@@ -122,7 +122,8 @@ def _supervisor_default_config() -> Iterator[None]:
     imported. The redirect binds an ephemeral localhost port instead of 8123.
     """
     with (
-        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
+        # clear=True so a developer/CI SETUP_PORT can't skew the simulation.
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}, clear=True),
         patch("homeassistant.components.http._DEFAULT_CONFIG", DEFAULT_80_CONFIG),
         patch(
             "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
@@ -1518,8 +1519,12 @@ async def test_no_redirect_when_http_configured(
 @pytest.mark.parametrize(
     ("origin", "redirect_active", "expect_header"),
     [
-        pytest.param("http://homeassistant.local:8123", True, True, id="same-host"),
-        pytest.param("http://evil.example.com", True, False, id="foreign-host"),
+        pytest.param("http://homeassistant.local:8123", True, True, id="legacy-port"),
+        pytest.param(
+            "http://homeassistant.local:9000", True, False, id="same-host-other-port"
+        ),
+        pytest.param("http://homeassistant.local", True, False, id="same-host-no-port"),
+        pytest.param("http://evil.example.com:8123", True, False, id="foreign-host"),
         pytest.param(
             "http://homeassistant.local:8123", False, False, id="redirect-stopped"
         ),
@@ -1532,7 +1537,7 @@ async def test_transition_cors_header(
     redirect_active: bool,
     expect_header: bool,
 ) -> None:
-    """Test the CORS hook echoes same-host origins only while the redirect runs."""
+    """Test the CORS hook echoes only the legacy-port origin while active."""
     with _supervisor_default_config():
         await _setup_http_with_onboarding(hass)
 
@@ -1562,7 +1567,7 @@ async def test_redirect_bind_failure_disables_cors(
 ) -> None:
     """Test CORS stays off when the legacy redirect server cannot bind."""
     with (
-        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}, clear=True),
         patch("homeassistant.components.http._DEFAULT_CONFIG", DEFAULT_80_CONFIG),
         patch(
             "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG

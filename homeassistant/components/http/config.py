@@ -143,9 +143,9 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
 _DEFAULT_CONFIG: Final[ConfData] = cast(ConfData, HTTP_STORAGE_SCHEMA({}))
 
 # Last-resort fallback on the previous default port, tried when the default
-# config (port 80 under Supervisor) cannot be bound. Identical to
-# _DEFAULT_CONFIG apart from the port, and only distinct from it when the
-# default port differs from SERVER_PORT (i.e. running under Supervisor).
+# config cannot be bound. Identical to _DEFAULT_CONFIG apart from the port, and
+# only distinct from it when the default port differs from SERVER_PORT - i.e.
+# under Supervisor (default 80) or when SETUP_PORT overrides the default.
 _DEFAULT_CONFIG_LEGACY_PORT: Final[ConfData] = cast(
     ConfData, {**_DEFAULT_CONFIG, CONF_SERVER_PORT: SERVER_PORT}
 )

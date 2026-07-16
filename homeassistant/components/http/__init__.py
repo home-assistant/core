@@ -870,13 +870,14 @@ class HomeAssistantHTTP:
     async def _async_add_transition_cors(
         self, request: web.Request, response: web.StreamResponse
     ) -> None:
-        """Echo a same-host Origin while the legacy-port redirect is active.
+        """Echo the legacy-port Origin while the legacy-port redirect is active.
 
         A cross-origin fetch that follows the legacy-port redirect stays in
         CORS mode, so the final response on the active port also needs CORS
-        headers. Scope this to our own host (the redirect is only ever same
-        host, different port). Keying off the redirect server means the
-        relaxation is never left enabled without a redirect to justify it.
+        headers. The only origin that can reach here that way is our own host
+        on the previous default port, so scope the relaxation to exactly that.
+        Keying off the redirect server means the relaxation is never left
+        enabled without a redirect to justify it.
         """
         if self._legacy_redirect_server is None:
             return
@@ -884,26 +885,34 @@ class HomeAssistantHTTP:
         if not origin:
             return
         try:
-            origin_host = URL(origin).host
+            origin_url = URL(origin)
         except ValueError:
             return
-        if origin_host and origin_host == request.url.host:
+        if origin_url.host == request.url.host and origin_url.port == SERVER_PORT:
             response.headers[ACCESS_CONTROL_ALLOW_ORIGIN] = origin
             response.headers[ACCESS_CONTROL_ALLOW_CREDENTIALS] = "true"
             # The response varies by Origin, so caches must not share it.
-            # Append rather than overwrite any existing Vary (e.g. from
-            # compression) so those values are preserved.
+            # Append to any existing Vary (e.g. from compression) without
+            # overwriting it or duplicating Origin.
             existing_vary = response.headers.get(VARY)
-            response.headers[VARY] = (
-                f"{existing_vary}, {ORIGIN}" if existing_vary else ORIGIN
+            vary_values = (
+                [value.strip() for value in existing_vary.split(",")]
+                if existing_vary
+                else []
             )
+            if not any(value.lower() == ORIGIN.lower() for value in vary_values):
+                response.headers[VARY] = (
+                    f"{existing_vary}, {ORIGIN}" if existing_vary else ORIGIN
+                )
 
     async def _async_start_legacy_redirect(self) -> None:
         """Redirect the previous default port to the active port."""
         target_port = self.server_port
 
         async def _redirect(request: web.Request) -> web.StreamResponse:
-            raise web.HTTPFound(request.url.with_port(target_port))
+            # Temporary, method-preserving redirect so non-GET requests from
+            # existing clients keep working during the transition.
+            raise web.HTTPTemporaryRedirect(request.url.with_port(target_port))
 
         redirect_app = web.Application()
         redirect_app.router.add_route("*", "/{path:.*}", _redirect)
