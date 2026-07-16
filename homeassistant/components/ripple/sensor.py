@@ -3,9 +3,9 @@
 from datetime import timedelta
 from typing import override
 
+import voluptuous as vol
 from xrpl.account import get_balance
 from xrpl.clients import JsonRpcClient
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
