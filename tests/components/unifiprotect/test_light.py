@@ -331,7 +331,6 @@ async def test_light_turn_on_with_brightness_public_only(
     """Turning on with brightness routes through the public setter in public-only."""
 
     public = make_public_light(light)
-    public.api = ufp.api
     ufp.api.is_public_only = True
 
     async def _prime_public_only() -> Any:
