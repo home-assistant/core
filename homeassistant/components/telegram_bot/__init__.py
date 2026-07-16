@@ -33,6 +33,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
@@ -704,6 +705,46 @@ async def async_migrate_entry(
             config_entry.minor_version,
             updated,
         )
+
+    # version 1.2 -> 1.3: move each chat's notify entity onto its own per-chat device
+    # (linked to the bot device) and strip the chat subentries from the bot device, leaving
+    # it associated with only (entry, None).
+    if version == 1 and config_entry.minor_version < 3:
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+        entities = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        bot_device_id = next(
+            (entity.device_id for entity in entities if entity.device_id is not None),
+            None,
+        )
+        for entity in entities:
+            # The event entity (no subentry) stays on the shared bot device
+            if entity.config_subentry_id is None:
+                continue
+            # The notify entity's unique id is f"{bot_id}_{chat_id}", which is the new
+            # per-chat device identifier
+            per_chat_device = device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                config_subentry_id=entity.config_subentry_id,
+                identifiers={(DOMAIN, entity.unique_id)},
+            )
+            entity_registry.async_update_entity(
+                entity.entity_id, device_id=per_chat_device.id
+            )
+            if bot_device_id is not None:
+                # Link the per-chat device to the bot device by id
+                device_registry.async_update_device(
+                    per_chat_device.id, via_device_id=bot_device_id
+                )
+                # Strip this chat's subentry from the bot device, leaving (entry, None)
+                device_registry.async_update_device(
+                    bot_device_id,
+                    remove_config_entry_id=config_entry.entry_id,
+                    remove_config_subentry_id=entity.config_subentry_id,
+                )
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     return True
 
