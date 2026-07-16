@@ -8,6 +8,7 @@ from pyoverkiz.client import GatewayCandidate
 from pyoverkiz.const import (
     REXEL_OAUTH_AUTHORIZE_URL,
     REXEL_OAUTH_POLICY,
+    REXEL_OAUTH_SCOPE,
     REXEL_OAUTH_TOKEN_URL,
 )
 from pyoverkiz.exceptions import (
@@ -1116,6 +1117,8 @@ async def test_rexel_full_flow_single_gateway(
     # Azure AD B2C needs the policy on the authorize URL; the helper rebuilds
     # the query string, so it must survive via extra_authorize_data.
     assert f"p={REXEL_OAUTH_POLICY}" in result["url"]
+    # offline_access is required for B2C to return a refresh token.
+    assert f"{REXEL_OAUTH_SCOPE}+offline_access" in result["url"]
 
     await _async_rexel_oauth_external_step(
         hass, hass_client_no_auth, aioclient_mock, result["flow_id"]

@@ -30,6 +30,18 @@
       "coax": {
         "name": "Coaxial"
       },
+      "eq_classic": {
+        "name": "Classic EQ"
+      },
+      "eq_dynamic": {
+        "name": "Dynamic EQ"
+      },
+      "eq_monitor": {
+        "name": "Monitor EQ"
+      },
+      "eq_vocal": {
+        "name": "Vocal EQ"
+      },
       "fx_off": {
         "name": "FX off"
       },
@@ -42,11 +54,20 @@
       "line_2": {
         "name": "Line 2"
       },
+      "line_bal": {
+        "name": "Line / Balanced"
+      },
+      "opt_coax": {
+        "name": "Optical / Coaxial"
+      },
       "optical": {
         "name": "Optical"
       },
       "pc": {
         "name": "PC"
+      },
+      "usb": {
+        "name": "USB"
       }
     }
   }

@@ -20,9 +20,11 @@ from uiprotect.data import (
     SmartDetectObjectType,
     StateType,
 )
+from uiprotect.data.public_devices import PublicSensor, SensorFeatureCapability
 
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -46,6 +48,46 @@ class PermRequired(int, Enum):
     NO_WRITE = 1
     WRITE = 2
     DELETE = 3
+
+
+@callback
+def _async_capability_supported(
+    data: ProtectData,
+    device: ProtectAdoptableDeviceModel,
+    description: ProtectEntityDescription,
+) -> bool:
+    """Whether the device advertises the description's required sensor capability."""
+    if (capability := description.ufp_capability) is None:
+        return True
+    public = data.async_get_public_device(device)
+    if not isinstance(public, PublicSensor) or not public.has_feature_flags:
+        return True
+    return public.supports(capability)
+
+
+@callback
+def async_remove_unsupported_sense_entities(
+    hass: HomeAssistant,
+    platform: Platform,
+    data: ProtectData,
+    descs: Sequence[ProtectEntityDescription],
+) -> None:
+    """Remove registry entries for sense entities the device cannot support.
+
+    Only acts when a public capability map is present (newer firmware); a console
+    upgrade then drops the never-functional entities created before the map existed.
+    """
+    entity_registry = er.async_get(hass)
+    for device in data.get_by_types({ModelType.SENSOR}):
+        for description in descs:
+            if description.ufp_capability is None or _async_capability_supported(
+                data, device, description
+            ):
+                continue
+            if entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, f"{device.mac}_{description.key}"
+            ):
+                entity_registry.async_remove(entity_id)
 
 
 @callback
@@ -101,6 +143,9 @@ def _async_device_entities(
             if not description.has_required(device):
                 continue
 
+            if not _async_capability_supported(data, device, description):
+                continue
+
             entities.append(
                 klass(
                     data,
@@ -119,7 +164,6 @@ def _async_device_entities(
 
 
 _ALL_MODEL_TYPES = (
-    ModelType.AIPORT,
     ModelType.CAMERA,
     ModelType.LIGHT,
     ModelType.SENSOR,
@@ -163,6 +207,10 @@ def async_all_device_entities(
 
     device_model_type = ufp_device.model
     assert device_model_type is not None
+    # Runtime adoption must honor the same model-type allowlist as initial setup,
+    # so unsupported devices (e.g. AI Port) get no entities when adopted live.
+    if device_model_type not in _ALL_MODEL_TYPES:
+        return []
     descs = _combine_model_descs(device_model_type, model_descriptions, all_descs)
     return _async_device_entities(
         data, klass, device_model_type, descs, unadopted_descs, ufp_device
@@ -440,6 +488,10 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     # Public counterpart of ``ufp_enabled``; a callable because public enablement
     # is often compound (e.g. mount type plus a settings flag).
     ufp_public_enabled_fn: Callable[[PublicDeviceModel], bool] | None = None
+    # Sensor capability required to create the entity, checked against the public
+    # capability map. Without a capability map (older firmware) every description
+    # is created, matching the pre-capability behavior.
+    ufp_capability: SensorFeatureCapability | None = None
     ufp_perm: PermRequired | None = None
 
     # The below are set in __post_init__
