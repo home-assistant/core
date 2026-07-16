@@ -57,6 +57,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         self.session: UltraSession | None = None
         self.position_subscription: UltraPositionSubscription | None = None
         self.position_state: UltraPositionSubscriptionState | None = None
+        self._position_connected: bool | None = None
         self.environment_state: UltraEnvironmentState | None = None
         self.environment_available = False
         self._environment_connected: bool | None = None
@@ -80,6 +81,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
                 POSITION_SUBSCRIPTION_CONFIRM_TIMEOUT
             )
             self.position_state = self.position_subscription.state
+            self._position_connected = self.position_state.subscribed
         except (OSError, TimeoutError, UltraError, ValueError) as err:
             if self.position_subscription is not None:
                 await self.position_subscription.stop()
@@ -101,7 +103,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
             )
         except (OSError, TimeoutError, UltraError) as err:
             if self._environment_connected is not False:
-                LOGGER.warning("Ultra environmental state is unavailable: %s", err)
+                LOGGER.info("Ultra environmental state is unavailable: %s", err)
             self._environment_connected = False
             self.environment_available = False
             return
@@ -128,6 +130,9 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         """Coalesce target-position updates before notifying entities."""
         assert self.position_subscription is not None
         self.position_state = self.position_subscription.state
+        if self._position_connected is False:
+            LOGGER.info("Ultra local position subscription is available")
+        self._position_connected = True
         if not self._position_listeners:
             return
         if self._cancel_position_notification is not None:
@@ -180,19 +185,26 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Forward meaningful subscription or expiry state changes."""
         previous = self.position_state
+        was_connected = self._position_connected
         self.position_state = state
-        if previous is not None and (
-            previous.subscribed,
-            previous.stale,
-            previous.last_error,
-        ) == (state.subscribed, state.stale, state.last_error):
+        self._position_connected = state.subscribed
+        if (
+            was_connected is state.subscribed
+            and previous is not None
+            and (
+                previous.subscribed,
+                previous.stale,
+                previous.last_error,
+            )
+            == (state.subscribed, state.stale, state.last_error)
+        ):
             return
-        if state.last_error and (previous is None or previous.subscribed):
-            LOGGER.warning(
+        if not state.subscribed and was_connected is not False and state.last_error:
+            LOGGER.info(
                 "Ultra local position subscription is unavailable: %s",
                 state.last_error,
             )
-        elif state.subscribed and previous is not None and not previous.subscribed:
+        elif state.subscribed and was_connected is False:
             LOGGER.info("Ultra local position subscription is available")
         self._async_cancel_position_notification()
         self._async_notify_position_listeners(None)
