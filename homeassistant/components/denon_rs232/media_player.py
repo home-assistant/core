@@ -14,6 +14,9 @@ from denon_rs232 import (
 )
 
 from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -74,6 +77,8 @@ INPUT_SOURCE_DENON_TO_HA: dict[InputSource, str] = {
 }
 
 TUNER_PRESET_PATTERN = re.compile(r"[A-G][1-8]")
+TUNER_PRESETS = tuple(f"{bank}{number}" for bank in "ABCDEFG" for number in range(1, 9))
+TUNER_PRESETS_ROOT = "presets"
 TUNER_FREQUENCY_PATTERN = re.compile(r"[0-9]+")
 TUNER_FREQUENCY_MIN = 8750
 TUNER_FREQUENCY_MAX = 10800
@@ -163,6 +168,7 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
             self._attr_supported_features |= (
                 MediaPlayerEntityFeature.VOLUME_MUTE
                 | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.BROWSE_MEDIA
             )
         else:
             self._attr_name = "Zone 2" if zone == "zone_2" else "Zone 3"
@@ -287,3 +293,34 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
             TUNER_FREQUENCY_MIN <= int(media_id) <= TUNER_FREQUENCY_MAX
         ):
             await player.set_tuner_frequency(media_id.zfill(TUNER_FREQUENCY_LENGTH))
+
+    @override
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """List the tuner presets as playable channels."""
+        if media_content_id not in (None, TUNER_PRESETS_ROOT):
+            raise BrowseError(f"Media not found: {media_content_id}")
+
+        return BrowseMedia(
+            title="Tuner presets",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id=TUNER_PRESETS_ROOT,
+            media_content_type=MediaType.CHANNELS,
+            can_play=False,
+            can_expand=True,
+            children_media_class=MediaClass.CHANNEL,
+            children=[
+                BrowseMedia(
+                    title=preset,
+                    media_class=MediaClass.CHANNEL,
+                    media_content_id=preset,
+                    media_content_type=MediaType.CHANNEL,
+                    can_play=True,
+                    can_expand=False,
+                )
+                for preset in TUNER_PRESETS
+            ],
+        )

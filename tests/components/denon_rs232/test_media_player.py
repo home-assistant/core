@@ -8,7 +8,11 @@ from denon_rs232 import InputSource
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.denon_rs232.media_player import INPUT_SOURCE_DENON_TO_HA
+from homeassistant.components.denon_rs232.media_player import (
+    INPUT_SOURCE_DENON_TO_HA,
+    TUNER_PRESETS,
+    TUNER_PRESETS_ROOT,
+)
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -42,6 +46,7 @@ from homeassistant.util.json import load_json
 from .conftest import MockReceiver, MockState, _default_state
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.typing import WebSocketGenerator
 
 type ZoneName = Literal["main", "zone_2", "zone_3"]
 
@@ -466,6 +471,92 @@ async def test_tuner_frequency_shared_by_zones(
 
     entity_state = hass.states.get(ZONE_2_ENTITY_ID)
     assert entity_state.attributes[ATTR_MEDIA_CHANNEL] == "101.10"
+
+
+async def test_browse_media_lists_tuner_presets(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test browsing returns every tuner preset as a playable channel."""
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/browse_media",
+            "entity_id": MAIN_ENTITY_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert result["media_content_id"] == TUNER_PRESETS_ROOT
+    assert not result["can_play"]
+    assert result["can_expand"]
+
+    children = result["children"]
+    assert [child["media_content_id"] for child in children] == list(TUNER_PRESETS)
+    assert children[0] == {
+        "title": "A1",
+        "media_class": "channel",
+        "media_content_type": "channel",
+        "media_content_id": "A1",
+        "can_play": True,
+        "can_expand": False,
+        "can_search": False,
+        "thumbnail": None,
+        "children_media_class": None,
+    }
+
+
+async def test_browse_media_invalid_content_id(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test browsing an unknown content id fails."""
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/browse_media",
+            "entity_id": MAIN_ENTITY_ID,
+            "media_content_id": "unknown",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+
+
+@pytest.mark.parametrize("entity_id", [ZONE_2_ENTITY_ID, ZONE_3_ENTITY_ID])
+async def test_browse_media_not_supported_for_zones(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, entity_id: str
+) -> None:
+    """Test only the main zone controls the shared tuner presets."""
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/browse_media",
+            "entity_id": entity_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+
+
+async def test_browsed_preset_tunes_when_played(
+    hass: HomeAssistant, mock_receiver: MockReceiver
+) -> None:
+    """Test every browsed preset is a valid play_media input."""
+    for preset in TUNER_PRESETS:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                ATTR_MEDIA_CONTENT_ID: preset,
+            },
+            blocking=True,
+        )
+        assert mock_receiver._send_command.await_args == call("TP", preset)
 
 
 def test_input_source_translation_keys_cover_all_enum_members() -> None:
