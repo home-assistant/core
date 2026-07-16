@@ -312,7 +312,9 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
     ) -> BrowseMedia:
         """List the tuner presets as playable channels."""
         if not self._is_main:
-            raise HomeAssistantError("Media browsing is only supported for the main zone")
+            raise HomeAssistantError(
+                "Media browsing is only supported for the main zone"
+            )
         if media_content_id not in (None, TUNER_PRESETS_ROOT):
             raise BrowseError(f"Media not found: {media_content_id}")
 
