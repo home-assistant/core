@@ -35,14 +35,13 @@
     'supported_features': 0,
     'translation_key': 'water_price',
     'unique_id': '123456_water_price',
-    'unit_of_measurement': '€',
+    'unit_of_measurement': '€/m³',
   })
 # ---
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by toutsurmoneau.fr',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Suez mock device Water price',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
