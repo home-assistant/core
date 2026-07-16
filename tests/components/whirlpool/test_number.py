@@ -91,6 +91,28 @@ async def test_set_target_temperature(
     )
 
 
+async def test_set_fractional_target_temperature(
+    hass: HomeAssistant,
+    oven_number_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test a fractional target temperature is passed through without truncation."""
+    entity_id, mock_fixture, cavity = oven_number_entity
+    mock = request.getfixturevalue(mock_fixture)
+    mock.get_cook_mode.return_value = whirlpool.oven.CookMode.Broil
+    await init_integration(hass)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 220.5},
+        blocking=True,
+    )
+    mock.set_cook.assert_called_once_with(
+        target_temp=220.5, mode=whirlpool.oven.CookMode.Broil, cavity=cavity
+    )
+
+
 async def test_set_target_temperature_failure(
     hass: HomeAssistant,
     oven_number_entity: tuple[str, str, whirlpool.oven.Cavity],
