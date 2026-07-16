@@ -1456,7 +1456,7 @@ async def test_read_ac_charge_times_classic_auth(
 
     assert response == {
         "charge_power": 100,
-        "charge_stop_soc": 90,
+        "charge_stop_soc": 100,
         "mains_enabled": True,
         "periods": [
             {
@@ -1505,7 +1505,7 @@ async def test_read_ac_discharge_times_classic_auth(
 
     assert response == {
         "discharge_power": 100,
-        "discharge_stop_soc": 10,
+        "discharge_stop_soc": 50,
         "periods": [
             {
                 "period_id": 1,
