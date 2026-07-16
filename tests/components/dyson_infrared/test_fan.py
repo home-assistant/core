@@ -1,163 +1,255 @@
-"""Tests for Dyson Infrared fan component."""
-
-from unittest.mock import AsyncMock, call, patch
+"""Tests for the Dyson Infrared fan platform."""
 
 from infrared_protocols.codes.dyson.cool import DysonCoolCode
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.dyson_infrared.const import (
-    CONF_INFRARED_EMITTER_ENTITY_ID,
+from homeassistant.components.fan import (
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_OSCILLATE,
+    SERVICE_SET_PERCENTAGE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
-from homeassistant.components.dyson_infrared.fan import DysonInfraredFan
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
-
-
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
-    """Test async setup entry adds a DysonInfraredFan entity."""
-    entry = MockConfigEntry(
-        domain="dyson_infrared",
-        data={CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.test_emitter"},
-        entry_id="test_entry_id",
-        title="Test Dyson Fan",
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.dyson_infrared.fan.DysonInfraredFan"
-    ) as mock_fan:
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_fan.assert_called_once_with(
-        "infrared.test_emitter",
-        "test_entry_id",
-        "Test Dyson Fan",
-    )
+from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.fixture
-def fan_entity() -> DysonInfraredFan:
-    """Return a DysonInfraredFan test entity."""
-    fan = DysonInfraredFan("infrared.test_emitter", "unique_id_123", "Fan Name")
-    fan.hass = AsyncMock()
-    return fan
+def platforms() -> list[Platform]:
+    """Return platforms to set up."""
+    return [Platform.FAN]
 
 
-async def test_is_on(fan_entity: DysonInfraredFan) -> None:
-    """Test is_on property reflects internal state."""
-    assert fan_entity.is_on is False
-    fan_entity._attr_is_on = True
-    assert fan_entity.is_on is True
+@pytest.mark.usefixtures("init_integration")
+async def test_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the fan entity is created with correct attributes and attached to a device."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={("dyson_infrared", mock_config_entry.entry_id)}
+    )
+    assert device_entry
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    for entity_entry in entity_entries:
+        assert entity_entry.device_id == device_entry.id
 
 
-async def test_async_send_dyson_action(fan_entity: DysonInfraredFan) -> None:
-    """Test sending a Dyson action builds and sends the command."""
-    with (
-        patch.object(
-            DysonCoolCode.ON, "to_command", return_value="mocked_command"
-        ) as mock_to_command,
-        patch.object(fan_entity, "_send_command") as mock_send_command,
-    ):
-        await fan_entity._async_send_dyson_action(DysonCoolCode.ON)
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_sends_on_command(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fan_entity_id: str,
+) -> None:
+    """Test turning on without a percentage sends the ON code."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
 
-        mock_to_command.assert_called_once()
-        mock_send_command.assert_called_once_with("mocked_command")
+    assert mock_infrared_emitter_entity.send_command_calls == [DysonCoolCode.ON]
 
-
-async def test_async_turn_on(fan_entity: DysonInfraredFan) -> None:
-    """Test async_turn_on sends an on action and updates state."""
-    with (
-        patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
-        patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
-    ):
-        await fan_entity.async_turn_on()
-
-        mock_send_action.assert_called_once_with(DysonCoolCode.ON)
-        assert fan_entity.is_on is True
-        mock_write_state.assert_called_once()
+    state = hass.states.get(fan_entity_id)
+    assert state
+    assert state.state == "on"
 
 
-async def test_async_turn_on_with_percentage(fan_entity: DysonInfraredFan) -> None:
-    """Test async_turn_on delegates to async_set_percentage when a percentage is provided."""
-    with patch.object(fan_entity, "async_set_percentage") as mock_set_percentage:
-        await fan_entity.async_turn_on(percentage=70)
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_off_sends_off_command(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fan_entity_id: str,
+) -> None:
+    """Test turning off sends the OFF code."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
 
-        mock_set_percentage.assert_called_once_with(70)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == [DysonCoolCode.OFF]
+
+    state = hass.states.get(fan_entity_id)
+    assert state
+    assert state.state == "off"
 
 
-async def test_async_turn_off(fan_entity: DysonInfraredFan) -> None:
-    """Test async_turn_off sends an off action and updates state."""
-    fan_entity._attr_is_on = True
-    with (
-        patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
-        patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
-    ):
-        await fan_entity.async_turn_off()
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_with_percentage_equal_to_current_speed(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fan_entity_id: str,
+) -> None:
+    """Test turning on at the fan's already-tracked percentage still sends ON.
 
-        mock_send_action.assert_called_once_with(DysonCoolCode.OFF)
-        assert fan_entity.is_on is False
-        mock_write_state.assert_called_once()
+    The fan starts off at 50%. Turning it on while requesting the same 50%
+    must still emit the ON command instead of silently doing nothing,
+    since the fan is physically off at this point.
+    """
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == [DysonCoolCode.ON]
+
+    state = hass.states.get(fan_entity_id)
+    assert state
+    assert state.state == "on"
+    assert state.attributes[ATTR_PERCENTAGE] == 50
 
 
-async def test_async_set_percentage_zero(fan_entity: DysonInfraredFan) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_set_percentage_zero_turns_off(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fan_entity_id: str,
+) -> None:
     """Test setting percentage to zero turns off the fan."""
-    with patch.object(fan_entity, "async_turn_off") as mock_turn_off:
-        await fan_entity.async_set_percentage(0)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
 
-        mock_turn_off.assert_called_once()
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 0},
+        blocking=True,
+    )
 
+    assert mock_infrared_emitter_entity.send_command_calls == [DysonCoolCode.OFF]
 
-async def test_async_set_percentage_same(fan_entity: DysonInfraredFan) -> None:
-    """Test setting the exact same percentage does nothing."""
-    fan_entity._attr_percentage = 50
-    with (
-        patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
-        patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
-    ):
-        await fan_entity.async_set_percentage(50)
-
-        mock_send_action.assert_not_called()
-        mock_write_state.assert_not_called()
-
-
-async def test_async_set_percentage_speed_up(fan_entity: DysonInfraredFan) -> None:
-    """Test increasing percentage sends multiple speed_up actions and updates state."""
-    fan_entity._attr_percentage = 40
-    with (
-        patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
-        patch(
-            "homeassistant.components.dyson_infrared.fan.asyncio.sleep"
-        ) as mock_sleep,
-        patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
-    ):
-        await fan_entity.async_set_percentage(80)
-
-        assert mock_send_action.call_count == 4
-        mock_send_action.assert_has_calls([call(DysonCoolCode.SPEED_UP)] * 4)
-        assert mock_sleep.call_count == 4
-
-        assert fan_entity._attr_percentage == 80
-        assert fan_entity.is_on is True
-        mock_write_state.assert_called_once()
+    state = hass.states.get(fan_entity_id)
+    assert state
+    assert state.state == "off"
 
 
-async def test_async_set_percentage_speed_down(fan_entity: DysonInfraredFan) -> None:
-    """Test decreasing percentage sends multiple speed_down actions and updates state."""
-    fan_entity._attr_percentage = 90
-    with (
-        patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
-        patch(
-            "homeassistant.components.dyson_infrared.fan.asyncio.sleep"
-        ) as mock_sleep,
-        patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
-    ):
-        await fan_entity.async_set_percentage(30)
-        assert mock_send_action.call_count == 6
-        mock_send_action.assert_has_calls([call(DysonCoolCode.SPEED_DOWN)] * 6)
-        assert mock_sleep.call_count == 6
+@pytest.mark.parametrize(
+    ("requested_percentage", "expected_codes", "expected_percentage"),
+    [
+        # 40% -> 80%: 4 discrete speed steps up (levels 4 -> 8)
+        (80, [DysonCoolCode.SPEED_UP] * 4, 80),
+        # 55% rounds to speed level 6 (60%): 2 steps up from level 4 (40%),
+        # and the *normalized* 60% must be stored, not the raw 55% requested.
+        (55, [DysonCoolCode.SPEED_UP] * 2, 60),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_set_percentage_speed_up(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fan_entity_id: str,
+    requested_percentage: int,
+    expected_codes: list[DysonCoolCode],
+    expected_percentage: int,
+) -> None:
+    """Test increasing percentage sends the correct number of speed_up codes.
 
-        assert fan_entity._attr_percentage == 30
-        assert fan_entity.is_on is True
-        mock_write_state.assert_called_once()
+    The fan starts at 50%. Requesting a percentage that maps to the same
+    discrete speed level after rounding (e.g. 55%) must still send at
+    least one command when the level actually changes, and must store
+    the normalized percentage rather than the raw requested value.
+    """
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 40},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: requested_percentage},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == expected_codes
+
+    state = hass.states.get(fan_entity_id)
+    assert state
+    assert state.attributes[ATTR_PERCENTAGE] == expected_percentage
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_percentage_speed_down(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fan_entity_id: str,
+) -> None:
+    """Test decreasing percentage sends the correct number of speed_down codes."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 90},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 30},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == (
+        [DysonCoolCode.SPEED_DOWN] * 6
+    )
+
+    state = hass.states.get(fan_entity_id)
+    assert state
+    assert state.attributes[ATTR_PERCENTAGE] == 30
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_oscillate_sends_swing_command(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fan_entity_id: str,
+) -> None:
+    """Test oscillating sends the SWING code and updates state."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_OSCILLATE,
+        {ATTR_ENTITY_ID: fan_entity_id, ATTR_OSCILLATING: True},
+        blocking=True,
+    )
+
+    assert mock_infrared_emitter_entity.send_command_calls == [DysonCoolCode.SWING]
+
+    state = hass.states.get(fan_entity_id)
+    assert state
+    assert state.attributes[ATTR_OSCILLATING] is True

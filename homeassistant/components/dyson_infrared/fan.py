@@ -9,9 +9,10 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
 
 PARALLEL_UPDATES = 0
 
@@ -45,6 +46,11 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         self._attr_is_on = False
         self._attr_assumed_state = True
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+        )
+
         self._attr_supported_features = (
             FanEntityFeature.TURN_ON
             | FanEntityFeature.TURN_OFF
@@ -61,6 +67,16 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
     async def _async_send_dyson_action(self, code: DysonCoolCode) -> None:
         command = code.to_command()
         await self._send_command(command)
+
+    def _percentage_to_speed(self, percentage: int) -> int:
+        """Convert a percentage into a discrete speed level (1..speed_count)."""
+        step_size = 100 / self._attr_speed_count
+        return max(1, min(self._attr_speed_count, round(percentage / step_size)))
+
+    def _speed_to_percentage(self, speed: int) -> int:
+        """Convert a discrete speed level back to its normalized percentage."""
+        step_size = 100 / self._attr_speed_count
+        return round(speed * step_size)
 
     @override
     async def async_turn_on(
@@ -90,21 +106,28 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        current_percentage = self._attr_percentage or 0
-        if percentage == current_percentage:
-            return
-        step_size = 100 / self._attr_speed_count
-        steps = round(abs(percentage - current_percentage) / step_size)
-        code = (
-            DysonCoolCode.SPEED_UP
-            if percentage > current_percentage
-            else DysonCoolCode.SPEED_DOWN
-        )
-        for _ in range(steps):
-            await self._async_send_dyson_action(code)
-            await asyncio.sleep(0.2)
 
-        self._attr_percentage = percentage
+        target_speed = self._percentage_to_speed(percentage)
+        normalized_percentage = self._speed_to_percentage(target_speed)
+        current_speed = self._percentage_to_speed(self._attr_percentage or 0)
+
+        if target_speed == current_speed and self._attr_is_on:
+            return
+
+        if target_speed == current_speed:
+            # Fan is off but already at the requested speed level: just turn it on.
+            await self._async_send_dyson_action(DysonCoolCode.ON)
+        else:
+            code = (
+                DysonCoolCode.SPEED_UP
+                if target_speed > current_speed
+                else DysonCoolCode.SPEED_DOWN
+            )
+            for _ in range(abs(target_speed - current_speed)):
+                await self._async_send_dyson_action(code)
+                await asyncio.sleep(0.2)
+
+        self._attr_percentage = normalized_percentage
         self._attr_is_on = True
         self.async_write_ha_state()
 
