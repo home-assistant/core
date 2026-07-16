@@ -58,7 +58,7 @@ DEFAULT_CONFIG_RECEIVER = {
     }
 }
 
-TEST_COMMAND = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
+TEST_COMMAND = NECCommand(address=0x04FB, command=0x0F7, modulation=38000)
 
 
 @pytest.mark.parametrize(
