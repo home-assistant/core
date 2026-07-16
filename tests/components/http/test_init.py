@@ -1389,6 +1389,26 @@ async def test_default_config_under_supervisor_starts_redirect(
     assert hass.http._legacy_redirect_server is not None
 
 
+async def test_persisted_default_config_starts_redirect(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect still starts for a default config loaded from disk.
+
+    On reboots the default config is deserialized from storage, so it is a
+    distinct object; the transition must key off value equality, not identity.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.config.api.port == 80
+    assert hass.http._legacy_redirect_server is not None
+
+
 async def test_no_redirect_without_supervisor(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1403,23 +1423,45 @@ async def test_no_redirect_without_supervisor(
     assert hass.http._legacy_redirect_server is None
 
 
+async def test_no_redirect_with_setup_port_outside_supervisor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test SETUP_PORT alone (no Supervisor) does not start the redirect.
+
+    SETUP_PORT changes the default port for plain container installs too, but
+    the transition is Supervisor-only.
+    """
+    with (
+        patch("homeassistant.components.http._DEFAULT_CONFIG", DEFAULT_80_CONFIG),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+    ):
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.http._legacy_redirect_server is None
+
+
 async def test_no_redirect_when_http_configured(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test no redirect is started once HTTP is configured (onboarding is over).
 
-    A stored (user-configured) config is not the default config, so even under
-    Supervisor on port 80 the transition must not apply.
+    A user-configured config differs from the default, so even under Supervisor
+    the transition must not apply.
     """
-    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 9000})
 
     with _supervisor_default_config():
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert hass.config.api.port == 80
+    assert hass.config.api.port == 9000
     assert hass.http._legacy_redirect_server is None
 
 
@@ -1499,6 +1541,28 @@ async def test_redirect_bind_failure_disables_cors(
         await server._async_add_transition_cors(request, response)
 
     assert "Access-Control-Allow-Origin" not in response.headers
+
+
+async def test_transition_cors_preserves_existing_vary(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the CORS hook appends Origin to an existing Vary header."""
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        server = hass.http
+        request = Mock()
+        request.headers = {"Origin": "http://homeassistant.local:8123"}
+        request.url = URL("http://homeassistant.local/manifest.json")
+        response = Mock()
+        response.headers = {"Vary": "Accept-Encoding"}
+
+        await server._async_add_transition_cors(request, response)
+
+    assert response.headers["Vary"] == "Accept-Encoding, Origin"
 
 
 async def test_websocket_http_config(

@@ -91,6 +91,7 @@ from .const import (  # noqa: F401
     CONF_USE_X_FRAME_OPTIONS,
     DEFAULT_CORS,
     DOMAIN,
+    ENV_SUPERVISOR,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     NO_LOGIN_ATTEMPT_THRESHOLD,
@@ -294,12 +295,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ],
             ssl_profile=conf[CONF_SSL_PROFILE],
             supervisor_unix_socket_path=supervisor_unix_socket_path,
-            # Bridge the previous default port only for the unconfigured
-            # default config on a new default port (a fresh install under
-            # Supervisor). Any user-configured HTTP config means onboarding is
-            # over, so the transition does not apply.
+            # Bridge the previous default port only under Supervisor while
+            # serving the unconfigured default config on the new default port
+            # (a fresh install). Value equality (not identity) keeps this true
+            # after a restart, when the default config is loaded from disk.
+            # Any user-configured HTTP config differs from the default, so the
+            # transition stops applying once onboarding leads to a config.
             port_transition=(
-                conf is _DEFAULT_CONFIG and conf[CONF_SERVER_PORT] != SERVER_PORT
+                ENV_SUPERVISOR in os.environ
+                and conf == _DEFAULT_CONFIG
+                and conf[CONF_SERVER_PORT] != SERVER_PORT
             ),
         )
 
@@ -862,7 +867,12 @@ class HomeAssistantHTTP:
             response.headers[ACCESS_CONTROL_ALLOW_ORIGIN] = origin
             response.headers[ACCESS_CONTROL_ALLOW_CREDENTIALS] = "true"
             # The response varies by Origin, so caches must not share it.
-            response.headers[VARY] = ORIGIN
+            # Append rather than overwrite any existing Vary (e.g. from
+            # compression) so those values are preserved.
+            existing_vary = response.headers.get(VARY)
+            response.headers[VARY] = (
+                f"{existing_vary}, {ORIGIN}" if existing_vary else ORIGIN
+            )
 
     async def _async_start_legacy_redirect(self) -> None:
         """Redirect the previous default port to the active port."""
