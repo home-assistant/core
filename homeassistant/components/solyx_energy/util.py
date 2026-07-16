@@ -11,7 +11,7 @@ def parse_attr_value(raw: dict[str, Any], attr_name: str) -> Any:
     """Extract value from an Solyx device attribute."""
     attributes = raw.get("attributes") or {}
     val = attributes.get(attr_name, {}).get("value")
-    _LOGGER.debug("Extracting %s.. New value: %s", attr_name, val)
+    _LOGGER.debug("Extracting %s. New value: %s", attr_name, val)
     return val
 
 
