@@ -1,18 +1,22 @@
 """Tests for LinknLink sensor entities."""
 
 from dataclasses import replace
+from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from aiolinknlink import UltraConnectionError
+import pytest
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import ENVIRONMENT_STATE, MAC, POSITION_STATE, POSITION_UPDATE
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _position_entity_ids(hass: HomeAssistant) -> tuple[str, str]:
@@ -143,6 +147,33 @@ async def test_empty_position_update(
     assert hass.states.get(target_count_id).state == "0"
 
 
+async def test_position_updates_are_coalesced(
+    hass: HomeAssistant,
+    mock_linknlink_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_position_subscription: tuple[MagicMock, MagicMock],
+) -> None:
+    """Test rapid position updates use the latest state at most once per second."""
+    await setup_integration(hass, mock_config_entry)
+    subscription_class, subscription = mock_position_subscription
+    position_callback = subscription_class.call_args.kwargs["callback"]
+    target_count_id = er.async_get(hass).async_get_entity_id(
+        "sensor", "linknlink", f"{MAC}_target_count"
+    )
+    assert target_count_id is not None
+
+    position_callback(POSITION_UPDATE)
+    empty_update = replace(POSITION_UPDATE, targets=())
+    subscription.state = replace(POSITION_STATE, latest_update=empty_update)
+    position_callback(empty_update)
+    await hass.async_block_till_done()
+    assert hass.states.get(target_count_id).state == "1"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert hass.states.get(target_count_id).state == "0"
+
+
 async def test_environment_failure_does_not_disable_position_entities(
     hass: HomeAssistant,
     mock_linknlink_client: AsyncMock,
@@ -225,8 +256,10 @@ async def test_entities_registered_when_initial_environment_read_fails(
     hass: HomeAssistant,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test stable entities when the environment API is initially offline."""
+    """Test stable entities and transition logging when the API is offline."""
+    caplog.set_level(logging.INFO, logger="homeassistant.components.linknlink")
     mock_linknlink_client.get_environment_state.side_effect = UltraConnectionError(
         "offline"
     )
@@ -238,3 +271,12 @@ async def test_entities_registered_when_initial_environment_read_fails(
         entity_id = registry.async_get_entity_id("sensor", "linknlink", f"{MAC}_{key}")
         assert entity_id is not None
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    await mock_config_entry.runtime_data.async_refresh()
+    mock_linknlink_client.get_environment_state.side_effect = None
+    mock_linknlink_client.get_environment_state.return_value = ENVIRONMENT_STATE
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert caplog.text.count("Ultra environmental state is unavailable") == 1
+    assert caplog.text.count("Ultra environmental state is available") == 1

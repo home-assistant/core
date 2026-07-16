@@ -6,7 +6,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_PORT, DISPLAY_MODEL, DOMAIN
+from .const import DEFAULT_PORT, DISPLAY_MODEL, DOMAIN, LEGACY_DISPLAY_MODEL
 from .coordinator import LinknLinkConfigEntry, LinknLinkCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) -> bool:
     """Set up LinknLink from a config entry."""
     assert entry.unique_id is not None
-    if entry.title != DISPLAY_MODEL:
+    if entry.title == LEGACY_DISPLAY_MODEL:
         hass.config_entries.async_update_entry(entry, title=DISPLAY_MODEL)
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
     device = UltraDevice(
