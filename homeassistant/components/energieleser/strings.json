@@ -1,0 +1,113 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser.",
+      "wrong_device": "The device at this IP address does not match the originally configured device."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."
+    },
+    "flow_title": "{device_type} · {host}",
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::energieleser::config::step::user::data_description::host%]"
+        },
+        "description": "Update the IP address or hostname of your energieleser device.",
+        "title": "Reconfigure energieleser"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Local IP address or hostname of the device (e.g. 192.168.1.42)."
+        },
+        "description": "Connect to a local energieleser device (stromleser.one, gasleser, wasserleser, or wärmeleser).",
+        "title": "Add an energieleser device"
+      },
+      "zeroconf_confirm": {
+        "description": "Found a {device_type} ({device_id}) at {host}. Add it to Home Assistant?",
+        "title": "Add discovered device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_export": {
+        "name": "Exported energy"
+      },
+      "energy_import": {
+        "name": "Imported energy"
+      },
+      "flow_rate": {
+        "name": "Gas flow rate"
+      },
+      "gas_consumption": {
+        "name": "Total gas"
+      },
+      "heat_energy_tariff": {
+        "name": "Energy tariff {tariff}"
+      },
+      "heat_flow_temperature": {
+        "name": "Flow temperature"
+      },
+      "heat_return_temperature": {
+        "name": "Return temperature"
+      },
+      "heat_total_volume": {
+        "name": "Total volume"
+      },
+      "heat_volume_flow": {
+        "name": "Volume flow"
+      },
+      "power_phase": {
+        "name": "Phase {phase} power"
+      },
+      "power_total": {
+        "name": "Active power"
+      },
+      "pulse_count": {
+        "name": "Pulse count"
+      },
+      "water_consumption": {
+        "name": "Total water"
+      },
+      "water_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "water_flow_rate_m3": {
+        "name": "Volume flow rate"
+      },
+      "water_today_consumption": {
+        "name": "Water today"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the device {device_id}"
+    },
+    "connection_error": {
+      "message": "An error occurred while connecting to the device {device_id}"
+    },
+    "unknown_device": {
+      "message": "The device type for {device_id} is unknown or unsupported"
+    }
+  },
+  "issues": {
+    "meter_locked": {
+      "description": "The electricity meter connected to {device_name} is not providing high-resolution data. You need to unlock the physical meter by entering the PIN (provided by your electricity company or grid operator) directly on the meter. Once the meter is unlocked, high-resolution data will be provided and this issue will resolve itself automatically. See the linked instructions for details on how to enter the PIN.",
+      "title": "Meter PIN Required"
+    }
+  }
+}

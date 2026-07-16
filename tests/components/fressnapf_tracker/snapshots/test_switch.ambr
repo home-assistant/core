@@ -39,8 +39,8 @@
 # name: test_state_entity_device_snapshots[switch.fluffy_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Fluffy Sleep mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fluffy Sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fluffy_sleep_mode',

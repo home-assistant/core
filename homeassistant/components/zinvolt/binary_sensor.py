@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,7 +31,7 @@ POINT_ENTITIES = {
 class ZinvoltBatteryStateDescription(BinarySensorEntityDescription):
     """Binary sensor description for Zinvolt battery state."""
 
-    is_on_fn: Callable[[ZinvoltData], bool]
+    is_on_fn: Callable[[ZinvoltData], bool | None]
 
 
 SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
@@ -84,7 +85,8 @@ class ZinvoltBatteryStateBinarySensor(ZinvoltEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
@@ -105,11 +107,13 @@ class ZinvoltPointBinarySensor(ZinvoltUnitEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.serial_number}.{point}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the binary sensor."""
         return super().available and self.point in self.battery.points
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return not self.battery.points[self.point]

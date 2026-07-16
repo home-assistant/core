@@ -15,5 +15,10 @@
         }
       }
     }
+  },
+  "triggers": {
+    "phase_changed": {
+      "trigger": "mdi:moon-waning-crescent"
+    }
   }
 }

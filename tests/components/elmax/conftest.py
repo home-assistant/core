@@ -79,7 +79,7 @@ def httpx_mock_direct_fixture(base_uri: str) -> Generator[respx.MockRouter]:
             algorithms="HS256",
             options={"verify_signature": False},
         )
-        expiration = datetime.now() + timedelta(hours=1)
+        expiration = datetime.now() + timedelta(hours=1)  # pylint: disable=home-assistant-enforce-naive-now
         decoded_jwt["payload"]["exp"] = int(expiration.timestamp())
         jws_string = jwt.encode(
             payload=decoded_jwt["payload"], algorithm="HS256", key=""

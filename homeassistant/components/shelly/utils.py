@@ -524,7 +524,7 @@ def update_device_fw_info(
     dev_reg = dr.async_get(hass)
     if device := dev_reg.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)},
-        connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+        connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
     ):
         if device.sw_version == shellydevice.firmware_version:
             return
@@ -663,9 +663,9 @@ def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> boo
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
     """Return the unit of a virtual component.
 
-    If the unit is not set, the device sends an empty string
+    If the unit is not set, the device sends an empty string or the key may be absent.
     """
-    unit = config["meta"]["ui"]["unit"]
+    unit = config["meta"]["ui"].get("unit")
     return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
 
 
