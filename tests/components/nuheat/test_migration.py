@@ -17,8 +17,6 @@ from chemelex_nuheat import (
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.nuheat import async_migrate_entry, async_setup_entry
-from homeassistant.components.nuheat.config_flow import NuHeatConfigFlow
 from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.components.nuheat.migration import (
     CONF_MIGRATION_STATE,
@@ -42,7 +40,7 @@ from homeassistant.components.nuheat.registry_migration import (
     build_registry_snapshots,
     transfer_registry_ownership,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -51,7 +49,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -59,11 +56,12 @@ from homeassistant.helpers import (
     issue_registry as ir,
     label_registry as lr,
 )
-from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
+from .helpers import FakeOAuthImplementation, complete_oauth_flow, jwt_access_token
+
 from tests.common import MockConfigEntry
-from tests.components.nuheat.helpers import jwt_access_token
+from tests.typing import ClientSessionGenerator
 
 ACCOUNT_SUBJECT = "synthetic-account-subject"
 LEGACY_PASSWORD = "synthetic-legacy-password"
@@ -128,25 +126,19 @@ def add_legacy_entry(
     return entry
 
 
-def migration_flow(hass, entry) -> NuHeatConfigFlow:
-    """Return a reauthentication flow bound to a legacy entry."""
-    flow = NuHeatConfigFlow()
-    flow.hass = hass
-    flow.handler = DOMAIN
-    flow.context = {"source": SOURCE_REAUTH, "entry_id": entry.entry_id}
-    return flow
-
-
 async def run_migration_flow(
-    hass,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
     entry,
     thermostats: list[Thermostat],
     *,
     account: str = "Owner@Example.com",
     subject: str = ACCOUNT_SUBJECT,
 ):
-    """Complete the post-OAuth migration callback with mocked API data."""
-    flow = migration_flow(hass, entry)
+    """Complete migration through the public reauthentication flow manager."""
+    implementation = FakeOAuthImplementation(
+        token=oauth_data(subject=subject)[CONF_TOKEN]
+    )
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
         patch(
@@ -163,35 +155,18 @@ async def run_migration_flow(
         ),
         patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
     ):
-        return await flow.async_oauth_create_entry(oauth_data(subject=subject))
+        return await complete_oauth_flow(
+            hass,
+            hass_client_no_auth,
+            implementation,
+            entry=entry,
+            confirmation_step="migration_confirm",
+        )
 
 
-class FakeOAuthImplementation(AbstractOAuth2Implementation):
-    """Minimal OAuth implementation for account-entry setup tests."""
-
-    @property
-    def name(self) -> str:
-        """Return the implementation name."""
-        return "Synthetic test credentials"
-
-    @property
-    def domain(self) -> str:
-        """Return the implementation domain."""
-        return "test"
-
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
-        """Return a synthetic authorization URL."""
-        return "https://identity.example/authorize"
-
-    async def async_resolve_external_data(self, external_data: object) -> dict:
-        """Resolve synthetic OAuth callback data."""
-        return oauth_data()[CONF_TOKEN]
-
-    async def _async_refresh_token(self, token: dict) -> dict:
-        return token
-
-
-def create_customized_registry_records(hass, entry, serial_number: str):
+def create_customized_registry_records(
+    hass: HomeAssistant, entry: MockConfigEntry, serial_number: str
+):
     """Create realistic legacy entity and device records with custom metadata."""
     entity_area = ar.async_get(hass).async_create(f"Entity {serial_number}")
     device_area = ar.async_get(hass).async_create(f"Device {serial_number}")
@@ -237,7 +212,7 @@ def create_customized_registry_records(hass, entry, serial_number: str):
     return entity, device, entity_area, device_area, label
 
 
-def build_three_entry_plan(hass):
+def build_three_entry_plan(hass: HomeAssistant):
     """Build a migration plan with enough records for first/later failures."""
     entries = [
         add_legacy_entry(hass, "ABC123"),
@@ -262,7 +237,31 @@ def build_three_entry_plan(hass):
     return entries, records, plan
 
 
-def local_state(hass, entries, records):
+def build_existing_anchor_plan(hass: HomeAssistant, *, loaded: bool):
+    """Build a migration plan that reuses an existing OAuth account entry."""
+    anchor = MockConfigEntry(
+        domain=DOMAIN,
+        title="Original OAuth account",
+        data=oauth_data(subject=ACCOUNT_SUBJECT),
+        unique_id=ACCOUNT_SUBJECT,
+        version=2,
+    )
+    anchor.add_to_hass(hass)
+    if loaded:
+        anchor.mock_state(hass, ConfigEntryState.LOADED)
+    legacy = add_legacy_entry(hass, "ABC123", "Original legacy thermostat")
+    records = [create_customized_registry_records(hass, legacy, "ABC123")]
+    plan = build_migration_plan(
+        hass,
+        legacy,
+        account_unique_id=ACCOUNT_SUBJECT,
+        account_title="Renamed OAuth account",
+        thermostats=[thermostat("ABC123")],
+    )
+    return anchor, legacy, records, plan
+
+
+def local_state(hass: HomeAssistant, entries, records):
     """Capture config and registry fields that migration must preserve."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -326,17 +325,16 @@ async def test_legacy_entry_detection_and_setup_requests_migration(
     entry = add_legacy_entry(hass, "ABC123", "Master Bath")
     assert is_legacy_entry_data(entry.data)
     assert is_legacy_entry(entry)
-    assert await async_migrate_entry(hass, entry) is True
+    assert await hass.config_entries.async_setup(entry.entry_id) is False
+    await hass.async_block_till_done()
     assert entry.version == 1
     assert entry.data[CONF_PASSWORD] == LEGACY_PASSWORD
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_key == "legacy_migration_required"
 
-    with pytest.raises(ConfigEntryAuthFailed) as raised:
-        await async_setup_entry(hass, entry)
-    assert raised.value.translation_domain == DOMAIN
-    assert raised.value.translation_key == "legacy_migration_required"
-
-    flow = migration_flow(hass, entry)
-    result = await flow.async_step_reauth(entry.data)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    result = flows[0]
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "migration_confirm"
 
@@ -357,7 +355,11 @@ async def test_version_one_oauth_entry_advances_without_legacy_data(
     original_data = entry.data
     original_title = entry.title
 
-    assert await async_migrate_entry(hass, entry) is True
+    with patch(
+        "homeassistant.components.nuheat.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
     assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
     assert entry.entry_id == entry_id
     assert entry.unique_id == ACCOUNT_SUBJECT
@@ -388,7 +390,11 @@ async def test_provisional_oauth_subject_migration_preserves_registry_identity(
     entry_id = entry.entry_id
     automation_reference = records[0][0].entity_id
 
-    assert await async_migrate_entry(hass, entry) is True
+    with patch(
+        "homeassistant.components.nuheat.async_setup_entry",
+        AsyncMock(return_value=True),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
 
     assert entry.entry_id == entry_id
     assert entry.unique_id == ACCOUNT_SUBJECT
@@ -425,11 +431,8 @@ async def test_invalid_provisional_subject_fails_without_mutation_or_logging(
     entry.add_to_hass(hass)
     original = (entry.entry_id, entry.unique_id, entry.version, entry.data, entry.title)
 
-    with pytest.raises(ConfigEntryError) as raised:
-        await async_migrate_entry(hass, entry)
-
-    assert raised.value.translation_domain == DOMAIN
-    assert raised.value.translation_key == "oauth_subject_migration_failed"
+    assert await hass.config_entries.async_setup(entry.entry_id) is False
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert (
         entry.entry_id,
         entry.unique_id,
@@ -461,19 +464,21 @@ async def test_provisional_subject_migration_rejects_duplicate_without_mutation(
     )
     provisional.add_to_hass(hass)
 
-    with pytest.raises(ConfigEntryError) as raised:
-        await async_migrate_entry(hass, provisional)
-
-    assert raised.value.translation_key == "oauth_subject_migration_duplicate"
+    assert await hass.config_entries.async_setup(provisional.entry_id) is False
+    assert provisional.state is ConfigEntryState.MIGRATION_ERROR
     assert provisional.unique_id == "owner@example.com"
     assert provisional.version == 2
 
 
 @pytest.mark.asyncio
-async def test_one_legacy_entry_becomes_oauth_account(hass: HomeAssistant) -> None:
+async def test_one_legacy_entry_becomes_oauth_account(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """A validated legacy entry is converted in place and loses its password."""
     entry = add_legacy_entry(hass, "ABC123")
-    result = await run_migration_flow(hass, entry, [thermostat("ABC123")])
+    result = await run_migration_flow(
+        hass, hass_client_no_auth, entry, [thermostat("ABC123")]
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_successful"
@@ -490,14 +495,16 @@ async def test_one_legacy_entry_becomes_oauth_account(hass: HomeAssistant) -> No
 
 @pytest.mark.asyncio
 async def test_customized_entity_and_device_survive_initialization(
-    hass: HomeAssistant,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Setup reuses legacy registry records and preserves all customization."""
     entry = add_legacy_entry(hass, "ABC123")
     original_entity, original_device, entity_area, device_area, label = (
         create_customized_registry_records(hass, entry, "ABC123")
     )
-    result = await run_migration_flow(hass, entry, [thermostat("ABC123")])
+    result = await run_migration_flow(
+        hass, hass_client_no_auth, entry, [thermostat("ABC123")]
+    )
     assert result["reason"] == "migration_successful"
 
     with (
@@ -550,7 +557,7 @@ async def test_customized_entity_and_device_survive_initialization(
 
 @pytest.mark.asyncio
 async def test_multiple_entries_consolidate_and_transfer_registry_ownership(
-    hass: HomeAssistant,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Matching thermostats share one account entry without registry churn."""
     anchor = add_legacy_entry(hass, "ABC123")
@@ -562,6 +569,7 @@ async def test_multiple_entries_consolidate_and_transfer_registry_ownership(
 
     result = await run_migration_flow(
         hass,
+        hass_client_no_auth,
         anchor,
         [thermostat("ABC123"), thermostat("XYZ789", "Kitchen")],
     )
@@ -604,7 +612,7 @@ async def test_multiple_entries_consolidate_and_transfer_registry_ownership(
 
 @pytest.mark.asyncio
 async def test_unrelated_and_temporarily_omitted_entries_remain_untouched(
-    hass: HomeAssistant,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Only serials returned by this account are eligible for consolidation."""
     anchor = add_legacy_entry(hass, "ABC123")
@@ -613,7 +621,9 @@ async def test_unrelated_and_temporarily_omitted_entries_remain_untouched(
     omitted_data = dict(omitted.data)
     unrelated_data = dict(unrelated.data)
 
-    result = await run_migration_flow(hass, anchor, [thermostat("ABC123")])
+    result = await run_migration_flow(
+        hass, hass_client_no_auth, anchor, [thermostat("ABC123")]
+    )
 
     assert result["reason"] == "migration_successful"
     assert hass.config_entries.async_get_entry(omitted.entry_id) is omitted
@@ -626,14 +636,16 @@ async def test_unrelated_and_temporarily_omitted_entries_remain_untouched(
 
 @pytest.mark.asyncio
 async def test_wrong_account_rolls_back_without_registry_changes(
-    hass: HomeAssistant,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """The initiating serial must exist before any local mutation occurs."""
     entry = add_legacy_entry(hass, "ABC123")
     entity, device, *_ = create_customized_registry_records(hass, entry, "ABC123")
     original_data = dict(entry.data)
 
-    result = await run_migration_flow(hass, entry, [thermostat("DIFFERENT")])
+    result = await run_migration_flow(
+        hass, hass_client_no_auth, entry, [thermostat("DIFFERENT")]
+    )
 
     assert result["reason"] == "migration_account_mismatch"
     assert entry.version == 1
@@ -658,14 +670,17 @@ async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
     error: Exception,
     reason: str,
     caplog: pytest.LogCaptureFixture,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Remote failures occur before any destructive migration operation."""
     entry = add_legacy_entry(hass, "ABC123")
     entity, device, *_ = create_customized_registry_records(hass, entry, "ABC123")
     original_data = dict(entry.data)
-    flow = migration_flow(hass, entry)
     authorization_code = jwt_access_token(
         ACCOUNT_SUBJECT, marker="synthetic-authorization-code-not-for-logs"
+    )
+    implementation = FakeOAuthImplementation(
+        token=oauth_data(authorization_code)[CONF_TOKEN]
     )
 
     with (
@@ -675,7 +690,13 @@ async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
             AsyncMock(side_effect=error),
         ),
     ):
-        result = await flow.async_oauth_create_entry(oauth_data(authorization_code))
+        result = await complete_oauth_flow(
+            hass,
+            hass_client_no_auth,
+            implementation,
+            entry=entry,
+            confirmation_step="migration_confirm",
+        )
 
     assert result["reason"] == reason
     assert entry.data == original_data
@@ -692,7 +713,7 @@ async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
 
 @pytest.mark.asyncio
 async def test_existing_oauth_account_absorbs_matching_legacy_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Migration reuses an existing account entry rather than duplicating it."""
     account_entry = MockConfigEntry(
@@ -707,7 +728,9 @@ async def test_existing_oauth_account_absorbs_matching_legacy_entry(
     legacy = add_legacy_entry(hass, "ABC123")
     entity, device, *_ = create_customized_registry_records(hass, legacy, "ABC123")
 
-    result = await run_migration_flow(hass, legacy, [thermostat("ABC123")])
+    result = await run_migration_flow(
+        hass, hass_client_no_auth, legacy, [thermostat("ABC123")]
+    )
 
     assert result["reason"] == "migration_successful"
     assert hass.config_entries.async_get_entry(legacy.entry_id) is None
@@ -830,6 +853,124 @@ def test_migration_plan_is_immutable_and_revalidates_before_execution(
         validate_migration_plan(hass, plan)
 
     assert local_state(hass, entries, records) == before
+
+
+@pytest.mark.asyncio
+async def test_rollback_restores_loaded_existing_oauth_anchor(
+    hass: HomeAssistant,
+) -> None:
+    """A failed migration returns a previously loaded OAuth anchor to service."""
+    anchor, legacy, records, plan = build_existing_anchor_plan(hass, loaded=True)
+    before = local_state(hass, [anchor, legacy], records)
+
+    async def unload_anchor(entry_id: str) -> bool:
+        assert entry_id == anchor.entry_id
+        anchor.mock_state(hass, ConfigEntryState.NOT_LOADED)
+        return True
+
+    async def setup_anchor(entry_id: str) -> bool:
+        assert entry_id == anchor.entry_id
+        anchor.mock_state(hass, ConfigEntryState.LOADED)
+        return True
+
+    with (
+        patch(
+            "homeassistant.components.nuheat.migration._reload_anchor",
+            AsyncMock(side_effect=RuntimeError("synthetic reload failure")),
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_unload",
+            AsyncMock(side_effect=unload_anchor),
+        ) as unload,
+        patch.object(
+            hass.config_entries,
+            "async_setup",
+            AsyncMock(side_effect=setup_anchor),
+        ) as setup,
+        pytest.raises(MigrationExecutionError),
+    ):
+        await execute_migration_plan(hass, plan, oauth_data=oauth_data())
+
+    assert plan.anchor_was_loaded is True
+    assert local_state(hass, [anchor, legacy], records) == before
+    assert anchor.state is ConfigEntryState.LOADED
+    unload.assert_awaited_once_with(anchor.entry_id)
+    setup.assert_awaited_once_with(anchor.entry_id)
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{anchor.entry_id}"
+        )
+        is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_rollback_leaves_originally_unloaded_anchor_unloaded(
+    hass: HomeAssistant,
+) -> None:
+    """Rollback does not load an OAuth anchor that was originally offline."""
+    anchor, legacy, records, plan = build_existing_anchor_plan(hass, loaded=False)
+    before = local_state(hass, [anchor, legacy], records)
+
+    with (
+        patch(
+            "homeassistant.components.nuheat.migration._reload_anchor",
+            AsyncMock(side_effect=RuntimeError("synthetic reload failure")),
+        ),
+        patch.object(hass.config_entries, "async_setup", AsyncMock()) as setup,
+        pytest.raises(MigrationExecutionError),
+    ):
+        await execute_migration_plan(hass, plan, oauth_data=oauth_data())
+
+    assert plan.anchor_was_loaded is False
+    assert local_state(hass, [anchor, legacy], records) == before
+    assert anchor.state is ConfigEntryState.NOT_LOADED
+    setup.assert_not_awaited()
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{anchor.entry_id}"
+        )
+        is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_rollback_loaded_state_restore_failure_creates_repair_issue(
+    hass: HomeAssistant,
+) -> None:
+    """Failure to restart a previously loaded anchor makes rollback incomplete."""
+    anchor, _, _, plan = build_existing_anchor_plan(hass, loaded=True)
+
+    async def unload_anchor(entry_id: str) -> bool:
+        anchor.mock_state(hass, ConfigEntryState.NOT_LOADED)
+        return True
+
+    with (
+        patch(
+            "homeassistant.components.nuheat.migration._reload_anchor",
+            AsyncMock(side_effect=RuntimeError("synthetic reload failure")),
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_unload",
+            AsyncMock(side_effect=unload_anchor),
+        ),
+        patch.object(
+            hass.config_entries, "async_setup", AsyncMock(return_value=False)
+        ) as setup,
+        pytest.raises(MigrationExecutionError),
+    ):
+        await execute_migration_plan(hass, plan, oauth_data=oauth_data())
+
+    setup.assert_awaited_once_with(anchor.entry_id)
+    assert anchor.state is ConfigEntryState.NOT_LOADED
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{anchor.entry_id}"
+        )
+        is not None
+    )
 
 
 @pytest.mark.asyncio

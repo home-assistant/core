@@ -1,8 +1,6 @@
 """Tests for the NuHeat integration."""
 
 from datetime import UTC, datetime
-import json
-from pathlib import Path
 import time
 from types import SimpleNamespace
 from typing import Any
@@ -19,13 +17,12 @@ from chemelex_nuheat import (
 import pytest
 
 from homeassistant.components.application_credentials import ClientCredential
-from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.nuheat import async_setup_entry, async_unload_entry
 from homeassistant.components.nuheat.application_credentials import (
     async_get_auth_implementation,
 )
@@ -40,11 +37,10 @@ from homeassistant.components.nuheat.climate import (
     NuHeatClimateEntity,
     async_setup_entry as async_setup_climate,
 )
-from homeassistant.components.nuheat.config_flow import NuHeatConfigFlow
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.components.nuheat.coordinator import NuHeatCoordinator
 from homeassistant.components.nuheat.migration import OAUTH_CONFIG_ENTRY_VERSION
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ACCESS_TOKEN,
@@ -52,7 +48,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.data_entry_flow import AbortFlow, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -61,14 +57,15 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    AbstractOAuth2Implementation,
     ImplementationUnavailableError,
     LocalOAuth2ImplementationWithPkce,
 )
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from .helpers import FakeOAuthImplementation, complete_oauth_flow, jwt_access_token
 
 from tests.common import MockConfigEntry
-from tests.components.nuheat.helpers import jwt_access_token
+from tests.typing import ClientSessionGenerator
 
 ACCOUNT_SUBJECT = "synthetic-account-subject"
 
@@ -93,62 +90,33 @@ def thermostat(
     )
 
 
-class FakeOAuthImplementation(AbstractOAuth2Implementation):
-    """Minimal local/cloud OAuth provider for flow and refresh tests."""
-
-    def __init__(self, *, token: dict | None = None, domain: str = "test") -> None:
-        """Initialize the synthetic OAuth implementation."""
-        self._token = token or {
-            "access_token": "access",
-            "refresh_token": "refresh",
-            "expires_in": 3600,
-        }
-        self._domain = domain
-
-    @property
-    def name(self) -> str:
-        """Return the implementation name."""
-        return "Test credentials"
-
-    @property
-    def domain(self) -> str:
-        """Return the implementation domain."""
-        return self._domain
-
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
-        """Return a synthetic authorization URL."""
-        return "https://identity.example/authorize"
-
-    async def async_resolve_external_data(self, external_data: object) -> dict:
-        """Resolve synthetic OAuth callback data."""
-        return dict(self._token)
-
-    async def _async_refresh_token(self, token: dict) -> dict:
-        return {
-            **token,
-            "access_token": "rotated-access",
-            "refresh_token": "rotated-refresh",
-            "expires_in": 3600,
-        }
-
-
 def oauth_data(
     access_token: str | None = None, *, subject: str = ACCOUNT_SUBJECT
 ) -> dict[str, Any]:
     """Return synthetic OAuth config-entry data."""
     return {
         "auth_implementation": "test",
-        CONF_TOKEN: {CONF_ACCESS_TOKEN: access_token or jwt_access_token(subject)},
+        CONF_TOKEN: {
+            CONF_ACCESS_TOKEN: (
+                jwt_access_token(subject) if access_token is None else access_token
+            )
+        },
     }
 
 
-def config_flow(hass: HomeAssistant, *, source: str = SOURCE_USER) -> NuHeatConfigFlow:
-    """Return a NuHeat config flow attached to Home Assistant."""
-    flow = NuHeatConfigFlow()
-    flow.hass = hass
-    flow.handler = DOMAIN
-    flow.context = {"source": source}
-    return flow
+def oauth_implementation(
+    access_token: str | None = None, *, subject: str = ACCOUNT_SUBJECT
+) -> FakeOAuthImplementation:
+    """Return a synthetic implementation with a valid OAuth token response."""
+    return FakeOAuthImplementation(
+        token={
+            CONF_ACCESS_TOKEN: (
+                jwt_access_token(subject) if access_token is None else access_token
+            ),
+            "refresh_token": "synthetic-refresh-token",
+            "expires_in": 3600,
+        }
+    )
 
 
 async def coordinator_with(
@@ -186,22 +154,15 @@ async def test_local_application_credentials_path(
 @pytest.mark.asyncio
 async def test_missing_credentials_has_helpful_error(hass: HomeAssistant) -> None:
     """Test missing OAuth credentials produce a helpful abort."""
-    flow = config_flow(hass)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         AsyncMock(return_value={}),
     ):
-        result = await flow.async_step_user()
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_oauth_credentials"
-    strings = json.loads(
-        Path("homeassistant/components/nuheat/strings.json").read_text()
-    )
-    assert strings["config"]["abort"]["missing_oauth_credentials"] == (
-        "OAuth application credentials are required for this development build. "
-        "A future official Home Assistant integration should use centrally managed "
-        "credentials."
-    )
 
 
 @pytest.mark.asyncio
@@ -209,12 +170,13 @@ async def test_oauth_implementation_temporarily_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """A cloud implementation lookup failure produces a translated abort."""
-    flow = config_flow(hass)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         AsyncMock(side_effect=ImplementationUnavailableError("cloud unavailable")),
     ):
-        result = await flow.async_step_user()
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_implementation_unavailable"
 
@@ -225,25 +187,26 @@ async def test_config_flow_accepts_future_cloud_implementation(
 ) -> None:
     """Test a centrally managed OAuth implementation can be selected."""
     cloud = FakeOAuthImplementation(domain="cloud")
-    flow = config_flow(hass)
-    flow.flow_id = "cloud-test-flow"
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         AsyncMock(return_value={"cloud": cloud}),
     ):
-        result = await flow.async_step_user()
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
         assert result["step_id"] == "pick_implementation"
-        result = await flow.async_step_user({"implementation": "cloud"})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"implementation": "cloud"}
+        )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"].startswith("https://identity.example/authorize")
-    assert flow.flow_impl is cloud
 
 
 @pytest.mark.asyncio
-async def test_successful_oauth_setup(hass: HomeAssistant) -> None:
+async def test_successful_oauth_setup(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test successful OAuth account setup."""
-    flow = config_flow(hass)
-    data = oauth_data()
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
         patch(
@@ -255,19 +218,23 @@ async def test_successful_oauth_setup(hass: HomeAssistant) -> None:
             AsyncMock(return_value=[thermostat()]),
         ),
     ):
-        result = await flow.async_oauth_create_entry(data)
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation()
+        )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Owner@Example.com"
-    assert result["data"] == data
-    assert flow.unique_id == ACCOUNT_SUBJECT
+    assert result["data"]["auth_implementation"] == "test"
+    assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == jwt_access_token()
+    assert result["result"].unique_id == ACCOUNT_SUBJECT
 
 
 @pytest.mark.asyncio
-async def test_duplicate_account_is_prevented(hass: HomeAssistant) -> None:
+async def test_duplicate_account_is_prevented(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test duplicate OAuth subjects cannot create another entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=oauth_data(), unique_id=ACCOUNT_SUBJECT)
     entry.add_to_hass(hass)
-    flow = config_flow(hass)
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
         patch(
@@ -278,14 +245,19 @@ async def test_duplicate_account_is_prevented(hass: HomeAssistant) -> None:
             "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
             AsyncMock(return_value=[thermostat()]),
         ),
-        pytest.raises(AbortFlow, match="already_configured"),
     ):
-        await flow.async_oauth_create_entry(oauth_data())
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation()
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
 
 
 @pytest.mark.asyncio
 async def test_duplicate_provisional_account_migrates_in_place_and_is_rejected(
-    hass: HomeAssistant,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Fresh setup recognizes a stored subject behind a provisional ID."""
     entry = MockConfigEntry(
@@ -298,7 +270,6 @@ async def test_duplicate_provisional_account_migrates_in_place_and_is_rejected(
     entry.add_to_hass(hass)
     entry_id = entry.entry_id
     original_data = entry.data
-    flow = config_flow(hass)
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
         patch(
@@ -309,10 +280,13 @@ async def test_duplicate_provisional_account_migrates_in_place_and_is_rejected(
             "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
             AsyncMock(return_value=[thermostat()]),
         ),
-        pytest.raises(AbortFlow, match="already_configured"),
     ):
-        await flow.async_oauth_create_entry(oauth_data())
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation()
+        )
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert entry.entry_id == entry_id
     assert entry.unique_id == ACCOUNT_SUBJECT
     assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
@@ -333,9 +307,9 @@ async def test_account_lookup_failures(
     error: Exception,
     reason: str,
     caplog: pytest.LogCaptureFixture,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test account lookup failures are translated without token logging."""
-    flow = config_flow(hass)
     secret = jwt_access_token(ACCOUNT_SUBJECT, marker="must-not-be-logged")
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
@@ -344,13 +318,17 @@ async def test_account_lookup_failures(
             AsyncMock(side_effect=error),
         ),
     ):
-        result = await flow.async_oauth_create_entry(oauth_data(secret))
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation(secret)
+        )
     assert result["reason"] == reason
     assert secret not in caplog.text
 
 
 @pytest.mark.asyncio
-async def test_successful_reauthentication(hass: HomeAssistant) -> None:
+async def test_successful_reauthentication(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test successful reauthentication updates the existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -360,8 +338,6 @@ async def test_successful_reauthentication(hass: HomeAssistant) -> None:
         version=2,
     )
     entry.add_to_hass(hass)
-    flow = config_flow(hass, source=SOURCE_REAUTH)
-    flow.context["entry_id"] = entry.entry_id
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
         patch(
@@ -373,18 +349,28 @@ async def test_successful_reauthentication(hass: HomeAssistant) -> None:
             AsyncMock(return_value=[thermostat()]),
         ),
     ):
-        new_data = oauth_data(subject=ACCOUNT_SUBJECT)
-        result = await flow.async_oauth_create_entry(new_data)
+        result = await complete_oauth_flow(
+            hass,
+            hass_client_no_auth,
+            oauth_implementation(subject=ACCOUNT_SUBJECT),
+            entry=entry,
+            confirmation_step="reauth_confirm",
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data == new_data
+    assert entry.data["auth_implementation"] == "test"
+    assert entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == jwt_access_token(
+        ACCOUNT_SUBJECT
+    )
     assert entry.title == "Renamed@Example.com"
     assert entry.unique_id == ACCOUNT_SUBJECT
     assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
 
 
 @pytest.mark.asyncio
-async def test_reauthentication_rejects_wrong_account(hass: HomeAssistant) -> None:
+async def test_reauthentication_rejects_wrong_account(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test reauthentication rejects a different OAuth subject."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -392,8 +378,6 @@ async def test_reauthentication_rejects_wrong_account(hass: HomeAssistant) -> No
         unique_id=ACCOUNT_SUBJECT,
     )
     entry.add_to_hass(hass)
-    flow = config_flow(hass, source=SOURCE_REAUTH)
-    flow.context["entry_id"] = entry.entry_id
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
         patch(
@@ -404,17 +388,22 @@ async def test_reauthentication_rejects_wrong_account(hass: HomeAssistant) -> No
             "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
             AsyncMock(return_value=[thermostat()]),
         ),
-        pytest.raises(AbortFlow, match="reauth_account_mismatch"),
     ):
-        await flow.async_oauth_create_entry(
-            oauth_data(subject="different-synthetic-subject")
+        result = await complete_oauth_flow(
+            hass,
+            hass_client_no_auth,
+            oauth_implementation(subject="different-synthetic-subject"),
+            entry=entry,
+            confirmation_step="reauth_confirm",
         )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_account_mismatch"
     assert entry.data == oauth_data(subject=ACCOUNT_SUBJECT)
 
 
 @pytest.mark.asyncio
 async def test_same_username_with_different_subject_creates_distinct_account(
-    hass: HomeAssistant,
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Display usernames do not collapse distinct OAuth subjects."""
     existing = MockConfigEntry(
@@ -424,7 +413,6 @@ async def test_same_username_with_different_subject_creates_distinct_account(
         title="Owner@Example.com",
     )
     existing.add_to_hass(hass)
-    flow = config_flow(hass)
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
         patch(
@@ -436,13 +424,15 @@ async def test_same_username_with_different_subject_creates_distinct_account(
             AsyncMock(return_value=[thermostat()]),
         ),
     ):
-        result = await flow.async_oauth_create_entry(
-            oauth_data(subject="second-synthetic-subject")
+        result = await complete_oauth_flow(
+            hass,
+            hass_client_no_auth,
+            oauth_implementation(subject="second-synthetic-subject"),
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == existing.title
-    assert flow.unique_id == "second-synthetic-subject"
+    assert result["result"].unique_id == "second-synthetic-subject"
 
 
 @pytest.mark.asyncio
@@ -459,9 +449,9 @@ async def test_missing_or_malformed_subject_aborts_without_api_calls(
     hass: HomeAssistant,
     access_token: str,
     caplog: pytest.LogCaptureFixture,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Invalid token identity cannot create or mutate an account entry."""
-    flow = config_flow(hass)
     get_account = AsyncMock()
     list_thermostats = AsyncMock()
     with (
@@ -475,7 +465,9 @@ async def test_missing_or_malformed_subject_aborts_without_api_calls(
             list_thermostats,
         ),
     ):
-        result = await flow.async_oauth_create_entry(oauth_data(access_token))
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation(access_token)
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_account_identity"
@@ -506,11 +498,16 @@ async def test_coordinator_auth_failure_triggers_reauthentication(
     """Polling auth rejection uses ConfigEntryAuthFailed for HA reauth."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
     api = AsyncMock()
     api.list_thermostats.side_effect = NuHeatAuthError("rejected")
     coordinator = NuHeatCoordinator(hass, entry, api)
     with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator._async_update_data()
+        await coordinator.async_config_entry_first_refresh()
+
+    api.list_thermostats.assert_awaited_once_with()
+    assert coordinator.last_update_success is False
+    assert coordinator.data is None
 
 
 @pytest.mark.asyncio
@@ -523,7 +520,7 @@ async def test_dynamic_discovery_retains_entities_without_duplicates(
     )
     entry.runtime_data = SimpleNamespace(coordinator=coordinator)
     added: list[NuHeatClimateEntity] = []
-    await async_setup_climate(hass, entry, lambda entities: added.extend(entities))
+    await async_setup_climate(hass, entry, added.extend)
     assert {entity.unique_id for entity in added} == {"ABC123", "XYZ789"}
 
     api.list_thermostats.return_value = [thermostat(), thermostat("NEW456")]
@@ -572,7 +569,7 @@ async def test_climate_state_and_writes_follow_ha_unit(
 ) -> None:
     """Test climate reads and writes follow the configured unit system."""
     if imperial:
-        hass.config.units = IMPERIAL_SYSTEM
+        hass.config.units = US_CUSTOMARY_SYSTEM
     coordinator, api, _ = await coordinator_with(hass, thermostat())
     api.set_target_temperature.return_value = thermostat(mode=ThermostatMode.MANUAL)
     entity = NuHeatClimateEntity(coordinator, "ABC123")
@@ -703,6 +700,8 @@ async def test_refresh_token_rotation_is_stored(hass: HomeAssistant) -> None:
                 "expires_in": 0,
             },
         },
+        unique_id=ACCOUNT_SUBJECT,
+        version=OAUTH_CONFIG_ENTRY_VERSION,
     )
     entry.add_to_hass(hass)
     with (
@@ -717,7 +716,8 @@ async def test_refresh_token_rotation_is_stored(hass: HomeAssistant) -> None:
         patch("homeassistant.components.nuheat.async_get_clientsession"),
         patch.object(hass.config_entries, "async_forward_entry_setups", AsyncMock()),
     ):
-        assert await async_setup_entry(hass, entry) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_TOKEN]["access_token"] == "rotated-access"
     assert entry.data[CONF_TOKEN]["refresh_token"] == "rotated-refresh"
 
@@ -740,7 +740,12 @@ async def test_rejected_and_transient_refresh_tokens(
     hass: HomeAssistant, error: Exception, expected: type[Exception]
 ) -> None:
     """Test token refresh failures map to setup exceptions."""
-    entry = MockConfigEntry(domain=DOMAIN, data=oauth_data())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=oauth_data(),
+        unique_id=ACCOUNT_SUBJECT,
+        version=OAUTH_CONFIG_ENTRY_VERSION,
+    )
     entry.add_to_hass(hass)
     with (
         patch(
@@ -751,9 +756,14 @@ async def test_rejected_and_transient_refresh_tokens(
             "homeassistant.components.nuheat.OAuth2Session.async_ensure_token_valid",
             AsyncMock(side_effect=error),
         ),
-        pytest.raises(expected),
     ):
-        await async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id) is False
+
+    assert entry.state is (
+        ConfigEntryState.SETUP_ERROR
+        if expected is ConfigEntryAuthFailed
+        else ConfigEntryState.SETUP_RETRY
+    )
 
 
 @pytest.mark.asyncio
@@ -770,9 +780,10 @@ async def test_setup_cloud_failure_is_retryable(hass: HomeAssistant) -> None:
                 "expires_in": 3600,
             },
         },
+        unique_id=ACCOUNT_SUBJECT,
+        version=OAUTH_CONFIG_ENTRY_VERSION,
     )
     entry.add_to_hass(hass)
-    entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
     with (
         patch(
             "homeassistant.components.nuheat.async_get_config_entry_implementation",
@@ -783,19 +794,21 @@ async def test_setup_cloud_failure_is_retryable(hass: HomeAssistant) -> None:
             "homeassistant.components.nuheat.NuHeatClient.list_thermostats",
             AsyncMock(side_effect=NuHeatApiError("temporary cloud failure")),
         ),
-        pytest.raises(ConfigEntryNotReady),
     ):
-        await async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id) is False
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.asyncio
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Unload forwards to the configured entity platforms."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.LOADED)
     with patch.object(
         hass.config_entries,
         "async_unload_platforms",
         AsyncMock(return_value=True),
     ) as unload:
-        assert await async_unload_entry(hass, entry) is True
+        assert await hass.config_entries.async_unload(entry.entry_id) is True
     unload.assert_awaited_once()

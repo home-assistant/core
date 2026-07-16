@@ -1,13 +1,17 @@
 {
+  "application_credentials": {
+    "description": "For development and local testing, request OAuth credentials from NuHeat/Chemelex using the [OpenAPI documentation]({docs_url}). Do not use credentials extracted from a mobile app. An official integration should use Home Assistant Cloud Account Linking."
+  },
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Unable to connect to NuHeat.",
-      "invalid_auth": "NuHeat rejected the authorization.",
       "invalid_account_identity": "NuHeat authorization did not provide a valid account identity. No settings were changed.",
-      "missing_oauth_credentials": "OAuth application credentials are required for this development build. A future official Home Assistant integration should use centrally managed credentials.",
+      "invalid_auth": "NuHeat rejected the authorization.",
       "migration_account_mismatch": "The linked NuHeat account does not contain this thermostat. No legacy settings were changed.",
       "migration_failed": "NuHeat migration could not be completed. No legacy config entry was removed.",
       "migration_successful": "NuHeat was reconnected successfully and matching legacy thermostats were consolidated.",
+      "missing_oauth_credentials": "OAuth application credentials are required for this development build. A future official Home Assistant integration should use centrally managed credentials.",
       "oauth_implementation_unavailable": "The NuHeat OAuth service is temporarily unavailable. Try again later.",
       "reauth_account_mismatch": "The linked NuHeat account does not match the existing account."
     },
@@ -22,18 +26,15 @@
       }
     }
   },
-  "application_credentials": {
-    "description": "For development and local testing, request OAuth credentials from NuHeat/Chemelex using the [OpenAPI documentation]({docs_url}). Do not use credentials extracted from a mobile app. An official integration should use Home Assistant Cloud Account Linking."
-  },
   "exceptions": {
-    "oauth_subject_migration_failed": {
-      "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
+    "legacy_migration_required": {
+      "message": "This NuHeat entry must be reconnected through OAuth."
     },
     "oauth_subject_migration_duplicate": {
       "message": "Another NuHeat entry already uses this OAuth account subject. No settings were changed."
     },
-    "legacy_migration_required": {
-      "message": "This NuHeat entry must be reconnected through OAuth."
+    "oauth_subject_migration_failed": {
+      "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
     },
     "unsupported_preset": {
       "message": "The preset {preset} is not supported by NuHeat."
