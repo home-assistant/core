@@ -84,16 +84,17 @@
       "reconnect_zigbee_router": {
         "name": "Reconnect Zigbee router"
       },
+      "z_wave_flash_mode": {
+        "name": "Z-Wave flash mode"
+      },
+      "z_wave_restart": {
+        "name": "Z-Wave restart"
+      },
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
       },
       "zigbee_restart": {
         "name": "Zigbee restart"
-      }
-    },
-    "infrared": {
-      "infrared_emitter": {
-        "name": "IR emitter"
       }
     },
     "light": {
@@ -165,6 +166,9 @@
       "core_update": {
         "name": "Core firmware"
       },
+      "z_wave_update": {
+        "name": "Z-Wave firmware"
+      },
       "zigbee_update": {
         "name": "Zigbee firmware"
       }
@@ -194,6 +198,36 @@
     "unsupported_firmware": {
       "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
       "title": "SLZB core firmware update required"
+    }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "ble_scanner_mode": "Bluetooth scanner mode"
+        },
+        "data_description": {
+          "ble_scanner_mode": "Auto is recommended for most setups. It saves battery on your Bluetooth devices while still catching new devices and updates quickly."
+        },
+        "description": "Configure SLZB Bluetooth settings. Switching between Disabled and another mode will reboot the device to apply the new configuration."
+      },
+      "no_settings": {
+        "description": "This SMLIGHT device ({model}) does not support settings."
+      }
+    }
+  },
+  "selector": {
+    "ble_scanner_mode": {
+      "options": {
+        "active": "Active (uses more device battery, fastest updates)",
+        "auto": "Auto (recommended, saves device battery)",
+        "disabled": "[%key:common::state::disabled%]",
+        "passive": "Passive (lowest device battery use, some details may be missing)"
+      }
     }
   },
   "services": {

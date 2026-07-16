@@ -11,11 +11,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_PERCENTAGE: Final = 50
 

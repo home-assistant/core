@@ -12,7 +12,12 @@ from homeassistant.components.alexa_devices.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -202,6 +207,20 @@ async def test_http2_stop_processing_called_on_unload(
     await setup_integration(hass, mock_config_entry)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
+
+
+async def test_http2_stop_processing_called_on_shutdown(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stop_http2_processing is awaited when Home Assistant stops."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
     mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
