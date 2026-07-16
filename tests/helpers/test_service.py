@@ -163,10 +163,18 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    device_in_area = dr.DeviceEntry(area_id="test-area")
-    device_no_area = dr.DeviceEntry(id="device-no-area-id")
-    device_diff_area = dr.DeviceEntry(area_id="diff-area")
-    device_area_a = dr.DeviceEntry(id="device-area-a-id", area_id="area-a")
+    device_in_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", area_id="test-area"
+    )
+    device_no_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-no-area-id"
+    )
+    device_diff_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", area_id="diff-area"
+    )
+    device_area_a = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-area-a-id", area_id="area-a"
+    )
 
     mock_device_registry(
         hass,
@@ -330,13 +338,21 @@ def label_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    device_has_label1 = dr.DeviceEntry(labels={"label1"})
-    device_has_label2 = dr.DeviceEntry(labels={"label2"})
+    device_has_label1 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", labels={"label1"}
+    )
+    device_has_label2 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", labels={"label2"}
+    )
     device_has_labels = dr.DeviceEntry(
-        labels={"label1", "label2"}, area_id=area_with_labels.id
+        config_entry_id="mock-config-entry",
+        labels={"label1", "label2"},
+        area_id=area_with_labels.id,
     )
     device_no_labels = dr.DeviceEntry(
-        id="device-no-labels", area_id=area_without_labels.id
+        config_entry_id="mock-config-entry",
+        id="device-no-labels",
+        area_id=area_without_labels.id,
     )
 
     mock_device_registry(
@@ -2491,7 +2507,10 @@ async def test_async_extract_entities_warn_referenced(
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     """Test we can find devices that have no entities."""
 
-    device_no_entities = dr.DeviceEntry(id="device-no-entities", config_entries={"abc"})
+    device_no_entities = dr.DeviceEntry(
+        config_entry_id="abc",
+        id="device-no-entities",
+    )
 
     call = ServiceCall(
         hass,

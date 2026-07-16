@@ -13,7 +13,7 @@ async def async_setup_entry(
     """Set up a config entry."""
     device_registry = dr.async_get(hass)
     if device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}):
-        device_registry.async_clear_config_entry(entry.entry_id)
+        device_registry.async_clear_config_entry(entry.entry_id, entry.domain)
     coordinator = DwdWeatherWarningsCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 

@@ -30,14 +30,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -57,7 +51,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -284,14 +277,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -311,7 +298,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -944,14 +930,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -971,7 +951,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -1198,14 +1177,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -1225,7 +1198,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -1918,14 +1890,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -1945,7 +1911,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -2172,14 +2137,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -2199,7 +2158,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -2921,14 +2879,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -2948,7 +2900,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -3491,14 +3442,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
             list([
@@ -3522,7 +3467,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.6.175',
         }),
@@ -3844,14 +3788,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -3871,7 +3809,6 @@
           'model_id': None,
           'name': 'Inverter 1',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '1',
           'sw_version': None,
         }),
@@ -4414,14 +4351,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -4441,7 +4372,6 @@
           'model_id': None,
           'name': 'Collar 482520020939',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '482520020939',
           'sw_version': '3.0.6-D0',
         }),
@@ -4725,14 +4655,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -4752,7 +4676,6 @@
           'model_id': None,
           'name': 'C6 Combiner 482523040549',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '482523040549',
           'sw_version': '0.1.20-D1',
         }),
@@ -4852,14 +4775,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -4879,7 +4796,6 @@
           'model_id': None,
           'name': 'Enpower 654321',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '654321',
           'sw_version': '1.2.2064_release/20.34',
         }),
@@ -5273,14 +5189,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -5300,7 +5210,6 @@
           'model_id': None,
           'name': 'Envoy <<envoyserial>>',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
           'sw_version': '7.1.2',
         }),
@@ -18167,14 +18076,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -18194,7 +18097,6 @@
           'model_id': None,
           'name': 'Encharge <<envoyserial>>56',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>56',
           'sw_version': '2.6.5973_rel/22.11',
         }),
@@ -18543,14 +18445,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -18570,7 +18466,6 @@
           'model_id': None,
           'name': 'NC1 Fixture',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': None,
           'sw_version': '1.2.2064_release/20.34',
         }),
@@ -18956,14 +18851,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -18983,7 +18872,6 @@
           'model_id': None,
           'name': 'NC2 Fixture',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': None,
           'sw_version': '1.2.2064_release/20.34',
         }),
@@ -19369,14 +19257,8 @@
       dict({
         'device': dict({
           'area_id': None,
-          'config_entries': list([
-            '45a36e55aaddb2007c5f6602e0c38e72',
-          ]),
-          'config_entries_subentries': dict({
-            '45a36e55aaddb2007c5f6602e0c38e72': list([
-              None,
-            ]),
-          }),
+          'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+          'config_subentry_id': None,
           'configuration_url': None,
           'connections': list([
           ]),
@@ -19396,7 +19278,6 @@
           'model_id': None,
           'name': 'NC3 Fixture',
           'name_by_user': None,
-          'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': None,
           'sw_version': '1.2.2064_release/20.34',
         }),
