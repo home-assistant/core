@@ -28,10 +28,10 @@ class _IzoneCommandEntity(Protocol):
 async def izone_command_context(availability_device: _IzoneAvailabilityDevice):
     """Handle connection and command errors for a pizone controller command.
 
-    A rejected command is logged and re-raised so multi-step sequences stop.
-    Availability is restored only by the library reconnect listener, not on
-    command success. A transport failure marks the controller unavailable
-    and fails the service call.
+    A rejected command is logged and raised as HomeAssistantError so multi-step
+    sequences stop. Availability is restored only by the library reconnect
+    listener, not on command success. A transport failure marks the controller
+    unavailable and fails the service call.
     """
     try:
         yield
@@ -41,7 +41,9 @@ async def izone_command_context(availability_device: _IzoneAvailabilityDevice):
             availability_device.device_uid,
             ex,
         )
-        raise
+        raise HomeAssistantError(
+            f"Controller {availability_device.device_uid} rejected command: {ex}",
+        ) from ex
     except ConnectionError as ex:
         availability_device.set_available(False, ex)
         raise HomeAssistantError(

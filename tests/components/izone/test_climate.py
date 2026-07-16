@@ -370,7 +370,7 @@ async def test_controller_device_init_fault_bootstrap(
         pytest.param(
             ControllerCommandError("rejected"),
             False,
-            ControllerCommandError,
+            HomeAssistantError,
             id="command_error_stays_available",
         ),
         pytest.param(
@@ -390,7 +390,7 @@ async def test_controller_command_error_handling(
     expect_unavailable: bool,
     expected_exception: type[Exception],
 ) -> None:
-    """A rejected command is re-raised; a transport failure clears availability."""
+    """Rejected and transport failures raise HomeAssistantError; only transport clears availability."""
     await setup_integration(hass, mock_config_entry)
     await setup_controller(hass, mock_discovery, mock_controller)
 
@@ -415,7 +415,7 @@ async def test_controller_command_error_handling(
         pytest.param(
             ControllerCommandError("rejected"),
             False,
-            ControllerCommandError,
+            HomeAssistantError,
             id="command_error_stays_available",
         ),
         pytest.param(
@@ -436,7 +436,7 @@ async def test_zone_command_error_handling(
     expect_unavailable: bool,
     expected_exception: type[Exception],
 ) -> None:
-    """Zone command errors update the owning controller's availability."""
+    """Zone command errors raise HomeAssistantError; only transport clears availability."""
     await setup_integration(hass, mock_config_entry)
     await setup_controller(hass, mock_discovery, mock_controller)
 
