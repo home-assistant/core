@@ -21,6 +21,32 @@ async def test_entry_unload(
     entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "tibber")
     assert entry.state is ConfigEntryState.LOADED
 
+    mock_tibber_setup.set_access_token.reset_mock()
+    await hass.config_entries.async_unload(entry.entry_id)
+    mock_tibber_setup.rt_disconnect.assert_called_once()
+    mock_tibber_setup.set_access_token.assert_not_called()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(Exception("Disconnect failed"), id="exception"),
+    ],
+)
+async def test_entry_unload_rt_disconnect_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_tibber_setup: MagicMock,
+    side_effect: Exception,
+) -> None:
+    """Test the entry unloads even if disconnecting the client fails."""
+    entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "tibber")
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_tibber_setup.rt_disconnect.side_effect = side_effect
     await hass.config_entries.async_unload(entry.entry_id)
     mock_tibber_setup.rt_disconnect.assert_called_once()
     await hass.async_block_till_done(wait_background_tasks=True)
