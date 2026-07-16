@@ -113,6 +113,45 @@ async def test_update_ac_charge_times_classic_encodes_params(
     )
 
 
+async def test_update_ac_charge_times_classic_wrong_period_count_raises(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+) -> None:
+    """Test a classic charge write with other than 3 periods raises ValueError."""
+    coordinator = await _get_mix_coordinator(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    with pytest.raises(ValueError, match="exactly 3 period definitions"):
+        await coordinator.update_ac_charge_times(
+            100,
+            100,
+            True,
+            [{"start_time": dt.time(0, 0), "end_time": dt.time(0, 0), "enabled": False}]
+            * 2,
+        )
+
+
+async def test_update_ac_discharge_times_classic_wrong_period_count_raises(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+) -> None:
+    """Test a classic discharge write with other than 3 periods raises ValueError."""
+    coordinator = await _get_mix_coordinator(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    with pytest.raises(ValueError, match="exactly 3 period definitions"):
+        await coordinator.update_ac_discharge_times(
+            100,
+            100,
+            [{"start_time": dt.time(0, 0), "end_time": dt.time(0, 0), "enabled": False}]
+            * 2,
+        )
+
+
 async def test_update_ac_discharge_times_classic_encodes_params(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
