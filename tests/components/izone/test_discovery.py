@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.izone import discovery as izone_discovery
-from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
@@ -35,16 +35,16 @@ async def test_async_start_discovery_service_stops_on_home_assistant_stop(
             return_value=mock_pizone_discovery_service,
         ),
     ):
-        await izone_discovery.async_start_discovery_service(hass)
+        service = await izone_discovery.async_start_discovery_service(hass)
 
-        assert DATA_DISCOVERY_SERVICE in hass.data
+        assert service.remove_stop_listener is not None
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 
     mock_pizone_discovery_service.start_discovery.assert_awaited_once()
     mock_pizone_discovery_service.close.assert_awaited_once()
-    assert DATA_DISCOVERY_SERVICE not in hass.data
+    assert service.remove_stop_listener is None
 
 
 async def test_async_maybe_stop_keeps_running_when_actionable_flow_exists(
@@ -52,9 +52,9 @@ async def test_async_maybe_stop_keeps_running_when_actionable_flow_exists(
 ) -> None:
     """Discovery should stay running while an actionable iZone flow is in progress."""
     service = await async_install_discovery_service(hass)
-    service.async_schedule_idle_stop = Mock()
 
     with (
+        patch.object(service, "async_schedule_idle_stop") as mock_schedule,
         patch.object(
             hass.config_entries.flow,
             "async_progress_by_handler",
@@ -68,7 +68,7 @@ async def test_async_maybe_stop_keeps_running_when_actionable_flow_exists(
         await izone_discovery.async_maybe_stop_discovery_service(hass)
 
     mock_stop.assert_not_awaited()
-    service.async_schedule_idle_stop.assert_called_once()
+    mock_schedule.assert_called_once()
 
 
 async def test_async_maybe_stop_keeps_running_when_actionable_entry_exists(
@@ -83,16 +83,18 @@ async def test_async_maybe_stop_keeps_running_when_actionable_entry_exists(
     ).add_to_hass(hass)
 
     service = await async_install_discovery_service(hass)
-    service.async_schedule_idle_stop = Mock()
 
-    with patch(
-        "homeassistant.components.izone.discovery.async_stop_discovery_service",
-        new=AsyncMock(),
-    ) as mock_stop:
+    with (
+        patch.object(service, "async_schedule_idle_stop") as mock_schedule,
+        patch(
+            "homeassistant.components.izone.discovery.async_stop_discovery_service",
+            new=AsyncMock(),
+        ) as mock_stop,
+    ):
         await izone_discovery.async_maybe_stop_discovery_service(hass)
 
     mock_stop.assert_not_awaited()
-    service.async_schedule_idle_stop.assert_called_once()
+    mock_schedule.assert_called_once()
 
 
 async def test_async_maybe_stop_stops_when_only_disabled_entry_matches_controller(
@@ -110,16 +112,18 @@ async def test_async_maybe_stop_stops_when_only_disabled_entry_matches_controlle
     service = await async_install_discovery_service(
         hass, create_mock_controller("000000001")
     )
-    service.async_schedule_idle_stop = Mock()
 
-    with patch(
-        "homeassistant.components.izone.discovery.async_stop_discovery_service",
-        new=AsyncMock(),
-    ) as mock_stop:
+    with (
+        patch.object(service, "async_schedule_idle_stop") as mock_schedule,
+        patch(
+            "homeassistant.components.izone.discovery.async_stop_discovery_service",
+            new=AsyncMock(),
+        ) as mock_stop,
+    ):
         await izone_discovery.async_maybe_stop_discovery_service(hass)
 
     mock_stop.assert_awaited_once_with(hass)
-    service.async_schedule_idle_stop.assert_not_called()
+    mock_schedule.assert_not_called()
 
 
 async def test_async_discover_controllers_starts_shared_service_when_missing(
@@ -292,9 +296,9 @@ async def test_async_maybe_stop_keeps_running_when_controller_not_ignored(
     service = await async_install_discovery_service(
         hass, create_mock_controller("000000001")
     )
-    service.async_schedule_idle_stop = Mock()
 
     with (
+        patch.object(service, "async_schedule_idle_stop") as mock_schedule,
         patch.object(
             hass.config_entries.flow,
             "async_progress_by_handler",
@@ -308,7 +312,7 @@ async def test_async_maybe_stop_keeps_running_when_controller_not_ignored(
         await izone_discovery.async_maybe_stop_discovery_service(hass)
 
     mock_stop.assert_not_awaited()
-    service.async_schedule_idle_stop.assert_called_once()
+    mock_schedule.assert_called_once()
 
 
 async def test_async_stop_discovery_service_returns_when_not_started(
@@ -332,4 +336,4 @@ async def test_async_stop_discovery_service_clears_stop_listener(
 
     stop_listener.assert_called_once()
     assert service.remove_stop_listener is None
-    assert DATA_DISCOVERY_SERVICE not in hass.data
+    service.pi_disco.close.assert_awaited_once()
