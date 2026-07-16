@@ -88,11 +88,7 @@ async def test_migrate_entry_to_per_chat_devices(
     entity_registry: er.EntityRegistry,
     chats_without_notify_entity: tuple[int, ...],
 ) -> None:
-    """Test migrating chats sharing one bot device to per-chat devices.
-
-    Each chat's notify entity moves onto its own per-chat device linked to the bot
-    device, and the bot device is left associated with only (entry, None).
-    """
+    """Test migrating a shared bot device to per-chat devices."""
     bot_id = 123456  # test_user id from mock_external_calls
     chat_ids = (123456, 654321)
     config_entry = MockConfigEntry(
