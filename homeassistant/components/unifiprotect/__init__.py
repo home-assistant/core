@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import NoReturn
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
@@ -157,6 +158,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     return True
 
 
+def _raise_buffered_public_auth_error(
+    data_service: ProtectData, err: NotAuthorized
+) -> NoReturn:
+    """Buffer spurious 401s (console updating) like the private login path."""
+    data_service.auth_retries += 1
+    if data_service.auth_retries > AUTH_RETRIES:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        ) from err
+    raise ConfigEntryNotReady from err
+
+
 async def _async_setup_public_only_entry(
     hass: HomeAssistant, entry: UFPConfigEntry, data_service: ProtectData
 ) -> None:
@@ -170,14 +184,7 @@ async def _async_setup_public_only_entry(
     try:
         meta = await protect.get_meta_info()
     except NotAuthorized as err:
-        # Buffer spurious 401s (console updating) like the private path.
-        data_service.auth_retries += 1
-        if data_service.auth_retries > AUTH_RETRIES:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="api_key_required",
-            ) from err
-        raise ConfigEntryNotReady from err
+        _raise_buffered_public_auth_error(data_service, err)
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
 
@@ -197,14 +204,7 @@ async def _async_setup_public_only_entry(
         await data_service.async_update_public()
     except NotAuthorized as err:
         await data_service.async_stop()
-        # Buffer spurious 401s (console updating) like the private path.
-        data_service.auth_retries += 1
-        if data_service.auth_retries > AUTH_RETRIES:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="api_key_required",
-            ) from err
-        raise ConfigEntryNotReady from err
+        _raise_buffered_public_auth_error(data_service, err)
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         await data_service.async_stop()
         raise ConfigEntryNotReady(
