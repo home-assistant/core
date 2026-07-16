@@ -2999,3 +2999,50 @@ async def test_update_moved_rdate_only_tail_shifts_dates(
         datetime.datetime(2017, 11, 29, 18, 0, tzinfo=datetime.UTC),
         datetime.datetime(2017, 12, 1, 18, 0, tzinfo=datetime.UTC),
     ]
+
+
+OFF_RULE_RDATE_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=WEEKLY;COUNT=5
+RDATE:20171129T170000Z
+SUMMARY:Weekly with extra day
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_off_rule_rdate_split_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that splitting at an added date cannot re-anchor the rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OFF_RULE_RDATE_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed",
+                "dtstart": "2017-11-29T17:00:00+00:00",
+                "dtend": "2017-11-29T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "added date" in resp["error"]["message"]
+    calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()

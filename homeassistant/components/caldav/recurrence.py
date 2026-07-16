@@ -89,6 +89,16 @@ def update_event(
     if not _has_occurrences_from(master, occurrence):
         return
 
+    # Inheriting the rule onto an off-rule RDATE would re-anchor it there
+    # and reschedule every remaining rule occurrence.
+    if (
+        master.get("RRULE") is not None
+        and not data.get("rrule")
+        and not _ends_before(master, occurrence)
+        and not _on_rule(master, occurrence)
+    ):
+        raise ValueError("Splitting a series at an added date is not supported")
+
     # RFC 4791 allows one UID per object; a derived UID makes retries
     # overwrite the tail instead of adding another one.
     tail = calendar.save_event(_tail_ics(ical, master, data, occurrence))
@@ -312,6 +322,19 @@ def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
             break
         count += 1
     return count
+
+
+def _on_rule(master: Any, occurrence: datetime | date) -> bool:
+    dtstart = master["DTSTART"].dt
+    target = _align(master, occurrence)
+    if not isinstance(dtstart, datetime):
+        dtstart = datetime.combine(dtstart, time.min)
+        target = datetime.combine(target, time.min)
+    rule = rrulestr(master["RRULE"].to_ical().decode("utf-8"), dtstart=dtstart)
+    for moment in rule:
+        if moment >= target:
+            return moment == target
+    return False
 
 
 def _ends_before(master: Any, occurrence: datetime | date) -> bool:
