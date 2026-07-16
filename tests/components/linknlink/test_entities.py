@@ -91,8 +91,10 @@ async def test_position_updates_and_availability(
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_position_subscription: tuple[MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test distance updates, stale data, and subscription availability."""
+    caplog.set_level(logging.INFO, logger="homeassistant.components.linknlink")
     await setup_integration(hass, mock_config_entry)
     subscription_class, subscription = mock_position_subscription
     position_callback = subscription_class.call_args.kwargs["callback"]
@@ -115,10 +117,19 @@ async def test_position_updates_and_availability(
     assert hass.states.get(horizontal_id).state == STATE_UNAVAILABLE
     assert hass.states.get(distance_id).state == STATE_UNAVAILABLE
 
+    subscription.state = POSITION_STATE
+    position_callback(POSITION_UPDATE)
     status_callback(POSITION_STATE)
     await hass.async_block_till_done()
     assert hass.states.get(horizontal_id).state == "0.5"
     assert hass.states.get(distance_id).state == "1.3"
+    assert caplog.text.count("position subscription is unavailable") == 1
+    assert caplog.text.count("position subscription is available") == 1
+    assert all(
+        record.levelno == logging.INFO
+        for record in caplog.records
+        if "position subscription is" in record.message
+    )
 
 
 async def test_empty_position_update(
@@ -280,3 +291,8 @@ async def test_entities_registered_when_initial_environment_read_fails(
 
     assert caplog.text.count("Ultra environmental state is unavailable") == 1
     assert caplog.text.count("Ultra environmental state is available") == 1
+    assert all(
+        record.levelno == logging.INFO
+        for record in caplog.records
+        if "Ultra environmental state is" in record.message
+    )
