@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'components': list([
+      dict({
+        'model': dict({
+          'has_temp_sensor': True,
+          'model_id': '183',
+          'name': 'Panel heater',
+          'requires_control_panel': False,
+          'supports_comfort': False,
+          'supports_eco': False,
+          'type': 'THERMOSTAT_FLOOR',
+        }),
+        'name': 'Floor sensor',
+        'serial': '**REDACTED**',
+        'zone_id': '1',
+      }),
+    ]),
+    'entry_data': dict({
+      'ip_address': '**REDACTED**',
+      'serial': '**REDACTED**',
+    }),
+    'hub_info': dict({
+      'hardware_version': 'hw',
+      'name': 'My Eco Hub',
+      'serial': '**REDACTED**',
+      'software_version': '115',
+    }),
+    'overrides': dict({
+      '988': dict({
+        'mode': '0',
+        'target_id': '-1',
+        'target_type': '0',
+      }),
+    }),
+    'week_profiles': dict({
+      '0': dict({
+        'name': 'Default',
+        'profile': '00000',
+        'week_profile_id': '0',
+      }),
+    }),
+    'zones': dict({
+      '1': dict({
+        'name': 'Living room',
+        'temp_comfort_c': '21',
+        'temp_eco_c': '17',
+        'week_profile_id': '0',
+        'zone_id': '1',
+      }),
+    }),
+  })
+# ---

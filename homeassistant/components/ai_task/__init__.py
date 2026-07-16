@@ -5,6 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.media_source import local_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DESCRIPTION, CONF_SELECTOR
 from homeassistant.core import (
@@ -34,6 +35,7 @@ from .const import (
 )
 from .entity import AITaskEntity
 from .http import async_setup as async_setup_http
+from .media_source import async_get_media_source
 from .task import (
     GenDataTask,
     GenDataTaskResult,
@@ -88,6 +90,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_PREFERENCES] = AITaskPreferences(hass)
     await hass.data[DATA_PREFERENCES].async_load()
     async_setup_http(hass)
+    if hass.config.media_dirs:
+        source = await async_get_media_source(hass)
+        hass.http.register_view(local_source.LocalMediaView(hass, source))
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_DATA,

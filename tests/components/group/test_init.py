@@ -1999,6 +1999,59 @@ async def test_setup_and_remove_config_entry(
     assert entity_registry.async_get(f"{group_type}.bed_room") is None
 
 
+async def test_groups_with_entity(hass: HomeAssistant) -> None:
+    """Test groups_with_entity finds legacy groups."""
+    assert await async_setup_component(
+        hass,
+        "group",
+        {"group": {"living_room": {"entities": ["light.one", "light.two"]}}},
+    )
+    await hass.async_block_till_done()
+
+    assert group.groups_with_entity(hass, "light.one") == ["group.living_room"]
+    assert group.groups_with_entity(hass, "light.three") == []
+
+
+@pytest.mark.parametrize(
+    ("group_type", "member_state", "extra_options"),
+    [
+        pytest.param("light", "on", {"all": False}, id="light"),
+        pytest.param("lock", "locked", {}, id="lock"),
+    ],
+)
+async def test_groups_with_entity_config_entry(
+    hass: HomeAssistant,
+    group_type: str,
+    member_state: str,
+    extra_options: dict[str, Any],
+) -> None:
+    """Test groups_with_entity finds config entry groups."""
+    members = [f"{group_type}.one", f"{group_type}.two"]
+
+    for member in members:
+        hass.states.async_set(member, member_state, {})
+
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain=group.DOMAIN,
+        options={
+            "entities": members,
+            "group_type": group_type,
+            "name": "Bed Room",
+            **extra_options,
+        },
+        title="Bed Room",
+    )
+    group_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert group.groups_with_entity(hass, f"{group_type}.one") == [
+        f"{group_type}.bed_room"
+    ]
+    assert group.groups_with_entity(hass, f"{group_type}.three") == []
+
+
 @pytest.mark.parametrize(
     ("hide_members", "hidden_by_initial", "hidden_by"),
     [
