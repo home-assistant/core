@@ -755,6 +755,9 @@
     "api_key_required": {
       "message": "API key is required. Please reauthenticate this integration to provide an API key."
     },
+    "cannot_connect": {
+      "message": "Could not connect to the UniFi Protect console"
+    },
     "command_error": {
       "message": "Error communicating with UniFi Protect while sending command: {error}"
     },

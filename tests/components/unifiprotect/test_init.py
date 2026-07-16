@@ -18,7 +18,7 @@ from homeassistant.components.unifiprotect.const import (
 from homeassistant.components.unifiprotect.data import (
     async_ufp_instance_for_config_entry_ids,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -653,8 +653,10 @@ async def test_hybrid_auth_failed_triggers_reauth(
     await init_entry(hass, ufp, [])
     assert ufp.entry.state is ConfigEntryState.LOADED
 
-    with patch.object(ufp.entry, "async_start_reauth") as mock_reauth:
-        ufp.devices_ws_state_subscription(WebsocketState.AUTH_FAILED)
-        await hass.async_block_till_done()
+    ufp.devices_ws_state_subscription(WebsocketState.AUTH_FAILED)
+    await hass.async_block_till_done()
 
-    assert mock_reauth.called
+    assert any(
+        flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )

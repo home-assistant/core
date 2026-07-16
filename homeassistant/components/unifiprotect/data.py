@@ -28,7 +28,7 @@ from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
@@ -64,7 +64,7 @@ def async_last_update_was_successful(
     Public-only entries have no private poll; their health is the public
     websocket (otherwise the discovery host self-heal could never trigger).
     """
-    if not hasattr(entry, "runtime_data"):
+    if entry.state is not ConfigEntryState.LOADED:
         return False
     data = entry.runtime_data
     if data.api.is_public_only:

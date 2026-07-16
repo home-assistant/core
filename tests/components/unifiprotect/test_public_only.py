@@ -37,7 +37,7 @@ from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
 from homeassistant.components.unifiprotect.media_source import async_get_media_source
 from homeassistant.components.unifiprotect.services import SERVICE_ADD_DOORBELL_TEXT
 from homeassistant.components.unifiprotect.views import ThumbnailProxyView
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_API_KEY,
@@ -58,6 +58,14 @@ from tests.typing import ClientSessionGenerator
 
 _UNIFI_MAC = "AABBCCDDEEFF"
 _ALARM_ENTITY_ID = "alarm_control_panel.test_nvr_alarm_manager"
+
+
+def _reauth_flow_started(hass: HomeAssistant) -> bool:
+    """Return whether a reauth flow is in progress."""
+    return any(
+        flow["context"]["source"] == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress()
+    )
 
 
 def _public_only_entry() -> MockConfigEntry:
@@ -256,15 +264,14 @@ async def test_public_only_auth_failed_triggers_reauth(hass: HomeAssistant) -> N
     15.12.2+), so the stale public data is marked unavailable by the regular
     disconnect path before reauth is triggered.
     """
-    entry, client = await _setup_public_only(hass)
+    _entry, client = await _setup_public_only(hass)
 
     state_cb = client._subs["devices_state"]
-    with patch.object(entry, "async_start_reauth") as mock_reauth:
-        state_cb(WebsocketState.DISCONNECTED)
-        state_cb(WebsocketState.AUTH_FAILED)
-        await hass.async_block_till_done()
+    state_cb(WebsocketState.DISCONNECTED)
+    state_cb(WebsocketState.AUTH_FAILED)
+    await hass.async_block_till_done()
 
-    assert mock_reauth.called
+    assert _reauth_flow_started(hass)
     assert hass.states.get(_ALARM_ENTITY_ID).state == "unavailable"
 
 
@@ -537,12 +544,11 @@ async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
     entry, client = await _setup_public_only(hass)
     client.update_public = AsyncMock(side_effect=NotAuthorized)
 
-    with patch.object(entry, "async_start_reauth") as mock_reauth:
-        for _ in range(AUTH_RETRIES):
-            await entry.runtime_data.async_refresh()
-            assert not mock_reauth.called
-
+    for _ in range(AUTH_RETRIES):
         await entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        assert not _reauth_flow_started(hass)
 
-    assert mock_reauth.called
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert _reauth_flow_started(hass)

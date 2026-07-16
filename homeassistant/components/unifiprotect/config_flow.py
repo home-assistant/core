@@ -76,12 +76,14 @@ def _normalize_port(data: dict[str, Any]) -> dict[str, Any]:
 
 def _build_data_without_credentials(entry_data: Mapping[str, Any]) -> dict[str, Any]:
     """Build form data from existing config entry, excluding sensitive credentials."""
-    return {
+    data = {
         CONF_HOST: entry_data[CONF_HOST],
         CONF_PORT: entry_data[CONF_PORT],
         CONF_VERIFY_SSL: entry_data[CONF_VERIFY_SSL],
-        CONF_USERNAME: entry_data.get(CONF_USERNAME, ""),
     }
+    if username := entry_data.get(CONF_USERNAME):
+        data[CONF_USERNAME] = username
+    return data
 
 
 async def _async_clear_session_if_credentials_changed(
@@ -181,6 +183,9 @@ DISCOVERY_API_KEY_SCHEMA = vol.Schema(
 REAUTH_SCHEMA = _build_schema(
     include_host=False, include_connection=False, credentials_optional=True
 )
+API_KEY_DOCUMENTATION_URL = (
+    "https://www.home-assistant.io/integrations/unifiprotect/#api-key-only"
+)
 # Reauth flow for public-API-only entries: the API key is the only credential
 REAUTH_API_KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): _PASSWORD_SELECTOR})
 
@@ -189,12 +194,6 @@ async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
     """Get the documentation url for the full-access (local user) mode."""
     integration = await async_get_integration(hass, DOMAIN)
     return f"{integration.documentation}#full-access"
-
-
-async def async_api_key_documentation_url(hass: HomeAssistant) -> str:
-    """Get the documentation url for the API-key-only mode."""
-    integration = await async_get_integration(hass, DOMAIN)
-    return f"{integration.documentation}#api-key-only"
 
 
 def _host_is_direct_connect(host: str) -> bool:
@@ -336,9 +335,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="discovery_api_key",
             description_placeholders={
                 **placeholders,
-                "api_key_documentation_url": (
-                    await async_api_key_documentation_url(self.hass)
-                ),
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL,
             },
             data_schema=self.add_suggested_values_to_schema(
                 DISCOVERY_API_KEY_SCHEMA, user_input
@@ -585,9 +582,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="api_key",
             description_placeholders={
-                "api_key_documentation_url": (
-                    await async_api_key_documentation_url(self.hass)
-                )
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL
             },
             data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, user_input),
             errors=errors,
@@ -637,9 +632,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_api_key",
             description_placeholders={
-                "api_key_documentation_url": (
-                    await async_api_key_documentation_url(self.hass)
-                )
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL
             },
             data_schema=REAUTH_API_KEY_SCHEMA,
             errors=errors,
@@ -731,9 +724,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure_api_key",
             description_placeholders={
-                "api_key_documentation_url": (
-                    await async_api_key_documentation_url(self.hass)
-                )
+                "api_key_documentation_url": API_KEY_DOCUMENTATION_URL
             },
             data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, form_data),
             errors=errors,

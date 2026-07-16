@@ -168,7 +168,10 @@ def _raise_buffered_public_auth_error(
             translation_domain=DOMAIN,
             translation_key="api_key_required",
         ) from err
-    raise ConfigEntryNotReady from err
+    raise ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="cannot_connect",
+    ) from err
 
 
 async def _async_setup_public_only_entry(
@@ -186,7 +189,10 @@ async def _async_setup_public_only_entry(
     except NotAuthorized as err:
         _raise_buffered_public_auth_error(data_service, err)
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     if meta.version < MIN_REQUIRED_PROTECT_V:
         raise ConfigEntryError(
