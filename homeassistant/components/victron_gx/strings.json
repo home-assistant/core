@@ -94,6 +94,7 @@
     "temperature": "Temperature",
     "terminals_overheated": "Terminals overheated",
     "total_energy": "Total energy",
+    "total_pv_yield_system": "Total PV yield system",
     "total_pv_yield_user": "Total PV yield user",
     "total_yield": "Total yield",
     "unknown": "Unknown",
@@ -325,9 +326,6 @@
       "hub4_ac_grid_setpoint": {
         "name": "AC grid setpoint"
       },
-      "multi_ess_ac_power_setpoint": {
-        "name": "ESS AC power setpoint"
-      },
       "multi_ess_min_soc_limit": {
         "name": "ESS minimum SoC limit"
       },
@@ -491,6 +489,14 @@
           "node_red": "Node-RED",
           "off": "[%key:common::state::off%]",
           "sell": "Sell"
+        }
+      },
+      "system_vrm_portal_mode": {
+        "name": "VRM portal access level",
+        "state": {
+          "full": "[%key:common::state::full%]",
+          "off": "[%key:common::state::off%]",
+          "read_only": "Read-only"
         }
       },
       "vebus_inverter_mode": {
@@ -1317,7 +1323,7 @@
         }
       },
       "inverter_total_pv_yield_system": {
-        "name": "Total PV yield system"
+        "name": "[%key:component::victron_gx::common::total_pv_yield_system%]"
       },
       "inverter_total_pv_yield_user": {
         "name": "[%key:component::victron_gx::common::total_pv_yield_user%]"
@@ -1397,6 +1403,9 @@
       },
       "multi_dc_temperature": {
         "name": "[%key:component::victron_gx::common::dc_temperature%]"
+      },
+      "multi_ess_ac_power_setpoint": {
+        "name": "ESS AC power setpoint"
       },
       "multi_ess_mode": {
         "name": "[%key:component::victron_gx::common::ess_mode%]",
@@ -1628,6 +1637,9 @@
           "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
+      "solarcharger_temperature": {
+        "name": "[%key:component::victron_gx::common::temperature%]"
+      },
       "solarcharger_time_in_absorption_today": {
         "name": "Time in absorption today"
       },
@@ -1636,6 +1648,9 @@
       },
       "solarcharger_time_in_float_today": {
         "name": "Time in float today"
+      },
+      "solarcharger_total_pv_yield_system": {
+        "name": "[%key:component::victron_gx::common::total_pv_yield_system%]"
       },
       "solarcharger_tracker_tracker_current": {
         "name": "PV tracker {tracker} current"
@@ -2254,6 +2269,9 @@
       "system_dvcc": {
         "name": "DVCC"
       },
+      "system_ess_always_peak_shave": {
+        "name": "ESS always peak shave"
+      },
       "system_ess_battery_use": {
         "name": "ESS only critical loads from battery"
       },
@@ -2272,6 +2290,18 @@
       "vebus_device_device_number_power_assist_enabled": {
         "name": "{device_number} PowerAssist enabled"
       },
+      "vebus_hub4_disable_charge": {
+        "name": "Hub4 disable charge"
+      },
+      "vebus_hub4_do_not_feed_in_overvoltage": {
+        "name": "Hub4 do not feed in on overvoltage"
+      },
+      "vebus_hub4_fix_solar_offset_100mv": {
+        "name": "Hub4 fix solar offset to 100mV"
+      },
+      "vebus_hub4_target_power_is_max_feed_in": {
+        "name": "Hub4 target power is max feed-in"
+      },
       "vebus_inverter_ignoreacin1_onoff_control": {
         "name": "Control ignore AC-in-1"
       },
@@ -2280,6 +2310,9 @@
       },
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Grid lost alarm setting"
+      },
+      "vebus_pvinverter_disable": {
+        "name": "Vebus PV inverter disable"
       }
     },
     "time": {

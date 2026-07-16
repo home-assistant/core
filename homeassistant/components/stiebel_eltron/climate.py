@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from pymodbus.exceptions import ModbusException
+from modbus_connection import ModbusError
 from pystiebeleltron.lwz import OperatingMode
 
 from homeassistant.components.climate import (
@@ -131,13 +131,11 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if self.preset_mode:
-            return
         new_mode = HA_TO_LWZ_HVAC[hvac_mode]
         _LOGGER.debug("async_set_hvac_mode: %s -> %s", self._attr_hvac_mode, new_mode)
         try:
             await self.coordinator.api_client.set_operation(new_mode)
-        except ModbusException as e:
+        except ModbusError as e:
             _LOGGER.error("Error setting HVAC mode: %s", e)
             raise HomeAssistantError("Failed to set HVAC mode") from e
         await self.coordinator.async_request_refresh()
@@ -145,12 +143,11 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise HomeAssistantError("target temperature must be provided")
+        target_temperature = kwargs[ATTR_TEMPERATURE]
         _LOGGER.debug("async_set_temperature: %s", target_temperature)
         try:
             await self.coordinator.api_client.set_target_temp(target_temperature)
-        except ModbusException as e:
+        except ModbusError as e:
             _LOGGER.error("Error setting target temperature: %s", e)
             raise HomeAssistantError("Failed to set target temperature") from e
         await self.coordinator.async_request_refresh()
@@ -164,7 +161,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
         )
         try:
             await self.coordinator.api_client.set_operation(new_preset)
-        except ModbusException as e:
+        except ModbusError as e:
             _LOGGER.error("Error setting preset mode: %s", e)
             raise HomeAssistantError("Failed to set preset mode") from e
         await self.coordinator.async_request_refresh()
