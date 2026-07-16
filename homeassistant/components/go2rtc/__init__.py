@@ -217,15 +217,12 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
 
 
 async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Return the local RTSP restream URL for a camera.
+    """Return the local RTSP restream URL for a camera, or None.
 
     Registers the camera's stream with the Home Assistant managed go2rtc server
     when needed, so every consumer of the returned URL shares go2rtc's single
-    upstream connection to the camera. Returns None when go2rtc is not set up,
-    the server is not managed by Home Assistant (its RTSP endpoint is unknown),
-    the camera entity is not available, its stream source is unsupported, or the
-    managed server rejects the registration, so the caller can fall back to the
-    raw source.
+    upstream connection to the camera. Best-effort: returns None whenever the
+    restream cannot be provided, so the caller can fall back to the raw source.
     """
     if (config := hass.data.get(_DATA_GO2RTC)) is None or not config.managed:
         return None
@@ -234,9 +231,8 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
     provider = entries[0].runtime_data
     try:
         camera = get_camera_from_entity_id(hass, entity_id)
-        # Resolving separately keeps a failing source out of
-        # async_update_stream_source, whose failure path tears down every
-        # active go2rtc session.
+        # Resolve first so a transient camera error propagates instead of
+        # reaching the unusable-source teardown in async_update_stream_source.
         stream_source = await provider.async_get_stream_source(camera)
         await provider.async_update_stream_source(camera, stream_source)
     except (HomeAssistantError, Go2RtcClientError) as err:
@@ -435,8 +431,6 @@ class WebRTCProvider(CameraWebRTCProvider):
             try:
                 stream_source = await self.async_get_stream_source(camera)
             except _UnusableStreamSourceError:
-                # A transient camera error must not reset unrelated sessions;
-                # only a genuinely unusable source tears down.
                 await self.teardown()
                 raise
 
@@ -497,6 +491,6 @@ class Go2RtcConfig:
 
     url: str
     session: ClientSession
-    # True only when Home Assistant started the server itself; a user-provided
-    # server at the same URL does not expose the managed RTSP endpoint.
+    # A user-provided server at the managed URL does not expose the managed
+    # RTSP endpoint, so ownership cannot be inferred from the URL.
     managed: bool
