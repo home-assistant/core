@@ -2331,6 +2331,37 @@ async def test_async_get_device_returns_first_match_for_ambiguous_lookup(
     assert match.config_entries == {entry_1.entry_id}
 
 
+async def test_async_get_device_prefers_calling_integration(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An ambiguous lookup prefers a device owned by the calling integration."""
+    entry_a = MockConfigEntry(domain="itg_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="itg_b")
+    entry_b.add_to_hass(hass)
+    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    # itg_a's device is indexed first (created first)
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, connections={mac}
+    )
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id, connections={mac}
+    )
+    assert device_a.id != device_b.id
+
+    # Each integration resolves to its own device, regardless of index order
+    with patch.object(dr, "_current_integration_domain", return_value="itg_b"):
+        assert device_registry.async_get_device(connections={mac}) is device_b
+    with patch.object(dr, "_current_integration_domain", return_value="itg_a"):
+        assert device_registry.async_get_device(connections={mac}) is device_a
+
+    # A caller owning neither, or no integration frame, falls back to the first match
+    with patch.object(dr, "_current_integration_domain", return_value="other"):
+        assert device_registry.async_get_device(connections={mac}) is device_a
+    with patch.object(dr, "_current_integration_domain", return_value=None):
+        assert device_registry.async_get_device(connections={mac}) is device_a
+
+
 async def test_async_get_device_prefers_matching_domain(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

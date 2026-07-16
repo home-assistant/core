@@ -1402,7 +1402,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         matches the looked-up identifier. If the remaining matches are the splits of one
         pre-migration composite device, a read-only composite spanning them is returned
         (async_update_device and async_remove_device fan it out to the underlying
-        devices); otherwise the first match is returned.
+        devices). Otherwise, for independent devices sharing an identifier or connection,
+        one owned by the calling integration is preferred, falling back to the first
+        match.
         """
         matches = self._async_matching_devices(identifiers, connections)
         if len(matches) <= 1:
@@ -1410,14 +1412,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # If the matches are the splits of one pre-migration composite device, return a
         # read-only composite over them, reusing the composite's id so stored references
         # (an automation, a fired event, or an entity holding the old device id) keep
-        # resolving to it as before the split. Otherwise they are independent devices
-        # sharing an identifier or connection: return the first match.
+        # resolving to it as before the split.
         composite_device_ids = {match.composite_device_id for match in matches}
         if (
             len(composite_device_ids) == 1
             and (pre_migration_id := next(iter(composite_device_ids))) is not None
         ):
             return self._restore_composite_device(pre_migration_id, matches)
+        # Otherwise they are independent devices sharing an identifier or connection.
+        # Prefer one owned by the calling integration so the caller resolves to its own
+        # device rather than an insertion-order-dependent one; fall back to the first.
+        if (domain := _current_integration_domain()) is not None:
+            for device in matches:
+                entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
+                if entry is not None and entry.domain == domain:
+                    return device
         return matches[0]
 
     @callback
