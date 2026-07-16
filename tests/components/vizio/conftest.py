@@ -25,7 +25,6 @@ from .const import (
     PAIR_CHALLENGE,
     UNIQUE_ID,
     VERSION,
-    ZEROCONF_HOST,
     audio_setting,
 )
 
@@ -354,15 +353,5 @@ def vizio_update_with_apps_on_input_fixture(vizio_update: None) -> Generator[Non
             "homeassistant.components.vizio.Vizio.get_current_app_config",
             return_value=AppConfig(app_id="unknown", name_space=1, message="app"),
         ),
-    ):
-        yield
-
-
-@pytest.fixture(name="vizio_hostname_check")
-def vizio_hostname_check() -> Generator[None]:
-    """Mock vizio hostname resolution."""
-    with patch(
-        "homeassistant.components.vizio.config_flow.socket.gethostbyname",
-        return_value=ZEROCONF_HOST,
     ):
         yield
