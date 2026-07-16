@@ -396,7 +396,6 @@ class HTTPConfigStore:
         """
         await self.async_load()
         self._async_cancel_revert()
-        self._pending = None
         await self._async_persist()
 
     async def async_migrate_yaml(self, config: ConfData) -> ConfData:
