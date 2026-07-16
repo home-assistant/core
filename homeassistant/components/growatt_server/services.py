@@ -56,24 +56,27 @@ class GrowattServiceArgument(StrEnum):
     DISCHARGE_STOP_SOC = "discharge_stop_soc"
 
 
-def _get_coordinators(hass, device_types: set[str]) -> dict[str, GrowattCoordinator]:
+def _get_coordinators(
+    hass: HomeAssistant, allowed: set[tuple[str, str]]
+) -> dict[str, GrowattCoordinator]:
+    """Get all coordinators whose (device_type, api_version) is in allowed."""
     coordinators = {}
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.state is not ConfigEntryState.LOADED:
             continue
         for coord in entry.runtime_data.devices.values():
-            if coord.device_type in device_types:
+            if (coord.device_type, coord.api_version) in allowed:
                 coordinators[coord.device_id] = coord
     return coordinators
 
 
 def _get_coordinator(
-    hass: HomeAssistant, device_id: str, device_types: set[str]
+    hass: HomeAssistant, device_id: str, allowed: set[tuple[str, str]]
 ) -> GrowattCoordinator:
-    """Get coordinator by device registry ID, matching any of the given device types."""
-    coordinators = _get_coordinators(hass, device_types)
+    """Get coordinator by device registry ID, matching an allowed (device_type, api_version) pair."""
+    coordinators = _get_coordinators(hass, allowed)
 
-    type_label = "/".join(sorted(t.upper() for t in device_types))
+    type_label = "/".join(sorted({device_type.upper() for device_type, _ in allowed}))
 
     if not coordinators:
         raise ServiceValidationError(
@@ -180,7 +183,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         start_time = _parse_time_str(start_time_str, "invalid_time_format_start_time")
         end_time = _parse_time_str(end_time_str, "invalid_time_format_end_time")
 
-        coordinator: GrowattCoordinator = _get_coordinator(hass, device_id, {"min"})
+        coordinator: GrowattCoordinator = _get_coordinator(
+            hass, device_id, {("min", "v1")}
+        )
         await coordinator.update_time_segment(
             segment_id, batt_mode, start_time, end_time, enabled
         )
@@ -188,7 +193,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_read_time_segments(call: ServiceCall) -> dict[str, Any]:
         """Handle read_time_segments service call."""
         coordinator: GrowattCoordinator = _get_coordinator(
-            hass, call.data[CommonServiceArgument.DEVICE_ID], {"min"}
+            hass, call.data[CommonServiceArgument.DEVICE_ID], {("min", "v1")}
         )
         time_segments: list[dict[str, Any]] = await coordinator.read_time_segments()
         return {"time_segments": time_segments}
@@ -196,40 +201,27 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_write_ac_charge_times(call: ServiceCall) -> None:
         """Handle write_ac_charge_times service call for SPH/Mix devices."""
         coordinator: GrowattCoordinator = _get_coordinator(
-            hass, call.data[CommonServiceArgument.DEVICE_ID], {"sph", "mix"}
+            hass,
+            call.data[CommonServiceArgument.DEVICE_ID],
+            {("sph", "v1"), ("mix", "classic")},
         )
 
-        if coordinator.api_version == "v1":
-            # The SPH API requires all 3 periods in every write call. Read
-            # current settings first so any period not supplied by the caller
-            # is filled from the cache instead of overwritten with zeros.
-            current = await coordinator.read_ac_charge_times()
-            charge_power: int = int(
-                call.data.get(
-                    GrowattServiceArgument.CHARGE_POWER, current["charge_power"]
-                )
+        # The underlying API requires all 3 periods in every write call. Read
+        # current settings first so any period not supplied by the caller is
+        # filled from the cache instead of overwritten with zeros.
+        current = await coordinator.read_ac_charge_times()
+        charge_power: int = int(
+            call.data.get(GrowattServiceArgument.CHARGE_POWER, current["charge_power"])
+        )
+        charge_stop_soc: int = int(
+            call.data.get(
+                GrowattServiceArgument.CHARGE_STOP_SOC, current["charge_stop_soc"]
             )
-            charge_stop_soc: int = int(
-                call.data.get(
-                    GrowattServiceArgument.CHARGE_STOP_SOC, current["charge_stop_soc"]
-                )
-            )
-            mains_enabled: bool = call.data.get(
-                GrowattServiceArgument.MAINS_ENABLED, current["mains_enabled"]
-            )
-            cached_periods = current["periods"]
-        else:
-            # Classic auth has no verified live read path, so unspecified fields
-            # fall back to safe defaults rather than merging with unknown state.
-            charge_power = int(call.data.get(GrowattServiceArgument.CHARGE_POWER, 100))
-            charge_stop_soc = int(
-                call.data.get(GrowattServiceArgument.CHARGE_STOP_SOC, 100)
-            )
-            mains_enabled = call.data.get(GrowattServiceArgument.MAINS_ENABLED, True)
-            cached_periods = [
-                {"start_time": "00:00", "end_time": "00:00", "enabled": False}
-                for _ in range(3)
-            ]
+        )
+        mains_enabled: bool = call.data.get(
+            GrowattServiceArgument.MAINS_ENABLED, current["mains_enabled"]
+        )
+        cached_periods = current["periods"]
 
         if not 0 <= charge_power <= 100:
             raise ServiceValidationError(
@@ -273,37 +265,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_write_ac_discharge_times(call: ServiceCall) -> None:
         """Handle write_ac_discharge_times service call for SPH/Mix devices."""
         coordinator: GrowattCoordinator = _get_coordinator(
-            hass, call.data[CommonServiceArgument.DEVICE_ID], {"sph", "mix"}
+            hass,
+            call.data[CommonServiceArgument.DEVICE_ID],
+            {("sph", "v1"), ("mix", "classic")},
         )
 
-        if coordinator.api_version == "v1":
-            # Same read-merge-write pattern as charge.
-            current = await coordinator.read_ac_discharge_times()
-            discharge_power: int = int(
-                call.data.get(
-                    GrowattServiceArgument.DISCHARGE_POWER, current["discharge_power"]
-                )
+        # Same read-merge-write pattern as charge.
+        current = await coordinator.read_ac_discharge_times()
+        discharge_power: int = int(
+            call.data.get(
+                GrowattServiceArgument.DISCHARGE_POWER, current["discharge_power"]
             )
-            discharge_stop_soc: int = int(
-                call.data.get(
-                    GrowattServiceArgument.DISCHARGE_STOP_SOC,
-                    current["discharge_stop_soc"],
-                )
+        )
+        discharge_stop_soc: int = int(
+            call.data.get(
+                GrowattServiceArgument.DISCHARGE_STOP_SOC, current["discharge_stop_soc"]
             )
-            cached_periods = current["periods"]
-        else:
-            # Classic auth has no verified live read path, so unspecified fields
-            # fall back to safe defaults rather than merging with unknown state.
-            discharge_power = int(
-                call.data.get(GrowattServiceArgument.DISCHARGE_POWER, 100)
-            )
-            discharge_stop_soc = int(
-                call.data.get(GrowattServiceArgument.DISCHARGE_STOP_SOC, 100)
-            )
-            cached_periods = [
-                {"start_time": "00:00", "end_time": "00:00", "enabled": False}
-                for _ in range(3)
-            ]
+        )
+        cached_periods = current["periods"]
 
         if not 0 <= discharge_power <= 100:
             raise ServiceValidationError(
@@ -347,14 +326,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_read_ac_charge_times(call: ServiceCall) -> dict[str, Any]:
         """Handle read_ac_charge_times service call for SPH/Mix devices."""
         coordinator: GrowattCoordinator = _get_coordinator(
-            hass, call.data[CommonServiceArgument.DEVICE_ID], {"sph", "mix"}
+            hass,
+            call.data[CommonServiceArgument.DEVICE_ID],
+            {("sph", "v1"), ("mix", "classic")},
         )
         return await coordinator.read_ac_charge_times()
 
     async def handle_read_ac_discharge_times(call: ServiceCall) -> dict[str, Any]:
         """Handle read_ac_discharge_times service call for SPH/Mix devices."""
         coordinator: GrowattCoordinator = _get_coordinator(
-            hass, call.data[CommonServiceArgument.DEVICE_ID], {"sph", "mix"}
+            hass,
+            call.data[CommonServiceArgument.DEVICE_ID],
+            {("sph", "v1"), ("mix", "classic")},
         )
         return await coordinator.read_ac_discharge_times()
 

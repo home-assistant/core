@@ -663,7 +663,7 @@
       "message": "Failed to resolve the plant ID from the Growatt API"
     },
     "no_devices_configured": {
-      "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
+      "message": "No {device_type} devices are configured."
     },
     "rate_limited": {
       "message": "Growatt API rate limited, will retry: {error}"
@@ -696,7 +696,7 @@
   },
   "services": {
     "read_ac_charge_times": {
-      "description": "Reads AC charge time periods from an SPH device.",
+      "description": "Reads AC charge time periods from an SPH/Mix device.",
       "fields": {
         "device_id": {
           "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
@@ -706,7 +706,7 @@
       "name": "Read AC charge times"
     },
     "read_ac_discharge_times": {
-      "description": "Reads AC discharge time periods from an SPH device.",
+      "description": "Reads AC discharge time periods from an SPH/Mix device.",
       "fields": {
         "device_id": {
           "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
@@ -756,7 +756,7 @@
       "name": "Update time segment"
     },
     "write_ac_charge_times": {
-      "description": "Writes AC charge time periods to an SPH device.",
+      "description": "Writes AC charge time periods to an SPH/Mix device.",
       "fields": {
         "charge_power": {
           "description": "Charge power limit (%).",
@@ -814,7 +814,7 @@
       "name": "Write AC charge times"
     },
     "write_ac_discharge_times": {
-      "description": "Writes AC discharge time periods to an SPH device.",
+      "description": "Writes AC discharge time periods to an SPH/Mix device.",
       "fields": {
         "device_id": {
           "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
