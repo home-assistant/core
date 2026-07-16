@@ -46,6 +46,7 @@ from homeassistant.components.go2rtc.const import (
     DOMAIN,
     HA_MANAGED_RTSP_HOST,
     HA_MANAGED_RTSP_PORT,
+    HA_MANAGED_URL,
     RECOMMENDED_VERSION,
 )
 from homeassistant.components.go2rtc.util import (
@@ -1263,9 +1264,20 @@ async def test_get_rtsp_stream_url_not_setup(hass: HomeAssistant) -> None:
     "server",
     "init_test_integration",
 )
-async def test_get_rtsp_stream_url_external_server(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "server_url",
+    [
+        pytest.param("http://localhost:1984/", id="other-port"),
+        # Same URL as the managed server: ownership must not be inferred from
+        # the URL, the user's server may expose a different RTSP endpoint.
+        pytest.param(HA_MANAGED_URL, id="managed-url-collision"),
+    ],
+)
+async def test_get_rtsp_stream_url_external_server(
+    hass: HomeAssistant, server_url: str
+) -> None:
     """The helper returns None for an external server whose RTSP endpoint is unknown."""
-    config = {DOMAIN: {CONF_URL: "http://localhost:1984/"}}
+    config = {DOMAIN: {CONF_URL: server_url}}
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 

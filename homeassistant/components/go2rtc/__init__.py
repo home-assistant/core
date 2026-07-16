@@ -125,6 +125,7 @@ type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
     url: str | None = None
+    managed = False
     username: str | None = None
     password: str | None = None
 
@@ -188,6 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+        managed = True
     elif username and password:
         # Create session with BasicAuth if credentials are provided
         auth = BasicAuth(username, password)
@@ -195,7 +197,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         session = async_get_clientsession(hass)
 
-    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session)
+    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session, managed)
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
@@ -219,7 +221,7 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
     managed server rejects the registration, so the caller can fall back to the
     raw source.
     """
-    if (config := hass.data.get(_DATA_GO2RTC)) is None or config.url != HA_MANAGED_URL:
+    if (config := hass.data.get(_DATA_GO2RTC)) is None or not config.managed:
         return None
     if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
         return None
@@ -232,8 +234,6 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
         stream_source = await provider.async_get_stream_source(camera)
         await provider.async_update_stream_source(camera, stream_source)
     except (HomeAssistantError, Go2RtcClientError) as err:
-        # Best-effort: any failure (unsupported source, or the managed server
-        # rejecting the registration) leaves the caller to use the raw source.
         _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)
         return None
     return (
@@ -487,3 +487,6 @@ class Go2RtcConfig:
 
     url: str
     session: ClientSession
+    # True only when Home Assistant started the server itself; a user-provided
+    # server at the same URL does not expose the managed RTSP endpoint.
+    managed: bool
