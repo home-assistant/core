@@ -21,7 +21,11 @@ from homeassistant.components.sonos.const import (
 from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
@@ -165,6 +169,28 @@ async def test_discovery_exception(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert "This is a test" in caplog.text
+
+
+async def test_discovery_skips_disabled_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test discovery message handling skips disabled Sonos devices."""
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.zoneGroupTopology.subscribe.assert_not_awaited()
+    assert not er.async_entries_for_device(entity_registry, device.id)
 
 
 async def test_async_poll_manual_hosts_warnings(
