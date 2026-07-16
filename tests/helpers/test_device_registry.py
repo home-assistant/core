@@ -6509,6 +6509,58 @@ async def test_remove_shadowed_collision_keeps_index_consistent(
     )
 
 
+@pytest.mark.parametrize(
+    ("identity", "merge_kwarg", "merge_extra", "error"),
+    [
+        pytest.param(
+            {"identifiers": {("test", "shared")}},
+            "merge_identifiers",
+            {("test", "extra")},
+            dr.DeviceIdentifierCollisionError,
+            id="identifiers",
+        ),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}},
+            "merge_connections",
+            {(dr.CONNECTION_NETWORK_MAC, "ab:cd:ef:12:34:56")},
+            dr.DeviceConnectionCollisionError,
+            id="connections",
+        ),
+    ],
+)
+async def test_move_with_merge_validates_retained_identity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    identity: dict[str, set[tuple[str, str]]],
+    merge_kwarg: str,
+    merge_extra: set[tuple[str, str]],
+    error: type[Exception],
+) -> None:
+    """A move that also merges must validate the retained identity against the target.
+
+    The merged additions are validated, but the retained old identity must be too, or the
+    move silently overwrites the target entry's index slot for a device already there.
+    """
+    entry_a = MockConfigEntry(domain="test")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="test")
+    entry_b.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, **identity
+    )
+    # entry_b already owns a device with the same identity
+    device_registry.async_get_or_create(config_entry_id=entry_b.entry_id, **identity)
+
+    # Moving device to entry_b retains its identity, which collides with entry_b's
+    # existing device, so the move must raise rather than silently shadow it.
+    with pytest.raises(error):
+        device_registry.async_update_device(
+            device.id,
+            new_config_entry_id=entry_b.entry_id,
+            **{merge_kwarg: merge_extra},
+        )
+
+
 async def test_move_two_calls_add_then_remove(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -6818,6 +6870,157 @@ async def test_pending_move_overwritten_by_later_add(
     assert moved is not None
     assert moved.config_entry_id == entry_3.entry_id
     assert moved.config_subentry_id is None
+
+
+async def test_new_config_entry_id_clears_pending_move(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An immediate new_config_entry_id move clears an earlier pending move.
+
+    Otherwise removing the new owner would perform the stale deferred move instead of
+    deleting the device, which has no other config entry.
+    """
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry()
+    entry_3.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("bridgeid", "0123")}
+    )
+
+    # Record a pending move to entry_2, then immediately move the device to entry_3
+    device_registry.async_update_device(device.id, add_config_entry_id=entry_2.entry_id)
+    device_registry.async_update_device(device.id, new_config_entry_id=entry_3.entry_id)
+    assert device_registry.async_get(device.id)._pending_move is None
+
+    # Removing the new owner deletes the device rather than performing the stale move
+    assert (
+        device_registry.async_update_device(
+            device.id, remove_config_entry_id=entry_3.entry_id
+        )
+        is None
+    )
+    assert device_registry.async_get(device.id) is None
+
+
+async def test_pending_move_canceled_by_cross_domain_removal(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A removal from a different integration than the one that armed the move cancels it.
+
+    Otherwise an incidental add_config_entry_id (e.g. device_tracker attaching a shared
+    MAC) would hijack the owning integration's later cleanup and move the device instead
+    of deleting it.
+    """
+    entry_owner = MockConfigEntry(domain="owner")
+    entry_owner.add_to_hass(hass)
+    entry_target = MockConfigEntry(domain="attacher")
+    entry_target.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_owner.entry_id, identifiers={("test", "1")}
+    )
+
+    # The "attacher" integration arms a deferred move to its own entry
+    with patch.object(dr, "_current_integration_domain", return_value="attacher"):
+        device_registry.async_update_device(
+            device.id, add_config_entry_id=entry_target.entry_id
+        )
+    assert (
+        device_registry.async_get(device.id)._pending_move.origin_domain == "attacher"
+    )
+
+    # The owning integration later removes its entry - a different domain, so the stale
+    # move is canceled and the device is deleted rather than transferred.
+    with patch.object(dr, "_current_integration_domain", return_value="owner"):
+        result = device_registry.async_update_device(
+            device.id, remove_config_entry_id=entry_owner.entry_id
+        )
+    assert result is None
+    assert device_registry.async_get(device.id) is None
+
+
+async def test_pending_move_completed_by_same_domain_removal(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A removal from the same integration that armed the move completes it."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+
+    with patch.object(dr, "_current_integration_domain", return_value="mover"):
+        device_registry.async_update_device(
+            device.id, add_config_entry_id=entry_2.entry_id
+        )
+        moved = device_registry.async_update_device(
+            device.id, remove_config_entry_id=entry_1.entry_id
+        )
+    assert moved is not None
+    assert moved.config_entry_id == entry_2.entry_id
+    assert device_registry.async_get(device.id) is moved
+
+
+async def test_composite_move_clears_sibling_pending_moves(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Completing one split's move clears the pending move on its composite siblings.
+
+    Arming add_config_entry_id on a composite fans out to every split; once one split
+    moves to the target, the others must not also move there and collide.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_target = MockConfigEntry(domain="test")
+    entry_target.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "shared")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "shared")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    # Arm a deferred move on the composite id: fans out to both splits
+    with patch.object(dr, "_current_integration_domain", return_value="test"):
+        device_registry.async_update_device(
+            old_id, add_config_entry_id=entry_target.entry_id
+        )
+    assert device_registry.async_get(device_1.id)._pending_move is not None
+    assert device_registry.async_get(device_2.id)._pending_move is not None
+
+    # Complete the move on split 1; split 2's pending move must be cleared
+    with patch.object(dr, "_current_integration_domain", return_value="test"):
+        device_registry.async_update_device(
+            device_1.id, remove_config_entry_id=entry_1.entry_id
+        )
+    assert (
+        device_registry.async_get(device_1.id).config_entry_id == entry_target.entry_id
+    )
+    assert device_registry.async_get(device_2.id)._pending_move is None
+
+    # Split 2's own removal now deletes it instead of colliding on the shared identifier
+    with patch.object(dr, "_current_integration_domain", return_value="test"):
+        assert (
+            device_registry.async_update_device(
+                device_2.id, remove_config_entry_id=entry_2.entry_id
+            )
+            is None
+        )
+    assert device_registry.async_get(device_2.id) is None
 
 
 async def test_add_and_remove_config_entry_in_one_call(

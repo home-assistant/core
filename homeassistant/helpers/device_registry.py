@@ -4,6 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Set as AbstractSet
 import copy
+from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
@@ -35,7 +36,12 @@ from homeassistant.util.json import format_unserializable_data
 from . import storage, translation
 from .debounce import Debouncer
 from .deprecation import deprecated_function
-from .frame import ReportBehavior, report_usage
+from .frame import (
+    MissingIntegrationFrame,
+    ReportBehavior,
+    get_integration_frame,
+    report_usage,
+)
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .typing import UNDEFINED, UndefinedType
@@ -73,6 +79,28 @@ ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 # pending_move can be removed once add_config_entry_id and remove_config_entry_id
 # are removed from the device registry API.
 RUNTIME_ONLY_ATTRS = {"suggested_area", "pending_move"}
+
+
+@dataclass(frozen=True, slots=True)
+class _PendingMove:
+    """A deferred config-entry move recorded by add_config_entry_id.
+
+    A later remove_config_entry_id from the same integration (origin_domain) completes
+    the move; one from a different integration cancels it. Runtime-only, never stored.
+    """
+
+    config_entry_id: str
+    config_subentry_id: str | None
+    origin_domain: str | None
+
+
+def _current_integration_domain() -> str | None:
+    """Return the domain of the integration in the current call stack, if any."""
+    try:
+        return get_integration_frame().integration
+    except MissingIntegrationFrame:
+        return None
+
 
 CONFIGURATION_URL_SCHEMES = {"http", "https", "homeassistant"}
 
@@ -412,7 +440,7 @@ class DeviceEntry:
     # Transient pending move target (config_entry_id, config_subentry_id) initiated by
     # add_config_entry_id and completed by a subsequent remove_config_entry_id. It is
     # never stored and is not part of equality. Can be removed in HA Core 2027.8.
-    _pending_move: tuple[str, str | None] | None = attr.ib(default=None, eq=False)
+    _pending_move: _PendingMove | None = attr.ib(default=None, eq=False)
     # Set only on the read-only composite device that async_get synthesizes on demand
     # for a pre-migration composite device id. It holds the union of the split
     # devices' config entries and subentries so callers see the pre-split device. It is
@@ -1842,7 +1870,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # - new_config_entry_id / new_config_subentry_id move the device immediately.
         target_config_entry_id: str | UndefinedType = UNDEFINED
         target_config_subentry_id: str | None | UndefinedType = UNDEFINED
-        pending_move: tuple[str, str | None] | None | UndefinedType = UNDEFINED
+        pending_move: _PendingMove | None | UndefinedType = UNDEFINED
         if new_config_entry_id is not UNDEFINED:
             target_config_entry_id = new_config_entry_id
             target_config_subentry_id = (
@@ -1850,6 +1878,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 if new_config_subentry_id is not UNDEFINED
                 else None
             )
+            # An immediate move to a new config entry supersedes a deferred move from an
+            # earlier add_config_entry_id; clear it so a later removal of the new owner
+            # deletes the device instead of performing the stale move.
+            pending_move = None
         elif new_config_subentry_id is not UNDEFINED:
             target_config_subentry_id = new_config_subentry_id
         else:
@@ -1862,24 +1894,55 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     or add_config_subentry_id == old.config_subentry_id
                 )
                 if not already_owner:
-                    pending_move = (
+                    pending_move = _PendingMove(
                         add_config_entry_id,
                         add_config_subentry_id
                         if add_config_subentry_id is not UNDEFINED
                         else None,
+                        _current_integration_domain(),
                     )
             if remove_config_entry_id == old.config_entry_id and (
                 remove_config_subentry_id is UNDEFINED
                 or remove_config_subentry_id == old.config_subentry_id
             ):
+                move_from_prior_call = pending_move is UNDEFINED
                 move_target = (
                     pending_move if pending_move is not UNDEFINED else old._pending_move  # noqa: SLF001
                 )
+                # A deferred move armed by an earlier add_config_entry_id only completes
+                # if the integration now removing the owning entry is the one that armed
+                # it. A removal from a different integration (e.g. device_tracker
+                # attaching a shared MAC) is unrelated, so cancel the move and delete the
+                # device instead of silently transferring it. Origins from core/tests are
+                # undetermined (None) and never cancel.
+                if (
+                    move_target is not None
+                    and move_from_prior_call
+                    and move_target.origin_domain is not None
+                    and (current_domain := _current_integration_domain()) is not None
+                    and current_domain != move_target.origin_domain
+                ):
+                    move_target = None
                 if move_target is None:
                     self.async_remove_device(device_id)
                     return None
-                target_config_entry_id, target_config_subentry_id = move_target
+                target_config_entry_id = move_target.config_entry_id
+                target_config_subentry_id = move_target.config_subentry_id
                 pending_move = None
+                # A pre-migration composite's splits share identity, so once one split
+                # completes the move to the target entry the others must not also move
+                # there and collide; clear their pending moves.
+                if old.composite_device_id is not None:
+                    for sibling in self.devices.get_devices_for_composite_device_id(
+                        old.composite_device_id
+                    ):
+                        if (
+                            sibling.id != device_id
+                            and sibling._pending_move is not None  # noqa: SLF001
+                        ):
+                            self.devices[sibling.id] = attr.evolve(
+                                sibling, pending_move=None
+                            )
 
         if target_config_subentry_id not in (UNDEFINED, None):
             resolved_config_entry_id = (
@@ -1965,16 +2028,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             old_values["identifiers"] = old.identifiers
 
-        # On a move to another config entry, the retained identifiers and connections
-        # (those not being replaced above) were only validated against the old entry;
-        # validate them against the new one so the move can't silently overwrite the
-        # index slot of a device that already has the same identity there.
+        # On a move to another config entry, validate the identifiers and connections
+        # retained from the old entry against the new one, so the move can't silently
+        # overwrite the index slot of a device that already has the same identity there.
+        # A full new_identifiers / new_connections replacement is validated above;
+        # merge_* only adds, so the retained old values still need checking here.
         if effective_config_entry_id != old.config_entry_id:
-            if new_identifiers is UNDEFINED and merge_identifiers is UNDEFINED:
+            if new_identifiers is UNDEFINED:
                 self._validate_identifiers(
                     device_id, effective_config_entry_id, old.identifiers, False
                 )
-            if new_connections is UNDEFINED and merge_connections is UNDEFINED:
+            if new_connections is UNDEFINED:
                 self._validate_connections(
                     device_id, effective_config_entry_id, old.connections, False
                 )
@@ -2550,7 +2614,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # device instead of moving it onto the removed entry.
         for device in list(self.devices.values()):
             pending_move = device._pending_move  # noqa: SLF001
-            if pending_move is not None and pending_move[0] == config_entry_id:
+            if (
+                pending_move is not None
+                and pending_move.config_entry_id == config_entry_id
+            ):
                 self.devices[device.id] = attr.evolve(device, pending_move=None)
         for deleted_device in list(self.deleted_devices.values()):
             if deleted_device.config_entry_id != config_entry_id:
@@ -2572,7 +2639,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # clear it so a later completion deletes the device instead of validating against
         # the removed subentry.
         for device in list(self.devices.values()):
-            if device._pending_move == (config_entry_id, config_subentry_id):  # noqa: SLF001
+            pending_move = device._pending_move  # noqa: SLF001
+            if (
+                pending_move is not None
+                and pending_move.config_entry_id == config_entry_id
+                and pending_move.config_subentry_id == config_subentry_id
+            ):
                 self.devices[device.id] = attr.evolve(device, pending_move=None)
         for deleted_device in list(self.deleted_devices.values()):
             if (
