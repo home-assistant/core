@@ -1,0 +1,183 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "The device at this address does not match the configured LinknLink device."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The new IP address or hostname of the eMotion Ultra device."
+        },
+        "description": "Update the network address for {device_name}."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the eMotion Ultra device."
+        },
+        "description": "The device must already be connected to Wi-Fi and be reachable from Home Assistant on the same local network."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Occupancy"
+      },
+      "zone_1_occupancy": {
+        "name": "Zone 1 occupancy"
+      },
+      "zone_2_occupancy": {
+        "name": "Zone 2 occupancy"
+      },
+      "zone_3_occupancy": {
+        "name": "Zone 3 occupancy"
+      },
+      "zone_4_occupancy": {
+        "name": "Zone 4 occupancy"
+      }
+    },
+    "event": {
+      "target_position": {
+        "name": "Target position",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "position_update": "Position update"
+            }
+          },
+          "nearest_distance": {
+            "name": "Nearest 3D distance"
+          },
+          "nearest_horizontal_distance": {
+            "name": "Nearest horizontal distance"
+          },
+          "target_count": {
+            "name": "Target count"
+          },
+          "targets": {
+            "name": "Targets"
+          }
+        }
+      }
+    },
+    "number": {
+      "radar_default_absence_delay": {
+        "name": "Default absence delay"
+      },
+      "radar_height": {
+        "name": "Radar installation height"
+      },
+      "radar_z_maximum": {
+        "name": "Radar maximum Z range"
+      },
+      "radar_z_minimum": {
+        "name": "Radar minimum Z range"
+      },
+      "radar_zone_1_absence_delay": {
+        "name": "Zone 1 absence delay"
+      },
+      "radar_zone_2_absence_delay": {
+        "name": "Zone 2 absence delay"
+      },
+      "radar_zone_3_absence_delay": {
+        "name": "Zone 3 absence delay"
+      },
+      "radar_zone_4_absence_delay": {
+        "name": "Zone 4 absence delay"
+      }
+    },
+    "select": {
+      "radar_install_direction": {
+        "name": "Radar installation direction",
+        "state": {
+          "down": "Down",
+          "up": "Up"
+        }
+      },
+      "radar_install_mode": {
+        "name": "Radar installation mode",
+        "state": {
+          "ceiling": "Ceiling",
+          "wall": "Wall"
+        }
+      },
+      "radar_sensitivity": {
+        "name": "Radar sensitivity",
+        "state": {
+          "level_0": "Low",
+          "level_1": "Medium",
+          "level_2": "High"
+        }
+      },
+      "radar_trigger_speed": {
+        "name": "Radar trigger speed",
+        "state": {
+          "level_0": "Slow",
+          "level_1": "Medium",
+          "level_2": "Fast"
+        }
+      }
+    },
+    "sensor": {
+      "humidity": {
+        "name": "Humidity"
+      },
+      "illuminance": {
+        "name": "Illuminance"
+      },
+      "nearest_distance": {
+        "name": "Nearest target 3D distance"
+      },
+      "nearest_horizontal_distance": {
+        "name": "Nearest target horizontal distance"
+      },
+      "persons_in_fenced_zones": {
+        "name": "Persons in fenced zones"
+      },
+      "target_count": {
+        "name": "Target count"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "zone_1_target_count": {
+        "name": "Zone 1 target count"
+      },
+      "zone_2_target_count": {
+        "name": "Zone 2 target count"
+      },
+      "zone_3_target_count": {
+        "name": "Zone 3 target count"
+      },
+      "zone_4_target_count": {
+        "name": "Zone 4 target count"
+      }
+    }
+  },
+  "exceptions": {
+    "control_error": {
+      "message": "Unable to update the LinknLink device: {error}"
+    },
+    "invalid_radar_option": {
+      "message": "The selected radar configuration option is invalid."
+    },
+    "update_error": {
+      "message": "Error communicating with the LinknLink device: {error}"
+    }
+  }
+}
