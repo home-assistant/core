@@ -1637,7 +1637,11 @@ async def test_update_event_this_and_future(
             "uid": "rec-1",
             "recurrence_id": "2017-11-29 17:00:00+00:00",
             "recurrence_range": "THISANDFUTURE",
-            "event": UPDATED_EVENT,
+            "event": UPDATED_EVENT
+            | {
+                "dtstart": "2017-11-29T17:00:00+00:00",
+                "dtend": "2017-11-29T18:00:00+00:00",
+            },
         },
     )
 
@@ -1650,6 +1654,9 @@ async def test_update_event_this_and_future(
     tail = _saved_tail(calendars[0])
     assert tail["UID"] == "rec-1-20171129T170000Z"
     assert tail["SUMMARY"] == "Renamed standup"
+    assert tail["DTSTART"].dt == datetime.datetime(
+        2017, 11, 29, 17, 0, tzinfo=datetime.UTC
+    )
     # Two occurrences stay in the capped head, so three are left for the tail.
     assert tail["RRULE"]["COUNT"] == [3]
 
@@ -2600,3 +2607,169 @@ async def test_delete_event_this_and_future_keeps_exdate_zones(
     assert [item.dt for item in utc.dts] == [
         datetime.datetime(2017, 11, 29, 16, 0, tzinfo=datetime.UTC)
     ]
+
+
+async def test_update_event_new_rrule_drops_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that replacing the rule clears overrides of the old series."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": UPDATED_EVENT | {"rrule": "FREQ=WEEKLY"},
+        },
+    )
+
+    assert not _overrides(event)
+
+
+async def test_update_event_single_occurrence_ignores_rrule(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a rule in the payload cannot make an override recurring."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+            "event": UPDATED_EVENT | {"rrule": "FREQ=WEEKLY"},
+        },
+    )
+
+    (override,) = _overrides(event)
+    assert "RRULE" not in override
+    assert _master(event)["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=5"
+
+
+async def test_update_event_rejects_all_day_toggle(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a series cannot switch between timed and all day."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27",
+                "dtend": "2017-11-28",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "all-day" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_event_single_occurrence_keeps_master_data(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a new override inherits what the edit cannot carry."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], RICH_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 16:00:00+00:00",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    (override,) = _overrides(event)
+    assert str(override["ATTENDEE"]) == "mailto:dev@example.com"
+    assert any(item.name == "VALARM" for item in override.subcomponents)
+    assert "RRULE" not in override
+
+
+ORPHAN_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+RECURRENCE-ID:20171128T170000Z
+DTSTART:20171128T190000Z
+DTEND:20171128T200000Z
+SUMMARY:Orphan override
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_orphan_override(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that editing an object holding only an override keeps it."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], ORPHAN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": UPDATED_EVENT
+            | {
+                "dtstart": "2017-11-28T20:00:00+00:00",
+                "dtend": "2017-11-28T21:00:00+00:00",
+            },
+        },
+    )
+
+    vevents = list(event.icalendar_instance.walk("VEVENT"))
+    assert len(vevents) == 1
+    assert vevents[0]["SUMMARY"] == "Renamed standup"
+
+
+async def test_delete_occurrence_of_orphan_override(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that cancelling the orphan's occurrence keeps the resource valid."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], ORPHAN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+        },
+    )
+
+    assert len(list(event.icalendar_instance.walk("VEVENT"))) == 1

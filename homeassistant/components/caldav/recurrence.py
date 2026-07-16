@@ -49,7 +49,13 @@ def update_event(
     master = _master(ical)
 
     if recurrence_id is None:
+        old_start = _utc(master["DTSTART"].dt)
         _apply(master, data)
+        # A new rule or start invalidates the RECURRENCE-IDs of overrides.
+        if data.get("rrule") or _utc(master["DTSTART"].dt) != old_start:
+            _drop_overrides(
+                ical, master, old_start, from_occurrence=False, all_overrides=True
+            )
         _save(dav_event, ical, master)
         return
 
@@ -57,13 +63,13 @@ def update_event(
 
     if not this_and_future:
         target = _override(ical, occurrence) or _new_override(ical, master, occurrence)
-        _apply(target, data)
+        _apply(target, {**data, "rrule": None})
         _save(dav_event, ical, target)
         return
 
     if _utc(occurrence) <= _utc(master["DTSTART"].dt):
         _apply(master, data)
-        _drop_overrides(ical, occurrence, from_occurrence=True)
+        _drop_overrides(ical, master, occurrence, from_occurrence=True)
         _save(dav_event, ical, master)
         return
 
@@ -80,7 +86,7 @@ def update_event(
     tail = calendar.save_event(_tail_ics(ical, master, data, occurrence))
     try:
         _cap_series(master, occurrence)
-        _drop_overrides(ical, occurrence, from_occurrence=True)
+        _drop_overrides(ical, master, occurrence, from_occurrence=True)
         _save(dav_event, ical, master)
     except _WRITE_FAILURES:
         # A timeout may hit after the server committed the capped head;
@@ -118,10 +124,10 @@ def delete_event(
             dav_event.delete()
             return
         _cap_series(master, occurrence)
-        _drop_overrides(ical, occurrence, from_occurrence=True)
+        _drop_overrides(ical, master, occurrence, from_occurrence=True)
     else:
         _add_exdate(master, occurrence)
-        _drop_overrides(ical, occurrence, from_occurrence=False)
+        _drop_overrides(ical, master, occurrence, from_occurrence=False)
 
     _save(dav_event, ical, master)
 
@@ -171,24 +177,35 @@ def _override(ical: Any, occurrence: datetime | date) -> Any | None:
 
 
 def _new_override(ical: Any, master: Any, occurrence: datetime | date) -> Any:
-    override = ICalEvent()
-    override.add("UID", str(master["UID"]))
-    override.add("DTSTAMP", dt_util.utcnow())
+    override = ICalEvent.from_ical(master.to_ical())
+    for key in ("RRULE", "RDATE", "EXDATE"):
+        if key in override:
+            del override[key]
+    _replace(override, "dtstamp", dt_util.utcnow())
+    _replace(override, "sequence", None)
     override.add("RECURRENCE-ID", vDDDTypes(_align(master, occurrence)))
-    for key in ("DTSTART", "DTEND"):
-        if key in master:
-            override[key] = master[key]
     ical.add_component(override)
     return override
 
 
 def _drop_overrides(
-    ical: Any, occurrence: datetime | date, from_occurrence: bool
+    ical: Any,
+    master: Any,
+    occurrence: datetime | date,
+    from_occurrence: bool,
+    all_overrides: bool = False,
 ) -> None:
+    """Remove overrides, but never the component _master() returned.
+
+    On an orphan-override object every VEVENT carries a RECURRENCE-ID and the
+    first doubles as the master; removing it would save an empty resource.
+    """
     target = _utc(occurrence)
     for vevent in _overrides(ical):
+        if vevent is master:
+            continue
         moment = _utc(vevent["RECURRENCE-ID"].dt)
-        if moment >= target if from_occurrence else moment == target:
+        if all_overrides or (moment >= target if from_occurrence else moment == target):
             ical.subcomponents.remove(vevent)
 
 
@@ -215,7 +232,8 @@ def _tail_ics(
     tail = ICalCalendar.from_ical(ical.to_ical())
     vevent = _master(tail)
     for override in _overrides(tail):
-        tail.subcomponents.remove(override)
+        if override is not vevent:
+            tail.subcomponents.remove(override)
     _replace(vevent, "uid", _tail_uid(str(master["UID"]), occurrence))
     _replace(vevent, "dtstamp", dt_util.utcnow())
     _replace(vevent, "sequence", None)
@@ -386,6 +404,13 @@ def _set_time(component: Any, key: str, value: Any) -> None:
     shift future occurrences across DST boundaries.
     """
     old = component[key].dt if key in component else None
+    if (
+        old is not None
+        and isinstance(old, datetime) != isinstance(value, datetime)
+        and any(k in component for k in ("RRULE", "RDATE", "RECURRENCE-ID"))
+    ):
+        # UNTIL, RDATE, EXDATE and RECURRENCE-ID would keep the old value type.
+        raise ValueError("Cannot change a recurring event between all-day and timed")
     if isinstance(old, datetime) and isinstance(value, datetime):
         if _utc(old) == _utc(value):
             return

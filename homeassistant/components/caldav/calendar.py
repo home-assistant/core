@@ -1,5 +1,6 @@
 """Support for WebDav Calendar."""
 
+import asyncio
 from datetime import datetime
 from functools import partial
 import logging
@@ -222,6 +223,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             # Never modify events the filter hides from this entity.
             self._attr_supported_features = CalendarEntityFeature.CREATE_EVENT
         self.entity_id = entity_id
+        self._write_lock = asyncio.Lock()
         self._event: CalendarEvent | None = None
         self._attr_name = name
         if unique_id is not None:
@@ -298,6 +300,12 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         )
 
     async def _async_write(self, job: partial[None], action: str) -> None:
+        # Concurrent read-modify-write cycles would drop each other's changes.
+        async with self._write_lock:
+            await self._async_run_write(job, action)
+        await self.coordinator.async_request_refresh()
+
+    async def _async_run_write(self, job: partial[None], action: str) -> None:
         try:
             await self.hass.async_add_executor_job(job)
         except NotFoundError as err:
@@ -309,7 +317,6 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             ValueError,
         ) as err:
             raise HomeAssistantError(f"CalDAV {action} error: {err}") from err
-        await self.coordinator.async_request_refresh()
 
     @callback
     @override
