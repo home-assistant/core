@@ -63,6 +63,7 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_HOST,
     HA_MANAGED_RTSP_PORT,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
@@ -214,7 +215,9 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
     when needed, so every consumer of the returned URL shares go2rtc's single
     upstream connection to the camera. Returns None when go2rtc is not set up,
     the server is not managed by Home Assistant (its RTSP endpoint is unknown),
-    the camera entity is not available, or its stream source is unsupported.
+    the camera entity is not available, its stream source is unsupported, or the
+    managed server rejects the registration, so the caller can fall back to the
+    raw source.
     """
     if (config := hass.data.get(_DATA_GO2RTC)) is None or config.url != HA_MANAGED_URL:
         return None
@@ -228,10 +231,15 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
         # active go2rtc session.
         stream_source = await provider.async_get_stream_source(camera)
         await provider.async_update_stream_source(camera, stream_source)
-    except HomeAssistantError as err:
+    except (HomeAssistantError, Go2RtcClientError) as err:
+        # Best-effort: any failure (unsupported source, or the managed server
+        # rejecting the registration) leaves the caller to use the raw source.
         _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)
         return None
-    return f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{get_camera_identifier(camera)}"
+    return (
+        f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}"
+        f"/{get_camera_identifier(camera)}"
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:

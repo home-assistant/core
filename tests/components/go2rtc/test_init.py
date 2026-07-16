@@ -44,6 +44,7 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_HOST,
     HA_MANAGED_RTSP_PORT,
     RECOMMENDED_VERSION,
 )
@@ -1212,7 +1213,10 @@ async def test_get_rtsp_stream_url(
 ) -> None:
     """The helper registers the stream and returns the managed RTSP URL."""
     url = await async_get_rtsp_stream_url(hass, "camera.test")
-    assert url == f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/test_camera_unique_id"
+    assert (
+        url
+        == f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}/test_camera_unique_id"
+    )
     rest_client.streams.add.assert_called_once_with(
         "test_camera_unique_id",
         [
@@ -1236,7 +1240,7 @@ async def test_get_rtsp_stream_url_generic_camera(
         url = await async_get_rtsp_stream_url(hass, "camera.test")
         identifier = get_camera_identifier(camera)
 
-    assert url == f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{identifier}"
+    assert url == f"rtsp://{HA_MANAGED_RTSP_HOST}:{HA_MANAGED_RTSP_PORT}/{identifier}"
     rest_client.streams.add.assert_called_once_with(
         identifier,
         [
@@ -1293,3 +1297,13 @@ async def test_get_rtsp_stream_url_unusable_source(
 async def test_get_rtsp_stream_url_unknown_camera(hass: HomeAssistant) -> None:
     """The helper returns None for an unavailable camera entity."""
     assert await async_get_rtsp_stream_url(hass, "camera.does_not_exist") is None
+
+
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
+async def test_get_rtsp_stream_url_server_rejects(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+) -> None:
+    """A managed-server error falls back to None instead of propagating."""
+    rest_client.streams.add.side_effect = Go2RtcClientError
+    assert await async_get_rtsp_stream_url(hass, "camera.test") is None
