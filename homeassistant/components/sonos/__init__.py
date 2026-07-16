@@ -256,7 +256,7 @@ class SonosDiscoveryManager:
         @callback
         def _async_add_visible_zones(subscription_succeeded: bool = False) -> None:
             """Determine visible zones and create SonosSpeaker instances."""
-            zones_to_add = set()
+            zones_to_add: set[SoCo] = set()
             subscription = None
             if subscription_succeeded:
                 subscription = sub
@@ -264,8 +264,14 @@ class SonosDiscoveryManager:
             visible_zones = soco.visible_zones
             self._known_invisible = soco.all_zones - visible_zones
             for zone in visible_zones:
-                if zone.uid not in self.data.discovered:
-                    zones_to_add.add(zone)
+                if zone.uid in self.data.discovered:
+                    continue
+                if self.is_device_disabled(zone.uid):
+                    _LOGGER.debug(
+                        "Skipping discovery for disabled Sonos device: %s", zone.uid
+                    )
+                    continue
+                zones_to_add.add(zone)
 
             if not zones_to_add:
                 return
