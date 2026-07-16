@@ -259,6 +259,14 @@ class ProtectData:
         """
         self._unsubs.append(self.api.subscribe_events(self._async_process_public_event))
 
+    async def async_update_public(self) -> None:
+        """Refresh the public bootstrap through the library.
+
+        The single entry point for public refreshes: both setup modes, the
+        reconnect resync, and the manual refresh go through here.
+        """
+        await self.api.update_public()
+
     @callback
     def _async_process_public_devices_ws_message(
         self, message: WSSubscriptionMessage
@@ -378,7 +386,7 @@ class ProtectData:
     async def _async_resignal_after_public_resync(self) -> None:
         """Re-signal public entities once a fresh public snapshot is applied."""
         try:
-            await self.api.update_public()
+            await self.async_update_public()
         except NotAuthorized:
             # A revoked API key cannot self-recover.
             self._entry.async_start_reauth(self._hass)
@@ -456,7 +464,7 @@ class ProtectData:
             # The private ``update()`` cannot run without a session; refresh
             # the public snapshot and re-render its subscribers instead.
             try:
-                await self.api.update_public()
+                await self.async_update_public()
             except NotAuthorized:
                 # Buffer transient 401s like the private path; a persistently
                 # revoked API key cannot self-recover and needs reauth.
