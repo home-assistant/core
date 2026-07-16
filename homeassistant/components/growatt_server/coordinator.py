@@ -667,6 +667,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_placeholders={"error": str(err)},
                 ) from err
         else:
+            if len(periods) != 3:
+                raise ValueError("periods must contain exactly 3 period definitions")
             # Classic (username/password) auth — same underlying mixSet endpoint,
             # addressed via positional param1-18 instead of the V1 named payload.
             params = [
@@ -753,8 +755,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_placeholders={"error": str(err)},
                 ) from err
         else:
+            if len(periods) != 3:
+                raise ValueError("periods must contain exactly 3 period definitions")
             # Classic (username/password) auth — same underlying mixSet endpoint,
-            # addressed via positional param1-18 instead of the V1 named payload.
+            # addressed via positional param1-17 instead of the V1 named payload.
             params = [str(discharge_power), str(discharge_stop_soc)]
             for period in periods:
                 params.extend(
