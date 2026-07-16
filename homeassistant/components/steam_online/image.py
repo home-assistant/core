@@ -191,6 +191,10 @@ class SteamImageEntity(SteamEntity, ImageEntity):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data[self._steamid]
+        return (
+            super().available
+            and self.entity_description.available_fn(
+                self.coordinator.data[self._steamid]
+            )
+            and self._cached_image is not None
         )
