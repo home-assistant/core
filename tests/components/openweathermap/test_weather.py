@@ -10,6 +10,7 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_CURRENT,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
+    OWM_MODE_V40,
 )
 from homeassistant.components.openweathermap.weather import SERVICE_GET_MINUTE_FORECAST
 from homeassistant.const import Platform
@@ -24,7 +25,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 ENTITY_ID = "weather.openweathermap"
 
 
-@pytest.mark.parametrize("mode", [OWM_MODE_V30], indirect=True)
+@pytest.mark.parametrize("mode", [OWM_MODE_V30, OWM_MODE_V40], indirect=True)
 async def test_get_minute_forecast(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -61,7 +62,7 @@ async def test_get_minute_forecast_unavailable(
     with pytest.raises(
         ServiceValidationError,
         match="Minute forecast is available only when"
-        " OpenWeatherMap mode is set to v3.0",
+        " OpenWeatherMap mode is set to v3.0 or v4.0",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -73,7 +74,9 @@ async def test_get_minute_forecast_unavailable(
 
 
 @pytest.mark.parametrize(
-    "mode", [OWM_MODE_V30, OWM_MODE_FREE_CURRENT, OWM_MODE_FREE_FORECAST], indirect=True
+    "mode",
+    [OWM_MODE_V30, OWM_MODE_V40, OWM_MODE_FREE_CURRENT, OWM_MODE_FREE_FORECAST],
+    indirect=True,
 )
 async def test_weather_states(
     hass: HomeAssistant,

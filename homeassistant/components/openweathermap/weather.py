@@ -44,6 +44,7 @@ from .const import (
     OWM_MODE_AIRPOLLUTION,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
+    OWM_MODE_V40,
 )
 from .coordinator import OWMUpdateCoordinator
 
@@ -106,7 +107,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
         )
         self.mode = mode
 
-        if mode == OWM_MODE_V30:
+        if mode in (OWM_MODE_V30, OWM_MODE_V40):
             self._attr_supported_features = (
                 WeatherEntityFeature.FORECAST_DAILY
                 | WeatherEntityFeature.FORECAST_HOURLY
@@ -117,7 +118,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
     async def async_get_minute_forecast(self) -> dict[str, list[dict]] | dict:
         """Return Minute forecast."""
 
-        if self.mode == OWM_MODE_V30:
+        if self.mode in (OWM_MODE_V30, OWM_MODE_V40):
             return self.coordinator.data[ATTR_API_MINUTE_FORECAST]
         raise ServiceValidationError(
             translation_domain=DOMAIN,

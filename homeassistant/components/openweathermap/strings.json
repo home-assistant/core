@@ -69,7 +69,7 @@
   },
   "exceptions": {
     "service_minute_forecast_mode": {
-      "message": "Minute forecast is available only when {name} mode is set to v3.0"
+      "message": "Minute forecast is available only when {name} mode is set to v3.0 or v4.0"
     }
   },
   "issues": {

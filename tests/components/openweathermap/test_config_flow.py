@@ -11,6 +11,7 @@ from homeassistant.components.openweathermap.const import (
     DEFAULT_OWM_MODE,
     DOMAIN,
     OWM_MODE_V30,
+    OWM_MODE_V40,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
@@ -46,11 +47,14 @@ USER_INPUT = {
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
+@pytest.mark.parametrize("mode", [OWM_MODE_V30, OWM_MODE_V40])
 async def test_successful_config_flow(
     hass: HomeAssistant,
     owm_client_mock: AsyncMock,
+    mode: str,
 ) -> None:
     """Test that the form is served with valid input."""
+    user_input = {**USER_INPUT, CONF_MODE: mode}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -61,14 +65,14 @@ async def test_successful_config_flow(
     # create entry
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        user_input,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_LATITUDE] == USER_INPUT[CONF_LOCATION][CONF_LATITUDE]
-    assert result["data"][CONF_LONGITUDE] == USER_INPUT[CONF_LOCATION][CONF_LONGITUDE]
-    assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
+    assert result["data"][CONF_LATITUDE] == user_input[CONF_LOCATION][CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == user_input[CONF_LOCATION][CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == user_input[CONF_API_KEY]
 
     # validate entry state
     conf_entries = hass.config_entries.async_entries(DOMAIN)
@@ -81,7 +85,7 @@ async def test_successful_config_flow(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("mode", [OWM_MODE_V30], indirect=True)
+@pytest.mark.parametrize("mode", [OWM_MODE_V30, OWM_MODE_V40], indirect=True)
 async def test_abort_config_flow(
     hass: HomeAssistant,
     owm_client_mock: AsyncMock,

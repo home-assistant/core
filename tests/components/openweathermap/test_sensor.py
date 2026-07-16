@@ -10,6 +10,7 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_CURRENT,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
+    OWM_MODE_V40,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -21,7 +22,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    "mode", [OWM_MODE_V30, OWM_MODE_FREE_CURRENT, OWM_MODE_AIRPOLLUTION], indirect=True
+    "mode",
+    [OWM_MODE_V30, OWM_MODE_V40, OWM_MODE_FREE_CURRENT, OWM_MODE_AIRPOLLUTION],
+    indirect=True,
 )
 async def test_sensor_states(
     hass: HomeAssistant,

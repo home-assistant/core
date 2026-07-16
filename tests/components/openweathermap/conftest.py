@@ -155,11 +155,11 @@ def owm_client_mock() -> Generator[AsyncMock]:
     client.validate_key.return_value = True
     with (
         patch(
-            "homeassistant.components.openweathermap.create_owm_client",
+            "homeassistant.components.openweathermap.get_owm_client",
             return_value=client,
         ),
         patch(
-            "homeassistant.components.openweathermap.utils.create_owm_client",
+            "homeassistant.components.openweathermap.utils.get_owm_client",
             return_value=client,
         ),
     ):
