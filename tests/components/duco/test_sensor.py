@@ -13,6 +13,7 @@ from duco_connectivity import (
     NodeType,
     NodeVentilationInfo,
     VentilationState,
+    VentilationTemperatureInfo,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -241,6 +242,24 @@ async def test_ventilation_temperatures_missing_skip_sensor_creation(
 
     for entity_id in VENTILATION_TEMPERATURE_ENTITY_IDS:
         assert hass.states.get(entity_id) is None
+
+
+async def test_partial_ventilation_temperatures_create_available_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test only reported ventilation temperatures create sensor entities."""
+    mock_duco_client.async_get_ventilation_temperature_info.return_value = (
+        VentilationTemperatureInfo(temp_oda=5.5, temp_eta=21.4)
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert hass.states.get("sensor.living_outdoor_air_temperature") is not None
+    assert hass.states.get("sensor.living_extract_air_temperature") is not None
+    assert hass.states.get("sensor.living_supply_air_temperature") is None
+    assert hass.states.get("sensor.living_exhaust_air_temperature") is None
 
 
 async def test_time_filter_remaining_transient_failure_recovers_sensor_creation(
