@@ -51,12 +51,17 @@ def update_event(
 
     if recurrence_id is None:
         old_start = _utc(master["DTSTART"].dt)
+        old_rule = _rule_string(master)
         _apply(master, data)
-        # A new rule or start invalidates the RECURRENCE-IDs of overrides.
-        if data.get("rrule") or _utc(master["DTSTART"].dt) != old_start:
+        # A changed rule or start invalidates everything anchored to the old
+        # schedule: overrides, exception dates and added dates alike.
+        if _rule_string(master) != old_rule or _utc(master["DTSTART"].dt) != old_start:
             _drop_overrides(
                 ical, master, old_start, from_occurrence=False, all_overrides=True
             )
+            for key in ("EXDATE", "RDATE"):
+                if key in master:
+                    del master[key]
         _save(dav_event, ical, master)
         return
 
@@ -176,6 +181,11 @@ def _master(ical: Any) -> Any:
         if "RECURRENCE-ID" not in vevent:
             return vevent
     return vevents[0]
+
+
+def _rule_string(master: Any) -> str | None:
+    rrule = master.get("RRULE")
+    return rrule.to_ical().decode("utf-8") if rrule is not None else None
 
 
 def _overrides(ical: Any) -> list[Any]:

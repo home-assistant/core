@@ -2820,3 +2820,54 @@ async def test_delete_one_of_two_orphan_overrides(
     event.delete.assert_not_called()
     vevents = list(event.icalendar_instance.walk("VEVENT"))
     assert [vevent["SUMMARY"] for vevent in vevents] == ["Second orphan"]
+
+
+async def test_update_event_same_rrule_keeps_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that resubmitting the unchanged rule keeps overrides."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": UPDATED_EVENT | {"rrule": "FREQ=DAILY;COUNT=5"},
+        },
+    )
+
+    assert len(_overrides(event)) == 1
+
+
+async def test_update_event_new_rrule_drops_exdates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a new rule clears dates anchored to the old schedule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27T16:00:00+00:00",
+                "dtend": "2017-11-27T17:00:00+00:00",
+                "rrule": "FREQ=WEEKLY",
+            },
+        },
+    )
+
+    master = _master(event)
+    assert "EXDATE" not in master
+    assert master["RRULE"].to_ical().decode() == "FREQ=WEEKLY"
