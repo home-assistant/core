@@ -3,6 +3,7 @@
   "name": "NuHeat",
   "codeowners": ["@tstabrawa"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "nuheat",
@@ -10,8 +11,10 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/nuheat",
-  "integration_type": "device",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["nuheat"],
-  "requirements": ["nuheat==1.0.1"]
+  "loggers": ["chemelex_nuheat"],
+  "requirements": [
+    "chemelex-nuheat@git+https://github.com/kilo-WATT/chemelex-nuheat.git@29ecb01c371b6beb3c0bb21053ae291adb96deb7"
+  ]
 }
