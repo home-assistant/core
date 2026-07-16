@@ -16,6 +16,8 @@ from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
 
 PARALLEL_UPDATES = 0
 
+_SPEED_STEP_DELAY = 0.2
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -32,30 +34,30 @@ async def async_setup_entry(
 class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
     """Representation of a Dyson infrared fan entity."""
 
+    _attr_translation_key = "fan"
+    _attr_has_entity_name = True
+    _attr_speed_count = 10
+    _attr_assumed_state = True
+    _attr_supported_features = (
+        FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.SET_SPEED
+        | FanEntityFeature.OSCILLATE
+    )
+
     def __init__(
         self, infrared_emitter_entity_id: str, unique_id: str, name: str
     ) -> None:
         """Initialize the Dyson infrared fan entity."""
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
 
-        self._attr_translation_key = "dyson_ir_fan"
         self._attr_unique_id = unique_id
-        self._attr_has_entity_name = True
-        self._attr_speed_count = 10
         self._attr_percentage = 50
         self._attr_is_on = False
-        self._attr_assumed_state = True
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=name,
-        )
-
-        self._attr_supported_features = (
-            FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
-            | FanEntityFeature.SET_SPEED
-            | FanEntityFeature.OSCILLATE
         )
 
     @property
@@ -125,7 +127,7 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
             )
             for _ in range(abs(target_speed - current_speed)):
                 await self._async_send_dyson_action(code)
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(_SPEED_STEP_DELAY)
 
         self._attr_percentage = normalized_percentage
         self._attr_is_on = True

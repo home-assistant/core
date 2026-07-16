@@ -21,7 +21,7 @@
   },
   "entity": {
     "fan": {
-      "dyson_ir_fan": {
+      "fan": {
         "name": "Dyson Fan"
       }
     }

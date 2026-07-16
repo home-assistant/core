@@ -55,10 +55,7 @@ async def test_form_and_create_entry(hass: HomeAssistant) -> None:
     assert result2["title"] == "Dyson Fan via My Living Room Emitter"
     assert result2["data"] == user_input
     assert len(mock_setup_entry.mock_calls) == 1
-    assert (
-        result2["result"].unique_id
-        == "dyson_infrared_fan_infrared.my_living_room_emitter"
-    )
+    assert result2["result"].unique_id == "fan_infrared.my_living_room_emitter"
 
 
 async def test_abort_no_emitters(hass: HomeAssistant) -> None:
@@ -83,7 +80,7 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
             CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
             CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.existing_emitter",
         },
-        unique_id="dyson_infrared_fan_infrared.existing_emitter",
+        unique_id="fan_infrared.existing_emitter",
     )
     mock_entry.add_to_hass(hass)
 

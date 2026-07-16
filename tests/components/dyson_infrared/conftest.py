@@ -31,7 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DEVICE_TYPE: DysonDeviceType.FAN,
             CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_ENTITY_ID,
         },
-        unique_id=f"dyson_infrared_fan_{MOCK_INFRARED_ENTITY_ID}",
+        unique_id=f"fan_{MOCK_INFRARED_ENTITY_ID}",
     )
 
 
@@ -59,7 +59,7 @@ def mock_make_dyson_cool_command() -> Generator[None]:
 @pytest.fixture
 def mock_speed_sleep() -> Generator[None]:
     """Skip the inter-command delay used when stepping fan speed."""
-    with patch("homeassistant.components.dyson_infrared.fan.asyncio.sleep"):
+    with patch("homeassistant.components.dyson_infrared.fan._SPEED_STEP_DELAY", 0):
         yield
 
 

@@ -43,10 +43,7 @@ rules:
       entity, so there is no separate connection to validate during setup.
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not register custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
