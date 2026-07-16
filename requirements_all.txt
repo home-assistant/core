@@ -1380,7 +1380,7 @@ inkbird-ble==1.4.4
 insteon-frontend-home-assistant==0.6.2
 
 # homeassistant.components.intellifire
-intellifire4py==4.4.0
+intellifire4py==4.5.0
 
 # homeassistant.components.iometer
 iometer==1.0.2
@@ -1599,9 +1599,6 @@ mitsubishi-comfort==0.3.2
 
 # homeassistant.components.moat
 moat-ble==0.1.1
-
-# homeassistant.components.modbus_connection
-modbus-connection[tmodbus]==3.7.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2655,7 +2652,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.8.0
+python-duco-connectivity==0.9.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -3314,7 +3311,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.7.0
+victron-mqtt==2026.7.4
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.12
