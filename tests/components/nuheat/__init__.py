@@ -1,1 +1,1 @@
-"""Tests for the nuheat component."""
+"""Home Assistant NuHeat integration tests."""

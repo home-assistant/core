@@ -1,24 +1,52 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_thermostat": "The thermostat serial number is invalid.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Unable to connect to NuHeat.",
+      "invalid_auth": "NuHeat rejected the authorization.",
+      "invalid_account_identity": "NuHeat authorization did not provide a valid account identity. No settings were changed.",
+      "missing_oauth_credentials": "OAuth application credentials are required for this development build. A future official Home Assistant integration should use centrally managed credentials.",
+      "migration_account_mismatch": "The linked NuHeat account does not contain this thermostat. No legacy settings were changed.",
+      "migration_failed": "NuHeat migration could not be completed. No legacy config entry was removed.",
+      "migration_successful": "NuHeat was reconnected successfully and matching legacy thermostats were consolidated.",
+      "oauth_implementation_unavailable": "The NuHeat OAuth service is temporarily unavailable. Try again later.",
+      "reauth_account_mismatch": "The linked NuHeat account does not match the existing account."
     },
     "step": {
-      "user": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "serial_number": "Serial number of the thermostat.",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "description": "You will need to obtain your thermostat\u2019s numeric serial number or ID by logging into {nuheat_url} and selecting your thermostat(s).",
-        "title": "Connect to the NuHeat"
+      "migration_confirm": {
+        "description": "{thermostat} uses the obsolete username/password API. Continue to sign in to NuHeat with OAuth. Stored legacy credentials are retained until the account and thermostat are validated.",
+        "title": "Reconnect NuHeat"
+      },
+      "reauth_confirm": {
+        "description": "The authorization for {account} has expired. Link the account again.",
+        "title": "Relink NuHeat"
       }
+    }
+  },
+  "application_credentials": {
+    "description": "For development and local testing, request OAuth credentials from NuHeat/Chemelex using the [OpenAPI documentation]({docs_url}). Do not use credentials extracted from a mobile app. An official integration should use Home Assistant Cloud Account Linking."
+  },
+  "exceptions": {
+    "oauth_subject_migration_failed": {
+      "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
+    },
+    "oauth_subject_migration_duplicate": {
+      "message": "Another NuHeat entry already uses this OAuth account subject. No settings were changed."
+    },
+    "legacy_migration_required": {
+      "message": "This NuHeat entry must be reconnected through OAuth."
+    },
+    "unsupported_preset": {
+      "message": "The preset {preset} is not supported by NuHeat."
+    }
+  },
+  "issues": {
+    "migration_cleanup_incomplete": {
+      "description": "NuHeat account migration succeeded, but one or more obsolete config entries could not be removed. Home Assistant will retry cleanup when the surviving NuHeat account loads. The migrated thermostats remain attached to the account entry. Restore a Home Assistant backup if cleanup cannot be completed.",
+      "title": "NuHeat migration cleanup is incomplete"
+    },
+    "migration_rollback_failed": {
+      "description": "Home Assistant could not completely restore local NuHeat registry or config-entry state after a migration failure. Stop retrying migration and restore the Home Assistant backup made before migration testing.",
+      "title": "NuHeat migration rollback needs manual recovery"
     }
   }
 }
