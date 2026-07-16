@@ -352,10 +352,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
+    # Only exposes the raw one-way RTS commands (up/down/stop), not open/close
     OverkizCoverDescription(
         key=UIWidget.RTS_GENERIC,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
+        open_command=OverkizCommand.UP,
+        close_command=OverkizCommand.DOWN,
         stop_command=OverkizCommand.STOP,
     ),
     ##
