@@ -17,7 +17,7 @@
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
   "quality_scale": "platinum",
-  "requirements": ["aioshelly==13.26.2"],
+  "requirements": ["aioshelly==13.27.0"],
   "zeroconf": [
     {
       "name": "shelly*",
