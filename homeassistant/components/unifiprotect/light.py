@@ -57,9 +57,8 @@ async def async_setup_entry(
     def _add_new_public_device(device: PublicDeviceModel) -> None:
         if not isinstance(device, PublicLight):
             return
-        # A re-added light overlaps the entity kept from before its removal;
-        # the platform rejects the duplicate unique_id with an error, so add
-        # only if the mac is not represented yet.
+        # Skip a re-add whose entity still exists; the platform errors on a
+        # duplicate unique_id.
         if any(e.unique_id == device.mac for e in platform.entities.values()):
             return
         async_add_entities([ProtectLight(data, device, None)])
@@ -72,16 +71,12 @@ async def async_setup_entry(
     entities: list[ProtectLight] = []
     for public, private in data.get_public_lights():
         if private is None:
-            # Hybrid: a light not yet in the private bootstrap (adopt race) is
-            # created by the adopt dispatch with its private fill, which would
-            # otherwise collide on unique_id. In public-only mode every pair
-            # carries the public object, so create from it directly.
+            # Public-only creates from the public object; hybrid defers to the
+            # adopt dispatch (its private fill would clash on unique_id).
             if data.api.is_public_only:
                 entities.append(ProtectLight(data, public, None))
             continue
-        # A private light without a public mirror is still created: the entity
-        # reads state from the public object and stays unavailable until its
-        # mirror arrives on the public devices websocket (paired by mac).
+        # Created even without a public mirror; unavailable until one arrives.
         if private.can_write(data.api.bootstrap.auth_user):
             entities.append(ProtectLight(data, public, private))
     async_add_entities(entities)
@@ -113,17 +108,10 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         public: PublicLight | None,
         private: Light | None,
     ) -> None:
-        """Initialize the light.
-
-        The public light is the master; the private light fills gaps the
-        public API does not cover and is ``None`` in public-only mode.
-        """
+        """Initialize the light."""
         self._private = private
-        # Seed the public object; ``async_added_to_hass`` re-reads it from the
-        # bootstrap so an update between construction and add is not missed.
         self._ufp_public_obj = public
-        # The base tracks the private device in hybrid (unchanged behaviour) and
-        # the public device in public-only, so it always has a mac to key on.
+        # Key the base on the private device in hybrid, the public one otherwise.
         super().__init__(data, cast(ProtectDeviceType, private or public))
 
     @callback
@@ -132,9 +120,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         if self._private is not None:
             super()._async_set_device_info()
             return
-        # public-only: no market_name/firmware_version/protect_url, and the
-        # NVR link is omitted — an API-key-only client has no private
-        # bootstrap to read the NVR mac from.
+        # market_name/firmware/URL and the NVR link are private-only.
         public = cast(PublicLight, self.device)
         self._attr_device_info = DeviceInfo(
             name=public.display_name,
@@ -184,9 +170,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         else:
             _LOGGER.debug("Turning on light")
 
-        # Commands are only reachable while available, which requires the public
-        # object; the setter copies the light's own current settings (write-through,
-        # never stale), validates the LED level, and serializes the write.
+        # Reachable only while available (public object present); the setter
+        # validates the level and writes through the light's own settings.
         await cast(PublicLight, self._ufp_public_obj).set_light(True, led_level)
 
     @async_ufp_instance_command

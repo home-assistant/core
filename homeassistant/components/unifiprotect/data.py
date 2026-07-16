@@ -192,13 +192,10 @@ class ProtectData:
     def get_public_lights(
         self,
     ) -> Generator[tuple[PublicLight | None, Light | None]]:
-        """Iterate lights public-master with private-fill.
+        """Yield ``(public, private)`` light pairs, public-master.
 
-        The public bootstrap is the master list; the matching private light is
-        paired by shared id when present (hybrid) and ``None`` in public-only
-        mode. An adopted private light not (yet) mirrored into the public
-        bootstrap is yielded as ``(None, private)``. Adopted-filtering mirrors
-        the private enumeration whenever a private object is available.
+        Either side is ``None``: public-only has no private, a not-yet-mirrored
+        light no public.
         """
         api = self.api
         if not api.has_public_bootstrap:
@@ -405,11 +402,9 @@ class ProtectData:
             _LOGGER.debug("Public refresh after reconnect failed: %s", err)
             return
         self._async_process_public_updates()
-        # Existing subscriptions are refreshed above, but a device that
-        # appeared during the gap still needs its entities; the platform adds
-        # only the missing ones. Cameras re-enumerate via the channels signal;
-        # in public-only mode there is no private adopt path, so public-master
-        # families (lights) that appeared are re-dispatched here too.
+        # A device that appeared during the gap gets no add frame, so re-dispatch
+        # for enumeration; the platform adds only the missing ones. Lights have no
+        # private adopt path in public-only mode, so re-dispatch them too.
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
                 async_dispatcher_send(self._hass, self.channels_signal, public)

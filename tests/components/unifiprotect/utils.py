@@ -499,9 +499,7 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
     pb.arm_profiles = {}
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
-        # Cache one public mock per id so the object the entity holds stays the
-        # same instance across calls (a fresh mock each call would break command
-        # assertions on the entity's cached public object).
+        # One mock per id so command assertions hit the entity's cached object.
         if (
             model is ModelType.LIGHT
             and obj_id not in public_bootstrap.lights
