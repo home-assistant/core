@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import (
@@ -77,11 +77,8 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
         """Fetch data from API endpoint."""
         try:
             await self.vmc.refresh_state()
-            if self.vmc.state is None:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_failed",
-                )
+            if TYPE_CHECKING:
+                assert self.vmc.state is not None
             return FlowItCoordinatorData(state=self.vmc.state)
         except FlowItAuthError as err:
             raise ConfigEntryAuthFailed(
