@@ -855,11 +855,7 @@ class HomeAssistantHTTP:
         self._legacy_redirect_runner = web.AppRunner(redirect_app)
         await self._legacy_redirect_runner.setup()
         try:
-            self._legacy_redirect_server = await self.hass.loop.create_server(
-                self._legacy_redirect_runner.server,
-                self.server_host if self.server_host is not None else _DEFAULT_BIND,
-                SERVER_PORT,
-            )
+            self._legacy_redirect_server = await self._async_create_redirect_server()
         except OSError as error:
             _LOGGER.error(
                 "Failed to start legacy port %d redirect: %s", SERVER_PORT, error
@@ -875,6 +871,15 @@ class HomeAssistantHTTP:
         )
         async_when_setup_or_start(
             self.hass, "onboarding", self._async_register_onboarding_teardown
+        )
+
+    async def _async_create_redirect_server(self) -> asyncio.Server:
+        """Bind the legacy redirect server on the previous default port."""
+        assert self._legacy_redirect_runner is not None
+        return await self.hass.loop.create_server(
+            self._legacy_redirect_runner.server,
+            self.server_host if self.server_host is not None else _DEFAULT_BIND,
+            SERVER_PORT,
         )
 
     async def _async_register_onboarding_teardown(self, *_: Any) -> None:

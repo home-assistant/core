@@ -98,6 +98,14 @@ def mock_create_server() -> Generator[Mock]:
         server.close()
 
 
+async def _bind_redirect_ephemeral(self: http.HomeAssistantHTTP) -> asyncio.Server:
+    """Bind the legacy redirect on an ephemeral localhost port instead of 8123."""
+    assert self._legacy_redirect_runner is not None
+    return await self.hass.loop.create_server(
+        self._legacy_redirect_runner.server, "127.0.0.1", 0, start_serving=False
+    )
+
+
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
     test_dir = tmp_path / "test_broken_ssl"
     test_dir.mkdir()
@@ -1341,22 +1349,22 @@ async def test_supervisor_defaults_to_port_80(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test that under Supervisor the server uses port 80 and redirects 8123."""
-    mock_server = Mock()
+    """Test that under Supervisor the server uses port 80 and starts the redirect."""
     with (
         patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
         patch(
-            "asyncio.BaseEventLoop.create_server", return_value=mock_server
-        ) as mock_create_server,
+            "homeassistant.components.http.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=_bind_redirect_ephemeral,
+        ),
     ):
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    # The main server binds port 80 and a legacy redirect binds port 8123.
-    bound_ports = {call.args[2] for call in mock_create_server.call_args_list}
-    assert bound_ports == {80, 8123}
+    assert hass.config.api.port == 80
     assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == 80
+    assert hass.http._legacy_redirect_server is not None
 
 
 async def test_no_legacy_redirect_without_supervisor(
@@ -1364,20 +1372,14 @@ async def test_no_legacy_redirect_without_supervisor(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test that no legacy redirect is started when not running under Supervisor."""
-    mock_server = Mock()
-    with (
-        patch.dict(os.environ, {ENV_SETUP_PORT: "80"}),
-        patch(
-            "asyncio.BaseEventLoop.create_server", return_value=mock_server
-        ) as mock_create_server,
-    ):
+    with patch.dict(os.environ, {ENV_SETUP_PORT: "80"}):
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    bound_ports = {call.args[2] for call in mock_create_server.call_args_list}
-    assert bound_ports == {80}
+    assert hass.config.api.port == 80
     assert hass.http._legacy_redirect_runner is None
+    assert hass.http._legacy_redirect_server is None
 
 
 @pytest.mark.parametrize(
@@ -1396,10 +1398,13 @@ async def test_transition_cors_header(
     expect_header: bool,
 ) -> None:
     """Test the transition CORS hook only echoes same-host origins while active."""
-    mock_server = Mock()
     with (
         patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
-        patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
+        patch(
+            "homeassistant.components.http.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=_bind_redirect_ephemeral,
+        ),
     ):
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
@@ -1426,23 +1431,27 @@ async def test_port_transition_ends_on_onboarding(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test the legacy redirect and CORS relaxation stop once onboarded."""
-    mock_server = Mock()
     with (
         patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
-        patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
+        patch(
+            "homeassistant.components.http.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=_bind_redirect_ephemeral,
+        ),
     ):
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
         server = hass.http
-        assert server._legacy_redirect_runner is not None
+        assert server._legacy_redirect_server is not None
         assert server._port_transition_cors is True
 
         await server._async_end_port_transition()
 
-    assert server._legacy_redirect_runner is None
-    assert server._port_transition_cors is False
+        assert server._legacy_redirect_server is None
+        assert server._legacy_redirect_runner is None
+        assert server._port_transition_cors is False
 
 
 async def test_websocket_http_config(
