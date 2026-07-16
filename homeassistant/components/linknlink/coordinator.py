@@ -11,7 +11,6 @@ from aiolinknlink import (
     UltraPositionSubscription,
     UltraPositionSubscriptionState,
     UltraPositionUpdate,
-    UltraRadarStatus,
     UltraSession,
 )
 
@@ -28,7 +27,6 @@ from .const import (
 
 type LinknLinkConfigEntry = ConfigEntry[LinknLinkCoordinator]
 type PositionListener = Callable[[UltraPositionUpdate | None], None]
-type ConfigListener = Callable[[], None]
 
 
 class LinknLinkCoordinator(DataUpdateCoordinator[None]):
@@ -58,11 +56,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         self.position_state: UltraPositionSubscriptionState | None = None
         self.environment_state: UltraEnvironmentState | None = None
         self.environment_available = False
-        self.radar_status: UltraRadarStatus | None = None
         self._position_listeners: set[PositionListener] = set()
-        self._config_listeners: set[ConfigListener] = set()
-        self._setup_complete = False
-        self._radar_refresh_pending = False
 
     @override
     async def _async_setup(self) -> None:
@@ -80,11 +74,6 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
                 POSITION_SUBSCRIPTION_CONFIRM_TIMEOUT
             )
             self.position_state = self.position_subscription.state
-            try:
-                self.radar_status = await self.position_subscription.get_radar_status()
-            except UltraError as err:
-                LOGGER.warning("Unable to read Ultra radar configuration: %s", err)
-            self._setup_complete = True
         except (OSError, TimeoutError, UltraError, ValueError) as err:
             if self.position_subscription is not None:
                 await self.position_subscription.stop()
@@ -127,78 +116,6 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         return _remove_listener
 
     @callback
-    def async_add_config_listener(self, listener: ConfigListener) -> Callable[[], None]:
-        """Register a callback for radar configuration changes."""
-        self._config_listeners.add(listener)
-
-        @callback
-        def _remove_listener() -> None:
-            self._config_listeners.discard(listener)
-
-        return _remove_listener
-
-    async def async_set_radar_sensitivity(self, sensitivity: int) -> None:
-        """Set radar sensitivity and store the device-confirmed value."""
-        if self.position_subscription is None:
-            raise UltraError("position subscription is not available")
-        self.radar_status = await self.position_subscription.set_radar_sensitivity(
-            sensitivity
-        )
-        self._async_notify_config_listeners()
-
-    async def async_set_radar_trigger_speed(self, trigger_speed: int) -> None:
-        """Set radar trigger speed and store the device-confirmed value."""
-        subscription = self._radar_subscription()
-        self.radar_status = await subscription.set_radar_trigger_speed(trigger_speed)
-        self._async_notify_config_listeners()
-
-    async def async_set_radar_install_mode(self, install_mode: int) -> None:
-        """Set installation mode and store the device-confirmed value."""
-        subscription = self._radar_subscription()
-        self.radar_status = await subscription.set_radar_install_mode(install_mode)
-        self._async_notify_config_listeners()
-
-    async def async_set_radar_height(self, height: int) -> None:
-        """Set installation height and store the device-confirmed value."""
-        subscription = self._radar_subscription()
-        self.radar_status = await subscription.set_radar_height(height)
-        self._async_notify_config_listeners()
-
-    async def async_set_radar_install_direction(self, install_direction: int) -> None:
-        """Set installation direction and store the device-confirmed value."""
-        subscription = self._radar_subscription()
-        self.radar_status = await subscription.set_radar_install_direction(
-            install_direction
-        )
-        self._async_notify_config_listeners()
-
-    async def async_set_radar_z_range(self, minimum: float, maximum: float) -> None:
-        """Set the Z-axis range and store both device-confirmed limits."""
-        subscription = self._radar_subscription()
-        self.radar_status = await subscription.set_radar_z_range(minimum, maximum)
-        self._async_notify_config_listeners()
-
-    async def async_set_radar_default_absence_delay(self, seconds: int) -> None:
-        """Set the default absence delay and store the device-confirmed value."""
-        subscription = self._radar_subscription()
-        self.radar_status = await subscription.set_radar_default_absence_delay(seconds)
-        self._async_notify_config_listeners()
-
-    async def async_set_radar_zone_absence_delay(self, zone: int, seconds: int) -> None:
-        """Set a zone absence delay and store the device-confirmed value."""
-        subscription = self._radar_subscription()
-        self.radar_status = await subscription.set_radar_zone_absence_delay(
-            zone, seconds
-        )
-        self._async_notify_config_listeners()
-
-    def _radar_subscription(self) -> UltraPositionSubscription:
-        """Return the running subscription used for serialized radar operations."""
-        if self.position_subscription is None:
-            raise UltraError("position subscription is not available")
-        return self.position_subscription
-
-    @callback
     def _async_handle_position(self, update: UltraPositionUpdate) -> None:
         """Forward a new target-position update to position entities."""
         assert self.position_subscription is not None
@@ -218,8 +135,6 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
             previous.stale,
             previous.last_error,
         ) == (state.subscribed, state.stale, state.last_error):
-            if state.subscribed and self.radar_status is None:
-                self._async_schedule_radar_refresh()
             return
         if state.last_error and (previous is None or previous.subscribed):
             LOGGER.warning(
@@ -228,43 +143,8 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
             )
         elif state.subscribed and previous is not None and not previous.subscribed:
             LOGGER.info("Ultra local position subscription is available")
-            self._async_schedule_radar_refresh()
-        if previous is not None and previous.subscribed and not state.subscribed:
-            self.radar_status = None
-            self._async_notify_config_listeners()
         for listener in self._position_listeners:
             listener(None)
-
-    @callback
-    def _async_schedule_radar_refresh(self) -> None:
-        """Schedule one radar refresh when no refresh is already pending."""
-        if not self._setup_complete or self._radar_refresh_pending:
-            return
-        self._radar_refresh_pending = True
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self._async_refresh_radar_status(),
-            "Refresh LinknLink radar configuration",
-        )
-
-    async def _async_refresh_radar_status(self) -> None:
-        """Refresh radar configuration after a recovered subscription."""
-        try:
-            if self.position_subscription is None:
-                return
-            self.radar_status = await self.position_subscription.get_radar_status()
-        except UltraError as err:
-            LOGGER.warning("Unable to refresh Ultra radar configuration: %s", err)
-            return
-        finally:
-            self._radar_refresh_pending = False
-        self._async_notify_config_listeners()
-
-    @callback
-    def _async_notify_config_listeners(self) -> None:
-        """Notify radar configuration entities."""
-        for listener in self._config_listeners:
-            listener()
 
     @override
     async def async_shutdown(self) -> None:

@@ -31,105 +31,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "occupancy": {
-        "name": "Occupancy"
-      },
-      "zone_1_occupancy": {
-        "name": "Zone 1 occupancy"
-      },
-      "zone_2_occupancy": {
-        "name": "Zone 2 occupancy"
-      },
-      "zone_3_occupancy": {
-        "name": "Zone 3 occupancy"
-      },
-      "zone_4_occupancy": {
-        "name": "Zone 4 occupancy"
-      }
-    },
-    "event": {
-      "target_position": {
-        "name": "Target position",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "position_update": "Position update"
-            }
-          },
-          "nearest_distance": {
-            "name": "Nearest 3D distance"
-          },
-          "nearest_horizontal_distance": {
-            "name": "Nearest horizontal distance"
-          },
-          "target_count": {
-            "name": "Target count"
-          },
-          "targets": {
-            "name": "Targets"
-          }
-        }
-      }
-    },
-    "number": {
-      "radar_default_absence_delay": {
-        "name": "Default absence delay"
-      },
-      "radar_height": {
-        "name": "Radar installation height"
-      },
-      "radar_z_maximum": {
-        "name": "Radar maximum Z range"
-      },
-      "radar_z_minimum": {
-        "name": "Radar minimum Z range"
-      },
-      "radar_zone_1_absence_delay": {
-        "name": "Zone 1 absence delay"
-      },
-      "radar_zone_2_absence_delay": {
-        "name": "Zone 2 absence delay"
-      },
-      "radar_zone_3_absence_delay": {
-        "name": "Zone 3 absence delay"
-      },
-      "radar_zone_4_absence_delay": {
-        "name": "Zone 4 absence delay"
-      }
-    },
-    "select": {
-      "radar_install_direction": {
-        "name": "Radar installation direction",
-        "state": {
-          "down": "Down",
-          "up": "Up"
-        }
-      },
-      "radar_install_mode": {
-        "name": "Radar installation mode",
-        "state": {
-          "ceiling": "Ceiling",
-          "wall": "Wall"
-        }
-      },
-      "radar_sensitivity": {
-        "name": "Radar sensitivity",
-        "state": {
-          "level_0": "Low",
-          "level_1": "Medium",
-          "level_2": "High"
-        }
-      },
-      "radar_trigger_speed": {
-        "name": "Radar trigger speed",
-        "state": {
-          "level_0": "Slow",
-          "level_1": "Medium",
-          "level_2": "Fast"
-        }
-      }
-    },
     "sensor": {
       "humidity": {
         "name": "Humidity"
@@ -170,12 +71,6 @@
     }
   },
   "exceptions": {
-    "control_error": {
-      "message": "Unable to update the LinknLink device: {error}"
-    },
-    "invalid_radar_option": {
-      "message": "The selected radar configuration option is invalid."
-    },
     "update_error": {
       "message": "Error communicating with the LinknLink device: {error}"
     }

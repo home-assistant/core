@@ -10,8 +10,6 @@ from aiolinknlink import (
     UltraEnvironmentState,
     UltraPositionSubscriptionState,
     UltraPositionUpdate,
-    UltraRadarStatus,
-    UltraRadarZRange,
     UltraSession,
     UltraTargetPosition,
 )
@@ -52,18 +50,6 @@ POSITION_STATE = UltraPositionSubscriptionState(
     confirmation_count=1,
     latest_update=POSITION_UPDATE,
     last_subscribed_at=datetime(2026, 7, 14, 11, 59, tzinfo=UTC),
-)
-RADAR_STATUS = UltraRadarStatus(
-    did="e04b410167bbdbac00000000dbac0001",
-    sensitivity=2,
-    received_at=datetime(2026, 7, 14, 11, 59, tzinfo=UTC),
-    trigger_speed=1,
-    install_mode=0,
-    height=240,
-    install_direction=1,
-    z_range=UltraRadarZRange(minimum=-2.0, maximum=2.0),
-    default_absence_delay=60,
-    zone_absence_delays=(60, 90, 120, 180),
 )
 ENVIRONMENT_STATE = UltraEnvironmentState(
     device_id=MAC,
@@ -132,17 +118,6 @@ def mock_position_subscription() -> Generator[tuple[MagicMock, MagicMock]]:
         subscription.state = POSITION_STATE
         subscription.start = AsyncMock()
         subscription.stop = AsyncMock()
-        subscription.get_radar_status = AsyncMock(return_value=RADAR_STATUS)
-        subscription.set_radar_sensitivity = AsyncMock(return_value=RADAR_STATUS)
-        subscription.set_radar_trigger_speed = AsyncMock(return_value=RADAR_STATUS)
-        subscription.set_radar_install_mode = AsyncMock(return_value=RADAR_STATUS)
-        subscription.set_radar_height = AsyncMock(return_value=RADAR_STATUS)
-        subscription.set_radar_install_direction = AsyncMock(return_value=RADAR_STATUS)
-        subscription.set_radar_z_range = AsyncMock(return_value=RADAR_STATUS)
-        subscription.set_radar_default_absence_delay = AsyncMock(
-            return_value=RADAR_STATUS
-        )
-        subscription.set_radar_zone_absence_delay = AsyncMock(return_value=RADAR_STATUS)
         yield subscription_class, subscription
 
 

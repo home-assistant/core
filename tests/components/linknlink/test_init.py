@@ -54,35 +54,18 @@ async def test_setup_and_unload(
     subscription_class.assert_called_once()
     subscription.start.assert_awaited_once()
     subscription.wait_confirmed.assert_awaited_once_with(60.0)
-    subscription.get_radar_status.assert_awaited_once()
     device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, MAC)})
     assert device is not None
     assert device.model == DISPLAY_MODEL
-    event_id = er.async_get(hass).async_get_entity_id(
-        "event", DOMAIN, f"{MAC}_target_position"
+    sensor_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{MAC}_nearest_distance"
     )
-    assert event_id is not None
+    assert sensor_id is not None
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     subscription.stop.assert_awaited_once()
-    assert hass.states.get(event_id).state == STATE_UNAVAILABLE
-
-
-async def test_setup_continues_when_radar_configuration_is_unavailable(
-    hass: HomeAssistant,
-    mock_linknlink_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_position_subscription: tuple[MagicMock, MagicMock],
-) -> None:
-    """Test position setup when the optional radar status read fails."""
-    _, subscription = mock_position_subscription
-    subscription.get_radar_status.side_effect = UltraConnectionError("offline")
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.radar_status is None
+    assert hass.states.get(sensor_id).state == STATE_UNAVAILABLE
 
 
 async def test_setup_retries_when_device_is_unavailable(
