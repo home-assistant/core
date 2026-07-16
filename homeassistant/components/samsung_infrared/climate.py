@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from infrared_protocols.codes.samsung.ac import SamsungAC0292StateBuilder
+from infrared_protocols.commands.samsung import SamsungAC0292Command
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -102,14 +102,14 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
         fan_str = HA_TO_LIB_FAN.get(self._attr_fan_mode, "auto")
         temp_int = int(self._attr_target_temperature)
 
-        builder = SamsungAC0292StateBuilder(
+        command = SamsungAC0292Command(
             hvac_mode=hvac_str,
-            target_temperature=temp_int,
+            target_temperature=None if hvac_str == "off" else temp_int,
             fan_mode=fan_str,
             swing_mode="off",
         )
 
-        await self._send_command(builder.to_command())
+        await self._send_command(command)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
