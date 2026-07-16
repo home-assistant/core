@@ -1,5 +1,6 @@
 """Coordinators for Google Health."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -12,9 +13,13 @@ from google_health_api.exceptions import (
     HealthAuthException,
 )
 from google_health_api.model import (
+    ActiveEnergyBurnedRollupValue,
+    BodyFat,
     DailyRestingHeartRate,
     DistanceRollupValue,
+    FloorsRollupValue,
     StepsRollupValue,
+    TotalCaloriesRollupValue,
     Weight,
 )
 
@@ -40,6 +45,9 @@ class GoogleHealthActivityData:
 
     steps: StepsRollupValue | None = None
     distance: DistanceRollupValue | None = None
+    active_energy_burned: ActiveEnergyBurnedRollupValue | None = None
+    total_calories: TotalCaloriesRollupValue | None = None
+    floors: FloorsRollupValue | None = None
 
 
 @dataclass
@@ -48,6 +56,7 @@ class GoogleHealthBodyData:
 
     weight: Weight | None = None
     resting_heart_rate: DailyRestingHeartRate | None = None
+    body_fat: BodyFat | None = None
 
 
 class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -116,20 +125,42 @@ class GoogleHealthActivityCoordinator(
 
     @override
     async def _async_fetch_data(self) -> GoogleHealthActivityData:
-        """Fetch steps and distance rollup for today.
+        """Fetch activity rollups for today.
 
-        Queries the daily rollup endpoints using Home Assistant's local time zone
-        to aggregate step and distance counts over the current civil day. If no
-        data points exist for today yet, the API returns None, which the sensors
-        default to 0.
+        Queries the daily rollup endpoints in parallel using Home Assistant's
+        local time zone to aggregate steps, distance, active calories, total
+        calories, and floors. If no data points exist for today yet, the API
+        returns None, which the sensors default to 0.
         """
-        steps_rollup = await self.api.steps.today(self.hass.config.time_zone)
-        distance_rollup = await self.api.distance.today(self.hass.config.time_zone)
+        (
+            steps_rollup,
+            distance_rollup,
+            active_energy_rollup,
+            total_calories_rollup,
+            floors_rollup,
+        ) = await asyncio.gather(
+            self.api.steps.today(self.hass.config.time_zone),
+            self.api.distance.today(self.hass.config.time_zone),
+            self.api.active_energy_burned.today(self.hass.config.time_zone),
+            self.api.total_calories.today(self.hass.config.time_zone),
+            self.api.floors.today(self.hass.config.time_zone),
+        )
 
         steps = steps_rollup.data if steps_rollup else None
         distance = distance_rollup.data if distance_rollup else None
+        active_energy_burned = (
+            active_energy_rollup.data if active_energy_rollup else None
+        )
+        total_calories = total_calories_rollup.data if total_calories_rollup else None
+        floors = floors_rollup.data if floors_rollup else None
 
-        return GoogleHealthActivityData(steps=steps, distance=distance)
+        return GoogleHealthActivityData(
+            steps=steps,
+            distance=distance,
+            active_energy_burned=active_energy_burned,
+            total_calories=total_calories,
+            floors=floors,
+        )
 
 
 class GoogleHealthBodyCoordinator(
@@ -155,13 +186,14 @@ class GoogleHealthBodyCoordinator(
 
     @override
     async def _async_fetch_data(self) -> GoogleHealthBodyData:
-        """Fetch latest body weight and resting heart rate."""
+        """Fetch latest body weight, resting heart rate, and body fat in parallel."""
         # The Google Health API returns data points sorted by interval start time
         # in descending order (newest first). Querying with page_size=1 and grabbing
         # the first element is sufficient to fetch the most recent measurement.
-        weight_result = await self.api.weight.list(page_size=DEFAULT_PAGE_SIZE)
-        hr_result = await self.api.daily_resting_heart_rate.list(
-            page_size=DEFAULT_PAGE_SIZE
+        weight_result, hr_result, body_fat_result = await asyncio.gather(
+            self.api.weight.list(page_size=DEFAULT_PAGE_SIZE),
+            self.api.daily_resting_heart_rate.list(page_size=DEFAULT_PAGE_SIZE),
+            self.api.body_fat.list(page_size=DEFAULT_PAGE_SIZE),
         )
 
         weight = (
@@ -170,7 +202,12 @@ class GoogleHealthBodyCoordinator(
         resting_heart_rate = (
             hr_result.data_points[0].data if hr_result.data_points else None
         )
+        body_fat = (
+            body_fat_result.data_points[0].data if body_fat_result.data_points else None
+        )
 
         return GoogleHealthBodyData(
-            weight=weight, resting_heart_rate=resting_heart_rate
+            weight=weight,
+            resting_heart_rate=resting_heart_rate,
+            body_fat=body_fat,
         )
