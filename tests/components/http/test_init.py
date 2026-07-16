@@ -1,13 +1,16 @@
 """The tests for the Home Assistant HTTP component."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+import errno
 from http import HTTPStatus
 import logging
 import os
 from pathlib import Path
+import socket
+import ssl
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,11 +23,13 @@ from homeassistant.components.http.config import (
     _DEFAULT_CONFIG,
     AUTO_REVERT_DELAY,
     HTTP_STORAGE_SCHEMA,
+    async_get_and_load_store,
     default_server_port,
 )
 from homeassistant.components.http.const import ENV_SETUP_PORT
-from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
@@ -47,6 +52,49 @@ def disable_http_server(socket_enabled: None) -> None:
     This allows the HTTP server to start in tests that need it.
     """
     return
+
+
+# The unpatched original, for tests that exercise the real implementation.
+_REAL_CREATE_SERVER = http.HomeAssistantHTTP._async_create_server
+
+
+async def _ephemeral_server(hass: HomeAssistant) -> asyncio.Server:
+    """Create a bound but not serving server on an ephemeral localhost port."""
+    return await hass.loop.create_server(
+        asyncio.Protocol, "127.0.0.1", 0, start_serving=False
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_create_server() -> Generator[Mock]:
+    """Bind an ephemeral localhost server instead of the configured address.
+
+    Binding the configured address for real would make parallel tests collide
+    on ports; an ephemeral localhost server keeps the serving path real.
+    """
+    servers: list[asyncio.Server] = []
+
+    async def _bind_ephemeral(self: http.HomeAssistantHTTP) -> asyncio.Server:
+        server = await self.hass.loop.create_server(
+            self._make_protocol,
+            "127.0.0.1",
+            0,
+            ssl=self.context,
+            start_serving=False,
+        )
+        servers.append(server)
+        return server
+
+    with patch(
+        "homeassistant.components.http.HomeAssistantHTTP._async_create_server",
+        autospec=True,
+        side_effect=_bind_ephemeral,
+    ) as mock_create:
+        yield mock_create
+
+    # Close any server that is not already closed (closing twice is a no-op).
+    for server in servers:
+        server.close()
 
 
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
@@ -400,24 +448,29 @@ async def test_emergency_ssl_certificate_when_invalid(
         " certificate was not usable" in caplog.text
     )
 
-    assert hass.http.site is not None
+    assert hass.http._server is not None
 
 
 async def test_emergency_ssl_certificate_not_used_when_not_recovery_mode(
-    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    hass_storage: dict[str, Any],
 ) -> None:
-    """Test an emergency cert is only used in recovery mode."""
+    """Test an emergency cert is only used in recovery mode.
+
+    A broken SSL config in the stable slot fails setup (activating recovery
+    mode on a real boot); only recovery mode uses the emergency certificate.
+    """
 
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-
-    assert (
-        await async_setup_component(
-            hass, DOMAIN, {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
-        )
-        is False
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
     )
+
+    assert await async_setup_component(hass, DOMAIN, {}) is False
 
 
 async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
@@ -452,7 +505,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
         " certificate was not usable" in caplog.text
     )
 
-    assert hass.http.site is not None
+    assert hass.http._server is not None
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert(
@@ -480,7 +533,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
     assert len(mock_builder.mock_calls) == 1
 
-    assert hass.http.site is not None
+    assert hass.http._server is not None
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
@@ -495,6 +548,9 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     an emergency cert (probably will never happen since this means
     the system is very broken), we do not want to startup http
     as it would allow connections that are not verified by the cert.
+    This intentionally overrides the recovery-mode fallback to the default
+    config: connections must never be accepted without client certificate
+    verification once it is configured.
     """
 
     cert_path, key_path = await hass.async_add_executor_job(
@@ -517,6 +573,68 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
     assert len(mock_builder.mock_calls) == 1
+
+
+async def test_emergency_ssl_certificate_enforces_peer_certificate(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the emergency cert still enforces client certificate verification.
+
+    When the configured SSL certificate is broken and recovery mode falls
+    back to the emergency self-signed certificate, a configured peer
+    certificate must still be applied - connections must never be accepted
+    without client certificate verification once it is configured.
+    """
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_peer_certificate": str(cert_path),
+        }
+    )
+    hass.config.recovery_mode = True
+
+    with patch("ssl.SSLContext.load_verify_locations") as mock_load_verify:
+        assert await async_setup_component(hass, DOMAIN, {}) is True
+
+    assert "emergency self signed ssl certificate" in caplog.text
+    mock_load_verify.assert_called_once_with(str(cert_path))
+    assert hass.http.context is not None
+    assert hass.http.context.verify_mode is ssl.CERT_REQUIRED
+
+
+async def test_create_server_passes_configuration(hass: HomeAssistant) -> None:
+    """The real server factory passes the configured values to asyncio."""
+    server = http.HomeAssistantHTTP(
+        hass,
+        server_host=["127.0.0.1", "::1"],
+        server_port=1234,
+        ssl_certificate=None,
+        ssl_peer_certificate=None,
+        ssl_key=None,
+        trusted_proxies=[],
+        ssl_profile=http.SSL_MODERN,
+    )
+
+    with patch.object(
+        hass.loop, "create_server", new=AsyncMock(return_value=Mock())
+    ) as mock_create:
+        await _REAL_CREATE_SERVER(server)
+
+    mock_create.assert_called_once_with(
+        server._make_protocol,
+        ["127.0.0.1", "::1"],
+        1234,
+        ssl=None,
+        backlog=128,
+        start_serving=False,
+    )
 
 
 async def test_cors_defaults(hass: HomeAssistant) -> None:
@@ -742,15 +860,10 @@ async def test_server_host(
     expected_serverhost: list,
     expected_issues: set[tuple[str, str]],
     caplog: pytest.LogCaptureFixture,
+    mock_create_server: Mock,
 ) -> None:
     """Test server_host behavior."""
-    mock_server = Mock()
-    with (
-        patch("homeassistant.components.http.is_hassio", return_value=hassio),
-        patch(
-            "asyncio.BaseEventLoop.create_server", return_value=mock_server
-        ) as mock_create_server,
-    ):
+    with patch("homeassistant.components.http.is_hassio", return_value=hassio):
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -759,15 +872,9 @@ async def test_server_host(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    mock_create_server.assert_called_once_with(
-        ANY,
-        expected_serverhost,
-        8123,
-        ssl=None,
-        backlog=128,
-        reuse_address=None,
-        reuse_port=None,
-    )
+    mock_create_server.assert_called_once()
+    assert hass.http.server_host == expected_serverhost
+    assert hass.http.server_port == 8123
 
     assert set(issue_registry.issues) == expected_issues
 
@@ -787,7 +894,6 @@ async def test_unix_socket_started_with_supervisor(
         patch.dict(
             os.environ, {"SUPERVISOR_CORE_API_SOCKET": str(socket_path)}, clear=False
         ),
-        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
         patch(
             "homeassistant.components.http.web_runner.HomeAssistantUnixSite"
             "._create_unix_socket",
@@ -812,7 +918,6 @@ async def test_unix_socket_not_started_without_supervisor(
     """Test unix socket is not started when not running under Supervisor."""
     with (
         patch.dict(os.environ, {}, clear=False),
-        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
     ):
         os.environ.pop("SUPERVISOR_CORE_API_SOCKET", None)
         assert await async_setup_component(hass, DOMAIN, {"http": {}})
@@ -833,7 +938,6 @@ async def test_unix_socket_rejected_relative_path(
             {"SUPERVISOR_CORE_API_SOCKET": "relative/path.sock"},
             clear=False,
         ),
-        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
     ):
         assert await async_setup_component(hass, DOMAIN, {"http": {}})
         await hass.async_start()
@@ -861,10 +965,9 @@ async def test_yaml_migration_to_storage(
         "trusted_proxies": ["127.0.0.0/8"],
         "ip_ban_enabled": False,
     }
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
@@ -918,10 +1021,9 @@ async def test_yaml_migration_matches_stable_no_pending(
         "trusted_proxies": ["127.0.0.0/8"],
         "ip_ban_enabled": False,
     }
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["pending"] is None
@@ -956,10 +1058,9 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
     }
 
     yaml_conf = {"server_port": 8765, "ip_ban_enabled": False}
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["stable"] == existing_stable
@@ -984,7 +1085,6 @@ async def test_yaml_migration_failure_creates_error_issue(
     yaml_conf = {"server_port": 9123}
 
     with (
-        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
         patch(
             "homeassistant.components.http.config.HTTPConfigStore.async_migrate_yaml",
             side_effect=RuntimeError("boom"),
@@ -1012,17 +1112,12 @@ async def test_yaml_still_present_after_migration_creates_issue(
     )
 
     yaml_conf = {"server_port": 1234}
-    mock_server = Mock()
-    with patch(
-        "asyncio.BaseEventLoop.create_server", return_value=mock_server
-    ) as mock_create_server:
-        assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     # YAML must be ignored once migration is done; stable wins.
-    args, _ = mock_create_server.call_args
-    assert args[2] == 9876
+    assert hass.config.api.port == 9876
 
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_still_present_after_migration")
     assert issue is not None
@@ -1047,10 +1142,9 @@ async def test_yaml_still_present_issue_cleared_when_yaml_removed(
         translation_key="yaml_still_present_after_migration",
     )
 
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     assert (
         issue_registry.async_get_issue(DOMAIN, "yaml_still_present_after_migration")
@@ -1071,16 +1165,11 @@ async def test_setup_uses_stable_config_when_no_yaml(
         }
     )
 
-    mock_server = Mock()
-    with patch(
-        "asyncio.BaseEventLoop.create_server", return_value=mock_server
-    ) as mock_create_server:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-    args, _ = mock_create_server.call_args
-    assert args[2] == 9876
+    assert hass.config.api.port == 9876
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
     assert (
@@ -1097,16 +1186,11 @@ async def test_setup_prefers_pending_over_stable_in_normal_mode(
         {"server_port": 9876}, pending={"server_port": 9999}
     )
 
-    mock_server = Mock()
-    with patch(
-        "asyncio.BaseEventLoop.create_server", return_value=mock_server
-    ) as mock_create_server:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-    args, _ = mock_create_server.call_args
-    assert args[2] == 9999
+    assert hass.config.api.port == 9999
 
 
 async def test_recovery_mode_falls_back_to_stable(
@@ -1119,16 +1203,11 @@ async def test_recovery_mode_falls_back_to_stable(
     )
     hass.config.recovery_mode = True
 
-    mock_server = Mock()
-    with patch(
-        "asyncio.BaseEventLoop.create_server", return_value=mock_server
-    ) as mock_create_server:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-    args, _ = mock_create_server.call_args
-    assert args[2] == 9876
+    assert hass.config.api.port == 9876
 
 
 async def test_recovery_mode_with_no_storage(
@@ -1145,16 +1224,11 @@ async def test_recovery_mode_with_no_storage(
     assert "http" not in hass_storage
     hass.config.recovery_mode = True
 
-    mock_server = Mock()
-    with patch(
-        "asyncio.BaseEventLoop.create_server", return_value=mock_server
-    ) as mock_create_server:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-    args, _ = mock_create_server.call_args
-    assert args[2] == 8123
+    assert hass.config.api.port == 8123
     # Recovery mode must not trigger YAML migration side effects.
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
 
@@ -1175,19 +1249,12 @@ async def test_recovery_mode_ignores_yaml(
     )
     hass.config.recovery_mode = True
 
-    mock_server = Mock()
-    with patch(
-        "asyncio.BaseEventLoop.create_server", return_value=mock_server
-    ) as mock_create_server:
-        assert await async_setup_component(
-            hass, DOMAIN, {"http": {"server_port": 1234}}
-        )
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {"http": {"server_port": 1234}})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-    args, _ = mock_create_server.call_args
     # YAML's port must NOT win: stable is the only source of truth in recovery.
-    assert args[2] == 5555
+    assert hass.config.api.port == 5555
     # The migration must not run in recovery mode, so its flag stays untouched
     # and no deprecation issue is created on this boot.
     assert hass_storage[DOMAIN]["data"]["yaml_migration_done"] is False
@@ -1205,19 +1272,14 @@ async def test_setup_migrates_v1_storage_to_v2(
         "data": {"server_port": 9876},
     }
 
-    mock_server = Mock()
-    with patch(
-        "asyncio.BaseEventLoop.create_server", return_value=mock_server
-    ) as mock_create_server:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     # The migrated v1 store config is only used in recovery mode. Since this
     # test isn't running in recovery mode, the YAML migration runs on first
     # boot after store migration. With no YAML http config, the default config is migrated to the pending slot and used. Therefore we assert below the default port (8123)
-    args, _ = mock_create_server.call_args
-    assert args[2] == 8123
+    assert hass.config.api.port == 8123
     assert hass_storage[DOMAIN]["version"] == 2
     data = hass_storage[DOMAIN]["data"]
     # The v1→v2 migration normalises the payload through the storage schema,
@@ -1252,19 +1314,14 @@ async def test_setup_port_env_var_used_as_default(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test SETUP_PORT is used as the default server port without YAML config."""
-    mock_server = Mock()
     with (
         patch.dict(os.environ, {ENV_SETUP_PORT: "80"}),
-        patch(
-            "asyncio.BaseEventLoop.create_server", return_value=mock_server
-        ) as mock_create_server,
     ):
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    args, _ = mock_create_server.call_args
-    assert args[2] == 80
+    assert hass.config.api.port == 80
     assert hass_storage["http"]["data"]["pending"]["server_port"] == 80
 
 
@@ -1274,11 +1331,10 @@ async def test_websocket_http_config(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test the http/config, configure and promote websocket commands."""
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, "http", {})
-        await async_setup_component(hass, "websocket_api", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     ws_client = await hass_ws_client(hass)
 
@@ -1399,11 +1455,10 @@ async def test_pending_config_auto_reverts_to_stable(
     # The revert deadline is anchored to the (frozen) load time.
     revert_at = dt_util.utcnow() + AUTO_REVERT_DELAY
 
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, "http", {})
-        await async_setup_component(hass, "websocket_api", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     ws_client = await hass_ws_client(hass)
 
@@ -1432,6 +1487,335 @@ async def test_pending_config_auto_reverts_to_stable(
     assert len(restart_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "bind_error",
+    [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        PermissionError(errno.EACCES, "Permission denied"),
+        socket.gaierror(socket.EAI_NONAME, "Name or service not known"),
+    ],
+    ids=["address-in-use", "permission-denied", "unresolvable-host"],
+)
+async def test_pending_config_reverted_in_place_on_bind_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server: Mock,
+    bind_error: OSError,
+) -> None:
+    """A pending config that cannot be bound is reverted within the same start.
+
+    The trial fails while the config is realized during setup, so the stable
+    config is applied in place - no restart, no waiting out the trial window.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {"server_port": 9876}, pending={"server_port": 80}
+    )
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    stable_server = await _ephemeral_server(hass)
+    mock_create_server.side_effect = [bind_error, stable_server]
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # The pending config is dropped and this same start continues on stable.
+    assert hass_storage["http"]["data"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
+        "pending": None,
+        "yaml_migration_done": True,
+    }
+    assert hass.config.api is not None
+    assert hass.config.api.port == 9876
+    # The second bind attempt was for the stable config.
+    assert mock_create_server.call_args_list[1].args[0].server_port == 9876
+    # No restart is involved and no revert stays scheduled.
+    assert len(restart_calls) == 0
+    store = await async_get_and_load_store(hass)
+    assert store.revert_deadline is None
+    assert "could not be applied, reverting" in caplog.text
+    assert "previous HTTP configuration has been restored (server port 9876)" in (
+        caplog.text
+    )
+    stable_server.close()
+    await stable_server.wait_closed()
+
+
+async def test_pending_config_reverted_in_place_on_ssl_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """A pending config whose SSL certificate is unusable reverts in place."""
+    stable = dict(HTTP_STORAGE_SCHEMA({"server_port": 9876}))
+    # Craft the raw storage payload: the schema validates that the SSL files
+    # exist when the config is set, but they can vanish before the next start.
+    pending = dict(HTTP_STORAGE_SCHEMA({"server_port": 9999}))
+    pending["ssl_certificate"] = "/nonexistent/cert.pem"
+    pending["ssl_key"] = "/nonexistent/key.pem"
+    hass_storage[DOMAIN] = {
+        "version": 2,
+        "key": DOMAIN,
+        "data": {"stable": stable, "pending": pending, "yaml_migration_done": True},
+    }
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass_storage["http"]["data"]["pending"] is None
+    assert hass.config.api is not None
+    assert hass.config.api.port == 9876
+    assert hass.config.api.use_ssl is False
+    assert len(restart_calls) == 0
+
+
+async def test_pending_config_reverted_in_place_on_ssl_peer_cert_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A pending config whose SSL peer certificate is unusable reverts in place."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    stable = dict(HTTP_STORAGE_SCHEMA({"server_port": 9876}))
+    pending = dict(
+        HTTP_STORAGE_SCHEMA(
+            {
+                "server_port": 9999,
+                "ssl_certificate": str(cert_path),
+                "ssl_key": str(key_path),
+            }
+        )
+    )
+    # The peer certificate vanished after the config was stored.
+    pending["ssl_peer_certificate"] = "/nonexistent/peer.pem"
+    hass_storage[DOMAIN] = {
+        "version": 2,
+        "key": DOMAIN,
+        "data": {"stable": stable, "pending": pending, "yaml_migration_done": True},
+    }
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass_storage["http"]["data"]["pending"] is None
+    assert hass.config.api is not None
+    assert hass.config.api.port == 9876
+    assert hass.config.api.use_ssl is False
+    assert len(restart_calls) == 0
+
+
+async def test_stable_config_ssl_peer_cert_failure_fails_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A stable config whose SSL peer certificate is unusable fails setup.
+
+    An unusable stable SSL configuration must fail setup, activating recovery
+    mode on a real boot.
+    """
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    stable = dict(
+        HTTP_STORAGE_SCHEMA(
+            {
+                "server_port": 9876,
+                "ssl_certificate": str(cert_path),
+                "ssl_key": str(key_path),
+            }
+        )
+    )
+    stable["ssl_peer_certificate"] = "/nonexistent/peer.pem"
+    hass_storage[DOMAIN] = {
+        "version": 2,
+        "key": DOMAIN,
+        "data": {"stable": stable, "pending": None, "yaml_migration_done": True},
+    }
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {}) is False
+
+
+async def test_bound_server_closed_on_stop_before_start(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """A bound server is closed on stop even if it never started serving.
+
+    If setup fails after binding (or recovery mode tears Home Assistant down
+    before serving starts), the stop event must close the server so a
+    follow-up boot in the same process can bind the address again.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 9876})
+
+    server = await _ephemeral_server(hass)
+    mock_create_server.side_effect = [server]
+
+    with patch.object(
+        http.HomeAssistantHTTP,
+        "async_initialize",
+        side_effect=HomeAssistantError("Setup failed after binding"),
+    ):
+        assert not await async_setup_component(hass, DOMAIN, {})
+
+    assert server.sockets
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert not server.sockets
+
+
+async def test_stable_config_bind_failure_fails_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """A stable config that cannot be bound fails setup.
+
+    Failing setup activates recovery mode on a real boot, which retries with
+    the stable config and falls back to the default config, so Home Assistant
+    stays reachable.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    assert not await async_setup_component(hass, DOMAIN, {})
+
+    assert len(restart_calls) == 0
+    assert hass_storage["http"]["data"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 80}),
+        "pending": None,
+        "yaml_migration_done": True,
+    }
+
+
+async def test_pending_and_stable_config_bind_failure_fails_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """Setup fails when the trialed pending and the stable config cannot bind.
+
+    The pending config must already be cleared and persisted, so the recovery
+    boot and future normal starts use stable instead of re-trialing it.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {"server_port": 9876}, pending={"server_port": 80}
+    )
+
+    mock_create_server.side_effect = [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        OSError(errno.EADDRINUSE, "Address already in use"),
+    ]
+
+    assert not await async_setup_component(hass, DOMAIN, {})
+
+    assert hass_storage["http"]["data"]["pending"] is None
+
+
+async def test_create_server_normalizes_unencodable_host(
+    hass: HomeAssistant,
+) -> None:
+    """A host name the IDNA codec cannot encode raises OSError.
+
+    create_server() raises UnicodeError (a ValueError) for such host names,
+    e.g. a label longer than 63 characters; it must be normalized to OSError
+    so the config fallback chain handles it like any other bind failure.
+    """
+    server = http.HomeAssistantHTTP(
+        hass,
+        server_host=[f"{'x' * 64}.example"],
+        server_port=8123,
+        ssl_certificate=None,
+        ssl_peer_certificate=None,
+        ssl_key=None,
+        trusted_proxies=[],
+        ssl_profile=http.SSL_MODERN,
+    )
+    with (
+        patch.object(
+            hass.loop,
+            "create_server",
+            side_effect=UnicodeError(
+                "encoding with 'idna' codec failed (UnicodeError: label too long)"
+            ),
+        ),
+        pytest.raises(OSError, match="error while resolving host"),
+    ):
+        await _REAL_CREATE_SERVER(server)
+
+
+async def test_recovery_mode_bind_failure_falls_back_to_default_config(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server: Mock,
+) -> None:
+    """In recovery mode an unbindable stable config falls back to defaults.
+
+    Recovery mode is the last resort and must not fail setup again, so the
+    default config is applied in place to keep the recovery UI reachable.
+    The stable config is left untouched.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass.config.recovery_mode = True
+
+    default_server = await _ephemeral_server(hass)
+    mock_create_server.side_effect = [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        default_server,
+    ]
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    assert "falling back to the default configuration" in caplog.text
+    assert hass.config.api is not None
+    assert hass.config.api.port == default_server_port()
+    # The second bind attempt was for the default config.
+    assert mock_create_server.call_args_list[1].args[0].server_port == (
+        default_server_port()
+    )
+    assert hass_storage["http"]["data"]["stable"] == HTTP_STORAGE_SCHEMA(
+        {"server_port": 80}
+    )
+    default_server.close()
+    await default_server.wait_closed()
+
+
+async def test_recovery_mode_default_config_bind_failure_fails_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server: Mock,
+) -> None:
+    """Setup fails in recovery mode when even the default config cannot bind.
+
+    The fallback chain is exhausted; failing setup makes the failure visible
+    to the outside (e.g. the Supervisor rolls back a Core update whose API
+    does not come up).
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass.config.recovery_mode = True
+
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    assert not await async_setup_component(hass, DOMAIN, {})
+
+    assert f"Failed to create HTTP server at port {default_server_port()}" in (
+        caplog.text
+    )
+
+
 async def test_pending_config_promote_cancels_revert(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1445,11 +1829,10 @@ async def test_pending_config_promote_cancels_revert(
 
     restart_calls = async_mock_service(hass, "homeassistant", "restart")
 
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, "http", {})
-        await async_setup_component(hass, "websocket_api", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     ws_client = await hass_ws_client(hass)
 
@@ -1497,11 +1880,10 @@ async def test_websocket_http_config_invalid(
     config: dict,
 ) -> None:
     """Test that an invalid HTTP config is rejected."""
-    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
-        assert await async_setup_component(hass, "http", {})
-        await async_setup_component(hass, "websocket_api", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     ws_client = await hass_ws_client(hass)
 
