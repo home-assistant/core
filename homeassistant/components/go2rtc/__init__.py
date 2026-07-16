@@ -118,6 +118,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
+
+
+class _UnusableStreamSourceError(HomeAssistantError):
+    """The camera's source is missing or unusable by go2rtc (not transient)."""
+
+
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
@@ -403,10 +409,12 @@ class WebRTCProvider(CameraWebRTCProvider):
     async def async_get_stream_source(self, camera: Camera) -> str:
         """Return the camera's stream source as usable by go2rtc.
 
-        Raises HomeAssistantError when the source is missing or unsupported.
+        Raises _UnusableStreamSourceError when the source is missing or
+        unsupported; a transient error from the camera itself propagates
+        unchanged.
         """
         if not (stream_source := await camera.stream_source()):
-            raise HomeAssistantError("Camera has no stream source")
+            raise _UnusableStreamSourceError("Camera has no stream source")
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
@@ -415,7 +423,7 @@ class WebRTCProvider(CameraWebRTCProvider):
             stream_source = _FFMPEG + ":" + stream_source
 
         if not self.async_is_supported(stream_source):
-            raise HomeAssistantError("Stream source is not supported by go2rtc")
+            raise _UnusableStreamSourceError("Stream source is not supported by go2rtc")
 
         return stream_source
 
@@ -426,7 +434,9 @@ class WebRTCProvider(CameraWebRTCProvider):
         if stream_source is None:
             try:
                 stream_source = await self.async_get_stream_source(camera)
-            except HomeAssistantError:
+            except _UnusableStreamSourceError:
+                # A transient camera error must not reset unrelated sessions;
+                # only a genuinely unusable source tears down.
                 await self.teardown()
                 raise
 

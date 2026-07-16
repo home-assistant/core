@@ -1305,6 +1305,36 @@ async def test_get_rtsp_stream_url_unusable_source(
     teardown.assert_not_called()
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_transient_stream_source_error_keeps_sessions(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+) -> None:
+    """A transient camera error during an offer must not tear down sessions.
+
+    Cameras such as Nest raise HomeAssistantError from stream_source() for
+    temporary API failures; only a genuinely unusable source tears down.
+    """
+    camera = init_test_integration
+    receive_message_callback = Mock(spec_set=WebRTCSendMessage)
+    provider = hass.config_entries.async_loaded_entries(DOMAIN)[0].runtime_data
+
+    with (
+        patch.object(provider, "teardown", wraps=provider.teardown) as teardown,
+        patch.object(
+            MockCamera, "stream_source", side_effect=HomeAssistantError("api down")
+        ),
+    ):
+        await camera.async_handle_async_webrtc_offer(
+            OFFER_SDP, "session_transient", receive_message_callback
+        )
+
+    receive_message_callback.assert_called_once_with(
+        WebRTCError("go2rtc_webrtc_offer_failed", "api down")
+    )
+    teardown.assert_not_called()
+
+
 @pytest.mark.usefixtures("init_integration", "init_test_integration")
 async def test_get_rtsp_stream_url_unknown_camera(hass: HomeAssistant) -> None:
     """The helper returns None for an unavailable camera entity."""
