@@ -90,7 +90,12 @@ async def target_entities(
         "Test Label"
     )
 
-    device = dr.DeviceEntry(id="test_device", area_id=area.id, labels={label.label_id})
+    device = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="test_device",
+        area_id=area.id,
+        labels={label.label_id},
+    )
     mock_device_registry(hass, {device.id: device})
 
     entity_reg = er.async_get(hass)
