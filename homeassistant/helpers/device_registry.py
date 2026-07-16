@@ -1258,38 +1258,24 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
         self,
         identifiers: set[tuple[str, str]] | None,
         connections: set[tuple[str, str]] | None,
-        domain: str | None,
+        domain: str,
     ) -> DeletedDeviceEntry | None:
-        """Return an orphan to restore for a device of the given domain.
+        """Return an orphan of the given domain to restore.
 
-        Prefer an orphan recorded for this domain; otherwise fall back to the domain-less
-        orphan (carried over by the migration) that overlaps the lookup most, so it is not
-        missed among several that share identifiers or connections.
+        Orphans are matched on their recorded domain so a chance identifier or connection
+        collision doesn't restore another integration's device. A domain-less orphan
+        (carried over by the migration with no recoverable domain) is left for the
+        periodic purge rather than restored.
         """
         orphans: dict[str, DeletedDeviceEntry] = {}
         for identifier in identifiers or ():
             orphans.update(self._orphaned_identifiers.get(identifier, {}))
         for connection in _normalize_connections(connections or set()):
             orphans.update(self._orphaned_connections.get(connection, {}))
-        if domain is not None:
-            for entry in orphans.values():
-                if entry.domain == domain:
-                    return entry
-        wanted_identifiers = identifiers or set()
-        wanted_connections = connections or set()
-        best: DeletedDeviceEntry | None = None
-        best_overlap = 0
-        # Sort by id so the choice is stable when several orphans overlap equally.
-        for entry in sorted(orphans.values(), key=lambda entry: entry.id):
-            if entry.domain is not None:
-                continue
-            overlap = len(entry.identifiers & wanted_identifiers) + len(
-                entry.connections & wanted_connections
-            )
-            if overlap > best_overlap:
-                best = entry
-                best_overlap = overlap
-        return best
+        for entry in orphans.values():
+            if entry.domain == domain:
+                return entry
+        return None
 
 
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):

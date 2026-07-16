@@ -2772,51 +2772,36 @@ async def test_cross_domain_orphans_do_not_shadow(
     assert restored_a.id == device_a.id
 
 
-async def test_domainless_orphans_matched_by_overlap(
+async def test_domainless_orphan_not_restored(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Domain-less orphans sharing an identifier are matched by best overlap on restore.
+    """A domain-less orphan is not restored; re-registering creates a fresh device.
 
-    The migration carries orphans over without a domain, and it cannot be resolved once
-    the config entry is gone. Several can share an identifier, so the best-overlapping
-    orphan is restored instead of whichever happens to sit in the index - which for the
-    shared identifier would otherwise be the wrong one.
+    The migration carries orphans over without a domain, which can't be resolved once the
+    config entry is gone. Orphans are matched only on their recorded domain, so a
+    domain-less one is left for the periodic purge and re-registering makes a new device.
     """
-    mac_1 = (dr.CONNECTION_NETWORK_MAC, "11:11:11:11:11:11")
-    mac_2 = (dr.CONNECTION_NETWORK_MAC, "22:22:22:22:22:22")
     entry_1 = MockConfigEntry(domain="hue")
     entry_1.add_to_hass(hass)
     device_1 = device_registry.async_get_or_create(
-        config_entry_id=entry_1.entry_id,
-        connections={mac_1},
-        identifiers={("test", "shared")},
-    )
-    entry_2 = MockConfigEntry(domain="hue")
-    entry_2.add_to_hass(hass)
-    device_2 = device_registry.async_get_or_create(
-        config_entry_id=entry_2.entry_id,
-        connections={mac_2},
-        identifiers={("test", "shared")},
+        config_entry_id=entry_1.entry_id, identifiers={("test", "shared")}
     )
 
-    # Simulate orphans whose domain can no longer be resolved (removed entries / the
-    # migration): both become domain-less orphans kept apart by their id
+    # Simulate an orphan whose domain can no longer be resolved (the migration carries
+    # orphans over without one)
     with patch.object(hass.config_entries, "async_get_entry", return_value=None):
         device_registry.async_clear_config_entry(entry_1.entry_id)
-        device_registry.async_clear_config_entry(entry_2.entry_id)
     assert device_registry.deleted_devices[device_1.id].domain is None
-    assert device_registry.deleted_devices[device_2.id].domain is None
 
-    # Both orphans share the identifier, but device_1 also matches the connection - it is
-    # restored rather than the one shadowing it on the identifier
-    entry_3 = MockConfigEntry(domain="hue")
-    entry_3.add_to_hass(hass)
-    restored = device_registry.async_get_or_create(
-        config_entry_id=entry_3.entry_id,
-        connections={mac_1},
-        identifiers={("test", "shared")},
+    # Re-registering the shared identifier does not restore the domain-less orphan
+    entry_2 = MockConfigEntry(domain="hue")
+    entry_2.add_to_hass(hass)
+    fresh = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "shared")}
     )
-    assert restored.id == device_1.id
+    assert fresh.id != device_1.id
+    # The un-restored orphan lingers until the periodic purge
+    assert device_1.id in device_registry.deleted_devices
 
 
 async def test_clear_config_subentry_removes_device_with_pending_move(
