@@ -1,6 +1,7 @@
 """Media player platform for the Denon RS-232 integration."""
 
-from typing import Literal, cast, override
+import re
+from typing import Any, Literal, cast, override
 
 from denon_rs232 import (
     MIN_VOLUME_DB,
@@ -17,6 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -70,6 +72,12 @@ INPUT_SOURCE_DENON_TO_HA: dict[InputSource, str] = {
     InputSource.HDRADIO: "hdradio",
     InputSource.DAB: "dab",
 }
+
+TUNER_PRESET_PATTERN = re.compile(r"[A-G][1-8]")
+TUNER_FREQUENCY_PATTERN = re.compile(r"[0-9]+")
+TUNER_FREQUENCY_MIN = 8750
+TUNER_FREQUENCY_MAX = 10800
+TUNER_FREQUENCY_LENGTH = 6
 
 
 async def async_setup_entry(
@@ -138,7 +146,10 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
         if zone == "main":
             self._attr_name = None
-            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
+            self._attr_supported_features |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+            )
         else:
             self._attr_name = "Zone 2" if zone == "zone_2" else "Zone 3"
 
@@ -239,3 +250,19 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
             raise HomeAssistantError("Invalid source")
 
         await self._player.select_input_source(input_source)
+
+    @override
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Tune to a tuner preset or an FM frequency."""
+        if media_type != MediaType.CHANNEL or len(media_id) < 2:
+            return
+
+        player = cast(MainPlayer, self._player)
+        if TUNER_PRESET_PATTERN.fullmatch(media_id):
+            await player.set_tuner_preset(media_id)
+        elif TUNER_FREQUENCY_PATTERN.fullmatch(media_id) and (
+            TUNER_FREQUENCY_MIN <= int(media_id) <= TUNER_FREQUENCY_MAX
+        ):
+            await player.set_tuner_frequency(media_id.zfill(TUNER_FREQUENCY_LENGTH))

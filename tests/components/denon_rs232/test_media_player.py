@@ -12,10 +12,14 @@ from homeassistant.components.denon_rs232.media_player import INPUT_SOURCE_DENON
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -305,6 +309,96 @@ async def test_main_invalid_source_raises(
             {
                 ATTR_ENTITY_ID: MAIN_ENTITY_ID,
                 ATTR_INPUT_SOURCE: "NONEXISTENT",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("media_id", "expected_command"),
+    [
+        pytest.param("A1", ("TP", "A1"), id="first_preset"),
+        pytest.param("G8", ("TP", "G8"), id="last_preset"),
+        pytest.param("C5", ("TP", "C5"), id="preset"),
+        pytest.param("8750", ("TF", "008750"), id="lowest_frequency"),
+        pytest.param("10800", ("TF", "010800"), id="highest_frequency"),
+        pytest.param("9930", ("TF", "009930"), id="frequency"),
+    ],
+)
+async def test_main_tuner_play_media(
+    hass: HomeAssistant,
+    mock_receiver: MockReceiver,
+    media_id: str,
+    expected_command: tuple[str, str],
+) -> None:
+    """Test playing media selects a tuner preset or frequency.
+
+    The default main input source is CD, so this also covers tuning while the
+    main zone plays another source.
+    """
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+            ATTR_MEDIA_CONTENT_ID: media_id,
+        },
+        blocking=True,
+    )
+    assert mock_receiver._send_command.await_args == call(*expected_command)
+
+
+@pytest.mark.parametrize(
+    ("media_type", "media_id"),
+    [
+        pytest.param(MediaType.MUSIC, "A1", id="media_type_not_channel"),
+        pytest.param(MediaType.CHANNEL, "A", id="media_id_too_short"),
+        pytest.param(MediaType.CHANNEL, "H1", id="preset_bank_above"),
+        pytest.param(MediaType.CHANNEL, "A0", id="preset_number_zero"),
+        pytest.param(MediaType.CHANNEL, "A9", id="preset_number_above"),
+        pytest.param(MediaType.CHANNEL, "a1", id="preset_lowercase"),
+        pytest.param(MediaType.CHANNEL, "A1B", id="preset_too_long"),
+        pytest.param(MediaType.CHANNEL, "8749", id="frequency_below_range"),
+        pytest.param(MediaType.CHANNEL, "10801", id="frequency_above_range"),
+        pytest.param(MediaType.CHANNEL, "1000", id="am_frequency"),
+        pytest.param(MediaType.CHANNEL, "99.30", id="frequency_not_an_integer"),
+        pytest.param(MediaType.CHANNEL, "not a channel", id="unparsable"),
+    ],
+)
+async def test_main_tuner_play_media_invalid_input_ignored(
+    hass: HomeAssistant,
+    mock_receiver: MockReceiver,
+    media_type: MediaType,
+    media_id: str,
+) -> None:
+    """Test playing invalid media sends no tuner command."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: media_type,
+            ATTR_MEDIA_CONTENT_ID: media_id,
+        },
+        blocking=True,
+    )
+    assert mock_receiver._send_command.await_count == 0
+
+
+@pytest.mark.parametrize("entity_id", [ZONE_2_ENTITY_ID, ZONE_3_ENTITY_ID])
+async def test_zones_do_not_support_play_media(
+    hass: HomeAssistant, entity_id: str
+) -> None:
+    """Test playing media is rejected for zones, which have no tuner control."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                ATTR_MEDIA_CONTENT_ID: "A1",
             },
             blocking=True,
         )
