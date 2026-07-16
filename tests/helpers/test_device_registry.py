@@ -343,9 +343,6 @@ async def test_loading_from_storage(
                     "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
-                    "composite_device_id": None,
-                    "composite_primary_config_entry": None,
-                    "split_at": None,
                     "has_composite_identifiers": False,
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "created_at": created_at,
@@ -600,9 +597,6 @@ async def test_migration_from_1_1(
                     "id": "deletedid",
                     "identifiers": [["serial", "123456ABCDFF"]],
                     "labels": [],
-                    "composite_device_id": None,
-                    "composite_primary_config_entry": None,
-                    "split_at": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "orphaned_timestamp": None,
@@ -1637,9 +1631,6 @@ async def test_migration_from_1_10(
                     "area_id": None,
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
-                    "composite_device_id": None,
-                    "composite_primary_config_entry": None,
-                    "split_at": None,
                     "domain": None,
                     "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1790,9 +1781,6 @@ async def test_migration_from_1_11(
                     "area_id": None,
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
-                    "composite_device_id": None,
-                    "composite_primary_config_entry": None,
-                    "split_at": None,
                     "domain": None,
                     "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -4771,13 +4759,13 @@ async def test_migrate_device_disabled_by_matches_runtime(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_composite_lineage_survives_remove_and_restore(
+async def test_composite_lineage_not_restored_after_remove(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """A migrated split keeps its composite_device_id across removal and restore.
+    """A migrated split loses its composite lineage once removed.
 
-    The deleted device carries the composite lineage, so re-registering the split still
-    resolves from the pre-migration composite id (e.g. for a legacy automation).
+    The deleted device does not carry composite data, so re-registering the split makes a
+    plain device that no longer resolves from the pre-migration composite id.
     """
     entry_a = MockConfigEntry(domain="dom_a")
     entry_a.add_to_hass(hass)
@@ -4830,17 +4818,16 @@ async def test_composite_lineage_survives_remove_and_restore(
     assert split_a is not None
     assert split_a.composite_device_id == old_id
 
-    # Remove the split; the deleted device keeps the composite lineage
+    # Remove the split; the deleted device does not carry the composite lineage
     registry.async_remove_device(split_a.id)
-    assert registry.deleted_devices[split_a.id].composite_device_id == old_id
 
-    # Re-registering restores it, and the old composite id resolves to it again
+    # Re-registering reuses the deleted device's id but drops the composite lineage
     restored = registry.async_get_or_create(
         config_entry_id=entry_a.entry_id, identifiers={("dom_a", "x")}
     )
     assert restored.id == split_a.id
-    assert restored.composite_device_id == old_id
-    assert restored in registry.async_get_devices_for_composite_device_id(old_id)
+    assert restored.composite_device_id is None
+    assert restored not in registry.async_get_devices_for_composite_device_id(old_id)
 
 
 async def test_cleanup_device_registry(
@@ -7321,40 +7308,6 @@ async def test_clear_config_entry_clears_composite_primary_config_entry(
     composite = device_registry.async_get(COMPOSITE_ID)
     assert composite is not None
     assert composite.primary_config_entry == entry_b.entry_id
-
-
-@pytest.mark.parametrize("load_registries", [False])
-async def test_clear_config_entry_clears_composite_primary_on_deleted_split(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Clearing the former primary entry also clears the ref on its removed split.
-
-    The split owned by the cleared entry is moved to deleted_devices; its dangling
-    composite_primary_config_entry must be cleared too, so a restore does not resurrect
-    it pointing at a config entry that no longer exists.
-    """
-    entry_a = MockConfigEntry(domain="domain_a")
-    entry_a.add_to_hass(hass)
-    entry_b = MockConfigEntry(domain="domain_b")
-    entry_b.add_to_hass(hass)
-    # The composite's former primary is entry_a
-    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
-
-    dr.async_setup(hass)
-    await dr.async_load(hass)
-    device_registry = dr.async_get(hass)
-
-    split_a = _get_device_for_config_entry(
-        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
-    )
-    assert split_a.composite_primary_config_entry == entry_a.entry_id
-
-    # Clearing entry_a removes its split (moving it to deleted_devices)
-    device_registry.async_clear_config_entry(entry_a.entry_id)
-
-    assert device_registry.async_get(split_a.id) is None
-    deleted_split_a = device_registry.deleted_devices[split_a.id]
-    assert deleted_split_a.composite_primary_config_entry is None
 
 
 @pytest.mark.parametrize("load_registries", [False])

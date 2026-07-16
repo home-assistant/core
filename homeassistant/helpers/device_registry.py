@@ -634,12 +634,6 @@ class DeletedDeviceEntry:
     modified_at: datetime = attr.ib()
     name_by_user: str | None = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
-    # Composite lineage copied from the active split so it survives removal and restore,
-    # keeping a restored split resolvable by the pre-migration composite device id. Can be
-    # removed in HA Core 2027.8.
-    composite_device_id: str | None = attr.ib(default=None)
-    composite_primary_config_entry: str | None = attr.ib(default=None)
-    split_at: datetime | None = attr.ib(default=None)
     # Domain of the config entry that owns (or owned) this device, recorded when the
     # device is deleted so a re-added config entry only restores an orphan from the same
     # integration. None for legacy stores.
@@ -695,9 +689,6 @@ class DeletedDeviceEntry:
             id=self.id,
             labels=self.labels,  # type: ignore[arg-type]
             name_by_user=self.name_by_user,
-            composite_device_id=self.composite_device_id,
-            composite_primary_config_entry=self.composite_primary_config_entry,
-            split_at=self.split_at,
         )
 
     @under_cached_property
@@ -718,11 +709,6 @@ class DeletedDeviceEntry:
                     "identifiers": list(self.identifiers),
                     "id": self.id,
                     "labels": list(self.labels),
-                    "composite_device_id": self.composite_device_id,
-                    "composite_primary_config_entry": (
-                        self.composite_primary_config_entry
-                    ),
-                    "split_at": self.split_at,
                     "modified_at": self.modified_at,
                     "name_by_user": self.name_by_user,
                     "orphaned_timestamp": self.orphaned_timestamp,
@@ -967,26 +953,18 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     config_entry_id, subentry_id = pairs[0] if pairs else (None, None)
                     device["config_entry_id"] = config_entry_id
                     device["config_subentry_id"] = subentry_id
-                    device["composite_device_id"] = None
-                    device["composite_primary_config_entry"] = None
-                    device["split_at"] = None
                     device["domain"] = None
                     deleted_devices.append(device)
                     continue
-                # A deleted device that belonged to several config entries or
-                # subentries is split like an active one - each split keeps a copy of
-                # the identifiers/connections and a reference to the original composite
-                # device id - so every config entry can still restore its share, and
-                # its composite lineage, when a matching device is re-registered.
-                old_id = device["id"]
+                # A deleted device that belonged to several config entries or subentries
+                # is split like an active one - each split keeps a copy of the
+                # identifiers/connections so every config entry can still restore its
+                # share when a matching device is re-registered.
                 for config_entry_id, subentry_id in pairs:
                     split = copy.deepcopy(device)
                     split["id"] = uuid_util.random_uuid_hex()
                     split["config_entry_id"] = config_entry_id
                     split["config_subentry_id"] = subentry_id
-                    split["composite_device_id"] = old_id
-                    split["composite_primary_config_entry"] = None
-                    split["split_at"] = migrated_at
                     split["domain"] = None
                     deleted_devices.append(split)
             old_data["deleted_devices"] = deleted_devices
@@ -2399,9 +2377,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name_by_user=device.name_by_user,
             orphaned_timestamp=None,
             domain=config_entry.domain if config_entry is not None else None,
-            composite_device_id=device.composite_device_id,
-            composite_primary_config_entry=device.composite_primary_config_entry,
-            split_at=device.split_at,
         )
         for other_device in list(self.devices.values()):
             if other_device.via_device_id == device_id:
@@ -2511,15 +2486,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     name_by_user=device["name_by_user"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                     domain=device["domain"],
-                    composite_device_id=device["composite_device_id"],
-                    composite_primary_config_entry=device[
-                        "composite_primary_config_entry"
-                    ],
-                    split_at=(
-                        datetime.fromisoformat(device["split_at"])
-                        if device["split_at"]
-                        else None
-                    ),
                 )
 
         self.devices = devices
@@ -2601,19 +2567,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_remove_device(device.id)
         # A split device records the composite's former primary config entry; when that
-        # config entry is removed, clear the now-dangling reference - on active devices
-        # and on deleted ones (including splits removed just above) - so a restored
+        # config entry is removed, clear the now-dangling reference so a restored
         # composite no longer points at a config entry that no longer exists.
         for device in list(self.devices.values()):
             if device.composite_primary_config_entry == config_entry_id:
                 self.devices[device.id] = attr.evolve(
                     device, composite_primary_config_entry=None
-                )
-                self.async_schedule_save()
-        for deleted_device in list(self.deleted_devices.values()):
-            if deleted_device.composite_primary_config_entry == config_entry_id:
-                self.deleted_devices[deleted_device.id] = attr.evolve(
-                    deleted_device, composite_primary_config_entry=None
                 )
                 self.async_schedule_save()
         # A device owned by another config entry may hold a transient pending move
