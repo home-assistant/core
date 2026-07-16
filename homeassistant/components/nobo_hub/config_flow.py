@@ -3,7 +3,7 @@
 import ipaddress
 from typing import TYPE_CHECKING, Any, override
 
-from pynobo import nobo
+from pynobo import PynoboConnectionError, nobo
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -313,14 +313,14 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
         # pynobo distinguishes the two failure modes: TCP-level errors
-        # (wrong IP, hub offline, port closed) raise OSError, while a
-        # successful TCP connection followed by a handshake REJECT
+        # (wrong IP, hub offline, port closed) raise PynoboConnectionError,
+        # while a successful TCP connection followed by a handshake REJECT
         # (serial mismatch) returns False.
         try:
             if not await hub.async_connect_hub(ip_address, serial):
                 raise NoboHubConnectError("cannot_connect")
             return hub.hub_info["name"]
-        except OSError as err:
+        except PynoboConnectionError as err:
             raise NoboHubConnectError("cannot_connect_ip") from err
         finally:
             await hub.close()
