@@ -37,7 +37,6 @@ async def async_get_config_entry_diagnostics(
                 "position_subscription": None,
                 "environment_state": None,
                 "environment_available": False,
-                "radar_status": None,
                 "last_update_success": False,
             },
             TO_REDACT,
@@ -62,11 +61,6 @@ async def async_get_config_entry_diagnostics(
                 else None
             ),
             "environment_available": coordinator.environment_available,
-            "radar_status": (
-                asdict(coordinator.radar_status)
-                if coordinator.radar_status is not None
-                else None
-            ),
             "last_update_success": coordinator.last_update_success,
         },
         TO_REDACT,

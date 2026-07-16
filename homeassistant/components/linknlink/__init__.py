@@ -9,13 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DEFAULT_PORT, DISPLAY_MODEL, DOMAIN
 from .coordinator import LinknLinkConfigEntry, LinknLinkCoordinator
 
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.EVENT,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) -> bool:
