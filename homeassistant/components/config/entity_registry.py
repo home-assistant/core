@@ -3,17 +3,21 @@
 import logging
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE
 from homeassistant.helpers.json import json_dumps
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
+    hass.http.register_view(EntityRegistryListView)
+    hass.http.register_view(EntityRegistryListForDisplayView)
     websocket_api.async_register_command(hass, websocket_get_automatic_entity_ids)
     websocket_api.async_register_command(hass, websocket_get_entities)
     websocket_api.async_register_command(hass, websocket_get_entity)
@@ -60,6 +66,7 @@ def websocket_list_entities(
 
 
 _ENTITY_CATEGORIES_JSON = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
+_ENTITY_CATEGORIES_JSON_BYTES = _ENTITY_CATEGORIES_JSON.encode()
 
 
 @websocket_api.websocket_command(
@@ -88,6 +95,70 @@ def websocket_list_entities_for_display(
     )
     msg_json = b"".join((msg_json_prefix, inner, b"]}}"))
     connection.send_message(msg_json)
+
+
+def _json_bytes_response(body: bytes) -> web.Response:
+    """Return a JSON response from raw bytes, compressing large bodies."""
+    response = web.Response(
+        body=body,
+        content_type=CONTENT_TYPE_JSON,
+        zlib_executor_size=32768,
+    )
+    if len(body) > MIN_COMPRESSED_RESPONSE_SIZE:
+        response.enable_compression()
+    return response
+
+
+class EntityRegistryListView(HomeAssistantView):
+    """View to list the entity registry entries."""
+
+    url = "/api/config/entity_registry/list"
+    name = "api:config:entity_registry:list"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the entity registry entries."""
+        registry = er.async_get(request.app[KEY_HASS])
+        # Concatenate cached entity registry item JSON serializations
+        inner = b",".join(
+            [
+                entry.partial_json_repr
+                for entry in registry.entities.values()
+                if entry.partial_json_repr is not None
+            ]
+        )
+        return _json_bytes_response(b"".join((b"[", inner, b"]")))
+
+
+class EntityRegistryListForDisplayView(HomeAssistantView):
+    """View to list the entity registry entries limited to display data."""
+
+    url = "/api/config/entity_registry/list_for_display"
+    name = "api:config:entity_registry:list_for_display"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the entity registry entries limited to display data."""
+        registry = er.async_get(request.app[KEY_HASS])
+        # Concatenate cached entity registry item JSON serializations
+        inner = b",".join(
+            [
+                entry.display_json_repr
+                for entry in registry.entities.values()
+                if entry.disabled_by is None and entry.display_json_repr is not None
+            ]
+        )
+        return _json_bytes_response(
+            b"".join(
+                (
+                    b'{"entity_categories":',
+                    _ENTITY_CATEGORIES_JSON_BYTES,
+                    b',"entities":[',
+                    inner,
+                    b"]}",
+                )
+            )
+        )
 
 
 @websocket_api.websocket_command(

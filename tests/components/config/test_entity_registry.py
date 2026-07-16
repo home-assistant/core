@@ -1,6 +1,7 @@
 """Test entity_registry API."""
 
 from datetime import datetime
+from http import HTTPStatus
 import logging
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,6 +18,7 @@ from homeassistant.helpers.entity_registry import (
     RegistryEntryDisabler,
     RegistryEntryHider,
 )
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import (
@@ -27,7 +29,11 @@ from tests.common import (
     RegistryEntryWithDefaults,
     mock_registry,
 )
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture
@@ -35,6 +41,7 @@ async def client(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
+    assert await async_setup_component(hass, "http", {})
     entity_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
@@ -1576,3 +1583,123 @@ async def test_get_automatic_entity_ids(
         # no test_domain.unknown in registry
         "test_domain.unknown": None,
     }
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/api/config/entity_registry/list",
+        "/api/config/entity_registry/list_for_display",
+    ],
+)
+async def test_rest_list_requires_auth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    url: str,
+) -> None:
+    """Test the REST list endpoints require authentication."""
+    assert await async_setup_component(hass, "http", {})
+    entity_registry.async_setup(hass)
+
+    client = await hass_client_no_auth()
+    resp = await client.get(url)
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    ("ws_type", "url"),
+    [
+        (
+            "config/entity_registry/list",
+            "/api/config/entity_registry/list",
+        ),
+        (
+            "config/entity_registry/list_for_display",
+            "/api/config/entity_registry/list_for_display",
+        ),
+    ],
+)
+async def test_rest_list_matches_websocket(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    ws_type: str,
+    url: str,
+) -> None:
+    """Test the REST list endpoints return the same payload as the websocket command."""
+    assert await async_setup_component(hass, "http", {})
+    entity_registry.async_setup(hass)
+    mock_registry(
+        hass,
+        {
+            "test_domain.name": RegistryEntryWithDefaults(
+                entity_id="test_domain.name",
+                unique_id="1234",
+                platform="test_platform",
+                name="Hello World",
+            ),
+            "sensor.precision": RegistryEntryWithDefaults(
+                entity_id="sensor.precision",
+                options={"sensor": {"suggested_display_precision": 0}},
+                platform="test_platform",
+                unique_id="5678",
+            ),
+            # Disabled entities are omitted from list_for_display but not from list
+            "test_domain.disabled": RegistryEntryWithDefaults(
+                disabled_by=RegistryEntryDisabler.USER,
+                entity_id="test_domain.disabled",
+                platform="test_platform",
+                unique_id="9ABC",
+            ),
+        },
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": ws_type})
+    ws_msg = await ws_client.receive_json()
+    assert ws_msg["success"]
+
+    client = await hass_client()
+    resp = await client.get(url)
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == ws_msg["result"]
+
+
+@pytest.mark.parametrize(
+    ("entity_count", "expect_compression"),
+    [
+        pytest.param(1, False, id="small-body-not-compressed"),
+        pytest.param(50, True, id="large-body-compressed"),
+    ],
+)
+async def test_rest_list_compression_threshold(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_count: int,
+    expect_compression: bool,
+) -> None:
+    """Test that only registry list responses above the size threshold are compressed."""
+    assert await async_setup_component(hass, "http", {})
+    entity_registry.async_setup(hass)
+    mock_registry(
+        hass,
+        {
+            f"test_domain.entity_{i}": RegistryEntryWithDefaults(
+                entity_id=f"test_domain.entity_{i}",
+                unique_id=str(i),
+                platform="test_platform",
+            )
+            for i in range(entity_count)
+        },
+    )
+
+    client = await hass_client()
+    resp = await client.get(
+        "/api/config/entity_registry/list",
+        headers={"Accept-Encoding": "gzip, deflate"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert ("Content-Encoding" in resp.headers) is expect_compression
