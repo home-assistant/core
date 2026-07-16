@@ -39,6 +39,7 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
             update_interval=None,
         )
         self.api = api
+        self._entry = entry
         self.websocket: EvolvIOTWebSocket | None = None
         self._unsub_websocket_listener: Callable[[], None] | None = None
 
@@ -49,12 +50,12 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[EvolvIOTData]):
             self._async_handle_event
         )
         self.async_set_updated_data(self.websocket.data)
-        self.config_entry.async_create_background_task(
+        self._entry.async_create_background_task(
             self.hass,
             self.websocket.async_run_forever(),
             f"{DOMAIN}-websocket",
         )
-        self.config_entry.async_on_unload(self.async_close)
+        self._entry.async_on_unload(self.async_close)
 
     async def async_close(self) -> None:
         """Close the WebSocket connection."""
