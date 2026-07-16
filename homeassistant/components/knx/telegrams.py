@@ -177,6 +177,8 @@ class Telegrams:
                 "Successfully initialized KNX telegram storage backend '%s'",
                 self.backend,
             )
+        except asyncio.CancelledError:
+            raise
         except TimeoutError:
             self._store_init_attempts += 1
             if self._store_init_attempts > STORE_INIT_MAX_RETRIES:
@@ -199,6 +201,10 @@ class Telegrams:
                 self._store_init_attempts,
                 delay,
             )
+            # No repair issue here: a single timeout is expected to self-heal via the
+            # retry above. Raising one on every transient blip would be alarming and
+            # not user-actionable; _abort_store_init() raises it once retries are
+            # actually exhausted.
             self._store_init_retry_unsub = async_call_later(
                 self.hass, delay, self._async_retry_load_history
             )
@@ -256,6 +262,10 @@ class Telegrams:
     async def _async_retry_load_history(self, now: datetime) -> None:
         """Retry telegram store initialization after a transient timeout."""
         self._store_init_retry_unsub = None
+        # asyncio.current_task() is safe here only because HassJob coroutine
+        # functions are scheduled via create_eager_task(), which runs the task
+        # synchronously up to its first suspension point - so by the time this
+        # line executes, the Task object already exists and is "current".
         self._store_init_retry_task = asyncio.current_task()
         try:
             await self.load_history()
