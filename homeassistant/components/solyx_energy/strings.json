@@ -24,7 +24,7 @@
       "user": {
         "data": {
           "nymo_client_id": "Client ID",
-          "nymo_client_secret": "Client secret",
+          "nymo_client_secret": "Client Secret",
           "nymo_device_id": "Nymo device ID"
         },
         "data_description": {

@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 
 from .const import (
     ATTRIBUTE_CONTROL_VALUE,
@@ -37,7 +38,7 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
     ),
 )
@@ -57,7 +58,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        native_unit_of_measurement="W",
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
         key=ATTRIBUTE_ENERGY_BOILER,
@@ -65,7 +66,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=0,
-        native_unit_of_measurement="Wh",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     SensorEntityDescription(
         key=ATTRIBUTE_GRID_POWER,
@@ -73,6 +74,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        native_unit_of_measurement="W",
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
 )

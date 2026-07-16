@@ -1,6 +1,7 @@
 """Config flow for the Solyx Energy integration."""
 
-from typing import TYPE_CHECKING, Any, override
+from collections.abc import Mapping
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -24,9 +25,6 @@ from .const import (
     CONF_NYMO_DEVICE_ID,
     DOMAIN,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping
 
 # Schema definition for the initial user setup
 STEP_USER_SCHEMA = vol.Schema(

@@ -9,12 +9,18 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
-  docs-conditions: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-triggers: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done

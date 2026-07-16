@@ -101,6 +101,8 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
                 self.device_id, attribute_name, value
             )
         except SolyxEnergyAuthError as err:
+            if self.config_entry is not None:
+                self.config_entry.async_start_reauth_if_available(self.hass)
             raise ConfigEntryAuthFailed from err
         except (SolyxEnergyTokenError, SolyxEnergyWriteError) as err:
             raise HomeAssistantError(f"API error: {err}") from err
