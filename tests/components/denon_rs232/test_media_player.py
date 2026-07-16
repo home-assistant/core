@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
@@ -356,39 +356,76 @@ async def test_main_tuner_play_media(
 
 
 @pytest.mark.parametrize(
-    ("media_type", "media_id"),
+    ("media_type", "media_id", "translation_key"),
     [
-        pytest.param(MediaType.MUSIC, "A1", id="media_type_not_channel"),
-        pytest.param(MediaType.CHANNEL, "A", id="media_id_too_short"),
-        pytest.param(MediaType.CHANNEL, "H1", id="preset_bank_above"),
-        pytest.param(MediaType.CHANNEL, "A0", id="preset_number_zero"),
-        pytest.param(MediaType.CHANNEL, "A9", id="preset_number_above"),
-        pytest.param(MediaType.CHANNEL, "a1", id="preset_lowercase"),
-        pytest.param(MediaType.CHANNEL, "A1B", id="preset_too_long"),
-        pytest.param(MediaType.CHANNEL, "8749", id="frequency_below_range"),
-        pytest.param(MediaType.CHANNEL, "10801", id="frequency_above_range"),
-        pytest.param(MediaType.CHANNEL, "1000", id="am_frequency"),
-        pytest.param(MediaType.CHANNEL, "99.30", id="frequency_not_an_integer"),
-        pytest.param(MediaType.CHANNEL, "not a channel", id="unparsable"),
+        pytest.param(
+            MediaType.MUSIC, "A1", "unsupported_media_type", id="media_type_not_channel"
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "A", "invalid_tuner_channel", id="media_id_too_short"
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "H1", "invalid_tuner_channel", id="preset_bank_above"
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "A0", "invalid_tuner_channel", id="preset_number_zero"
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "A9", "invalid_tuner_channel", id="preset_number_above"
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "a1", "invalid_tuner_channel", id="preset_lowercase"
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "A1B", "invalid_tuner_channel", id="preset_too_long"
+        ),
+        pytest.param(
+            MediaType.CHANNEL,
+            "8749",
+            "invalid_tuner_channel",
+            id="frequency_below_range",
+        ),
+        pytest.param(
+            MediaType.CHANNEL,
+            "10801",
+            "invalid_tuner_channel",
+            id="frequency_above_range",
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "1000", "invalid_tuner_channel", id="am_frequency"
+        ),
+        pytest.param(
+            MediaType.CHANNEL,
+            "99.30",
+            "invalid_tuner_channel",
+            id="frequency_not_an_integer",
+        ),
+        pytest.param(
+            MediaType.CHANNEL, "not a channel", "invalid_tuner_channel", id="unparsable"
+        ),
     ],
 )
-async def test_main_tuner_play_media_invalid_input_ignored(
+async def test_main_tuner_play_media_invalid_input_raises(
     hass: HomeAssistant,
     mock_receiver: MockReceiver,
     media_type: MediaType,
     media_id: str,
+    translation_key: str,
 ) -> None:
-    """Test playing invalid media sends no tuner command."""
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id,
-        },
-        blocking=True,
-    )
+    """Test playing invalid media raises and sends no tuner command."""
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_type,
+                ATTR_MEDIA_CONTENT_ID: media_id,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
     assert mock_receiver._send_command.await_count == 0
 
 

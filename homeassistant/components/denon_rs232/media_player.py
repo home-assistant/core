@@ -24,7 +24,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -283,8 +283,12 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Tune to a tuner preset or an FM frequency."""
-        if media_type != MediaType.CHANNEL or len(media_id) < 2:
-            return
+        if media_type != MediaType.CHANNEL:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={"media_type": str(media_type)},
+            )
 
         player = cast(MainPlayer, self._player)
         if TUNER_PRESET_PATTERN.fullmatch(media_id):
@@ -293,6 +297,12 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
             TUNER_FREQUENCY_MIN <= int(media_id) <= TUNER_FREQUENCY_MAX
         ):
             await player.set_tuner_frequency(media_id.zfill(TUNER_FREQUENCY_LENGTH))
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_tuner_channel",
+                translation_placeholders={"media_id": media_id},
+            )
 
     @override
     async def async_browse_media(
