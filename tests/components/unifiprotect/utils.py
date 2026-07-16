@@ -480,6 +480,7 @@ def setup_public_sensor(
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 
@@ -509,6 +510,7 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 
@@ -536,6 +538,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 

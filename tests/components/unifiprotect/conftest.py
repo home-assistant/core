@@ -1,6 +1,6 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterator
 from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
@@ -195,6 +195,15 @@ def mock_ufp_client(bootstrap: Bootstrap):
         return None
 
     client.public_bootstrap.get = Mock(side_effect=_public_bootstrap_get)
+
+    def _public_all_devices() -> Iterator[Mock]:
+        pb = client.public_bootstrap
+        yield from pb.cameras.values()
+        yield from pb.lights.values()
+        yield from pb.relays.values()
+        yield from pb.sirens.values()
+
+    client.public_bootstrap.all_devices = _public_all_devices
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any

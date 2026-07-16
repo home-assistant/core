@@ -13,7 +13,7 @@ from uiprotect.data.public_devices import PublicLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,7 +34,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up lights for UniFi Protect integration."""
     data = entry.runtime_data
-    platform = entity_platform.async_get_current_platform()
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
@@ -55,13 +54,8 @@ async def async_setup_entry(
 
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
-        if not isinstance(device, PublicLight):
-            return
-        # Skip a re-add whose entity still exists; the platform errors on a
-        # duplicate unique_id.
-        if any(e.unique_id == device.mac for e in platform.entities.values()):
-            return
-        async_add_entities([ProtectLight(data, device, None)])
+        if isinstance(device, PublicLight):
+            async_add_entities([ProtectLight(data, device, None)])
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
@@ -111,7 +105,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         """Initialize the light."""
         self._private = private
         self._ufp_public_obj = public
-        # Key the base on the private device in hybrid, the public one otherwise.
+        # unique_id and device info derive from the base device, so hybrid must
+        # keep the private one to leave existing entities unchanged.
         super().__init__(data, cast(ProtectDeviceType, private or public))
 
     @callback
@@ -128,6 +123,11 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
             manufacturer=DEFAULT_BRAND,
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
         )
+
+    @override
+    async def async_removed_from_registry(self) -> None:
+        """Release the device for a future public add offer."""
+        self.data.async_forget_public_device(self.device.mac)
 
     @override
     async def async_added_to_hass(self) -> None:

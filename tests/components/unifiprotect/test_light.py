@@ -1,7 +1,7 @@
 """Test the UniFi Protect light platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from uiprotect.data import DeviceState, Light, Permission, WSAction
@@ -30,6 +30,19 @@ from .utils import (
     remove_entities,
     setup_public_light,
 )
+
+
+def _use_public_only_bootstrap(ufp: MockUFPFixture, *publics: Mock) -> None:
+    """Serve setup and resync public refreshes from a public-only bootstrap."""
+    ufp.api.is_public_only = True
+
+    async def _prime() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        pb.lights = {public.id: public for public in publics}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
 
 
 async def test_light_remove(
@@ -206,15 +219,7 @@ async def test_light_setup_public_only(
     """In public-only mode lights are enumerated from the public bootstrap."""
 
     public = make_public_light(light)
-    ufp.api.is_public_only = True
-
-    async def _prime_public_only() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {}
-        pb.lights = {light.id: public}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    _use_public_only_bootstrap(ufp, public)
 
     await init_entry(hass, ufp, [])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
@@ -241,15 +246,7 @@ async def test_light_added_after_setup_public_only(
     websocket ``add`` frame is the only discovery signal.
     """
 
-    ufp.api.is_public_only = True
-
-    async def _prime_public_only() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {}
-        pb.lights = {}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    _use_public_only_bootstrap(ufp)
 
     await init_entry(hass, ufp, [])
     assert_entity_counts(hass, Platform.LIGHT, 0, 0)
@@ -279,8 +276,42 @@ async def test_light_added_after_setup_public_only(
     assert "already exists" not in caplog.text
 
 
+async def test_light_recreated_after_entity_removal_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """A deleted entity is recreated when its device is offered again.
+
+    Removing the entity from the registry releases the device's dedup slot, so
+    a re-delivered ADD frame recreates the entity instead of being dropped.
+    """
+
+    public = make_public_light(light)
+    _use_public_only_bootstrap(ufp, public)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+
+    entity_registry.async_remove("light.test_light")
+    await hass.async_block_till_done()
+    assert hass.states.get("light.test_light") is None
+
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    assert hass.states.get("light.test_light") is not None
+
+
 async def test_light_added_during_gap_public_only(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A light added while the websocket was down enumerates on reconnect.
 
@@ -289,15 +320,7 @@ async def test_light_added_during_gap_public_only(
     """
 
     first = make_public_light(light)
-    ufp.api.is_public_only = True
-
-    async def _prime_one() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {}
-        pb.lights = {light.id: first}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_one)
+    _use_public_only_bootstrap(ufp, first)
 
     await init_entry(hass, ufp, [])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
@@ -309,13 +332,7 @@ async def test_light_added_during_gap_public_only(
     second.name = "Gap Light"
     second.display_name = "Gap Light"
 
-    async def _prime_two() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {}
-        pb.lights = {light.id: first, second.id: second}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_two)
+    _use_public_only_bootstrap(ufp, first, second)
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
@@ -323,6 +340,8 @@ async def test_light_added_during_gap_public_only(
 
     assert_entity_counts(hass, Platform.LIGHT, 2, 2)
     assert hass.states.get("light.gap_light") is not None
+    # The resync re-offers the first light too; the dedup must drop it.
+    assert "already exists" not in caplog.text
 
 
 async def test_light_turn_on_with_brightness_public_only(
@@ -331,15 +350,7 @@ async def test_light_turn_on_with_brightness_public_only(
     """Turning on with brightness routes through the public setter in public-only."""
 
     public = make_public_light(light)
-    ufp.api.is_public_only = True
-
-    async def _prime_public_only() -> Any:
-        pb = ufp.api.public_bootstrap
-        pb.cameras = {}
-        pb.lights = {light.id: public}
-        return pb
-
-    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    _use_public_only_bootstrap(ufp, public)
 
     await init_entry(hass, ufp, [])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
