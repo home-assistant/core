@@ -1,0 +1,8 @@
+[
+  {
+    "key": "backend_service",
+    "name": "Backend Service",
+    "group": "Core",
+    "results": [{ "success": false, "status": 500 }]
+  }
+]

@@ -1162,6 +1162,15 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "database_missing": "The specified database does not exist.",
+      "host_unreachable": "Could not reach the database host.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_dependency": "Required database driver is not installed.",
+      "permission": "Insufficient privileges to access the database.",
+      "timeout": "Connection timed out."
+    },
     "step": {
       "communication_settings": {
         "data": {
@@ -1175,10 +1184,12 @@
         "sections": {
           "telegram_store_section": {
             "data": {
+              "telegram_db_backend": "Telegram storage backend",
               "telegram_db_load_hours": "Group monitor history",
               "telegram_db_retention_days": "Retention period"
             },
             "data_description": {
+              "telegram_db_backend": "Select where to store KNX telegram history.",
               "telegram_db_load_hours": "Number of hours of telegram history to load when the group monitor is opened.",
               "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly at 3 AM. Set to `0` to delete all telegram history on every nightly run."
             },
@@ -1186,6 +1197,25 @@
           }
         },
         "title": "Communication settings"
+      },
+      "telegram_store_postgres": {
+        "data": {
+          "database": "Database name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "tls": "Use TLS",
+          "user": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "database": "Name of the database to store telegrams in.",
+          "host": "Hostname or IP address of the PostgreSQL server.",
+          "password": "Password for the PostgreSQL user. Leave blank to keep the current password.",
+          "port": "Port the PostgreSQL server is listening on.",
+          "tls": "Encrypt the connection to the PostgreSQL server (`sslmode=require`). Note that the server certificate is not verified.",
+          "user": "Username to authenticate with the PostgreSQL server."
+        },
+        "title": "PostgreSQL connection"
       }
     }
   },
@@ -1259,6 +1289,12 @@
         "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    },
+    "telegram_backend": {
+      "options": {
+        "postgres": "PostgreSQL (External)",
+        "sqlite": "Internal storage (Default)"
       }
     }
   },

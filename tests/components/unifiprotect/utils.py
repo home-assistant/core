@@ -6,13 +6,17 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     Bootstrap,
     Camera,
+    ChannelQuality,
     DeviceState,
     Event,
     EventType,
     Light,
+    LightModeEnableType,
+    LightModeType,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -27,6 +31,7 @@ from uiprotect.data.public_devices import (
     PublicHdrMode,
     PublicLight,
     PublicLightDeviceSettings,
+    PublicLightModeSettings,
     PublicSensor,
     PublicSensorLeakSettings,
     PublicSensorMotionSettingsRead,
@@ -229,6 +234,21 @@ async def init_entry(
     await hass.async_block_till_done()
 
 
+def public_rtsps_for(camera: Camera) -> RTSPSStreams | None:
+    """Build a camera's primed RTSPS streams from its RTSP-enabled channels.
+
+    Mirrors what the library writes onto ``PublicCamera.rtsps_streams`` during
+    ``update_public()`` — only RTSP-enabled channels carry an active URL, and a
+    camera with none is left streamless (``None``).
+    """
+    urls = {
+        channel.rtsps_quality: channel.rtsps_url
+        for channel in camera.channels
+        if channel.is_rtsp_enabled and channel.rtsps_quality is not None
+    }
+    return RTSPSStreams(**urls) if urls else None
+
+
 def make_public_sensor(
     sensor: Sensor,
     *,
@@ -318,29 +338,65 @@ def make_public_light(
     light: Light,
     *,
     state: DeviceState | None = None,
+    is_light_on: bool | None = None,
+    is_dark: bool | None = None,
+    is_pir_motion_detected: bool | None = None,
+    last_motion_ms: int | None = None,
+    led_level: int | None = None,
     pir_duration_ms: int | None = None,
+    pir_sensitivity: int | None = None,
+    is_indicator_enabled: bool | None = None,
+    light_mode: LightModeType | None = None,
+    light_mode_enable_at: LightModeEnableType | None = None,
 ) -> Mock:
-    """Build a public-API light for the migrated PIR auto-shutoff duration number.
+    """Build a public-API light mirroring the private fixture's migrated fields.
 
-    ``light_device_settings`` mirrors the private fixture (the public API reports
-    ``pir_duration`` in milliseconds); ``pir_duration_ms`` overrides it so a test
-    can assert a value the private object would not produce.
+    Every field the FloodLight entities read over the public API is mirrored from
+    the private light; each ``*`` override lets a test set a value the private
+    object would not produce, proving the entity reads the public source. The
+    public API reports ``pir_duration`` and ``last_motion`` in milliseconds.
     """
     lds = light.light_device_settings
+    lms = light.light_mode_settings
     public = Mock(spec=PublicLight)
     public.id = light.id
     public.mac = light.mac
     public.model = ModelType.LIGHT
     public.state = DeviceState[light.state.name] if state is None else state
+    public.is_light_on = light.is_light_on if is_light_on is None else is_light_on
+    public.is_dark = light.is_dark if is_dark is None else is_dark
+    public.is_pir_motion_detected = (
+        light.is_pir_motion_detected
+        if is_pir_motion_detected is None
+        else is_pir_motion_detected
+    )
+    if last_motion_ms is not None:
+        public.last_motion = last_motion_ms
+    elif light.last_motion is not None:
+        public.last_motion = round(light.last_motion.timestamp() * 1000)
+    else:
+        public.last_motion = None
+    public.light_mode_settings = PublicLightModeSettings(
+        mode=lms.mode if light_mode is None else light_mode,
+        enable_at=(
+            lms.enable_at if light_mode_enable_at is None else light_mode_enable_at
+        ),
+    )
     public.light_device_settings = PublicLightDeviceSettings(
-        is_indicator_enabled=lds.is_indicator_enabled,
-        led_level=lds.led_level,
+        is_indicator_enabled=(
+            lds.is_indicator_enabled
+            if is_indicator_enabled is None
+            else is_indicator_enabled
+        ),
+        led_level=lds.led_level if led_level is None else led_level,
         pir_duration=(
             round(lds.pir_duration.total_seconds() * 1000)
             if pir_duration_ms is None
             else pir_duration_ms
         ),
-        pir_sensitivity=lds.pir_sensitivity,
+        pir_sensitivity=(
+            lds.pir_sensitivity if pir_sensitivity is None else pir_sensitivity
+        ),
     )
     return public
 
@@ -356,24 +412,38 @@ def make_public_camera(
     camera: Camera,
     *,
     state: DeviceState | None = None,
+    mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
     """Build a public-API camera mirroring a private camera's migrated fields.
 
-    ``hdr_type`` defaults to the public mode derived from the private
-    ``hdr_mode_display`` so the migrated HDR select reads the same value the
-    private object would produce; pass it to diverge from that.
+    ``mic_volume`` and ``hdr_type`` default to values derived from the private
+    fixture so the public mirror matches it; pass an override to assert a value
+    the private object would not produce.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
     public.mac = camera.mac
+    public.name = camera.name
+    public.display_name = camera.display_name
+    public.type = camera.type
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
+    public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
     public.hdr_type = (
         _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
         if hdr_type is None
         else hdr_type
     )
+    public.has_package_camera = camera.feature_flags.has_package_camera
+    public.feature_flags = Mock()
+    public.feature_flags.support_full_hd_snapshot = (
+        camera.feature_flags.support_full_hd_snapshot
+    )
+    qualities = [ChannelQuality.HIGH, ChannelQuality.MEDIUM, ChannelQuality.LOW]
+    if public.has_package_camera:
+        qualities.append(ChannelQuality.PACKAGE)
+    public.hardware_stream_qualities.return_value = qualities
     return public
 
 
@@ -441,8 +511,8 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
 def setup_public_camera(ufp: MockUFPFixture) -> None:
     """Expose private cameras over the public API via a real ``PublicBootstrap``.
 
-    Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated HDR
-    select reads from the public object.
+    Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
+    camera config entities read from the public object.
     """
     public_bootstrap = PublicBootstrap()
     pb = Mock(spec=PublicBootstrap)

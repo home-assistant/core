@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfLength, UnitOfMass
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -56,6 +56,32 @@ ACTIVITY_SENSORS: list[
             data.distance.millimeters_sum / 1000.0 if data and data.distance else 0.0
         ),
     ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="active_calories",
+        translation_key="active_calories",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.active_energy_burned.kcal_sum
+            if data and data.active_energy_burned
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="total_calories",
+        translation_key="total_calories",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.total_calories.kcal_sum if data and data.total_calories else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="floors",
+        translation_key="floors",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.floors.count_sum if data and data.floors else 0,
+    ),
 ]
 
 BODY_SENSORS: list[
@@ -79,6 +105,15 @@ BODY_SENSORS: list[
             data.resting_heart_rate.beats_per_minute
             if data and data.resting_heart_rate
             else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="body_fat",
+        translation_key="body_fat",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.body_fat.percentage if data and data.body_fat else None
         ),
     ),
 ]
