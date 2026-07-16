@@ -46,7 +46,6 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
             config_entry, NotifyEntityDescription(key=subentry.data[CONF_CHAT_ID])
         )
         self.chat_id = subentry.data[CONF_CHAT_ID]
-        self._attr_name = subentry.title
         # Each chat gets its own device (keyed per chat) linked to the shared bot device.
         device_info = self._attr_device_info
         assert device_info is not None

@@ -90,14 +90,8 @@ async def test_migrate_entry_to_per_chat_devices(
 ) -> None:
     """Test migrating chats sharing one bot device to per-chat devices.
 
-    On this device-registry model a device may belong to multiple subentries, so the shared
-    bot device holds the event entity (subentry None) and every chat's notify entity across
-    subentries. The migration must move each chat's notify entity onto its own per-chat
-    device (linked to the bot device) and leave the bot device associated with only
-    (entry, None), so the future device-registry redesign keeps it at None.
-
-    A chat's notify entity may have been deleted while the bot device keeps that chat's
-    subentry association, so the migration must strip the association either way.
+    Each chat's notify entity moves onto its own per-chat device linked to the bot
+    device, and the bot device is left associated with only (entry, None).
     """
     bot_id = 123456  # test_user id from mock_external_calls
     chat_ids = (123456, 654321)
