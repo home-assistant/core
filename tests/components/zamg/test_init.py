@@ -70,8 +70,15 @@ async def test_migrate_unique_ids(
     station_id: str,
 ) -> None:
     """Test successful migration of entity unique_ids."""
-    FIXTURE_CONFIG_ENTRY["data"][CONF_STATION_ID] = station_id
-    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    mock_config_entry = MockConfigEntry(
+        **{
+            **FIXTURE_CONFIG_ENTRY,
+            "data": {
+                **FIXTURE_CONFIG_ENTRY["data"],
+                CONF_STATION_ID: station_id,
+            },
+        }
+    )
     mock_config_entry.add_to_hass(hass)
 
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
@@ -116,8 +123,15 @@ async def test_dont_migrate_unique_ids(
     station_id: str,
 ) -> None:
     """Test successful migration of entity unique_ids."""
-    FIXTURE_CONFIG_ENTRY["data"][CONF_STATION_ID] = station_id
-    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    mock_config_entry = MockConfigEntry(
+        **{
+            **FIXTURE_CONFIG_ENTRY,
+            "data": {
+                **FIXTURE_CONFIG_ENTRY["data"],
+                CONF_STATION_ID: station_id,
+            },
+        }
+    )
     mock_config_entry.add_to_hass(hass)
 
     # create existing entry with new_unique_id
@@ -173,7 +187,14 @@ async def test_unload_entry(
     unique_id: str,
 ) -> None:
     """Test unload entity unique_ids."""
-    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    mock_config_entry = MockConfigEntry(
+        **{
+            **FIXTURE_CONFIG_ENTRY,
+            "data": {
+                **FIXTURE_CONFIG_ENTRY["data"],
+            },
+        }
+    )
     mock_config_entry.add_to_hass(hass)
 
     entity_registry.async_get_or_create(
