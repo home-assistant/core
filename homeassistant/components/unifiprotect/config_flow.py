@@ -41,9 +41,11 @@ from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_CONNECTION_MODE,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
+    CONNECTION_MODE_API_KEY_ONLY,
     DEFAULT_MAX_MEDIA,
     DEFAULT_PORT,
     DEFAULT_VERIFY_SSL,
@@ -319,6 +321,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
                     CONF_VERIFY_SSL: verify_ssl,
                     CONF_API_KEY: user_input[CONF_API_KEY],
+                    CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
                 }
                 mac, errors = await self._async_get_public_nvr_identity(attempt)
                 if mac and not errors:
@@ -429,7 +432,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         username = user_input.get(CONF_USERNAME, "")
         password = user_input.get(CONF_PASSWORD, "")
         if not username or not password:
-            # Entries coming from public-API-only mode have no stored
+            # An entry created in public-API-only mode has no stored
             # credentials to fall back on; the client constructor rejects an
             # incomplete pair, so fail as invalid_auth before building it.
             return None, {CONF_PASSWORD: "invalid_auth"}
@@ -571,7 +574,13 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             if mac and not errors:
                 await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
                 self._abort_if_unique_id_configured()
-                return self._async_create_entry(user_input[CONF_HOST], user_input)
+                return self._async_create_entry(
+                    user_input[CONF_HOST],
+                    {
+                        **user_input,
+                        CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
+                    },
+                )
 
         return self.async_show_form(
             step_id="api_key",
@@ -588,10 +597,10 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        if not entry_data.get(CONF_USERNAME):
-            # Public-API-only entry: there is no local user to re-enter, and
-            # re-adding one here would silently flip the mode (that belongs
-            # to reconfigure); only the API key can be renewed.
+        if entry_data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY_ONLY:
+            # Public-API-only entry: only the API key is in use, and asking
+            # for a local user here would silently flip the mode (that
+            # belongs to reconfigure); only the API key can be renewed.
             return await self.async_step_reauth_api_key()
         return await self.async_step_reauth_confirm()
 
@@ -693,8 +702,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Reconfigure onto (or within) the public-API-only mode.
 
-        Switching from full access drops the stored local-user credentials so
-        the entry reloads in public-only mode.
+        Stored local-user credentials are kept (unused in this mode) so
+        switching back to full access is lossless.
         """
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
@@ -704,17 +713,12 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             if mac and not errors:
                 await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
                 self._abort_if_unique_id_mismatch(reason="wrong_nvr")
-                # Build fresh data without username/password: their absence is
-                # the public-only signal, and the merge convention (empty =
-                # keep) could otherwise not remove them.
                 new_data = {
+                    **reconfigure_entry.data,
                     **_normalize_port(user_input),
+                    CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
                     CONF_ID: reconfigure_entry.data.get(CONF_ID, user_input[CONF_HOST]),
                 }
-                # The dropped local user leaves a cached session token behind.
-                await _async_clear_session_if_credentials_changed(
-                    self.hass, reconfigure_entry, new_data
-                )
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data=new_data
                 )
@@ -750,6 +754,9 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 **reconfigure_entry.data,
                 **_filter_empty_credentials(user_input),
             }
+            # Full access is the default mode; drop the field so the entry
+            # matches one that never switched.
+            merged_input.pop(CONF_CONNECTION_MODE, None)
 
             # Clear stored session if credentials changed to force fresh authentication
             await _async_clear_session_if_credentials_changed(

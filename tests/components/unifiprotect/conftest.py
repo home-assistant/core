@@ -33,7 +33,11 @@ from uiprotect.data import (
 )
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DOMAIN,
+)
 from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
 from homeassistant.const import (
     CONF_API_KEY,
@@ -572,6 +576,7 @@ def mock_ufp_public_only_entry():
             "id": DEFAULT_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
         },
         unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )

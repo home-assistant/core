@@ -28,7 +28,7 @@
           "port": "Port of your UniFi Protect device.",
           "verify_ssl": "Verify SSL certificate of the UniFi Protect device."
         },
-        "description": "Connect using only an API key, without a local user. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Connect using only an API key, without a local user. The API-key-only mode currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
         "title": "UniFi Protect setup (API key)"
       },
       "discovery_api_key": {
@@ -40,11 +40,11 @@
           "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]",
           "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]"
         },
-        "description": "Connect to {name} ({ip_address}) using only an API key. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Connect to {name} ({ip_address}) using only an API key. The API-key-only mode currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
         "title": "UniFi Protect discovered (API key)"
       },
       "discovery_confirm": {
-        "description": "How do you want to connect to {name} ({ip_address})? The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
+        "description": "How do you want to connect to {name} ({ip_address})? The API-key-only mode currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
         "menu_options": {
           "discovery_api_key": "API key only (limited feature set)",
           "discovery_full": "Local user and API key (full access)"
@@ -134,7 +134,7 @@
           "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
           "verify_ssl": "[%key:component::unifiprotect::config::step::api_key::data_description::verify_ssl%]"
         },
-        "description": "Switch to (or update) API-key-only mode. Switching from a local user removes the stored credentials. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Switch to (or update) API-key-only mode. Stored local user credentials are kept, so you can switch back at any time. The API-key-only mode currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
         "title": "Reconfigure UniFi Protect (API key)"
       },
       "reconfigure_full": {
@@ -158,7 +158,7 @@
         "title": "Reconfigure UniFi Protect (local user)"
       },
       "user": {
-        "description": "Choose how to connect to your UniFi Protect console. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
+        "description": "Choose how to connect to your UniFi Protect console. The API-key-only mode currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
         "menu_options": {
           "api_key": "API key only (limited feature set)",
           "full": "Local user and API key (full access)"

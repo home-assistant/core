@@ -34,7 +34,9 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_CONNECTION_MODE,
     CONF_OVERRIDE_CHOST,
+    CONNECTION_MODE_API_KEY_ONLY,
     DEVICES_FOR_SUBSCRIBE,
     DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
@@ -110,9 +112,11 @@ def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
 def async_entry_is_public_only(entry: UFPConfigEntry) -> bool:
     """Return whether an entry uses the public-API-only (API-key) mode.
 
-    A public-only entry has no local user; the API key is the only credential.
+    The mode is an explicit field: local-user credentials may still be stored
+    (kept on a mode switch so switching back is lossless), so their presence
+    says nothing about the mode.
     """
-    return not entry.data.get(CONF_USERNAME)
+    return entry.data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY_ONLY
 
 
 @callback

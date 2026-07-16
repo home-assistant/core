@@ -13,8 +13,10 @@ from uiprotect.exceptions import ClientError
 from homeassistant import config_entries
 from homeassistant.components.unifiprotect.const import (
     CONF_ALL_UPDATES,
+    CONF_CONNECTION_MODE,
     CONF_DISABLE_RTSP,
     CONF_OVERRIDE_CHOST,
+    CONNECTION_MODE_API_KEY_ONLY,
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
@@ -2172,6 +2174,7 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
         "verify_ssl": False,
         "api_key": "test-api-key",
         "id": "1.1.1.1",
+        "connection_mode": "api_key_only",
     }
     assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
     assert len(mock_setup_entry.mock_calls) == 1
@@ -2234,7 +2237,7 @@ async def test_reconfigure_flip_to_api_key(
     nvr: NVR,
     mock_setup: None,
 ) -> None:
-    """Reconfiguring a full entry to API-key-only drops the local credentials."""
+    """Reconfiguring to API-key-only keeps the credentials, flips the mode."""
     ufp_reauth_entry.add_to_hass(hass)
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
 
@@ -2259,9 +2262,11 @@ async def test_reconfigure_flip_to_api_key(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    # The local-user credentials are gone; the entry is now public-only.
-    assert CONF_USERNAME not in ufp_reauth_entry.data
-    assert CONF_PASSWORD not in ufp_reauth_entry.data
+    # The mode field flips; the local-user credentials stay stored so
+    # switching back to full access is lossless.
+    assert ufp_reauth_entry.data[CONF_CONNECTION_MODE] == CONNECTION_MODE_API_KEY_ONLY
+    assert ufp_reauth_entry.data[CONF_USERNAME] == DEFAULT_USERNAME
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == DEFAULT_PASSWORD
     assert ufp_reauth_entry.data[CONF_API_KEY] == "new-api-key"
 
 
@@ -2296,9 +2301,69 @@ async def test_reconfigure_flip_to_full(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     # The entry is now full access: the local user is stored alongside the key.
+    assert CONF_CONNECTION_MODE not in ufp_public_only_entry.data
     assert ufp_public_only_entry.data[CONF_USERNAME] == DEFAULT_USERNAME
     assert ufp_public_only_entry.data[CONF_PASSWORD] == DEFAULT_PASSWORD
     assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+async def test_reconfigure_mode_round_trip(
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    ufp_reauth_entry: MockConfigEntry,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
+) -> None:
+    """A full entry flips to API-key-only and back without re-entering credentials.
+
+    The kept credentials make the switch lossless: flipping back submits an
+    empty password and relies on the stored one.
+    """
+    ufp_reauth_entry.add_to_hass(hass)
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
+    bootstrap.nvr = nvr
+
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    result = await _advance_menu(hass, result, "reconfigure_api_key")
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=nvr.mac,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": DEFAULT_HOST, "api_key": "new-api-key"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert ufp_reauth_entry.data[CONF_CONNECTION_MODE] == CONNECTION_MODE_API_KEY_ONLY
+
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    result = await _advance_menu(hass, result, "reconfigure_full")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **BASE_USER_INPUT,
+            CONF_PASSWORD: "",
+            CONF_API_KEY: "",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert CONF_CONNECTION_MODE not in ufp_reauth_entry.data
+    assert ufp_reauth_entry.data[CONF_USERNAME] == DEFAULT_USERNAME
+    assert ufp_reauth_entry.data[CONF_PASSWORD] == DEFAULT_PASSWORD
+    assert ufp_reauth_entry.data[CONF_API_KEY] == "new-api-key"
 
 
 async def test_reconfigure_flip_wrong_nvr(
@@ -2465,6 +2530,7 @@ async def test_discovery_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
         "verify_ssl": True,
         "api_key": "test-api-key",
         "id": DEVICE_HOSTNAME,
+        "connection_mode": "api_key_only",
     }
     assert CONF_USERNAME not in result["data"]
     # The unique id is the resolved NVR mac, not the discovery hardware address,

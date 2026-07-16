@@ -29,6 +29,8 @@ from homeassistant.components.unifiprotect import async_remove_config_entry_devi
 from homeassistant.components.unifiprotect.const import (
     ATTR_MESSAGE,
     AUTH_RETRIES,
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY_ONLY,
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
@@ -68,6 +70,7 @@ def _public_only_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: False,
             CONF_API_KEY: "test-api-key",
             "id": "1.1.1.1",
+            CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
         },
         version=2,
         unique_id=_UNIFI_MAC,

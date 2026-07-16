@@ -86,6 +86,11 @@ PUBLIC_ONLY_PLATFORMS = [
     Platform.CAMERA,
 ]
 
+# Stored local-user credentials do not imply the mode: they are kept on a
+# switch to API-key-only so switching back is lossless.
+CONF_CONNECTION_MODE = "connection_mode"
+CONNECTION_MODE_API_KEY_ONLY = "api_key_only"
+
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
