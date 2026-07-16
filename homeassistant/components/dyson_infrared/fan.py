@@ -1,7 +1,6 @@
 """Support for Dyson infrared fans."""
 
 import asyncio
-import math
 from typing import Any, override
 
 from infrared_protocols.codes.dyson.cool import DysonCoolCode
@@ -10,11 +9,10 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.percentage import percentage_to_ranged_value, ranged_value_to_percentage
 
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID
+
 PARALLEL_UPDATES = 0
 
 
