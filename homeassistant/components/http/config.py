@@ -331,6 +331,13 @@ class HTTPConfigStore:
         if config is not None and _strip_meta(config) == _strip_meta(self._stable):
             # No need to save a pending config that is the same as stable.
             config = None
+        if (
+            config is not None
+            and self._pending is not None
+            and self._pending[CONF_ERROR] is None
+            and _strip_meta(config) == _strip_meta(self._pending)
+        ):
+            return
         self._pending = config
         if self._pending is not None:
             self._pending[CONF_CREATED_AT] = dt_util.utcnow()
