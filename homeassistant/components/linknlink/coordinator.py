@@ -1,6 +1,7 @@
 """Coordinator for LinknLink eMotion Ultra local position updates."""
 
 from collections.abc import Callable
+from datetime import datetime
 from typing import override
 
 from aiolinknlink import (
@@ -16,6 +17,7 @@ from aiolinknlink import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -23,6 +25,7 @@ from .const import (
     ENVIRONMENT_UPDATE_INTERVAL,
     LOGGER,
     POSITION_SUBSCRIPTION_CONFIRM_TIMEOUT,
+    POSITION_UPDATE_COOLDOWN,
 )
 
 type LinknLinkConfigEntry = ConfigEntry[LinknLinkCoordinator]
@@ -56,7 +59,10 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
         self.position_state: UltraPositionSubscriptionState | None = None
         self.environment_state: UltraEnvironmentState | None = None
         self.environment_available = False
+        self._environment_connected: bool | None = None
         self._position_listeners: set[PositionListener] = set()
+        self._cancel_position_notification: Callable[[], None] | None = None
+        self._position_notification_pending = False
 
     @override
     async def _async_setup(self) -> None:
@@ -86,7 +92,7 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
 
     @override
     async def _async_update_data(self) -> None:
-        """Refresh lower-frequency environmental and occupancy state."""
+        """Refresh lower-frequency environmental and count state."""
         if self.session is None:
             return
         try:
@@ -94,12 +100,14 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
                 self.session
             )
         except (OSError, TimeoutError, UltraError) as err:
-            if self.environment_available:
+            if self._environment_connected is not False:
                 LOGGER.warning("Ultra environmental state is unavailable: %s", err)
-            else:
-                LOGGER.debug("Unable to read Ultra environmental state: %s", err)
+            self._environment_connected = False
             self.environment_available = False
             return
+        if self._environment_connected is False:
+            LOGGER.info("Ultra environmental state is available")
+        self._environment_connected = True
         self.environment_available = True
 
     @callback
@@ -117,11 +125,54 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
 
     @callback
     def _async_handle_position(self, update: UltraPositionUpdate) -> None:
-        """Forward a new target-position update to position entities."""
+        """Coalesce target-position updates before notifying entities."""
         assert self.position_subscription is not None
         self.position_state = self.position_subscription.state
+        if not self._position_listeners:
+            return
+        if self._cancel_position_notification is not None:
+            self._position_notification_pending = True
+            return
+        self._async_notify_position_listeners(update)
+        self._async_schedule_position_notification()
+
+    @callback
+    def _async_schedule_position_notification(self) -> None:
+        """Start the position notification cooldown."""
+        self._cancel_position_notification = async_call_later(
+            self.hass,
+            POSITION_UPDATE_COOLDOWN,
+            self._async_flush_position_notification,
+        )
+
+    @callback
+    def _async_flush_position_notification(self, _: datetime) -> None:
+        """Notify listeners of the latest position after the cooldown."""
+        self._cancel_position_notification = None
+        if not self._position_notification_pending:
+            return
+        self._position_notification_pending = False
+        state = self.position_state
+        self._async_notify_position_listeners(
+            state.latest_update if state is not None else None
+        )
+        self._async_schedule_position_notification()
+
+    @callback
+    def _async_notify_position_listeners(
+        self, update: UltraPositionUpdate | None
+    ) -> None:
+        """Notify position entities of the latest coalesced state."""
         for listener in self._position_listeners:
             listener(update)
+
+    @callback
+    def _async_cancel_position_notification(self) -> None:
+        """Cancel a pending position notification."""
+        if self._cancel_position_notification is not None:
+            self._cancel_position_notification()
+            self._cancel_position_notification = None
+        self._position_notification_pending = False
 
     @callback
     def _async_handle_position_status(
@@ -143,12 +194,13 @@ class LinknLinkCoordinator(DataUpdateCoordinator[None]):
             )
         elif state.subscribed and previous is not None and not previous.subscribed:
             LOGGER.info("Ultra local position subscription is available")
-        for listener in self._position_listeners:
-            listener(None)
+        self._async_cancel_position_notification()
+        self._async_notify_position_listeners(None)
 
     @override
     async def async_shutdown(self) -> None:
         """Stop the local position subscription and release its socket."""
+        self._async_cancel_position_notification()
         if self.position_subscription is not None:
             await self.position_subscription.stop()
             self.position_subscription = None

@@ -80,13 +80,11 @@ ENVIRONMENT_SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="target_count",
         translation_key="target_count",
-        icon="mdi:account-multiple",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="persons_in_fenced_zones",
         translation_key="persons_in_fenced_zones",
-        icon="mdi:account-group",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -95,7 +93,6 @@ ZONE_COUNT_SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
     SensorEntityDescription(
         key=f"zone_{zone}_target_counts",
         translation_key=f"zone_{zone}_target_count",
-        icon="mdi:account-multiple",
         state_class=SensorStateClass.MEASUREMENT,
     )
     for zone in range(1, 5)
