@@ -2758,7 +2758,7 @@ async def test_delete_occurrence_of_orphan_override(
     calendars: list[Mock],
     ws_client: ClientFixture,
 ) -> None:
-    """Test that cancelling the orphan's occurrence keeps the resource valid."""
+    """Test that cancelling the orphan's only occurrence drops the resource."""
     await setup_platform_cb()
     event = _mock_dav_event(calendars[0], ORPHAN_ICS)
 
@@ -2772,4 +2772,51 @@ async def test_delete_occurrence_of_orphan_override(
         },
     )
 
-    assert len(list(event.icalendar_instance.walk("VEVENT"))) == 1
+    event.delete.assert_called_once()
+
+
+TWO_ORPHANS_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+RECURRENCE-ID:20171128T170000Z
+DTSTART:20171128T190000Z
+DTEND:20171128T200000Z
+SUMMARY:First orphan
+END:VEVENT
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+RECURRENCE-ID:20171129T170000Z
+DTSTART:20171129T190000Z
+DTEND:20171129T200000Z
+SUMMARY:Second orphan
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_delete_one_of_two_orphan_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that deleting one orphan occurrence keeps the other."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], TWO_ORPHANS_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+        },
+    )
+
+    event.delete.assert_not_called()
+    vevents = list(event.icalendar_instance.walk("VEVENT"))
+    assert [vevent["SUMMARY"] for vevent in vevents] == ["Second orphan"]

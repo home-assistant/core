@@ -33,7 +33,8 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-_WRITE_FAILURES = (requests.ConnectionError, requests.Timeout, DAVError, ValueError)
+_NETWORK_FAILURES = (requests.ConnectionError, requests.Timeout, DAVError)
+_WRITE_FAILURES = (*_NETWORK_FAILURES, ValueError)
 
 
 def update_event(
@@ -125,6 +126,19 @@ def delete_event(
             return
         _cap_series(master, occurrence)
         _drop_overrides(ical, master, occurrence, from_occurrence=True)
+    elif "RECURRENCE-ID" in master:
+        # An object holding only overrides has no series to annotate; drop
+        # the matching component, or the resource when it is the last one.
+        target = _override(ical, occurrence)
+        if target is None:
+            raise ValueError(f"Occurrence not found: {recurrence_id}")
+        remaining = [v for v in _overrides(ical) if v is not target]
+        if not remaining:
+            dav_event.delete()
+            return
+        ical.subcomponents.remove(target)
+        _save(dav_event, ical, remaining[0])
+        return
     else:
         _add_exdate(master, occurrence)
         _drop_overrides(ical, master, occurrence, from_occurrence=False)
@@ -267,7 +281,12 @@ def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
         dtstart = datetime.combine(dtstart, time.min)
         target = datetime.combine(target, time.min)
     rule = rrulestr(master["RRULE"].to_ical().decode("utf-8"), dtstart=dtstart)
-    return sum(1 for moment in rule if moment < target)
+    count = 0
+    for moment in rule:
+        if moment >= target:
+            break
+        count += 1
+    return count
 
 
 def _ends_before(master: Any, occurrence: datetime | date) -> bool:
@@ -304,7 +323,7 @@ def _head_uncapped(
     """Return whether the head still holds occurrences from the cutoff on."""
     try:
         ical = calendar.event_by_uid(uid).icalendar_instance
-    except requests.ConnectionError, requests.Timeout, DAVError:
+    except _NETWORK_FAILURES:
         return False
     return _has_occurrences_from(_master(ical), occurrence)
 
@@ -312,7 +331,7 @@ def _head_uncapped(
 def _discard(tail: Any) -> None:
     try:
         tail.delete()
-    except (requests.ConnectionError, requests.Timeout, DAVError) as err:
+    except _NETWORK_FAILURES as err:
         _LOGGER.warning(
             "The split-off series could not be removed after a failed update"
             " and may show duplicate events until the update is retried: %s",
