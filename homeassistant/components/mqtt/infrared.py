@@ -57,7 +57,8 @@ SIGNAL_SCHEMA = vol.Schema(
     {
         vol.Required("timings"): vol.All([int], vol.Length(min=1)),
         vol.Optional("modulation"): vol.Any(int, None),
-    }
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 
@@ -109,7 +110,6 @@ DISCOVERY_SCHEMA_MAPPING: dict[str, VolSchemaType] = {
     "receiver": RECEIVER_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
 }
 
-
 PLATFORM_SCHEMA_MODERN = vol.All(
     INFRARED_BASE_SCHEMA,
     validate_mqtt_infrared_config,
@@ -156,7 +156,7 @@ class MqttInfraredEmitterEntity(MqttEntity, InfraredEmitterEntity):
     @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
-        return DISCOVERY_SCHEMA
+        return DISCOVERY_SCHEMA_MAPPING["emitter"]
 
     @override
     def _setup_from_config(self, config: ConfigType) -> None:
@@ -203,7 +203,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
     @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
-        return DISCOVERY_SCHEMA
+        return DISCOVERY_SCHEMA_MAPPING["receiver"]
 
     @override
     def _setup_from_config(self, config: ConfigType) -> None:
