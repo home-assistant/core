@@ -78,6 +78,20 @@ TUNER_FREQUENCY_PATTERN = re.compile(r"[0-9]+")
 TUNER_FREQUENCY_MIN = 8750
 TUNER_FREQUENCY_MAX = 10800
 TUNER_FREQUENCY_LENGTH = 6
+#: Reported frequencies at or above this value are AM, which is not supported.
+TUNER_FREQUENCY_FM_MAX = 50000
+
+
+def _tuner_frequency_to_mhz(frequency: str | None) -> str | None:
+    """Convert a reported tuner frequency to MHz, or None if it is not FM."""
+    if frequency is None or not TUNER_FREQUENCY_PATTERN.fullmatch(frequency):
+        return None
+
+    value = int(frequency)
+    if value >= TUNER_FREQUENCY_FM_MAX:
+        return None
+
+    return f"{value / 100:.2f}"
 
 
 async def async_setup_entry(
@@ -182,6 +196,13 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
         source = self._player.input_source
         self._attr_source = INPUT_SOURCE_DENON_TO_HA.get(source) if source else None
+
+        if source is InputSource.TUNER:
+            self._attr_media_channel = _tuner_frequency_to_mhz(
+                self._receiver.state.main_zone.tuner_frequency
+            )
+        else:
+            self._attr_media_channel = None
 
         volume_min = self._player.volume_min
         volume_max = self._player.volume_max

@@ -12,6 +12,7 @@ from homeassistant.components.denon_rs232.media_player import INPUT_SOURCE_DENON
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -402,6 +403,69 @@ async def test_zones_do_not_support_play_media(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("tuner_frequency", "expected_channel"),
+    [
+        pytest.param("009930", "99.30", id="fm_frequency"),
+        pytest.param("008750", "87.50", id="lowest_fm_frequency"),
+        pytest.param("010800", "108.00", id="highest_fm_frequency"),
+        pytest.param("010000", "100.00", id="whole_mhz_frequency"),
+        pytest.param(None, None, id="frequency_unknown"),
+        pytest.param("050000", None, id="am_threshold"),
+        pytest.param("099990", None, id="am_frequency"),
+        pytest.param("00AM10", None, id="not_a_number"),
+    ],
+)
+async def test_tuner_frequency_media_channel(
+    hass: HomeAssistant,
+    mock_receiver: MockReceiver,
+    tuner_frequency: str | None,
+    expected_channel: str | None,
+) -> None:
+    """Test the tuner frequency is reported in MHz as the media channel."""
+    state = _default_state()
+    state.main_zone.input_source = InputSource.TUNER
+    state.main_zone.tuner_frequency = tuner_frequency
+    mock_receiver.mock_state(state)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(MAIN_ENTITY_ID)
+    assert entity_state.attributes.get(ATTR_MEDIA_CHANNEL) == expected_channel
+
+
+async def test_tuner_frequency_not_reported_for_other_sources(
+    hass: HomeAssistant, mock_receiver: MockReceiver
+) -> None:
+    """Test the media channel is cleared when the zone leaves the tuner source."""
+    state = _default_state()
+    state.main_zone.input_source = InputSource.TUNER
+    mock_receiver.mock_state(state)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MAIN_ENTITY_ID).attributes[ATTR_MEDIA_CHANNEL] == "99.30"
+
+    state = _default_state()
+    state.main_zone.input_source = InputSource.CD
+    mock_receiver.mock_state(state)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(MAIN_ENTITY_ID)
+    assert ATTR_MEDIA_CHANNEL not in entity_state.attributes
+
+
+async def test_tuner_frequency_shared_by_zones(
+    hass: HomeAssistant, mock_receiver: MockReceiver
+) -> None:
+    """Test a zone on the tuner source reports the shared main zone frequency."""
+    state = _default_state()
+    state.main_zone.tuner_frequency = "010110"
+    mock_receiver.mock_state(state)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(ZONE_2_ENTITY_ID)
+    assert entity_state.attributes[ATTR_MEDIA_CHANNEL] == "101.10"
 
 
 def test_input_source_translation_keys_cover_all_enum_members() -> None:

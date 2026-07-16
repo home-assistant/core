@@ -137,6 +137,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AVR-3805 Zone 2',
+      <MediaPlayerEntityStateAttribute.MEDIA_CHANNEL: 'media_channel'>: '99.30',
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'tuner',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
