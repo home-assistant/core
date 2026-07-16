@@ -8,7 +8,7 @@ from pizone import Controller, Zone
 import pytest
 
 from homeassistant.components.izone import discovery as izone_discovery
-from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.const import CONF_EXCLUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -161,9 +161,7 @@ async def async_install_discovery_service(
             return_value=mock_pi_disco,
         ),
     ):
-        service = await izone_discovery.async_start_discovery_service(hass)
-    assert DATA_DISCOVERY_SERVICE in hass.data
-    return service
+        return await izone_discovery.async_start_discovery_service(hass)
 
 
 @pytest.fixture
