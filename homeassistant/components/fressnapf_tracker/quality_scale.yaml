@@ -14,9 +14,15 @@ rules:
     status: exempt
     comment: |
       No custom actions are defined.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -63,7 +69,7 @@ rules:
     comment: |
       This integration does not have many entities. All of them are fundamental.
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo

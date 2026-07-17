@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import ClassVar
+from typing import ClassVar, override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
@@ -82,6 +82,7 @@ class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch console data."""
 
@@ -106,6 +107,7 @@ class XboxConsolesCoordinator(XboxBaseCoordinator[dict[str, SmartglassConsole]])
     config_entry: XboxConfigEntry
     _update_interval = timedelta(minutes=10)
 
+    @override
     async def update_data(self) -> dict[str, SmartglassConsole]:
         """Fetch console data."""
 
@@ -125,9 +127,7 @@ class XboxConsolesCoordinator(XboxBaseCoordinator[dict[str, SmartglassConsole]])
                 and not set(device.identifiers) & identifiers
             ):
                 _LOGGER.debug("Removing stale device %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
 
         return {console.id: console for console in consoles.result}
 
@@ -151,6 +151,7 @@ class XboxConsoleStatusCoordinator(XboxBaseCoordinator[dict[str, ConsoleData]]):
 
         self.consoles: dict[str, SmartglassConsole] | None = consoles
 
+    @override
     async def update_data(self) -> dict[str, ConsoleData]:
         """Fetch console data."""
 
@@ -208,6 +209,7 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     _update_interval = timedelta(seconds=30)
     title_data: ClassVar[dict[str, Title]] = {}
 
+    @override
     async def update_data(self) -> XboxData:
         """Fetch presence data."""
 
@@ -256,8 +258,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
 
-        # The Xbox API constantly fluctuates the "last seen" timestamp between two close values,
-        # causing unnecessary updates. We only accept the most recent one as valild to prevent this.
+        # The Xbox API constantly fluctuates the "last seen"
+        # timestamp between two close values, causing
+        # unnecessary updates. We only accept the most
+        # recent one as valid to prevent this.
 
         prev_dt = (
             prev_data.last_seen_date_time_utc

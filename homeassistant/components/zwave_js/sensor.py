@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass, RssiError
@@ -59,9 +59,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UV_INDEX,
     EntityCategory,
@@ -71,6 +69,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -131,11 +130,14 @@ PARALLEL_UPDATES = 0
 
 # These descriptions should have a non None unit of measurement.
 ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] = {
-    (ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, PERCENTAGE): SensorEntityDescription(
+    (
+        ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
+        UnitOfRatio.PERCENTAGE,
+    ): SensorEntityDescription(
         key=ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
     (
@@ -185,29 +187,29 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
-    (ENTITY_DESC_KEY_POWER_FACTOR, PERCENTAGE): SensorEntityDescription(
+    (ENTITY_DESC_KEY_POWER_FACTOR, UnitOfRatio.PERCENTAGE): SensorEntityDescription(
         key=ENTITY_DESC_KEY_POWER_FACTOR,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
-    (ENTITY_DESC_KEY_CO, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
+    (ENTITY_DESC_KEY_CO, UnitOfRatio.PARTS_PER_MILLION): SensorEntityDescription(
         key=ENTITY_DESC_KEY_CO,
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
-    (ENTITY_DESC_KEY_CO2, CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
+    (ENTITY_DESC_KEY_CO2, UnitOfRatio.PARTS_PER_MILLION): SensorEntityDescription(
         key=ENTITY_DESC_KEY_CO2,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
-    (ENTITY_DESC_KEY_HUMIDITY, PERCENTAGE): SensorEntityDescription(
+    (ENTITY_DESC_KEY_HUMIDITY, UnitOfRatio.PERCENTAGE): SensorEntityDescription(
         key=ENTITY_DESC_KEY_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     (ENTITY_DESC_KEY_ILLUMINANCE, LIGHT_LUX): SensorEntityDescription(
         key=ENTITY_DESC_KEY_ILLUMINANCE,
@@ -629,7 +631,8 @@ async def async_setup_entry(
                 )
             )
         elif info.platform_hint == "notification":
-            # prevent duplicate entities for values that are already represented as binary sensors
+            # prevent duplicate entities for values that are
+            # already represented as binary sensors
             if is_valid_notification_binary_sensor(info):
                 return
             entities.append(
@@ -756,6 +759,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
             self._attr_name = self.generate_name(include_value_name=True)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return state of the sensor."""
         key = str(self.info.primary_value.value)
@@ -764,6 +768,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
         return str(self.info.primary_value.metadata.states[key])
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if (unit := super().native_unit_of_measurement) is not None:
@@ -794,6 +799,7 @@ class ZWaveNumericSensor(ZwaveSensor):
             )
 
     @callback
+    @override
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
         data = NumericSensorDataTemplate().resolve_data(self.info.primary_value)
@@ -801,6 +807,7 @@ class ZWaveNumericSensor(ZwaveSensor):
         self._attr_native_unit_of_measurement = data.unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
@@ -849,6 +856,7 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
         return scale_type
 
     @callback
+    @override
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
         # TODO: Try to limit this to metadata updated event.  # pylint: disable=fixme
@@ -857,6 +865,7 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
             self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
@@ -868,6 +877,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
         meter_type = get_meter_type(self.info.primary_value)
@@ -908,6 +918,7 @@ class NewZWaveMeterSensor(NewZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
         meter_type = get_meter_type(self.info.primary_value)
@@ -982,6 +993,7 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_options = list(info.primary_value.metadata.states.values())
 
     @callback
+    @override
     def should_rediscover_on_metadata_update(self) -> bool:
         """Check if metadata states have changed."""
         return list(self.info.primary_value.metadata.states.values()) != (
@@ -989,6 +1001,7 @@ class ZWaveListSensor(ZwaveSensor):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         if (value := self.info.primary_value.value) is None:
@@ -1023,6 +1036,7 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         if (value := self.info.primary_value.value) is None:
@@ -1051,6 +1065,7 @@ class ZWaveNodeStatusSensor(ZWaveNodeBaseEntity, SensorEntity):
         self._attr_native_value = self.node.status.name.lower()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -1081,6 +1096,7 @@ class ZWaveControllerStatusSensor(ZWaveNodeBaseEntity, SensorEntity):
         self._attr_native_value = self.controller.status.name.lower()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -1140,6 +1156,7 @@ class ZWaveStatisticsSensor(ZWaveNodeBaseEntity, SensorEntity):
         # Reset available state.
         self._attr_available = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -1165,7 +1182,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         ),
     ),
     NewZWaveDiscoverySchema(

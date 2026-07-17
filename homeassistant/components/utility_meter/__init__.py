@@ -60,7 +60,7 @@ def validate_cron_pattern(pattern: str) -> str:
 
 
 def period_or_cron(config: ConfigType) -> ConfigType:
-    """Check that if cron pattern is used, then meter type and offsite must be removed."""
+    """Check cron pattern excludes meter type and offset."""
     if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
         raise vol.Invalid(f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>")
     if (
@@ -205,7 +205,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
-            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_entity_id_to_device_id(
@@ -252,10 +251,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
-
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         new = {**config_entry.options}

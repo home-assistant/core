@@ -135,6 +135,16 @@ SSDP = {
             "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
         },
     ],
+    "harman_luxury": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Harman Luxury Audio",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Harman Luxury Audio",
+        },
+    ],
     "harmony": [
         {
             "deviceType": "urn:myharmony-com:device:harmony:1",
@@ -201,14 +211,15 @@ SSDP = {
             "manufacturer": "ZyXEL Communications Corp.",
         },
     ],
-    "konnected": [
-        {
-            "manufacturer": "konnected.io",
-        },
-    ],
     "lametric": [
         {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
+        },
+    ],
+    "lyngdorf": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Lyngdorf",
         },
     ],
     "nanoleaf": [

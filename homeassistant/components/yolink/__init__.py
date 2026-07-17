@@ -70,8 +70,8 @@ class YoLinkHomeMessageListener(MessageListener):
             return
 
         device_coordinator.dev_online = True
-        if (loraInfo := msg_data.get(ATTR_LORA_INFO)) is not None:
-            device_coordinator.dev_net_type = loraInfo.get("devNetType")
+        if (lora_info := msg_data.get(ATTR_LORA_INFO)) is not None:
+            device_coordinator.dev_net_type = lora_info.get("devNetType")
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (
@@ -169,9 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
                 identifier[0] == DOMAIN
                 and device_coordinators.get(identifier[1]) is None
             ):
-                device_registry.async_update_device(
-                    device_entry.id, remove_config_entry_id=entry.entry_id
-                )
+                device_registry.async_remove_device(device_entry.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

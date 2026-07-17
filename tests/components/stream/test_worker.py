@@ -178,7 +178,10 @@ class PacketSequence:
             size = 3
 
             def __str__(self) -> str:
-                return f"FakePacket<stream={self.stream}, pts={self.pts}, key={self.is_keyframe}>"
+                return (
+                    f"FakePacket<stream={self.stream},"
+                    f" pts={self.pts}, key={self.is_keyframe}>"
+                )
 
         return FakePacket()
 
@@ -312,7 +315,7 @@ async def async_decode_stream(
     py_av: MockPyAv | None = None,
     stream_settings: StreamSettings | None = None,
 ) -> FakePyAvBuffer:
-    """Start a stream worker that decodes incoming stream packets into output segments."""
+    """Start a stream worker that decodes packets into segments."""
     stream = Stream(
         hass,
         STREAM_SOURCE,
@@ -336,8 +339,9 @@ async def async_decode_stream(
         try:
             run_worker(hass, stream, STREAM_SOURCE, stream_settings)
         except StreamEndedError:
-            # Tests only use a limited number of packets, then the worker exits as expected. In
-            # production, stream ending would be unexpected.
+            # Tests only use a limited number of packets, then the
+            # worker exits as expected. In production, stream ending
+            # would be unexpected.
             pass
         finally:
             # Wait for all packets to be flushed even when exceptions are thrown
@@ -710,7 +714,8 @@ async def test_stream_stopped_while_decoding(hass: HomeAssistant) -> None:
         worker_wake.set()
         await stream.stop()
 
-    # Stream is still considered available when the worker was still active and asked to stop
+    # Stream is still considered available when the worker was still
+    # active and asked to stop
     assert stream.available
 
 
@@ -727,8 +732,8 @@ async def test_update_stream_source(hass: HomeAssistant) -> None:
         dynamic_stream_settings(),
     )
     stream.add_provider(HLS_PROVIDER)
-    # Note that retries are disabled by default in tests, however the stream is "restarted" when
-    # the stream source is updated.
+    # Note that retries are disabled by default in tests, however
+    # the stream is "restarted" when the stream source is updated.
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -832,7 +837,7 @@ async def test_durations(hass: HomeAssistant, worker_finished_stream) -> None:
     target_part_duration = TEST_PART_DURATION - 0.01
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -912,13 +917,14 @@ async def test_has_keyframe(
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                # Our test video has keyframes every second. Use smaller parts so we have more
-                # part boundaries to better test keyframe logic.
+                # Our test video has keyframes every second. Use
+                # smaller parts so we have more part boundaries to
+                # better test keyframe logic.
                 CONF_PART_DURATION: 0.25,
             }
         },
@@ -956,7 +962,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
     """Test that a h265 video gets muxed as hvc1."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -1001,7 +1007,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
 
 async def test_get_image(hass: HomeAssistant, h264_video, filename) -> None:
     """Test getting an image from the stream."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(
@@ -1064,7 +1070,7 @@ async def test_worker_disable_ll_hls(hass: HomeAssistant) -> None:
 
 async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> None:
     """Test getting a rotated image."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(

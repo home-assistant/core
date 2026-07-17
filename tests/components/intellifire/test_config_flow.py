@@ -203,7 +203,8 @@ async def test_dhcp_discovery_non_intellifire_device(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_intellifire_device"
-    # Test is finished - the DHCP scanner detected a hostname that "might" be an IntelliFire device, but it was not.
+    # Test is finished - the DHCP scanner detected a hostname that
+    # "might" be an IntelliFire device, but it was not.
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -299,7 +300,7 @@ async def test_options_flow_local_read_unavailable(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test options flow shows error when local connectivity unavailable for read mode."""
+    """Test options flow error when local unavailable for read."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
@@ -332,7 +333,7 @@ async def test_options_flow_local_control_unavailable(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test options flow shows error when local connectivity unavailable for control mode."""
+    """Test options flow error when local unavailable for control."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
@@ -363,7 +364,7 @@ async def test_options_flow_cloud_read_unavailable(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test options flow shows error when cloud connectivity unavailable for read mode."""
+    """Test options flow error when cloud unavailable for read."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
@@ -396,7 +397,7 @@ async def test_options_flow_cloud_control_unavailable(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test options flow shows error when cloud connectivity unavailable for control mode."""
+    """Test options flow error when cloud unavailable for control."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)

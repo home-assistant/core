@@ -1318,7 +1318,7 @@ async def test_unavailable_device(
 
     # Check attributes are unavailable
     attrs = mock_state.attributes
-    for attr in mp.ATTR_TO_PROPERTY:
+    for attr in mp.PROP_TO_ATTR.values():
         assert attr not in attrs
 
     assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
@@ -1936,7 +1936,8 @@ async def test_ssdp_bootid(
     assert dmr_device_mock.async_subscribe_services.call_count == 1
     assert dmr_device_mock.async_unsubscribe_services.call_count == 0
 
-    # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
+    # Send a new SSDP alive with an incremented boot ID,
+    # device should be dis/reconnected
     await ssdp_callback(
         SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -2080,8 +2081,8 @@ async def test_disappearing_device(
     entity: DlnaDmrEntity = hass.data[mp.DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
-    for attr in mp.ATTR_TO_PROPERTY:
-        value = getattr(entity, attr)
+    for prop in mp.PROP_TO_ATTR:
+        value = getattr(entity, prop)
         assert value is None
 
     # media_image_url is normally hidden by entity_picture, but we want a direct check

@@ -2,11 +2,12 @@
 
 from functools import partial
 import logging
+from typing import override
 
 from numato_gpio import NumatoGpioError
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import CONF_DEVICES, DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,7 +15,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_BINARY_SENSORS,
-    CONF_DEVICES,
     CONF_ID,
     CONF_INVERT_LOGIC,
     CONF_PORTS,
@@ -102,6 +102,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self._state = None
         self._api = api
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect state update callback."""
         self.async_on_remove(
@@ -119,6 +120,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic

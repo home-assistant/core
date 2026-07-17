@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+from pynobo import PynoboConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -14,6 +15,8 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+
+from .conftest import SERIAL, STORED_IP
 
 from tests.common import MockConfigEntry
 
@@ -32,12 +35,13 @@ async def test_configure_with_discover(
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
-    ):
+    ) as mock_discover:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+    mock_discover.assert_awaited_once_with(autodiscover_wait=5.0)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -74,6 +78,106 @@ async def test_configure_with_discover(
     }
     mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
     mock_setup_entry.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("discovered", "expected_devices", "selected_device"),
+    [
+        # Same IP+prefix hidden; sibling with same prefix at a different IP shown.
+        (
+            [("1.1.1.1", "111111111"), ("2.2.2.2", "111111111")],
+            {"2.2.2.2", "manual"},
+            "2.2.2.2",
+        ),
+        # Same IP, different prefix → different hub (e.g. replacement), shown.
+        ([("1.1.1.1", "222222222")], {"1.1.1.1", "manual"}, "1.1.1.1"),
+    ],
+    ids=["sibling_different_ip", "replaced_hub"],
+)
+async def test_configure_filters_configured_hubs(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    discovered: list[tuple[str, str]],
+    expected_devices: set[str],
+    selected_device: str,
+) -> None:
+    """Configured (IP, prefix) pairs are hidden; the user can pick a remaining one."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="111111111012",
+        data={CONF_SERIAL: "111111111012", CONF_IP_ADDRESS: "1.1.1.1"},
+    ).add_to_hass(hass)
+
+    with patch("pynobo.nobo.async_discover_hubs", return_value=discovered):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert set(result["data_schema"].schema["device"].container) == expected_devices
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device": selected_device},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "selected"
+
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True),
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"serial_suffix": "999"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_configure_skips_user_step_when_all_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Flow falls through to manual when every discovered hub matches a configured pair."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="111111111012",
+        data={CONF_SERIAL: "111111111012", CONF_IP_ADDRESS: "1.1.1.1"},
+    ).add_to_hass(hass)
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "111111111")],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True),
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial": "999999999999", "ip_address": "9.9.9.9"},
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_configure_manual(
@@ -177,8 +281,11 @@ async def test_configure_user_selected_manual(
     mock_setup_entry.assert_awaited_once()
 
 
-async def test_configure_invalid_serial_suffix(hass: HomeAssistant) -> None:
-    """Test we handle invalid serial suffix error."""
+async def test_configure_invalid_serial_suffix(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Invalid serial suffix surfaces an error; valid suffix recovers."""
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
@@ -199,16 +306,35 @@ async def test_configure_invalid_serial_suffix(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_serial"}
 
-
-async def test_configure_invalid_serial_undiscovered(hass: HomeAssistant) -> None:
-    """Test we handle invalid serial error."""
-    with patch(
-        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
-        return_value=[],
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "manual"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial_suffix": "012"},
         )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_setup_entry.assert_awaited_once()
+
+
+async def test_configure_invalid_serial_undiscovered(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Invalid serial in the manual step surfaces an error; valid serial recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "manual"}
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -218,16 +344,35 @@ async def test_configure_invalid_serial_undiscovered(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_serial"}
 
-
-async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
-    """Test we handle invalid ip address error."""
-    with patch(
-        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
-        return_value=[("1.1.1.1", "123456789")],
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "manual"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "1.1.1.1", CONF_SERIAL: "123456789012"},
         )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_setup_entry.assert_awaited_once()
+
+
+async def test_configure_invalid_ip_address(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Invalid IP surfaces an error; valid IP recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "manual"}
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -237,27 +382,51 @@ async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_ip"}
 
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SERIAL: "123456789012", CONF_IP_ADDRESS: "1.1.1.1"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_setup_entry.assert_awaited_once()
+
 
 @pytest.mark.parametrize(
     ("connect_outcome", "expected_error"),
     [
         ({"return_value": False}, "cannot_connect"),
-        ({"side_effect": ConnectionRefusedError(61, "")}, "cannot_connect_ip"),
+        (
+            {"side_effect": PynoboConnectionError("Failed to connect")},
+            "cannot_connect_ip",
+        ),
     ],
     ids=["serial_mismatch", "tcp_failure"],
 )
 async def test_configure_cannot_connect(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     connect_outcome: dict[str, object],
     expected_error: str,
 ) -> None:
-    """Connect failures map to distinct error keys.
+    """Connect failures map to distinct error keys; retry recovers.
 
     pynobo's async_connect_hub returns False on a successful TCP connect
-    followed by a handshake REJECT (serial mismatch) and raises OSError
-    on TCP-level failure (wrong IP / hub offline). We surface these as
-    cannot_connect ("check serial number") and cannot_connect_ip
-    ("check IP address") respectively.
+    followed by a handshake REJECT (serial mismatch) and raises
+    PynoboConnectionError on TCP-level failure (wrong IP / hub offline).
+    We surface these as cannot_connect ("check serial number") and
+    cannot_connect_ip ("check IP address") respectively.
     """
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
@@ -284,6 +453,26 @@ async def test_configure_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
     mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial_suffix": "012"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_setup_entry.assert_awaited_once()
 
 
 async def test_dhcp_discovery_new_hub(
@@ -334,51 +523,18 @@ async def test_dhcp_discovery_new_hub(
     mock_setup_entry.assert_awaited_once()
 
 
-@pytest.mark.parametrize(
-    ("stored_ip", "expected_type", "expected_reason", "expected_step", "expected_mac"),
-    [
-        # Matching IP + prefix → backfill MAC, abort already_configured.
-        (
-            "192.168.1.106",
-            FlowResultType.ABORT,
-            "already_configured",
-            None,
-            "7c830602644f",
-        ),
-        # Mismatched IP (sibling hub in same production batch) → don't
-        # clobber, fall through to the selected step.
-        (
-            "192.168.1.100",
-            FlowResultType.FORM,
-            None,
-            "selected",
-            None,
-        ),
-    ],
-    ids=["matching_ip_backfills_mac", "mismatched_ip_does_not_clobber"],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_dhcp_discovery_backfill_requires_ip_match(
+async def test_dhcp_discovery_backfill_aborts_when_ip_matches(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_unload_entry: AsyncMock,
-    stored_ip: str,
-    expected_type: FlowResultType,
-    expected_reason: str | None,
-    expected_step: str | None,
-    expected_mac: str | None,
 ) -> None:
-    """MAC backfill on an entry without a stored MAC requires both IP and prefix to match.
-
-    Two hubs from the same production batch share the 9-digit serial
-    prefix but have different IPs. Requiring IP match prevents a DHCP
-    packet from one hub clobbering a sibling entry's MAC.
-    """
+    """Matching IP + prefix backfills the MAC and aborts as already_configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="102000100098",
         data={
             CONF_SERIAL: "102000100098",
-            CONF_IP_ADDRESS: stored_ip,
+            CONF_IP_ADDRESS: "192.168.1.106",
             CONF_MAC: None,
         },
     )
@@ -394,11 +550,69 @@ async def test_dhcp_discovery_backfill_requires_ip_match(
             data=DHCP_DISCOVERY,
         )
 
-    assert result["type"] is expected_type
-    assert result.get("reason") == expected_reason
-    assert result.get("step_id") == expected_step
-    assert config_entry.data[CONF_IP_ADDRESS] == stored_ip
-    assert config_entry.data[CONF_MAC] == expected_mac
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_IP_ADDRESS] == "192.168.1.106"
+    assert config_entry.data[CONF_MAC] == "7c830602644f"
+
+
+async def test_dhcp_discovery_backfill_proceeds_when_ip_mismatched(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+) -> None:
+    """Mismatched IP (sibling hub from same production batch) doesn't clobber an existing entry's MAC.
+
+    Two hubs from the same production batch share the 9-digit serial
+    prefix but have different IPs. Requiring IP match prevents a DHCP
+    packet from one hub clobbering a sibling entry's MAC. The flow falls
+    through to the `selected` step so the user can configure the new hub.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="102000100098",
+        data={
+            CONF_SERIAL: "102000100098",
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_MAC: None,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
+        return_value={("192.168.1.106", "102000100")},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "selected"
+    assert config_entry.data[CONF_IP_ADDRESS] == "192.168.1.100"
+    assert config_entry.data[CONF_MAC] is None
+
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial_suffix": "099"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "102000100099"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -433,40 +647,40 @@ async def test_dhcp_discovery_skips_broadcast_when_mac_known(
     assert config_entry.data[CONF_MAC] == "7c830602644f"
 
 
-@pytest.mark.parametrize(
-    ("ignored_unique_id", "expected_type", "expected_reason", "expected_step"),
-    [
-        # Same MAC: rediscovery of a previously-ignored hub aborts.
-        (
-            "7c:83:06:02:64:4f",
-            FlowResultType.ABORT,
-            "already_configured",
-            None,
-        ),
-        # Different MAC (sibling in same production batch): flow proceeds
-        # to the selected step. The 9-digit serial prefix would match,
-        # but using the MAC as unique_id prevents the false-shadowing.
-        (
-            "7c:83:06:99:99:99",
-            FlowResultType.FORM,
-            None,
-            "selected",
-        ),
-    ],
-    ids=["same_mac_aborts", "different_mac_proceeds"],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_dhcp_discovery_with_ignored_entry(
+async def test_dhcp_discovery_aborts_when_ignored_mac_matches(
     hass: HomeAssistant,
-    ignored_unique_id: str,
-    expected_type: FlowResultType,
-    expected_reason: str | None,
-    expected_step: str | None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Ignored entries match the discovery flow by MAC, not by serial prefix."""
+    """Rediscovery of a previously-ignored hub aborts on matching MAC."""
     ignored_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=ignored_unique_id,
+        unique_id="7c:83:06:02:64:4f",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_proceeds_when_ignored_mac_differs(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A sibling hub (different MAC, same serial prefix) is not shadowed by an ignored entry.
+
+    The 9-digit serial prefix would match, but using the MAC as the
+    discovery flow's unique_id prevents the false-shadowing.
+    """
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="7c:83:06:99:99:99",
         source=config_entries.SOURCE_IGNORE,
     )
     ignored_entry.add_to_hass(hass)
@@ -481,9 +695,28 @@ async def test_dhcp_discovery_with_ignored_entry(
             data=DHCP_DISCOVERY,
         )
 
-    assert result["type"] is expected_type
-    assert result.get("reason") == expected_reason
-    assert result.get("step_id") == expected_step
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "selected"
+
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial_suffix": "098"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "102000100098"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -546,6 +779,163 @@ async def test_dhcp_discovery_no_broadcast(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_discover"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_changes_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A new IP is probed before save when the entry is not loaded."""
+    new_ip = "192.168.1.200"
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["description_placeholders"] == {CONF_SERIAL: SERIAL}
+
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ) as mock_connect,
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: new_ip},
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: new_ip}
+    mock_connect.assert_awaited_once_with(new_ip, SERIAL)
+
+
+@pytest.mark.parametrize(
+    ("submitted_ip", "connect_outcome", "expected_error", "expected_connect_count"),
+    [
+        (
+            "192.168.1.200",
+            {"side_effect": PynoboConnectionError("Failed to connect")},
+            "cannot_connect_ip",
+            1,
+        ),
+        ("not-an-ip", {"return_value": True}, "invalid_ip", 0),
+    ],
+    ids=["unreachable_ip", "invalid_format"],
+)
+@pytest.mark.usefixtures("mock_setup_entry", "mock_unload_entry")
+async def test_reconfigure_flow_rejects_bad_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    submitted_ip: str,
+    connect_outcome: dict[str, object],
+    expected_error: str,
+    expected_connect_count: int,
+) -> None:
+    """A bad IP is rejected inline; resubmitting a good IP completes the reconfigure."""
+    recovery_ip = "192.168.1.201"
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+        **connect_outcome,
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: submitted_ip},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_IP_ADDRESS: expected_error}
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == STORED_IP
+    assert mock_connect.await_count == expected_connect_count
+
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_IP_ADDRESS: recovery_ip},
+        )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_SERIAL: SERIAL, CONF_IP_ADDRESS: recovery_ip}
+
+
+async def test_reconfigure_flow_unchanged_ip_skips_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+) -> None:
+    """Submitting the same IP while connected aborts without triggering a reload."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_setup_entry.reset_mock()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_IP_ADDRESS: STORED_IP},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    mock_unload_entry.assert_not_awaited()
+    mock_setup_entry.assert_not_awaited()
+
+
+async def test_reconfigure_flow_changed_ip_triggers_reload_and_skips_probe(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_unload_entry: AsyncMock,
+) -> None:
+    """Submitting a different IP while connected reloads the entry without probing."""
+    new_ip = "192.168.1.200"
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_setup_entry.reset_mock()
+    mock_unload_entry.reset_mock()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub"
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: new_ip},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_IP_ADDRESS] == new_ip
+    mock_connect.assert_not_awaited()
+    mock_unload_entry.assert_awaited_once()
+    mock_setup_entry.assert_awaited_once()
+
+
 async def test_options_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -553,7 +943,7 @@ async def test_options_flow(
 ) -> None:
     """Test the options flow."""
     config_entry = MockConfigEntry(
-        domain="nobo_hub",
+        domain=DOMAIN,
         unique_id="123456789012",
         data={
             CONF_SERIAL: "123456789012",

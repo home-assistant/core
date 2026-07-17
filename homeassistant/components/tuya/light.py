@@ -1,7 +1,7 @@
 """Support for the Tuya lights."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.definition.light import (
     FallbackColorDataMode,
@@ -461,10 +461,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if light is on."""
         return self._read_wrapper(self._switch_wrapper)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
         commands = self._switch_wrapper.get_update_commands(self.device, True)
@@ -527,14 +529,17 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
         await self._async_send_commands(commands)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        # If the light is currently in color mode, extract the brightness from the color data
+        # If the light is currently in color mode,
+        # extract the brightness from the color data
         if self.color_mode == ColorMode.HS and self._color_data_wrapper:
             hsv_data = self._read_wrapper(self._color_data_wrapper)
             return None if hsv_data is None else round(hsv_data[2])
@@ -542,11 +547,13 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         return self._read_wrapper(self._brightness_wrapper)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         return self._read_wrapper(self._color_temp_wrapper)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hs_color of the light."""
         if self._color_data_wrapper is None:
@@ -555,6 +562,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         return None if hsv_data is None else (hsv_data[0], hsv_data[1])
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color_mode of the light."""
         if self._fixed_color_mode:

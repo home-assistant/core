@@ -72,7 +72,9 @@ async def test_zbt1_update_entity(hass: HomeAssistant) -> None:
         FirmwareInfo(
             device=USB_DATA_ZBT1.device,
             firmware_type=ApplicationType.SPINEL,
-            firmware_version="SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57",
+            firmware_version=(
+                "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57"
+            ),
             owners=[],
             source="otbr",
         ),

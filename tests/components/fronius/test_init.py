@@ -68,7 +68,7 @@ async def test_inverter_night_rescan(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test dynamic adding of an inverter discovered automatically after a Home Assistant reboot during the night."""
+    """Test adding inverter discovered after HA reboot at night."""
     mock_responses(aioclient_mock, fixture_set="igplus_v2", night=True)
     config_entry = await setup_fronius_integration(hass, is_logger=True)
     assert config_entry.state is ConfigEntryState.LOADED

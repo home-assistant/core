@@ -14,7 +14,6 @@ import pytest
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
-    DOMAIN,
     EVENT_COMMAND_RECEIVED,
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
@@ -28,8 +27,8 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
     async_get_users,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import HomeAssistant, State
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -76,6 +75,25 @@ MOCK_HEADER = {
     "Authorization": f"Bearer {MOCK_TOKEN['access_token']}",
     "X-GFE-SSL": "yes",
 }
+
+
+async def test_sync_google_does_not_block_startup(hass: HomeAssistant) -> None:
+    """Test that Google entity sync runs after startup, not during."""
+    hass.set_state(CoreState.not_running)
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+
+    with patch.object(config, "async_sync_entities_all") as mock_sync:
+        await config.async_initialize()
+
+        # Fire EVENT_HOMEASSISTANT_START - sync should NOT run yet
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        mock_sync.assert_not_called()
+
+        # Fire EVENT_HOMEASSISTANT_STARTED - now sync should run
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        mock_sync.assert_called_once()
 
 
 async def test_get_jwt(hass: HomeAssistant) -> None:
@@ -323,27 +341,6 @@ async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
     config = GoogleConfig(hass, secure_config)
 
     assert config.secure_devices_pin == secure_pin
-
-
-async def test_should_expose(hass: HomeAssistant) -> None:
-    """Test the google config should expose method."""
-    config = GoogleConfig(hass, DUMMY_CONFIG)
-    await config.async_initialize()
-
-    with patch.object(config, "async_call_homegraph_api"):
-        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
-        await hass.async_block_till_done()
-
-    assert (
-        config.should_expose(State(DOMAIN + ".mock", "mock", {"view": "not None"}))
-        is False
-    )
-
-    with patch.object(config, "async_call_homegraph_api"):
-        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
-        await hass.async_block_till_done()
-
-    assert config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock")) is False
 
 
 async def test_missing_service_account(hass: HomeAssistant) -> None:

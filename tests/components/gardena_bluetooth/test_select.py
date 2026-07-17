@@ -25,6 +25,8 @@ from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
+
 
 @pytest.fixture
 def mock_chars(mock_read_char_raw):

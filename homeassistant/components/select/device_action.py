@@ -10,10 +10,12 @@ from homeassistant.components.device_automation import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_OPTION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    SERVICE_SELECT_OPTION,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -23,16 +25,14 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import (
     ATTR_CYCLE,
-    ATTR_OPTION,
-    ATTR_OPTIONS,
     CONF_CYCLE,
     CONF_OPTION,
     DOMAIN,
     SERVICE_SELECT_FIRST,
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
+    SelectEntityCapabilityAttribute,
 )
 
 _ACTION_SCHEMA = vol.Any(
@@ -142,7 +142,12 @@ async def async_get_action_capabilities(
             entry = async_get_entity_registry_entry_or_raise(
                 hass, config[CONF_ENTITY_ID]
             )
-            options = get_capability(hass, entry.entity_id, ATTR_OPTIONS) or []
+            options = (
+                get_capability(
+                    hass, entry.entity_id, SelectEntityCapabilityAttribute.OPTIONS
+                )
+                or []
+            )
         return {
             "extra_fields": vol.Schema({vol.Required(CONF_OPTION): vol.In(options)})
         }

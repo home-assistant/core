@@ -150,7 +150,7 @@ async def device_source_mock(
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,
 ) -> AsyncGenerator[None]:
-    """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
+    """Set up a DmsDeviceSource in a connected state and cleanup at completion."""
     config_entry_mock.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_mock.entry_id)
     await hass.async_block_till_done()

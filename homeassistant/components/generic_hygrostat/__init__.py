@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -28,7 +28,6 @@ CONF_SENSOR = "target_sensor"
 CONF_MIN_HUMIDITY = "min_humidity"
 CONF_MAX_HUMIDITY = "max_humidity"
 CONF_TARGET_HUMIDITY = "target_humidity"
-CONF_DEVICE_CLASS = "device_class"
 CONF_MIN_DUR = "min_cycle_duration"
 CONF_DRY_TOLERANCE = "dry_tolerance"
 CONF_WET_TOLERANCE = "wet_tolerance"
@@ -106,7 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # humidifier's device.
         async_handle_source_entity_changes(
             hass,
-            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_humidifier_entity_id_or_uuid,
             source_device_id=async_entity_id_to_device_id(
@@ -149,9 +147,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:

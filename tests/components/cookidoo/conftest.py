@@ -1,12 +1,10 @@
 """Common fixtures for the Cookidoo tests."""
 
 from collections.abc import Generator
-from typing import cast
 from unittest.mock import AsyncMock, patch
 
 from cookidoo_api import (
     CookidooAdditionalItem,
-    CookidooAuthResponse,
     CookidooIngredientItem,
     CookidooSubscription,
     CookidooUserInfo,
@@ -44,7 +42,7 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.login.return_value = cast(CookidooAuthResponse, {"name": "Cookidoo"})
+        client.login.return_value = None
         client.get_ingredient_items.return_value = [
             CookidooIngredientItem(**item)
             for item in load_json_object_fixture("ingredient_items.json", DOMAIN)[
@@ -63,9 +61,6 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
         client.get_user_info.return_value = CookidooUserInfo(
             **load_json_object_fixture("user_info.json", DOMAIN)["data"]
         )
-        client.login.return_value = CookidooAuthResponse(
-            **load_json_object_fixture("login.json", DOMAIN)
-        )
         client.get_recipes_in_calendar_week.return_value = [
             CookidooCalendarDay(
                 id=day["id"],
@@ -75,6 +70,9 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
                         id=recipe["id"],
                         name=recipe["name"],
                         total_time=recipe["total_time"],
+                        thumbnail=recipe["thumbnail"],
+                        image=recipe["image"],
+                        url=recipe["url"],
                     )
                     for recipe in day["recipes"]
                 ],
@@ -90,7 +88,7 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         version=1,
-        minor_version=2,
+        minor_version=3,
         data={
             CONF_EMAIL: EMAIL,
             CONF_PASSWORD: PASSWORD,

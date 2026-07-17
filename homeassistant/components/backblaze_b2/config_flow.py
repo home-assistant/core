@@ -2,12 +2,13 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from b2sdk.v2 import exception
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PREFIX
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -22,7 +23,6 @@ from .const import (
     CONF_APPLICATION_KEY,
     CONF_BUCKET,
     CONF_KEY_ID,
-    CONF_PREFIX,
     DOMAIN,
 )
 
@@ -59,6 +59,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

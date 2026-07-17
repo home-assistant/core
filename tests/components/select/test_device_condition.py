@@ -138,7 +138,10 @@ async def test_if_selected_option(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option1 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option1 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -157,7 +160,10 @@ async def test_if_selected_option(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option2 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option2 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -227,7 +233,10 @@ async def test_if_selected_option_legacy(
                     "action": {
                         "service": "test.automation",
                         "data": {
-                            "result": "option1 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "result": (
+                                "option1 - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

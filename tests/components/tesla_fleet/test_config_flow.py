@@ -19,12 +19,12 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.tesla_fleet.config_flow import OAuth2FlowHandler
 from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
-    CONF_DOMAIN,
     DOMAIN,
     SCOPES,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -80,9 +80,14 @@ def mock_private_key():
     public_key = Mock()
     private_key.public_key.return_value = public_key
     public_key.public_bytes.side_effect = [
-        b"-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA\n-----END PUBLIC KEY-----",
+        b"-----BEGIN PUBLIC KEY-----\n"
+        b"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA\n"
+        b"-----END PUBLIC KEY-----",
         bytes.fromhex(
-            "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+            "0404112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff1122"
         ),
     ]
     return private_key
@@ -171,7 +176,12 @@ async def test_partner_login_partial_failure(
         },
     )
 
-    public_key = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+    public_key = (
+        "0404112233445566778899aabbccddeeff"
+        "112233445566778899aabbccddeeff"
+        "112233445566778899aabbccddeeff"
+        "112233445566778899aabbccddeeff1122"
+    )
 
     mock_api_na = AsyncMock()
     mock_api_na.private_key = mock_private_key
@@ -265,10 +275,20 @@ async def test_full_flow_with_domain_registration(
         mock_api.private_key = mock_private_key
         mock_api.get_private_key = AsyncMock()
         mock_api.partner_login = AsyncMock()
-        mock_api.public_uncompressed_point = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+        mock_api.public_uncompressed_point = (
+            "0404112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff1122"
+        )
         mock_api.partner.register.return_value = {
             "response": {
-                "public_key": "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+                "public_key": (
+                    "0404112233445566778899aabbccddeeff"
+                    "112233445566778899aabbccddeeff"
+                    "112233445566778899aabbccddeeff"
+                    "112233445566778899aabbccddeeff1122"
+                )
             }
         }
         mock_api_class.return_value = mock_api
@@ -278,7 +298,8 @@ async def test_full_flow_with_domain_registration(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_input"
 
-        # Enter domain - this should automatically register and go to registration_complete
+        # Enter domain - this should automatically register and go to
+        # registration_complete
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
@@ -351,11 +372,22 @@ async def test_domain_input_invalid_domain(
         assert result["step_id"] == "domain_input"
         assert result["errors"] == {CONF_DOMAIN: "invalid_domain"}
 
-        # Enter valid domain - this should automatically register and go to registration_complete
-        mock_api.public_uncompressed_point = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+        # Enter valid domain - this should automatically register
+        # and go to registration_complete
+        mock_api.public_uncompressed_point = (
+            "0404112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff"
+            "112233445566778899aabbccddeeff1122"
+        )
         mock_api.partner.register.return_value = {
             "response": {
-                "public_key": "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+                "public_key": (
+                    "0404112233445566778899aabbccddeeff"
+                    "112233445566778899aabbccddeeff"
+                    "112233445566778899aabbccddeeff"
+                    "112233445566778899aabbccddeeff1122"
+                )
             }
         }
         result = await hass.config_entries.flow.async_configure(
@@ -483,7 +515,8 @@ async def test_domain_registration_precondition_failed(
         # Complete OAuth
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        # Enter domain - this should go to domain_registration and then fail back to domain_input
+        # Enter domain - this should go to domain_registration
+        # and then fail back to domain_input
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
@@ -646,7 +679,12 @@ async def test_domain_registration_partial_failure(
         },
     )
 
-    public_key = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
+    public_key = (
+        "0404112233445566778899aabbccddeeff"
+        "112233445566778899aabbccddeeff"
+        "112233445566778899aabbccddeeff"
+        "112233445566778899aabbccddeeff1122"
+    )
 
     # Create two separate mocks for NA and EU
     mock_api_na = AsyncMock()

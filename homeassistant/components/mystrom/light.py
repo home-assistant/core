@@ -1,7 +1,7 @@
 """Support for myStrom Wifi bulbs."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymystrom.exceptions import MyStromConnectionError
 
@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
@@ -57,11 +57,13 @@ class MyStromLight(LightEntity):
         self._attr_hs_color = 0, 0
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
+            connections={(CONNECTION_NETWORK_MAC, mac)},
             name=name,
             manufacturer=MANUFACTURER,
             sw_version=self._bulb.firmware,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
@@ -93,6 +95,7 @@ class MyStromLight(LightEntity):
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the bulb."""
         try:

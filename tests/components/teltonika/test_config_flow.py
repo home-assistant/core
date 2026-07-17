@@ -560,7 +560,7 @@ async def test_form_user_flow_rut240(
     mock_teltasync_client: MagicMock,
     rut240_device_info: UnauthorizedStatusData,
 ) -> None:
-    """RUT240 firmware omits device_identifier; the flow falls back to mnf_info.serial."""
+    """RUT240 firmware omits device_identifier; falls back to serial."""
     mock_teltasync_client.get_device_info.return_value = rut240_device_info
     mock_teltasync_client.validate_credentials.return_value = True
 
@@ -695,7 +695,7 @@ async def test_dhcp_discovery_apiv1_already_configured_aborts(
     mock_config_entry: MockConfigEntry,
     rut240_device_info: UnauthorizedStatusData,
 ) -> None:
-    """An API v1.0 (e.g. RUT240) known to the device registry by MAC aborts before dhcp_confirm."""
+    """API v1.0 RUT240 known by MAC aborts before dhcp_confirm."""
     mock_config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,

@@ -45,9 +45,9 @@
       'Orages': 'Jaune',
       'Pluie-inondation': 'Vert',
       'Vent violent': 'Vert',
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz 32 Weather alert',
-      'icon': 'mdi:weather-cloudy-alert',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz 32 Weather alert',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-cloudy-alert',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_alert_for_department_74_32_weather_alert',
@@ -97,10 +97,10 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_cloud_cover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Cloud cover',
-      'icon': 'mdi:weather-partly-cloudy',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Cloud cover',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-partly-cloudy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_cloud_cover',
@@ -150,8 +150,8 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_daily_original_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Daily original condition',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Daily original condition',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_daily_original_condition',
@@ -204,10 +204,10 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_daily_precipitation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'device_class': 'precipitation',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Daily precipitation',
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Daily precipitation',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_daily_precipitation',
@@ -257,10 +257,10 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_freeze_chance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Freeze chance',
-      'icon': 'mdi:snowflake',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Freeze chance',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_freeze_chance',
@@ -277,7 +277,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -312,11 +312,11 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'device_class': 'humidity',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_humidity',
@@ -366,8 +366,8 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_original_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Original condition',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Original condition',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_original_condition',
@@ -384,7 +384,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,11 +422,11 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'device_class': 'atmospheric_pressure',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Pressure',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_pressure',
@@ -476,10 +476,10 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_rain_chance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Rain chance',
-      'icon': 'mdi:weather-rainy',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Rain chance',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-rainy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_rain_chance',
@@ -529,10 +529,10 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_snow_chance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Snow chance',
-      'icon': 'mdi:weather-snowy',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Snow chance',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-snowy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_snow_chance',
@@ -549,7 +549,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -587,11 +587,11 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'device_class': 'temperature',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_temperature',
@@ -641,10 +641,10 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_uv-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz UV',
-      'icon': 'mdi:sunglasses',
-      'unit_of_measurement': 'UV index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz UV',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sunglasses',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'UV index',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_uv',
@@ -661,7 +661,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -699,12 +699,12 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_wind_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Wind gust',
-      'icon': 'mdi:weather-windy-variant',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Wind gust',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-windy-variant',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_wind_gust',
@@ -721,7 +721,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -759,11 +759,11 @@
 # name: test_sensor[sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Météo-France forecast for city La Clusaz La Clusaz Wind speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz Wind speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_forecast_for_city_la_clusaz_la_clusaz_wind_speed',
@@ -824,10 +824,10 @@
         '5 min': 'Temps sec',
         '55 min': 'Temps sec',
       }),
-      'attribution': 'Data provided by Météo-France',
-      'device_class': 'timestamp',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       'forecast_time_ref': '2020-05-20T17:35:00+00:00',
-      'friendly_name': 'Météo-France forecast for city La Clusaz Meudon Next rain',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz Meudon Next rain',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meteo_france_rain_for_city_la_clusaz_meudon_next_rain',
