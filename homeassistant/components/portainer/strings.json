@@ -133,11 +133,17 @@
       "image": {
         "name": "Image"
       },
+      "image_created": {
+        "name": "Image created"
+      },
       "image_disk_usage_reclaimable": {
         "name": "Image disk usage reclaimable"
       },
       "image_disk_usage_total_size": {
         "name": "Image disk usage total size"
+      },
+      "image_version": {
+        "name": "Image version"
       },
       "images_count": {
         "name": "Image count"

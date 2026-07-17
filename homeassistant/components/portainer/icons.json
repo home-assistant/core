@@ -57,11 +57,17 @@
       "image": {
         "default": "mdi:docker"
       },
+      "image_created": {
+        "default": "mdi:calendar-clock"
+      },
       "image_disk_usage_reclaimable": {
         "default": "mdi:file-restore"
       },
       "image_disk_usage_total_size": {
         "default": "mdi:harddisk"
+      },
+      "image_version": {
+        "default": "mdi:tag-outline"
       },
       "images_count": {
         "default": "mdi:image-multiple"

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from itertools import chain
 from typing import override
 
@@ -19,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfInformation, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import (
     PortainerConfigEntry,
@@ -42,7 +44,7 @@ PARALLEL_UPDATES = 0
 class PortainerContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer container sensor description."""
 
-    value_fn: Callable[[PortainerContainerData], StateType]
+    value_fn: Callable[[PortainerContainerData], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -78,6 +80,33 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         key="image",
         translation_key="image",
         value_fn=lambda data: data.container.image,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="image_version",
+        translation_key="image_version",
+        value_fn=lambda data: (
+            data.container.labels.get("org.opencontainers.image.version")
+            if data.container.labels
+            else None
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="image_created",
+        translation_key="image_created",
+        value_fn=lambda data: (
+            parsed
+            if data.container.labels
+            and (
+                created := data.container.labels.get("org.opencontainers.image.created")
+            )
+            and (parsed := dt_util.parse_datetime(created)) is not None
+            and parsed.tzinfo is not None
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     PortainerContainerSensorEntityDescription(
         key="container_state",
@@ -475,7 +504,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
 
