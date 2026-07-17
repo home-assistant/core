@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -14,20 +13,18 @@ from . import SERVICE_INFO
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize("platform", [Platform.SENSOR, Platform.BINARY_SENSOR])
 async def test_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_update_device: AsyncMock,
-    platform: Platform,
 ) -> None:
     """Test the created entities."""
     mock_config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.nespresso_ble.PLATFORMS", [platform]),
+        patch("homeassistant.components.nespresso_ble.PLATFORMS", [Platform.SENSOR]),
         patch(
             "homeassistant.components.nespresso_ble.coordinator.bluetooth.async_ble_device_from_address",
             return_value=SERVICE_INFO.device,

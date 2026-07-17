@@ -1,107 +1,5 @@
 # serializer version: 1
-# name: test_entities[binary_sensor][binary_sensor.nespresso_vertuo_mini_descaling_needed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.nespresso_vertuo_mini_descaling_needed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Descaling needed',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Descaling needed',
-    'platform': 'nespresso_ble',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'descaling_needed',
-    'unique_id': '80:F1:B2:E1:48:76_descaling_needed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor][binary_sensor.nespresso_vertuo_mini_descaling_needed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nespresso Vertuo Mini Descaling needed',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.nespresso_vertuo_mini_descaling_needed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[binary_sensor][binary_sensor.nespresso_vertuo_mini_problem-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.nespresso_vertuo_mini_problem',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Problem',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Problem',
-    'platform': 'nespresso_ble',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '80:F1:B2:E1:48:76_problem',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[binary_sensor][binary_sensor.nespresso_vertuo_mini_problem-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nespresso Vertuo Mini Problem',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.nespresso_vertuo_mini_problem',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_entities[sensor][sensor.nespresso_vertuo_mini_machine_status-entry]
+# name: test_entities[sensor.nespresso_vertuo_mini_machine_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +29,6 @@
         'factory_reset',
         'initializing',
         'error',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -164,7 +61,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor][sensor.nespresso_vertuo_mini_machine_status-state]
+# name: test_entities[sensor.nespresso_vertuo_mini_machine_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -192,7 +89,6 @@
         'factory_reset',
         'initializing',
         'error',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -203,7 +99,7 @@
     'state': 'ready',
   })
 # ---
-# name: test_entities[sensor][sensor.nespresso_vertuo_mini_water_hardness-entry]
+# name: test_entities[sensor.nespresso_vertuo_mini_water_hardness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -240,7 +136,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor][sensor.nespresso_vertuo_mini_water_hardness-state]
+# name: test_entities[sensor.nespresso_vertuo_mini_water_hardness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nespresso Vertuo Mini Water hardness',

@@ -34,7 +34,11 @@ SENSORS: tuple[NespressoBLESensorEntityDescription, ...] = (
         key="machine_status",
         translation_key="machine_status",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in MachineStatus],
+        options=[
+            status.value
+            for status in MachineStatus
+            if status is not MachineStatus.UNKNOWN
+        ],
         value_fn=lambda device: device.status.value,
     ),
     NespressoBLESensorEntityDescription(

@@ -22,14 +22,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "descaling_needed": {
-        "name": "Descaling needed"
-      },
-      "water_tank_empty": {
-        "name": "Water tank empty"
-      }
-    },
     "sensor": {
       "machine_status": {
         "name": "Machine status",
@@ -55,7 +47,6 @@
           "setup": "Setup",
           "standby": "Standby",
           "tank_empty": "Tank empty",
-          "unknown": "Unknown",
           "updating": "Updating"
         }
       },
