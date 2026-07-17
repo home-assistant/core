@@ -47,9 +47,14 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
         if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
-            data["data_schema"] = voluptuous_serialize.convert(
+            serialized = voluptuous_serialize.convert(
                 schema, custom_serializer=cv.custom_serializer
             )
+            if isinstance(serialized, list):
+                data_entry_flow.add_hidden_conditions_to_serialized_schema(
+                    schema, serialized
+                )
+            data["data_schema"] = serialized
         return data
 
 
