@@ -417,6 +417,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # get key phase 2: reinit cloud with preset account
                     if not await self._check_cloud_login(force_login=True):
+                        self._clear_login_state()
                         return await self.async_step_auto(
                             error="preset_login_failed",
                         )
@@ -432,6 +433,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                             "Can't get available token from Midea server for device %s",
                             device_id,
                         )
+                        self._clear_login_state()
                         return await self.async_step_auto(
                             error="token_unavailable",
                         )
@@ -535,9 +537,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=name,
                     data=data,
                 )
-        return await self.async_step_manually(
-            error="device_auth_failed",
-        )
+        return self._show_manually_form(user_input, error="device_auth_failed")
 
     async def async_step_manually(
         self,
@@ -550,11 +550,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 bytearray.fromhex(user_input[CONF_TOKEN])
                 bytearray.fromhex(user_input[CONF_KEY])
             except ValueError:
-                return await self.async_step_manually(error="invalid_token")
+                return self._show_manually_form(user_input, error="invalid_token")
 
             device_id = user_input[CONF_DEVICE_ID]
-            # check device, discover already done or only manual add
-            if len(self.devices) < 1:
+            # (re)discover whenever the requested device isn't already known,
+            # so correcting the IP/device_id and resubmitting can succeed
+            if device_id not in self.devices:
                 ip = user_input[CONF_IP_ADDRESS]
                 # discover device
                 self.devices = await self.hass.async_add_executor_job(
@@ -562,26 +563,28 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 # discover result MUST exist
                 if len(self.devices) != 1:
-                    return await self.async_step_manually(error="invalid_device_ip")
+                    return self._show_manually_form(
+                        user_input, error="invalid_device_ip"
+                    )
                 # check all the input, disable error add
                 device_id = next(iter(self.devices.keys()))
 
                 # check if device_id is correctly set for that IP
                 if user_input[CONF_DEVICE_ID] != device_id:
-                    return await self.async_step_manually(
+                    return self._show_manually_form(
+                        user_input,
                         error="invalid_device_id_for_ip",
                     )
 
-            if device_id not in self.devices:
-                return await self.async_step_manually(error="invalid_device_id")
-
             device = self.devices[device_id]
             if user_input[CONF_IP_ADDRESS] != device.get(CONF_IP_ADDRESS):
-                return await self.async_step_manually(
+                return self._show_manually_form(
+                    user_input,
                     error="ip_address_mismatch",
                 )
             if user_input[CONF_PROTOCOL] != device.get(CONF_PROTOCOL):
-                return await self.async_step_manually(
+                return self._show_manually_form(
+                    user_input,
                     error="protocol_mismatch",
                 )
 
@@ -592,7 +595,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 # init cloud with preset account
                 result = await self._check_cloud_login()
                 if not result:
-                    return await self.async_step_manually(
+                    return self._show_manually_form(
+                        user_input,
                         error="preset_login_failed",
                     )
                 # try to get a passed key
@@ -604,7 +608,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         "Can't get a valid token from Midea server for device %s",
                         user_input[CONF_DEVICE_ID],
                     )
-                    return await self.async_step_manually(
+                    return self._show_manually_form(
+                        user_input,
                         error="token_unavailable",
                     )
 
@@ -625,50 +630,61 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             return await self._async_create_midea_entry(user_input)
+        return self._show_manually_form(user_input, error)
+
+    def _show_manually_form(
+        self,
+        user_input: dict[str, Any] | None,
+        error: str | None = None,
+    ) -> ConfigFlowResult:
+        """Show the manual step form, retaining any previously entered values."""
         protocol = self.found_device.get(CONF_PROTOCOL)
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_DEVICE_ID,
+                    default=self.found_device.get(CONF_DEVICE_ID),
+                ): int,
+                vol.Required(
+                    CONF_TYPE,
+                    default=(self.found_device.get(CONF_TYPE) or DeviceType.AC),
+                ): vol.In(self.supports),
+                vol.Required(
+                    CONF_IP_ADDRESS,
+                    default=self.found_device.get(CONF_IP_ADDRESS),
+                ): str,
+                vol.Required(
+                    CONF_PORT,
+                    default=(self.found_device.get(CONF_PORT) or 6444),
+                ): int,
+                vol.Required(
+                    CONF_PROTOCOL,
+                    default=(protocol or ProtocolVersion.V3),
+                ): vol.In(
+                    [protocol] if protocol else ProtocolVersion,
+                ),
+                vol.Required(
+                    CONF_MODEL,
+                    default=(self.found_device.get(CONF_MODEL) or "Unknown"),
+                ): str,
+                vol.Required(
+                    CONF_SUBTYPE,
+                    default=(self.found_device.get(CONF_SUBTYPE) or 0),
+                ): int,
+                vol.Optional(
+                    CONF_TOKEN,
+                    default=(self.found_device.get(CONF_TOKEN) or ""),
+                ): str,
+                vol.Optional(
+                    CONF_KEY,
+                    default=(self.found_device.get(CONF_KEY) or ""),
+                ): str,
+            },
+        )
+        if user_input is not None:
+            schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
             step_id="manually",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_DEVICE_ID,
-                        default=self.found_device.get(CONF_DEVICE_ID),
-                    ): int,
-                    vol.Required(
-                        CONF_TYPE,
-                        default=(self.found_device.get(CONF_TYPE) or DeviceType.AC),
-                    ): vol.In(self.supports),
-                    vol.Required(
-                        CONF_IP_ADDRESS,
-                        default=self.found_device.get(CONF_IP_ADDRESS),
-                    ): str,
-                    vol.Required(
-                        CONF_PORT,
-                        default=(self.found_device.get(CONF_PORT) or 6444),
-                    ): int,
-                    vol.Required(
-                        CONF_PROTOCOL,
-                        default=(protocol or ProtocolVersion.V3),
-                    ): vol.In(
-                        [protocol] if protocol else ProtocolVersion,
-                    ),
-                    vol.Required(
-                        CONF_MODEL,
-                        default=(self.found_device.get(CONF_MODEL) or "Unknown"),
-                    ): str,
-                    vol.Required(
-                        CONF_SUBTYPE,
-                        default=(self.found_device.get(CONF_SUBTYPE) or 0),
-                    ): int,
-                    vol.Optional(
-                        CONF_TOKEN,
-                        default=(self.found_device.get(CONF_TOKEN) or ""),
-                    ): str,
-                    vol.Optional(
-                        CONF_KEY,
-                        default=(self.found_device.get(CONF_KEY) or ""),
-                    ): str,
-                },
-            ),
+            data_schema=schema,
             errors={"base": error} if error else None,
         )

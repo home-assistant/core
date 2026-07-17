@@ -48,8 +48,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> 
 
     connected = await hass.async_add_executor_job(device.connect, True)
     if not connected:
+        # connect() swallows AuthException/SocketException internally and can
+        # leave the socket open even though it reports failure, so it must be
+        # closed explicitly here to avoid a ResourceWarning.
+        await hass.async_add_executor_job(device.close_socket)
         raise ConfigEntryNotReady(f"Unable to connect to device {device_id}")
 
+    # The library's reconnect loop keeps retrying with a growing backoff
+    # (up to 600s) without checking for a stop request while sleeping, so
+    # device.close() alone cannot guarantee the background thread exits
+    # promptly when offline. Marking it a daemon thread ensures it can
+    # never block Home Assistant shutdown as a zombie thread.
+    device.daemon = True
     await hass.async_add_executor_job(device.open)
     entry.runtime_data = device
 

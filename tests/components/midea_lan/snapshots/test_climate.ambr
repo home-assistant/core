@@ -264,7 +264,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_climate_state_snapshot[cc][climate.bedroom_ac-entry]
@@ -275,8 +275,10 @@
     'area_id': None,
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
-        'low',
-        'high',
+        'Low',
+        'Medium',
+        'High',
+        'Auto',
       ]),
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -333,10 +335,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'high',
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'High',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
-        'low',
-        'high',
+        'Low',
+        'Medium',
+        'High',
+        'Auto',
       ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
@@ -458,8 +462,10 @@
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'comfort',
-        'eco',
+        'Auto',
+        'ECO',
+        'Sleep',
+        'Comfort',
       ]),
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
     }),
@@ -504,10 +510,12 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'comfort',
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'Comfort',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'comfort',
-        'eco',
+        'Auto',
+        'ECO',
+        'Sleep',
+        'Comfort',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,

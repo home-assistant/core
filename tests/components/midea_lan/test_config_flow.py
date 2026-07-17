@@ -51,7 +51,7 @@ from .const import (
     TEST_TYPE,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -297,18 +297,6 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             "token_unavailable",
             id="no_token_from_cloud",
         ),
-        pytest.param(
-            {**EXTENDED_DATA, CONF_DEVICE_ID: TEST_DEVICE_ID + 1},
-            {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
-            None,
-            None,
-            True,
-            {},
-            {},
-            {**EXTENDED_DATA, CONF_IP_ADDRESS: "9.9.9.9"},
-            "invalid_device_id",
-            id="invalid_device_id",
-        ),
     ],
 )
 async def test_manual_step_errors(
@@ -381,6 +369,97 @@ async def test_manual_step_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
     assert result["errors"] == {"base": expected_error}
+
+
+async def test_manual_step_retains_user_input_on_error(hass: HomeAssistant) -> None:
+    """Test the manual form keeps the user's entered values after a validation error.
+
+    Previously, any error re-render fell back to the (possibly empty)
+    found_device defaults, discarding everything the user had just typed.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    flow_id = result["flow_id"]
+    await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "manually"},
+    )
+
+    submitted = {**EXTENDED_DATA, CONF_TOKEN: "zz"}
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input=submitted,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manually"
+    assert result["errors"] == {"base": "invalid_token"}
+    data_schema = result["data_schema"].schema
+    assert (
+        get_schema_suggested_value(data_schema, CONF_DEVICE_ID)
+        == (submitted[CONF_DEVICE_ID])
+    )
+    assert (
+        get_schema_suggested_value(data_schema, CONF_IP_ADDRESS)
+        == (submitted[CONF_IP_ADDRESS])
+    )
+    assert get_schema_suggested_value(data_schema, CONF_TOKEN) == "zz"
+
+
+async def test_manual_step_retries_discovery_after_mismatch(
+    hass: HomeAssistant,
+) -> None:
+    """Test resubmitting corrected data triggers a fresh discovery.
+
+    Previously, once self.devices held a stale entry from a failed attempt,
+    any later submission would fail forever with "invalid_device_id" without
+    ever retrying discover(), even if the resubmitted data was correct.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    flow_id = result["flow_id"]
+    await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "manually"},
+    )
+
+    dm = MagicMock()
+    dm.connect.return_value = True
+    dm.authenticate.return_value = None
+
+    with (
+        patch(
+            "homeassistant.components.midea_lan.config_flow.discover",
+            side_effect=[
+                {TEST_DEVICE_ID + 1: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
+                DISCOVERY_RESULT,
+            ],
+        ) as mock_discover,
+        patch(
+            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            return_value=dm,
+        ),
+    ):
+        # first attempt: discovery finds a different device than requested
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={**EXTENDED_DATA},
+        )
+        assert result["errors"] == {"base": "invalid_device_id_for_ip"}
+
+        # resubmitting the same (now correct) data must retry discovery
+        # rather than dead-ending on the stale result from the first attempt
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={**EXTENDED_DATA},
+        )
+
+    assert mock_discover.call_count == 2
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -598,6 +677,80 @@ async def test_search_and_auto_flow(
             assert result["data"][CONF_SUBTYPE] == device_info["model_number"]
 
 
+async def test_auto_flow_recovers_after_preset_login_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test the auto flow returns to auth_method after a login/key failure.
+
+    Previously, a failed preset-login retry inside async_step_auto left
+    self._login_data and self.cloud populated with the broken credentials,
+    so re-selecting the device would skip auth_method entirely and keep
+    retrying with the same stale login, failing forever.
+    """
+    mock_devices = {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    flow_id = result["flow_id"]
+
+    await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "search"},
+    )
+    with patch(
+        "homeassistant.components.midea_lan.config_flow.discover",
+        return_value=mock_devices,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "auto"},
+        )
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={CONF_DEVICE: TEST_DEVICE_ID},
+    )
+    assert result["step_id"] == "auth_method"
+
+    cloud = MagicMock()
+    cloud.login = AsyncMock(side_effect=[True, False])
+    cloud.get_device_info = AsyncMock(return_value=None)
+    cloud.get_cloud_keys = AsyncMock(return_value={})
+
+    with (
+        patch(
+            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={"login_mode": LOGIN_MODE_PRESET},
+        )
+        assert result["step_id"] == "auto"
+        assert result["errors"] == {"base": "preset_login_failed"}
+
+        # re-selecting the device must route back through auth_method
+        # instead of silently retrying with the stale login state
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_DEVICE: TEST_DEVICE_ID},
+        )
+
+    assert result["step_id"] == "auth_method"
+
+
 @pytest.mark.parametrize(
     "protocol",
     [
@@ -783,6 +936,116 @@ async def test_login_credentials_step_login_failed_sets_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "login_credentials"
     assert result["errors"] == {"base": "login_failed"}
+
+
+async def test_login_credentials_step_recovers_after_failed_login(
+    hass: HomeAssistant,
+) -> None:
+    """Test the user can correct a failed login and complete the flow.
+
+    This is the config-flow-test-coverage error-recovery scenario: the flow
+    hits an error (a wrong password), the user resubmits corrected data on
+    the same form, and the flow proceeds all the way to CREATE_ENTRY.
+    """
+    discovered_device = {
+        TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE},
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.MENU
+    flow_id = result["flow_id"]
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "search"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "search"
+
+    with patch(
+        "homeassistant.components.midea_lan.config_flow.discover",
+        return_value=discovered_device,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "auto"},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={CONF_DEVICE: TEST_DEVICE_ID},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"login_mode": LOGIN_MODE_ACCOUNT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "login_credentials"
+
+    cloud = MagicMock()
+    cloud.login = AsyncMock(side_effect=[False, True])
+    cloud.get_device_info = AsyncMock(return_value=None)
+    cloud.get_cloud_keys = AsyncMock(
+        return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
+    )
+
+    dm = MagicMock()
+    dm.connect.return_value = True
+    dm.authenticate.return_value = True
+
+    with (
+        patch(
+            "homeassistant.components.midea_lan.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            return_value=dm,
+        ),
+    ):
+        # first attempt: wrong password
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={
+                CONF_SERVER: DEFAULT_CLOUD,
+                CONF_ACCOUNT: "user",
+                CONF_PASSWORD: "wrong-pass",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "login_credentials"
+        assert result["errors"] == {"base": "login_failed"}
+
+        # user corrects the password and resubmits; the flow must complete
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={
+                CONF_SERVER: DEFAULT_CLOUD,
+                CONF_ACCOUNT: "user",
+                CONF_PASSWORD: "correct-pass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
+    assert result["data"][CONF_TOKEN] == TEST_TOKEN
+    assert result["data"][CONF_KEY] == TEST_KEY
 
 
 @pytest.mark.parametrize(

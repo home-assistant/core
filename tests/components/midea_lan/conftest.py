@@ -46,8 +46,8 @@ class DummyDevice:
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1
-        self.fan_modes = ["low", "high"]
-        self.modes = ["comfort", "eco"]
+        self.fan_modes = ["Low", "Medium", "High", "Auto"]
+        self.modes = ["Auto", "ECO", "Sleep", "Comfort"]
 
     def register_update(self, callback: Callable) -> None:
         """Record update callback registration."""
@@ -95,6 +95,10 @@ class DummyDevice:
     def close(self) -> None:
         """Record close call."""
         self.calls.append(("close",))
+
+    def close_socket(self) -> None:
+        """Record close_socket call."""
+        self.calls.append(("close_socket",))
 
 
 def default_ac_device() -> DummyDevice:

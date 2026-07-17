@@ -571,7 +571,9 @@ class MideaC3Climate(MideaClimate):
         if not isinstance(temperatures, list):
             return [fallback, fallback]
         parsed_temperatures = [float(temperature) for temperature in temperatures]
-        if len(parsed_temperatures) < 2:
+        if len(parsed_temperatures) < 2 or all(
+            temperature == 0.0 for temperature in parsed_temperatures
+        ):
             return [fallback, fallback]
         return parsed_temperatures
 
@@ -640,7 +642,7 @@ class MideaC3Climate(MideaClimate):
     @override
     def current_temperature(self) -> float | None:
         """Midea C3 Climate current temperature."""
-        return self._float_attribute(C3Attributes.temp_tw_in)
+        return self._float_attribute(C3Attributes.temp_tw_out)
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:

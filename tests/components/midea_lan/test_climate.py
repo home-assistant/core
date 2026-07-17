@@ -257,7 +257,7 @@ async def test_midea_cc_climate_setup_and_services(
         attributes={
             CCAttributes.power: True,
             CCAttributes.mode: 5,
-            CCAttributes.fan_speed: "high",
+            CCAttributes.fan_speed: "High",
             CCAttributes.temperature_precision: 0.5,
             CCAttributes.swing: True,
         },
@@ -269,7 +269,7 @@ async def test_midea_cc_climate_setup_and_services(
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == HVACMode.AUTO
-    assert state.attributes[ATTR_FAN_MODE] == "high"
+    assert state.attributes[ATTR_FAN_MODE] == "High"
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.OFF,
         HVACMode.FAN_ONLY,
@@ -286,8 +286,8 @@ async def test_midea_cc_climate_setup_and_services(
         hass,
         entity_entry.entity_id,
         SERVICE_SET_FAN_MODE,
-        {ATTR_FAN_MODE: FAN_LOW},
-        [("set_attribute", CCAttributes.fan_speed, "low")],
+        {ATTR_FAN_MODE: "Low"},
+        [("set_attribute", CCAttributes.fan_speed, "Low")],
         device,
     )
     await _assert_service_calls(
@@ -371,7 +371,7 @@ async def test_midea_c3_climate_setup_and_services(
             C3Attributes.mode: 1,
             C3Attributes.zone1_power: True,
             C3Attributes.target_temperature: [22, 23],
-            C3Attributes.temp_tw_in: 21.5,
+            C3Attributes.temp_tw_out: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -437,7 +437,7 @@ async def test_midea_fb_climate_setup_and_services(
     device = DummyDevice(
         DeviceType.FB,
         attributes={
-            FBAttributes.mode: "comfort",
+            FBAttributes.mode: "Comfort",
             FBAttributes.power: True,
             FBAttributes.current_temperature: 20,
         },
@@ -453,7 +453,7 @@ async def test_midea_fb_climate_setup_and_services(
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.HEAT]
     assert state.attributes[ATTR_MAX_TEMP] == 35
     assert state.attributes[ATTR_MIN_TEMP] == 5
-    assert state.attributes[ATTR_PRESET_MODE] == "comfort"
+    assert state.attributes[ATTR_PRESET_MODE] == "Comfort"
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1.0
 
     await _assert_service_calls(
@@ -476,8 +476,8 @@ async def test_midea_fb_climate_setup_and_services(
         hass,
         entity_entry.entity_id,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_PRESET_MODE: PRESET_ECO},
-        [("set_attribute", FBAttributes.mode, PRESET_ECO)],
+        {ATTR_PRESET_MODE: "ECO"},
+        [("set_attribute", FBAttributes.mode, "ECO")],
         device,
     )
 
@@ -759,7 +759,7 @@ async def test_c3_temperature_fallback_and_turn_on(
             C3Attributes.mode: 1,
             C3Attributes.zone1_power: True,
             C3Attributes.target_temperature: [22],
-            C3Attributes.temp_tw_in: 21.5,
+            C3Attributes.temp_tw_out: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -781,6 +781,38 @@ async def test_c3_temperature_fallback_and_turn_on(
     )
 
 
+async def test_c3_zero_temperature_limits_use_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 min/max fall back to defaults when the device reports [0.0, 0.0].
+
+    Some devices report [0.0, 0.0] for the temperature limits when in
+    water-mode combined with auto/cool, which must not be treated as a
+    valid (and therefore unusable) range.
+    """
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone_temp_type: [True, False],
+            C3Attributes.temperature_min: [0.0, 0.0],
+            C3Attributes.temperature_max: [0.0, 0.0],
+            C3Attributes.mode: 1,
+            C3Attributes.zone1_power: True,
+            C3Attributes.target_temperature: [22, 23],
+            C3Attributes.temp_tw_out: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
+
+    assert entity is not None
+    assert entity.min_temp == 16.0
+    assert entity.max_temp == 30.0
+
+
 async def test_c3_unknown_power_maps_to_unknown_state(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
@@ -790,11 +822,9 @@ async def test_c3_unknown_power_maps_to_unknown_state(
         DeviceType.C3,
         attributes={
             C3Attributes.zone_temp_type: [True],
-            C3Attributes.temperature_min: [16],
-            C3Attributes.temperature_max: [30],
             C3Attributes.mode: 1,
             C3Attributes.target_temperature: [22],
-            C3Attributes.temp_tw_in: 21.5,
+            C3Attributes.temp_tw_out: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -847,7 +877,7 @@ async def test_fb_set_hvac_off_calls_turn_off(
     device = DummyDevice(
         DeviceType.FB,
         attributes={
-            FBAttributes.mode: "comfort",
+            FBAttributes.mode: "Comfort",
             FBAttributes.power: True,
             FBAttributes.current_temperature: 20,
         },
@@ -874,7 +904,7 @@ async def test_fb_set_temperature_with_heat_mode_turns_on_when_off(
     device = DummyDevice(
         DeviceType.FB,
         attributes={
-            FBAttributes.mode: "comfort",
+            FBAttributes.mode: "Comfort",
             FBAttributes.power: False,
             FBAttributes.current_temperature: 20,
         },
@@ -980,7 +1010,7 @@ async def test_c3_zone_power_off_state(
         attributes={
             C3Attributes.zone1_power: False,
             C3Attributes.mode: 1,
-            C3Attributes.temp_tw_in: 21.5,
+            C3Attributes.temp_tw_out: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -1001,7 +1031,7 @@ async def test_c3_invalid_mode_maps_to_unknown_state(
         attributes={
             C3Attributes.zone1_power: True,
             C3Attributes.mode: 999,
-            C3Attributes.temp_tw_in: 21.5,
+            C3Attributes.temp_tw_out: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -1022,7 +1052,7 @@ async def test_c3_temperature_fallback_when_attribute_missing(
         attributes={
             C3Attributes.zone1_power: True,
             C3Attributes.mode: 1,
-            C3Attributes.temp_tw_in: 21.5,
+            C3Attributes.temp_tw_out: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -1088,7 +1118,7 @@ async def test_fb_invalid_attribute_types_return_none(
                 attributes={
                     CCAttributes.power: True,
                     CCAttributes.mode: 5,
-                    CCAttributes.fan_speed: "high",
+                    CCAttributes.fan_speed: "High",
                     CCAttributes.temperature_precision: 0.5,
                     CCAttributes.swing: True,
                 },
@@ -1117,8 +1147,9 @@ async def test_fb_invalid_attribute_types_return_none(
                     C3Attributes.temperature_max: [30, 29],
                     C3Attributes.mode: 1,
                     C3Attributes.zone1_power: True,
+                    C3Attributes.zone2_power: False,
                     C3Attributes.target_temperature: [22, 23],
-                    C3Attributes.temp_tw_in: 21.5,
+                    C3Attributes.temp_tw_out: 21.5,
                 },
             ),
             id="c3",
@@ -1127,7 +1158,7 @@ async def test_fb_invalid_attribute_types_return_none(
             DummyDevice(
                 DeviceType.FB,
                 attributes={
-                    FBAttributes.mode: "comfort",
+                    FBAttributes.mode: "Comfort",
                     FBAttributes.power: True,
                     FBAttributes.current_temperature: 20,
                 },

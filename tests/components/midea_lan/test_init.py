@@ -43,17 +43,20 @@ async def test_async_setup(hass: HomeAssistant) -> None:
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
-    """Test async_unload_entry unloads platforms."""
+    """Test async_unload_entry unloads platforms and closes the device."""
     entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
     entry.add_to_hass(hass)
+    device = DummyDevice(DeviceType.AC)
     with patch(
         "homeassistant.components.midea_lan.device_selector",
-        return_value=DummyDevice(DeviceType.AC),
+        return_value=device,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
+    assert device.daemon is True
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert ("close",) in device.calls
 
 
 async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
@@ -87,6 +90,8 @@ async def test_setup_entry_not_ready_on_connect_failure(
 
     The real device.connect() already catches SocketException/AuthException
     internally and reports failure by returning False; it never raises them.
+    It can also leave the socket open in that case (e.g. when authentication
+    fails), so the socket must be closed explicitly to avoid a ResourceWarning.
     """
     entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
     entry.add_to_hass(hass)
@@ -100,3 +105,4 @@ async def test_setup_entry_not_ready_on_connect_failure(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert ("close_socket",) in device.calls
