@@ -1,0 +1,392 @@
+{
+  "applianceInfo": {
+    "serialNumber": "44709990",
+    "pnc": "950011600",
+    "brand": "ELECTROLUX",
+    "deviceType": "PORTABLE_AIR_CONDITIONER",
+    "model": "COMFORT600",
+    "variant": "AZULTM01",
+    "colour": "MATTSILVER"
+  },
+  "capabilities": {
+    "dataModelVersion": {
+      "access": "constant",
+      "type": "string",
+      "value": "DAM-1.0.0"
+    },
+    "mapFileVersion": {
+      "access": "read",
+      "type": "string"
+    },
+    "applianceInfo": {
+      "type": "object",
+      "properties": {
+        "applianceType": {
+          "access": "constant",
+          "type": "string",
+          "value": "AC"
+        },
+        "applianceId": {
+          "access": "read",
+          "type": "string"
+        },
+        "model": {
+          "access": "constant",
+          "type": "string",
+          "value": "AZUL"
+        }
+      }
+    },
+    "networkInterface": {
+      "type": "object",
+      "properties": {
+        "wifiStrength": {
+          "access": "read",
+          "type": "string",
+          "values": {
+            "undefined": {},
+            "veryPoor": {},
+            "poor": {},
+            "good": {},
+            "veryGood": {},
+            "excellent": {}
+          }
+        },
+        "mac": {
+          "access": "read",
+          "type": "string"
+        },
+        "ssid": {
+          "access": "read",
+          "type": "string"
+        }
+      }
+    },
+    "swVersions": {
+      "type": "object",
+      "properties": {
+        "niu": {
+          "type": "object",
+          "properties": {
+            "ver": {
+              "access": "read",
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          }
+        },
+        "userInterface": {
+          "type": "object",
+          "properties": {
+            "ver": {
+              "access": "read",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "swUpdate": {
+      "type": "object",
+      "properties": {
+        "swUpdateState": {
+          "type": "string",
+          "values": {
+            "unknown": {},
+            "unsupported": {},
+            "idle": {},
+            "checkForUpdate": {},
+            "updateAvailable": {},
+            "updateDownloadPending": {},
+            "updateDownloading": {},
+            "updatePending": {},
+            "updating": {},
+            "updated": {},
+            "updateError": {},
+            "updateAbort": {},
+            "waitForUserAuth": {},
+            "systemReady": {}
+          }
+        }
+      }
+    },
+    "connectivityState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "connected": {},
+        "disconnected": {}
+      }
+    },
+    "temperatureUnit": {
+      "access": "constant",
+      "type": "string",
+      "value": "celsius"
+    },
+    "uarCode": {
+      "access": "read",
+      "type": "number"
+    },
+    "uarState": {
+      "access": "read",
+      "type": "string"
+    },
+    "uarActionPerformed": {
+      "access": "write",
+      "type": "string"
+    },
+    "provRemainingTime": {
+      "access": "read",
+      "type": "number"
+    },
+    "airConditioner": {
+      "type": "object",
+      "properties": {
+        "executeCommand": {
+          "access": "write",
+          "type": "string",
+          "values": {
+            "off": {},
+            "on": {}
+          }
+        },
+        "applianceState": {
+          "access": "read",
+          "type": "string",
+          "values": {
+            "off": {},
+            "running": {}
+          }
+        },
+        "mode": {
+          "access": "readwrite",
+          "type": "string",
+          "values": {
+            "auto": {
+              "actions": {
+                "airConditioner": {
+                  "fanMode": {
+                    "values": {
+                      "auto": {}
+                    },
+                    "access": "read"
+                  },
+                  "targetTemperature": {
+                    "range": [
+                      16,
+                      32,
+                      1
+                    ],
+                    "disabled": false,
+                    "access": "readwrite",
+                    "default": 16
+                  },
+                  "sleepMode": {
+                    "disabled": false
+                  }
+                }
+              }
+            },
+            "cool": {
+              "actions": {
+                "airConditioner": {
+                  "fanMode": {
+                    "values": {
+                      "auto": {},
+                      "low": {},
+                      "medium": {},
+                      "high": {},
+                      "middle": {}
+                    },
+                    "access": "readwrite"
+                  },
+                  "targetTemperature": {
+                    "range": [
+                      16,
+                      32,
+                      1
+                    ],
+                    "disabled": false,
+                    "access": "readwrite",
+                    "default": 16
+                  },
+                  "sleepMode": {
+                    "disabled": false
+                  }
+                }
+              }
+            },
+            "dry": {
+              "actions": {
+                "airConditioner": {
+                  "fanMode": {
+                    "values": {
+                      "low": {}
+                    },
+                    "access": "read"
+                  },
+                  "targetTemperature": {
+                    "range": [
+                      23,
+                      23,
+                      1
+                    ],
+                    "disabled": true,
+                    "access": "readwrite",
+                    "default": 23
+                  },
+                  "sleepMode": {
+                    "disabled": true
+                  }
+                }
+              }
+            },
+            "fanOnly": {
+              "actions": {
+                "airConditioner": {
+                  "fanMode": {
+                    "values": {
+                      "low": {},
+                      "medium": {},
+                      "high": {},
+                      "middle": {}
+                    },
+                    "access": "readwrite"
+                  },
+                  "targetTemperature": {
+                    "range": [
+                      23,
+                      23,
+                      1
+                    ],
+                    "disabled": true,
+                    "access": "readwrite",
+                    "default": 23
+                  },
+                  "sleepMode": {
+                    "disabled": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fanMode": {
+          "access": "readwrite",
+          "type": "string",
+          "values": {
+            "auto": {},
+            "low": {},
+            "medium": {},
+            "high": {}
+          }
+        },
+        "fanSpeed": {
+          "access": "readwrite",
+          "type": "number"
+        },
+        "targetTemperature": {
+          "range": [
+            16,
+            32,
+            1
+          ],
+          "access": "readwrite",
+          "type": "number"
+        },
+        "sleepMode": {
+          "access": "readwrite",
+          "type": "boolean"
+        },
+        "startTime": {
+          "ranges": [
+            [
+              0,
+              36000,
+              1800
+            ],
+            [
+              39600,
+              86400,
+              3600
+            ]
+          ],
+          "access": "readwrite",
+          "type": "number"
+        },
+        "stopTime": {
+          "ranges": [
+            [
+              0,
+              36000,
+              1800
+            ],
+            [
+              39600,
+              86400,
+              3600
+            ]
+          ],
+          "access": "readwrite",
+          "type": "number"
+        },
+        "louvers": {
+          "type": "object",
+          "values": {
+            "0": {
+              "properties": {
+                "mode": {
+                  "access": "readwrite",
+                  "type": "string",
+                  "values": {
+                    "off": {},
+                    "swing": {}
+                  }
+                },
+                "orientation": {
+                  "access": "constant",
+                  "type": "string",
+                  "value": "vertical"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "temperature": {
+      "access": "read",
+      "type": "number"
+    },
+    "uiLocked": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "schedulerSet": {
+      "access": "read",
+      "type": "boolean"
+    },
+    "schedulerSession": {
+      "access": "read",
+      "type": "boolean"
+    },
+    "compressorCoolingRuntime": {
+      "access": "read",
+      "type": "number"
+    },
+    "compressorHeatingRuntime": {
+      "access": "read",
+      "type": "number"
+    },
+    "totalRuntime": {
+      "access": "read",
+      "type": "number"
+    },
+    "alerts": {
+      "access": "read",
+      "type": "alerts"
+    }
+  }
+}

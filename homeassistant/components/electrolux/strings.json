@@ -141,6 +141,11 @@
         "name": "Upper oven stop"
       }
     },
+    "climate": {
+      "climate": {
+        "name": "Climate"
+      }
+    },
     "fan": {
       "air_purifier_fan": {
         "name": "[%key:component::fan::title%]",

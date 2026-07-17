@@ -27,17 +27,13 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ELECTROLUX_TO_HA_TEMPERATURE_UNIT
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
 from .util import convert_to_snake_case, round_to_multiple_of_step
 
 _LOGGER = logging.getLogger(__name__)
-
-ELECTROLUX_TO_HA_TEMPERATURE_UNIT = {
-    "CELSIUS": UnitOfTemperature.CELSIUS,
-    "FAHRENHEIT": UnitOfTemperature.FAHRENHEIT,
-}
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -22,6 +22,8 @@ APPLIANCE_FIXTURES = [
     "hood",
     "electrolux_air_purifier",
     "electrolux_dehumidifier",
+    "electrolux_ac",
+    "electrolux_dam_ac",
 ]
 
 
