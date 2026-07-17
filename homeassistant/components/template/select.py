@@ -181,7 +181,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity, RestoreEntity
     @property
     @override
     def extra_restore_state_data(self) -> SelectExtraStoredData:
-        """Return cover specific state data to be restored."""
+        """Return select specific state data to be restored."""
         return SelectExtraStoredData(
             current_option=self._attr_current_option,
             options=self._attr_options,

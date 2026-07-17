@@ -639,19 +639,13 @@ async def test_restore_state(
     initial_state: str,
     initial_attributes: ConfigType,
 ) -> None:
-    """Test restoring trigger template weather."""
-
-    restored_attributes = {  # These should be ignored
-        "current_position": 5,
-        "current_tilt_position": 5,
-    }
+    """Test restoring trigger template selects."""
 
     setup_mock_template_entity_restore_state(
         hass,
         TEST_SELECT,
         saved_state,
         saved_extra_data=saved_extra_data,
-        saved_attributes=restored_attributes,
     )
 
     await setup_restore_template_entity(
