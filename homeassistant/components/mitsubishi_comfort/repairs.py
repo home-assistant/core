@@ -14,7 +14,7 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, OperationNotAllowed, UnknownEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,8 +31,16 @@ async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     addressless — but a failed unload ends the reload before setup runs,
     which would leave the still-loaded entry without its fix flow.
     """
-    if await hass.config_entries.async_reload(entry.entry_id):
+    try:
+        if await hass.config_entries.async_reload(entry.entry_id):
+            return
+    except UnknownEntry:
+        # Removed while this task was pending; nothing left to repair.
         return
+    except OperationNotAllowed:
+        # A FAILED_UNLOAD entry cannot reload; treat it as a failed reload so
+        # a repeat repair attempt on the wedged entry keeps its issue.
+        pass
     addresses: dict[str, str] = entry.data.get(CONF_ADDRESSES, {})
     credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
     if any(
@@ -136,7 +144,7 @@ class MissingAddressRepairFlow(RepairsFlow):
                     # brackets, so an IPv6 literal can never work.
                     IPv4Address(value)
                 except ValueError:
-                    errors["base"] = "invalid_ip"
+                    errors[mac] = "invalid_ip"
                 else:
                     entered[mac] = value
             if not errors and entered:
@@ -154,15 +162,20 @@ class MissingAddressRepairFlow(RepairsFlow):
                         for mac, address in entered.items()
                     )
                 )
-                if not all(reachable):
-                    errors["base"] = "cannot_connect"
+                errors |= {
+                    mac: "cannot_connect"
+                    for mac, ok in zip(entered, reachable, strict=True)
+                    if not ok
+                }
             if not errors:
-                # Re-read the cache: DHCP discovery may have stored another
-                # device's address while the probes above were awaited.
+                # Re-read the cache: DHCP discovery may have stored addresses
+                # while the probes above were awaited. On overlap the stored
+                # lease wins — live discovery saw the device after the user
+                # typed the address.
                 current: dict[str, str] = self.entry.data.get(CONF_ADDRESSES, {})
                 self.hass.config_entries.async_update_entry(
                     self.entry,
-                    data={**self.entry.data, CONF_ADDRESSES: {**current, **entered}},
+                    data={**self.entry.data, CONF_ADDRESSES: {**entered, **current}},
                 )
                 # The repairs framework deletes the issue after this step
                 # returns; run the reload non-eagerly so it happens after that
