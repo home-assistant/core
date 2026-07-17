@@ -4,6 +4,7 @@ import asyncio
 from ipaddress import IPv4Address
 from typing import cast
 
+from aiohttp import ClientSession
 from mitsubishi_comfort import DeviceInfo, probe_candidate_ips
 import voluptuous as vol
 
@@ -16,11 +17,14 @@ from homeassistant.components.repairs import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS
 
 
-async def _async_probe(serial: str, cred: dict[str, str], address: str) -> bool:
+async def _async_probe(
+    serial: str, cred: dict[str, str], address: str, session: ClientSession
+) -> bool:
     """Return whether the device answers an authenticated probe at address."""
     info = DeviceInfo(
         serial=serial,
@@ -31,7 +35,7 @@ async def _async_probe(serial: str, cred: dict[str, str], address: str) -> bool:
         password=cred["password"],
         crypto_serial=cred["crypto_serial"],
     )
-    return bool(await probe_candidate_ips({serial: info}, [address]))
+    return bool(await probe_candidate_ips({serial: info}, [address], session=session))
 
 
 class MissingAddressRepairFlow(RepairsFlow):
@@ -122,9 +126,10 @@ class MissingAddressRepairFlow(RepairsFlow):
                     dr.format_mac(cred["mac"]): (serial, cred)
                     for serial, cred in credentials.items()
                 }
+                session = async_get_clientsession(self.hass)
                 reachable = await asyncio.gather(
                     *(
-                        _async_probe(*by_mac[mac], address)
+                        _async_probe(*by_mac[mac], address, session)
                         for mac, address in entered.items()
                     )
                 )

@@ -9,6 +9,7 @@ from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DO
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -81,11 +82,12 @@ async def test_fix_flow_sets_missing_address(
     with patch(
         "homeassistant.components.mitsubishi_comfort.repairs.probe_candidate_ips",
         return_value={MOCK_SERIAL: "192.168.1.50"},
-    ):
+    ) as mock_probe:
         data = await process_repair_fix_flow(
             client, flow_id, json={dr.format_mac(MOCK_MAC): "192.168.1.50"}
         )
     assert data["type"] == "create_entry"
+    assert mock_probe.call_args.kwargs["session"] is async_get_clientsession(hass)
     await hass.async_block_till_done()
 
     assert entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == "192.168.1.50"
@@ -168,7 +170,9 @@ async def test_fix_flow_keeps_address_discovered_during_probe(
     entry = await _setup_addressless_entry(hass)
     second_mac = dr.format_mac(second.mac)
 
-    async def _probe_with_concurrent_discovery(*args: object) -> dict[str, str]:
+    async def _probe_with_concurrent_discovery(
+        *args: object, **kwargs: object
+    ) -> dict[str, str]:
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_ADDRESSES: {second_mac: "192.168.1.60"}},
