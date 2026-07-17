@@ -1,10 +1,11 @@
 """Climate platform for Samsung IR integration."""
 
-from typing import Any
+from typing import Any, override
 
 from infrared_protocols.commands.samsung import SamsungAC0292Command
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID, SamsungDeviceType
 from .entity import SamsungIrEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 HA_TO_LIB_HVAC = {
@@ -111,6 +112,7 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
 
         await self._send_command(command)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         self._attr_hvac_mode = hvac_mode
@@ -120,23 +122,34 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
         await self._async_send_command()
         self.async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         self._attr_fan_mode = fan_mode
         await self._async_send_command()
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            self._attr_hvac_mode = hvac_mode
+            if hvac_mode != HVACMode.OFF:
+                self._last_on_hvac_mode = hvac_mode
+
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_target_temperature = temperature
+            self._attr_target_temperature = round(temperature)
+
+        if ATTR_HVAC_MODE in kwargs or ATTR_TEMPERATURE in kwargs:
             await self._async_send_command()
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.async_set_hvac_mode(self._last_on_hvac_mode)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
