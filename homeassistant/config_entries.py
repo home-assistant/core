@@ -911,6 +911,11 @@ class ConfigEntry[_DataT = Any]:
                 SystemExit,
                 Exception,
             ) as exc:
+                if isinstance(exc, ConfigEntryAuthFailed):
+                    # Auth issues during migration should result in migration error
+                    # directly to not start any reauth flow
+                    self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
+                    return
                 (
                     error_reason,
                     error_reason_translation_key,
