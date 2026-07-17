@@ -104,9 +104,8 @@ def async_handle_source_entity_changes(
             # No need to do any cleanup
             return
 
-        # The source entity has been moved to a different device, update the helper
-        # entities to link to the new device and the helper device to include the
-        # helper config entry
+        # The source entity has been moved to a different device; relink the helper
+        # entities to the new device.
         for helper_entity in entity_registry.entities.get_entries_for_config_entry_id(
             helper_config_entry_id
         ):
