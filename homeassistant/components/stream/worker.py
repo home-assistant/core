@@ -688,7 +688,14 @@ def stream_worker(
     muxer.reset(start_dts)
 
     # Mux the first keyframe, then proceed through the rest of the packets
-    muxer.mux_packet(first_keyframe)
+    try:
+        muxer.mux_packet(first_keyframe)
+    except av.FFmpegError as ex:
+        container.close()
+        muxer.close()
+        raise StreamWorkerError(
+            f"Error muxing first keyframe ({redact_av_error_string(ex)})"
+        ) from ex
 
     with contextlib.closing(container), contextlib.closing(muxer):
         while not quit_event.is_set():
@@ -703,7 +710,12 @@ def stream_worker(
                     f"Error demuxing stream ({redact_av_error_string(ex)})"
                 ) from ex
 
-            muxer.mux_packet(packet)
+            try:
+                muxer.mux_packet(packet)
+            except av.FFmpegError as ex:
+                raise StreamWorkerError(
+                    f"Error muxing stream ({redact_av_error_string(ex)})"
+                ) from ex
 
             if packet.is_keyframe and is_video(packet):
                 keyframe_converter.stash_keyframe_packet(packet)

@@ -399,6 +399,30 @@ async def test_stream_worker_success(hass: HomeAssistant) -> None:
     assert len(decoded_stream.audio_packets) == 0
 
 
+async def test_stream_worker_first_keyframe_mux_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test an FFmpeg error muxing the first keyframe is handled."""
+    error = av.error.ArgumentError(22, "Invalid argument")
+
+    with (
+        patch.object(StreamMuxer, "mux_packet", side_effect=error),
+        pytest.raises(StreamWorkerError, match="Error muxing first keyframe"),
+    ):
+        await async_decode_stream(hass, PacketSequence(TEST_SEQUENCE_LENGTH))
+
+
+async def test_stream_worker_packet_mux_fails(hass: HomeAssistant) -> None:
+    """Test an FFmpeg error muxing a packet is handled."""
+    error = av.error.ArgumentError(22, "Invalid argument")
+
+    with (
+        patch.object(StreamMuxer, "mux_packet", side_effect=(None, error)),
+        pytest.raises(StreamWorkerError, match="Error muxing stream"),
+    ):
+        await async_decode_stream(hass, PacketSequence(TEST_SEQUENCE_LENGTH))
+
+
 async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
     """Skip a single out of order packet."""
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
