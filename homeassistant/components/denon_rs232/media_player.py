@@ -77,7 +77,6 @@ INPUT_SOURCE_DENON_TO_HA: dict[InputSource, str] = {
 }
 
 TUNER_PRESETS_ROOT = "presets"
-TUNER_FREQUENCY_PATTERN = re.compile(r"[0-9]+")
 TUNER_FREQUENCY_MIN = 8750
 TUNER_FREQUENCY_MAX = 10800
 TUNER_FREQUENCY_LENGTH = 6
@@ -87,7 +86,7 @@ TUNER_FREQUENCY_FM_MAX = 50000
 
 def _tuner_frequency_to_mhz(frequency: str | None) -> str | None:
     """Convert a reported tuner frequency to MHz, or None if it is not FM."""
-    if frequency is None or not TUNER_FREQUENCY_PATTERN.fullmatch(frequency):
+    if frequency is None or not frequency.isdigit():
         return None
 
     value = int(frequency)
