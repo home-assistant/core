@@ -6,6 +6,7 @@ import aiohttp
 from nexia.const import BRAND_NEXIA
 from nexia.home import NexiaHome
 from nexia.thermostat import NexiaThermostat
+from nexia.zone import NexiaThermostatZone
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -88,6 +89,10 @@ async def async_remove_config_entry_device(
         for zone_id in thermostat.get_zone_ids():
             if zone_id in dev_ids:
                 return False
+            zone: NexiaThermostatZone = thermostat.get_zone_by_id(zone_id)
+            for room_iq_sensor in zone.get_sensors():
+                if str(room_iq_sensor.id) in dev_ids:
+                    return False
     return True
 
 
