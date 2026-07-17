@@ -248,9 +248,7 @@ async def async_setup_entry(  # noqa: C901
     for device in dev_entries:
         for identifier in device.identifiers:
             if identifier[0] == DOMAIN and identifier[1] not in player_ids:
-                dev_reg.async_update_device(
-                    device.id, remove_config_entry_id=entry.entry_id
-                )
+                dev_reg.async_remove_device(device.id)
 
     return True
 
