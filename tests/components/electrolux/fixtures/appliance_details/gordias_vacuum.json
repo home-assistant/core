@@ -1,0 +1,210 @@
+{
+  "applianceInfo": {
+    "brand": "ELECTROLUX",
+    "colour": "SHELL_WHITE",
+    "deviceType": "ROBOTIC_VACUUM_CLEANER",
+    "model": "ULTIMATE700",
+    "pnc": "900402278",
+    "serialNumber": "33200020",
+    "variant": "M2"
+  },
+  "capabilities": {
+    "batteryStatus": {
+      "access": "read",
+      "type": "int",
+      "max": 100,
+      "min": 1
+    },
+    "cleaningMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "notSet": {},
+        "globalClean": {},
+        "edgeClean": {},
+        "pointClean": {},
+        "returnToCharger": {}
+      }
+    },
+    "state": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "idle": {},
+        "inProgress": {},
+        "paused": {},
+        "goingHome": {},
+        "sleeping": {}
+      }
+    },
+    "chargingStatus": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "charging": {},
+        "fullyCharged": {},
+        "idle": {}
+      }
+    },
+    "vacuumMode": {
+      "access": "readwrite",
+      "type": "string",
+      "schedulable": true,
+      "values": {
+        "quiet": {},
+        "energySaving": {},
+        "standard": {},
+        "powerful": {}
+      }
+    },
+    "waterPumpRate": {
+      "access": "readwrite",
+      "type": "string",
+      "default": "medium",
+      "schedulable": true,
+      "values": {
+        "off": {},
+        "low": {},
+        "medium": {},
+        "high": {}
+      }
+    },
+    "binTank": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "none": {},
+        "dustBox": {},
+        "waterTank": {},
+        "both": {}
+      }
+    },
+    "mopInstalled": {
+      "access": "read",
+      "type": "boolean",
+      "values": {
+        "false": {},
+        "true": {}
+      },
+      "triggers": [
+        {
+          "action": {
+            "waterPumpRate": {
+              "access": "readwrite",
+              "type": "string",
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "false",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "waterPumpRate": {
+              "access": "readwrite",
+              "type": "string",
+              "default": "medium",
+              "values": {
+                "off": {},
+                "low": {},
+                "medium": {},
+                "high": {},
+                "max": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "true",
+            "operator": "eq"
+          }
+        }
+      ]
+    },
+    "cleaningCommand": {
+      "access": "readwrite",
+      "type": "string",
+      "schedulable": true,
+      "values": {
+        "startGlobalClean": {},
+        "startMoppingClean": {},
+        "startEdgeClean": {},
+        "startPointClean": {},
+        "startGoToCharger": {},
+        "pauseClean": {},
+        "resumeClean": {},
+        "stopClean": {}
+      }
+    },
+    "setVoiceVolume": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "mute": {},
+        "low": {},
+        "medium": {},
+        "high": {}
+      }
+    },
+    "findMe": {
+      "access": "readwrite"
+    },
+    "faultCode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "noFault": {},
+        "batteryLowPercentage": {},
+        "batteryNotChargedEnough": {},
+        "dustbinNotInPlace": {},
+        "isOnUnevenSurface": {},
+        "stuckOfCliffSensor": {},
+        "stuckFailedToEscape": {},
+        "frontJammedOrCollisionSensorDirty": {},
+        "rollerBrushStuck": {},
+        "canNotChargeOfLowVoltage": {},
+        "canNotFindCharger": {},
+        "canNotCharge": {}
+      }
+    },
+    "mapCommand": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "mapId": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "type": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/roomId": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/sweepMode": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/vacuumMode": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/waterPumpRate": {
+      "access": "readwrite",
+      "type": "custom"
+    },
+    "roomInfo/numberOfCleaningRepetitions": {
+      "access": "readwrite",
+      "type": "custom"
+    }
+  }
+}
