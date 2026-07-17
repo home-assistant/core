@@ -100,6 +100,32 @@
         "name": "Upper door state"
       }
     },
+    "button": {
+      "bottomoven_start": {
+        "name": "Lower oven start"
+      },
+      "bottomoven_stop": {
+        "name": "Lower oven stop"
+      },
+      "start": {
+        "name": "Appliance start"
+      },
+      "stop": {
+        "name": "Appliance stop"
+      },
+      "pause": {
+        "name": "Appliance pause"
+      },
+      "resume": {
+        "name": "Appliance resume"
+      },
+      "upperoven_start": {
+        "name": "Upper oven start"
+      },
+      "upperoven_stop": {
+        "name": "Upper oven stop"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "name": "Appliance state",
