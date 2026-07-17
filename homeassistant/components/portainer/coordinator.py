@@ -274,16 +274,30 @@ class PortainerCoordinator(
                 for stack in stacks
             }
 
-            inspect_local_images = dict(
+            container_names = [
+                sanitize_container_name(container.names[0]) for container in containers
+            ]
+            container_inspects = dict(
                 zip(
-                    (
-                        sanitize_container_name(container.names[0])
-                        for container in containers
-                    ),
+                    container_names,
                     await asyncio.gather(
                         *(
-                            self._get_inspect_local_image(endpoint.id, container.id)
+                            self.portainer.inspect_container(endpoint.id, container.id)
                             for container in containers
+                        )
+                    ),
+                    strict=False,
+                )
+            )
+            local_images = dict(
+                zip(
+                    container_inspects,
+                    await asyncio.gather(
+                        *(
+                            self._get_local_image(
+                                endpoint.id, str(container_inspect.image)
+                            )
+                            for container_inspect in container_inspects.values()
                         )
                     ),
                     strict=False,
@@ -299,7 +313,8 @@ class PortainerCoordinator(
                     else None
                 )
 
-                container_inspect, local_image = inspect_local_images[container_name]
+                container_inspect = container_inspects[container_name]
+                local_image = local_images[container_name]
 
                 image_status = (
                     (
@@ -479,17 +494,10 @@ class PortainerCoordinator(
             for stack_callback in self.new_stacks_callbacks:
                 stack_callback(new_stack_data)
 
-    async def _get_inspect_local_image(
-        self, endpoint_id: int, container_id: str
-    ) -> tuple[DockerInspect, LocalImageInformation]:
-        """Fetch container inspect data and its cached local image data."""
-        # Fetch the container inspect data each update cycle, to obtain the health state
-        # Use cached local image data if available, to avoid unnecessary API calls to Portainer
-        container_inspect = await self.portainer.inspect_container(
-            endpoint_id, container_id
-        )
-        image = str(container_inspect.image)
-
+    async def _get_local_image(
+        self, endpoint_id: int, image: str
+    ) -> LocalImageInformation:
+        """Fetch local image data, reusing the cache until the watcher checks again."""
         if cached := self._image_cache.get((endpoint_id, image)):
             cached_at, local_image = cached
             if (
@@ -502,14 +510,14 @@ class PortainerCoordinator(
                     endpoint_id,
                     image,
                 )
-                return container_inspect, local_image
+                return local_image
 
         local_image = await self.portainer.get_image(endpoint_id, image)
         self._image_cache[(endpoint_id, image)] = (
             time.monotonic(),
             local_image,
         )
-        return container_inspect, local_image
+        return local_image
 
 
 class PortainerDockerDiskSpaceCoordinator(
