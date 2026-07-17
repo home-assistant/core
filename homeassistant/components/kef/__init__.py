@@ -4,6 +4,7 @@ import aiohttp
 from pykefcontrol.kef_connector import KefAsyncConnector
 
 from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -12,7 +13,7 @@ from .coordinator import KefConfigEntry, KefCoordinator
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass, entry: KefConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KefConfigEntry) -> bool:
     """Set up KEF from a config entry."""
     host = entry.data[CONF_HOST]
     model = entry.data.get("model")
@@ -33,6 +34,6 @@ async def async_setup_entry(hass, entry: KefConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass, entry: KefConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KefConfigEntry) -> bool:
     """Unload a KEF config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
