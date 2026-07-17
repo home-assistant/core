@@ -2302,6 +2302,9 @@ pyjvcprojector==2.0.6
 # homeassistant.components.kaleidescape
 pykaleidescape==1.1.6
 
+# homeassistant.components.kef
+pykefcontrol==0.9.3
+
 # homeassistant.components.kira
 pykira==0.1.1
 

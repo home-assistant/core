@@ -21,9 +21,17 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import XIO_SOURCES
+from .coordinator import KefConfigEntry, KefCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -412,3 +420,162 @@ class KefMediaPlayer(MediaPlayerEntity):
         """Set sub_db of the KEF speakers."""
         await self._speaker.set_sub_db(db_value)
         self._dsp = None
+
+
+_SOURCE_REVERSE: dict[str, str] = {v: k for k, v in XIO_SOURCES.items()}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: KefConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up KEF media player from a config entry."""
+    async_add_entities([KefConnectMediaPlayer(entry.runtime_data, entry)])
+
+
+class KefConnectMediaPlayer(CoordinatorEntity[KefCoordinator], MediaPlayerEntity):
+    """Media player for modern KEF speakers via pykefcontrol."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_icon = "mdi:speaker-wireless"
+    _attr_source_list = list(XIO_SOURCES)
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    )
+
+    def __init__(
+        self,
+        coordinator: KefCoordinator,
+        entry: KefConfigEntry,
+    ) -> None:
+        """Initialize the media player."""
+        super().__init__(coordinator)
+        assert entry.unique_id is not None
+        self._attr_unique_id = entry.unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            manufacturer="KEF",
+            model=entry.data.get("model", "XIO"),
+            name=entry.title,
+            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
+        )
+
+    @property
+    @override
+    def state(self) -> MediaPlayerState | None:
+        """Return the state of the player."""
+        data = self.coordinator.data
+        if not data.is_on:
+            return MediaPlayerState.OFF
+        if data.is_playing:
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.ON
+
+    @property
+    @override
+    def volume_level(self) -> float | None:
+        """Return volume level (0..1)."""
+        return self.coordinator.data.volume / 100
+
+    @property
+    @override
+    def is_volume_muted(self) -> bool:
+        """Return True if volume is muted."""
+        return self.coordinator.data.volume == 0
+
+    @property
+    @override
+    def source(self) -> str | None:
+        """Return the current source."""
+        return _SOURCE_REVERSE.get(self.coordinator.data.source)
+
+    @property
+    @override
+    def media_title(self) -> str | None:
+        """Return the title of current playing media."""
+        return self.coordinator.data.media_title
+
+    @property
+    @override
+    def media_artist(self) -> str | None:
+        """Return the artist of current playing media."""
+        return self.coordinator.data.media_artist
+
+    @property
+    @override
+    def media_album_name(self) -> str | None:
+        """Return the album name of current playing media."""
+        return self.coordinator.data.media_album
+
+    @property
+    @override
+    def media_image_url(self) -> str | None:
+        """Return the image URL of current playing media."""
+        return self.coordinator.data.media_image_url
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on the speaker."""
+        await self.coordinator.connector.power_on()
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Turn off the speaker."""
+        await self.coordinator.connector.shutdown()
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level (0..1)."""
+        await self.coordinator.connector.set_volume(round(volume * 100))
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute or unmute the speaker."""
+        if mute:
+            await self.coordinator.connector.mute()
+        else:
+            await self.coordinator.connector.unmute()
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        await self.coordinator.connector.set_source(XIO_SOURCES[source])
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        await self.coordinator.connector.toggle_play_pause()
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self.coordinator.connector.toggle_play_pause()
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_media_next_track(self) -> None:
+        """Send next track command."""
+        await self.coordinator.connector.next_track()
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_media_previous_track(self) -> None:
+        """Send previous track command."""
+        await self.coordinator.connector.previous_track()
+        await self.coordinator.async_request_refresh()

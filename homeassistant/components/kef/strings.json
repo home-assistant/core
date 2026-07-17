@@ -1,4 +1,22 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your KEF speaker."
+        }
+      }
+    }
+  },
   "services": {
     "set_desk_db": {
       "description": "Sets the \"Desk mode\" slider of the speaker in dB.",
