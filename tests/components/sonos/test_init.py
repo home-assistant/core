@@ -663,44 +663,35 @@ async def test_async_poll_manual_hosts_8(
 async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test disabled visible zone is skipped during manual host discovery."""
+    """Test disabled visible zone is skipped in visible-zones expansion."""
     soco_1 = soco_factory.cache_mock(
         _MockSoCoVisibleZones(), "10.10.10.1", "Living Room"
     )
-    soco_2 = soco_factory.cache_mock(_MockSoCoVisibleZones(), "10.10.10.2", "Bedroom")
-    soco_3 = soco_factory.cache_mock(MockSoCo(), "10.10.10.3", "Basement")
-    soco_4 = soco_factory.cache_mock(MockSoCo(), "10.10.10.4", "Garage")
-    soco_5 = soco_factory.cache_mock(MockSoCo(), "10.10.10.5", "Studio")
+    # Host 2 errors out during visible_zones read, which avoids the later
+    # manual-scan disabled path and keeps this test focused on the
+    # _async_add_visible_zones filter branch.
+    soco_2 = soco_factory.cache_mock(_MockSoCoOsError(), "10.10.10.2", "Bedroom")
 
-    # Initial discovery excludes Studio so it can be introduced after disabling.
-    soco_1.set_visible_zones({soco_1, soco_2, soco_3, soco_4})
-    soco_2.set_visible_zones({soco_1, soco_2, soco_3, soco_4})
+    soco_1.set_visible_zones({soco_1, soco_2})
 
-    await _setup_hass(hass)
-    await hass.async_block_till_done()
+    with (
+        caplog.at_level(logging.DEBUG),
+        patch.object(
+            sonos.SonosDiscoveryManager,
+            "is_device_disabled",
+            autospec=True,
+            side_effect=lambda _self, uid: uid == soco_2.uid,
+        ),
+    ):
+        await _setup_hass(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    entry = hass.config_entries.async_entries(sonos.DOMAIN)[0]
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(sonos.DOMAIN, soco_5.uid)},
-        disabled_by=dr.DeviceEntryDisabler.USER,
-    )
-
-    # Studio appears in visible zones after disable; follow-up manual poll should skip it.
-    soco_1.set_visible_zones({soco_1, soco_2, soco_3, soco_4, soco_5})
-    soco_2.set_visible_zones({soco_1, soco_2, soco_3, soco_4, soco_5})
-
-    async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert "media_player.bedroom" in entity_registry.entities
     assert "media_player.living_room" in entity_registry.entities
-    assert "media_player.basement" in entity_registry.entities
-    assert "media_player.garage" in entity_registry.entities
-    assert "media_player.studio" not in entity_registry.entities
+    assert "media_player.bedroom" not in entity_registry.entities
+    assert f"Skipping discovery for disabled Sonos device: {soco_2.uid}" in caplog.text
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
