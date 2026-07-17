@@ -104,8 +104,14 @@ type Condition = FieldCondition | AndCondition | OrCondition | NotCondition
 
 
 def _condition_value_is_empty(value: Any) -> bool:
-    """Return True when a value counts as empty for existence checks."""
     return value is None or value == ""
+
+
+def _strict_equal(actual: Any, value: Any) -> bool:
+    """Compare by value and type, so a boolean never equals a number."""
+    if isinstance(actual, bool) != isinstance(value, bool):
+        return False
+    return bool(actual == value)
 
 
 def _evaluate_field_condition(
@@ -115,13 +121,17 @@ def _evaluate_field_condition(
     value = condition.get("value")
     match condition.get("operator", "eq"):
         case "eq":
-            return actual == value
+            return _strict_equal(actual, value)
         case "not_eq":
-            return actual != value
+            return not _strict_equal(actual, value)
         case "in":
-            return isinstance(value, (list, tuple)) and actual in value
+            return isinstance(value, (list, tuple)) and any(
+                _strict_equal(actual, item) for item in value
+            )
         case "not_in":
-            return isinstance(value, (list, tuple)) and actual not in value
+            return isinstance(value, (list, tuple)) and not any(
+                _strict_equal(actual, item) for item in value
+            )
         case "exists":
             return not _condition_value_is_empty(actual)
         case "not_exists":
@@ -131,10 +141,7 @@ def _evaluate_field_condition(
 
 
 def evaluate_condition(condition: Mapping[str, Any], data: Mapping[str, Any]) -> bool:
-    """Evaluate a field condition against submitted step data.
-
-    Mirrors the frontend `evaluateCondition` in ha-form/conditions.ts.
-    """
+    """Evaluate a field condition against submitted step data."""
     if (combinator := condition.get("condition")) is not None:
         conditions: list[Mapping[str, Any]] = condition.get("conditions", [])
         match combinator:
@@ -155,13 +162,13 @@ def is_field_hidden(
 ) -> bool:
     """Return True when a field's hidden condition matches the submitted data.
 
-    Mirrors the frontend `isFieldHidden` in ha-form/conditions.ts: a list of
-    conditions is combined with AND.
+    A list of conditions is combined with AND.
     """
     if hidden_condition is True:
         return True
-    if not hidden_condition:
+    if hidden_condition is False:
         return False
+    # An empty list has no condition to fail, so the field is hidden.
     conditions = (
         hidden_condition if isinstance(hidden_condition, list) else [hidden_condition]
     )
@@ -173,10 +180,9 @@ def hidden(
 ) -> vol.Marker:
     """Hide a schema field while a condition matches the other fields.
 
-    A hidden field is not rendered by the frontend, is treated as optional, and
-    its value is omitted from the submitted data. The backend mirrors this by
-    skipping the required check while the condition matches. A list of conditions
-    is combined with AND.
+    A hidden field is not rendered, is treated as optional, and its value is
+    omitted from the submitted data, so the required check is skipped while the
+    condition matches. A list of conditions is combined with AND.
     """
     marker.hidden = condition  # type: ignore[attr-defined]
     return marker
@@ -1070,19 +1076,39 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
 ) -> tuple[vol.Schema, _T]:
     """Remove currently hidden fields from the schema and the submitted input.
 
-    The frontend hides fields whose condition matches, treats them as optional,
-    and omits them from the submitted data. Mirror that server-side: a hidden
-    required field must not fail validation, and a hidden field must not inject a
-    default or keep a stale value. Conditions are evaluated against the original
-    input. Returns the schema and input unchanged when nothing is hidden.
+    A hidden field is treated as optional and its value is omitted, so a hidden
+    required field must not fail validation and a hidden field must not inject a
+    default or keep a stale value. Conditions are evaluated against the input
+    with schema defaults applied, so a field omitted by the client resolves the
+    same as one that was submitted. Returns the schema and input unchanged when
+    nothing is hidden.
     """
     if not isinstance(data_schema.schema, dict):
         return data_schema, user_input
+
+    eval_data = dict(user_input)
+    for key in data_schema.schema:
+        if (
+            isinstance(key, (vol.Optional, vol.Required))
+            and key.schema not in eval_data
+            and not isinstance(key.default, vol.Undefined)
+        ):
+            eval_data[key.schema] = key.default()
 
     new_schema: dict[Any, Any] = {}
     new_input: dict[str, Any] | None = None
     for key, val in data_schema.schema.items():
         name = key.schema if isinstance(key, vol.Marker) else key
+
+        hidden_condition = getattr(key, "hidden", None)
+        if hidden_condition is not None and is_field_hidden(
+            hidden_condition, eval_data
+        ):
+            if name in user_input:
+                if new_input is None:
+                    new_input = dict(user_input)
+                new_input.pop(name, None)
+            continue
 
         if isinstance(val, section) and isinstance(
             section_input := user_input.get(name), Mapping
@@ -1096,16 +1122,6 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
                     new_input = dict(user_input)
                 new_input[name] = inner_input
                 continue
-
-        hidden_condition = getattr(key, "hidden", None)
-        if hidden_condition is not None and is_field_hidden(
-            hidden_condition, user_input
-        ):
-            if name in user_input:
-                if new_input is None:
-                    new_input = dict(user_input)
-                new_input.pop(name, None)
-            continue
 
         new_schema[key] = val
 
