@@ -12,7 +12,7 @@ from requests import Response
 from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
-from homeassistant.components import sonos, ssdp
+from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
@@ -27,7 +27,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -219,20 +218,8 @@ async def test_discovery_reenable_device_on_new_discovery(
 
     device_registry.async_update_device(device.id, disabled_by=None)
 
-    ssdp_callback = discover.call_args_list[0].args[1]
-    ssdp_callback(
-        SsdpServiceInfo(
-            ssdp_location=f"http://{soco.ip_address}/",
-            ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
-            ssdp_usn=(
-                f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:"
-                "GroupRenderingControl:1"
-            ),
-            upnp={ATTR_UPNP_UDN: f"uuid:{soco.uid}"},
-            ssdp_headers={"X-RINCON-BOOTSEQ": "2"},
-        ),
-        ssdp.SsdpChange.ALIVE,
-    )
+    # Re-run discovery using the fixture's own mocked callback path.
+    discover.side_effect(*discover.call_args.args, **discover.call_args.kwargs)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     await fire_zgs_event()
