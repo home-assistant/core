@@ -1,7 +1,7 @@
 """Tests for the helper entity helpers."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -211,6 +211,67 @@ def listen_entity_registry_events(
     hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, add_event)
 
     return events
+
+
+@pytest.mark.parametrize("add_helper_config_entry_to_device", [True, False])
+async def test_async_handle_source_entity_changes_deprecated_kwarg(
+    hass: HomeAssistant,
+    add_helper_config_entry_to_device: bool,
+) -> None:
+    """The removed add_helper_config_entry_to_device kwarg is accepted but reported.
+
+    It is swallowed by **kwargs so callers still passing it don't raise, and reported on
+    its presence rather than its value, since it no longer has any effect either way.
+    """
+    with patch("homeassistant.helpers.helper_integration.report_usage") as report_usage:
+        unsub = async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            set_source_entity_id_or_uuid=Mock(),
+            source_device_id=None,
+            source_entity_id_or_uuid="sensor.test",
+            add_helper_config_entry_to_device=add_helper_config_entry_to_device,
+        )
+    unsub()
+
+    report_usage.assert_called_once()
+    assert "add_helper_config_entry_to_device" in report_usage.call_args[0][0]
+
+
+async def test_async_handle_source_entity_changes_rejects_unknown_kwarg(
+    hass: HomeAssistant,
+) -> None:
+    """An unknown keyword argument still raises, as it did before **kwargs was added.
+
+    **kwargs only exists to swallow the deprecated add_helper_config_entry_to_device;
+    anything else (e.g. a misspelling) must not be silently accepted.
+    """
+    with pytest.raises(TypeError, match="unexpected keyword arguments 'unknown_kwarg'"):
+        async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            set_source_entity_id_or_uuid=Mock(),
+            source_device_id=None,
+            source_entity_id_or_uuid="sensor.test",
+            unknown_kwarg=True,
+        )
+
+
+async def test_async_handle_source_entity_changes_without_deprecated_kwarg(
+    hass: HomeAssistant,
+) -> None:
+    """Not passing the removed add_helper_config_entry_to_device kwarg is not reported."""
+    with patch("homeassistant.helpers.helper_integration.report_usage") as report_usage:
+        unsub = async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            set_source_entity_id_or_uuid=Mock(),
+            source_device_id=None,
+            source_entity_id_or_uuid="sensor.test",
+        )
+    unsub()
+
+    report_usage.assert_not_called()
 
 
 @pytest.mark.parametrize("source_entity_removed", [None])

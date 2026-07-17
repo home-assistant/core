@@ -7,17 +7,18 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, valid_entity
 
 from . import device_registry as dr, entity_registry as er
 from .event import async_track_entity_registry_updated_event
+from .frame import ReportBehavior, report_usage
 
 
 def async_handle_source_entity_changes(
     hass: HomeAssistant,
     *,
-    add_helper_config_entry_to_device: bool = True,
     helper_config_entry_id: str,
     set_source_entity_id_or_uuid: Callable[[str], None],
     source_device_id: str | None,
     source_entity_id_or_uuid: str,
     source_entity_removed: Callable[[], Coroutine[Any, Any, None]] | None = None,
+    **kwargs: Any,
 ) -> CALLBACK_TYPE:
     """Handle changes to a helper entity's source entity.
 
@@ -31,11 +32,9 @@ def async_handle_source_entity_changes(
       called. If the source entity is identified by a UUID, the helper config entry
       is reloaded.
     - Source entity moved to another device: The helper entity is updated to link
-      to the new device, and the helper config entry removed from the old device
-      and added to the new device. Then the helper config entry is reloaded.
+      to the new device. Then the helper config entry is reloaded.
     - Source entity removed from the device: The helper entity is updated to link
-      to no device, and the helper config entry removed from the old device. Then
-      the helper config entry is reloaded.
+      to no device. Then the helper config entry is reloaded.
 
     :param set_source_entity_id_or_uuid: A function which updates the source entity
         ID or UUID, e.g., in the helper config entry options.
@@ -43,6 +42,22 @@ def async_handle_source_entity_changes(
         is removed. This can be used to clean up any resources related to the source
         entity or ask the user to select a new source entity.
     """
+    if "add_helper_config_entry_to_device" in kwargs:
+        del kwargs["add_helper_config_entry_to_device"]
+        # Adding the helper's config entry to the source device is no longer supported
+        # now that a device belongs to a single config entry; the helper entities link to
+        # the source device via their device_id instead.
+        report_usage(
+            "calls async_handle_source_entity_changes with "
+            "add_helper_config_entry_to_device, which no longer has any effect",
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2027.8.0",
+        )
+    if kwargs:
+        raise TypeError(
+            "async_handle_source_entity_changes() got unexpected keyword arguments "
+            f"{', '.join(map(repr, kwargs))}"
+        )
 
     async def async_registry_updated(
         event: Event[er.EventEntityRegistryUpdatedData],
@@ -89,26 +104,14 @@ def async_handle_source_entity_changes(
             # No need to do any cleanup
             return
 
-        # The source entity has been moved to a different device, update the helper
-        # entities to link to the new device and the helper device to include the
-        # helper config entry
+        # The source entity has been moved to a different device; relink the helper
+        # entities to the new device.
         for helper_entity in entity_registry.entities.get_entries_for_config_entry_id(
             helper_config_entry_id
         ):
             # Update the helper entity to link to the new device (or no device)
             entity_registry.async_update_entity(
                 helper_entity.entity_id, device_id=source_entity_entry.device_id
-            )
-
-        if add_helper_config_entry_to_device:
-            if source_entity_entry.device_id is not None:
-                device_registry.async_update_device(
-                    source_entity_entry.device_id,
-                    add_config_entry_id=helper_config_entry_id,
-                )
-
-            device_registry.async_update_device(
-                source_device_id, remove_config_entry_id=helper_config_entry_id
             )
 
         source_device_id = source_entity_entry.device_id
