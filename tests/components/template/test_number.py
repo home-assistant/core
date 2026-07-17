@@ -28,11 +28,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -40,6 +42,8 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry
@@ -601,4 +605,134 @@ async def test_setup_valid_device_class(
     assert (
         hass.states.get(TEST_NUMBER.entity_id).attributes.get("device_class")
         == expected_device_class
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            "some_value",
+            {
+                "native_max_value": 80,
+                "native_min_value": 2,
+                "native_step": 2,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            "10",
+            {
+                "step": 2,
+                "min": 2,
+                "max": 80,
+                "unit_of_measurement": "°C",
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "native_max_value": 80,
+                "native_min_value": 2,
+                "native_step": 2,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            STATE_UNKNOWN,
+            {
+                "step": 1,
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "°C",
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "native_max_value": 80,
+                "native_min_value": 2,
+                "native_step": 2,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            STATE_UNKNOWN,
+            {
+                "step": 1,
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "°C",
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring trigger template weather."""
+
+    restored_attributes = {  # These should be ignored
+        "current_position": 5,
+        "current_tilt_position": 5,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_NUMBER,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_NUMBER,
+        style,
+        {
+            "max": "{{ state_attr('number.test_state', 'max') or 100 }}",
+            "min": "{{ state_attr('number.test_state', 'min') or 0 }}",
+            "state": "{{ state_attr('number.test_state', 'native_value') }}",
+            "step": "{{ state_attr('number.test_state', 'step') or 1 }}",
+            "set_value": [],
+            "device_class": "temperature",
+            "unit_of_measurement": "°C",
+        },
+        "state_attr('number.test_state', 'native_value') | float(0) > 6",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_NUMBER,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "number.test_state",
+        "anything",
+        {
+            "native_value": 30,
+            "step": 3,
+            "min": 3,
+            "max": 60,
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_NUMBER,
+        "30.0",
+        {"step": 3, "min": 3, "max": 60},
     )
