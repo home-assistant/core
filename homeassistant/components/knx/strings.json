@@ -1025,7 +1025,18 @@
       "title": "Information"
     },
     "project": {
-      "description": "Inspect imported group addresses",
+      "description": "Inspect imported project",
+      "devices": {
+        "channels": "Channels",
+        "group_objects": "Group objects",
+        "lines": "Lines",
+        "locations": "Locations",
+        "not_found": "No devices found in project data.",
+        "title": "Devices"
+      },
+      "group_addresses": {
+        "title": "[%key:component::knx::config_panel::common::group_addresses%]"
+      },
       "title": "Project"
     },
     "selectors": {
