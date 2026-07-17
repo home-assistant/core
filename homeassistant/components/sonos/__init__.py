@@ -256,7 +256,7 @@ class SonosDiscoveryManager:
         @callback
         def _async_add_visible_zones(subscription_succeeded: bool = False) -> None:
             """Determine visible zones and create SonosSpeaker instances."""
-            zones_to_add: set[SoCo] = set()
+            zones_to_add = set()
             subscription = None
             if subscription_succeeded:
                 subscription = sub
