@@ -624,6 +624,40 @@ async def test_async_poll_manual_hosts_8(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabled visible zone is skipped during manual host discovery."""
+    soco_1 = soco_factory.cache_mock(
+        _MockSoCoVisibleZones(), "10.10.10.1", "Living Room"
+    )
+    soco_2 = soco_factory.cache_mock(_MockSoCoVisibleZones(), "10.10.10.2", "Bedroom")
+    soco_3 = soco_factory.cache_mock(MockSoCo(), "10.10.10.3", "Basement")
+    soco_4 = soco_factory.cache_mock(MockSoCo(), "10.10.10.4", "Garage")
+    soco_5 = soco_factory.cache_mock(MockSoCo(), "10.10.10.5", "Studio")
+
+    soco_1.set_visible_zones({soco_1, soco_2, soco_3, soco_4, soco_5})
+    soco_2.set_visible_zones({soco_1, soco_2, soco_3, soco_4, soco_5})
+
+    with patch.object(
+        sonos.SonosDiscoveryManager,
+        "is_device_disabled",
+        autospec=True,
+        side_effect=lambda _self, uid: uid == soco_5.uid,
+    ):
+        await _setup_hass(hass)
+        await hass.async_block_till_done()
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" in entity_registry.entities
+    assert "media_player.basement" in entity_registry.entities
+    assert "media_player.garage" in entity_registry.entities
+    assert "media_player.studio" not in entity_registry.entities
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
 async def _setup_hass_ipv6_address_not_supported(hass: HomeAssistant):
     await async_setup_component(
         hass,
