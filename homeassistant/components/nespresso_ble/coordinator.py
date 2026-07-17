@@ -84,7 +84,11 @@ class NespressoBLECoordinator(DataUpdateCoordinator[NespressoDevice]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        if self._client.supports_push(ble_device) and (
+        service_info = bluetooth.async_last_service_info(
+            self.hass, ble_device.address, connectable=True
+        )
+        service_uuids = service_info.service_uuids if service_info else []
+        if self._client.supports_push(service_uuids) and (
             self._stream_task is None or self._stream_task.done()
         ):
             self._start_stream(ble_device)
