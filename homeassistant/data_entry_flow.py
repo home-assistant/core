@@ -20,13 +20,13 @@ from enum import StrEnum
 from functools import wraps
 import logging
 from types import MappingProxyType
+import typing
 from typing import (
     Any,
     Concatenate,
     Generic,
     Literal,
     NotRequired,
-    Required,
     TypedDict,
     TypeVar,
     cast,
@@ -190,17 +190,42 @@ def is_field_hidden(
     return all(evaluate_condition(condition, data) for condition in conditions)
 
 
-def hidden(
-    marker: probatio.Marker, condition: bool | Condition | list[Condition]
-) -> probatio.Marker:
-    """Hide a schema field while a condition matches the other fields.
+class Required(probatio.Required):
+    """Required schema marker that can be conditionally hidden.
 
-    A hidden field is not rendered, is treated as optional, and its value is
-    omitted from the submitted data, so the required check is skipped while the
-    condition matches. A list of conditions is combined with AND.
+    While the ``hidden`` condition matches the other fields, the field is not
+    rendered, is treated as optional, and its value is omitted from the
+    submitted data. A list of conditions is combined with AND.
     """
-    marker.hidden = condition  # type: ignore[attr-defined]
-    return marker
+
+    def __init__(
+        self,
+        *args: Any,
+        hidden: bool | Condition | list[Condition] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a required marker."""
+        super().__init__(*args, **kwargs)
+        self.hidden = hidden
+
+
+class Optional(probatio.Optional):
+    """Optional schema marker that can be conditionally hidden.
+
+    While the ``hidden`` condition matches the other fields, the field is not
+    rendered and its value is omitted from the submitted data. A list of
+    conditions is combined with AND.
+    """
+
+    def __init__(
+        self,
+        *args: Any,
+        hidden: bool | Condition | list[Condition] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize an optional marker."""
+        super().__init__(*args, **kwargs)
+        self.hidden = hidden
 
 
 _FlowContextT = TypeVar("_FlowContextT", bound="FlowContext", default="FlowContext")
@@ -280,8 +305,8 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     description: str | None
     errors: dict[str, str] | None
     extra: str
-    flow_id: Required[str]
-    handler: Required[_HandlerT]
+    flow_id: typing.Required[str]
+    handler: typing.Required[_HandlerT]
     last_step: bool | None
     menu_options: Container[str]
     preview: str | None
