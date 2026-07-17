@@ -508,8 +508,8 @@ async def test_migrate_from_higher_version_not_supported(
         ),
         (
             ConfigEntryAuthFailed,
-            config_entries.ConfigEntryState.SETUP_ERROR,
-            "Config entry 'Mock Title' for comp integration could not authenticate",
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            "",
         ),
         (
             ConfigEntryNotReady,
