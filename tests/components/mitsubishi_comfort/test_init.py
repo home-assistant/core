@@ -247,7 +247,6 @@ async def test_setup_entry_resolves_address_from_entry(
     assert mock_config_entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == (
         MOCK_ADDRESS
     )
-    # Every device has an address, so no repair issue is raised.
     assert not issue_registry.async_get_issue(
         DOMAIN, f"missing_address_{mock_config_entry.entry_id}"
     )
