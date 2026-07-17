@@ -1,9 +1,11 @@
 """Plugwise Select component for Home Assistant."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
 from plugwise import Smile
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
