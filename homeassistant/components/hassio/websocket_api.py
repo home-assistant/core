@@ -20,6 +20,7 @@ from homeassistant.helpers.dispatcher import (
 
 from .config import HassioUpdateParametersDict
 from .const import (
+    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
@@ -58,6 +59,10 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     f"|{RE_ADDONS_INFO_ENDPOINT}"
     r")$"
 )
+
+# Endpoints that reload the add-on store. After one of these the add-on update
+# entities must be refreshed so they don't report stale update information.
+STORE_RELOAD_ENDPOINTS = {"/addons/reload", "/store/reload"}
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -160,6 +165,11 @@ async def websocket_supervisor_api(
         if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
         connection.send_result(msg[WS_ID], data)
+
+        if command in STORE_RELOAD_ENDPOINTS and (
+            coordinator := hass.data.get(ADDONS_COORDINATOR)
+        ):
+            hass.async_create_task(coordinator.async_refresh_after_store_reload())
 
 
 @websocket_api.require_admin
