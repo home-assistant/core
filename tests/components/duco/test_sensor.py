@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from duco_connectivity import (
     DucoConnectionError,
     DucoError,
+    DucoUnsupportedCapabilityError,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
@@ -236,7 +237,9 @@ async def test_ventilation_temperatures_missing_skip_sensor_creation(
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test ventilation temperature sensors are not created when unsupported."""
-    mock_duco_client.async_get_ventilation_temperature_info.return_value = None
+    mock_duco_client.async_get_ventilation_temperature_info.side_effect = (
+        DucoUnsupportedCapabilityError(400, "/info", '{"Code":3,"Result":"FAILED"}')
+    )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 

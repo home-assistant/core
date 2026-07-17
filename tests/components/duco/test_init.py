@@ -12,6 +12,7 @@ from duco_connectivity import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
+    DucoUnsupportedCapabilityError,
     LanInfo,
     Node,
     NodeListActionItemList,
@@ -203,7 +204,9 @@ async def test_unsupported_ventilation_temperature_capability_is_not_repolled(
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test unavailable ventilation temperatures are not polled after setup."""
-    mock_duco_client.async_get_ventilation_temperature_info.return_value = None
+    mock_duco_client.async_get_ventilation_temperature_info.side_effect = (
+        DucoUnsupportedCapabilityError(400, "/info", '{"Code":3,"Result":"FAILED"}')
+    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

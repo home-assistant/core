@@ -10,6 +10,7 @@ from duco_connectivity.exceptions import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
+    DucoUnsupportedCapabilityError,
 )
 from duco_connectivity.models import (
     BoardInfo,
@@ -192,13 +193,12 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 ventilation_temperatures = (
                     await self.client.async_get_ventilation_temperature_info()
                 )
+            except DucoUnsupportedCapabilityError:
+                ventilation_temperatures = None
+                self._supports_ventilation_temperatures = False
             except DucoError as err:
                 _LOGGER.debug(
                     "Could not fetch Duco ventilation temperatures", exc_info=err
-                )
-            else:
-                self._supports_ventilation_temperatures = (
-                    ventilation_temperatures is not None
                 )
 
         return DucoData(
