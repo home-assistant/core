@@ -41,11 +41,15 @@ async def test_device_remove_devices(
     """Test we can only remove a device that no longer exists."""
     await async_setup_component(hass, "config", {})
     config_entry = await setup_integration(hass, patch_nexia_home)
+    client = await hass_ws_client(hass)
+
+    entity = entity_registry.entities["sensor.upstairs_upstairs_roomiq_temperature"]
+    live_room_iq_device_entry = device_registry.async_get(entity.device_id)
+    response = await client.remove_device(live_room_iq_device_entry.id)
+    assert not response["success"]
 
     entity = entity_registry.entities["sensor.nick_office_nick_office_temperature"]
-
     live_zone_device_entry = device_registry.async_get(entity.device_id)
-    client = await hass_ws_client(hass)
     response = await client.remove_device(live_zone_device_entry.id)
     assert not response["success"]
 
