@@ -1312,6 +1312,9 @@ async def test_show_advanced_options(
         ({"field": "a", "operator": "eq", "value": "x"}, {"a": "x"}, True),
         ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 2}, True),
         ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 1}, False),
+        ({"field": "a", "value": True}, {"a": 1}, False),
+        ({"field": "a", "value": 1}, {"a": True}, False),
+        ({"field": "a", "operator": "in", "value": [True]}, {"a": 1}, False),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 2}, True),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 3}, False),
         ({"field": "a", "operator": "in", "value": "notalist"}, {"a": "n"}, False),
@@ -1366,6 +1369,7 @@ def test_evaluate_condition(condition: dict, data: dict, expected: bool) -> None
     [
         (True, {}, True),
         (False, {}, False),
+        ([], {}, True),
         ({"field": "a", "value": 1}, {"a": 1}, True),
         ({"field": "a", "value": 1}, {"a": 2}, False),
         (
@@ -1380,7 +1384,9 @@ def test_evaluate_condition(condition: dict, data: dict, expected: bool) -> None
         ),
     ],
 )
-def test_is_field_hidden(hidden, data: dict, expected: bool) -> None:
+def test_is_field_hidden(
+    hidden: bool | dict | list, data: dict, expected: bool
+) -> None:
     """Test hidden condition resolution mirrors the frontend semantics."""
     assert data_entry_flow.is_field_hidden(hidden, data) is expected
 
@@ -1502,6 +1508,66 @@ async def test_hidden_required_field_in_section(manager: MockFlowManager) -> Non
         await manager.async_configure(
             form["flow_id"], {"advanced": {"mode": "advanced"}}
         )
+
+
+async def test_hidden_condition_uses_defaults(manager: MockFlowManager) -> None:
+    """Test conditions see schema defaults for fields the client omitted."""
+    schema = vol.Schema(
+        {
+            vol.Optional("mode", default="simple"): str,
+            data_entry_flow.hidden(
+                vol.Required("token"),
+                {"field": "mode", "value": "simple"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "mode" is omitted but defaults to "simple", so "token" is hidden
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"mode": "simple"}
+
+
+async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
+    """Test a hidden section is removed entirely, not kept as an empty dict."""
+    schema = vol.Schema(
+        {
+            vol.Required("enable_advanced", default=False): bool,
+            data_entry_flow.hidden(
+                vol.Required("advanced"),
+                {"field": "enable_advanced", "value": False},
+            ): data_entry_flow.section(
+                vol.Schema({vol.Required("token"): str}),
+            ),
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # the section is hidden, so a missing section validates
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"enable_advanced": False})
+    assert result["data"] == {"enable_advanced": False}
+
+    # stale nested data for the hidden section is dropped
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"enable_advanced": False, "advanced": {"token": "stale"}}
+    )
+    assert result["data"] == {"enable_advanced": False}
 
 
 def test_add_hidden_conditions_to_serialized_schema() -> None:
