@@ -201,3 +201,14 @@ async def async_unload_entry(
             return_exceptions=True,
         )
     return unload_ok
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
+) -> None:
+    """Remove a config entry's leftovers.
+
+    Removal never calls async_unload_entry for an entry that failed setup, so
+    the repair issue such a setup left behind is deleted here.
+    """
+    ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")

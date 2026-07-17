@@ -282,6 +282,7 @@ async def test_setup_entry_prunes_stale_addresses(
 async def test_setup_entry_skips_incomplete_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_device_info: DeviceInfo,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
@@ -353,6 +354,11 @@ async def test_setup_entry_skips_incomplete_devices(
             "mac": "",
         },
     }
+    # Incomplete devices are not addressless: an issue for them would open a
+    # fix flow with zero fields.
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"missing_address_{mock_config_entry.entry_id}"
+    )
 
 
 async def test_unload_entry(
@@ -452,6 +458,45 @@ async def test_failed_unload_keeps_missing_address_issue(
 
     assert entry.state is ConfigEntryState.FAILED_UNLOAD
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_remove_never_loaded_entry_clears_missing_address_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+    mock_device_info: DeviceInfo,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing an entry stuck in setup retry clears the repair issue.
+
+    Removal never calls async_unload_entry for an entry that failed setup, so
+    without the remove hook the issue would outlive the entry.
+    """
+    mock_account, mock_device = mock_setup_integration
+    mock_account.discover_devices.return_value = {
+        MOCK_SERIAL: mock_device_info,
+        "SERIAL002": DeviceInfo(
+            serial="SERIAL002",
+            label="Bedroom",
+            address="",
+            mac="11:22:33:44:55:66",
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+    }
+    mock_device.update_status.side_effect = DeviceConnectionError("boom")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"missing_address_{mock_config_entry.entry_id}"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_unload_entry_clears_missing_address_issue(
