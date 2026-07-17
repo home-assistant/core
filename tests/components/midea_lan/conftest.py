@@ -12,7 +12,7 @@ from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import BASE_DATA, TEST_MODEL, TEST_NAME, TEST_SUBTYPE
+from .const import BASE_DATA, TEST_DEVICE_ID, TEST_MODEL, TEST_NAME, TEST_SUBTYPE
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +29,7 @@ class DummyDevice:
     ) -> None:
         """Initialize fake device."""
         self.device_type = device_type
-        self.device_id = 123
+        self.device_id = TEST_DEVICE_ID
         self.name = TEST_NAME
         self.model = TEST_MODEL
         self.subtype = TEST_SUBTYPE

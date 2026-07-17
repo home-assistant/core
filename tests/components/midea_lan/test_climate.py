@@ -46,6 +46,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
+from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -94,7 +95,7 @@ async def test_midea_ac_climate_setup_and_services(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -234,7 +235,7 @@ async def test_midea_cc_climate_setup_and_services(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -288,7 +289,7 @@ async def test_midea_cf_climate_setup_and_services(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -348,8 +349,8 @@ async def test_midea_c3_climate_setup_and_services(
     await setup_integration(hass, config_entry, device)
     entries_by_unique_id = entity_entries(hass, config_entry)
 
-    zone1 = entries_by_unique_id["123_climate_zone1"]
-    zone2 = entries_by_unique_id["123_climate_zone2"]
+    zone1 = entries_by_unique_id[f"{TEST_DEVICE_ID}_climate_zone1"]
+    zone2 = entries_by_unique_id[f"{TEST_DEVICE_ID}_climate_zone2"]
     assert zone2.disabled_by == er.RegistryEntryDisabler.INTEGRATION
     assert hass.states.get(zone2.entity_id) is None
 
@@ -414,7 +415,7 @@ async def test_midea_fb_climate_setup_and_services(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -481,7 +482,7 @@ async def test_ac_fan_mode_thresholds(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes[ATTR_FAN_MODE] == expected_fan_mode
@@ -517,7 +518,7 @@ async def test_ac_humidity_filtering(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == expected_humidity
@@ -542,7 +543,7 @@ async def test_base_set_temperature_without_target_noop(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_entry.entity_id)
 
     device.calls.clear()
@@ -570,7 +571,7 @@ async def test_ac_set_hvac_mode_off_calls_power_off(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     await _assert_service_calls(
         hass,
@@ -601,7 +602,7 @@ async def test_ac_invalid_mode_maps_to_off_state(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == "unknown"
@@ -626,7 +627,7 @@ async def test_ac_power_off_state(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == HVACMode.OFF
@@ -650,7 +651,7 @@ async def test_ac_missing_mode_maps_to_unknown_state(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == "unknown"
@@ -666,19 +667,19 @@ async def test_cf_temperature_range_attributes(
         attributes={
             "power": True,
             "mode": 2,
-            CFAttributes.min_temperature: 16,
-            CFAttributes.max_temperature: 30,
+            CFAttributes.min_temperature: 5,
+            CFAttributes.max_temperature: 55,
             CFAttributes.current_temperature: 22,
         },
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_entry.entity_id)
 
     assert entity is not None
-    assert entity.target_temperature_low == 16.0
-    assert entity.target_temperature_high == 30.0
+    assert entity.target_temperature_low == 5.0
+    assert entity.target_temperature_high == 55.0
 
 
 async def test_set_temperature_unsupported_hvac_mode_raises(
@@ -698,7 +699,7 @@ async def test_set_temperature_unsupported_hvac_mode_raises(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     device.calls.clear()
     with pytest.raises(ServiceValidationError):
@@ -724,8 +725,8 @@ async def test_c3_temperature_fallback_and_turn_on(
         DeviceType.C3,
         attributes={
             C3Attributes.zone_temp_type: [True],
-            C3Attributes.temperature_min: [16],
-            C3Attributes.temperature_max: [30],
+            C3Attributes.temperature_min: [5, 5],
+            C3Attributes.temperature_max: [55, 55],
             C3Attributes.mode: 1,
             C3Attributes.zone1_power: True,
             C3Attributes.target_temperature: [22],
@@ -734,12 +735,12 @@ async def test_c3_temperature_fallback_and_turn_on(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
     entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
 
     assert entity is not None
-    assert entity.target_temperature_low == 16.0
-    assert entity.target_temperature_high == 30.0
+    assert entity.target_temperature_low == 5.0
+    assert entity.target_temperature_high == 55.0
 
     await _assert_service_calls(
         hass,
@@ -769,7 +770,7 @@ async def test_c3_unknown_power_maps_to_unknown_state(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
 
     assert (state := hass.states.get(zone1.entity_id))
     assert state.state == "unknown"
@@ -792,7 +793,7 @@ async def test_cf_set_hvac_mode_falls_back_to_min_temp(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     await _assert_service_calls(
         hass,
@@ -824,7 +825,7 @@ async def test_fb_set_hvac_off_calls_turn_off(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     await _assert_service_calls(
         hass,
@@ -853,7 +854,7 @@ async def test_cf_set_hvac_mode_off_calls_turn_off(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     await _assert_service_calls(
         hass,
@@ -876,7 +877,7 @@ async def test_cf_temperature_range_fallback_when_unset(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes[ATTR_MIN_TEMP] == 16.0
@@ -900,7 +901,7 @@ async def test_cc_fan_and_swing_invalid_types_return_none(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes.get(ATTR_FAN_MODE) is None
@@ -922,7 +923,7 @@ async def test_c3_zone_power_off_state(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
 
     assert (state := hass.states.get(zone1.entity_id))
     assert state.state == HVACMode.OFF
@@ -943,7 +944,7 @@ async def test_c3_invalid_mode_maps_to_unknown_state(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
 
     assert (state := hass.states.get(zone1.entity_id))
     assert state.state == "unknown"
@@ -964,7 +965,7 @@ async def test_c3_temperature_fallback_when_attribute_missing(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
     entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
 
     assert entity is not None
@@ -988,7 +989,7 @@ async def test_fb_invalid_attribute_types_return_none(
     )
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes.get(ATTR_PRESET_MODE) is None

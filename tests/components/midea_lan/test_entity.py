@@ -9,6 +9,7 @@ from homeassistant.core import CoreState, HomeAssistant
 
 from . import setup_integration
 from .conftest import DummyDevice, default_ac_device, entity_entries
+from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry
 
@@ -62,7 +63,7 @@ async def test_entity_updates_from_device_callback(
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
 
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes["current_temperature"] == 21.0
@@ -87,7 +88,7 @@ async def test_entity_callback_ignored_while_hass_stopping(
     config_entry = mock_config_entry(device)
     await setup_integration(hass, config_entry, device)
 
-    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
 
     assert hass.states.get(entity_entry.entity_id) is not None
 
