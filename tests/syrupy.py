@@ -177,14 +177,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         if serialized["via_device_id"] is not None:
             serialized["via_device_id"] = ANY
 
-        # Remove single config entry and subentry ids to not break snapshots
-        serialized.pop("config_entry_id")
-        serialized.pop("config_subentry_id")
-
-        # Set removed composite device attributes to ANY to not break snapshots
-        serialized["config_entries"] = ANY
-        serialized["config_entries_subentries"] = ANY
-        serialized["primary_config_entry"] = ANY
+        serialized["config_entry_id"] = ANY
+        serialized["config_subentry_id"] = ANY
 
         return cls._remove_created_and_modified_at(serialized)
 
