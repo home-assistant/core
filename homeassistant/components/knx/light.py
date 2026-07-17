@@ -5,6 +5,7 @@ from typing import Any, cast, override
 from propcache.api import cached_property
 from xknx import XKNX
 from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
+from xknx.telegram.address import DeviceGroupAddress
 
 from homeassistant import config_entries
 from homeassistant.components.light import (
@@ -27,7 +28,13 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import color as color_util
 
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, ColorTempModes
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    async_migrate_yaml_unique_id,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .schema import LightSchema
 from .storage.const import (
@@ -570,9 +577,13 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX light."""
         self._device = _create_yaml_light(knx_module.xknx, config)
+        new_uid, legacy_uid = build_yaml_unique_id(*self._unique_id_parts())
+        async_migrate_yaml_unique_id(
+            knx_module.hass, Platform.LIGHT, legacy_uid, new_uid
+        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=self._device_unique_id(),
+            unique_id=new_uid,
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
@@ -580,14 +591,14 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
         self._attr_max_color_temp_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
         self._attr_min_color_temp_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
 
-    def _device_unique_id(self) -> str:
-        """Return unique id for this device."""
+    def _unique_id_parts(self) -> tuple[DeviceGroupAddress | None, ...]:
+        """Return the group addresses this device's unique id is built from."""
         if self._device.switch.group_address is not None:
-            return f"{self._device.switch.group_address}"
+            return (self._device.switch.group_address,)
         return (
-            f"{self._device.red.brightness.group_address}_"
-            f"{self._device.green.brightness.group_address}_"
-            f"{self._device.blue.brightness.group_address}"
+            self._device.red.brightness.group_address,
+            self._device.green.brightness.group_address,
+            self._device.blue.brightness.group_address,
         )
 
 

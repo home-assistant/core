@@ -28,7 +28,7 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxYamlEntity
+from .entity import KnxYamlEntity, async_migrate_yaml_unique_id, build_yaml_unique_id
 from .knx_module import KNXModule
 from .schema import SelectSchema
 
@@ -66,9 +66,15 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX select."""
         self._device = _create_raw_value(knx_module.xknx, config)
+        new_uid, legacy_uid = build_yaml_unique_id(
+            self._device.remote_value.group_address
+        )
+        async_migrate_yaml_unique_id(
+            knx_module.hass, Platform.SELECT, legacy_uid, new_uid
+        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address),
+            unique_id=new_uid,
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

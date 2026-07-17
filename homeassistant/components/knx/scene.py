@@ -20,6 +20,8 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    async_migrate_yaml_unique_id,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import SceneSchema
@@ -89,11 +91,15 @@ class KnxYamlScene(_KnxScene, KnxYamlEntity):
             group_address=config[KNX_ADDRESS],
             scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
         )
+        new_uid, legacy_uid = build_yaml_unique_id(
+            self._device.scene_value.group_address, self._device.scene_number
+        )
+        async_migrate_yaml_unique_id(
+            knx_module.hass, Platform.SCENE, legacy_uid, new_uid
+        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.scene_value.group_address}_{self._device.scene_number}"
-            ),
+            unique_id=new_uid,
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

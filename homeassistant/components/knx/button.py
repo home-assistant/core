@@ -15,7 +15,13 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PAYLOAD_LENGTH, CONF_VALUE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    async_migrate_yaml_unique_id,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
 from .storage.util import ConfigExtractor
@@ -80,9 +86,15 @@ class KnxYamlButton(_KnxButton, KnxYamlEntity):
             payload_length=config[CONF_PAYLOAD_LENGTH],
             group_address=config[KNX_ADDRESS],
         )
+        new_uid, legacy_uid = build_yaml_unique_id(
+            self._device.remote_value.group_address, self._payload
+        )
+        async_migrate_yaml_unique_id(
+            knx_module.hass, Platform.BUTTON, legacy_uid, new_uid
+        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=f"{self._device.remote_value.group_address}_{self._payload}",
+            unique_id=new_uid,
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

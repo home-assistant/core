@@ -35,7 +35,13 @@ from .const import (
     DOMAIN,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    async_migrate_yaml_unique_id,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
@@ -126,9 +132,15 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
             reset_after=config.get(CONF_RESET_AFTER),
             always_callback=True,
         )
+        new_uid, legacy_uid = build_yaml_unique_id(
+            self._device.remote_value.group_address_state
+        )
+        async_migrate_yaml_unique_id(
+            knx_module.hass, Platform.BINARY_SENSOR, legacy_uid, new_uid
+        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address_state),
+            unique_id=new_uid,
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

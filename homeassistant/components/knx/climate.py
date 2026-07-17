@@ -52,6 +52,8 @@ from .entity import (
     KnxUiEntityPlatformController,
     KnxYamlEntity,
     _KnxEntityBase,
+    async_migrate_yaml_unique_id,
+    build_yaml_unique_id,
 )
 from .knx_module import KNXModule
 from .schema import ClimateSchema
@@ -669,14 +671,18 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         self._device = _create_climate_yaml(knx_module.xknx, config)
+        new_uid, legacy_uid = build_yaml_unique_id(
+            self._device.temperature.group_address_state,
+            self._device.target_temperature.group_address_state,
+            self._device.target_temperature.group_address,
+            self._device._setpoint_shift.group_address,  # noqa: SLF001
+        )
+        async_migrate_yaml_unique_id(
+            knx_module.hass, Platform.CLIMATE, legacy_uid, new_uid
+        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=(
-                f"{self._device.temperature.group_address_state}_"
-                f"{self._device.target_temperature.group_address_state}_"
-                f"{self._device.target_temperature.group_address}_"
-                f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
-            ),
+            unique_id=new_uid,
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
