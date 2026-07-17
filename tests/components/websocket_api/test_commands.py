@@ -5055,6 +5055,37 @@ async def test_get_automation_component_lookup_table_cache(
     )
 
 
+async def test_get_automation_component_lookup_table_scalar_target_shapes(
+    hass: HomeAssistant,
+) -> None:
+    """Test target.entity given as a bare mapping instead of a list.
+
+    Real services.yaml files commonly declare `target: entity: {domain: ...}`
+    as a single mapping rather than a list (e.g. siren, blink), and
+    `domain`/`device_class` as a bare string rather than a list of one.
+    """
+    services: dict[str, dict[str, Any] | None] = {
+        "siren.turn_on": {
+            "target": {"entity": {"domain": "siren", "device_class": "siren"}}
+        },
+        "blink.trigger_camera": {
+            "target": {"entity": {"integration": "blink", "domain": "camera"}}
+        },
+    }
+
+    lookup_table = _get_automation_component_lookup_table(hass, "services", services)
+
+    assert set(lookup_table.domain_components) == {"siren", "blink", "camera"}
+
+    siren_filter = lookup_table.domain_components["siren"][0].filters[0]
+    assert siren_filter.domains == {"siren"}
+    assert siren_filter.device_classes == {"siren"}
+
+    blink_filter = lookup_table.domain_components["camera"][0].filters[0]
+    assert blink_filter.integration == "blink"
+    assert blink_filter.domains == {"camera"}
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expect_success"),
     [(Exception("error"), False), (None, True)],
