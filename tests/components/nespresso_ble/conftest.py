@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.nespresso_ble.const import DOMAIN
+from homeassistant.const import CONF_TOKEN
 
 from . import ADDRESS, make_device
 
@@ -19,6 +20,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=ADDRESS,
         title="VL-MD1_26083MD1p00937820La",
+        data={CONF_TOKEN: "0123456789abcdef"},
     )
 
 

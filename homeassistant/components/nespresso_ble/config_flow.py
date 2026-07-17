@@ -1,6 +1,7 @@
 """Config flow for the Nespresso integration."""
 
 from typing import Any, override
+import uuid
 
 from nespresso_ble import is_supported
 import voluptuous as vol
@@ -10,9 +11,14 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 
 from .const import DOMAIN
+
+
+def _generate_token() -> str:
+    """Generate a random 16 hex-character machine token."""
+    return uuid.uuid4().hex[:16]
 
 
 class NespressoBLEConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,7 +49,7 @@ class NespressoBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=discovery_info.name,
-                data={},
+                data={CONF_TOKEN: _generate_token()},
             )
 
         self._set_confirm_only()
@@ -63,7 +69,7 @@ class NespressoBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=self._discovered_devices[address],
-                data={},
+                data={CONF_TOKEN: _generate_token()},
             )
 
         current_addresses = self._async_current_ids()

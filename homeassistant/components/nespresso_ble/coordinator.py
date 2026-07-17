@@ -13,6 +13,7 @@ from nespresso_ble import NespressoBluetoothDeviceData, NespressoDevice, Nespres
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -31,7 +32,9 @@ class NespressoBLECoordinator(DataUpdateCoordinator[NespressoDevice]):
 
     def __init__(self, hass: HomeAssistant, entry: NespressoBLEConfigEntry) -> None:
         """Initialize the coordinator."""
-        self._client = NespressoBluetoothDeviceData(_LOGGER)
+        self._client = NespressoBluetoothDeviceData(
+            _LOGGER, auth_key=entry.data[CONF_TOKEN]
+        )
         self._stream_task: asyncio.Task[None] | None = None
         self._stop_stream: asyncio.Event | None = None
         super().__init__(

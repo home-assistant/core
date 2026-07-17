@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.nespresso_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -28,6 +28,7 @@ async def test_bluetooth_discovery(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == ADDRESS
+    assert result["result"].data[CONF_TOKEN]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -57,6 +58,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == ADDRESS
+    assert result["result"].data[CONF_TOKEN]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
