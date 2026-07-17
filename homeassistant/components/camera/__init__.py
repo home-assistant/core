@@ -2,7 +2,7 @@
 
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable, Container, Coroutine, Mapping
+from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
@@ -14,14 +14,14 @@ from random import SystemRandom
 import time
 from typing import Any, Final, final, override
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import attr
 from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -46,6 +46,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -68,6 +69,7 @@ from .const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraEntityStateAttribute,
     CameraState,
     StreamType,
 )
@@ -421,7 +423,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for camera entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {CameraEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
     )
 
     # Entity Properties
@@ -456,6 +458,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
     @cached_property
+    @override
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
@@ -468,6 +471,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return False
 
     @cached_property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -503,6 +507,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_frame_interval
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if (stream := self.stream) and not stream.available:
@@ -597,6 +602,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
@@ -644,18 +650,23 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, str | None]:
+    @override
+    def state_attributes(self) -> dict[str, str | bool | None]:
         """Return the camera state attributes."""
-        attrs = {"access_token": self.access_tokens[-1]}
+        attrs: dict[str, str | bool | None] = {
+            CameraEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]
+        }
 
         if model := self.model:
-            attrs["model_name"] = model
+            attrs[CameraEntityStateAttribute.MODEL_NAME] = model
 
         if brand := self.brand:
-            attrs["brand"] = brand
+            attrs[CameraEntityStateAttribute.BRAND] = brand
 
         if motion_detection_enabled := self.motion_detection_enabled:
-            attrs["motion_detection"] = motion_detection_enabled
+            attrs[CameraEntityStateAttribute.MOTION_DETECTION] = (
+                motion_detection_enabled
+            )
 
         return attrs
 
@@ -665,6 +676,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
         self.__dict__.pop("entity_picture", None)
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
@@ -759,6 +771,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return CameraCapabilities(frontend_stream_types)
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
@@ -776,25 +789,35 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class CameraView(HomeAssistantView):
     """Base CameraView."""
 
-    use_query_token_for_auth = True
+    requires_auth = False
 
     def __init__(self, component: EntityComponent[Camera]) -> None:
         """Initialize a basic camera view."""
         self.component = component
 
-    @callback
-    @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
-        """Return valid auth tokens, which can be used for query token authentication."""
-        if (camera := self.component.get_entity(match_info["entity_id"])) is None:
-            return ()
-
-        return camera.access_tokens
-
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
+
+        authenticated = (
+            request[KEY_AUTHENTICATED]
+            or request.query.get("token") in camera.access_tokens
+        )
+
+        if not authenticated:
+            if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
+                raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
+            raise web.HTTPForbidden
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
@@ -813,6 +836,7 @@ class CameraImageView(CameraView):
     url = "/api/camera_proxy/{entity_id}"
     name = "api:camera:image"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
         width = request.query.get("width")
@@ -836,6 +860,7 @@ class CameraMjpegStream(CameraView):
     url = "/api/camera_proxy_stream/{entity_id}"
     name = "api:camera:stream"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
@@ -981,6 +1006,7 @@ class _TemplateCameraEntity:
         self._report_issue()
         return getattr(self._camera, name)
 
+    @override
     def __str__(self) -> str:
         """Forward to the camera entity."""
         self._report_issue()

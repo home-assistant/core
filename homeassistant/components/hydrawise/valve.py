@@ -1,7 +1,7 @@
 """Support for Hydrawise sprinkler valves."""
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
 from pydrawise.schema import Controller, Zone
 
@@ -59,14 +59,17 @@ class HydrawiseValve(HydrawiseEntity, ValveEntity):
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     zone: Zone
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self.coordinator.api.start_zone(self.zone)
 
+    @override
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self.coordinator.api.stop_zone(self.zone)
 
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_is_closed = self.zone.scheduled_runs.current_run is None

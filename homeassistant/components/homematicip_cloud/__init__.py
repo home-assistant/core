@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the HomematicIP Cloud component."""
+    """Set up the HomematicIP Cloud integration."""
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:

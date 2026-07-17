@@ -1,6 +1,6 @@
 """Config flow for simplepush integration."""
 
-from typing import Any
+from typing import Any, override
 
 from simplepush import UnknownError, send
 import voluptuous as vol
@@ -37,6 +37,7 @@ def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
 class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for simplepush."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

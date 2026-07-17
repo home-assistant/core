@@ -1,11 +1,14 @@
 """Media player platform for Edifier infrared integration."""
 
+from typing import override
+
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
 from infrared_protocols.codes.edifier.r1280t import EdifierR1280TCode
 from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 from infrared_protocols.codes.edifier.s360db import EdifierS360DBCode
+from infrared_protocols.codes.edifier.s3000pro import EdifierS3000ProCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.media_player import (
@@ -90,6 +93,19 @@ COMMAND_SET_COMMANDS: dict[
         MediaPlayerEntityFeature.NEXT_TRACK: (EdifierRC20GCode.FORWARD,),
         MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierRC20GCode.PREVIOUS,),
     },
+    EdifierCommandSet.S3000PRO: {
+        MediaPlayerEntityFeature.TURN_ON: (EdifierS3000ProCode.POWER,),
+        MediaPlayerEntityFeature.TURN_OFF: (EdifierS3000ProCode.POWER,),
+        MediaPlayerEntityFeature.VOLUME_STEP: (
+            (EdifierS3000ProCode.VOLUME_UP,),
+            (EdifierS3000ProCode.VOLUME_DOWN,),
+        ),
+        MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierS3000ProCode.MUTE,),
+        MediaPlayerEntityFeature.PLAY: (EdifierS3000ProCode.PLAY_PAUSE,),
+        MediaPlayerEntityFeature.PAUSE: (EdifierS3000ProCode.PLAY_PAUSE,),
+        MediaPlayerEntityFeature.NEXT_TRACK: (EdifierS3000ProCode.NEXT,),
+        MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierS3000ProCode.PREVIOUS,),
+    },
 }
 
 
@@ -137,38 +153,47 @@ class EdifierIrMediaPlayer(
         for code in codes:
             await self._send_command(code.to_command())
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the speaker."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.TURN_ON])
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the speaker."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.TURN_OFF])
 
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.VOLUME_STEP][0])
 
+    @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.VOLUME_STEP][1])
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.VOLUME_MUTE])
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.PLAY])
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.PAUSE])
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.NEXT_TRACK])
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._send_codes(*self._commands[MediaPlayerEntityFeature.PREVIOUS_TRACK])

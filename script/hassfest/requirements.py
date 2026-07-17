@@ -120,7 +120,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
     "airthings": {"airthings-cloud": {"async-timeout"}},
-    "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "aseko_pool_live": {"gql": {"backoff"}},
     "blackbird": {
@@ -218,7 +217,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "surepetcare": {"surepy": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
     "technove": {"python-technove": {"backoff"}},
-    "tesla_wall_connector": {"tesla-wall-connector": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
     "travisci": {
@@ -271,6 +269,8 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
         "pbr": {"setuptools"}
     },
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
+    # https://github.com/lawtancool/pyControl4 - ships tests/ in wheel
+    "control4": {"homeassistant": {"pycontrol4"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
     # https://github.com/tkdrob/pyefergy

@@ -45,9 +45,9 @@
 # name: test_setup[sensor.ntfy_sh_attachment_bandwidth_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'ntfy.sh Attachment bandwidth limit',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Attachment bandwidth limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_attachment_bandwidth_limit',
@@ -103,9 +103,9 @@
 # name: test_setup[sensor.ntfy_sh_attachment_expiry_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'ntfy.sh Attachment expiry duration',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Attachment expiry duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_attachment_expiry_duration',
@@ -161,9 +161,9 @@
 # name: test_setup[sensor.ntfy_sh_attachment_file_size_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'ntfy.sh Attachment file size limit',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Attachment file size limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_attachment_file_size_limit',
@@ -219,9 +219,9 @@
 # name: test_setup[sensor.ntfy_sh_attachment_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'ntfy.sh Attachment storage',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Attachment storage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_attachment_storage',
@@ -277,9 +277,9 @@
 # name: test_setup[sensor.ntfy_sh_attachment_storage_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'ntfy.sh Attachment storage limit',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Attachment storage limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_attachment_storage_limit',
@@ -335,9 +335,9 @@
 # name: test_setup[sensor.ntfy_sh_attachment_storage_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'ntfy.sh Attachment storage remaining',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Attachment storage remaining',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_attachment_storage_remaining',
@@ -387,8 +387,8 @@
 # name: test_setup[sensor.ntfy_sh_email_usage_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Email usage limit',
-      'unit_of_measurement': 'emails',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Email usage limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'emails',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_email_usage_limit',
@@ -438,8 +438,8 @@
 # name: test_setup[sensor.ntfy_sh_emails_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Emails remaining',
-      'unit_of_measurement': 'emails',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Emails remaining',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'emails',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_emails_remaining',
@@ -489,8 +489,8 @@
 # name: test_setup[sensor.ntfy_sh_emails_sent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Emails sent',
-      'unit_of_measurement': 'emails',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Emails sent',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'emails',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_emails_sent',
@@ -546,9 +546,9 @@
 # name: test_setup[sensor.ntfy_sh_messages_expiry_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'ntfy.sh Messages expiry duration',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Messages expiry duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_messages_expiry_duration',
@@ -598,8 +598,8 @@
 # name: test_setup[sensor.ntfy_sh_messages_published-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Messages published',
-      'unit_of_measurement': 'messages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Messages published',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'messages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_messages_published',
@@ -649,8 +649,8 @@
 # name: test_setup[sensor.ntfy_sh_messages_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Messages remaining',
-      'unit_of_measurement': 'messages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Messages remaining',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'messages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_messages_remaining',
@@ -700,8 +700,8 @@
 # name: test_setup[sensor.ntfy_sh_messages_usage_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Messages usage limit',
-      'unit_of_measurement': 'messages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Messages usage limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'messages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_messages_usage_limit',
@@ -751,8 +751,8 @@
 # name: test_setup[sensor.ntfy_sh_phone_calls_made-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Phone calls made',
-      'unit_of_measurement': 'calls',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Phone calls made',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'calls',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_phone_calls_made',
@@ -802,8 +802,8 @@
 # name: test_setup[sensor.ntfy_sh_phone_calls_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Phone calls remaining',
-      'unit_of_measurement': 'calls',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Phone calls remaining',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'calls',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_phone_calls_remaining',
@@ -853,8 +853,8 @@
 # name: test_setup[sensor.ntfy_sh_phone_calls_usage_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Phone calls usage limit',
-      'unit_of_measurement': 'calls',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Phone calls usage limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'calls',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_phone_calls_usage_limit',
@@ -904,8 +904,8 @@
 # name: test_setup[sensor.ntfy_sh_reserved_topics-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Reserved topics',
-      'unit_of_measurement': 'topics',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Reserved topics',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'topics',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_reserved_topics',
@@ -955,8 +955,8 @@
 # name: test_setup[sensor.ntfy_sh_reserved_topics_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Reserved topics limit',
-      'unit_of_measurement': 'topics',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Reserved topics limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'topics',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_reserved_topics_limit',
@@ -1006,8 +1006,8 @@
 # name: test_setup[sensor.ntfy_sh_reserved_topics_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Reserved topics remaining',
-      'unit_of_measurement': 'topics',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Reserved topics remaining',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'topics',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_reserved_topics_remaining',
@@ -1057,7 +1057,7 @@
 # name: test_setup[sensor.ntfy_sh_subscription_tier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ntfy.sh Subscription tier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ntfy.sh Subscription tier',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ntfy_sh_subscription_tier',

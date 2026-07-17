@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, LitterRobot5, Robot
 
@@ -40,6 +40,12 @@ ROBOT_BUTTON_MAP: dict[tuple[type[Robot], ...], RobotButtonEntityDescription] = 
         translation_key="reset",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda robot: robot.reset(),
+    ),
+    (LitterRobot5,): RobotButtonEntityDescription[LitterRobot5](
+        key="change_filter",
+        translation_key="change_filter",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda robot: robot.change_filter(),
     ),
     (FeederRobot,): RobotButtonEntityDescription[FeederRobot](
         key="give_snack",
@@ -84,6 +90,7 @@ class LitterRobotButtonEntity(LitterRobotEntity[_WhiskerEntityT], ButtonEntity):
     entity_description: RobotButtonEntityDescription[_WhiskerEntityT]
 
     @whisker_command
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)

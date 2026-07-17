@@ -483,31 +483,44 @@ async def test_trigger_methods(
 ) -> None:
     """Test trigger methods delegate to correct underlying calls."""
 
+    # test async_trigger_firmware_update
     fritz_tools.connection.call_action = MagicMock(
         return_value={"NewX_AVM-DE_UpdateState": True}
     )
+    assert await fritz_tools.async_trigger_firmware_update() is True
+
+    # test async_trigger_reboot
     fritz_tools.connection.reboot = MagicMock()
-    fritz_tools.connection.reconnect = MagicMock()
+    await fritz_tools.async_trigger_reboot()
+    fritz_tools.connection.reboot.assert_called_once()
+
+    # test async_trigger_set_guest_password
     fritz_tools.fritz_guest_wifi.set_password = MagicMock()
+    await fritz_tools.async_trigger_set_guest_password("new-password", 20)
+    fritz_tools.fritz_guest_wifi.set_password.assert_called_once_with(
+        "new-password", 20
+    )
+
+    # test async_trigger_reconnect
+    fritz_tools.connection.call_action = MagicMock(
+        side_effect=FritzConnectionException(
+            "UPnPError:\nerrorCode: 707\nerrorDescription: DisconnectInProgress"
+        )
+    )
+    await fritz_tools.async_trigger_reconnect()
+    fritz_tools.connection.call_action.assert_called_with(
+        "WANPPPConnection1", "ForceTermination"
+    )
+
+    # test async_trigger_dial
     fritz_tools.fritz_call.dial = MagicMock()
     fritz_tools.fritz_call.hangup = MagicMock()
-
-    assert await fritz_tools.async_trigger_firmware_update() is True
-    await fritz_tools.async_trigger_reboot()
-    await fritz_tools.async_trigger_reconnect()
-    await fritz_tools.async_trigger_set_guest_password("new-password", 20)
-
     with patch(
         "homeassistant.components.fritz.coordinator.asyncio.sleep",
         new=AsyncMock(),
     ) as sleep_mock:
         await fritz_tools.async_trigger_dial("012345", 1)
 
-    fritz_tools.connection.reboot.assert_called_once()
-    fritz_tools.connection.reconnect.assert_called_once()
-    fritz_tools.fritz_guest_wifi.set_password.assert_called_once_with(
-        "new-password", 20
-    )
     fritz_tools.fritz_call.dial.assert_called_once_with("012345")
     sleep_mock.assert_awaited_once_with(1)
     fritz_tools.fritz_call.hangup.assert_called_once()
