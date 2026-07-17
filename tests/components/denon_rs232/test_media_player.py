@@ -10,7 +10,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.denon_rs232.media_player import (
     INPUT_SOURCE_DENON_TO_HA,
-    TUNER_PRESETS,
     TUNER_PRESETS_ROOT,
 )
 from homeassistant.components.media_player import (
@@ -55,6 +54,9 @@ ZONE_2_ENTITY_ID = "media_player.avr_3805_zone_2"
 ZONE_3_ENTITY_ID = "media_player.avr_3805_zone_3"
 
 STRINGS_PATH = Path("homeassistant/components/denon_rs232/strings.json")
+
+# The 56 tuner presets the integration exposes, A1 through G8.
+TUNER_PRESETS = [f"{bank}{number}" for bank in "ABCDEFG" for number in range(1, 9)]
 
 
 @pytest.fixture(autouse=True)
@@ -548,7 +550,10 @@ async def test_browse_media_lists_tuner_presets(
     assert result["can_expand"]
 
     children = result["children"]
-    assert [child["media_content_id"] for child in children] == list(TUNER_PRESETS)
+    preset_ids = [child["media_content_id"] for child in children]
+    assert len(preset_ids) == 56
+    assert (preset_ids[0], preset_ids[-1]) == ("A1", "G8")
+    assert preset_ids == TUNER_PRESETS
     assert children[0] == {
         "title": "A1",
         "media_class": "channel",

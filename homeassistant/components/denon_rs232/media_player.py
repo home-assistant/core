@@ -77,7 +77,6 @@ INPUT_SOURCE_DENON_TO_HA: dict[InputSource, str] = {
 }
 
 TUNER_PRESET_PATTERN = re.compile(r"[A-G][1-8]")
-TUNER_PRESETS = tuple(f"{bank}{number}" for bank in "ABCDEFG" for number in range(1, 9))
 TUNER_PRESETS_ROOT = "presets"
 #: Matches a requested frequency. Leading zeros are accepted, but only the significant
 #: digits are captured, so overlong input is rejected before it reaches int().
@@ -334,6 +333,8 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
                     can_play=True,
                     can_expand=False,
                 )
-                for preset in TUNER_PRESETS
+                for preset in (
+                    f"{bank}{number}" for bank in "ABCDEFG" for number in range(1, 9)
+                )
             ],
         )
