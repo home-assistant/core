@@ -1,7 +1,7 @@
 """The tests for the State vacuum Mqtt platform."""
 
-import json
 from copy import deepcopy
+import json
 from typing import Any
 from unittest.mock import call, patch
 
@@ -39,15 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import issue_registry as ir
-from tests.common import async_fire_mqtt_message
-from tests.components.vacuum import common
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .common import (
     help_custom_config,
@@ -77,6 +69,14 @@ from .common import (
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
+)
+
+from tests.common import async_fire_mqtt_message
+from tests.components.vacuum import common
+from tests.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
 )
 
 COMMAND_TOPIC = "vacuum/command"
