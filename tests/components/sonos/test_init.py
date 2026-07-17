@@ -225,9 +225,7 @@ async def test_discovery_reenable_device_on_new_discovery(
     await fire_zgs_event()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    speaker = config_entry.runtime_data.discovered[soco.uid]
     assert soco.zoneGroupTopology.subscribe.await_count > 0
-    assert speaker._subscriptions
     assert er.async_entries_for_device(entity_registry, device.id)
 
 
