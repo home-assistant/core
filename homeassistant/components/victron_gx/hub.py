@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
+    UPDATE_FREQUENCY_AUTO,
     AuthenticationError,
     CannotConnectError,
     Device as VictronVenusDevice,
@@ -74,7 +75,7 @@ class Hub:
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
             operation_mode=OperationMode.FULL,
-            update_frequency_seconds="auto",
+            update_frequency_seconds=UPDATE_FREQUENCY_AUTO,
         )
         self._hub.on_new_metric = self._on_new_metric
         self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}
