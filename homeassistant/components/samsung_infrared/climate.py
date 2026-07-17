@@ -100,6 +100,8 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
     async def _async_send_command(self) -> None:
         """Generate the logical state and delegate transmission to the infrared platform."""
         hvac_str = HA_TO_LIB_HVAC.get(self._attr_hvac_mode, "off")
+        if hvac_str == "auto":
+            self._attr_fan_mode = FAN_AUTO
         fan_str = HA_TO_LIB_FAN.get(self._attr_fan_mode, "auto")
         temp_int = int(self._attr_target_temperature)
 
