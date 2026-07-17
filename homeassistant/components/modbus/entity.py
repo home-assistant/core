@@ -216,7 +216,11 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         if entry != entry:  # noqa: PLR0124
             # NaN float detection replace with None
             return None
-        val: float | int = scale * entry + offset
+        val: float | int
+        if isinstance(entry, int) and scale.is_integer() and offset.is_integer():
+            val = int(scale) * entry + int(offset)
+        else:
+            val = scale * entry + offset
         if not math.isfinite(val):
             return None
         if self._min_value is not None and val < self._min_value:
