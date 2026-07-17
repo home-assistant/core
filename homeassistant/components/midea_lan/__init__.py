@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> 
         raise ConfigEntryError("Unable to initialize device")
 
     try:
-        connected = await hass.async_add_executor_job(device.connect)
+        connected = await hass.async_add_executor_job(device.connect, True)
     except (SocketException, AuthException) as err:
         raise ConfigEntryNotReady(f"Unable to connect to device {device_id}") from err
     if not connected:

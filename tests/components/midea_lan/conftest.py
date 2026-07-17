@@ -25,7 +25,7 @@ class DummyDevice:
         device_type: int,
         *,
         attributes: dict | None = None,
-        available: bool = True,
+        available: bool = False,
     ) -> None:
         """Initialize fake device."""
         self.device_type = device_type
@@ -74,10 +74,11 @@ class DummyDevice:
         """Record set mode call."""
         self.calls.append(("set_mode", zone, mode))
 
-    def connect(self) -> bool:
-        """Record connect call."""
-        self.calls.append(("connect",))
-        return True
+    def connect(self, check_protocol: bool = False) -> bool:
+        """Record connect call and mirror midealocal's availability handling."""
+        self.calls.append(("connect", check_protocol))
+        self.available = check_protocol
+        return check_protocol
 
     def open(self) -> None:
         """Record open call."""

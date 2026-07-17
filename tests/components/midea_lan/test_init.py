@@ -79,14 +79,14 @@ async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "connect_side_effect",
     [
-        pytest.param(lambda: False, id="returns_false"),
+        pytest.param(lambda check_protocol: False, id="returns_false"),
         pytest.param(SocketException, id="socket_exception"),
         pytest.param(AuthException, id="auth_exception"),
     ],
 )
 async def test_setup_entry_not_ready_on_connect_failure(
     hass: HomeAssistant,
-    connect_side_effect: Callable[[], bool] | type[Exception],
+    connect_side_effect: Callable[[bool], bool] | type[Exception],
 ) -> None:
     """Test async_setup_entry raises ConfigEntryNotReady when connect fails."""
     entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
