@@ -184,11 +184,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
         for device in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
-            device_registry.async_update_device(
-                device.id,
-                remove_config_entry_id=entry.entry_id,
-                remove_config_subentry_id=None,
-            )
+            # The broken migration left devices attached to the config entry itself;
+            # devices which reached a subentry are correct and must be kept.
+            if device.config_subentry_id is None:
+                device_registry.async_remove_device(device.id)
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
