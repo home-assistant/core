@@ -20,7 +20,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import (
     DEFAULT_AI_TASK_NAME,
@@ -182,7 +182,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by = device.disabled_by
+            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -192,20 +192,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 device.id,
                 disabled_by=device_disabled_by,
                 new_identifiers={(DOMAIN, subentry.subentry_id)},
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=parent_entry.entry_id,
+                new_config_entry_id=parent_entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
             )
-            if parent_entry.entry_id != entry.entry_id:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
-                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
