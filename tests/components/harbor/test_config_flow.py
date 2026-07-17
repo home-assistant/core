@@ -1,7 +1,7 @@
 """Test the Harbor config flow."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -43,7 +43,6 @@ async def test_user_flow(
             CONF_IP_ADDRESS: "192.168.1.10",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Camera {SERIAL}"
@@ -81,7 +80,6 @@ async def test_user_flow_uses_friendly_name(
             CONF_IP_ADDRESS: "192.168.1.10",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Nursery"
@@ -160,7 +158,6 @@ async def test_user_flow_validation_errors(
             CONF_IP_ADDRESS: "192.168.1.10",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -202,16 +199,15 @@ async def test_user_flow_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    with patch("homeassistant.components.harbor.coordinator.CONNECT_TIMEOUT", 0):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_SERIAL: SERIAL,
-                CONF_CERT_PEM: CERT_PEM,
-                CONF_KEY_PEM: KEY_PEM,
-                CONF_IP_ADDRESS: "192.168.1.10",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERIAL: SERIAL,
+            CONF_CERT_PEM: CERT_PEM,
+            CONF_KEY_PEM: KEY_PEM,
+            CONF_IP_ADDRESS: "192.168.1.10",
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -231,6 +227,5 @@ async def test_user_flow_cannot_connect(
             CONF_IP_ADDRESS: "192.168.1.10",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

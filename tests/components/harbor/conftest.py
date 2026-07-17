@@ -61,6 +61,13 @@ async def set_connected(mock_mqtt_client: AsyncMock, connected: bool) -> None:
     await connection_callback(mock_mqtt_client)(connected)
 
 
+@pytest.fixture(autouse=True)
+def mock_connect_timeout() -> Generator[None]:
+    """Patch the connect timeout so unreachable-camera tests run quickly."""
+    with patch("homeassistant.components.harbor.coordinator.CONNECT_TIMEOUT", 0):
+        yield
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""

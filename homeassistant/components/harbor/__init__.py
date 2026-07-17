@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HarborConfigEntry) -> bo
             serial=entry.data[CONF_SERIAL],
             cert_pem=entry.data[CONF_CERT_PEM],
             key_pem=entry.data[CONF_KEY_PEM],
-            ip_address=entry.data.get(CONF_IP_ADDRESS),
+            ip_address=entry.data[CONF_IP_ADDRESS],
         ),
     )
     await coordinator.async_start()

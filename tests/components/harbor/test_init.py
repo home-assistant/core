@@ -1,6 +1,8 @@
 """Test the Harbor integration setup and coordinator."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.harbor.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -66,8 +68,7 @@ async def test_setup_retry_when_unreachable(
     # Start the client without ever reporting a successful connection.
     mock_mqtt_client.return_value.start.side_effect = None
 
-    with patch("homeassistant.components.harbor.coordinator.CONNECT_TIMEOUT", 0):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert mock_mqtt_client.return_value.stop.called
@@ -85,8 +86,7 @@ async def test_setup_retry_when_no_data_arrives(
 
     mock_mqtt_client.return_value.start.side_effect = _start
 
-    with patch("homeassistant.components.harbor.coordinator.CONNECT_TIMEOUT", 0):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert mock_mqtt_client.return_value.stop.called
@@ -124,6 +124,7 @@ async def test_device_registry(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_mqtt_client: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device adopts the name and firmware from the first message.
 
@@ -140,6 +141,4 @@ async def test_device_registry(
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
-    assert device is not None
-    assert device.name == "Nursery"
-    assert device.sw_version == "1.2.3"
+    assert device == snapshot
