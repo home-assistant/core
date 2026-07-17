@@ -117,7 +117,9 @@ class _AutomationComponentLookupData:
                 # it rather than crash on the unhashable list.
                 supported_features={
                     feature
-                    for feature in entity_filter_config.get("supported_features", [])
+                    for feature in cv.ensure_list(
+                        entity_filter_config.get("supported_features", [])
+                    )
                     if not isinstance(feature, list)
                 },
             )
