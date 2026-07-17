@@ -78,8 +78,6 @@ INPUT_SOURCE_DENON_TO_HA: dict[InputSource, str] = {
 
 TUNER_PRESET_PATTERN = re.compile(r"[A-G][1-8]")
 TUNER_PRESETS_ROOT = "presets"
-#: Matches a requested frequency. Leading zeros are accepted, but only the significant
-#: digits are captured, so overlong input is rejected before it reaches int().
 TUNER_FREQUENCY_ID_PATTERN = re.compile(r"0*([0-9]{1,5})")
 TUNER_FREQUENCY_PATTERN = re.compile(r"[0-9]+")
 TUNER_FREQUENCY_MIN = 8750
