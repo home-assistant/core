@@ -665,6 +665,7 @@ async def test_async_poll_manual_hosts_8(
 async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -672,22 +673,22 @@ async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
     soco_1 = soco_factory.cache_mock(
         _MockSoCoVisibleZones(), "10.10.10.1", "Living Room"
     )
-    # Host 2 errors out during visible_zones read, which avoids the later
-    # manual-scan disabled path and keeps this test focused on the
-    # _async_add_visible_zones filter branch.
-    soco_2 = soco_factory.cache_mock(_MockSoCoOsError(), "10.10.10.2", "Bedroom")
+    # Host 2 is marked disabled in the device registry.
+    # Host 1's visible-zones expansion encounters host 2 and exercises the
+    # _async_add_visible_zones disabled filter branch.
+    soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
 
     soco_1.set_visible_zones({soco_1, soco_2})
 
-    with (
-        caplog.at_level(logging.DEBUG),
-        patch.object(
-            sonos.SonosDiscoveryManager,
-            "is_device_disabled",
-            autospec=True,
-            side_effect=lambda _self, uid: uid == soco_2.uid,
-        ),
-    ):
+    config_entry = MockConfigEntry(domain=sonos.DOMAIN)
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco_2.uid)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    with caplog.at_level(logging.DEBUG):
         await _setup_hass(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
