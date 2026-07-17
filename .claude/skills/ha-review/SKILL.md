@@ -5,6 +5,9 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 
 # Review Code Changes
 
+## Scope:
+- Unless instructed otherwise, review the full branch changes against the base branch, e.g. `git diff $(git merge-base HEAD dev)`. Replace `dev` with the target branch when a different base is specified.
+
 ## Analyze the code changes for:
 - Code quality and style consistency
 - Potential bugs or issues
