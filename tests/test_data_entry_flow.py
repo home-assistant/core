@@ -1314,6 +1314,9 @@ async def test_show_advanced_options(
         ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 1}, False),
         ({"field": "a", "value": True}, {"a": 1}, False),
         ({"field": "a", "value": 1}, {"a": True}, False),
+        # an absent field is not equal to an explicit None value
+        ({"field": "a", "value": None}, {}, False),
+        ({"field": "a", "value": None}, {"a": None}, True),
         # containers never compare equal
         ({"field": "a", "value": ["x"]}, {"a": ["x"]}, False),
         ({"field": "a", "operator": "not_eq", "value": ["x"]}, {"a": ["x"]}, True),

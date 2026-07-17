@@ -95,16 +95,23 @@ class NotCondition(TypedDict):
 type Condition = FieldCondition | AndCondition | OrCondition | NotCondition
 
 
+# Sentinel distinguishing an absent field from an explicit ``None`` value.
+_MISSING = object()
+
+
 def _condition_value_is_empty(value: Any) -> bool:
-    return value is None or value == ""
+    return value is _MISSING or value is None or value == ""
 
 
 def _strict_equal(actual: Any, value: Any) -> bool:
     """Compare by value and type, so a boolean never equals a number.
 
-    Containers never compare equal, matching a renderer where separately parsed
-    lists or dicts are distinct references.
+    An absent field equals nothing, and containers never compare equal, matching
+    a renderer where a missing value is distinct from ``None`` and separately
+    parsed lists or dicts are distinct references.
     """
+    if actual is _MISSING:
+        return False
     if isinstance(actual, (list, tuple, dict)) or isinstance(
         value, (list, tuple, dict)
     ):
@@ -117,7 +124,7 @@ def _strict_equal(actual: Any, value: Any) -> bool:
 def _evaluate_field_condition(
     condition: Mapping[str, Any], data: Mapping[str, Any]
 ) -> bool:
-    actual = data.get(condition["field"])
+    actual = data.get(condition["field"], _MISSING)
     value = condition.get("value")
     match condition.get("operator", "eq"):
         case "eq":
@@ -1096,6 +1103,18 @@ class section:
         return self.schema(value)
 
 
+def _schema_has_hidden(data_schema: vol.Schema) -> bool:
+    """Return True if the schema (or a nested section) has a hidden marker."""
+    if not isinstance(data_schema.schema, dict):
+        return False
+    for key, val in data_schema.schema.items():
+        if getattr(key, "hidden", None) is not None:
+            return True
+        if isinstance(val, section) and _schema_has_hidden(val.schema):
+            return True
+    return False
+
+
 def _strip_hidden_fields[_T: Mapping[str, Any]](
     data_schema: vol.Schema, user_input: _T
 ) -> tuple[vol.Schema, _T]:
@@ -1106,9 +1125,9 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
     default or keep a stale value. Conditions are evaluated against the input
     with schema defaults applied, so a field omitted by the client resolves the
     same as one that was submitted. Returns the schema and input unchanged when
-    nothing is hidden.
+    nothing is hidden, leaving schemas without hidden fields untouched.
     """
-    if not isinstance(data_schema.schema, dict):
+    if not _schema_has_hidden(data_schema):
         return data_schema, user_input
 
     eval_data = dict(user_input)
@@ -1164,7 +1183,7 @@ def add_hidden_conditions_to_serialized_schema(
     """Add `hidden` conditions from schema markers to the serialized fields.
 
     `voluptuous_serialize` does not emit marker metadata beyond `description`, so
-    the condition attached by `hidden()` is injected here after conversion.
+    a marker's `hidden` argument is injected here after conversion.
     Recurses into serialized sections.
     """
     if not isinstance(data_schema.schema, dict):
