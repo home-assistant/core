@@ -4623,6 +4623,50 @@ async def test_update_conflicting_disabled_by_ignored(
     ) in caplog.text
 
 
+async def test_create_with_conflicting_disabled_by_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An explicit disabled_by contradicting the owning entry's disabled state.
+
+    When creating a device, the conflicting disabled_by is ignored, the disabled
+    state is updated to reflect the owning config entry's disabled state, and a
+    deprecation warning is logged. This will raise in HA Core 2027.8.
+    """
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id,
+        identifiers={("test", "1")},
+        disabled_by=None,
+    )
+    assert device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    assert (
+        "Detected code that sets disabled_by to None when creating a device "
+        f"attached to the disabled config entry {disabled_entry.entry_id}. This "
+        "will stop working in Home Assistant 2027.8, please report this issue"
+    ) in caplog.text
+
+    enabled_device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id,
+        identifiers={("test", "2")},
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+    )
+    assert enabled_device.disabled_by is None
+    assert (
+        "Detected code that sets disabled_by to DeviceEntryDisabler.CONFIG_ENTRY "
+        "when creating a device attached to the enabled config entry "
+        f"{enabled_entry.entry_id}. This will stop working in Home Assistant "
+        "2027.8, please report this issue"
+    ) in caplog.text
+
+
 async def test_update_explicit_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
