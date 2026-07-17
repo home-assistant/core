@@ -41,6 +41,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -111,7 +112,7 @@ async def test_midea_ac_climate_setup_and_services(
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 16
-    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
     assert state.attributes[ATTR_SWING_MODE] == SWING_BOTH
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1.0
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
@@ -247,7 +248,7 @@ async def test_midea_cc_climate_setup_and_services(
         HVACMode.COOL,
         HVACMode.AUTO,
     ]
-    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
     assert state.attributes[ATTR_SWING_MODE] == SWING_ON
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == 0.5
 
@@ -623,6 +624,40 @@ async def test_cf_temperature_range_attributes(
     assert entity is not None
     assert entity.target_temperature_low == 16.0
     assert entity.target_temperature_high == 30.0
+
+
+async def test_set_temperature_unsupported_hvac_mode_raises(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test set_temperature with an hvac_mode unsupported by the device raises."""
+    device = DummyDevice(
+        DeviceType.CF,
+        attributes={
+            "power": True,
+            "mode": 2,
+            CFAttributes.min_temperature: 16,
+            CFAttributes.max_temperature: 30,
+            CFAttributes.current_temperature: 22,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    device.calls.clear()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: entity_entry.entity_id,
+                ATTR_TEMPERATURE: 23.0,
+                "hvac_mode": HVACMode.DRY,
+            },
+            blocking=True,
+        )
+    assert device.calls == []
 
 
 async def test_c3_temperature_fallback_and_turn_on(

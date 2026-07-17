@@ -41,9 +41,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import FanSpeed
+from .const import DOMAIN, FanSpeed
 from .entity import MideaEntity, MideaLanConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -229,7 +230,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
             if self._device.get_attribute(attr):
                 return preset
 
-        return None
+        return PRESET_NONE
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
@@ -251,7 +252,15 @@ class MideaClimate(MideaEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             self.turn_off()
         else:
-            mode = self.hvac_modes.index(hvac_mode) if hvac_mode else None
+            mode = None
+            if hvac_mode:
+                if hvac_mode not in self.hvac_modes:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="unsupported_hvac_mode",
+                        translation_placeholders={"hvac_mode": hvac_mode},
+                    )
+                mode = self.hvac_modes.index(hvac_mode)
             self._device.set_target_temperature(
                 target_temperature=temperature,
                 mode=mode,

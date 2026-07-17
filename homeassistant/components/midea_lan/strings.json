@@ -110,6 +110,11 @@
       }
     }
   },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "HVAC mode {hvac_mode} is not supported by this device."
+    }
+  },
   "selector": {
     "login_mode": {
       "options": {

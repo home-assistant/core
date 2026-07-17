@@ -95,7 +95,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'comfort',
@@ -349,7 +349,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
-      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'none',
         'sleep',
