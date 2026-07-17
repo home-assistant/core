@@ -3119,3 +3119,117 @@ async def test_update_event_off_rule_split_with_resubmitted_rule_rejected(
     assert not resp["success"]
     assert "added date" in resp["error"]["message"]
     event.save.assert_not_called()
+
+
+DURATION_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000
+DURATION:PT1H
+SUMMARY:Floating with duration
+END:VEVENT
+END:VCALENDAR
+"""
+
+SECONDLY_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=SECONDLY
+SUMMARY:Way too dense
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_tail_move_against_anchored_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that moving a day-bound tail to another day needs a new rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-04 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-12-05T17:00:00+00:00",
+                "dtend": "2017-12-05T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()
+
+
+async def test_update_duration_event_keeps_floating_end(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a synthesized end follows the floating start."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], DURATION_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed",
+                "dtstart": "2017-11-27T17:00:00+00:00",
+                "dtend": "2017-11-27T18:30:00+00:00",
+            },
+        },
+    )
+
+    master = _master(event)
+    assert "DURATION" not in master
+    assert master["DTEND"].dt.tzinfo is None
+    assert master["DTSTART"].dt.tzinfo is None
+
+
+async def test_update_dense_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a secondly rule cannot tie up the executor."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], SECONDLY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    assert "too dense" in resp["error"]["message"]
+    event.save.assert_not_called()

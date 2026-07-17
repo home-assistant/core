@@ -33,6 +33,7 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+_MAX_OCCURRENCES = 10_000
 _NETWORK_FAILURES = (requests.ConnectionError, requests.Timeout, DAVError)
 _WRITE_FAILURES = (*_NETWORK_FAILURES, ValueError)
 
@@ -286,6 +287,8 @@ def _tail_ics(
         _clear_dates(vevent)
         return tail.to_ical().decode("utf-8")
     _replace(vevent, "rrule", _tail_rrule(master, occurrence))
+    if vevent.get("RRULE") is not None and not _self_anchored(vevent):
+        raise ValueError("The new start does not match the recurrence rule")
     _keep_dates(vevent, "RDATE", occurrence, before=False)
     _keep_dates(vevent, "EXDATE", occurrence, before=False)
     # A wall-clock delta keeps shifted values stable across DST changes.
@@ -325,6 +328,8 @@ def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
         if moment >= target:
             break
         count += 1
+        if count > _MAX_OCCURRENCES:
+            raise ValueError("The recurrence rule is too dense to process")
     return count
 
 
@@ -371,9 +376,11 @@ def _on_rule(master: Any, occurrence: datetime | date) -> bool:
         dtstart = datetime.combine(dtstart, time.min)
         target = datetime.combine(target, time.min)
     rule = rrulestr(master["RRULE"].to_ical().decode("utf-8"), dtstart=dtstart)
-    for moment in rule:
+    for count, moment in enumerate(rule):
         if moment >= target:
             return moment == target
+        if count > _MAX_OCCURRENCES:
+            raise ValueError("The recurrence rule is too dense to process")
     return False
 
 
@@ -557,13 +564,23 @@ def _set_time(component: Any, key: str, value: Any) -> None:
     ):
         # UNTIL, RDATE, EXDATE and RECURRENCE-ID would keep the old value type.
         raise ValueError("Cannot change a recurring event between all-day and timed")
-    if isinstance(old, datetime) and isinstance(value, datetime):
-        if _utc(old) == _utc(value):
-            return
-        if old.tzinfo is None:
+    if (
+        isinstance(old, datetime)
+        and isinstance(value, datetime)
+        and _utc(old) == _utc(value)
+    ):
+        return
+    # An event using DURATION has no stored end to anchor to.
+    anchor = (
+        old
+        if old is not None
+        else (component["DTSTART"].dt if "DTSTART" in component else None)
+    )
+    if isinstance(anchor, datetime) and isinstance(value, datetime):
+        if anchor.tzinfo is None:
             value = dt_util.as_local(value).replace(tzinfo=None)
         else:
-            value = value.astimezone(old.tzinfo)
+            value = value.astimezone(anchor.tzinfo)
     _replace(component, key, value)
 
 
