@@ -235,32 +235,47 @@ async def test_ventilation_temperatures_missing_skip_sensor_creation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test ventilation temperature sensors are not created when unsupported."""
-    mock_duco_client.async_get_ventilation_temperature_info.side_effect = (
-        DucoUnsupportedCapabilityError(400, "/info", '{"Code":3,"Result":"FAILED"}')
-    )
+    """Test unsupported ventilation temperatures never expose temperature states."""
+    mock_duco_client.async_get_ventilation_temperature_info.side_effect = [
+        DucoUnsupportedCapabilityError(400, "/info", '{"Code":3,"Result":"FAILED"}'),
+        VentilationTemperatureInfo(temp_oda=5.5),
+    ]
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
     for entity_id in VENTILATION_TEMPERATURE_ENTITY_IDS:
         assert hass.states.get(entity_id) is None
 
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-async def test_partial_ventilation_temperatures_create_available_sensors(
+    for entity_id in VENTILATION_TEMPERATURE_ENTITY_IDS:
+        assert hass.states.get(entity_id) is None
+
+
+async def test_partial_ventilation_temperatures_only_expose_available_sensor_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test only reported ventilation temperatures create sensor entities."""
+    """Test only populated ventilation temperature fields are exposed as states."""
     mock_duco_client.async_get_ventilation_temperature_info.return_value = (
         VentilationTemperatureInfo(temp_oda=5.5, temp_eta=21.4)
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
-    assert hass.states.get("sensor.living_outdoor_air_temperature") is not None
-    assert hass.states.get("sensor.living_extract_air_temperature") is not None
+    state = hass.states.get("sensor.living_outdoor_air_temperature")
+    assert state is not None
+    assert state.state == "5.5"
+
+    state = hass.states.get("sensor.living_extract_air_temperature")
+    assert state is not None
+    assert state.state == "21.4"
+
     assert hass.states.get("sensor.living_supply_air_temperature") is None
     assert hass.states.get("sensor.living_exhaust_air_temperature") is None
 

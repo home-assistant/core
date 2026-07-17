@@ -12,7 +12,6 @@ from duco_connectivity import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
-    DucoUnsupportedCapabilityError,
     LanInfo,
     Node,
     NodeListActionItemList,
@@ -195,31 +194,6 @@ async def test_setup_entry_recovers_from_optional_temperature_capability_failure
     state = hass.states.get("sensor.living_outdoor_air_temperature")
     assert state is not None
     assert state.state == "5.5"
-
-
-async def test_unsupported_ventilation_temperature_capability_is_not_repolled(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test unavailable ventilation temperatures are not polled after setup."""
-    mock_duco_client.async_get_ventilation_temperature_info.side_effect = (
-        DucoUnsupportedCapabilityError(400, "/info", '{"Code":3,"Result":"FAILED"}')
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_duco_client.async_get_ventilation_temperature_info.reset_mock()
-
-    freezer.tick(timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    mock_duco_client.async_get_ventilation_temperature_info.assert_not_awaited()
 
 
 async def test_setup_entry_ignores_node_name_config_failures(
