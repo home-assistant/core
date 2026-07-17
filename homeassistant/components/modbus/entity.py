@@ -4,6 +4,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 import copy
 from datetime import datetime, timedelta
+import math
 import struct
 from typing import Any, cast, override
 
@@ -216,6 +217,8 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             # NaN float detection replace with None
             return None
         val: float | int = scale * entry + offset
+        if not math.isfinite(val):
+            return None
         if self._min_value is not None and val < self._min_value:
             val = self._min_value
         if self._max_value is not None and val > self._max_value:
