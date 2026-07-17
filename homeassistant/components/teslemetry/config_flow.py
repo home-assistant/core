@@ -14,6 +14,7 @@ from tesla_fleet_api.exceptions import (
     NotOnWhitelistFault,
     SubscriptionRequired,
     TeslaFleetError,
+    WhitelistOperationAttemptingToAddExistingKey,
 )
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
@@ -303,6 +304,11 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             LOGGER.debug("Bluetooth pairing timed out: %s", err)
             self._pair_error = {"base": "timeout"}
             return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationAttemptingToAddExistingKey as err:
+            # The key is already on the whitelist, so pairing has succeeded: the
+            # vehicle reports this once the user approves a key whose earlier
+            # add attempt went unconfirmed. Re-handshake to confirm it.
+            LOGGER.debug("Virtual key is already on the whitelist: %s", err)
         except TeslaFleetError as err:
             # The vehicle rejected the key (e.g. whitelist full, denied on the
             # screen, or valet mode) - not a timeout the user can wait out.

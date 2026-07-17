@@ -15,6 +15,7 @@ from tesla_fleet_api.exceptions import (
     BluetoothUnconfirmedCommand,
     NotOnWhitelistFault,
     TeslaFleetError,
+    WhitelistOperationAttemptingToAddExistingKey,
 )
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
@@ -666,6 +667,82 @@ async def test_subentry_authorize_failure(
     assert CONF_ADDRESS not in entry.subentries[subentry_id].data
     # pair() is a single bounded op; it is never re-sent.
     vehicle.pair.assert_awaited_once()
+
+
+async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> None:
+    """Approving the key after a timeout, then retrying, completes the pairing.
+
+    This is the recovery the timeout error asks the user to perform: approve the
+    key on the touchscreen and try again. The retry re-sends the whitelist op,
+    which the vehicle answers with "key already on the whitelist" - a report that
+    the key is installed, so the flow must finish rather than report a failure.
+    """
+    entry = await _setup_vehicle_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+    vehicle = _mock_vehicle(on_whitelist=False)
+    releases = [asyncio.Event(), asyncio.Event()]
+    attempts = iter(
+        zip(
+            releases,
+            [BluetoothTimeout(), WhitelistOperationAttemptingToAddExistingKey()],
+            strict=True,
+        )
+    )
+
+    async def _pair() -> None:
+        release, error = next(attempts)
+        await release.wait()
+        raise error
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "instructions"
+
+        # confirm instructions -> authorize runs pair() as a progress task
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # the vehicle never confirms -> instructions re-shown, asking for approval
+        releases[0].set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "timeout"}
+
+        # the user approves the key and retries -> pair() runs again
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # the vehicle reports the key already exists -> handshake confirms -> finish
+        releases[1].set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry_id].data[CONF_ADDRESS] == ADDRESS
+    assert vehicle.pair.await_count == 2
+    vehicle.disconnect.assert_awaited_once()
 
 
 async def test_subentry_handshake_error_aborts(hass: HomeAssistant) -> None:
