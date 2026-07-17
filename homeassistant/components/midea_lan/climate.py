@@ -55,6 +55,9 @@ PARALLEL_UPDATES = 0
 TEMPERATURE_MAX = 30
 TEMPERATURE_MIN = 16
 
+TEMPERATURE_MAX_C3 = 60
+TEMPERATURE_MIN_C3 = 5
+
 FAN_SILENT = "silent"
 FAN_FULL_SPEED = "full"
 
@@ -200,7 +203,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
 
     def _protocol_mode_to_hvac(self, mode: int) -> HVACMode | None:
         """Convert protocol mode value to Home Assistant HVAC mode."""
-        if 0 <= mode < len(self.hvac_modes):
+        if 1 <= mode < len(self.hvac_modes):
             return self.hvac_modes[mode]
         return None
 
@@ -567,15 +570,16 @@ class MideaC3Climate(MideaClimate):
             C3Attributes.temperature_min if minimum else C3Attributes.temperature_max
         )
         temperatures = self._device.get_attribute(value)
-        fallback = float(TEMPERATURE_MIN if minimum else TEMPERATURE_MAX)
+        fallback = float(TEMPERATURE_MIN_C3 if minimum else TEMPERATURE_MAX_C3)
         if not isinstance(temperatures, list):
             return [fallback, fallback]
         parsed_temperatures = [float(temperature) for temperature in temperatures]
-        if len(parsed_temperatures) < 2 or all(
-            temperature == 0.0 for temperature in parsed_temperatures
-        ):
+        if len(parsed_temperatures) < 2:
             return [fallback, fallback]
-        return parsed_temperatures
+        return [
+            fallback if temperature == 0.0 else temperature
+            for temperature in parsed_temperatures
+        ]
 
     _attr_supported_features = FEATURES_TARGET_AND_POWER
 
@@ -622,8 +626,8 @@ class MideaC3Climate(MideaClimate):
         if not power:
             return HVACMode.OFF
         mode = self._device.get_attribute(C3Attributes.mode)
-        if isinstance(mode, int) and 0 <= mode < len(self.hvac_modes):
-            return self.hvac_modes[mode]
+        if isinstance(mode, int):
+            return self._protocol_mode_to_hvac(mode)
         return None
 
     @property

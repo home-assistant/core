@@ -612,16 +612,46 @@ async def test_ac_set_hvac_mode_off_calls_power_off(
     )
 
 
-async def test_ac_invalid_mode_maps_to_off_state(
+async def test_ac_invalid_mode_maps_to_unknown_state(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
 ) -> None:
-    """Test AC invalid protocol mode yields off state."""
+    """Test AC out-of-range protocol mode yields unknown state."""
     device = DummyDevice(
         DeviceType.AC,
         attributes={
             ACAttributes.power: True,
             ACAttributes.mode: 999,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == "unknown"
+
+
+async def test_ac_powered_on_with_protocol_mode_zero_is_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC powered on with protocol mode 0 yields unknown, not off.
+
+    Protocol mode 0 is reserved for the OFF entry in hvac_modes and is
+    never sent by the device while powered on; if the sub-protocol decoder
+    reports it anyway it must not be misread as an explicit OFF request.
+    """
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 0,
             ACAttributes.target_temperature: 22.0,
             ACAttributes.indoor_temperature: 21.0,
             ACAttributes.fan_speed: 103,
@@ -684,6 +714,55 @@ async def test_ac_missing_mode_maps_to_unknown_state(
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == "unknown"
+
+
+async def test_ac_hvac_mode_unknown_when_power_attribute_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC hvac_mode is unknown when the power attribute is missing."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == "unknown"
+
+
+async def test_ac_fan_mode_invalid_type_returns_none(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC fan_mode returns None for an unexpected attribute type."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: "auto",
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.attributes.get(ATTR_FAN_MODE) is None
 
 
 async def test_cf_min_max_temperature_from_device(
@@ -809,8 +888,92 @@ async def test_c3_zero_temperature_limits_use_fallback(
     entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
 
     assert entity is not None
-    assert entity.min_temp == 16.0
-    assert entity.max_temp == 30.0
+    assert entity.min_temp == 5.0
+    assert entity.max_temp == 60.0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_c3_zero_temperature_limit_uses_fallback_per_zone(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 min/max fall back per zone when only one zone reports 0.0.
+
+    A zone stuck at 0.0 must fall back independently, even when the other
+    zone reports a valid, populated value.
+    """
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone_temp_type: [True, False],
+            C3Attributes.temperature_min: [0.0, 10.0],
+            C3Attributes.temperature_max: [0.0, 45.0],
+            C3Attributes.mode: 1,
+            C3Attributes.zone1_power: True,
+            C3Attributes.target_temperature: [22, 23],
+            C3Attributes.temp_tw_out: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
+    zone2 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone2"]
+    entity1 = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
+    entity2 = hass.data[CLIMATE_DOMAIN].get_entity(zone2.entity_id)
+
+    assert entity1 is not None
+    assert entity1.min_temp == 5.0
+    assert entity1.max_temp == 60.0
+    assert entity2 is not None
+    assert entity2.min_temp == 10.0
+    assert entity2.max_temp == 45.0
+
+
+async def test_c3_temperature_limit_list_too_short_uses_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 min/max fall back when the reported list has fewer than 2 entries."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone_temp_type: [True],
+            C3Attributes.temperature_min: [16],
+            C3Attributes.temperature_max: [30],
+            C3Attributes.mode: 1,
+            C3Attributes.zone1_power: True,
+            C3Attributes.target_temperature: [22],
+            C3Attributes.temp_tw_out: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
+
+    assert entity is not None
+    assert entity.min_temp == 5.0
+    assert entity.max_temp == 60.0
+
+
+async def test_c3_hvac_mode_none_when_mode_attribute_missing(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 zone hvac_mode is unknown when powered on but mode is not an int."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone1_power: True,
+            C3Attributes.temp_tw_out: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
+
+    assert (state := hass.states.get(zone1.entity_id))
+    assert state.state == "unknown"
 
 
 async def test_c3_unknown_power_maps_to_unknown_state(
@@ -1042,6 +1205,27 @@ async def test_c3_invalid_mode_maps_to_unknown_state(
     assert state.state == "unknown"
 
 
+async def test_c3_powered_on_with_protocol_mode_zero_is_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 zone powered on with protocol mode 0 yields unknown, not off."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone1_power: True,
+            C3Attributes.mode: 0,
+            C3Attributes.temp_tw_out: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate_zone1"]
+
+    assert (state := hass.states.get(zone1.entity_id))
+    assert state.state == "unknown"
+
+
 async def test_c3_temperature_fallback_when_attribute_missing(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
@@ -1061,8 +1245,8 @@ async def test_c3_temperature_fallback_when_attribute_missing(
     entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
 
     assert entity is not None
-    assert entity.min_temp == 16.0
-    assert entity.max_temp == 30.0
+    assert entity.min_temp == 5.0
+    assert entity.max_temp == 60.0
     assert entity.target_temperature is None
 
 
