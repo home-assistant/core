@@ -233,8 +233,9 @@ async def test_migration_merges_duplicate_v1_entries(
         wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
             "Unable to connect"
         )
+        # Setting up the first entry loads the integration, which sets up and migrates
+        # every wolflink entry: the first becomes the hub and the second merges into it.
         await hass.config_entries.async_setup(first_entry.entry_id)
-        await second_entry.async_migrate(hass)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)

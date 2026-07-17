@@ -342,7 +342,7 @@ aiolyric==2.1.1
 aiomealie==1.2.4
 
 # homeassistant.components.melcloud_home
-aiomelcloudhome==0.1.9
+aiomelcloudhome==0.2.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -417,7 +417,7 @@ aiorussound==5.0.1
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.26.2
+aioshelly==13.27.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1374,7 +1374,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==7.0.0
+infrared-protocols==7.5.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1383,7 +1383,7 @@ inkbird-ble==1.4.4
 insteon-frontend-home-assistant==0.6.2
 
 # homeassistant.components.intellifire
-intellifire4py==4.4.0
+intellifire4py==4.5.0
 
 # homeassistant.components.iometer
 iometer==1.0.2
@@ -1441,7 +1441,7 @@ knocki==0.4.2
 knx-frontend==2026.6.23.203726
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite,postgres]==0.9.1
+knx-telegram-store[sqlite,postgres]==0.10.1
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -1602,9 +1602,6 @@ mitsubishi-comfort==0.3.2
 
 # homeassistant.components.moat
 moat-ble==0.1.1
-
-# homeassistant.components.modbus_connection
-modbus-connection[tmodbus]==3.6.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -1807,7 +1804,7 @@ openwrt-ubus-rpc==0.0.3
 opower==0.18.6
 
 # homeassistant.components.oralb
-oralb-ble==1.1.0
+oralb-ble==1.1.1
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2030,7 +2027,7 @@ pyaftership==21.11.0
 pyairnow==1.3.1
 
 # homeassistant.components.airobot
-pyairobotrest==0.3.0
+pyairobotrest==0.4.0
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
@@ -2658,7 +2655,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.8.0
+python-duco-connectivity==0.9.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2767,7 +2764,7 @@ python-snoo==0.8.3
 python-songpal==0.16.2
 
 # homeassistant.components.swisscom
-python-swisscom-internet-box==0.1.1
+python-swisscom-internet-box==0.2.0
 
 # homeassistant.components.tado
 python-tado==0.18.16
@@ -2816,7 +2813,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
-pytrydan==1.0.3
+pytrydan==1.0.4
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==25.0.0
@@ -2991,7 +2988,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.14.1
+sense-energy==0.14.3
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -3264,7 +3261,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.12.2
+uiprotect==15.14.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3317,7 +3314,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.7.0
+victron-mqtt==2026.7.4
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.12
