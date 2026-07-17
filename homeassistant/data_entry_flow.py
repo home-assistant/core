@@ -100,7 +100,15 @@ def _condition_value_is_empty(value: Any) -> bool:
 
 
 def _strict_equal(actual: Any, value: Any) -> bool:
-    """Compare by value and type, so a boolean never equals a number."""
+    """Compare by value and type, so a boolean never equals a number.
+
+    Containers never compare equal, matching a renderer where separately parsed
+    lists or dicts are distinct references.
+    """
+    if isinstance(actual, (list, tuple, dict)) or isinstance(
+        value, (list, tuple, dict)
+    ):
+        return False
     if isinstance(actual, bool) != isinstance(value, bool):
         return False
     return bool(actual == value)
@@ -1128,7 +1136,7 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
             continue
 
         if isinstance(val, section) and isinstance(
-            section_input := user_input.get(name), Mapping
+            section_input := eval_data.get(name), Mapping
         ):
             inner_schema, inner_input = _strip_hidden_fields(val.schema, section_input)
             if inner_schema is not val.schema:

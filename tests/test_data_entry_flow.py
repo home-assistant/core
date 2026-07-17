@@ -1314,6 +1314,10 @@ async def test_show_advanced_options(
         ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 1}, False),
         ({"field": "a", "value": True}, {"a": 1}, False),
         ({"field": "a", "value": 1}, {"a": True}, False),
+        # containers never compare equal
+        ({"field": "a", "value": ["x"]}, {"a": ["x"]}, False),
+        ({"field": "a", "operator": "not_eq", "value": ["x"]}, {"a": ["x"]}, True),
+        ({"field": "a", "operator": "in", "value": [["x"]]}, {"a": ["x"]}, False),
         ({"field": "a", "operator": "in", "value": [True]}, {"a": 1}, False),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 2}, True),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 3}, False),
@@ -1569,6 +1573,40 @@ async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
         form["flow_id"], {"enable_advanced": False, "advanced": {"token": "stale"}}
     )
     assert result["data"] == {"enable_advanced": False}
+
+
+async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> None:
+    """Test nested hidden fields are stripped for an omitted defaulted section."""
+    schema = vol.Schema(
+        {
+            vol.Optional("advanced", default={"mode": "simple"}): (
+                data_entry_flow.section(
+                    vol.Schema(
+                        {
+                            vol.Required("mode", default="simple"): str,
+                            data_entry_flow.Required(
+                                "token",
+                                hidden={"field": "mode", "value": "simple"},
+                            ): str,
+                        }
+                    ),
+                )
+            )
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # the section is omitted; its default hides the nested required "token"
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"advanced": {"mode": "simple"}}
 
 
 def test_add_hidden_conditions_to_serialized_schema() -> None:
