@@ -2030,10 +2030,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # a deleted device does) unless a consistent disabled_by was passed explicitly:
         # disable an enabled device moved onto a disabled entry, and clear a
         # CONFIG_ENTRY disable when moved onto an enabled entry. A USER disable is
-        # preserved. A new device is reconciled the same way after an inconsistent
-        # disabled_by was discarded, so a create can't leave the device's disabled
-        # state contradicting the owning entry's.
-        if (disabled_by is not UNDEFINED or is_move) and (
+        # preserved. A new device is reconciled the same way, so a create can't
+        # leave the device's disabled state contradicting the owning entry's.
+        if (disabled_by is not UNDEFINED or is_move or is_new) and (
             owning_entry := self.hass.config_entries.async_get_entry(
                 effective_config_entry_id
             )

@@ -4667,6 +4667,45 @@ async def test_create_with_conflicting_disabled_by_ignored(
     ) in caplog.text
 
 
+async def test_create_reflects_config_entry_disabled_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A new device without an explicit disabled_by reflects the owning entry's state."""
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id, identifiers={("test", "1")}
+    )
+    assert device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    enabled_device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id, identifiers={("test", "2")}
+    )
+    assert enabled_device.disabled_by is None
+
+    # Restoring a deleted device from a legacy store without a recorded
+    # disabled_by is reconciled the same way
+    device_registry.async_remove_device(device.id)
+    deleted_entry = device_registry.deleted_devices[device.id]
+    device_registry.deleted_devices[device.id] = attr.evolve(
+        deleted_entry, disabled_by=UNDEFINED
+    )
+    restored = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id, identifiers={("test", "1")}
+    )
+    assert restored.id == device.id
+    assert restored.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    assert "Detected code that" not in caplog.text
+
+
 async def test_update_explicit_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -5521,7 +5560,9 @@ async def test_restore_device(
     ("device_disabled_by", "expected_disabled_by"),
     [
         (None, None),
-        (dr.DeviceEntryDisabler.CONFIG_ENTRY, dr.DeviceEntryDisabler.CONFIG_ENTRY),
+        # A CONFIG_ENTRY disable contradicts the enabled config entry and is
+        # cleared when the device is restored
+        (dr.DeviceEntryDisabler.CONFIG_ENTRY, None),
         (dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
         (dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
         (UNDEFINED, None),
