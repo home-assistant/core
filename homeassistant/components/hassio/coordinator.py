@@ -1413,7 +1413,8 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
 
     async def async_refresh_after_store_reload(self) -> None:
         """Refresh addon data when the store was already reloaded externally."""
-        await super()._async_refresh(log_failures=True)
+        async with self._debounced_refresh.async_lock():
+            await super()._async_refresh(log_failures=True)
 
     async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
         """Force refresh of addon info data for a specific addon."""
