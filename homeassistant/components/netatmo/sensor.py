@@ -62,6 +62,7 @@ from .coordinator import (
 )
 from .entity import (
     NetatmoBaseEntity,
+    NetatmoDeviceEntity,
     NetatmoModuleEntity,
     NetatmoRoomEntity,
     NetatmoWeatherModuleEntity,
@@ -631,7 +632,25 @@ async def async_setup_entry(
     await add_public_entities(False)
 
 
-class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
+class NetatmoLegacyReachableSensor(NetatmoDeviceEntity, SensorEntity):
+    """Sensor mixin that goes unavailable, keeping its last value, when unreachable."""
+
+    @callback
+    def _async_set_unavailable_if_unreachable(self) -> bool:
+        """Set the entity unavailable and write state when the device is unreachable.
+
+        Returns True when the device is unreachable so callers return early.
+        """
+        device = cast("pyatmo.Module | pyatmo.Room", self.device)
+        if device.reachable:
+            return False
+        if self.available:
+            self._attr_available = False
+        self.async_write_ha_state()
+        return True
+
+
+class NetatmoBaseSensor(NetatmoModuleEntity, NetatmoLegacyReachableSensor):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -666,10 +685,7 @@ class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
         """Update the entity's state (the legacy way)."""
         # Keep the last known value for these legacy sensors when the device is
         # unreachable to preserve the historical behavior expected by existing entities.
-        if not self.device.reachable:
-            if self.available:
-                self._attr_available = False
-            self.async_write_ha_state()
+        if self._async_set_unavailable_if_unreachable():
             return
 
         self._attr_available = True
@@ -790,10 +806,7 @@ class NetatmoClimateBatterySensor(NetatmoLegacySensor):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if not self.device.reachable:
-            if self.available:
-                self._attr_available = False
-            self.async_write_ha_state()
+        if self._async_set_unavailable_if_unreachable():
             return
 
         self._attr_available = True
@@ -860,7 +873,7 @@ class NetatmoSensor(NetatmoBaseSensor):
         self.async_write_ha_state()
 
 
-class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
+class NetatmoRoomSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
     """Implementation of a Netatmo room sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -892,10 +905,7 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if not self.device.reachable:
-            if self.available:
-                self._attr_available = False
-            self.async_write_ha_state()
+        if self._async_set_unavailable_if_unreachable():
             return
 
         self._attr_available = True
