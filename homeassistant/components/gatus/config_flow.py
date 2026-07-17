@@ -114,7 +114,9 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
                     except CannotConnect:
                         errors["base"] = "cannot_connect"
                     except Exception:
-                        _LOGGER.exception("Unexpected exception during Gatus reconfiguration")
+                        _LOGGER.exception(
+                            "Unexpected exception during Gatus reconfiguration"
+                        )
                         errors["base"] = "unknown"
                     else:
                         return self.async_update_reload_and_abort(
