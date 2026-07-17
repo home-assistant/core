@@ -22,5 +22,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["nespresso-ble==0.1.3"]
+  "requirements": ["nespresso-ble==0.1.4"]
 }
