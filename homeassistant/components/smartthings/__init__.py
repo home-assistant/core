@@ -314,9 +314,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for device_identifier in device_status
         ):
             continue
-        device_registry.async_update_device(
-            device_entry.id, remove_config_entry_id=entry.entry_id
-        )
+        device_registry.async_remove_device(device_entry.id)
 
     return True
 
