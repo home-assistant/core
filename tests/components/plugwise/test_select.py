@@ -239,7 +239,7 @@ async def test_anna_dhw_mode_select(
         },
         blocking=True,
     )
-    assert mock_smile_anna.set_select.call_count == 1
-    mock_smile_anna.set_select.assert_called_with(
-        DHW_MODE, "cd0e6156b1f04d5f952349ffbe397481", "comfort", "on"
+    assert mock_smile_anna.set_dhw_mode.call_count == 1
+    mock_smile_anna.set_dhw_mode.assert_called_with(
+        DHW_MODE, "cd0e6156b1f04d5f952349ffbe397481", "comfort", 2
     )
