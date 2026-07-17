@@ -223,6 +223,8 @@ class FakePyAvBuffer:
         self.audio_packets = []
         self.video_packets = []
         self.memory_file: io.BytesIO | None = None
+        self.mux_side_effects = []
+        self.close_side_effect = None
 
     def add_stream_from_template(self, template, **kwargs):
         """Create an output buffer that captures packets for test to examine."""
@@ -251,6 +253,8 @@ class FakePyAvBuffer:
 
     def mux(self, packet):
         """Capture a packet for tests to examine."""
+        if self.mux_side_effects and (side_effect := self.mux_side_effects.pop(0)):
+            raise side_effect
         # Forward to appropriate FakeStream
         packet.stream.mux(packet)
         # Make new init/part data available to the worker
@@ -258,6 +262,8 @@ class FakePyAvBuffer:
 
     def close(self):
         """Close the buffer."""
+        if self.close_side_effect:
+            raise self.close_side_effect
         # Make the final segment data available to the worker
         self.memory_file.write(b"0")
 
@@ -403,24 +409,33 @@ async def test_stream_worker_first_keyframe_mux_fails(
     hass: HomeAssistant,
 ) -> None:
     """Test an FFmpeg error muxing the first keyframe is handled."""
-    error = av.error.ArgumentError(22, "Invalid argument")
+    py_av = MockPyAv()
+    py_av.capture_buffer.mux_side_effects = [av.error.ArgumentError(22, "Mux failed")]
+    py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
 
-    with (
-        patch.object(StreamMuxer, "mux_packet", side_effect=error),
-        pytest.raises(StreamWorkerError, match="Error muxing first keyframe"),
+    with pytest.raises(
+        StreamWorkerError, match="Error muxing first keyframe \\(Mux failed\\)"
     ):
-        await async_decode_stream(hass, PacketSequence(TEST_SEQUENCE_LENGTH))
+        await async_decode_stream(
+            hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
+        )
+    assert py_av.capture_buffer.memory_file.closed
 
 
 async def test_stream_worker_packet_mux_fails(hass: HomeAssistant) -> None:
     """Test an FFmpeg error muxing a packet is handled."""
-    error = av.error.ArgumentError(22, "Invalid argument")
+    py_av = MockPyAv()
+    py_av.capture_buffer.mux_side_effects = [
+        None,
+        av.error.ArgumentError(22, "Mux failed"),
+    ]
+    py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
 
-    with (
-        patch.object(StreamMuxer, "mux_packet", side_effect=(None, error)),
-        pytest.raises(StreamWorkerError, match="Error muxing stream"),
-    ):
-        await async_decode_stream(hass, PacketSequence(TEST_SEQUENCE_LENGTH))
+    with pytest.raises(StreamWorkerError, match="Error muxing stream \\(Mux failed\\)"):
+        await async_decode_stream(
+            hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
+        )
+    assert py_av.capture_buffer.memory_file.closed
 
 
 async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:

@@ -424,8 +424,28 @@ class StreamMuxer:
 
     def close(self) -> None:
         """Close stream buffer."""
-        self._av_output.close()
-        self._memory_file.close()
+        try:
+            self._av_output.close()
+        finally:
+            self._memory_file.close()
+
+
+@contextlib.contextmanager
+def closing_stream_worker(
+    container: InputContainer, muxer: StreamMuxer
+) -> Generator[None]:
+    """Close worker resources without masking an active error."""
+    try:
+        yield
+    except BaseException:
+        with contextlib.suppress(av.FFmpegError):
+            muxer.close()
+        with contextlib.suppress(av.FFmpegError):
+            container.close()
+        raise
+    else:
+        with contextlib.closing(container), contextlib.closing(muxer):
+            pass
 
 
 class PeekIterator(Iterator[av.Packet]):
@@ -687,17 +707,15 @@ def stream_worker(
     )
     muxer.reset(start_dts)
 
-    # Mux the first keyframe, then proceed through the rest of the packets
-    try:
-        muxer.mux_packet(first_keyframe)
-    except av.FFmpegError as ex:
-        container.close()
-        muxer.close()
-        raise StreamWorkerError(
-            f"Error muxing first keyframe ({redact_av_error_string(ex)})"
-        ) from ex
+    with closing_stream_worker(container, muxer):
+        # Mux the first keyframe, then proceed through the rest of the packets
+        try:
+            muxer.mux_packet(first_keyframe)
+        except av.FFmpegError as ex:
+            raise StreamWorkerError(
+                f"Error muxing first keyframe ({redact_av_error_string(ex)})"
+            ) from ex
 
-    with contextlib.closing(container), contextlib.closing(muxer):
         while not quit_event.is_set():
             try:
                 packet = next(container_packets)
