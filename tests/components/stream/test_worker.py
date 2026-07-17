@@ -410,7 +410,9 @@ async def test_stream_worker_first_keyframe_mux_fails(
 ) -> None:
     """Test an FFmpeg error muxing the first keyframe is handled."""
     py_av = MockPyAv()
+    # pylint: disable-next=c-extension-no-member
     py_av.capture_buffer.mux_side_effects = [av.error.ArgumentError(22, "Mux failed")]
+    # pylint: disable-next=c-extension-no-member
     py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
 
     with pytest.raises(
@@ -427,8 +429,10 @@ async def test_stream_worker_packet_mux_fails(hass: HomeAssistant) -> None:
     py_av = MockPyAv()
     py_av.capture_buffer.mux_side_effects = [
         None,
+        # pylint: disable-next=c-extension-no-member
         av.error.ArgumentError(22, "Mux failed"),
     ]
+    # pylint: disable-next=c-extension-no-member
     py_av.capture_buffer.close_side_effect = av.error.ArgumentError(22, "Close failed")
 
     with pytest.raises(StreamWorkerError, match="Error muxing stream \\(Mux failed\\)"):
