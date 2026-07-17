@@ -167,7 +167,6 @@ async def test_vibration_condition_excludes_non_vibration_device_class(
     entity_id_vibration = "binary_sensor.test_vibration"
     entity_id_motion = "binary_sensor.test_motion"
 
-    # Set matching states on all entities
     hass.states.async_set(
         entity_id_vibration, state_matching, {ATTR_DEVICE_CLASS: "vibration"}
     )
@@ -185,10 +184,8 @@ async def test_vibration_condition_excludes_non_vibration_device_class(
         behavior="any",
     )
 
-    # Matching entity in matching state - condition should be True
     assert condition_any.async_check() is True
 
-    # Set matching entity to non-matching state
     hass.states.async_set(
         entity_id_vibration,
         state_non_matching,
@@ -196,5 +193,4 @@ async def test_vibration_condition_excludes_non_vibration_device_class(
     )
     await hass.async_block_till_done()
 
-    # Wrong device class entity still in matching state, but should be excluded
     assert condition_any.async_check() is False
