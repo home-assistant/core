@@ -423,7 +423,7 @@ async def test_update_ac_charge_times_v1_api_error_raises(
         )
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await coordinator.update_ac_charge_times(
             90,
             80,
@@ -437,6 +437,12 @@ async def test_update_ac_charge_times_v1_api_error_raises(
             ]
             * 3,
         )
+
+    assert excinfo.value.translation_key == "api_error_with_code"
+    assert excinfo.value.translation_placeholders == {
+        "error": "Too many requests",
+        "code": str(GrowattV1ApiErrorCode.RATE_LIMITED),
+    }
 
 
 async def test_read_ac_charge_times_classic_reads_via_get_mix_inverter_settings(
