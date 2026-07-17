@@ -290,9 +290,11 @@ def _tail_ics(
     _keep_dates(vevent, "EXDATE", occurrence, before=False)
     # A wall-clock delta keeps shifted values stable across DST changes.
     if delta := _wall(master, data["dtstart"]) - _wall(master, occurrence):
-        _shift_dates(vevent, delta)
+        dtstart = master["DTSTART"].dt
+        zone = dtstart.tzinfo if isinstance(dtstart, datetime) else None
+        _shift_dates(vevent, delta, zone)
         if (recur := vevent.get("RRULE")) is not None and (until := recur.get("UNTIL")):
-            recur["UNTIL"] = [until[0] + delta]
+            recur["UNTIL"] = [_shifted(until[0], delta, zone)]
     return tail.to_ical().decode("utf-8")
 
 
@@ -440,7 +442,7 @@ def _cap_series(master: Any, occurrence: datetime | date) -> None:
     _keep_dates(master, "EXDATE", occurrence, before=True)
 
 
-def _shift_dates(component: Any, delta: timedelta) -> None:
+def _shift_dates(component: Any, delta: timedelta, zone: Any) -> None:
     """Move retained RDATE/EXDATE values along with a moved DTSTART."""
     for key in ("RDATE", "EXDATE"):
         if key not in component:
@@ -450,18 +452,27 @@ def _shift_dates(component: Any, delta: timedelta) -> None:
             entries = [entries]
         shifted = []
         for entry in entries:
-            rebuilt = vDDDLists([_shifted(item.dt, delta) for item in entry.dts])
+            rebuilt = vDDDLists([_shifted(item.dt, delta, zone) for item in entry.dts])
             rebuilt.params = entry.params
             shifted.append(rebuilt)
         del component[key]
         component[key] = shifted if len(shifted) > 1 else shifted[0]
 
 
-def _shifted(value: Any, delta: timedelta) -> Any:
+def _shifted(value: Any, delta: timedelta, zone: Any) -> Any:
+    """Shift in the series' wall clock, keeping the value's representation."""
     if isinstance(value, tuple):
-        end = value[1] + delta if isinstance(value[1], datetime) else value[1]
-        return (value[0] + delta, end)
-    return value + delta
+        end = (
+            _shifted(value[1], delta, zone)
+            if isinstance(value[1], datetime)
+            else value[1]
+        )
+        return (_shifted(value[0], delta, zone), end)
+    if not isinstance(value, datetime) or value.tzinfo is None:
+        return value + delta
+    anchor = zone or dt_util.get_default_time_zone()
+    wall = value.astimezone(anchor).replace(tzinfo=None) + delta
+    return wall.replace(tzinfo=anchor).astimezone(value.tzinfo)
 
 
 def _clear_dates(component: Any) -> None:
