@@ -1618,11 +1618,7 @@ async def test_scanner_entity_attaches_to_split_of_composite_device(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """A mac-based scanner entity attaches to its config entry's split, not the composite.
-
-    async_get_device resolves a shared MAC to a synthesized pre-migration composite whose
-    id is not a real device; the entity must attach to the split owned by its own config
-    entry instead of crashing while trying to assign the composite id.
+    """Test that a scanner entity attaches to its config entry's split device."""
     """
     mac = TEST_MAC_ADDRESS
     other_entry = MockConfigEntry(domain="other")
