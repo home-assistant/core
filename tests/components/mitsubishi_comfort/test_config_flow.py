@@ -198,6 +198,49 @@ async def test_user_step_retry_replays_partial_credentials(
     }
 
 
+async def test_user_step_empty_account_response_keeps_cached_credentials(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a transient empty device list does not wipe recovered fields.
+
+    The cached password may be unrecoverable, so only a discovery that
+    returned devices may replace the cache.
+    """
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: _partial_device_info()
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+
+    mock_cloud_account.discover_devices.return_value = {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_devices"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert mock_cloud_account.discover_devices.call_args.kwargs[
+        "cached_credentials"
+    ] == {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": "",
+        }
+    }
+
+
 async def test_user_step_username_change_drops_cached_credentials(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,

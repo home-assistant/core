@@ -42,7 +42,7 @@ def build_credentials(devices: dict[str, DeviceInfo]) -> dict[str, dict[str, str
     discover_devices() consumes the password, cryptoSerial, and MAC
     independently, so any recovered field is worth caching — above all the
     password, which the throttled Socket.IO fetch may never return again.
-    All-empty records are dropped so a later setup re-discovers the device.
+    All-empty records carry nothing worth replaying and are dropped.
     """
     return {
         serial: {
