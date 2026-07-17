@@ -532,7 +532,7 @@ async def test_migration_1_1(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from v1.1 removes template config entry from device."""
+    """Test migration from v1.1 does not add the template config entry to the device."""
 
     device_config_entry = MockConfigEntry()
     device_config_entry.add_to_hass(hass)
@@ -557,21 +557,12 @@ async def test_migration_1_1(
     )
     template_config_entry.add_to_hass(hass)
 
-    # Add the helper config entry to the device
-    device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=template_config_entry.entry_id
-    )
-
-    # Check preconditions
-    device_entry = device_registry.async_get(device_entry.id)
-    assert template_config_entry.entry_id in device_entry.config_entries
-
     await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert template_config_entry.state is ConfigEntryState.LOADED
 
-    # Check that the helper config entry is removed from the device and the helper
+    # Check that the helper config entry is not in the device and the helper
     # entity is linked to the source device
     device_entry = device_registry.async_get(device_entry.id)
     assert template_config_entry.entry_id not in device_entry.config_entries

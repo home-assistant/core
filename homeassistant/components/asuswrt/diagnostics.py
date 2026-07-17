@@ -2,9 +2,11 @@
 
 from typing import Any
 
-import attr
-
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
@@ -39,7 +41,7 @@ async def async_get_config_entry_diagnostics(
         return data
 
     data["device"] = {
-        **async_redact_data(attr.asdict(hass_device), TO_REDACT_DEV),
+        **async_redact_data(device_entry_as_dict(hass_device), TO_REDACT_DEV),
         "entities": {},
         "tracked_devices": [],
     }
@@ -60,13 +62,11 @@ async def async_get_config_entry_diagnostics(
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
 
+        entity_dict = entity_entry_as_dict(entity_entry)
+        # The entity_id is already provided at root level (the key).
+        del entity_dict["entity_id"]
         data["device"]["entities"][entity_entry.entity_id] = {
-            **async_redact_data(
-                attr.asdict(
-                    entity_entry, filter=lambda attr, value: attr.name != "entity_id"
-                ),
-                TO_REDACT,
-            ),
+            **async_redact_data(entity_dict, TO_REDACT),
             "state": state_dict,
         }
 
