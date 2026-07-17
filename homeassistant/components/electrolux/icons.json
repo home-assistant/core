@@ -40,6 +40,20 @@
       "remote_control": {
         "default": "mdi:remote"
       }
+    },
+    "switch": {
+      "bottomoven_cavity_light": {
+        "default": "mdi:lightbulb-outline"
+      },
+      "cavity_light": {
+        "default": "mdi:lightbulb-outline"
+      },
+      "child_lock": {
+        "default": "mdi:lock"
+      },
+      "upperoven_cavity_light": {
+        "default": "mdi:lightbulb-outline"
+      }
     }
   }
 }

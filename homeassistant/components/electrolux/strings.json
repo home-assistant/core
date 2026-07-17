@@ -222,6 +222,20 @@
           "temporary_locked": "Temporarily locked"
         }
       }
+    },
+    "switch": {
+      "bottomoven_cavity_light": {
+        "name": "Lower cavity light"
+      },
+      "cavity_light": {
+        "name": "Light"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "upperoven_cavity_light": {
+        "name": "Upper cavity light"
+      }
     }
   },
   "exceptions": {
