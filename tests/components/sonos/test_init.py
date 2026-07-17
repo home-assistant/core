@@ -12,7 +12,7 @@ from requests import Response
 from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
-from homeassistant.components import sonos
+from homeassistant.components import sonos, ssdp
 from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
@@ -27,6 +27,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -191,6 +192,56 @@ async def test_discovery_skips_disabled_device(
 
     soco.zoneGroupTopology.subscribe.assert_not_awaited()
     assert not er.async_entries_for_device(entity_registry, device.id)
+
+
+async def test_discovery_reenable_device_on_new_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    discover,
+    fire_zgs_event,
+) -> None:
+    """Test re-enabling a disabled device allows subscriptions and entities."""
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.zoneGroupTopology.subscribe.assert_not_awaited()
+    assert not er.async_entries_for_device(entity_registry, device.id)
+
+    device_registry.async_update_device(device.id, disabled_by=None)
+
+    ssdp_callback = discover.call_args_list[0].args[1]
+    ssdp_callback(
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco.ip_address}/",
+            ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+            ssdp_usn=(
+                f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:"
+                "GroupRenderingControl:1"
+            ),
+            upnp={ATTR_UPNP_UDN: f"uuid:{soco.uid}"},
+            ssdp_headers={"X-RINCON-BOOTSEQ": "2"},
+        ),
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await fire_zgs_event()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    speaker = config_entry.runtime_data.discovered[soco.uid]
+    assert soco.zoneGroupTopology.subscribe.await_count > 0
+    assert speaker._subscriptions
+    assert er.async_entries_for_device(entity_registry, device.id)
 
 
 async def test_async_poll_manual_hosts_warnings(
