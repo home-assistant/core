@@ -600,6 +600,9 @@
     "update": {
       "beta_firmware": {
         "name": "Beta firmware"
+      },
+      "lora_firmware": {
+        "name": "LoRa add-on firmware"
       }
     },
     "valve": {
