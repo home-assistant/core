@@ -24,6 +24,10 @@ APPLIANCE_FIXTURES = [
     "electrolux_dehumidifier",
     "electrolux_ac",
     "electrolux_dam_ac",
+    "purei9_vacuum",
+    "700series_vacuum",
+    "gordias_vacuum",
+    "cybele_vacuum",
 ]
 
 
