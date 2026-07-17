@@ -173,7 +173,7 @@ async def test_vibration_condition_excludes_non_vibration_device_class(
     )
     hass.states.async_set(
         entity_id_motion,
-        state_non_matching,
+        state_matching,
         {ATTR_DEVICE_CLASS: "motion"},
     )
     await hass.async_block_till_done()
