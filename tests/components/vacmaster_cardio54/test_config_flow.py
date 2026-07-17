@@ -84,8 +84,9 @@ async def test_user_flow_happy_path(
     }
     assert result["result"].unique_id == f"{registry_id}_{FIXED_DEVICE_ID:05X}"
 
-    # The mock transmitter should have seen two sends: pair burst + test burst.
-    assert len(mock_rf_entity.send_command_calls) == 2
+    # The mock transmitter should have seen three sends: pair burst, test
+    # burst, and the power-off toggle sent on finish so the fan is left off.
+    assert len(mock_rf_entity.send_command_calls) == 3
 
 
 async def test_user_flow_pair_send_failure(
@@ -189,6 +190,48 @@ async def test_user_flow_test_send_failure(
             result["flow_id"], {CONF_TRANSMITTER: entity_id}
         )
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "send_failed"
+
+
+async def test_user_flow_finish_send_failure(
+    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+) -> None:
+    """If the finish power-off send fails we land on send_failed too."""
+    entity_id = _transmitter_entity_id(hass, mock_rf_entity)
+
+    # Let the pair and test bursts go through but break the finish send.
+    real_send = mock_rf_entity.async_send_command
+    call_count = {"n": 0}
+
+    async def selective_failure(command):
+        call_count["n"] += 1
+        if call_count["n"] <= 2:
+            await real_send(command)
+            return
+        raise HomeAssistantError("transmitter glitched")
+
+    with (
+        patch(
+            "homeassistant.components.vacmaster_cardio54.config_flow.random.getrandbits",
+            return_value=FIXED_DEVICE_ID,
+        ),
+        patch.object(
+            mock_rf_entity, "async_send_command", side_effect=selective_failure
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TRANSMITTER: entity_id}
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["step_id"] == "test"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "finish"}
+        )
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "send_failed"

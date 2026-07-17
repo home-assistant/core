@@ -155,9 +155,19 @@ class VacmasterCardio54ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create the config entry."""
+        """Switch the fan back off and create the config entry.
+
+        ``async_step_test`` left the fan running at speed 1. Send a final
+        power-off toggle so the hardware matches the new entity's assumed
+        state (off); otherwise the first ``fan.turn_off`` would be a no-op
+        against a fan that is actually running.
+        """
         assert self._transmitter_id is not None
         assert self._device_id is not None
+        try:
+            await self._async_send(DATA_POWER, FRAME_REPEATS)
+        except HomeAssistantError:
+            return await self.async_step_send_failed()
         return self.async_create_entry(
             title="Vacmaster Cardio54",
             data={
