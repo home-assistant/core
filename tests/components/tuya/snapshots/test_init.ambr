@@ -2,8 +2,8 @@
 # name: test_device_registry[0hlcxgoadnrh03yaqkydsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': 'ay30hrndaogxclh0',
     'name': 'LCDÕ▒Åµ©®µ╣┐Õ║ªõ©çÞâ¢ÚüÑµÄºÕÖ¿',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -33,8 +32,8 @@
 # name: test_device_registry[0qtza8cv6q5rdxpxgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -55,7 +54,6 @@
     'model_id': 'xpxdr5q6vc8aztq0',
     'name': 'Weather station',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -64,8 +62,8 @@
 # name: test_device_registry[0wep74vtderarfni]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -86,7 +84,6 @@
     'model_id': '47pew0',
     'name': 'TV',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -95,8 +92,8 @@
 # name: test_device_registry[18yvbamhgkjc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -117,7 +114,6 @@
     'model_id': 'hmabvy81',
     'name': 'Interruptor',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -126,8 +122,8 @@
 # name: test_device_registry[1nw1rysgyj8th1l5qbnxw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -148,7 +144,6 @@
     'model_id': '5l1ht8jygsyr1wn1',
     'name': 'Panneaux solaires 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -157,8 +152,8 @@
 # name: test_device_registry[2k8wyjo7iidkohuczc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -179,7 +174,6 @@
     'model_id': 'cuhokdii7ojyw8k2',
     'name': 'Buitenverlichting',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -188,8 +182,8 @@
 # name: test_device_registry[2myxayqtud9aqbizsc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -210,7 +204,6 @@
     'model_id': 'zibqa9dutqyaxym2',
     'name': 'Dehumidifier',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -219,8 +212,8 @@
 # name: test_device_registry[2pxfek1jjrtctiyglam]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -241,7 +234,6 @@
     'model_id': 'gyitctrjj1kefxp2',
     'name': 'Multifunction alarm',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -250,8 +242,8 @@
 # name: test_device_registry[2w46jyhngklc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -272,7 +264,6 @@
     'model_id': 'nhyj64w2',
     'name': 'Tapparelle studio',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -281,8 +272,8 @@
 # name: test_device_registry[2x473nefusdo7af6zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -303,7 +294,6 @@
     'model_id': '6fa7odsufen374x2',
     'name': 'Office',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -312,8 +302,8 @@
 # name: test_device_registry[3d4yosotwk27nqxvzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -334,7 +324,6 @@
     'model_id': 'vxqn72kwtosoy4d3',
     'name': 'Garage Socket',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -343,8 +332,8 @@
 # name: test_device_registry[3kdnp0ajo7zdolfxgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -365,7 +354,6 @@
     'model_id': 'xflodz7oja0pndk3',
     'name': 'Sensor T & H Server Home',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -374,8 +362,8 @@
 # name: test_device_registry[3phkffywh5nnlj5vbdnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -396,7 +384,6 @@
     'model_id': 'v5jlnn5hwyffkhp3',
     'name': 'Production',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -405,8 +392,8 @@
 # name: test_device_registry[3uqk1csjqplf3uxqscm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -427,7 +414,6 @@
     'model_id': 'qxu3flpqjsc1kqu3',
     'name': 'Garage Contact Sensor',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -436,8 +422,8 @@
 # name: test_device_registry[49m7h9lh3t8pq6ftzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -458,7 +444,6 @@
     'model_id': 'tf6qp8t3hl9h7m94',
     'name': 'Consommation',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -467,8 +452,8 @@
 # name: test_device_registry[4bxfp3kgncpcgx5uycjzs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -489,7 +474,6 @@
     'model_id': 'u5xgcpcngk3pfxb4',
     'name': 'YINMIK Water Quality Tester',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -498,8 +482,8 @@
 # name: test_device_registry[4fO1qIzYbcdMUHqAjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -520,7 +504,6 @@
     'model_id': 'AqHUMdcbYzIq1Of4',
     'name': 'Landing',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -529,8 +512,8 @@
 # name: test_device_registry[4hbnivc4w2rsw966lc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -551,7 +534,6 @@
     'model_id': '669wsr2w4cvinbh4',
     'name': 'VIVIDSTORM SCREEN',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -560,8 +542,8 @@
 # name: test_device_registry[4pa1uobdjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -582,7 +564,6 @@
     'model_id': 'dbou1ap4',
     'name': 'Lumy Garage',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -591,8 +572,8 @@
 # name: test_device_registry[4q5c2am8n1bwb6bszc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -613,7 +594,6 @@
     'model_id': 'sb6bwb1n8ma2c5q4',
     'name': 'Socket4',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -622,8 +602,8 @@
 # name: test_device_registry[51tdkcsamisw9ukycp]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -644,7 +624,6 @@
     'model_id': 'yku9wsimasckdt15',
     'name': 'Framboisier',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -653,8 +632,8 @@
 # name: test_device_registry[53apxfah2qoxb1cgkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -675,7 +654,6 @@
     'model_id': 'gc1bxoq2hafxpa35',
     'name': 'Полотенцосушитель',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -684,8 +662,8 @@
 # name: test_device_registry[53fnjncm3jywuaznps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -706,7 +684,6 @@
     'model_id': 'nzauwyj3mcnjnf35',
     'name': 'Garage Camera',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -715,8 +692,8 @@
 # name: test_device_registry[5ebss29hqqmse7t5psm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -737,7 +714,6 @@
     'model_id': '5t7esmqqh92ssbe5',
     'name': 'Slimme kattenbak',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -746,8 +722,8 @@
 # name: test_device_registry[5gfyvvg48bsxbbnjzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -768,7 +744,6 @@
     'model_id': 'jnbbxsb84gvvyfg5',
     'name': 'Bathroom Fan',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -777,8 +752,8 @@
 # name: test_device_registry[63cninaczt9dwo7v2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -799,7 +774,6 @@
     'model_id': 'v7owd9tzcaninc36',
     'name': 'Gateway2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -808,8 +782,8 @@
 # name: test_device_registry[69dth3rxgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -830,7 +804,6 @@
     'model_id': 'xr3htd96',
     'name': 'Humy toilettes RDC',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -839,8 +812,8 @@
 # name: test_device_registry[6ffyxwrjsuydxhqrqkynw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -861,7 +834,6 @@
     'model_id': 'rqhxdyusjrwxyff6',
     'name': 'Smart IR',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -870,8 +842,8 @@
 # name: test_device_registry[6gsqieoh1yzjvxlnjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -892,7 +864,6 @@
     'model_id': 'nlxvjzy1hoeiqsg6',
     'name': 'hall 💡 ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -901,8 +872,8 @@
 # name: test_device_registry[6h8boeqxorpsmtj]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -923,7 +894,6 @@
     'model_id': 'xqeob8h6',
     'name': 'S1-TY-BLE-PRO 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -932,8 +902,8 @@
 # name: test_device_registry[6o148laaosbf0g4djd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -954,7 +924,6 @@
     'model_id': 'd4g0fbsoaal841o6',
     'name': 'WC D1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -963,8 +932,8 @@
 # name: test_device_registry[6pd3bkidqld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -985,7 +954,6 @@
     'model_id': 'dikb3dp6',
     'name': 'Medidor de Energia',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -994,8 +962,8 @@
 # name: test_device_registry[6tbtkuv3tal1aesfjxq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1016,7 +984,6 @@
     'model_id': 'fsea1lat3vuktbt6',
     'name': 'BR 7-in-1 WLAN Wetterstation Anthrazit',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1025,8 +992,8 @@
 # name: test_device_registry[6wxksqu35c61sce9dsf]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1047,7 +1014,6 @@
     'model_id': '9ecs16c53uqskxw6',
     'name': 'ceiling fan/Light v2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1056,8 +1022,8 @@
 # name: test_device_registry[73ov8i8iedtylkzrqzkfs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1078,7 +1044,6 @@
     'model_id': 'rzklytdei8i8vo37',
     'name': 'balkonbewässerung',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1087,8 +1052,8 @@
 # name: test_device_registry[7axah58vfydd8cphjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1109,7 +1074,6 @@
     'model_id': 'hpc8ddyfv85haxa7',
     'name': 'Garage',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1118,8 +1082,8 @@
 # name: test_device_registry[7jxnjpiltmj2zyaijd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1140,7 +1104,6 @@
     'model_id': 'iayz2jmtlipjnxj7',
     'name': 'LED Porch 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1149,8 +1112,8 @@
 # name: test_device_registry[7obpyhy8scm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1171,7 +1134,6 @@
     'model_id': '8yhypbo7',
     'name': 'Boîte aux lettres - arrière',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1180,8 +1142,8 @@
 # name: test_device_registry[7xpq8plg06p46j7ygklc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1202,7 +1164,6 @@
     'model_id': 'y7j64p60glp8qpx7',
     'name': 'Fenster Küche',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1211,8 +1172,8 @@
 # name: test_device_registry[7zogt3pcwhxhu8upqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1233,7 +1194,6 @@
     'model_id': 'pu8uhxhwcp3tgoz7',
     'name': 'Socket3',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1242,8 +1202,8 @@
 # name: test_device_registry[86kdcut3hiqqddlijd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1264,7 +1224,6 @@
     'model_id': 'ilddqqih3tucdk68',
     'name': 'Ieskas',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1273,8 +1232,8 @@
 # name: test_device_registry[87yarxyp23ap1vazjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1295,7 +1254,6 @@
     'model_id': 'zav1pa32pyxray78',
     'name': 'Gengske 💡 ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1304,8 +1262,8 @@
 # name: test_device_registry[8m3ggyvgycjwz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1326,7 +1284,6 @@
     'model_id': 'gvygg3m8',
     'name': 'humid pelargonia',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1335,8 +1292,8 @@
 # name: test_device_registry[8u5ftxkt52smougesc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1357,7 +1314,6 @@
     'model_id': 'eguoms25tkxtf5u8',
     'name': 'Arida Stavern ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1366,8 +1322,8 @@
 # name: test_device_registry[97k3pwirjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1388,7 +1344,6 @@
     'model_id': 'riwp3k79',
     'name': 'LED KEUKEN 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1397,8 +1352,8 @@
 # name: test_device_registry[9AzrW5XtELTySJxqzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1419,7 +1374,6 @@
     'model_id': 'qxJSyTLEtX5WrzA9',
     'name': 'LivR',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1428,8 +1382,8 @@
 # name: test_device_registry[9Ry4oUpdAYq8Pe0Bkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1450,7 +1404,6 @@
     'model_id': 'B0eP8qYAdpUo4yR9',
     'name': 'ITC-308-WIFI Thermostat',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1459,8 +1412,8 @@
 # name: test_device_registry[9c1vlsxoscm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1481,7 +1434,6 @@
     'model_id': 'oxslv1c9',
     'name': 'Window downstairs',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1490,8 +1442,8 @@
 # name: test_device_registry[9oh1h1uyalfykgg4bdnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1512,7 +1464,6 @@
     'model_id': '4ggkyflayu1h1ho9',
     'name': 'XOCA-DAC212XC V2-S1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1521,8 +1472,8 @@
 # name: test_device_registry[9wlo8cpzprhiclrkgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1543,7 +1494,6 @@
     'model_id': 'krlcihrpzpc8olw9',
     'name': 'IFS-STD002',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1552,8 +1502,8 @@
 # name: test_device_registry[AUTwCwqDY9EjlQSocm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1574,7 +1524,6 @@
     'model_id': 'oSQljE9YDqwCwTUA',
     'name': 'Kippenluik',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1583,8 +1532,8 @@
 # name: test_device_registry[CyD4ctKVrAFSSXSbjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1605,7 +1554,6 @@
     'model_id': 'bSXSSFArVKtc4DyC',
     'name': 'bedroom',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1614,8 +1562,8 @@
 # name: test_device_registry[HzsAAAKFLPABVi8nzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1636,7 +1584,6 @@
     'model_id': 'n8iVBAPLFKAAAszH',
     'name': 'Steckdose 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1645,8 +1592,8 @@
 # name: test_device_registry[JLWRUpPiwMTwKXtTtq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1667,7 +1614,6 @@
     'model_id': 'TtXKwTMwiPpURWLJ',
     'name': 'Dining-Blinds',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1676,8 +1622,8 @@
 # name: test_device_registry[LJ9zTFQTfMgsG2Ahzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1698,7 +1644,6 @@
     'model_id': 'hA2GsgMfTQFTz9JL',
     'name': 'Spot 4',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1707,8 +1652,8 @@
 # name: test_device_registry[LS6FfVBVU1vzBRBHzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1729,7 +1674,6 @@
     'model_id': 'HBRBzv1UVBVfF6SL',
     'name': 'Rewireable Plug 6930HA',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1738,8 +1682,8 @@
 # name: test_device_registry[LmLMc0ht1KW2zYAIkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1760,7 +1704,6 @@
     'model_id': 'IAYz2WK1th0cMLmL',
     'name': 'El termostato de la cocina',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1769,8 +1712,8 @@
 # name: test_device_registry[NVjuXIQ6QH9eZLHCzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1791,7 +1734,6 @@
     'model_id': 'CHLZe9HQ6QIXujVN',
     'name': 'schuur',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1800,8 +1742,8 @@
 # name: test_device_registry[O8QpxJwdme33sqn4gk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1822,7 +1764,6 @@
     'model_id': '4nqs33emdwJxpQ8O',
     'name': 'office lights',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1831,8 +1772,8 @@
 # name: test_device_registry[VA4QyBNZHkJ2Xa4hjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1853,7 +1794,6 @@
     'model_id': 'h4aX2JkHZNByQ4AV',
     'name': 'Entry Stairs',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1862,8 +1802,8 @@
 # name: test_device_registry[YQLkAe7nyyAxXHiAzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1884,7 +1824,6 @@
     'model_id': 'AiHXxAyyn7eAkLQY',
     'name': 'Solar Heater Pump',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1893,8 +1832,8 @@
 # name: test_device_registry[ZDldMHS0tjmQgGxEzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1915,7 +1854,6 @@
     'model_id': 'ExGgQmjt0SHMdlDZ',
     'name': 'Casa1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1924,8 +1862,8 @@
 # name: test_device_registry[ZgXzZULP6dDp4Atvgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1946,7 +1884,6 @@
     'model_id': 'vtA4pDd6PLUZzXgZ',
     'name': 'Humy bain',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1955,8 +1892,8 @@
 # name: test_device_registry[a3qtb7pulkcc6jdjqld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1977,7 +1914,6 @@
     'model_id': 'jdj6ccklup7btq3a',
     'name': 'Eau Chaude',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -1986,8 +1922,8 @@
 # name: test_device_registry[a4zeazrz1ata9mbggk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2008,7 +1944,6 @@
     'model_id': 'gbm9ata1zrzaez4a',
     'name': 'QT-Switch',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2017,8 +1952,8 @@
 # name: test_device_registry[a6ugbo3of3hqf4jojd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2039,7 +1974,6 @@
     'model_id': 'oj4fqh3fo3obgu6a',
     'name': 'L├ímpara Ati',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2048,8 +1982,8 @@
 # name: test_device_registry[aa99hccfnzvypr3zjsywc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2070,7 +2004,6 @@
     'model_id': 'z3rpyvznfcch99aa',
     'name': 'PIXI Smart Drinking Fountain',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2079,8 +2012,8 @@
 # name: test_device_registry[addr6y4u8gb43nl8brnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2101,7 +2034,6 @@
     'model_id': '8ln34bg8u4y6rdda',
     'name': 'Madimack Elite V3 Pool Heat Pump',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2110,8 +2042,8 @@
 # name: test_device_registry[ai9swgb6tyinbwbxjxq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2132,7 +2064,6 @@
     'model_id': 'xbwbniyt6bgws9ia',
     'name': 'SWS 16600 WiFi SH',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2141,8 +2072,8 @@
 # name: test_device_registry[aiag5pku0x39rkfllc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2163,7 +2094,6 @@
     'model_id': 'lfkr93x0ukp5gaia',
     'name': 'Projector Screen',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2172,8 +2102,8 @@
 # name: test_device_registry[aje5kxgmhhxdihqizc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2194,7 +2124,6 @@
     'model_id': 'iqhidxhhmgxk5eja',
     'name': 'Powerplug 5',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2203,8 +2132,8 @@
 # name: test_device_registry[ajkdo1bm2rcmpuufjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2225,7 +2154,6 @@
     'model_id': 'fuupmcr2mb1odkja',
     'name': 'Slaapkamer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2234,8 +2162,8 @@
 # name: test_device_registry[ake0bre784zriw0usc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2256,7 +2184,6 @@
     'model_id': 'u0wirz487erb0eka',
     'name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2265,8 +2192,8 @@
 # name: test_device_registry[ao3z3oeyvepe8o3xqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2287,7 +2214,6 @@
     'model_id': 'x3o8epevyeo3z3oa',
     'name': 'Interior Bedroom Sensor',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2296,8 +2222,8 @@
 # name: test_device_registry[aoyweq8xbx7qfndijd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2318,7 +2244,6 @@
     'model_id': 'idnfq7xbx8qewyoa',
     'name': 'AB1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2327,8 +2252,8 @@
 # name: test_device_registry[ase6htln9tdni2sijxq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2349,7 +2274,6 @@
     'model_id': 'is2indt9nlth6esa',
     'name': 'Frysen',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2358,8 +2282,8 @@
 # name: test_device_registry[b6e05dfy4qhpgea1qdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2380,7 +2304,6 @@
     'model_id': '1aegphq4yfd50e6b',
     'name': 'jardin Fraises',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2389,8 +2312,8 @@
 # name: test_device_registry[bFFsO8HimyAJGIj7scm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2411,7 +2334,6 @@
     'model_id': '7jIGJAymiH8OsFFb',
     'name': 'Door Garage ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2420,8 +2342,8 @@
 # name: test_device_registry[bak2crzmabancwqvjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2442,7 +2364,6 @@
     'model_id': 'vqwcnabamzrc2kab',
     'name': 'Strip 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2451,8 +2372,8 @@
 # name: test_device_registry[bcyciyhhu1g2gk9rqld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2473,7 +2394,6 @@
     'model_id': 'r9kg2g1uhhyicycb',
     'name': 'P1 Energia Elettrica',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2482,8 +2402,8 @@
 # name: test_device_registry[bescacsciyam3aouqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2504,7 +2424,6 @@
     'model_id': 'uoa3mayicscacseb',
     'name': 'Living room left',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2513,8 +2432,8 @@
 # name: test_device_registry[bfpewgk8r6fhmissdyzb]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2535,7 +2454,6 @@
     'model_id': 'ssimhf6r8kgwepfb',
     'name': 'BlissRadia ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2544,8 +2462,8 @@
 # name: test_device_registry[bgnj6bafrdgb1xmajd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2566,7 +2484,6 @@
     'model_id': 'amx1bgdrfab6jngb',
     'name': 'Lumy Hall',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2575,8 +2492,8 @@
 # name: test_device_registry[bjum5isf7h6xpbrvzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2597,7 +2514,6 @@
     'model_id': 'vrbpx6h7fsi5mujb',
     'name': '接HA双向计量插座',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2606,8 +2522,8 @@
 # name: test_device_registry[bl5cuqxnqzkfs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2628,7 +2544,6 @@
     'model_id': 'nxquc5lb',
     'name': 'Smart Water Timer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2637,8 +2552,8 @@
 # name: test_device_registry[btpss2f6kwfi294rqsj]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2659,7 +2574,6 @@
     'model_id': 'r492ifwk6f2ssptb',
     'name': 'KLARTA HUMEA',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2668,8 +2582,8 @@
 # name: test_device_registry[btyk53n3v10z7a97zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2690,7 +2604,6 @@
     'model_id': '79a7z01v3n35kytb',
     'name': 'Double Digital Meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2699,8 +2612,8 @@
 # name: test_device_registry[buzituffc13pgb1jjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2721,7 +2634,6 @@
     'model_id': 'j1bgp31cffutizub',
     'name': 'Ceiling Portal',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2730,8 +2642,8 @@
 # name: test_device_registry[bxfkpxjgux2fgwnazc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2752,7 +2664,6 @@
     'model_id': 'anwgf2xugjxpkfxb',
     'name': 'Security Light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2761,8 +2672,8 @@
 # name: test_device_registry[c1tfgunpf6optybisf]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2783,7 +2694,6 @@
     'model_id': 'ibytpo6fpnugft1c',
     'name': 'Ventilador Cama',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2792,8 +2702,8 @@
 # name: test_device_registry[c9nbmrweturkgqktdyzb]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2814,7 +2724,6 @@
     'model_id': 'tkqgkrutewrmbn9c',
     'name': 'White Noise Machine',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2823,8 +2732,8 @@
 # name: test_device_registry[cd6bezcadvjngj5jrip]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2845,7 +2754,6 @@
     'model_id': 'j5jgnjvdaczeb6dc',
     'name': 'QNECT WI-FI PIR SENSOR',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2854,8 +2762,8 @@
 # name: test_device_registry[cijerqyssiwrf7deqzkfs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2876,7 +2784,6 @@
     'model_id': 'ed7frwissyqrejic',
     'name': '接HA水阀',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2885,8 +2792,8 @@
 # name: test_device_registry[cju47ovcbeuapei2zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2907,7 +2814,6 @@
     'model_id': '2iepauebcvo74ujc',
     'name': 'Aubess Cooker',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2916,8 +2822,8 @@
 # name: test_device_registry[codvtvgtjs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2938,7 +2844,6 @@
     'model_id': 'tgvtvdoc',
     'name': 'Tournesol',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2947,8 +2852,8 @@
 # name: test_device_registry[couukaypjdnyt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -2969,7 +2874,6 @@
     'model_id': 'pyakuuoc',
     'name': 'Solar zijpad',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -2978,8 +2882,8 @@
 # name: test_device_registry[cq4hzlrnqn4qi0mqzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3000,7 +2904,6 @@
     'model_id': 'qm0iq4nqnrlzh4qc',
     'name': 'Elivco Kitchen Socket',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3009,8 +2912,8 @@
 # name: test_device_registry[cvowstbid97lokayjb2oc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3031,7 +2934,6 @@
     'model_id': 'yakol79dibtswovc',
     'name': 'PTH-9CW 32',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3040,8 +2942,8 @@
 # name: test_device_registry[cwwk68dyfsh2eqi4jbqr]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3062,7 +2964,6 @@
     'model_id': '4iqe2hsfyd86kwwc',
     'name': 'Gas sensor',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3071,8 +2972,8 @@
 # name: test_device_registry[cxbmhihohohk5bmeqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3093,7 +2994,6 @@
     'model_id': 'emb5khohohihmbxc',
     'name': 'Server Fan',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3102,8 +3002,8 @@
 # name: test_device_registry[dBFBdywk9gTihUQmzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3124,7 +3024,6 @@
     'model_id': 'mQUhiTg9kwydBFBd',
     'name': 'Waschmaschine',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3133,8 +3032,8 @@
 # name: test_device_registry[dNBnmtjLU8eRWHf0zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3155,7 +3054,6 @@
     'model_id': '0fHWRe8ULjtmnBNd',
     'name': 'Weihnachten3',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3164,8 +3062,8 @@
 # name: test_device_registry[dj8foneugkjc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3186,7 +3084,6 @@
     'model_id': 'uenof8jd',
     'name': 'Smart Switch',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3195,8 +3092,8 @@
 # name: test_device_registry[dke76hazlc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3217,7 +3114,6 @@
     'model_id': 'zah67ekd',
     'name': 'Kitchen Blinds',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3226,8 +3122,8 @@
 # name: test_device_registry[dn7cjik6kw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3248,7 +3144,6 @@
     'model_id': '6kijc7nd',
     'name': 'Кабінет',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3257,8 +3152,8 @@
 # name: test_device_registry[dt4whlrosmnldadvtk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3279,7 +3174,6 @@
     'model_id': 'vdadlnmsorlhw4td',
     'name': 'Sove',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3288,8 +3182,8 @@
 # name: test_device_registry[dvdtmcoil5yopaljjzm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3310,7 +3204,6 @@
     'model_id': 'jlapoy5liocmtdvd',
     'name': 'ISV-100W2.0',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3319,8 +3212,8 @@
 # name: test_device_registry[e2sbdwuga5jorvejtkdy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3341,7 +3234,6 @@
     'model_id': 'jevroj5aguwdbs2e',
     'name': 'DOLCECLIMA 10 HP WIFI',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3350,8 +3242,8 @@
 # name: test_device_registry[ej2zsznihehztkzqcaderarfni]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3372,7 +3264,6 @@
     'model_id': 'qzktzhehinzsz2je',
     'name': 'Air',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3381,8 +3272,8 @@
 # name: test_device_registry[eway2kw92ncuecarzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3403,7 +3294,6 @@
     'model_id': 'raceucn29wk2yawe',
     'name': 'Bathroom Mirror',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3412,8 +3302,8 @@
 # name: test_device_registry[f4vvhmhvseuiqs6pqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3434,7 +3324,6 @@
     'model_id': 'p6sqiuesvhmhvv4f',
     'name': 'Entrance Door',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3443,8 +3332,8 @@
 # name: test_device_registry[fasvixqysw1lxvjprd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3465,7 +3354,6 @@
     'model_id': 'pjvxl1wsyqxivsaf',
     'name': 'Sunbeam Bedding',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3474,8 +3362,8 @@
 # name: test_device_registry[fbya6s6rhaoyvl8hqgcwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3496,7 +3384,6 @@
     'model_id': 'h8lvyoahr6s6aybf',
     'name': 'Rainwater Tank Level',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3505,8 +3392,8 @@
 # name: test_device_registry[fc2ngmpckw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3527,7 +3414,6 @@
     'model_id': 'cpmgn2cf',
     'name': 'Bathroom radiator',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3536,8 +3422,8 @@
 # name: test_device_registry[fcacn8iqbocuow7dsr]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3558,7 +3444,6 @@
     'model_id': 'd7woucobqi8ncacf',
     'name': 'Geti Solar PV Water Heater',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3567,8 +3452,8 @@
 # name: test_device_registry[fcdadqsiax2gvnt0qld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3589,7 +3474,6 @@
     'model_id': '0tnvg2xaisqdadcf',
     'name': '一路带计量磁保持通断器',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3598,8 +3482,8 @@
 # name: test_device_registry[fjdyw5ld2f5f5ddsps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3620,7 +3504,6 @@
     'model_id': 'sdd5f5f2dl5wydjf',
     'name': 'C9',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3629,8 +3512,8 @@
 # name: test_device_registry[fov1huugujgfyl0xqkynw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3651,7 +3534,6 @@
     'model_id': 'x0lyfgjuguuh1vof',
     'name': 'Smart IR+RF Remote Control',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3660,8 +3542,8 @@
 # name: test_device_registry[frmfrbds0jixxyaljbngd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3682,7 +3564,6 @@
     'model_id': 'layxxij0sdbrfmrf',
     'name': 'WiFi smart online 8 in 1 tester',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3691,8 +3572,8 @@
 # name: test_device_registry[ftvxinxevpy21tbelc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3713,7 +3594,6 @@
     'model_id': 'ebt12ypvexnixvtf',
     'name': 'Kitchen Blinds',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3722,8 +3602,8 @@
 # name: test_device_registry[fvywp3b5mu4zay8lgkxw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3744,7 +3624,6 @@
     'model_id': 'l8yaz4um5b3pwyvf',
     'name': 'Bathroom Smart Switch',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3753,8 +3632,8 @@
 # name: test_device_registry[g0edqq0wzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3775,7 +3654,6 @@
     'model_id': 'w0qqde0g',
     'name': 'Lave linge',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3784,8 +3662,8 @@
 # name: test_device_registry[g1efxsqnp33cg8r3lc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3806,7 +3684,6 @@
     'model_id': '3r8gc33pnqsxfe1g',
     'name': 'Lounge Dark Blind',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3815,8 +3692,8 @@
 # name: test_device_registry[g1fmm26qhhrimmbitk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3837,7 +3714,6 @@
     'model_id': 'ibmmirhhq62mmf1g',
     'name': 'Master Bedroom AC',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3846,8 +3722,8 @@
 # name: test_device_registry[g1qorlffoy2iyo9bsc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3868,7 +3744,6 @@
     'model_id': 'b9oyi2yofflroq1g',
     'name': 'Living room dehumidifier',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3877,8 +3752,8 @@
 # name: test_device_registry[g5uso5ajgkxw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3899,7 +3774,6 @@
     'model_id': 'ja5osu5g',
     'name': 'Bouton tempo extérieur',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3908,8 +3782,8 @@
 # name: test_device_registry[g7af6lrt4miugbstcp]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3930,7 +3804,6 @@
     'model_id': 'tsbguim4trl6fa7g',
     'name': 'Keller',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3939,8 +3812,8 @@
 # name: test_device_registry[g9h9sblxpb5wdwzkqkynw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3961,7 +3834,6 @@
     'model_id': 'kzwdw5bpxlbs9h9g',
     'name': 'IR Minero',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -3970,8 +3842,8 @@
 # name: test_device_registry[gbq8kiahk57ct0bpncjynx]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -3992,7 +3864,6 @@
     'model_id': 'pb0tc75khaik8qbg',
     'name': 'CBE Pro 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4001,8 +3872,8 @@
 # name: test_device_registry[ggimpv4dqzkfs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4023,7 +3894,6 @@
     'model_id': 'd4vpmigg',
     'name': 'Garden Valve Yard',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4032,8 +3902,8 @@
 # name: test_device_registry[ggwxkj8bwn5y63flgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4054,7 +3924,6 @@
     'model_id': 'lf36y5nwb8jkxwgg',
     'name': 'Greenhouse',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4063,8 +3932,8 @@
 # name: test_device_registry[gi69tunb0esxcnefzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4085,7 +3954,6 @@
     'model_id': 'fencxse0bnut96ig',
     'name': 'Spa',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4094,8 +3962,8 @@
 # name: test_device_registry[giqs1xhsekjelfibsc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4116,7 +3984,6 @@
     'model_id': 'biflejkeshx1sqig',
     'name': 'D825A I',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4125,8 +3992,8 @@
 # name: test_device_registry[gjnpc0eojd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4147,7 +4014,6 @@
     'model_id': 'oe0cpnjg',
     'name': 'Front right Lighting trap',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4156,8 +4022,8 @@
 # name: test_device_registry[glsehgu8jd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4178,7 +4044,6 @@
     'model_id': '8ugheslg',
     'name': 'POWERASIA R2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4187,8 +4052,8 @@
 # name: test_device_registry[gluaktf5gk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4209,7 +4074,6 @@
     'model_id': '5ftkaulg',
     'name': 'bathroom light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4218,8 +4082,8 @@
 # name: test_device_registry[gm0whbftkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4240,7 +4104,6 @@
     'model_id': 'tfbhw0mg',
     'name': 'Salon',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4249,8 +4112,8 @@
 # name: test_device_registry[gnZOKztbAtcBkEGPzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4271,7 +4134,6 @@
     'model_id': 'PGEkBctAbtzKOZng',
     'name': 'Din',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4280,8 +4142,8 @@
 # name: test_device_registry[gnqwzcph94wj2sl5nq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4302,7 +4164,6 @@
     'model_id': '5ls2jw49hpczwqng',
     'name': 'Mr. Pure',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4311,8 +4172,8 @@
 # name: test_device_registry[gt1q9tldv1opojrtcp]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4333,7 +4194,6 @@
     'model_id': 'trjopo1vdlt9q1tg',
     'name': 'Terras',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4342,8 +4202,8 @@
 # name: test_device_registry[gtcinipmdp5rgx3nlc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4364,7 +4224,6 @@
     'model_id': 'n3xgr5pdmpinictg',
     'name': 'Estore Sala',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4373,8 +4232,8 @@
 # name: test_device_registry[gvxxy4jitzltz5xhscm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4395,7 +4254,6 @@
     'model_id': 'hx5ztlztij4yxxvg',
     'name': 'Steel cage door',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4404,8 +4262,8 @@
 # name: test_device_registry[hfqeljop3aihnm73zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4426,7 +4284,6 @@
     'model_id': '37mnhia3pojleqfh',
     'name': 'Sapphire ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4435,8 +4292,8 @@
 # name: test_device_registry[hkm4px9ohzozxma3rip]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4457,7 +4314,6 @@
     'model_id': '3amxzozho9xp4mkh',
     'name': 'rat trap hedge',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4466,8 +4322,8 @@
 # name: test_device_registry[hxbonj4yzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4488,7 +4344,6 @@
     'model_id': 'y4jnobxh',
     'name': 'AuVeLiCo',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4497,8 +4352,8 @@
 # name: test_device_registry[hyda5jsihokacvaqjzm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4519,7 +4374,6 @@
     'model_id': 'qavcakohisj5adyh',
     'name': 'Sous Vide',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4528,8 +4382,8 @@
 # name: test_device_registry[hz4pau766eavmxhqsc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4550,7 +4404,6 @@
     'model_id': 'qhxmvae667uap4zh',
     'name': 'DryFix',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4559,8 +4412,8 @@
 # name: test_device_registry[i6xywcsymer1kmb6ps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4581,7 +4434,6 @@
     'model_id': '6bmk1remyscwyx6i',
     'name': 'Mirilla puerta',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4590,8 +4442,8 @@
 # name: test_device_registry[iaagy4qigcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4612,7 +4464,6 @@
     'model_id': 'iq4ygaai',
     'name': 'Bassin',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4621,8 +4472,8 @@
 # name: test_device_registry[idztlaspsms815moqkynw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4643,7 +4494,6 @@
     'model_id': 'om518smspsaltzdi',
     'name': 'Smart IR Theater',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4652,8 +4502,8 @@
 # name: test_device_registry[ifzgvpgoodrfw2aksc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4674,7 +4524,6 @@
     'model_id': 'ka2wfrdoogpvgzfi',
     'name': 'Dehumidifer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4683,8 +4532,8 @@
 # name: test_device_registry[igkrtodqg14xvfxlqswwc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4705,7 +4554,6 @@
     'model_id': 'lxfvx41gqdotrkgi',
     'name': 'Cat Feeder',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4714,8 +4562,8 @@
 # name: test_device_registry[ijne16zv8vpqmubnjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4736,7 +4584,6 @@
     'model_id': 'nbumqpv8vz61enji',
     'name': 'b2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4745,8 +4592,8 @@
 # name: test_device_registry[ijzjlqwmv1blwe0gsf]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4767,7 +4614,6 @@
     'model_id': 'g0ewlb1vmwqljzji',
     'name': 'Ceiling Fan With Light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4776,8 +4622,8 @@
 # name: test_device_registry[ikbbdbnqsd70pc1glc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4798,7 +4644,6 @@
     'model_id': 'g1cp07dsqnbdbbki',
     'name': 'Persiana do Quarto',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4807,8 +4652,8 @@
 # name: test_device_registry[iks13mcaiyie3rryjb2oc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4829,7 +4674,6 @@
     'model_id': 'yrr3eiyiacm31ski',
     'name': 'AQI',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4838,8 +4682,8 @@
 # name: test_device_registry[ilms5pwjzzsxuxmvsc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4860,7 +4704,6 @@
     'model_id': 'vmxuxszzjwp5smli',
     'name': 'Dehumidifier ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4869,8 +4712,8 @@
 # name: test_device_registry[im3fum2zt73boagkjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4891,7 +4734,6 @@
     'model_id': 'kgaob37tz2muf3mi',
     'name': 'Parker Ceiling Fan 1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4900,8 +4742,8 @@
 # name: test_device_registry[ingdwog22gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4922,7 +4764,6 @@
     'model_id': '2gowdgni',
     'name': 'Mesh-Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4931,8 +4772,8 @@
 # name: test_device_registry[iomszlsve0yyzkfwqswwc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4953,7 +4794,6 @@
     'model_id': 'wfkzyy0evslzsmoi',
     'name': 'Cleverio PF100',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4962,8 +4802,8 @@
 # name: test_device_registry[j6mn1t4ut5end6ifkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -4984,7 +4824,6 @@
     'model_id': 'fi6dne5tu4t1nm6j',
     'name': 'WiFi Smart Gas Boiler Thermostat ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -4993,8 +4832,8 @@
 # name: test_device_registry[jfpdpavoqgoqsn3cjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5015,7 +4854,6 @@
     'model_id': 'c3nsqogqovapdpfj',
     'name': 'Arbeitszimmer led',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5024,8 +4862,8 @@
 # name: test_device_registry[jfydgffzmhjed9fgjbwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5046,7 +4884,6 @@
     'model_id': 'gf9dejhmzffgdyfj',
     'name': ' Smoke detector upstairs ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5055,8 +4892,8 @@
 # name: test_device_registry[jgsopsvzh2ec3itjzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5077,7 +4914,6 @@
     'model_id': 'jti3ce2hzvsposgj',
     'name': 'Dehumidifier ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5086,8 +4922,8 @@
 # name: test_device_registry[jlduh7vigcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5108,7 +4944,6 @@
     'model_id': 'iv7hudlj',
     'name': 'Basement temperature',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5117,8 +4952,8 @@
 # name: test_device_registry[jm2fsqtzuhqtbo5ykw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5139,7 +4974,6 @@
     'model_id': 'y5obtqhuztqsf2mj',
     'name': 'Term - Prizemi',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5148,8 +4982,8 @@
 # name: test_device_registry[jzpap0inhkykqtlwgklc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5170,7 +5004,6 @@
     'model_id': 'wltqkykhni0papzj',
     'name': 'Roller shutter Living Room',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5179,8 +5012,8 @@
 # name: test_device_registry[kcdngswaxs8hm52bnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5201,7 +5034,6 @@
     'model_id': 'b25mh8sxawsgndck',
     'name': 'ZigBee Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5210,8 +5042,8 @@
 # name: test_device_registry[kffnst1epj6vr8xnzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5232,7 +5064,6 @@
     'model_id': 'nx8rv6jpe1tsnffk',
     'name': 'Spot 1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5241,8 +5072,8 @@
 # name: test_device_registry[kjr0pqg7eunn4vlujbgs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5263,7 +5094,6 @@
     'model_id': 'ulv4nnue7gqp0rjk',
     'name': 'Siren veranda ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5272,8 +5102,8 @@
 # name: test_device_registry[kkande5hk6sfdkoxjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5294,7 +5124,6 @@
     'model_id': 'xokdfs6kh5ednakk',
     'name': 'ERKER 1-Gold ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5303,8 +5132,8 @@
 # name: test_device_registry[kkcwqzlvgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5325,7 +5154,6 @@
     'model_id': 'vlzqwckk',
     'name': 'Temperature Humidity Sensor abelhas pasillo',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5334,8 +5162,8 @@
 # name: test_device_registry[kkgbskmfejn67l1orip]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5356,7 +5184,6 @@
     'model_id': 'o1l76njefmksbgkk',
     'name': 'PIR',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5365,8 +5192,8 @@
 # name: test_device_registry[klgxmpwvdhw7tzs8jd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5387,7 +5214,6 @@
     'model_id': '8szt7whdvwpmxglk',
     'name': 'Porch light E',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5396,8 +5222,8 @@
 # name: test_device_registry[ksy8guiy64acbbpnqkynw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5418,7 +5244,6 @@
     'model_id': 'npbbca46yiug8ysk',
     'name': 'Bedroom IR',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5427,8 +5252,8 @@
 # name: test_device_registry[kta28zbwj6u0xa6lbsgy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5449,7 +5274,6 @@
     'model_id': 'l6ax0u6jwbz82atk',
     'name': 'Pond',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5458,8 +5282,8 @@
 # name: test_device_registry[kvnsoqyfltmf0bknzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5480,7 +5304,6 @@
     'model_id': 'nkb0fmtlfyqosnvk',
     'name': 'Bassin',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5489,8 +5312,8 @@
 # name: test_device_registry[kx8dncf1qzkfs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5511,7 +5334,6 @@
     'model_id': '1fcnd8xk',
     'name': 'Valve Controller 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5520,8 +5342,8 @@
 # name: test_device_registry[kxwleaa2sph]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5542,7 +5364,6 @@
     'model_id': '2aaelwxk',
     'name': 'Human presence Office',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5551,8 +5372,8 @@
 # name: test_device_registry[kxxrbv93k2vvkconqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5573,7 +5394,6 @@
     'model_id': 'nockvv2k39vbrxxk',
     'name': 'Seating side 6-ch Smart Switch ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5582,8 +5402,8 @@
 # name: test_device_registry[l8uxezzkc7c5a0jhzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5604,7 +5424,6 @@
     'model_id': 'hj0a5c7ckzzexu8l',
     'name': 'droger',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5613,8 +5432,8 @@
 # name: test_device_registry[lflvu8cazha8af9jsk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5635,7 +5454,6 @@
     'model_id': 'j9fa8ahzac8uvlfl',
     'name': 'Tower Fan CA-407G Smart',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5644,8 +5462,8 @@
 # name: test_device_registry[llw1rhcau4y3othdzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5666,7 +5484,6 @@
     'model_id': 'dhto3y4uachr1wll',
     'name': 'Meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5675,8 +5492,8 @@
 # name: test_device_registry[lnjsbx45z3p7s59zbdnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5697,7 +5514,6 @@
     'model_id': 'z95s7p3z54xbsjnl',
     'name': 'WIFI Dual Meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5706,8 +5522,8 @@
 # name: test_device_registry[mgcpxpmovasazerdps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5728,7 +5544,6 @@
     'model_id': 'drezasavompxpcgm',
     'name': 'CAM GARAGE',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5737,8 +5552,8 @@
 # name: test_device_registry[mjhwalv51czt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5759,7 +5574,6 @@
     'model_id': '5vlawhjm',
     'name': 'INTELAR IR288',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5768,8 +5582,8 @@
 # name: test_device_registry[mpowx36sgqexmtes2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5790,7 +5604,6 @@
     'model_id': 'setmxeqgs63xwopm',
     'name': 'Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5799,8 +5612,8 @@
 # name: test_device_registry[mvsdcwtskkezlnw5tk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5821,7 +5634,6 @@
     'model_id': '5wnlzekkstwcdsvm',
     'name': 'Air Conditioner',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5830,8 +5642,8 @@
 # name: test_device_registry[mwsaod7fa3gjyh6ids]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5852,7 +5664,6 @@
     'model_id': 'i6hyjg3af7doaswm',
     'name': 'Hoover',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5861,8 +5672,8 @@
 # name: test_device_registry[nc4e9nlZPTuTNfYEzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5883,7 +5694,6 @@
     'model_id': 'EYfNTuTPZln9e4cn',
     'name': 'ZAS-01',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5892,8 +5702,8 @@
 # name: test_device_registry[ncl7oi5d6hqmf1g0zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5914,7 +5724,6 @@
     'model_id': '0g1fmqh6d5io7lcn',
     'name': 'Apollo light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5923,8 +5732,8 @@
 # name: test_device_registry[ngcubvaqoraolsmtjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5945,7 +5754,6 @@
     'model_id': 'tmsloaroqavbucgn',
     'name': 'Pokerlamp 1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5954,8 +5762,8 @@
 # name: test_device_registry[nnqlg0rxryraf8ezbdnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -5976,7 +5784,6 @@
     'model_id': 'ze8faryrxr0glqnn',
     'name': 'Meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -5985,8 +5792,8 @@
 # name: test_device_registry[nr26obpclc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6007,7 +5814,6 @@
     'model_id': 'cpbo62rn',
     'name': 'blinds',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6016,8 +5822,8 @@
 # name: test_device_registry[nt3mpibadxfqkegldyg]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6038,7 +5844,6 @@
     'model_id': 'lgekqfxdabipm3tn',
     'name': 'Colorful PIR Night Light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6047,8 +5852,8 @@
 # name: test_device_registry[nxdcy0uidplnhkazjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6069,7 +5874,6 @@
     'model_id': 'zakhnlpdiu0ycdxn',
     'name': 'Stoel',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6078,8 +5882,8 @@
 # name: test_device_registry[nyriu7sjgj9oruzmpsm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6100,7 +5904,6 @@
     'model_id': 'mzuro9jgjs7uiryn',
     'name': 'Poopy Nano 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6109,8 +5912,8 @@
 # name: test_device_registry[o4hpbl5uarjfbzheps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6131,7 +5934,6 @@
     'model_id': 'ehzbfjrau5lbph4o',
     'name': 'Dolní vchod - západ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6140,8 +5942,8 @@
 # name: test_device_registry[o5kqedcacfng0plpnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6162,7 +5964,6 @@
     'model_id': 'plp0gnfcacdeqk5o',
     'name': 'Zigbee Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6171,8 +5972,8 @@
 # name: test_device_registry[o71einxvuuktuljcjbwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6193,7 +5994,6 @@
     'model_id': 'cjlutkuuvxnie17o',
     'name': 'Rauchmelder Alexsandro ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6202,8 +6002,8 @@
 # name: test_device_registry[obb7p55c0us6rdxkqld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6224,7 +6024,6 @@
     'model_id': 'kxdr6su0c55p7bbo',
     'name': 'Metering_3PN_WiFi_stable',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6233,8 +6032,8 @@
 # name: test_device_registry[ohefbbk9gcdl]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6255,7 +6054,6 @@
     'model_id': '9kbbfeho',
     'name': 'Luminosité',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6264,8 +6062,8 @@
 # name: test_device_registry[okwwus27jhqqe2mijbgs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6286,7 +6084,6 @@
     'model_id': 'im2eqqhj72suwwko',
     'name': 'Siren',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6295,8 +6092,8 @@
 # name: test_device_registry[ol8xwtcj42eg18bdbrnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6317,7 +6114,6 @@
     'model_id': 'db81ge24jctwx8lo',
     'name': 'Hot Water Heat Pump',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6326,8 +6122,8 @@
 # name: test_device_registry[oq9ksabjz6tip49tkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6348,7 +6144,6 @@
     'model_id': 't94pit6zjbask9qo',
     'name': 'Floor Thermostat Kitchen',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6357,8 +6152,8 @@
 # name: test_device_registry[oqyhsaqwsph]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6379,7 +6174,6 @@
     'model_id': 'wqashyqo',
     'name': 'Soil moisture sensor #1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6388,8 +6182,8 @@
 # name: test_device_registry[orotles4ucq8rxwn2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6410,7 +6204,6 @@
     'model_id': 'nwxr8qcu4seltoro',
     'name': 'X5 Zigbee Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6419,8 +6212,8 @@
 # name: test_device_registry[ouabwhlarnczogyfqld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6441,7 +6234,6 @@
     'model_id': 'fygozcnralhwbauo',
     'name': 'SPM02_WiFi',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6450,8 +6242,8 @@
 # name: test_device_registry[owozxdzgbibizu4sjk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6472,7 +6264,6 @@
     'model_id': 's4uzibibgzdxzowo',
     'name': 'ION1000PRO',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6481,8 +6272,8 @@
 # name: test_device_registry[oxi73pj9a0ubr60pjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6503,7 +6294,6 @@
     'model_id': 'p06rbu0a9jp37ixo',
     'name': 'Jardim Casa',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6512,8 +6302,8 @@
 # name: test_device_registry[p2gnclbiqxrbboagdd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6534,7 +6324,6 @@
     'model_id': 'gaobbrxqiblcng2p',
     'name': 'TV Sync Backlights',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6543,8 +6332,8 @@
 # name: test_device_registry[p5ger7bqlcjtmmqgbdnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6565,7 +6354,6 @@
     'model_id': 'gqmmtjclqb7reg5p',
     'name': 'Wi-Fi Meter(Bi-Directional)',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6574,8 +6362,8 @@
 # name: test_device_registry[p8xoxccrjbwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6596,7 +6384,6 @@
     'model_id': 'rccxox8p',
     'name': 'Smoke Alarm',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6605,8 +6392,8 @@
 # name: test_device_registry[paxijfx9fkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6627,7 +6414,6 @@
     'model_id': '9xfjixap',
     'name': 'Empore',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6636,8 +6422,8 @@
 # name: test_device_registry[pdasfna8fswh4a0tzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6658,7 +6444,6 @@
     'model_id': 't0a4hwsf8anfsadp',
     'name': 'wallwasher front',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6667,8 +6452,8 @@
 # name: test_device_registry[pdnimgsb3w0xko3kjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6689,7 +6474,6 @@
     'model_id': 'k3okx0w3bsgmindp',
     'name': 'Portal Casa Carro Jalimy',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6698,8 +6482,8 @@
 # name: test_device_registry[pfhwb1v3i7cifa2tcp]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6720,7 +6504,6 @@
     'model_id': 't2afic7i3v1bwhfp',
     'name': 'Bubbelbad',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6729,8 +6512,8 @@
 # name: test_device_registry[ppgdpsq1xaxlyzryjk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6751,7 +6534,6 @@
     'model_id': 'yrzylxax1qspdgpp',
     'name': 'Bree',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6760,8 +6542,8 @@
 # name: test_device_registry[pykascx9yfqrxtbgzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6782,7 +6564,6 @@
     'model_id': 'gbtxrqfy9xcsakyp',
     'name': '3DPrinter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6791,8 +6572,8 @@
 # name: test_device_registry[pz2xuth8hczv6zrwzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6813,7 +6594,6 @@
     'model_id': 'wrz6vzch8htux2zp',
     'name': 'Elivco TV',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6822,8 +6602,8 @@
 # name: test_device_registry[q304vac40br8nlkajsywc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6844,7 +6624,6 @@
     'model_id': 'akln8rb04cav403q',
     'name': 'Water Fountain',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6853,8 +6632,8 @@
 # name: test_device_registry[q3iie9vjd4wfqyy1qzkmkc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6875,7 +6654,6 @@
     'model_id': '1yyqfw4djv9eii3q',
     'name': 'Garage door ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6884,8 +6662,8 @@
 # name: test_device_registry[q62sg0p3s52thp6zzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6906,7 +6684,6 @@
     'model_id': 'z6pht25s3p0gs26q',
     'name': '6294HA',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6915,8 +6692,8 @@
 # name: test_device_registry[q8dncqpgin4yympisc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6937,7 +6714,6 @@
     'model_id': 'ipmyy4nigpqcnd8q',
     'name': 'Pro Breeze 30L Compressor Dehumidifier',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6946,8 +6722,8 @@
 # name: test_device_registry[qe8vvtx4nl21wjd3dytkx]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6968,7 +6744,6 @@
     'model_id': '3djw12ln4xtvv8eq',
     'name': 'Genio Nebula & Blue Star Projector',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -6977,8 +6752,8 @@
 # name: test_device_registry[qhgghufzqtwloqoqjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -6999,7 +6774,6 @@
     'model_id': 'qoqolwtqzfuhgghq',
     'name': 'Smart Bulb RGBCW',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7008,8 +6782,8 @@
 # name: test_device_registry[qi94v9dmdx4fkpncqld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7030,7 +6804,6 @@
     'model_id': 'cnpkf4xdmd9v49iq',
     'name': '断路器HA',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7039,8 +6812,8 @@
 # name: test_device_registry[qifhbafbqubbp3b6qbnnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7061,7 +6834,6 @@
     'model_id': '6b3pbbuqbfabhfiq',
     'name': 'Wi-Fi solar grid micro inverter （GT）',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7070,8 +6842,8 @@
 # name: test_device_registry[qt0o5jlatiqf2rscps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7092,7 +6864,6 @@
     'model_id': 'csr2fqitalj5o0tq',
     'name': 'Intercom',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7101,8 +6872,8 @@
 # name: test_device_registry[queafegmhhmtivdxjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7123,7 +6894,6 @@
     'model_id': 'xdvitmhhmgefaeuq',
     'name': 'druckerhell',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7132,8 +6902,8 @@
 # name: test_device_registry[qwExlkou9h2USezrjs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7154,7 +6924,6 @@
     'model_id': 'rzeSU2h9uoklxEwq',
     'name': 'Inondation',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7163,8 +6932,8 @@
 # name: test_device_registry[qyy1auihjyoogvb7zdccq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7185,7 +6954,6 @@
     'model_id': '7bvgooyjhiua1yyq',
     'name': 'AC charging control box',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7194,8 +6962,8 @@
 # name: test_device_registry[r4yrlr705ei31ikmjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7216,7 +6984,6 @@
     'model_id': 'mki13ie507rlry4r',
     'name': 'Garage light',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7225,8 +6992,8 @@
 # name: test_device_registry[rdq0bn4dzuwx2qfujd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7247,7 +7014,6 @@
     'model_id': 'ufq2xwuzd4nb0qdr',
     'name': 'Sjiethoes',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7256,8 +7022,8 @@
 # name: test_device_registry[ri7eegdifufzdi54dyzb]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7278,7 +7044,6 @@
     'model_id': '45idzfufidgee7ir',
     'name': 'Smart White Noise Machine',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7287,8 +7052,8 @@
 # name: test_device_registry[rirsc4vhpbv2whkp2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7309,7 +7074,6 @@
     'model_id': 'pkhw2vbphv4csrir',
     'name': 'C30',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7318,8 +7082,8 @@
 # name: test_device_registry[rl39uwgaqwjwc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7340,7 +7104,6 @@
     'model_id': 'agwu93lr',
     'name': 'Smart Odor Eliminator-Pro',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7349,8 +7112,8 @@
 # name: test_device_registry[rojky4l6yyjreeilnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7371,7 +7134,6 @@
     'model_id': 'lieerjyy6l4ykjor',
     'name': 'Zigbee Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7380,8 +7142,8 @@
 # name: test_device_registry[rsjdwgnbqky]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7402,7 +7164,6 @@
     'model_id': 'bngwdjsr',
     'name': 'Télécommande lumières ZigBee',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7411,8 +7172,8 @@
 # name: test_device_registry[rvsneuipzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7433,7 +7194,6 @@
     'model_id': 'piuensvr',
     'name': 'Signal repeater',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7442,8 +7202,8 @@
 # name: test_device_registry[rwp6kdezm97s2nktzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7464,7 +7224,6 @@
     'model_id': 'tkn2s79mzedk6pwr',
     'name': 'Weihnachtsmann ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7473,8 +7232,8 @@
 # name: test_device_registry[rzt2knqamsxjp8f9ycjjh]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7495,7 +7254,6 @@
     'model_id': '9f8pjxsmaqnk2tzr',
     'name': 'MT15/MT29',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7504,8 +7262,8 @@
 # name: test_device_registry[s3zzjdcfrip]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7526,7 +7284,6 @@
     'model_id': 'fcdjzz3s',
     'name': 'Motion sensor lidl zigbee',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7535,8 +7292,8 @@
 # name: test_device_registry[s5ah3novtabe4tfdhb]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7557,7 +7314,6 @@
     'model_id': 'dft4ebatvon3ha5s',
     'name': 'Smart Kettle',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7566,8 +7322,8 @@
 # name: test_device_registry[sb3zdertrw50bgogkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7588,7 +7344,6 @@
     'model_id': 'gogb05wrtredz3bs',
     'name': 'smart thermostats',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7597,8 +7352,8 @@
 # name: test_device_registry[sdq2flqkq0lblcah2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7619,7 +7374,6 @@
     'model_id': 'haclbl0qkqlf2qds',
     'name': 'Home Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7628,8 +7382,8 @@
 # name: test_device_registry[shga3pmbkwhthvqxgklc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7650,7 +7404,6 @@
     'model_id': 'xqvhthwkbmp3aghs',
     'name': 'Pergola',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7659,8 +7412,8 @@
 # name: test_device_registry[sifg4pfqsylsayg0jd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7681,7 +7434,6 @@
     'model_id': '0gyaslysqfp4gfis',
     'name': 'Study 1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7690,8 +7442,8 @@
 # name: test_device_registry[sj55nxhjftilowkejd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7712,7 +7464,6 @@
     'model_id': 'ekwolitfjhxn55js',
     'name': 'ab6',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7721,8 +7472,8 @@
 # name: test_device_registry[slkkzcxa7yjqmetqlc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7743,7 +7494,6 @@
     'model_id': 'qtemqjy7axczkkls',
     'name': 'Dining 1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7752,8 +7502,8 @@
 # name: test_device_registry[snbu4b3vekhywztwqgcwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7774,7 +7524,6 @@
     'model_id': 'wtzwyhkev3b4ubns',
     'name': 'House Water Level',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7783,8 +7532,8 @@
 # name: test_device_registry[sq6fbd3pfkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7805,7 +7554,6 @@
     'model_id': 'p3dbf6qs',
     'name': 'Anbau',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7814,8 +7562,8 @@
 # name: test_device_registry[srbr1lpaydiq7l5sgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7836,7 +7584,6 @@
     'model_id': 's5l7qidyapl1rbrs',
     'name': 'Ventus test',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7845,8 +7592,8 @@
 # name: test_device_registry[srp7cfjtn6sshwmt2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7867,7 +7614,6 @@
     'model_id': 'tmwhss6ntjfc7prs',
     'name': 'Gateway',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7876,8 +7622,8 @@
 # name: test_device_registry[svjjuwykgijjedurps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7898,7 +7644,6 @@
     'model_id': 'rudejjigkywujjvs',
     'name': 'Bürocam',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7907,8 +7652,8 @@
 # name: test_device_registry[sw1ejdomlmfubapizc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7929,7 +7674,6 @@
     'model_id': 'ipabufmlmodje1ws',
     'name': 'Värmelampa',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7938,8 +7682,8 @@
 # name: test_device_registry[swhtzki3qrz5ydchjboc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7960,7 +7704,6 @@
     'model_id': 'hcdy5zrq3ikzthws',
     'name': 'Smogo',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -7969,8 +7712,8 @@
 # name: test_device_registry[sxa4ealyi9cotiugzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -7991,7 +7734,6 @@
     'model_id': 'guitoc9iylae4axs',
     'name': 'HA Socket Delta Test',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8000,8 +7742,8 @@
 # name: test_device_registry[syep74caderarfni]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8022,7 +7764,6 @@
     'model_id': '47peys',
     'name': 'Ar',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8031,8 +7772,8 @@
 # name: test_device_registry[t5zosev6h6wmwyrajbwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8053,7 +7794,6 @@
     'model_id': 'arywmw6h6vesoz5t',
     'name': 'Rauchmelder Drucker',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8062,8 +7802,8 @@
 # name: test_device_registry[t7bvnnvplkwhdqm9qtn]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8084,7 +7824,6 @@
     'model_id': '9mqdhwklpvnnvb7t',
     'name': 'Бризер Зал',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8093,8 +7832,8 @@
 # name: test_device_registry[t88qaeyydamm9xhsddx]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8115,7 +7854,6 @@
     'model_id': 'shx9mmadyyeaq88t',
     'name': 'Plafond bureau ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8124,8 +7862,8 @@
 # name: test_device_registry[tcdk0skzcpisexj2zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8146,7 +7884,6 @@
     'model_id': '2jxesipczks0kdct',
     'name': 'HVAC Meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8155,8 +7892,8 @@
 # name: test_device_registry[thdfxdqqlc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8177,7 +7914,6 @@
     'model_id': 'qqdxfdht',
     'name': 'bedroom blinds',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8186,8 +7922,8 @@
 # name: test_device_registry[trffx1ktlyu3tnmljd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8208,7 +7944,6 @@
     'model_id': 'lmnt3uyltk1xffrt',
     'name': 'DirectietKamer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8217,8 +7952,8 @@
 # name: test_device_registry[tskafaotnfigad6oqzkfs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8239,7 +7974,6 @@
     'model_id': 'o6dagifntoafakst',
     'name': 'Sprinkler Cesare',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8248,8 +7982,8 @@
 # name: test_device_registry[tvgoe1s3fabebcskjbwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8270,7 +8004,6 @@
     'model_id': 'kscbebaf3s1eogvt',
     'name': 'WIFI Smoke alarm',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8279,8 +8012,8 @@
 # name: test_device_registry[u8h3bty7qgg]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8301,7 +8034,6 @@
     'model_id': '7ytb3h8u',
     'name': 'GIEX Watering Timer',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8310,8 +8042,8 @@
 # name: test_device_registry[uBLyTOvlhoRWXKjrps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8332,7 +8064,6 @@
     'model_id': 'rjKXWRohlvOTyLBu',
     'name': 'CAM PORCH',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8341,8 +8072,8 @@
 # name: test_device_registry[uYmmlWz6zs0dIgYDjbgs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8363,7 +8094,6 @@
     'model_id': 'DYgId0sz6zWlmmYu',
     'name': 'Siren',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8372,8 +8102,8 @@
 # name: test_device_registry[uc9fL2NpR79iCzGIzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8394,7 +8124,6 @@
     'model_id': 'IGzCi97RpN2Lf9cu',
     'name': 'N4-Auto',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8403,8 +8132,8 @@
 # name: test_device_registry[uew54dymycjwz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8425,7 +8154,6 @@
     'model_id': 'myd45weu',
     'name': 'Patates',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8434,8 +8162,8 @@
 # name: test_device_registry[urm7i0rtdlabqiqygcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8456,7 +8184,6 @@
     'model_id': 'yqiqbaldtr0i7mru',
     'name': 'WiFi Temperature & Humidity Sensor',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8465,8 +8192,8 @@
 # name: test_device_registry[uvh6oeqrfliovfiwzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8487,7 +8214,6 @@
     'model_id': 'wifvoilfrqeo6hvu',
     'name': 'Licht drucker',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8496,8 +8222,8 @@
 # name: test_device_registry[vADxMzNytofrgbm4zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8518,7 +8244,6 @@
     'model_id': '4mbgrfotyNzMxDAv',
     'name': 'Air Purifier ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8527,8 +8252,8 @@
 # name: test_device_registry[vayhq2aj3p3z6y2ggcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8549,7 +8274,6 @@
     'model_id': 'g2y6z3p3ja2qhyav',
     'name': 'NP DownStairs North',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8558,8 +8282,8 @@
 # name: test_device_registry[vcrfgwvbuybgnj3zqld]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8580,7 +8304,6 @@
     'model_id': 'z3jngbyubvwgfrcv',
     'name': 'Edesanya Energy',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8589,8 +8312,8 @@
 # name: test_device_registry[ve3ctzrqgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8611,7 +8334,6 @@
     'model_id': 'qrztc3ev',
     'name': 'Temperature and humidity sensor',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8620,8 +8342,8 @@
 # name: test_device_registry[vnj3sa6mqahro6phjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8642,7 +8364,6 @@
     'model_id': 'hp6orhaqm6as3jnv',
     'name': 'Master bedroom TV lights',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8651,8 +8372,8 @@
 # name: test_device_registry[vpfdskpi8pr8cbtfzjs]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8673,7 +8394,6 @@
     'model_id': 'ftbc8rp8ipksdfpv',
     'name': 'mesa',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8682,8 +8402,8 @@
 # name: test_device_registry[vrhdtr5fawoiyth9qdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8704,7 +8424,6 @@
     'model_id': '9htyiowaf5rtdhrv',
     'name': 'Framboisiers',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8713,8 +8432,8 @@
 # name: test_device_registry[vx2owjsg86g2ys93zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8735,7 +8454,6 @@
     'model_id': '39sy2g68gsjwo2xv',
     'name': 'Ineox SP2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8744,8 +8462,8 @@
 # name: test_device_registry[vzu7lkknqjz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8766,7 +8484,6 @@
     'model_id': 'nkkl7uzv',
     'name': 'Zigby répéteur ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8775,8 +8492,8 @@
 # name: test_device_registry[w8oht6v8aauqa0y8jd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8797,7 +8514,6 @@
     'model_id': '8y0aquaa8v6tho8w',
     'name': 'dressoir spot',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8806,8 +8522,8 @@
 # name: test_device_registry[w9hdtm88xj5crtc1qdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8828,7 +8544,6 @@
     'model_id': '1ctrc5jx88mtdh9w',
     'name': 'Puerta Casa ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8837,8 +8552,8 @@
 # name: test_device_registry[wc6mumew8inrivi9zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8859,7 +8574,6 @@
     'model_id': '9ivirni8wemum6cw',
     'name': 'Garáž čerpadlo',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8868,8 +8582,8 @@
 # name: test_device_registry[weozorgv28n2scribswh]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8890,7 +8604,6 @@
     'model_id': 'ircs2n82vgrozoew',
     'name': 'InverFlow',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8899,8 +8612,8 @@
 # name: test_device_registry[x4nogasbi8ggpb3lcd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8921,7 +8634,6 @@
     'model_id': 'l3bpgg8ibsagon4x',
     'name': 'LSC Party String Light RGBIC+CCT ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8930,8 +8642,8 @@
 # name: test_device_registry[x7quooqakw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8952,7 +8664,6 @@
     'model_id': 'aqoouq7x',
     'name': 'Clima cucina',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8961,8 +8672,8 @@
 # name: test_device_registry[xR2ASpOQgAAqu7Drlc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8983,7 +8694,6 @@
     'model_id': 'rD7uqAAgQOpSA2Rx',
     'name': 'Kit-Blinds',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -8992,8 +8702,8 @@
 # name: test_device_registry[xenxir4a0tn0p1qcqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9014,7 +8724,6 @@
     'model_id': 'cq1p0nt0a4rixnex',
     'name': '4-433',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9023,8 +8732,8 @@
 # name: test_device_registry[xihygtyd0d1faknkps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9045,7 +8754,6 @@
     'model_id': 'knkaf1d0dytgyhix',
     'name': 'Security Camera',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9054,8 +8762,8 @@
 # name: test_device_registry[xms6qowipdvjnkdgqdt]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9076,7 +8784,6 @@
     'model_id': 'gdknjvdpiwoq6smx',
     'name': 'Jardim frontal ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9085,8 +8792,8 @@
 # name: test_device_registry[y1dkg3disbacmqfyjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9107,7 +8814,6 @@
     'model_id': 'yfqmcabsid3gkd1y',
     'name': 'Shop Light 5',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9116,8 +8822,8 @@
 # name: test_device_registry[y7eeatfzbtbyllk0qbnnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9138,7 +8844,6 @@
     'model_id': '0kllybtbzftaee7y',
     'name': 'Soria',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9147,8 +8852,8 @@
 # name: test_device_registry[ycttanlnpa0aivbfzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9169,7 +8874,6 @@
     'model_id': 'fbvia0apnlnattcy',
     'name': 'AK1',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9178,8 +8882,8 @@
 # name: test_device_registry[yky6kunazmaitupzjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9200,7 +8904,6 @@
     'model_id': 'zputiamzanuk6yky',
     'name': 'Floodlight',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9209,8 +8912,8 @@
 # name: test_device_registry[yo2karkjuhzztxsfjk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9231,7 +8934,6 @@
     'model_id': 'fsxtzzhujkrak2oy',
     'name': 'Kalado Air Purifier',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9240,8 +8942,8 @@
 # name: test_device_registry[yohkwjjdjlzludd3psm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9262,7 +8964,6 @@
     'model_id': '3ddulzljdjjwkhoy',
     'name': 'Kattenbak',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9271,8 +8972,8 @@
 # name: test_device_registry[yuanswy6scm]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9293,7 +8994,6 @@
     'model_id': '6ywsnauy',
     'name': 'Fenêtre cuisine',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9302,8 +9002,8 @@
 # name: test_device_registry[yybgnzr3ztws]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9324,7 +9024,6 @@
     'model_id': '3rzngbyy',
     'name': 'Grillhőmérő',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9333,8 +9032,8 @@
 # name: test_device_registry[z7cu5t8bl9tt9fabjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9355,7 +9054,6 @@
     'model_id': 'baf9tt9lb8t5uc7z',
     'name': 'Pokerlamp 2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9364,8 +9062,8 @@
 # name: test_device_registry[z8woiryqydmzonjdjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9386,7 +9084,6 @@
     'model_id': 'djnozmdyqyriow8z',
     'name': 'Fakkel 8',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9395,8 +9092,8 @@
 # name: test_device_registry[zaszonjgzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9417,7 +9114,6 @@
     'model_id': 'gjnozsaz',
     'name': 'Raspy4 - Home Assistant',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9426,8 +9122,8 @@
 # name: test_device_registry[zf8vgiwoa07jwegtjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9448,7 +9144,6 @@
     'model_id': 'tgewj70aowigv8fz',
     'name': 'Stairs',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9457,8 +9152,8 @@
 # name: test_device_registry[zfHZQ7tZUBxAWjACjk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9479,7 +9174,6 @@
     'model_id': 'CAjWAxBUZt7QZHfz',
     'name': 'HL400',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9488,8 +9182,8 @@
 # name: test_device_registry[zgiyrxflahjowpcckw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9510,7 +9204,6 @@
     'model_id': 'ccpwojhalfxryigz',
     'name': 'Boiler Temperature Controller',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9519,8 +9212,8 @@
 # name: test_device_registry[zjh9xhtm3gibs9kizc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9541,7 +9234,6 @@
     'model_id': 'ik9sbig3mthx9hjz',
     'name': 'Aubess Washing Machine',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9550,8 +9242,8 @@
 # name: test_device_registry[zoytcemodrn39zqwrip]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9572,7 +9264,6 @@
     'model_id': 'wqz93nrdomectyoz',
     'name': 'PIR outside stairs',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9581,8 +9272,8 @@
 # name: test_device_registry[zrrraytdoanz33rlds]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9603,7 +9294,6 @@
     'model_id': 'lr33znaodtyarrrz',
     'name': 'V20',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9612,8 +9302,8 @@
 # name: test_device_registry[zspc4q1ut7swycnyzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9634,7 +9324,6 @@
     'model_id': 'yncyws7tu1q4cpsz',
     'name': 'Wi-Fi hub',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9643,8 +9332,8 @@
 # name: test_device_registry[zspxfhsvgn2hgtndzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9665,7 +9354,6 @@
     'model_id': 'dntgh2ngvshfxpsz',
     'name': 'fakkel veranda ',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9674,8 +9362,8 @@
 # name: test_device_registry[zuqudhznfzttizpgbrnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9696,7 +9384,6 @@
     'model_id': 'gpzittzfnzhduquz',
     'name': 'Inverter Pool Heat Pump',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9705,8 +9392,8 @@
 # name: test_device_registry[zwnoax1om13nulplvtderarfni]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9727,7 +9414,6 @@
     'model_id': 'lplun31mo1xaonwz',
     'name': 'TV',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9736,8 +9422,8 @@
 # name: test_device_registry[zxmrfsffcearbajpjfx]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9758,7 +9444,6 @@
     'model_id': 'pjabraecffsfrmxz',
     'name': 'Register booster fan',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9767,8 +9452,8 @@
 # name: test_device_registry[zyutbek7wdm1b4cgzckw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9789,7 +9474,6 @@
     'model_id': 'gc4b1mdw7kebtuyz',
     'name': 'pid_relay_2',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -9798,8 +9482,8 @@
 # name: test_device_registry[zzz87dkfce6pdqxwtk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -9820,7 +9504,6 @@
     'model_id': 'wxqdp6ecfkd78zzz',
     'name': 'Mini-Split',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
