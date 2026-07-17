@@ -209,8 +209,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
-                suggested_values=user_input
-                or {k: v for k, v in reconf_entry.data.items() if k != CONF_PASSWORD},
+                suggested_values=user_input or dict(reconf_entry.data),
             ),
             errors=errors,
         )
