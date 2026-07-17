@@ -1,14 +1,19 @@
 """Fan platform for the Vacmaster Cardio54."""
 
 import math
-from typing import Any
+from typing import Any, override
 
 from rf_protocols.commands.ev1527 import EV1527Command
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -18,7 +23,6 @@ from homeassistant.util.percentage import (
 )
 
 from .const import (
-    CONF_DEVICE_ID,
     DATA_POWER,
     DATA_SPEEDS,
     FRAME_REPEATS,
@@ -61,17 +65,20 @@ class VacmasterCardio54Fan(VacmasterCardio54Entity, FanEntity, RestoreEntity):
         self._attr_unique_id = entry.unique_id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the fan is currently on."""
         return self._level > 0
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed as a percentage."""
         if self._level == 0:
             return 0
         return ranged_value_to_percentage(_SPEED_RANGE, self._level)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore the last known speed level."""
         await super().async_added_to_hass()
@@ -106,6 +113,7 @@ class VacmasterCardio54Fan(VacmasterCardio54Entity, FanEntity, RestoreEntity):
         if self._level > 0:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -119,6 +127,7 @@ class VacmasterCardio54Fan(VacmasterCardio54Entity, FanEntity, RestoreEntity):
             level = math.ceil(percentage_to_ranged_value(_SPEED_RANGE, percentage))
         await self._async_set_level(level)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off.
 
@@ -130,6 +139,7 @@ class VacmasterCardio54Fan(VacmasterCardio54Entity, FanEntity, RestoreEntity):
         self._level = 0
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed."""
         if percentage <= 0:

@@ -10,12 +10,9 @@ from homeassistant.components.radio_frequency import DATA_COMPONENT
 from homeassistant.components.vacmaster_cardio54.config_flow import (
     VacmasterCardio54ConfigFlow,
 )
-from homeassistant.components.vacmaster_cardio54.const import (
-    CONF_DEVICE_ID,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.vacmaster_cardio54.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError

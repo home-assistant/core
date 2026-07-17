@@ -1,7 +1,7 @@
 """Config flow for the Vacmaster Cardio54 integration."""
 
 import random
-from typing import Any
+from typing import Any, override
 
 from rf_protocols.commands.ev1527 import EV1527Command
 import voluptuous as vol
@@ -11,11 +11,11 @@ from homeassistant.components.radio_frequency import (
     async_send_command,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_TRANSMITTER,
     DATA_POWER,
     DATA_SPEEDS,
@@ -64,6 +64,7 @@ class VacmasterCardio54ConfigFlow(ConfigFlow, domain=DOMAIN):
             "Could not allocate a unique 20-bit device ID on this transmitter"
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

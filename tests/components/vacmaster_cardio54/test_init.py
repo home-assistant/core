@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from homeassistant.components.vacmaster_cardio54.const import (
-    CONF_DEVICE_ID,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.vacmaster_cardio54.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

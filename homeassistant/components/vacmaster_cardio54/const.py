@@ -7,7 +7,6 @@ from rf_protocols import ModulationType
 DOMAIN: Final = "vacmaster_cardio54"
 
 CONF_TRANSMITTER: Final = "transmitter"
-CONF_DEVICE_ID: Final = "device_id"
 
 FREQUENCY: Final = 433_920_000
 MODULATION: Final = ModulationType.OOK

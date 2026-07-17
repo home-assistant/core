@@ -2,11 +2,8 @@
 
 import pytest
 
-from homeassistant.components.vacmaster_cardio54.const import (
-    CONF_DEVICE_ID,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.vacmaster_cardio54.const import CONF_TRANSMITTER, DOMAIN
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 

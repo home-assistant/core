@@ -1,6 +1,7 @@
 """Common entity for the Vacmaster Cardio54 integration."""
 
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -33,6 +34,7 @@ class VacmasterCardio54Entity(Entity):
             model="Cardio54",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to transmitter entity state changes."""
         await super().async_added_to_hass()
