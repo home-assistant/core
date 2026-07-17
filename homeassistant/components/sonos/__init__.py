@@ -268,7 +268,8 @@ class SonosDiscoveryManager:
                     continue
                 if self.is_device_disabled(zone.uid):
                     _LOGGER.debug(
-                        "Skipping discovery for disabled Sonos device: %s", zone.uid
+                        "Skipping visible-zones discovery for disabled Sonos device: %s",
+                        zone.uid,
                     )
                     continue
                 zones_to_add.add(zone)
@@ -565,7 +566,7 @@ class SonosDiscoveryManager:
     ) -> None:
         """Handle discovered player creation and activity."""
         if self.is_device_disabled(uid):
-            _LOGGER.debug("Skipping discovery for disabled Sonos device: %s", uid)
+            _LOGGER.debug("Skipping %s for disabled Sonos device: %s", source, uid)
             return
 
         async with self.discovery_lock:

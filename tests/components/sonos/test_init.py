@@ -691,7 +691,10 @@ async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
 
     assert "media_player.living_room" in entity_registry.entities
     assert "media_player.bedroom" not in entity_registry.entities
-    assert f"Skipping discovery for disabled Sonos device: {soco_2.uid}" in caplog.text
+    assert (
+        f"Skipping visible-zones discovery for disabled Sonos device: {soco_2.uid}"
+        in caplog.text
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
