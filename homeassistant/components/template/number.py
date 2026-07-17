@@ -173,9 +173,19 @@ class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
         """Restore the extra data."""
         # Do not restore native_unit_of_measurement, this is always pulled from the
         # number configuration.
-        self._attr_native_max_value = extra_data.native_max_value or DEFAULT_MAX_VALUE
-        self._attr_native_min_value = extra_data.native_min_value or DEFAULT_MIN_VALUE
-        self._attr_native_step = extra_data.native_step or DEFAULT_STEP
+        self._attr_native_max_value = (
+            DEFAULT_MAX_VALUE
+            if extra_data.native_max_value is None
+            else extra_data.native_max_value
+        )
+        self._attr_native_min_value = (
+            DEFAULT_MIN_VALUE
+            if extra_data.native_min_value is None
+            else extra_data.native_min_value
+        )
+        self._attr_native_step = (
+            DEFAULT_STEP if extra_data.native_step is None else extra_data.native_step
+        )
         self._attr_native_value = extra_data.native_value
 
 

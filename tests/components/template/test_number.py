@@ -637,6 +637,23 @@ async def test_setup_valid_device_class(
             },
         ),
         (
+            "some_value",
+            {
+                "native_max_value": None,
+                "native_min_value": None,
+                "native_step": None,
+                "native_unit_of_measurement": "°F",
+                "native_value": 10,
+            },
+            "10",
+            {
+                "step": 1,
+                "min": 0,
+                "max": 100,
+                "unit_of_measurement": "°C",
+            },
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "native_max_value": 80,
@@ -680,19 +697,13 @@ async def test_restore_state(
     initial_state: str,
     initial_attributes: ConfigType,
 ) -> None:
-    """Test restoring trigger template weather."""
-
-    restored_attributes = {  # These should be ignored
-        "current_position": 5,
-        "current_tilt_position": 5,
-    }
+    """Test restoring state."""
 
     setup_mock_template_entity_restore_state(
         hass,
         TEST_NUMBER,
         saved_state,
         saved_extra_data=saved_extra_data,
-        saved_attributes=restored_attributes,
     )
 
     await setup_restore_template_entity(
