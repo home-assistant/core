@@ -5,7 +5,6 @@ from typing import Any, override
 
 from gatus_api import GatusClient, GatusClientError
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
@@ -46,33 +45,19 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_URL] = user_input[CONF_URL].strip().rstrip("/")
+
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
             try:
-                url = URL(user_input[CONF_URL])
-            except ValueError:
-                errors["base"] = "invalid_url"
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during Gatus setup")
+                errors["base"] = "unknown"
             else:
-                if url.scheme not in {"http", "https"} or not url.host:
-                    errors["base"] = "invalid_url"
-                else:
-                    normalized_url = str(
-                        url.with_query(None)
-                        .with_fragment(None)
-                        .with_user(None)
-                        .with_password(None)
-                    ).rstrip("/")
-                    user_input[CONF_URL] = normalized_url
-
-                    self._async_abort_entries_match({CONF_URL: normalized_url})
-
-                    try:
-                        await validate_input(self.hass, user_input)
-                    except CannotConnect:
-                        errors["base"] = "cannot_connect"
-                    except Exception:
-                        _LOGGER.exception("Unexpected exception during Gatus setup")
-                        errors["base"] = "unknown"
-                    else:
-                        return self.async_create_entry(title="Gatus", data=user_input)
+                return self.async_create_entry(title="Gatus", data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -90,39 +75,23 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            user_input[CONF_URL] = user_input[CONF_URL].strip().rstrip("/")
+
+            if user_input[CONF_URL] != reconfigure_entry.data[CONF_URL]:
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
             try:
-                url = URL(user_input[CONF_URL])
-            except ValueError:
-                errors["base"] = "invalid_url"
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during Gatus setup")
+                errors["base"] = "unknown"
             else:
-                if url.scheme not in {"http", "https"} or not url.host:
-                    errors["base"] = "invalid_url"
-                else:
-                    normalized_url = str(
-                        url.with_query(None)
-                        .with_fragment(None)
-                        .with_user(None)
-                        .with_password(None)
-                    ).rstrip("/")
-                    user_input[CONF_URL] = normalized_url
-
-                    if normalized_url != reconfigure_entry.data[CONF_URL]:
-                        self._async_abort_entries_match({CONF_URL: normalized_url})
-
-                    try:
-                        await validate_input(self.hass, user_input)
-                    except CannotConnect:
-                        errors["base"] = "cannot_connect"
-                    except Exception:
-                        _LOGGER.exception(
-                            "Unexpected exception during Gatus reconfiguration"
-                        )
-                        errors["base"] = "unknown"
-                    else:
-                        return self.async_update_reload_and_abort(
-                            reconfigure_entry,
-                            data_updates=user_input,
-                        )
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
