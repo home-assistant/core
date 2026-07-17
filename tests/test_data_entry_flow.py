@@ -1398,9 +1398,9 @@ async def test_hidden_required_field_skips_validation(
     schema = vol.Schema(
         {
             vol.Required("use_tls", default=True): bool,
-            data_entry_flow.hidden(
-                vol.Required("cert_path"),
-                {"field": "use_tls", "value": False},
+            data_entry_flow.Required(
+                "cert_path",
+                hidden={"field": "use_tls", "value": False},
             ): str,
         }
     )
@@ -1438,9 +1438,10 @@ async def test_hidden_field_is_omitted_from_data(manager: MockFlowManager) -> No
     schema = vol.Schema(
         {
             vol.Required("use_tls", default=True): bool,
-            data_entry_flow.hidden(
-                vol.Optional("cert_path", default="default.pem"),
-                {"field": "use_tls", "value": False},
+            data_entry_flow.Optional(
+                "cert_path",
+                default="default.pem",
+                hidden={"field": "use_tls", "value": False},
             ): str,
         }
     )
@@ -1478,9 +1479,9 @@ async def test_hidden_required_field_in_section(manager: MockFlowManager) -> Non
                 vol.Schema(
                     {
                         vol.Required("mode", default="simple"): str,
-                        data_entry_flow.hidden(
-                            vol.Required("token"),
-                            {"field": "mode", "value": "simple"},
+                        data_entry_flow.Required(
+                            "token",
+                            hidden={"field": "mode", "value": "simple"},
                         ): str,
                     }
                 ),
@@ -1515,9 +1516,9 @@ async def test_hidden_condition_uses_defaults(manager: MockFlowManager) -> None:
     schema = vol.Schema(
         {
             vol.Optional("mode", default="simple"): str,
-            data_entry_flow.hidden(
-                vol.Required("token"),
-                {"field": "mode", "value": "simple"},
+            data_entry_flow.Required(
+                "token",
+                hidden={"field": "mode", "value": "simple"},
             ): str,
         }
     )
@@ -1541,9 +1542,9 @@ async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
     schema = vol.Schema(
         {
             vol.Required("enable_advanced", default=False): bool,
-            data_entry_flow.hidden(
-                vol.Required("advanced"),
-                {"field": "enable_advanced", "value": False},
+            data_entry_flow.Required(
+                "advanced",
+                hidden={"field": "enable_advanced", "value": False},
             ): data_entry_flow.section(
                 vol.Schema({vol.Required("token"): str}),
             ),
@@ -1576,7 +1577,7 @@ def test_add_hidden_conditions_to_serialized_schema() -> None:
     schema = vol.Schema(
         {
             vol.Required("use_tls", default=True): bool,
-            data_entry_flow.hidden(vol.Required("cert_path"), condition): str,
+            data_entry_flow.Required("cert_path", hidden=condition): str,
         }
     )
     serialized = voluptuous_serialize.convert(

@@ -14,7 +14,7 @@ def test_prepare_result_json_includes_hidden() -> None:
     schema = vol.Schema(
         {
             vol.Required("use_tls", default=True): bool,
-            data_entry_flow.hidden(vol.Required("cert_path"), condition): str,
+            data_entry_flow.Required("cert_path", hidden=condition): str,
         }
     )
     view = _BaseFlowManagerView(Mock())
