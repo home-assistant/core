@@ -295,6 +295,73 @@ async def test_k10_plus_webhook_updates_state_after_reload(
     assert state.state == VacuumActivity.CLEANING.value
 
 
+async def test_webhook_partial_payload_keeps_known_state(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_get_webook_configuration,
+    mock_delete_webhook,
+    mock_setup_webhook,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """A webhook payload missing keys should not clear known-good state."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
+    mock_get_webook_configuration.return_value = {"urls": ["https://example.com"]}
+    mock_list_devices.return_value = [
+        Device(
+            deviceId="360TY420703038421",
+            deviceName="Succ K11 Plus",
+            deviceType="Robot Vacuum Cleaner K11 Plus",
+            hubDeviceId=None,
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {
+            "battery": 88,
+            "deviceId": "360TY420703038421",
+            "onlineStatus": "online",
+            "workingStatus": "Clearing",
+        },
+    ]
+    mock_delete_webhook.return_value = {}
+    mock_setup_webhook.return_value = {}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "vacuum.succ_k11_plus"
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == VacuumActivity.CLEANING.value
+
+    client = await hass_client_no_auth()
+    # A subsequent webhook push that omits onlineStatus/workingStatus (as seen
+    # from real SwitchBot K11+ traffic) should not clear the known-good state.
+    await client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "eventType": "changeReport",
+            "eventVersion": "1",
+            "context": {
+                "battery": 87,
+                "deviceMac": "360TY420703038421",
+                "deviceType": "Robot Vacuum Cleaner K11 Plus",
+                "timeOfSample": 1776974845413,
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == VacuumActivity.CLEANING.value
+
+
 async def test_k20_plus_pro_set_fan_speed(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
