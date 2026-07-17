@@ -30,6 +30,68 @@
     'via_device_id': None,
   })
 # ---
+# name: test_all_appliances[electrolux_air_purifier]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '956006956242000015087076',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'PURE500',
+    'model_id': None,
+    'name': 'Air Purifier',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '24200001',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[electrolux_dehumidifier]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '950133061_00:98802845-443E07021EF3',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'FRIGIDAIRE',
+    'model': 'FGAC5044W1',
+    'model_id': None,
+    'name': 'Dehumidifier',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '98802845',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_appliances[fenix_oven]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

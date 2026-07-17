@@ -1,0 +1,36 @@
+{
+  "applianceId": "950133061_00:98802845-443E07021EF3",
+  "connectionState": "connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "targetHumidity": 35,
+      "cleanAirMode": "OFF",
+      "applianceInfo": {
+        "capabilityHash": "1267f465e06a66eca06b7134d770ea20a0f408909916e7df3ce5645c470b2ce3",
+        "applianceType": "DH"
+      },
+      "displayLight": "DISPLAY_LIGHT_1",
+      "uiLockMode": false,
+      "cpv": "00",
+      "applianceState": "OFF",
+      "mode": "OFF",
+      "alerts": [],
+      "filterState": "GOOD",
+      "fanSpeedSetting": "HIGH",
+      "networkInterface": {
+        "swVersion": "v1.9.1_srac",
+        "linkQualityIndicator": "VERY_GOOD",
+        "otaState": "IDLE",
+        "swAncAndRevision": "S00006778A",
+        "niuSwUpdateCurrentDescription": "A16323311A-S00006778A"
+      },
+      "sensorHumidity": 50,
+      "verticalSwing": "OFF",
+      "startTime": -1,
+      "stopTime": -1,
+      "waterBucketLevel": 0,
+      "connectivityState": "connected"
+    }
+  }
+}

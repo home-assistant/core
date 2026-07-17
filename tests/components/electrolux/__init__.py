@@ -1,6 +1,7 @@
 """Tests for the electrolux integration."""
 
 from functools import cache
+from typing import Any
 
 from electrolux_group_developer_sdk.client.dto.appliance import Appliance
 from electrolux_group_developer_sdk.client.dto.appliance_details import ApplianceDetails
@@ -19,6 +20,8 @@ APPLIANCE_FIXTURES = [
     "supex_structured_oven",
     "ayran_fridge",
     "hood",
+    "electrolux_air_purifier",
+    "electrolux_dehumidifier",
 ]
 
 
@@ -64,3 +67,19 @@ def load_appliance_state(appliance_name: str) -> ApplianceState:
     """Load an ApplianceState object from a fixture for the given appliance name."""
     json_string = load_fixture(f"appliance_states/{appliance_name}.json", DOMAIN)
     return ApplianceState.model_validate_json(json_string)
+
+
+def merge_dict_recursive(
+    command1: dict[str, Any], command2: dict[str, Any]
+) -> dict[str, Any]:
+    """Merge two dictionaries recursively, combining nested dictionaries."""
+    combined_dict = command1.copy()
+    for key, value in command2.items():
+        if key in combined_dict:
+            if isinstance(combined_dict[key], dict) and isinstance(value, dict):
+                combined_dict[key] = merge_dict_recursive(combined_dict[key], value)
+            else:
+                combined_dict[key] = value
+        else:
+            combined_dict[key] = value
+    return combined_dict

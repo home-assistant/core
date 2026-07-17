@@ -1,0 +1,70 @@
+{
+  "applianceId": "956006956242000015087076",
+  "connectionState": "Connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+            "logE": 1340,
+            "logW": 313,
+            "InterfaceVer": 20231016,
+            "VmNo_NIU": "VM213_A_04.43.06_MUJU",
+            "VmNo_MCU": "VM216_A_01.00.04_A3_NOUV",
+            "capabilities": {},
+            "tasks": {},
+            "SignalStrength": "EXCELLENT",
+            "TimeZoneDaylightRule": ":GMT+2:GMT+3:0200:(1900)040103-0:110104-0",
+            "TimeZoneStandardName": "Europe/Bucharest",
+            "Workmode": "Auto",
+            "Fanspeed": 1,
+            "UILight": true,
+            "$metadata": {
+                "$lastUpdated": "2025-07-16T06:59:59.143Z",
+                "logE": {
+                    "$lastUpdated": "2025-07-15T22:33:50.7878112Z"
+                },
+                "logW": {
+                    "$lastUpdated": "2025-07-15T22:33:50.7878112Z"
+                },
+                "InterfaceVer": {
+                    "$lastUpdated": "2025-07-15T22:33:50.7878112Z"
+                },
+                "VmNo_NIU": {
+                    "$lastUpdated": "2025-07-15T22:33:50.7878112Z"
+                },
+                "VmNo_MCU": {
+                    "$lastUpdated": "2025-07-15T22:33:50.7878112Z"
+                },
+                "capabilities": {
+                    "$lastUpdated": "2025-07-15T22:33:50.7878112Z"
+                },
+                "tasks": {
+                    "$lastUpdated": "2025-07-15T06:53:50.5500246Z"
+                },
+                "SignalStrength": {
+                    "$lastUpdated": "2025-07-16T05:41:59.1251498Z"
+                },
+                "TimeZoneDaylightRule": {
+                    "$lastUpdated": "2025-07-15T22:33:50.7878112Z"
+                },
+                "TimeZoneStandardName": {
+                    "$lastUpdated": "2025-07-15T07:55:59.2794332Z"
+                },
+                "Workmode": {
+                    "$lastUpdated": "2025-07-16T07:01:06.287358Z"
+                },
+                "Fanspeed": {
+                    "$lastUpdated": "2025-07-16T07:01:06.287358Z"
+                },
+                "UILight": {
+                    "$lastUpdated": "2025-07-16T07:01:06.287358Z"
+                },
+                "PM2_5_approximate": {
+                    "$lastUpdated": "2025-07-16T06:59:59.143Z"
+                }
+            },
+            "$version": 51,
+            "deviceId": "956006956242000015087076",
+            "PM2_5_approximate": 4.5
+    }
+  }
+}

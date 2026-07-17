@@ -141,6 +141,23 @@
         "name": "Upper oven stop"
       }
     },
+    "fan": {
+      "air_purifier_fan": {
+        "name": "Fan",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manual",
+              "quiet": "Quiet",
+              "smart": "Smart"
+            }
+          }
+        }
+      },
+      "dehumidifier_fan": {
+        "name": "Fan"
+      }
+    },
     "light": {
       "bottomoven_cavity_light": {
         "name": "Lower cavity light"
