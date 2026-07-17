@@ -57,9 +57,10 @@ def update_event(
         # A changed rule or start invalidates everything anchored to the old
         # schedule: overrides, exception dates and added dates alike.
         start_moved = _utc(master["DTSTART"].dt) != old_start
-        if start_moved and not data.get("rrule") and not _self_anchored(master):
+        rule_changed = _rule_string(master) != old_rule
+        if start_moved and not rule_changed and not _self_anchored(master):
             raise ValueError("The new start does not match the recurrence rule")
-        if _rule_string(master) != old_rule or start_moved:
+        if rule_changed or start_moved:
             _drop_overrides(
                 ical, master, old_start, from_occurrence=False, all_overrides=True
             )
@@ -68,6 +69,9 @@ def update_event(
         return
 
     occurrence = parse_recurrence_id(recurrence_id)
+
+    if this_and_future and "RECURRENCE-ID" in master:
+        raise ValueError("Event is not a recurring series")
 
     if not this_and_future:
         target = _override(ical, occurrence) or _new_override(ical, master, occurrence)
@@ -81,9 +85,10 @@ def update_event(
         _apply(master, data)
         _drop_overrides(ical, master, occurrence, from_occurrence=True)
         start_moved = _utc(master["DTSTART"].dt) != old_start
-        if start_moved and not data.get("rrule") and not _self_anchored(master):
+        rule_changed = _rule_string(master) != old_rule
+        if start_moved and not rule_changed and not _self_anchored(master):
             raise ValueError("The new start does not match the recurrence rule")
-        if _rule_string(master) != old_rule or start_moved:
+        if rule_changed or start_moved:
             _clear_dates(master)
         _save(dav_event, ical, master)
         return

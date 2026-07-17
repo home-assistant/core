@@ -3233,3 +3233,89 @@ async def test_update_dense_rule_rejected(
     assert not resp["success"]
     assert "too dense" in resp["error"]["message"]
     event.save.assert_not_called()
+
+
+async def test_update_event_echoed_rule_does_not_bypass_anchor_check(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that resubmitting the rule does not allow an off-rule move."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-11-28T17:00:00+00:00",
+                "dtend": "2017-11-28T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;BYDAY=MO;COUNT=5",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_first_occurrence_echoed_rule_anchor_check(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test the anchor check on the first-occurrence path with an echoed rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-11-28T17:00:00+00:00",
+                "dtend": "2017-11-28T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;BYDAY=MO;COUNT=5",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_orphans_this_and_future_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a future-scoped edit cannot wipe sibling orphan overrides."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], TWO_ORPHANS_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    assert "not a recurring series" in resp["error"]["message"]
+    event.save.assert_not_called()
