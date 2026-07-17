@@ -339,7 +339,7 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             _error = api_error
 
     if _error is not None:
-        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], _error)
+        _LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], _error)
         if "invalid user name or password" in str(_error):
             raise LoginError from _error
         raise CannotConnect from _error
