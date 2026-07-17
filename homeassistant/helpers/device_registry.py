@@ -1179,6 +1179,14 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
             for key in self._composite_device_id_index.get(composite_device_id, ())
         ]
 
+    def get_composite_splits(self) -> dict[str, list[DeviceEntry]]:
+        """Get the pre-migration composite device ids and the devices split from them."""
+        data = self.data
+        return {
+            composite_device_id: [data[key] for key in keys]
+            for composite_device_id, keys in self._composite_device_id_index.items()
+        }
+
 
 class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
     """Container for deleted device registry entries.
