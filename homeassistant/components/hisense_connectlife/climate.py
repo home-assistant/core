@@ -124,7 +124,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._device_id: str | None = device.puid
-        self._attr_unique_id = f"{device.device_id}"
+        self._attr_unique_id = f"{device.device_id or self._device_id}_climate"
         self._attr_name = device.name
         self._attr_translation_key = "climate"
 

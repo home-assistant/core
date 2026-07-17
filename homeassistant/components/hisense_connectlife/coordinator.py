@@ -290,7 +290,11 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Decoded status: %s", status_json)
                 if isinstance(status_json, dict):
                     device_data["statusList"].update(status_json)
-            except (json.JSONDecodeError, TypeError) as e:
+            except (
+                json.JSONDecodeError,
+                TypeError,
+                UnicodeDecodeError,
+            ) as e:
                 _LOGGER.warning("Failed to decode base64 status: %s", e)
 
         # Process properties

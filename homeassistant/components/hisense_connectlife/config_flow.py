@@ -36,11 +36,8 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                     errors["base"] = "no_coordinator"
                 else:
                     try:
-                        # Re-fetch device list
-                        devices = await coordinator.api_client.async_get_devices()
-                        coordinator._devices = devices  # noqa: SLF001
                         # Force update state once
-                        await coordinator.async_refresh()
+                        await coordinator.async_refresh_all_devices()
                         description_placeholders["message"] = (
                             "Device list has been refreshed"
                         )
@@ -69,7 +66,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                             # Update token in coordinator
                             coordinator.api_client.oauth_session.token = new_token
                             # Force update config entry data
-                            await self.hass.config_entries.async_update_entry(
+                            self.hass.config_entries.async_update_entry(
                                 self.config_entry,
                                 data={**self.config_entry.data, "token": new_token},
                             )

@@ -77,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Initial data refresh successful during setup")
 
     entry.runtime_data = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -91,5 +92,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if oauth_session is not None:
                 await oauth_session.close()
         entry.runtime_data = None
-
+        hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok

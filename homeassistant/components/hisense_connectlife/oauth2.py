@@ -88,9 +88,9 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
         if "redirect_uri" not in data:
             data["redirect_uri"] = self.redirect_uri
 
-        resp = await session.post(self.token_url, data=data)
-        resp.raise_for_status()
-        resp_json = cast(dict, await resp.json())
+        async with session.post(self.token_url, data=data) as resp:
+            resp.raise_for_status()
+            resp_json = cast(dict, await resp.json())
 
         # Add expires_at to the token response
         if "expires_in" in resp_json and "expires_at" not in resp_json:
