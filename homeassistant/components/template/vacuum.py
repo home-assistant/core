@@ -243,7 +243,7 @@ class VacuumExtraStoredData(ExtraStoredData):
                 activity=activity,
                 fan_speed=restored["fan_speed"],
             )
-        except KeyError:
+        except KeyError, ValueError:
             return None
 
 

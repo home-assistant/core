@@ -1314,6 +1314,16 @@ async def test_flow_preview(
         (
             "some_value",
             {
+                "activity": "do",
+            },
+            STATE_UNKNOWN,
+            {
+                "fan_speed": None,
+            },
+        ),
+        (
+            "some_value",
+            {
                 "activity": VacuumActivity.DOCKED,
             },
             STATE_UNKNOWN,
