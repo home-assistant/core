@@ -3705,6 +3705,47 @@ async def test_device_does_not_exist(entity_registry: er.EntityRegistry) -> None
         entity_registry.async_update_entity(entity_id, device_id="blah")
 
 
+async def test_composite_device_id_not_allowed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an entity cannot be linked to a pre-migration composite device id.
+
+    async_get resolves a composite id to a synthesized read-only device, but it is not a
+    real device, so linking an entity to it must be rejected.
+    """
+    entry_1 = MockConfigEntry(domain="itg1")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="itg2")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("itg1", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("itg2", "1")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+    # The composite id resolves to a synthesized device, but is not a real registry entry
+    assert device_registry.async_get(old_id) is not None
+    assert old_id not in device_registry.devices
+
+    match = f"Device {old_id} does not exist"
+    with pytest.raises(ValueError, match=match):
+        entity_registry.async_get_or_create("light", "hue", "1234", device_id=old_id)
+
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
+    with pytest.raises(ValueError, match=match):
+        entity_registry.async_update_entity(entity_id, device_id=old_id)
+
+
 async def test_disabled_by_str_not_allowed(entity_registry: er.EntityRegistry) -> None:
     """Test we need to pass disabled by type."""
     with pytest.raises(ValueError):

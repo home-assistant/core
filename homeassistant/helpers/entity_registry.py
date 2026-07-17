@@ -1131,7 +1131,7 @@ def _validate_item(
             )
     if device_id and device_id is not UNDEFINED:
         device_registry = dr.async_get(hass)
-        if not device_registry.async_get(device_id):
+        if device_id not in device_registry.devices:
             raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
