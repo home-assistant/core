@@ -4679,6 +4679,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "nespresso_ble": {
+      "name": "Nespresso Vertuo",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",

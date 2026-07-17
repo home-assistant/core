@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The Nespresso Vertuo machine discovered via Bluetooth."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "descaling_alert": {
+        "name": "Descaling needed"
+      }
+    },
+    "sensor": {
+      "error_code": {
+        "name": "Error code"
+      },
+      "machine_status": {
+        "name": "Machine status",
+        "state": {
+          "brewing": "Brewing",
+          "descaling": "Descaling",
+          "error": "Error",
+          "heating": "Heating",
+          "ready": "Ready",
+          "standby": "Standby"
+        }
+      },
+      "water_hardness": {
+        "name": "Water hardness"
+      }
+    }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Nespresso Vertuo device with address {address}: {reason}"
+    },
+    "update_failed": {
+      "message": "Unable to fetch data from the machine: {error}"
+    }
+  }
+}
