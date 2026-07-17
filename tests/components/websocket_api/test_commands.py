@@ -5058,12 +5058,7 @@ async def test_get_automation_component_lookup_table_cache(
 async def test_get_automation_component_lookup_table_scalar_target_shapes(
     hass: HomeAssistant,
 ) -> None:
-    """Test target.entity given as a bare mapping instead of a list.
-
-    Real services.yaml files commonly declare `target: entity: {domain: ...}`
-    as a single mapping rather than a list (e.g. siren, blink), and
-    `domain`/`device_class` as a bare string rather than a list of one.
-    """
+    """Test target.entity given as a bare mapping instead of a list."""
     services: dict[str, dict[str, Any] | None] = {
         "siren.turn_on": {
             "target": {"entity": {"domain": "siren", "device_class": "siren"}}
