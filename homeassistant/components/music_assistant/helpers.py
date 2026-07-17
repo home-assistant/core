@@ -9,6 +9,9 @@ from music_assistant_models.errors import MusicAssistantError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
+
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -62,3 +65,17 @@ async def async_resolve_mass_username(
     if username in available_usernames:
         return username
     return None
+
+
+def get_party_device_id(server_id: str, instance_id: str) -> str:
+    """Return composite device ID for Party Mode."""
+    return f"{server_id}_{instance_id}"
+
+
+def get_party_device_info(server_id: str, instance_id: str) -> DeviceInfo:
+    """Return device info for Party Mode."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, get_party_device_id(server_id, instance_id))},
+        name="Party Mode Plugin",
+        manufacturer="Music Assistant",
+    )

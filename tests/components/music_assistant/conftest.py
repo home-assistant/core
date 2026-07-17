@@ -9,6 +9,8 @@ from music_assistant_client.player_queues import PlayerQueues
 from music_assistant_client.players import Players
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.config_entries import PlayerConfig
+from music_assistant_models.enums import ProviderType
+from music_assistant_models.provider import ProviderInstance
 import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
@@ -84,7 +86,36 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
                 for player in client.players
             ]
 
-        client.config.get_player_configs = get_player_configs
+        client.config.get_player_configs = AsyncMock(side_effect=get_player_configs)
+
+        async def get_providers() -> list[ProviderInstance]:
+            """Mock get providers."""
+            return [
+                ProviderInstance(
+                    type=ProviderType.PLUGIN,
+                    domain="party",
+                    name="Party Mode",
+                    instance_id="party_instance",
+                    supported_features=set(),
+                    available=True,
+                )
+            ]
+
+        client.get_providers = AsyncMock(side_effect=get_providers)
+
+        def get_provider(domain: str) -> ProviderInstance | None:
+            if domain == "party":
+                return ProviderInstance(
+                    type=ProviderType.PLUGIN,
+                    domain="party",
+                    name="Party Mode Plugin",
+                    instance_id="party_instance",
+                    supported_features=set(),
+                    available=True,
+                )
+            return None
+
+        client.get_provider = MagicMock(side_effect=get_provider)
 
         yield client
 
