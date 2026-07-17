@@ -7,12 +7,20 @@ from unittest.mock import AsyncMock, patch
 from midealocal.const import DeviceType
 import pytest
 
-from homeassistant.components.midea_lan.const import DOMAIN
-from homeassistant.const import CONF_TYPE
+from homeassistant.components.midea_lan.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
+from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import BASE_DATA, TEST_DEVICE_ID, TEST_MODEL, TEST_NAME, TEST_SUBTYPE
+from .const import (
+    BASE_DATA,
+    TEST_DEVICE_ID,
+    TEST_KEY,
+    TEST_MODEL,
+    TEST_NAME,
+    TEST_SUBTYPE,
+    TEST_TOKEN,
+)
 
 from tests.common import MockConfigEntry
 
@@ -136,7 +144,14 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
     def _create(device: DummyDevice) -> MockConfigEntry:
         return MockConfigEntry(
             domain=DOMAIN,
-            data={**BASE_DATA, CONF_TYPE: device.device_type},
+            data={
+                **BASE_DATA,
+                CONF_TYPE: device.device_type,
+                CONF_NAME: TEST_NAME,
+                CONF_TOKEN: TEST_TOKEN,
+                CONF_KEY: TEST_KEY,
+                CONF_SUBTYPE: TEST_SUBTYPE,
+            },
         )
 
     return _create

@@ -80,7 +80,7 @@
       },
       "search": {
         "data": {
-          "ip_address": "IP address"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
           "ip_address": "Enter 'auto' to scan your network, or enter a specific IP address"

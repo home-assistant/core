@@ -4,14 +4,17 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType, ProtocolVersion
 
-from homeassistant.components.midea_lan.const import DOMAIN
+from homeassistant.components.midea_lan.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
     CONF_MODEL,
+    CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_TOKEN,
+    CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -22,10 +25,15 @@ from tests.common import MockConfigEntry
 
 _ENTRY_DATA = {
     CONF_DEVICE_ID: 123,
+    CONF_NAME: "m",
+    CONF_TYPE: DeviceType.AC,
     CONF_IP_ADDRESS: "1.1.1.1",
     CONF_PORT: 6444,
     CONF_MODEL: "m",
     CONF_PROTOCOL: ProtocolVersion.V2,
+    CONF_TOKEN: "",
+    CONF_KEY: "",
+    CONF_SUBTYPE: 0,
 }
 
 

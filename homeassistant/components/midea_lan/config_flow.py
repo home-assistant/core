@@ -90,13 +90,11 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-        error: str | None = None,
     ) -> ConfigFlowResult:
         """Start a user flow."""
         return self.async_show_menu(
             step_id="user",
             menu_options=["search", "manually", "list"],
-            description_placeholders={"error": error} if error else None,
         )
 
     async def async_step_login_credentials(
@@ -155,7 +153,6 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=cloud_server_options,
-                            translation_key="server",
                         )
                     ),
                 },

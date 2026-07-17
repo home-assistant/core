@@ -1,6 +1,6 @@
 """The Midea LAN integration."""
 
-from midealocal.const import DeviceType, ProtocolVersion
+from midealocal.const import ProtocolVersion
 from midealocal.devices import device_selector
 
 from homeassistant.const import (
@@ -31,16 +31,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> 
 
     device = await hass.async_add_executor_job(
         device_selector,
-        data.get(CONF_NAME, f"{device_id}"),
+        data[CONF_NAME],
         device_id,
-        data.get(CONF_TYPE, DeviceType.AC),
+        data[CONF_TYPE],
         data[CONF_IP_ADDRESS],
         data[CONF_PORT],
-        data.get(CONF_TOKEN, ""),
-        data.get(CONF_KEY, ""),
+        data[CONF_TOKEN],
+        data[CONF_KEY],
         ProtocolVersion(data[CONF_PROTOCOL]),
         data[CONF_MODEL],
-        data.get(CONF_SUBTYPE, 0),
+        data[CONF_SUBTYPE],
         "",
     )
     if device is None:

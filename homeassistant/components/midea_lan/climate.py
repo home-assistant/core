@@ -164,8 +164,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
     )
     _attr_max_temp = TEMPERATURE_MAX
     _attr_min_temp = TEMPERATURE_MIN
-    _attr_target_temperature_high = TEMPERATURE_MAX
-    _attr_target_temperature_low = TEMPERATURE_MIN
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _zone: int | None = None
 
@@ -358,6 +356,24 @@ class MideaACClimate(MideaClimate):
 
     @property
     @override
+    def min_temp(self) -> float:
+        """Midea AC Climate min temperature."""
+        min_temperature = self._float_attribute(ACAttributes.min_temperature)
+        if min_temperature is None:
+            return TEMPERATURE_MIN
+        return min_temperature
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Midea AC Climate max temperature."""
+        max_temperature = self._float_attribute(ACAttributes.max_temperature)
+        if max_temperature is None:
+            return float(TEMPERATURE_MAX)
+        return max_temperature
+
+    @property
+    @override
     def fan_mode(self) -> str | None:
         """Midea AC Climate fan mode."""
         fan_speed = self._device.get_attribute(ACAttributes.fan_speed)
@@ -512,18 +528,6 @@ class MideaCFClimate(MideaClimate):
 
     @property
     @override
-    def target_temperature_low(self) -> float:
-        """Midea CF Climate target temperature."""
-        return self.min_temp
-
-    @property
-    @override
-    def target_temperature_high(self) -> float:
-        """Midea CF Climate target temperature high."""
-        return self.max_temp
-
-    @property
-    @override
     def current_temperature(self) -> float | None:
         """Midea CF Climate current temperature."""
         return self._float_attribute(CFAttributes.current_temperature)
@@ -596,18 +600,6 @@ class MideaC3Climate(MideaClimate):
         """Midea C3 Climate max temperature."""
         return self._temperature(minimum=False)[self._zone]
 
-    @property
-    @override
-    def target_temperature_low(self) -> float:
-        """Midea C3 Climate target temperature low."""
-        return self._temperature(minimum=True)[self._zone]
-
-    @property
-    @override
-    def target_temperature_high(self) -> float:
-        """Midea C3 Climate target temperature high."""
-        return self._temperature(minimum=False)[self._zone]
-
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Midea C3 Climate turn on."""
@@ -673,8 +665,6 @@ class MideaFBClimate(MideaClimate):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_target_temperature_high = 35
-    _attr_target_temperature_low = 5
     _attr_target_temperature_step = PRECISION_WHOLE
 
     def __init__(
@@ -709,6 +699,14 @@ class MideaFBClimate(MideaClimate):
     def current_temperature(self) -> float | None:
         """Midea FB Climate current temperature."""
         return self._float_attribute(FBAttributes.current_temperature)
+
+    @override
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Midea FB Climate set temperature."""
+        wants_heat = kwargs.get(ATTR_HVAC_MODE) == HVACMode.HEAT
+        if wants_heat and self.hvac_mode == HVACMode.OFF:
+            self.turn_on()
+        super().set_temperature(**kwargs)
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
