@@ -235,7 +235,7 @@ async def test_migrate_entry_from_future_version_fails(
 @pytest.mark.parametrize(
     ("side_effect", "state"),
     [
-        (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
+        (InvalidAuthentication, ConfigEntryState.MIGRATION_ERROR),
         (NoTrainStationFound, ConfigEntryState.MIGRATION_ERROR),
         (UnknownError, ConfigEntryState.MIGRATION_ERROR),
         (Exception, ConfigEntryState.MIGRATION_ERROR),
