@@ -134,10 +134,12 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         device = RAVEnSerialDevice(self.config_entry.data[CONF_DEVICE])
 
         try:
-            async with asyncio.timeout(5):
-                await device.open()
+            async with asyncio.timeout(30):
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
+        except asyncio.CancelledError:
+            await device.abort()
+            raise
         except Exception:
             await device.abort()
             raise
