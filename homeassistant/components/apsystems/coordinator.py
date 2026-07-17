@@ -43,7 +43,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     """Coordinator used for all sensors."""
 
     config_entry: ApSystemsConfigEntry
-    device_version: str
+    device_version: str | None
     battery_system: bool
 
     def __init__(
@@ -61,9 +61,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             update_interval=timedelta(seconds=12),
         )
         self.api = api
-        self.api.max_power = getattr(self.api, "max_power", 800)
-        self.api.min_power = getattr(self.api, "min_power", 30)
-        self.device_version = ""
+        self.device_version = None
         self.battery_system = False
         self.inverter_connected = False
 
