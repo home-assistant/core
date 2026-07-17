@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import override
 
+from plugwise import Smile
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -32,6 +33,7 @@ class PlugwiseSelectEntityDescription(SelectEntityDescription):
 
     key: SelectType
     options_key: SelectOptionsType
+    set_value_fn: Callable[[Smile, str, str, str, int | str], Awaitable[None]]
 
 
 SELECT_TYPES = (
@@ -40,41 +42,53 @@ SELECT_TYPES = (
         translation_key=SELECT_DHW_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="dhw_modes",
-        set_value_fn = lambda api, key, appl_id, length, option, api.set_dhw_mode(key, appl_id, option, length),
+        set_value_fn=lambda api, key, appl_id, option, length: api.set_dhw_mode(
+            key, appl_id, option, length
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_SCHEDULE,
         translation_key=SELECT_SCHEDULE,
         options_key="available_schedules",
-        set_value_fn = lambda api, key, appl_or_loc_id, option, state, api.set_select(key, appl_or_loc_id, option, state),
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_REGULATION_MODE,
         translation_key=SELECT_REGULATION_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="regulation_modes",
-        set_value_fn = lambda api, key, appl_or_loc_id, option, state, api.set_select(key, appl_or_loc_id, option, state),
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_DHW_MODE,
         translation_key=SELECT_DHW_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="dhw_modes",
-        set_value_fn = lambda api, key, appl_or_loc_id, option, state, api.set_select(key, appl_or_loc_id, option, state),
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_GATEWAY_MODE,
         translation_key=SELECT_GATEWAY_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="gateway_modes",
-        set_value_fn = lambda api, key, appl_or_loc_id, option, state, api.set_dset_selecthw_mode(key, appl_or_loc_id, option, state),
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: (
+            api.set_dset_selecthw_mode(key, appl_or_loc_id, option, state)
+        ),
     ),
     PlugwiseSelectEntityDescription(
         key=SELECT_ZONE_PROFILE,
         translation_key=SELECT_ZONE_PROFILE,
         entity_category=EntityCategory.CONFIG,
         options_key="zone_profiles",
-        set_value_fn = lambda api, key, appl_or_loc_id, option, state, api.set_select(key, appl_or_loc_id, option, state),
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
     ),
 )
 
@@ -155,5 +169,9 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         if self.entity_description.key != DHW_MODE:
             select_options_count = STATE_ON
         await self.entity_description.set_value_fn(
-                self.coordinator, self.entity_description.key, self._device_or_location, option, select_options_count
-            )
+            self.coordinator.api,
+            self.entity_description.key,
+            self._device_or_location,
+            option,
+            select_options_count,
+        )
