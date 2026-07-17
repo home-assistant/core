@@ -235,7 +235,7 @@ class VacuumExtraStoredData(ExtraStoredData):
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored vacuum state from a dict."""
         try:
-            activity: VacuumActivity | None
+            activity: VacuumActivity | None = None
             if _activity := restored["activity"]:
                 activity = VacuumActivity(_activity)
 
@@ -407,7 +407,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @property
     @override
     def extra_restore_state_data(self) -> VacuumExtraStoredData:
-        """Return cover specific state data to be restored."""
+        """Return vacuum specific state data to be restored."""
         return VacuumExtraStoredData(
             activity=self._attr_activity,
             fan_speed=self._attr_fan_speed,
