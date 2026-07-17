@@ -242,8 +242,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(uid)
         self._abort_if_unique_id_configured()
-        # Discovery host is for confirm-step context only; runtime discovery owns
-        # current device IP state and keeps it up to date independently of entry data.
+        # Persist through confirm into entry data as CONF_HOST.
         self._discovered_controller_ip = host
         return await self.async_step_confirm()
 
@@ -357,7 +356,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=self._entry_title(controller.device_uid),
-            data={},
+            data={CONF_HOST: controller.device_ip},
         )
 
     @callback
