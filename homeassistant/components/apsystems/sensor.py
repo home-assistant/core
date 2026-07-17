@@ -16,10 +16,9 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
-from .entity import ApSystemsEntity
+from .coordinator import ApSystemsConfigEntry, ApSystemsData
+from .entity import ApSystemsCoordinatorEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -127,13 +126,10 @@ async def async_setup_entry(
     )
 
 
-class ApSystemsSensorWithDescription(
-    CoordinatorEntity[ApSystemsDataCoordinator], ApSystemsEntity, SensorEntity
-):
+class ApSystemsSensorWithDescription(ApSystemsCoordinatorEntity, SensorEntity):
     """Base sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiSensorDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -141,8 +137,7 @@ class ApSystemsSensorWithDescription(
         entity_description: ApsystemsLocalApiSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(data.coordinator)
-        ApSystemsEntity.__init__(self, data)
+        super().__init__(data)
         self.entity_description = entity_description
         self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
 

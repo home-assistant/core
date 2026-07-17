@@ -2,9 +2,10 @@
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ApSystemsData
+from .coordinator import ApSystemsData, ApSystemsDataCoordinator
 
 
 class ApSystemsEntity(Entity):
@@ -31,3 +32,14 @@ class ApSystemsEntity(Entity):
             serial_number=data.device_id,
             sw_version=sw_version,
         )
+
+
+class ApSystemsCoordinatorEntity(
+    CoordinatorEntity[ApSystemsDataCoordinator], ApSystemsEntity
+):
+    """Defines a base APsystems entity backed by the data coordinator."""
+
+    def __init__(self, data: ApSystemsData) -> None:
+        """Initialize the APsystems coordinator entity."""
+        super().__init__(data.coordinator)
+        ApSystemsEntity.__init__(self, data)
