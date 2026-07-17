@@ -3,9 +3,11 @@
 from datetime import timedelta
 from functools import partial
 from time import time
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from pyatmo.const import ALL_SCOPES
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,7 +15,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_WEBHOOK_ID, Platform
+from homeassistant.const import (
+    CONF_WEBHOOK_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
@@ -113,7 +120,7 @@ async def test_setup_component_with_config(
     """Test setup of the netatmo component with dev account."""
     fake_post_hits = 0
 
-    async def fake_post(*args, **kwargs):
+    async def fake_post(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
@@ -656,3 +663,89 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("platform", "entity_id", "module_id", "initial_state"),
+    [
+        pytest.param(
+            "switch", "switch.prise", "12:34:56:80:00:12:ac:f2", "on", id="switch"
+        ),
+        pytest.param(
+            "cover", "cover.entrance_blinds", "0009999992", "closed", id="cover"
+        ),
+        pytest.param(
+            "fan",
+            "fan.centralized_ventilation_controler",
+            "12:34:56:00:01:01:01:b1",
+            "on",
+            id="fan",
+        ),
+        pytest.param(
+            "light",
+            "light.unknown_00_11_22_33_00_11_45_fe",
+            "00:11:22:33:00:11:45:fe",
+            "off",
+            id="light",
+        ),
+        pytest.param(
+            "button",
+            "button.entrance_blinds_preferred_position",
+            "0009999992",
+            STATE_UNKNOWN,
+            id="button",
+        ),
+    ],
+)
+async def test_entity_unavailable_when_device_unreachable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    platform: str,
+    entity_id: str,
+    module_id: str,
+    initial_state: str,
+) -> None:
+    """Test that entities become unavailable when their device is unreachable."""
+    reachable = True
+
+    def set_reachable(payload: dict) -> None:
+        home = payload.get("body", {}).get("home")
+        if not isinstance(home, dict):
+            return
+        for module in home.get("modules", []):
+            if module.get("id") == module_id:
+                module["reachable"] = reachable
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(
+            hass, *args, msg_callback=set_reachable, **kwargs
+        )
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", [platform]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == initial_state
+
+    reachable = False
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
