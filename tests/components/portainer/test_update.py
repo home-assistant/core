@@ -9,6 +9,11 @@ from pyportainer.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_RELEASE_SUMMARY,
+    ATTR_RELEASE_URL,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -101,6 +106,94 @@ async def test_update_install_errors(
             {"entity_id": ENTITY_ID},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("labels", "release_summary", "release_url"),
+    [
+        pytest.param(
+            {},
+            "docker.io/library/ubuntu:latest",
+            None,
+            id="no_labels",
+        ),
+        pytest.param(
+            {"org.opencontainers.image.version": "1.2.3"},
+            "docker.io/library/ubuntu:latest (1.2.3)",
+            None,
+            id="version_label",
+        ),
+        pytest.param(
+            {"org.opencontainers.image.source": "https://github.com/example/app"},
+            "docker.io/library/ubuntu:latest",
+            "https://github.com/example/app",
+            id="source_label",
+        ),
+        pytest.param(
+            {"org.opencontainers.image.url": "https://example.com/app"},
+            "docker.io/library/ubuntu:latest",
+            "https://example.com/app",
+            id="url_label_as_fallback",
+        ),
+        pytest.param(
+            {
+                "org.opencontainers.image.source": "https://github.com/example/app",
+                "org.opencontainers.image.url": "https://example.com/app",
+            },
+            "docker.io/library/ubuntu:latest",
+            "https://github.com/example/app",
+            id="source_label_wins_over_url_label",
+        ),
+        pytest.param(
+            {"org.opencontainers.image.source": "git@github.com:example/app.git"},
+            "docker.io/library/ubuntu:latest",
+            None,
+            id="non_http_source_label_ignored",
+        ),
+    ],
+)
+async def test_update_release_information(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    labels: dict[str, str],
+    release_summary: str,
+    release_url: str | None,
+) -> None:
+    """Test the release information derived from the image labels."""
+    mock_portainer_client.get_image.return_value.config["Labels"] = labels
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_RELEASE_SUMMARY] == release_summary
+    assert state.attributes[ATTR_RELEASE_URL] == release_url
+
+
+@pytest.mark.parametrize("repo_digests", [None, []], ids=["missing", "empty"])
+async def test_update_installed_version_without_repo_digest(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    repo_digests: list[str] | None,
+) -> None:
+    """Test an image that was never pulled from a registry has no installed version."""
+    mock_portainer_client.get_image.return_value.repo_digests = repo_digests
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
 
 
 async def test_update_using_cache(

@@ -42,6 +42,8 @@ class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
 
     installed_version: Callable[[LocalImageInformation], str | None]
     latest_version: Callable[[PortainerImageUpdateStatus | None], str | None]
+    release_summary: Callable[[PortainerContainerData], str | None]
+    release_url: Callable[[LocalImageInformation], str | None]
     update_func: Callable[
         [Portainer, int, str],
         Awaitable[DockerContainer],
@@ -52,17 +54,61 @@ PARALLEL_UPDATES = 1
 DEFAULT_RECREATE_TIMEOUT = timedelta(minutes=10)
 
 
+def _short_digest(digest: str) -> str:
+    """Shorten a digest to its algorithm and the leading hex characters."""
+    algorithm, separator, hex_digest = digest.partition(":")
+    return f"{algorithm}{separator}{hex_digest[:12]}"
+
+
+def _image_labels(data: LocalImageInformation) -> dict[str, str]:
+    """Return the labels baked into the image itself."""
+    return (data.config or {}).get("Labels") or {}
+
+
+def _installed_version(data: LocalImageInformation) -> str | None:
+    """Return the digest of the image the container currently runs.
+
+    An image built locally and never pushed carries no repo digest.
+    """
+    if not data.repo_digests:
+        return None
+    return _short_digest(data.repo_digests[0].partition("@")[2])
+
+
+def _release_summary(data: PortainerContainerData) -> str | None:
+    """Return the image reference, with the image's own version label if it has one."""
+    image = data.container.image
+    if version := _image_labels(data.local_image).get(
+        "org.opencontainers.image.version"
+    ):
+        return f"{image} ({version})"
+    return image
+
+
+def _release_url(data: LocalImageInformation) -> str | None:
+    """Return the project URL the image advertises."""
+    labels = _image_labels(data)
+    url = labels.get("org.opencontainers.image.source") or labels.get(
+        "org.opencontainers.image.url"
+    )
+    if url and url.startswith(("http://", "https://")):
+        return url
+    return None
+
+
 CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
     PortainerContainerUpdateEntityDescription(
         key="container_image_update",
         translation_key="container_image_update",
         entity_category=EntityCategory.CONFIG,
-        installed_version=lambda data: (
-            data.repo_digests[0].split("@")[1]
-            if data.repo_digests and isinstance(data.repo_digests[0], str)
+        installed_version=_installed_version,
+        latest_version=lambda data: (
+            _short_digest(digest)
+            if data is not None and (digest := data.registry_digest)
             else None
         ),
-        latest_version=lambda data: data.registry_digest if data is not None else None,
+        release_summary=_release_summary,
+        release_url=_release_url,
         update_func=(
             lambda portainer, endpoint_id, container_id: portainer.container_recreate(
                 endpoint_id=endpoint_id,
@@ -112,9 +158,7 @@ async def async_setup_entry(
 class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity):
     """Representation of a Portainer container update."""
 
-    _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
-    )
+    _attr_supported_features = UpdateEntityFeature.INSTALL
 
     entity_description: PortainerContainerUpdateEntityDescription
 
@@ -130,7 +174,6 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         super().__init__(coordinator, entity_description, device_info, via_device)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-        self._in_progress_old_version: str | None = None
 
     @override
     @property
@@ -154,16 +197,21 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
 
     @override
     @property
-    def in_progress(self) -> bool:
-        """Return if an update is in progress."""
-        return self._in_progress_old_version == self.installed_version
+    def release_summary(self) -> str | None:
+        """Return the release summary."""
+        return self.entity_description.release_summary(self.container_data)
+
+    @override
+    @property
+    def release_url(self) -> str | None:
+        """Return the release URL."""
+        return self.entity_description.release_url(self.container_data.local_image)
 
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install update."""
-        self._in_progress_old_version = self.installed_version
         try:
             await self.entity_description.update_func(
                 self.coordinator.portainer,
@@ -183,5 +231,3 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
             ) from ex
         else:
             await self.coordinator.async_request_refresh()
-        finally:
-            self._in_progress_old_version = None
