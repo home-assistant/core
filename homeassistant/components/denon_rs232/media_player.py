@@ -76,9 +76,7 @@ INPUT_SOURCE_DENON_TO_HA: dict[InputSource, str] = {
     InputSource.DAB: "dab",
 }
 
-TUNER_PRESET_PATTERN = re.compile(r"[A-G][1-8]")
 TUNER_PRESETS_ROOT = "presets"
-TUNER_FREQUENCY_ID_PATTERN = re.compile(r"0*([0-9]{1,5})")
 TUNER_FREQUENCY_PATTERN = re.compile(r"[0-9]+")
 TUNER_FREQUENCY_MIN = 8750
 TUNER_FREQUENCY_MAX = 10800
@@ -291,9 +289,9 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
             )
 
         player = cast(MainPlayer, self._player)
-        if TUNER_PRESET_PATTERN.fullmatch(media_id):
+        if re.fullmatch(r"[A-G][1-8]", media_id):
             await player.set_tuner_preset(media_id)
-        elif (match := TUNER_FREQUENCY_ID_PATTERN.fullmatch(media_id)) and (
+        elif (match := re.fullmatch(r"0*([0-9]{1,5})", media_id)) and (
             TUNER_FREQUENCY_MIN <= (frequency := int(match[1])) <= TUNER_FREQUENCY_MAX
         ):
             await player.set_tuner_frequency(f"{frequency:0{TUNER_FREQUENCY_LENGTH}d}")
