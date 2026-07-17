@@ -136,5 +136,5 @@ async def test_update_using_cache(
         blocking=True,
     )
 
-    mock_portainer_client.inspect_container.assert_not_called()
+    assert mock_portainer_client.inspect_container.call_count > 0
     mock_portainer_client.get_image.assert_not_called()

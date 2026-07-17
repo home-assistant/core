@@ -198,7 +198,7 @@ class PortainerCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, portainer)
         self._image_cache: dict[
-            tuple[int, str], tuple[float, DockerInspect, LocalImageInformation]
+            tuple[int, str], tuple[float, LocalImageInformation]
         ] = {}
 
     @override
@@ -274,6 +274,22 @@ class PortainerCoordinator(
                 for stack in stacks
             }
 
+            inspect_local_images = dict(
+                zip(
+                    (
+                        sanitize_container_name(container.names[0])
+                        for container in containers
+                    ),
+                    await asyncio.gather(
+                        *(
+                            self._get_inspect_local_image(endpoint.id, container.id)
+                            for container in containers
+                        )
+                    ),
+                    strict=False,
+                )
+            )
+
             # Map containers, started and stopped
             for container in containers:
                 container_name = sanitize_container_name(container.names[0])
@@ -283,10 +299,7 @@ class PortainerCoordinator(
                     else None
                 )
 
-                (
-                    container_inspect,
-                    local_image,
-                ) = await self._get_inspect_local_image(endpoint.id, container.id)
+                container_inspect, local_image = inspect_local_images[container_name]
 
                 image_status = (
                     (
@@ -469,30 +482,31 @@ class PortainerCoordinator(
     async def _get_inspect_local_image(
         self, endpoint_id: int, container_id: str
     ) -> tuple[DockerInspect, LocalImageInformation]:
-        """Fetch or retrieve cached container inspect and local image data."""
-        if cached := self._image_cache.get((endpoint_id, container_id)):
-            cached_at, container_inspect, local_image = cached
+        """Fetch container inspect data and its cached local image data."""
+        # Fetch the container inspect data each update cycle, to obtain the health state
+        # Use cached local image data if available, to avoid unnecessary API calls to Portainer
+        container_inspect = await self.portainer.inspect_container(
+            endpoint_id, container_id
+        )
+        image = str(container_inspect.image)
+
+        if cached := self._image_cache.get((endpoint_id, image)):
+            cached_at, local_image = cached
             if (
                 self.watcher is None
                 or self.watcher.last_check is None
                 or cached_at >= self.watcher.last_check
             ):
                 _LOGGER.debug(
-                    "Using cached inspect and local image for endpoint %d, container %s",
+                    "Using cached local image for endpoint %d, image %s",
                     endpoint_id,
-                    container_id,
+                    image,
                 )
                 return container_inspect, local_image
 
-        container_inspect = await self.portainer.inspect_container(
-            endpoint_id, container_id
-        )
-        local_image = await self.portainer.get_image(
-            endpoint_id, str(container_inspect.image)
-        )
-        self._image_cache[(endpoint_id, container_id)] = (
+        local_image = await self.portainer.get_image(endpoint_id, image)
+        self._image_cache[(endpoint_id, image)] = (
             time.monotonic(),
-            container_inspect,
             local_image,
         )
         return container_inspect, local_image
