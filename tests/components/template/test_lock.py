@@ -1031,6 +1031,38 @@ async def test_flow_preview(
             },
         ),
         (
+            LockState.LOCKED,
+            {
+                "code_format": ".+",
+                "is_locked": True,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": False,
+            },
+            LockState.LOCKED,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
+            LockState.LOCKING,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": True,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": False,
+            },
+            LockState.LOCKING,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
             LockState.JAMMED,
             {
                 "code_format": ".+",
