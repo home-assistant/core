@@ -1,0 +1,5 @@
+{
+  "domain": "keba",
+  "name": "KEBA",
+  "integrations": ["keba", "keba_p40"]
+}

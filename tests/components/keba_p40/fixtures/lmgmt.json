@@ -1,0 +1,7 @@
+{
+  "configs": [
+    { "key": "max_available_current", "value": 32000 },
+    { "key": "min_default_current", "value": 6000 },
+    { "key": "load_management", "value": true }
+  ]
+}
