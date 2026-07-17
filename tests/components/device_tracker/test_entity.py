@@ -1619,7 +1619,6 @@ async def test_scanner_entity_attaches_to_split_of_composite_device(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that a scanner entity attaches to its config entry's split device."""
-    """
     mac = TEST_MAC_ADDRESS
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
