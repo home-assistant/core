@@ -1,10 +1,12 @@
 """Tests for the Sonos config flow."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 from itertools import chain, repeat
 import logging
-from unittest.mock import Mock, PropertyMock, patch
+from typing import Any
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -199,8 +201,8 @@ async def test_discovery_reenable_device_on_new_discovery(
     soco: MockSoCo,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    discover,
-    fire_zgs_event,
+    discover: MagicMock,
+    fire_zgs_event: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """Test re-enabling a disabled device allows subscriptions and entities."""
     config_entry.add_to_hass(hass)
