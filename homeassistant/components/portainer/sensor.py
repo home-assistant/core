@@ -89,7 +89,6 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             if data.container.labels
             else None
         ),
-        entity_registry_enabled_default=False,
     ),
     PortainerContainerSensorEntityDescription(
         key="image_created",
@@ -106,7 +105,6 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     PortainerContainerSensorEntityDescription(
         key="container_state",
