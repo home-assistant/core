@@ -175,18 +175,11 @@ def _reattach_device_to_hub(
     if device_disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
         device_disabled_by = dr.DeviceEntryDisabler.USER
 
-    if source_entry.entry_id != hub_entry.entry_id:
-        device_registry.async_update_device(
-            device.id,
-            disabled_by=device_disabled_by,
-            add_config_entry_id=hub_entry.entry_id,
-            remove_config_entry_id=source_entry.entry_id,
-        )
-    else:
-        device_registry.async_update_device(
-            device.id,
-            disabled_by=device_disabled_by,
-        )
+    device_registry.async_update_device(
+        device.id,
+        disabled_by=device_disabled_by,
+        new_config_entry_id=hub_entry.entry_id,
+    )
 
     for entity_entry in er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
