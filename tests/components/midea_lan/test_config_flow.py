@@ -413,17 +413,27 @@ async def test_manual_step_errors(
                         "keyB": {"token": TEST_TOKEN, "key": TEST_KEY},
                     },
                     {
-                        "default": {"token": TEST_TOKEN, "key": TEST_KEY},
                         "keyC": {"token": TEST_TOKEN, "key": TEST_KEY},
                     },
                 ],
-                "default_keys": {"default": "value"},
-                "connect": [True, True, False],
-                "authenticate": [AuthException, SocketException],
+                "default_keys": {"builtin": {"token": TEST_TOKEN, "key": TEST_KEY}},
+                "connect": [True, True, True, False],
+                "authenticate": [AuthException, SocketException, AuthException],
             },
             FlowResultType.FORM,
             "token_unavailable",
             id="v3_token_retrieval_exhausted",
+        ),
+        pytest.param(
+            {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
+            {
+                "login": True,
+                "cloud_keys": {},
+                "default_keys": {"builtin": {"token": TEST_TOKEN, "key": TEST_KEY}},
+            },
+            FlowResultType.CREATE_ENTRY,
+            None,
+            id="v3_default_key_phase1_success",
         ),
         pytest.param(
             {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
@@ -545,6 +555,8 @@ async def test_search_and_auto_flow(
         assert result["errors"] == {"base": expected_error}
     else:
         assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
+        assert result["data"][CONF_TOKEN] == TEST_TOKEN
+        assert result["data"][CONF_KEY] == TEST_KEY
 
 
 @pytest.mark.parametrize(

@@ -283,6 +283,7 @@ async def test_midea_cf_climate_setup_and_services(
             CFAttributes.min_temperature: 16,
             CFAttributes.max_temperature: 30,
             CFAttributes.current_temperature: 22,
+            CFAttributes.target_temperature: 20,
         },
     )
     config_entry = mock_config_entry(device)
@@ -308,7 +309,7 @@ async def test_midea_cf_climate_setup_and_services(
         entity_entry.entity_id,
         SERVICE_SET_TEMPERATURE,
         {ATTR_TEMPERATURE: 24.2, "hvac_mode": HVACMode.OFF},
-        [("set_attribute", CCAttributes.power, False)],
+        [("set_attribute", CFAttributes.power, False)],
         device,
     )
     await _assert_service_calls(
@@ -316,7 +317,12 @@ async def test_midea_cf_climate_setup_and_services(
         entity_entry.entity_id,
         SERVICE_SET_HVAC_MODE,
         {"hvac_mode": HVACMode.HEAT},
-        [("set_attribute", CCAttributes.mode, 3)],
+        [
+            (
+                "set_target_temperature",
+                {"target_temperature": 20.0, "mode": 3},
+            )
+        ],
         device,
     )
 
@@ -335,7 +341,7 @@ async def test_midea_c3_climate_setup_and_services(
             C3Attributes.mode: 1,
             C3Attributes.zone1_power: True,
             C3Attributes.target_temperature: [22, 23],
-            C3Attributes.temp_tw_in: [21.5, 22.5],
+            C3Attributes.temp_tw_in: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -601,6 +607,55 @@ async def test_ac_invalid_mode_maps_to_off_state(
     assert state.state == "unknown"
 
 
+async def test_ac_power_off_state(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC hvac_mode reports OFF when power is explicitly False."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: False,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == HVACMode.OFF
+
+
+async def test_ac_missing_mode_maps_to_unknown_state(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test AC hvac_mode is unknown when powered on with a non-int mode value."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.fan_speed: 103,
+            ACAttributes.swing_vertical: True,
+            ACAttributes.swing_horizontal: True,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == "unknown"
+
+
 async def test_cf_temperature_range_attributes(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
@@ -674,7 +729,7 @@ async def test_c3_temperature_fallback_and_turn_on(
             C3Attributes.mode: 1,
             C3Attributes.zone1_power: True,
             C3Attributes.target_temperature: [22],
-            C3Attributes.temp_tw_in: [21.5],
+            C3Attributes.temp_tw_in: 21.5,
         },
     )
     config_entry = mock_config_entry(device)
@@ -692,6 +747,64 @@ async def test_c3_temperature_fallback_and_turn_on(
         SERVICE_TURN_ON,
         {},
         [("set_attribute", C3Attributes.zone1_power, True)],
+        device,
+    )
+
+
+async def test_c3_unknown_power_maps_to_unknown_state(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 zone HVAC mode is unknown, not off, when power state is unknown."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone_temp_type: [True],
+            C3Attributes.temperature_min: [16],
+            C3Attributes.temperature_max: [30],
+            C3Attributes.mode: 1,
+            C3Attributes.target_temperature: [22],
+            C3Attributes.temp_tw_in: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+
+    assert (state := hass.states.get(zone1.entity_id))
+    assert state.state == "unknown"
+
+
+async def test_cf_set_hvac_mode_falls_back_to_min_temp(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test CF set_hvac_mode falls back to min_temp when target_temperature is unset."""
+    device = DummyDevice(
+        DeviceType.CF,
+        attributes={
+            "power": True,
+            "mode": 2,
+            CFAttributes.min_temperature: 16,
+            CFAttributes.max_temperature: 30,
+            CFAttributes.current_temperature: 22,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    await _assert_service_calls(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_SET_HVAC_MODE,
+        {"hvac_mode": HVACMode.HEAT},
+        [
+            (
+                "set_target_temperature",
+                {"target_temperature": 16.0, "mode": 3},
+            )
+        ],
         device,
     )
 
@@ -721,6 +834,165 @@ async def test_fb_set_hvac_off_calls_turn_off(
         [("set_attribute", FBAttributes.power, False)],
         device,
     )
+
+
+async def test_cf_set_hvac_mode_off_calls_turn_off(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test CF set_hvac_mode with OFF delegates to turn_off."""
+    device = DummyDevice(
+        DeviceType.CF,
+        attributes={
+            "power": True,
+            "mode": 2,
+            CFAttributes.min_temperature: 16,
+            CFAttributes.max_temperature: 30,
+            CFAttributes.current_temperature: 22,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    await _assert_service_calls(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_SET_HVAC_MODE,
+        {"hvac_mode": HVACMode.OFF},
+        [("set_attribute", CFAttributes.power, False)],
+        device,
+    )
+
+
+async def test_cf_temperature_range_fallback_when_unset(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test CF min/max temperature fall back to defaults when attributes are unset."""
+    device = DummyDevice(
+        DeviceType.CF,
+        attributes={"power": True, "mode": 2, CFAttributes.current_temperature: 22},
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.attributes[ATTR_MIN_TEMP] == 16.0
+    assert state.attributes[ATTR_MAX_TEMP] == 30.0
+
+
+async def test_cc_fan_and_swing_invalid_types_return_none(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test CC fan_mode/swing_mode return None for unexpected attribute types."""
+    device = DummyDevice(
+        DeviceType.CC,
+        attributes={
+            CCAttributes.power: True,
+            CCAttributes.mode: 5,
+            CCAttributes.fan_speed: 1,
+            CCAttributes.temperature_precision: 0.5,
+            CCAttributes.swing: "on",
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.attributes.get(ATTR_FAN_MODE) is None
+    assert state.attributes.get(ATTR_SWING_MODE) is None
+
+
+async def test_c3_zone_power_off_state(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 zone hvac_mode reports OFF when power is explicitly False."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone1_power: False,
+            C3Attributes.mode: 1,
+            C3Attributes.temp_tw_in: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+
+    assert (state := hass.states.get(zone1.entity_id))
+    assert state.state == HVACMode.OFF
+
+
+async def test_c3_invalid_mode_maps_to_unknown_state(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 zone hvac_mode is unknown when powered on with an invalid mode."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone1_power: True,
+            C3Attributes.mode: 999,
+            C3Attributes.temp_tw_in: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+
+    assert (state := hass.states.get(zone1.entity_id))
+    assert state.state == "unknown"
+
+
+async def test_c3_temperature_fallback_when_attribute_missing(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test C3 min/max/target temperature fall back when attributes are missing."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone1_power: True,
+            C3Attributes.mode: 1,
+            C3Attributes.temp_tw_in: 21.5,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
+
+    assert entity is not None
+    assert entity.min_temp == 16.0
+    assert entity.max_temp == 30.0
+    assert entity.target_temperature is None
+
+
+async def test_fb_invalid_attribute_types_return_none(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test FB preset_mode/hvac_mode return None for unexpected attribute types."""
+    device = DummyDevice(
+        DeviceType.FB,
+        attributes={
+            FBAttributes.mode: 1,
+            FBAttributes.power: "on",
+            FBAttributes.current_temperature: 20,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
+    assert state.state == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -783,7 +1055,7 @@ async def test_fb_set_hvac_off_calls_turn_off(
                     C3Attributes.mode: 1,
                     C3Attributes.zone1_power: True,
                     C3Attributes.target_temperature: [22, 23],
-                    C3Attributes.temp_tw_in: [21.5, 22.5],
+                    C3Attributes.temp_tw_in: 21.5,
                 },
             ),
             id="c3",

@@ -480,6 +480,18 @@ class MideaCFClimate(MideaClimate):
 
     _attr_supported_features = FEATURES_TARGET_AND_POWER
 
+    @override
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Midea CF Climate set hvac mode."""
+        if hvac_mode == HVACMode.OFF:
+            self.turn_off()
+        else:
+            target_temperature = self.target_temperature or self.min_temp
+            self._device.set_target_temperature(
+                target_temperature=target_temperature,
+                mode=self._hvac_to_protocol_mode(hvac_mode),
+            )
+
     @property
     @override
     def min_temp(self) -> float:
@@ -610,7 +622,10 @@ class MideaC3Climate(MideaClimate):
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Midea C3 Climate hvac mode."""
-        if not self._device.get_attribute(self._power_attr):
+        power = self._device.get_attribute(self._power_attr)
+        if not isinstance(power, bool):
+            return None
+        if not power:
             return HVACMode.OFF
         mode = self._device.get_attribute(C3Attributes.mode)
         if isinstance(mode, int) and 0 <= mode < len(self.hvac_modes):
@@ -633,13 +648,7 @@ class MideaC3Climate(MideaClimate):
     @override
     def current_temperature(self) -> float | None:
         """Midea C3 Climate current temperature."""
-        current_temperature = self._device.get_attribute(C3Attributes.temp_tw_in)
-        if (
-            not isinstance(current_temperature, list)
-            or len(current_temperature) <= self._zone
-        ):
-            return None
-        return float(current_temperature[self._zone])
+        return self._float_attribute(C3Attributes.temp_tw_in)
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:

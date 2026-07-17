@@ -335,19 +335,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # _check_cloud_login always succeeds before this is called, setting self.cloud
         assert self.cloud is not None
 
-        # get device token/key from cloud
+        # get device token/key from cloud, plus the well-known default keys
         keys = await self.cloud.get_cloud_keys(appliance_id)
-        default_keys = await MideaCloud.get_default_keys()
-        default_key_name = next(iter(default_keys), None)
+        if default_key:
+            keys = {**keys, **(await MideaCloud.get_default_keys())}
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
-            # skip default_key
-            if (
-                not default_key
-                and default_key_name is not None
-                and k == default_key_name
-            ):
-                continue
             dm = MideaDevice(
                 name="",
                 device_id=appliance_id,

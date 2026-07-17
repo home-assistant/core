@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_state_snapshot[ac][climate.bedroom_ac_thermostat-entry]
+# name: test_climate_state_snapshot[ac][climate.bedroom_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -47,7 +47,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -55,12 +55,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Thermostat',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Thermostat',
+    'original_name': None,
     'platform': 'midea_lan',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -70,7 +70,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[ac][climate.bedroom_ac_thermostat-state]
+# name: test_climate_state_snapshot[ac][climate.bedroom_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50.0,
@@ -84,7 +84,7 @@
         'full',
         'auto',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -116,7 +116,7 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -245,7 +245,7 @@
 # name: test_climate_state_snapshot[c3][climate.bedroom_ac_zone_2_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.5,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.5,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Zone 2 thermostat',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -264,10 +264,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
-# name: test_climate_state_snapshot[cc][climate.bedroom_ac_thermostat-entry]
+# name: test_climate_state_snapshot[cc][climate.bedroom_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -306,7 +306,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -314,12 +314,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Thermostat',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Thermostat',
+    'original_name': None,
     'platform': 'midea_lan',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -329,7 +329,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[cc][climate.bedroom_ac_thermostat-state]
+# name: test_climate_state_snapshot[cc][climate.bedroom_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
@@ -338,7 +338,7 @@
         'low',
         'high',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -365,14 +365,14 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_climate_state_snapshot[cf][climate.bedroom_ac_thermostat-entry]
+# name: test_climate_state_snapshot[cf][climate.bedroom_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -396,7 +396,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -404,12 +404,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Thermostat',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Thermostat',
+    'original_name': None,
     'platform': 'midea_lan',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -419,11 +419,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[cf][climate.bedroom_ac_thermostat-state]
+# name: test_climate_state_snapshot[cf][climate.bedroom_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -437,14 +437,14 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
   })
 # ---
-# name: test_climate_state_snapshot[fb][climate.bedroom_ac_thermostat-entry]
+# name: test_climate_state_snapshot[fb][climate.bedroom_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -470,7 +470,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -478,12 +478,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Thermostat',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Thermostat',
+    'original_name': None,
     'platform': 'midea_lan',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -493,11 +493,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[fb][climate.bedroom_ac_thermostat-state]
+# name: test_climate_state_snapshot[fb][climate.bedroom_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -514,7 +514,7 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_ac_thermostat',
+    'entity_id': 'climate.bedroom_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

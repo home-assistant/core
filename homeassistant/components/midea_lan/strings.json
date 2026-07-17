@@ -99,9 +99,6 @@
   },
   "entity": {
     "climate": {
-      "climate_key": {
-        "name": "Thermostat"
-      },
       "climate_zone1": {
         "name": "Zone 1 thermostat"
       },
