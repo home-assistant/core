@@ -136,38 +136,67 @@ def async_remove_helper_config_entry_from_source_device(
     helper_config_entry_id: str,
     source_device_id: str,
 ) -> None:
-    """Remove helper config entry from source device.
+    """Migrate a helper which has tried to add its config entry to the source device.
 
-    This is a convenience function to migrate from helpers which added their config
-    entry to the source device.
+    A device belongs to a single config entry, and has been split into multiple devices
+    if it was co-owned by multiple config entries. This function handles both ids a
+    helper may pass as source_device_id:
+    - a pre-migration composite id (the id of the device before it was split): its split
+      children are known, so the helper's entities are moved onto the source-owned split
+      and the helper-owned split is removed;
+    - a plain source device id, with the helper owning a separate device: the helper's
+      entities are moved onto the source device and the helper's device is removed.
     """
     device_registry = dr.async_get(hass)
-
-    if (
-        not (source_device := device_registry.async_get(source_device_id))
-        or helper_config_entry_id not in source_device.config_entries
-    ):
-        return
-
     entity_registry = er.async_get(hass)
+
     helper_entity_entries = er.async_entries_for_config_entry(
         entity_registry, helper_config_entry_id
     )
 
-    # Disconnect helper entities from the device to prevent them from
-    # being removed when the config entry link to the device is removed.
-    modified_helpers: list[er.RegistryEntry] = []
-    for helper in helper_entity_entries:
-        if helper.device_id != source_device_id:
-            continue
-        modified_helpers.append(helper)
-        entity_registry.async_update_entity(helper.entity_id, device_id=None)
-    # Remove the helper config entry from the device
-    device_registry.async_update_device(
-        source_device_id, remove_config_entry_id=helper_config_entry_id
-    )
-    # Connect the helper entity to the device
-    for helper in modified_helpers:
-        entity_registry.async_update_entity(
-            helper.entity_id, device_id=source_device_id
+    # A pre-migration composite id resolves to the split devices it was migrated into
+    # (empty for any other id). Act on those children directly instead of relying on the
+    # deprecated config_entries shim and remove_config_entry_id: move the helper's entities
+    # onto a source-owned split and remove the helper-owned split.
+    if split_devices := device_registry.async_get_devices_for_composite_device_id(
+        source_device_id
+    ):
+        helper_device = next(
+            (
+                device
+                for device in split_devices
+                if device.config_entry_id == helper_config_entry_id
+            ),
+            None,
         )
+        if helper_device is None:
+            return
+        target_device_id = next(
+            (
+                device.id
+                for device in split_devices
+                if device.config_entry_id != helper_config_entry_id
+            ),
+            None,
+        )
+        for helper in helper_entity_entries:
+            if helper.device_id == helper_device.id:
+                entity_registry.async_update_entity(
+                    helper.entity_id, device_id=target_device_id
+                )
+        device_registry.async_remove_device(helper_device.id)
+        return
+
+    # The helper owns a separate device. Move the helper's entities onto the source device,
+    # then remove the helper's device.
+    if not device_registry.async_get(source_device_id):
+        return
+    for helper_device in dr.async_entries_for_config_entry(
+        device_registry, helper_config_entry_id
+    ):
+        for helper in helper_entity_entries:
+            if helper.device_id == helper_device.id:
+                entity_registry.async_update_entity(
+                    helper.entity_id, device_id=source_device_id
+                )
+        device_registry.async_remove_device(helper_device.id)

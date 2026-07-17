@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+import attr
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
@@ -510,65 +511,70 @@ async def test_async_handle_source_entity_new_entity_id(
     assert events == []
 
 
-@pytest.mark.parametrize("use_entity_registry_id", [True, False])
-@pytest.mark.usefixtures("source_entity_entry")
-async def test_async_remove_helper_config_entry_from_source_device(
+async def test_async_remove_helper_config_entry_from_pre_split_composite_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    helper_config_entry: MockConfigEntry,
-    helper_entity_entry: er.RegistryEntry,
-    source_config_entry: ConfigEntry,
-    source_device: dr.DeviceEntry,
 ) -> None:
-    """Test removing the helper config entry from the source device."""
-    # In the single-owner model the migration helper only acts when the helper config
-    # entry owns the source device. Move the source device to the helper config entry
-    # and record a pending move back to the source config entry, so removing the helper
-    # config entry hands the device back to the source config entry instead of deleting
-    # it.
-    device_registry.async_update_device(
-        source_device.id,
-        add_config_entry_id=helper_config_entry.entry_id,
-        remove_config_entry_id=source_config_entry.entry_id,
-    )
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=source_config_entry.entry_id
-    )
-    source_device = device_registry.async_get(source_device.id)
-    assert source_device.config_entries == {helper_config_entry.entry_id}
+    """Test migrating a helper off a pre-migration composite source device.
 
-    # Create a helper entity entry, not connected to the source device
-    extra_helper_entity_entry = entity_registry.async_get_or_create(
+    The single-config-entry migration split a device co-owned by the source and helper
+    config entries into one device per config entry, sharing the pre-migration id as their
+    composite id. A helper storing that pre-migration id as its source device is migrated
+    by moving its entities onto the source-owned split and removing the helper-owned split.
+    """
+    source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
+    source_config_entry.add_to_hass(hass)
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+    composite_id = "pre_split_composite_id"
+
+    source_split = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={(SOURCE_DOMAIN, "1")},
+    )
+    helper_split = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "1")},
+    )
+    # Simulate the migration split: both devices share the pre-migration composite id
+    device_registry.devices[source_split.id] = attr.evolve(
+        source_split, composite_device_id=composite_id
+    )
+    device_registry.devices[helper_split.id] = attr.evolve(
+        helper_split, composite_device_id=composite_id
+    )
+    # A helper entity on the helper's split, plus one not linked to any device
+    helper_entity_entry = entity_registry.async_get_or_create(
         "sensor",
         HELPER_DOMAIN,
-        f"{helper_config_entry.entry_id}_2",
+        "1",
         config_entry=helper_config_entry,
-        original_name="ABC",
+        device_id=helper_split.id,
     )
-    assert extra_helper_entity_entry.entity_id != helper_entity_entry.entity_id
-
-    events = listen_entity_registry_events(hass)
+    extra_helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor", HELPER_DOMAIN, "2", config_entry=helper_config_entry
+    )
+    # The helper stores the pre-migration composite id as its source device
+    assert device_registry.async_get(composite_id) is not None
 
     async_remove_helper_config_entry_from_source_device(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
-        source_device_id=source_device.id,
+        source_device_id=composite_id,
     )
 
-    # Check we got the expected events
-    assert events == [
-        {
-            "action": "update",
-            "changes": {"device_id": source_device.id},
-            "entity_id": helper_entity_entry.entity_id,
-        },
-        {
-            "action": "update",
-            "changes": {"device_id": None},
-            "entity_id": helper_entity_entry.entity_id,
-        },
-    ]
+    # The helper's entity moved onto the source-owned split; its own split was removed
+    assert (
+        entity_registry.async_get(helper_entity_entry.entity_id).device_id
+        == source_split.id
+    )
+    assert (
+        entity_registry.async_get(extra_helper_entity_entry.entity_id).device_id is None
+    )
+    assert device_registry.async_get(helper_split.id) is None
+    assert device_registry.async_get(source_split.id) is not None
 
 
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])
@@ -602,3 +608,71 @@ async def test_async_remove_helper_config_entry_from_source_device_helper_not_in
 
     # Check we got the expected events
     assert events == []
+
+
+@pytest.mark.parametrize("use_entity_registry_id", [True, False])
+@pytest.mark.usefixtures("source_entity_entry")
+async def test_async_remove_helper_config_entry_from_source_device_post_split(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    helper_config_entry: MockConfigEntry,
+    source_config_entry: ConfigEntry,
+    source_device: dr.DeviceEntry,
+) -> None:
+    """Test cleaning up a helper-owned device split off from the source device.
+
+    In the single-config-entry model the migration splits a device co-owned by the source
+    and helper config entries into a source-owned device and a separate helper-owned
+    device. The helper's entities must be moved onto the source device and the helper's
+    device removed.
+    """
+    # The helper owns a separate device (the migration split it off from the source
+    # device), with a helper entity linked to it.
+    helper_device = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
+    )
+    helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        helper_config_entry.entry_id,
+        config_entry=helper_config_entry,
+        device_id=helper_device.id,
+        original_name="ABC",
+    )
+    # A second helper entity, not connected to any device
+    extra_helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        f"{helper_config_entry.entry_id}_2",
+        config_entry=helper_config_entry,
+        original_name="ABC",
+    )
+
+    events = listen_entity_registry_events(hass)
+
+    async_remove_helper_config_entry_from_source_device(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=source_device.id,
+    )
+
+    # The helper entity was moved to the source device and the helper device removed
+    assert (
+        entity_registry.async_get(helper_entity_entry.entity_id).device_id
+        == source_device.id
+    )
+    assert (
+        entity_registry.async_get(extra_helper_entity_entry.entity_id).device_id is None
+    )
+    assert device_registry.async_get(helper_device.id) is None
+
+    # Check we got the expected events
+    assert events == [
+        {
+            "action": "update",
+            "changes": {"device_id": helper_device.id},
+            "entity_id": helper_entity_entry.entity_id,
+        },
+    ]
