@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import KNX_MODULE_KEY
-from .entity import KnxYamlEntity, async_migrate_yaml_unique_id, build_yaml_unique_id
+from .entity import KnxYamlEntity, build_yaml_unique_id
 from .knx_module import KNXModule
 from .schema import WeatherSchema
 
@@ -86,15 +86,11 @@ class KNXWeather(KnxYamlEntity, WeatherEntity):
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
         self._device = _create_weather(knx_module.xknx, config)
-        new_uid, legacy_uid = build_yaml_unique_id(
-            self._device._temperature.group_address_state  # noqa: SLF001
-        )
-        async_migrate_yaml_unique_id(
-            knx_module.hass, Platform.WEATHER, legacy_uid, new_uid
-        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=new_uid,
+            unique_id=build_yaml_unique_id(
+                self._device._temperature.group_address_state  # noqa: SLF001
+            ),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

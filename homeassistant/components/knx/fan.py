@@ -29,7 +29,6 @@ from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
-    async_migrate_yaml_unique_id,
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
@@ -237,13 +236,11 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
             max_step=max_step,
             sync_state=config.get(CONF_SYNC_STATE, True),
         )
-        new_uid, legacy_uid = build_yaml_unique_id(
-            self._device.speed.group_address or self._device.switch.group_address
-        )
-        async_migrate_yaml_unique_id(knx_module.hass, Platform.FAN, legacy_uid, new_uid)
         super().__init__(
             knx_module=knx_module,
-            unique_id=new_uid,
+            unique_id=build_yaml_unique_id(
+                self._device.speed.group_address or self._device.switch.group_address
+            ),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

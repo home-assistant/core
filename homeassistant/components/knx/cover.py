@@ -31,7 +31,6 @@ from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
-    async_migrate_yaml_unique_id,
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
@@ -226,16 +225,12 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             invert_position=config[CoverConf.INVERT_POSITION],
             invert_angle=config[CoverConf.INVERT_ANGLE],
         )
-        new_uid, legacy_uid = build_yaml_unique_id(
-            self._device.updown.group_address,
-            self._device.position_target.group_address,
-        )
-        async_migrate_yaml_unique_id(
-            knx_module.hass, Platform.COVER, legacy_uid, new_uid
-        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=new_uid,
+            unique_id=build_yaml_unique_id(
+                self._device.updown.group_address,
+                self._device.position_target.group_address,
+            ),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

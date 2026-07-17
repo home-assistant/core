@@ -6,17 +6,15 @@ from typing import TYPE_CHECKING, Any, override
 from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
-from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    EntityCategory,
-    Platform,
-)
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.entity_platform import (
+    EntityPlatform,
+    async_get_current_platform,
+)
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import DOMAIN
@@ -48,6 +46,7 @@ def build_yaml_unique_id(
     `new_stable_id` is independent of the global group address format. `legacy_id`
     matches the id produced before this fix (using the current global format) and is
     used to migrate registry entries of installations not using the 3-level style.
+    Pass the result as `unique_id` to `KnxYamlEntity`, which runs the migration.
     """
     new_id = "_".join(_stable_group_address_repr(part) for part in parts)
     legacy_id = "_".join(str(part) for part in parts)
@@ -56,7 +55,7 @@ def build_yaml_unique_id(
 
 @callback
 def async_migrate_yaml_unique_id(
-    hass: HomeAssistant, platform: Platform, legacy_id: str, new_id: str
+    hass: HomeAssistant, platform: str, legacy_id: str, new_id: str
 ) -> None:
     """Migrate a YAML entity unique_id from the legacy format to the stable one."""
     # migration from unstable group address string parts added in 2026.8
@@ -176,14 +175,25 @@ class KnxYamlEntity(_KnxEntityBase):
     def __init__(
         self,
         knx_module: KNXModule,
-        unique_id: str,
+        unique_id: tuple[str, str],  # new_stable_id, legacy_id for migration
         name: str,
         entity_category: EntityCategory | None,
     ) -> None:
-        """Initialize the YAML entity."""
+        """Initialize the YAML entity.
+
+        `unique_id` is the `(new_stable_id, legacy_id)` tuple from
+        `build_yaml_unique_id`; the legacy id is migrated to the stable one.
+        """
+        new_unique_id, legacy_unique_id = unique_id
+        async_migrate_yaml_unique_id(
+            knx_module.hass,
+            async_get_current_platform().domain,
+            legacy_unique_id,
+            new_unique_id,
+        )
         self._knx_module = knx_module
         self._attr_name = name or None
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = new_unique_id
         self._attr_entity_category = entity_category
 
 

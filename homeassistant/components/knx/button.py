@@ -19,7 +19,6 @@ from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
-    async_migrate_yaml_unique_id,
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
@@ -86,15 +85,11 @@ class KnxYamlButton(_KnxButton, KnxYamlEntity):
             payload_length=config[CONF_PAYLOAD_LENGTH],
             group_address=config[KNX_ADDRESS],
         )
-        new_uid, legacy_uid = build_yaml_unique_id(
-            self._device.remote_value.group_address, self._payload
-        )
-        async_migrate_yaml_unique_id(
-            knx_module.hass, Platform.BUTTON, legacy_uid, new_uid
-        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=new_uid,
+            unique_id=build_yaml_unique_id(
+                self._device.remote_value.group_address, self._payload
+            ),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )

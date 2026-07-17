@@ -32,7 +32,6 @@ from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
-    async_migrate_yaml_unique_id,
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
@@ -577,13 +576,9 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX light."""
         self._device = _create_yaml_light(knx_module.xknx, config)
-        new_uid, legacy_uid = build_yaml_unique_id(*self._unique_id_parts())
-        async_migrate_yaml_unique_id(
-            knx_module.hass, Platform.LIGHT, legacy_uid, new_uid
-        )
         super().__init__(
             knx_module=knx_module,
-            unique_id=new_uid,
+            unique_id=build_yaml_unique_id(*self._unique_id_parts()),
             name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
