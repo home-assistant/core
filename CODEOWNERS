@@ -625,6 +625,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gardena_bluetooth/ @elupus
 /homeassistant/components/gate/ @home-assistant/core
 /tests/components/gate/ @home-assistant/core
+/homeassistant/components/gatus/ @TN-1
+/tests/components/gatus/ @TN-1
 /homeassistant/components/gdacs/ @exxamalte
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001
@@ -717,6 +719,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/habitica/ @tr4nt0r
 /homeassistant/components/hanna/ @bestycame
 /tests/components/hanna/ @bestycame
+/homeassistant/components/harbor/ @Lash-L @afgarcia86
+/tests/components/harbor/ @Lash-L @afgarcia86
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
@@ -1032,6 +1036,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
+/homeassistant/components/litellm/ @luismalves
+/tests/components/litellm/ @luismalves
 /homeassistant/components/litterrobot/ @natekspencer @tkdrob
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
@@ -1146,8 +1152,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus_connection/ @home-assistant/core
-/tests/components/modbus_connection/ @home-assistant/core
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
@@ -1965,6 +1969,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
+/homeassistant/components/vibration/ @home-assistant/core
+/tests/components/vibration/ @home-assistant/core
 /homeassistant/components/vicare/ @CFenner @lackas
 /tests/components/vicare/ @CFenner @lackas
 /homeassistant/components/victron_ble/ @rajlaud

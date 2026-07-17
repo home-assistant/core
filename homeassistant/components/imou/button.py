@@ -5,7 +5,11 @@ from typing import override
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,15 +27,6 @@ PARAM_PTZ_DOWN = "ptz_down"
 PARAM_PTZ_LEFT = "ptz_left"
 PARAM_PTZ_RIGHT = "ptz_right"
 
-BUTTON_TYPES = (
-    PARAM_RESTART_DEVICE,
-    PARAM_MUTE,
-    PARAM_PTZ_UP,
-    PARAM_PTZ_DOWN,
-    PARAM_PTZ_LEFT,
-    PARAM_PTZ_RIGHT,
-)
-
 PTZ_BUTTON_TYPES = (
     PARAM_PTZ_UP,
     PARAM_PTZ_DOWN,
@@ -39,20 +34,43 @@ PTZ_BUTTON_TYPES = (
     PARAM_PTZ_RIGHT,
 )
 
-BUTTON_DEVICE_CLASS: dict[str, ButtonDeviceClass] = {
-    PARAM_RESTART_DEVICE: ButtonDeviceClass.RESTART,
-}
+BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
+    ButtonEntityDescription(
+        key=PARAM_RESTART_DEVICE,
+        device_class=ButtonDeviceClass.RESTART,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_MUTE,
+        translation_key=PARAM_MUTE,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_UP,
+        translation_key=PARAM_PTZ_UP,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_DOWN,
+        translation_key=PARAM_PTZ_DOWN,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_LEFT,
+        translation_key=PARAM_PTZ_LEFT,
+    ),
+    ButtonEntityDescription(
+        key=PARAM_PTZ_RIGHT,
+        translation_key=PARAM_PTZ_RIGHT,
+    ),
+)
 
 
 def _iter_buttons(
     coordinator: ImouDataUpdateCoordinator,
-) -> list[tuple[str, ImouHaDevice]]:
-    """Return (button_type, device) pairs for supported buttons."""
+) -> list[tuple[ButtonEntityDescription, ImouHaDevice]]:
+    """Return (description, device) pairs for supported buttons."""
     return [
-        (button_type, device)
+        (description, device)
         for device in coordinator.devices
-        for button_type in device.buttons
-        if button_type in BUTTON_TYPES
+        for description in BUTTON_TYPES
+        if description.key in device.buttons
     ]
 
 
@@ -67,8 +85,8 @@ async def async_setup_entry(
     def _add_buttons(new_devices: list[ImouHaDevice]) -> None:
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
-            ImouButton(coordinator, button_type, device)
-            for button_type, device in _iter_buttons(coordinator)
+            ImouButton(coordinator, description, device)
+            for description, device in _iter_buttons(coordinator)
             if imou_device_identifier(device) in device_keys
         )
 
@@ -86,17 +104,7 @@ async def async_setup_entry(
 class ImouButton(ImouEntity, ButtonEntity):
     """Imou button entity."""
 
-    def __init__(
-        self,
-        coordinator: ImouDataUpdateCoordinator,
-        entity_type: str,
-        device: ImouHaDevice,
-    ) -> None:
-        """Initialize the Imou button entity."""
-        super().__init__(coordinator, entity_type, device)
-        if device_class := BUTTON_DEVICE_CLASS.get(entity_type):
-            self._attr_device_class = device_class
-            self._attr_translation_key = None
+    entity_description: ButtonEntityDescription
 
     @override
     async def async_press(self) -> None:

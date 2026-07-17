@@ -13,7 +13,7 @@
   "iot_class": "local_polling",
   "loggers": ["duco_connectivity"],
   "quality_scale": "platinum",
-  "requirements": ["python-duco-connectivity==0.8.0"],
+  "requirements": ["python-duco-connectivity==0.10.0"],
   "zeroconf": [
     {
       "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
