@@ -38,6 +38,14 @@ from tests.common import MockConfigEntry
             True,
             id="availability_update",
         ),
+        pytest.param(
+            {ACAttributes.indoor_temperature: 24.0},
+            {"power": True, ACAttributes.indoor_temperature: 24.0},
+            True,
+            24.0,
+            False,
+            id="attribute_update_without_available_key",
+        ),
     ],
 )
 async def test_entity_updates_from_device_callback(

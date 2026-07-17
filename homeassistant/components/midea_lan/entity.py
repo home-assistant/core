@@ -26,7 +26,6 @@ class MideaEntity(Entity):
     def __init__(self, device: MideaDevice, entity_key: str) -> None:
         """Initialize Midea base entity."""
         self._device = device
-        self._entity_key = entity_key
         self._unique_id = f"{self._device.device_id}_{entity_key}"
         self._device_name = self._device.name
 
@@ -77,5 +76,4 @@ class MideaEntity(Entity):
             )
             return
 
-        if self._entity_key in status or "available" in status:
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
