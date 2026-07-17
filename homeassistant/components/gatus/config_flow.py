@@ -46,22 +46,20 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            url = URL(user_input[CONF_URL])
+            user_input[CONF_URL] = str(
+                url.with_query(None)
+                .with_fragment(None)
+                .with_user(None)
+                .with_password(None)
+            ).rstrip("/")
+
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
             try:
-                url = URL(user_input[CONF_URL])
-                user_input[CONF_URL] = str(
-                    url.with_query(None)
-                    .with_fragment(None)
-                    .with_user(None)
-                    .with_password(None)
-                ).rstrip("/")
-
-                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except HomeAssistantError:
-                raise
             except Exception:
                 _LOGGER.exception("Unexpected exception during Gatus setup")
                 errors["base"] = "unknown"
@@ -84,25 +82,23 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            url = URL(user_input[CONF_URL])
+            user_input[CONF_URL] = str(
+                url.with_query(None)
+                .with_fragment(None)
+                .with_user(None)
+                .with_password(None)
+            ).rstrip("/")
+
+            if user_input[CONF_URL] != reconfigure_entry.data[CONF_URL]:
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
             try:
-                url = URL(user_input[CONF_URL])
-                user_input[CONF_URL] = str(
-                    url.with_query(None)
-                    .with_fragment(None)
-                    .with_user(None)
-                    .with_password(None)
-                ).rstrip("/")
-
-                if user_input[CONF_URL] != reconfigure_entry.data[CONF_URL]:
-                    self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except HomeAssistantError:
-                raise
             except Exception:
-                _LOGGER.exception("Unexpected exception during Gatus setup")
+                _LOGGER.exception("Unexpected exception during Gatus reconfigure")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
