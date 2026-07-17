@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import contextlib
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
@@ -305,36 +305,60 @@ class LightExtraStoredData(ExtraStoredData):
     @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
-        return asdict(self)
+        return {
+            "is_on": self.is_on,
+            "brightness": self.brightness,
+            "color_mode": self.color_mode.value if self.color_mode else None,
+            "color_temp_kelvin": self.color_temp_kelvin,
+            "effect_list": self.effect_list,
+            "effect": self.effect,
+            "hs_color": self.hs_color,
+            "max_color_temp_kelvin": self.max_color_temp_kelvin,
+            "min_color_temp_kelvin": self.min_color_temp_kelvin,
+            "rgb_color": self.rgb_color,
+            "rgbw_color": self.rgbw_color,
+            "rgbww_color": self.rgbww_color,
+            "supported_color_modes": (
+                [mode.value for mode in self.supported_color_modes]
+                if self.supported_color_modes
+                else None
+            ),
+            "xy_color": self.xy_color,
+        }
 
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored state from a dict."""
 
-        color_mode: ColorMode | None = None
-        if _color_mode := restored["color_mode"]:
-            color_mode = ColorMode(_color_mode)
+        try:
+            color_mode: ColorMode | None = None
+            if _color_mode := restored["color_mode"]:
+                color_mode = ColorMode(_color_mode)
 
-        supported_color_modes: set[ColorMode] | None = None
-        if _supported_color_modes := restored["supported_color_modes"]:
-            supported_color_modes = {ColorMode(item) for item in _supported_color_modes}
+            supported_color_modes: set[ColorMode] | None = None
+            if _supported_color_modes := restored["supported_color_modes"]:
+                supported_color_modes = {
+                    ColorMode(item) for item in _supported_color_modes
+                }
 
-        return cls(
-            is_on=restored["is_on"],
-            brightness=restored["brightness"],
-            color_mode=color_mode,
-            color_temp_kelvin=restored["color_temp_kelvin"],
-            effect_list=restored["effect_list"],
-            effect=restored["effect"],
-            hs_color=restored["hs_color"],
-            max_color_temp_kelvin=restored["max_color_temp_kelvin"],
-            min_color_temp_kelvin=restored["min_color_temp_kelvin"],
-            rgb_color=restored["rgb_color"],
-            rgbw_color=restored["rgbw_color"],
-            rgbww_color=restored["rgbww_color"],
-            supported_color_modes=supported_color_modes,
-            xy_color=restored["xy_color"],
-        )
+            return cls(
+                is_on=restored["is_on"],
+                brightness=restored["brightness"],
+                color_mode=color_mode,
+                color_temp_kelvin=restored["color_temp_kelvin"],
+                effect_list=restored["effect_list"],
+                effect=restored["effect"],
+                hs_color=restored["hs_color"],
+                max_color_temp_kelvin=restored["max_color_temp_kelvin"],
+                min_color_temp_kelvin=restored["min_color_temp_kelvin"],
+                rgb_color=restored["rgb_color"],
+                rgbw_color=restored["rgbw_color"],
+                rgbww_color=restored["rgbww_color"],
+                supported_color_modes=supported_color_modes,
+                xy_color=restored["xy_color"],
+            )
+        except KeyError, ValueError:
+            return None
 
 
 class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):

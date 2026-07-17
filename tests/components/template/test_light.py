@@ -31,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
@@ -49,7 +50,7 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
 from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "light.test_state"
@@ -1904,35 +1905,6 @@ async def test_flow_preview(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "state": "{{ state_attr('sensor.test_state', 'is_on') }}",
-            "turn_on": [],
-            "turn_off": [],
-            "level": "{{ state_attr('sensor.test_state', 'brightness') }}",
-            "set_level": [],
-            "temperature": "{{ state_attr('sensor.test_state', 'color_temp_kelvin') }}",
-            "set_temperature": [],
-            "effect_list": "{{ state_attr('sensor.test_state', 'effect_list') }}",
-            "effect": "{{ state_attr('sensor.test_state', 'effect') }}",
-            "set_effect": [],
-            "hs": "{{ state_attr('sensor.test_state', 'hs_color') }}",
-            "set_hs": [],
-            "min_mireds": "{{ state_attr('sensor.test_state', 'max_color_temp_kelvin') }}",
-            "max_mireds": "{{ state_attr('sensor.test_state', 'min_color_temp_kelvin') }}",
-            "rgb": "{{ state_attr('sensor.test_state', 'rgb_color') }}",
-            "set_rgb": [],
-            "rgbw": "{{ state_attr('sensor.test_state', 'rgbw_color') }}",
-            "set_rgbw": [],
-            "rgbww": "{{ state_attr('sensor.test_state', 'rgbww_color') }}",
-            "set_rgbww": [],
-            "xy": "{{ state_attr('sensor.test_state', 'xy_color') }}",
-            "set_xy": [],
-        },
-    ],
-)
-@pytest.mark.parametrize(
     (
         "saved_state",
         "saved_extra_data",
@@ -1973,6 +1945,71 @@ async def test_flow_preview(
                 "supported_color_modes": [ColorMode.COLOR_TEMP],
                 "xy_color": None,
             },
+        ),
+        (
+            # Missing key
+            STATE_OFF,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": "color_temp",
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            # Bad color mode
+            STATE_OFF,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": "color_tem",
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": ["color_temp"],
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            # Bad supported color modes
+            STATE_OFF,
+            {
+                "is_on": False,
+                "brightness": None,
+                "color_mode": "color_temp",
+                "color_temp_kelvin": None,
+                "effect_list": None,
+                "effect": None,
+                "hs_color": None,
+                "max_color_temp_kelvin": 6535,
+                "min_color_temp_kelvin": 2000,
+                "rgb_color": None,
+                "rgbw_color": None,
+                "rgbww_color": None,
+                "supported_color_modes": ["color_tep"],
+                "xy_color": None,
+            },
+            STATE_UNKNOWN,
+            {},
         ),
         (
             STATE_UNAVAILABLE,
@@ -2060,7 +2097,6 @@ async def test_flow_preview(
 )
 async def test_restore_state(
     hass: HomeAssistant,
-    config: ConfigType,
     style: ConfigurationStyle,
     saved_state: str,
     saved_extra_data: dict | None,
@@ -2086,7 +2122,30 @@ async def test_restore_state(
         hass,
         TEST_LIGHT,
         style,
-        config,
+        {
+            "state": "{{ state_attr('sensor.test_state', 'is_on') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "level": "{{ state_attr('sensor.test_state', 'brightness') }}",
+            "set_level": [],
+            "temperature": "{{ state_attr('sensor.test_state', 'color_temp_kelvin') }}",
+            "set_temperature": [],
+            "effect_list": "{{ state_attr('sensor.test_state', 'effect_list') }}",
+            "effect": "{{ state_attr('sensor.test_state', 'effect') }}",
+            "set_effect": [],
+            "hs": "{{ state_attr('sensor.test_state', 'hs_color') }}",
+            "set_hs": [],
+            "min_mireds": "{{ state_attr('sensor.test_state', 'max_color_temp_kelvin') }}",
+            "max_mireds": "{{ state_attr('sensor.test_state', 'min_color_temp_kelvin') }}",
+            "rgb": "{{ state_attr('sensor.test_state', 'rgb_color') }}",
+            "set_rgb": [],
+            "rgbw": "{{ state_attr('sensor.test_state', 'rgbw_color') }}",
+            "set_rgbw": [],
+            "rgbww": "{{ state_attr('sensor.test_state', 'rgbww_color') }}",
+            "set_rgbww": [],
+            "xy": "{{ state_attr('sensor.test_state', 'xy_color') }}",
+            "set_xy": [],
+        },
         "state_attr('sensor.test_state', 'is_on') is true",
     )
 
@@ -2105,3 +2164,70 @@ async def test_restore_state(
     )
 
     assert_state_and_attributes(hass, TEST_LIGHT, STATE_ON)
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_saving_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test restore saved state."""
+
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        config={
+            "state": "{{ state_attr('light.test_state', 'is_on') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "level": "{{ state_attr('light.test_state', 'brightness') }}",
+            "set_level": [],
+        },
+    )
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "anything",
+        {"is_on": True, "brightness": 255},
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_LIGHT,
+        STATE_ON,
+        {
+            "brightness": 255,
+            "color_mode": ColorMode.BRIGHTNESS,
+            "supported_color_modes": [ColorMode.BRIGHTNESS],
+        },
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == TEST_LIGHT.entity_id
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == {
+        "is_on": True,
+        "brightness": 255,
+        "color_mode": "brightness",
+        "color_temp_kelvin": None,
+        "effect_list": None,
+        "effect": None,
+        "hs_color": None,
+        "max_color_temp_kelvin": 6535,
+        "min_color_temp_kelvin": 2000,
+        "rgb_color": None,
+        "rgbw_color": None,
+        "rgbww_color": None,
+        "supported_color_modes": ["brightness"],
+        "xy_color": None,
+    }
