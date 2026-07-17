@@ -670,8 +670,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(err)},
+                    translation_key="api_error_with_code",
+                    translation_placeholders={
+                        "error": err.error_msg,
+                        "code": str(err.error_code),
+                    },
                 ) from err
         else:
             if len(periods) != 3:
@@ -758,8 +761,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(err)},
+                    translation_key="api_error_with_code",
+                    translation_placeholders={
+                        "error": err.error_msg,
+                        "code": str(err.error_code),
+                    },
                 ) from err
         else:
             if len(periods) != 3:
