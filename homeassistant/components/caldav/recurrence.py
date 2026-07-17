@@ -55,7 +55,10 @@ def update_event(
         _apply(master, data)
         # A changed rule or start invalidates everything anchored to the old
         # schedule: overrides, exception dates and added dates alike.
-        if _rule_string(master) != old_rule or _utc(master["DTSTART"].dt) != old_start:
+        start_moved = _utc(master["DTSTART"].dt) != old_start
+        if start_moved and not data.get("rrule") and not _self_anchored(master):
+            raise ValueError("The new start does not match the recurrence rule")
+        if _rule_string(master) != old_rule or start_moved:
             _drop_overrides(
                 ical, master, old_start, from_occurrence=False, all_overrides=True
             )
@@ -76,7 +79,10 @@ def update_event(
         old_rule = _rule_string(master)
         _apply(master, data)
         _drop_overrides(ical, master, occurrence, from_occurrence=True)
-        if _rule_string(master) != old_rule or _utc(master["DTSTART"].dt) != old_start:
+        start_moved = _utc(master["DTSTART"].dt) != old_start
+        if start_moved and not data.get("rrule") and not _self_anchored(master):
+            raise ValueError("The new start does not match the recurrence rule")
+        if _rule_string(master) != old_rule or start_moved:
             _clear_dates(master)
         _save(dav_event, ical, master)
         return
@@ -93,7 +99,7 @@ def update_event(
     # and reschedule every remaining rule occurrence.
     if (
         master.get("RRULE") is not None
-        and not data.get("rrule")
+        and not _rule_replaced(master, data)
         and not _ends_before(master, occurrence)
         and not _on_rule(master, occurrence)
     ):
@@ -274,23 +280,19 @@ def _tail_ics(
     _replace(vevent, "dtstamp", dt_util.utcnow())
     _replace(vevent, "sequence", None)
     _apply(vevent, {**data, "rrule": None})
-    rule_changed = False
-    if (supplied := data.get("rrule")) and (
-        "RRULE" not in master
-        or vRecur.from_ical(supplied).to_ical() != master["RRULE"].to_ical()
-    ):
-        _replace(vevent, "rrule", vRecur.from_ical(supplied))
-        rule_changed = True
-    else:
-        _replace(vevent, "rrule", _tail_rrule(master, occurrence))
-    if rule_changed:
+    if _rule_replaced(master, data):
+        _replace(vevent, "rrule", vRecur.from_ical(data["rrule"]))
         # Dates anchored to the replaced rule are meaningless on the tail.
         _clear_dates(vevent)
-    else:
-        _keep_dates(vevent, "RDATE", occurrence, before=False)
-        _keep_dates(vevent, "EXDATE", occurrence, before=False)
-        if delta := _utc(data["dtstart"]) - _utc(occurrence):
-            _shift_dates(vevent, delta)
+        return tail.to_ical().decode("utf-8")
+    _replace(vevent, "rrule", _tail_rrule(master, occurrence))
+    _keep_dates(vevent, "RDATE", occurrence, before=False)
+    _keep_dates(vevent, "EXDATE", occurrence, before=False)
+    # A wall-clock delta keeps shifted values stable across DST changes.
+    if delta := _wall(master, data["dtstart"]) - _wall(master, occurrence):
+        _shift_dates(vevent, delta)
+        if (recur := vevent.get("RRULE")) is not None and (until := recur.get("UNTIL")):
+            recur["UNTIL"] = [until[0] + delta]
     return tail.to_ical().decode("utf-8")
 
 
@@ -322,6 +324,42 @@ def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
             break
         count += 1
     return count
+
+
+def _rule_replaced(master: Any, data: dict[str, Any]) -> bool:
+    supplied = data.get("rrule")
+    if not supplied:
+        return False
+    return (
+        "RRULE" not in master
+        or vRecur.from_ical(supplied).to_ical() != master["RRULE"].to_ical()
+    )
+
+
+def _self_anchored(master: Any) -> bool:
+    """Return whether DTSTART is itself an occurrence of the rule."""
+    rrule = master.get("RRULE")
+    if rrule is None:
+        return True
+    dtstart = master["DTSTART"].dt
+    start = (
+        dtstart
+        if isinstance(dtstart, datetime)
+        else datetime.combine(dtstart, time.min)
+    )
+    rule = rrulestr(rrule.to_ical().decode("utf-8"), dtstart=start)
+    return next(iter(rule), None) == start
+
+
+def _wall(master: Any, value: datetime | date) -> datetime:
+    """Return the value as wall-clock time in the DTSTART anchor."""
+    dtstart = master["DTSTART"].dt
+    if not isinstance(dtstart, datetime):
+        aligned = _align(master, value)
+        return datetime.combine(aligned, time.min)
+    moment = _utc(value)
+    zone = dtstart.tzinfo or dt_util.get_default_time_zone()
+    return moment.astimezone(zone).replace(tzinfo=None)
 
 
 def _on_rule(master: Any, occurrence: datetime | date) -> bool:

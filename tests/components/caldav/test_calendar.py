@@ -2993,8 +2993,7 @@ async def test_update_moved_rdate_only_tail_shifts_dates(
 
     tail = _saved_tail(calendars[0])
     entries = tail["RDATE"]
-    if not isinstance(entries, list):
-        entries = [entries]
+    assert isinstance(entries, list)
     assert [item.dt for entry in entries for item in entry.dts] == [
         datetime.datetime(2017, 11, 29, 18, 0, tzinfo=datetime.UTC),
         datetime.datetime(2017, 12, 1, 18, 0, tzinfo=datetime.UTC),
@@ -3045,4 +3044,78 @@ async def test_update_event_off_rule_rdate_split_rejected(
     assert not resp["success"]
     assert "added date" in resp["error"]["message"]
     calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()
+
+
+BYDAY_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=5
+SUMMARY:Monday sync
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_move_against_anchored_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that moving a day-bound series to another day needs a new rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-11-28T17:00:00+00:00",
+                "dtend": "2017-11-28T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_event_off_rule_split_with_resubmitted_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that echoing the unchanged rule does not bypass the split guard."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OFF_RULE_RDATE_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed",
+                "dtstart": "2017-11-29T17:00:00+00:00",
+                "dtend": "2017-11-29T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;COUNT=5",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "added date" in resp["error"]["message"]
     event.save.assert_not_called()
