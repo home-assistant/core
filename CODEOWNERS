@@ -1717,8 +1717,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
-/homeassistant/components/sonos/ @jjlawren @peterager
-/tests/components/sonos/ @jjlawren @peterager
+/homeassistant/components/sonos/ @peterager @jjlawren
+/tests/components/sonos/ @peterager @jjlawren
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
