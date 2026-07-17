@@ -325,7 +325,7 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
             else None
         ),
         device_class=SensorDeviceClass.ENUM,
-        options=["swarm", "compose", "kubernetes"],
+        options=[stack.name.lower() for stack in StackType],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerStackSensorEntityDescription(
