@@ -27,16 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bo
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
-    # Station Radius is a user-configurable option
-    distance = entry.options[CONF_RADIUS]
-
     # Reports are published hourly but update twice per hour
     update_interval = datetime.timedelta(minutes=30)
 
     # Setup the Coordinator
     session = async_get_clientsession(hass)
     coordinator = AirNowDataUpdateCoordinator(
-        hass, entry, session, api_key, latitude, longitude, distance, update_interval
+        hass, entry, session, api_key, latitude, longitude, update_interval
     )
 
     # Sync with Coordinator
@@ -69,13 +66,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
+        # Version 1 stored the radius in data; version 2 moved it to options.
         new_options = {CONF_RADIUS: entry.data[CONF_RADIUS]}
-        new_data = entry.data.copy()
-        del new_data[CONF_RADIUS]
+        new_data = {k: v for k, v in entry.data.items() if k != CONF_RADIUS}
 
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, version=2
         )
+
+    if entry.version == 2:
+        # The 2026 AirNow API dropped the distance parameter, so the radius
+        # option no longer affects lookups. Remove it.
+        new_options = {k: v for k, v in entry.options.items() if k != CONF_RADIUS}
+
+        hass.config_entries.async_update_entry(entry, options=new_options, version=3)
 
     _LOGGER.info("Migration to version %s successful", entry.version)
 

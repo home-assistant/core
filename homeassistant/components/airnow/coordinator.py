@@ -51,13 +51,11 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api_key: str,
         latitude: float,
         longitude: float,
-        distance: int,
         update_interval: timedelta,
     ) -> None:
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.distance = distance
 
         self.airnow = WebServiceAPI(api_key, session=session)
 
