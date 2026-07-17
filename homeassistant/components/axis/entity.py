@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from axis.models.event import Event, EventTopic
 
@@ -63,6 +63,7 @@ class AxisEntity(Entity):
             serial_number=hub.unique_id,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe device events."""
         self.async_on_remove(
@@ -108,6 +109,7 @@ class AxisEventEntity(AxisEntity):
     def async_event_callback(self, event: Event) -> None:
         """Update the entities state."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
         await super().async_added_to_hass()

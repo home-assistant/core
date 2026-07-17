@@ -5,6 +5,7 @@ speaker A/B, source-direct toggle, and loudness toggle.
 """
 
 from dataclasses import dataclass
+from typing import override
 
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 
@@ -76,6 +77,7 @@ class MarantzIrButton(MarantzIrEntity, ButtonEntity):
         super().__init__(entry, infrared_entity_id, unique_id_suffix=description.key)
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._send_marantz_command(self.entity_description.command_code)

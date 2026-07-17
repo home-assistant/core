@@ -1,7 +1,7 @@
 """Support for hive water heaters."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -80,16 +80,19 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     _attr_operation_list = SUPPORT_WATER_HEATER
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "MANUAL")
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "OFF")
 
     @refresh_system
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""
         new_mode = HASS_TO_HIVE_STATE[operation_mode]

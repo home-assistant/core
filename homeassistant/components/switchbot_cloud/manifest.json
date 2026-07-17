@@ -1,6 +1,7 @@
 {
   "domain": "switchbot_cloud",
   "name": "SwitchBot Cloud",
+  "after_dependencies": ["cloud"],
   "codeowners": [
     "@SeraphicRav",
     "@laurence-presland",
@@ -13,5 +14,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["switchbot_api"],
-  "requirements": ["switchbot-api==2.11.1"]
+  "requirements": ["switchbot-api==2.12.0"]
 }

@@ -1,6 +1,6 @@
 """Config flow for the energieleser integration."""
 
-from typing import Any
+from typing import Any, override
 
 from energieleser import (
     EnergieleserClient,
@@ -35,6 +35,7 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_device_type: str
     _discovered_sw_version: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -69,6 +70,7 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -137,6 +139,43 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
                 "device_type": self._discovered_device_type,
                 "host": self._discovered_host,
             },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            client = EnergieleserClient(
+                host=host, session=async_get_clientsession(self.hass)
+            )
+            try:
+                device = await client.get_device()
+            except EnergieleserConnectionError:
+                errors["base"] = "cannot_connect"
+            except EnergieleserUnknownDeviceError:
+                errors["base"] = "unknown_device_type"
+            except EnergieleserError:
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(device.device_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: host},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_SCHEMA,
+                suggested_values=entry.data | (user_input or {}),
+            ),
+            errors=errors,
         )
 
     def _create_entry(

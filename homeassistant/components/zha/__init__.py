@@ -9,6 +9,7 @@ from yarl import URL
 from zha.application.const import BAUD_RATES, RadioType
 from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
+from zha.quirks import DEVICE_REGISTRY
 from zha.zigbee.device import get_device_automation_triggers
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
@@ -158,11 +159,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     zha_gateway = await Gateway.async_from_config(zha_lib_data)
 
-    # Load and cache device trigger information early
+    # Load and cache device trigger information early. Quirks were registered by
+    # `Gateway.async_from_config` above, so pass the resolver to quirk devices
+    # and surface quirk-defined triggers (e.g. remote button presses).
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    async with radio_mgr.create_zigpy_app(connect=False) as app:
+    async with radio_mgr.create_zigpy_app(
+        connect=False, device_resolver=DEVICE_REGISTRY.resolve
+    ) as app:
         for dev in app.devices.values():
             dev_entry = device_registry.async_get_device(
                 identifiers={(DOMAIN, str(dev.ieee))},

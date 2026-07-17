@@ -37,5 +37,32 @@
       }
     }
   },
-  "title": "Moon"
+  "selector": {
+    "phase": {
+      "options": {
+        "any": "Any",
+        "first_quarter": "[%key:component::moon::entity::sensor::phase::state::first_quarter%]",
+        "full_moon": "[%key:component::moon::entity::sensor::phase::state::full_moon%]",
+        "last_quarter": "[%key:component::moon::entity::sensor::phase::state::last_quarter%]",
+        "new_moon": "[%key:component::moon::entity::sensor::phase::state::new_moon%]",
+        "waning_crescent": "[%key:component::moon::entity::sensor::phase::state::waning_crescent%]",
+        "waning_gibbous": "[%key:component::moon::entity::sensor::phase::state::waning_gibbous%]",
+        "waxing_crescent": "[%key:component::moon::entity::sensor::phase::state::waxing_crescent%]",
+        "waxing_gibbous": "[%key:component::moon::entity::sensor::phase::state::waxing_gibbous%]"
+      }
+    }
+  },
+  "title": "Moon",
+  "triggers": {
+    "phase_changed": {
+      "description": "Triggers when the moon enters a new phase.",
+      "fields": {
+        "phase": {
+          "description": "Limit the trigger to a specific moon phase, or leave as Any to trigger on every phase change.",
+          "name": "Phase"
+        }
+      },
+      "name": "Moon phase changed"
+    }
+  }
 }

@@ -2,6 +2,14 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError
+from pyoverkiz.exceptions import (
+    MaintenanceError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+)
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,6 +21,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import MockOverkizClient
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
 from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
@@ -104,6 +113,36 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     assert mock_entry.minor_version == 2
 
 
+async def test_setup_rexel_local_uses_local_client(
+    hass: HomeAssistant,
+    mock_rexel_local_config_entry: MockConfigEntry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """A Rexel gateway configured via the Local API must not use OAuth2."""
+    mock_rexel_local_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.overkiz.create_local_client",
+            return_value=mock_client,
+        ) as mock_create_local_client,
+        patch(
+            "homeassistant.components.overkiz.create_rexel_client"
+        ) as mock_create_rexel_client,
+    ):
+        await hass.config_entries.async_setup(mock_rexel_local_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_create_local_client.assert_called_once_with(
+        hass,
+        host="gateway-1234-5678-9123.local:8443",
+        token="1234123412341234",
+        verify_ssl=True,
+    )
+    mock_create_rexel_client.assert_not_called()
+    assert mock_rexel_local_config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_setup_token_reauth_error_starts_reauth(
     hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
 ) -> None:
@@ -127,16 +166,35 @@ async def test_setup_token_reauth_error_starts_reauth(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
 
-async def test_setup_token_transient_error_retries(
-    hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "exception",
+    [
+        OAuth2TokenRequestError(request_info=MagicMock(), domain=DOMAIN),
+        TooManyRequestsError("Too many requests"),
+        MaintenanceError("Server is down for maintenance"),
+        ServiceUnavailableError("Server is unavailable"),
+        TimeoutError("Timed out"),
+        ClientError("Connection error"),
+    ],
+    ids=[
+        "oauth2_token_request",
+        "too_many_requests",
+        "maintenance",
+        "service_unavailable",
+        "timeout",
+        "client_error",
+    ],
+)
+async def test_setup_transient_error_retries(
+    hass: HomeAssistant,
+    mock_rexel_config_entry: MockConfigEntry,
+    exception: Exception,
 ) -> None:
-    """A recoverable token refresh failure retries setup."""
+    """A recoverable error during setup retries instead of failing."""
     mock_rexel_config_entry.add_to_hass(hass)
 
     client = AsyncMock()
-    client.login.side_effect = OAuth2TokenRequestError(
-        request_info=MagicMock(), domain=DOMAIN
-    )
+    client.login.side_effect = exception
 
     with patch(
         "homeassistant.components.overkiz.create_rexel_client", return_value=client

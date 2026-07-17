@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from roborock.data import UserData
@@ -69,6 +69,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username: str | None = None
         self._client: RoborockApiClient | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -210,6 +211,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -264,6 +266,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RoborockConfigEntry,
     ) -> RoborockOptionsFlowHandler:

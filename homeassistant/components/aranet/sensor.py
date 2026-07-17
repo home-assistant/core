@@ -1,7 +1,7 @@
 """Support for Aranet sensors."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aranet4.client import Aranet4Advertisement, Color
 from bleak.backends.device import BLEDevice
@@ -23,10 +23,9 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     EntityCategory,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -62,7 +61,7 @@ SENSOR_DESCRIPTIONS = {
         key="humidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": AranetSensorEntityDescription(
@@ -83,7 +82,7 @@ SENSOR_DESCRIPTIONS = {
         key="co2",
         name="Carbon Dioxide",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radiation_rate": AranetSensorEntityDescription(
@@ -115,7 +114,7 @@ SENSOR_DESCRIPTIONS = {
         key="battery",
         name="Battery",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -211,6 +210,7 @@ class Aranet4BluetoothSensorEntity(
     """Representation of an Aranet sensor."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity was available in the last update."""
         # Our superclass covers "did the device disappear entirely", but if the
@@ -224,6 +224,7 @@ class Aranet4BluetoothSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

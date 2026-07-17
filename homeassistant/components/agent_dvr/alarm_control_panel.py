@@ -1,5 +1,7 @@
 """Support for Agent DVR Alarm Control Panels."""
 
+from typing import override
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -70,23 +72,27 @@ class AgentBaseStation(AlarmControlPanelEntity):
         else:
             self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm()
         self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_AWAY_MODE_NAME)
         self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_HOME_MODE_NAME)
         self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command. Uses custom mode."""
         await self._client.arm()

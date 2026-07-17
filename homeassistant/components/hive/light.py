@@ -1,7 +1,7 @@
 """Support for Hive light devices."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Hive
 
@@ -58,6 +58,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             self._attr_color_mode = ColorMode.UNKNOWN
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         new_brightness = None
@@ -82,6 +83,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         )
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.hive.light.turnOff(self.device)

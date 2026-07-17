@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'East Berlin',
-      'friendly_name': 'Single Channel Receiver 22',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single Channel Receiver 22',
       'state': dict({
       }),
     }),

@@ -1,8 +1,9 @@
 """Data update coordinator for the Duco integration."""
 
-from dataclasses import dataclass
+from contextlib import suppress
+from dataclasses import dataclass, replace
 import logging
-from typing import cast
+from typing import cast, override
 
 from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import (
@@ -10,7 +11,7 @@ from duco_connectivity.exceptions import (
     DucoError,
     DucoResponseError,
 )
-from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList
+from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList, NodeName
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,7 @@ class DucoData:
     nodes: dict[int, Node]
     node_actions: NodeListActionItemList
     rssi_wifi: int | None
+    time_filter_remain: int | None
 
 
 class DucoCoordinator(DataUpdateCoordinator[DucoData]):
@@ -39,6 +41,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
+    _supports_time_filter_remain: bool
+    _configured_node_names: dict[int, str]
 
     def __init__(
         self,
@@ -55,7 +59,26 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
+        self._configured_node_names = {}
+        self._supports_time_filter_remain = True
 
+    async def _async_load_node_names(self) -> None:
+        """Load configured Duco node names during setup."""
+        try:
+            configured_node_names = await self.client.async_get_node_configs(
+                parameter="Name"
+            )
+        except DucoError as err:
+            _LOGGER.debug("Could not fetch Duco node names", exc_info=err)
+            return
+
+        self._configured_node_names = {
+            node.node_id: node.name.value
+            for node in configured_node_names.nodes
+            if node.name is not None
+        }
+
+    @override
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
         try:
@@ -81,6 +104,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
             ) from err
 
+        await self._async_load_node_names()
+
+    @override
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
         try:
@@ -95,6 +121,22 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
+
+        if self._configured_node_names:
+            nodes = [
+                replace(
+                    node,
+                    general=replace(
+                        node.general,
+                        name=NodeName(
+                            self._configured_node_names.get(
+                                node.node_id, node.general.name
+                            )
+                        ),
+                    ),
+                )
+                for node in nodes
+            ]
 
         try:
             node_actions = await self.client.async_get_node_actions()
@@ -124,8 +166,18 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
+        # Heat recovery info only backs the optional filter timer sensor, so
+        # failures on this supplemental endpoint should not make the primary
+        # node entities unavailable.
+        time_filter_remain = None
+        if self._supports_time_filter_remain:
+            with suppress(DucoError):
+                time_filter_remain = await self.client.async_get_time_filter_remaining()
+                self._supports_time_filter_remain = time_filter_remain is not None
+
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
+            time_filter_remain=time_filter_remain,
         )
