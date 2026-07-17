@@ -35,6 +35,15 @@ class NetatmoBaseEntity(Entity):
         self._publishers: list[dict[str, Any]] = []
         self._attr_extra_state_attributes = {}
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the underlying data publishers are reachable."""
+        return super().available and all(
+            self.data_handler.is_signal_available(publisher[SIGNAL_NAME])
+            for publisher in self._publishers
+        )
+
     @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -172,6 +181,16 @@ class NetatmoModuleEntity(NetatmoDeviceEntity):
     def device_type(self) -> DeviceType:
         """Return the device type."""
         return self.device.device_type
+
+
+class NetatmoReachabilityEntity(NetatmoModuleEntity):
+    """Module entity that is unavailable when its device is unreachable."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True unless the device explicitly reports as unreachable."""
+        return super().available and self.device.reachable is not False
 
 
 class NetatmoWeatherModuleEntity(NetatmoModuleEntity):
