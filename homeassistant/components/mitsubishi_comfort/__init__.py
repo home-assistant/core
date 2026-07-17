@@ -30,6 +30,7 @@ from .const import (
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
 from .helpers import (
     async_create_missing_address_issue,
+    async_reconcile_missing_address_issue,
     build_credentials,
     is_fully_credentialed,
 )
@@ -71,6 +72,13 @@ async def async_setup_entry(
     # these; without them a second Socket.IO call right after the flow's own
     # is throttled to empty, leaving devices unconfigurable.
     cached_credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
+
+    # The issue is not persistent and unload deletes it: if the cloud is
+    # unreachable below, addressless devices would retry with no fix flow
+    # offered. Reconcile from the stored data now; the fresh device list
+    # refines it further down.
+    async_reconcile_missing_address_issue(hass, entry)
+
     try:
         await account.login()
         devices = await account.discover_devices(cached_credentials=cached_credentials)

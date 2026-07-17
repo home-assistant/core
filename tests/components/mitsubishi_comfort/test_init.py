@@ -460,6 +460,90 @@ async def test_failed_unload_keeps_missing_address_issue(
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
+async def test_setup_retry_raises_issue_from_cached_credentials(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a cloud-down setup still offers the fix flow from stored data.
+
+    The issue is not persistent and unload deletes it, so a restart or reload
+    that cannot reach the cloud must reconcile it from the entry data alone.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_CREDENTIALS: {
+                MOCK_SERIAL: {
+                    "password": "dGVzdHBhc3M=",
+                    "crypto_serial": "0102030405060708090a",
+                    "mac": MOCK_MAC,
+                }
+            },
+        },
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+    mock_cloud_account.login.side_effect = DeviceConnectionError("cloud down")
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+
+
+async def test_setup_retry_clears_stale_issue_when_all_addressed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a cloud-down setup clears an issue whose devices got addresses."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_ADDRESSES: {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            CONF_CREDENTIALS: {
+                MOCK_SERIAL: {
+                    "password": "dGVzdHBhc3M=",
+                    "crypto_serial": "0102030405060708090a",
+                    "mac": MOCK_MAC,
+                },
+                # A MAC-only record cannot be probed, so it must not count
+                # as addressless.
+                "SERIAL002": {
+                    "password": "",
+                    "crypto_serial": "",
+                    "mac": "11:22:33:44:55:66",
+                },
+            },
+        },
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+    issue_id = f"missing_address_{entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="missing_address",
+        data={"entry_id": entry.entry_id},
+    )
+    mock_cloud_account.login.side_effect = DeviceConnectionError("cloud down")
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
 async def test_remove_never_loaded_entry_clears_missing_address_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,

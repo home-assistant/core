@@ -20,7 +20,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS
-from .helpers import async_create_missing_address_issue, has_full_credentials
+from .helpers import async_reconcile_missing_address_issue, has_full_credentials
 
 
 async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -41,14 +41,7 @@ async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         # A FAILED_UNLOAD entry cannot reload; treat it as a failed reload so
         # a repeat repair attempt on the wedged entry keeps its issue.
         pass
-    addresses: dict[str, str] = entry.data.get(CONF_ADDRESSES, {})
-    credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
-    if any(
-        dr.format_mac(cred["mac"]) not in addresses
-        for cred in credentials.values()
-        if has_full_credentials(cred)
-    ):
-        async_create_missing_address_issue(hass, entry.entry_id)
+    async_reconcile_missing_address_issue(hass, entry)
 
 
 async def _async_probe(
@@ -96,24 +89,24 @@ class MissingAddressRepairFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Ask for the LAN IP of each device that has none."""
         stored: dict[str, str] = dict(self.entry.data.get(CONF_ADDRESSES, {}))
-        # The registry may still hold devices removed from the account; the
-        # freshly pruned credential cache reflects the account's current,
-        # usable devices, so only ask for those.
         credentials: dict[str, dict[str, str]] = self.entry.data.get(
             CONF_CREDENTIALS, {}
         )
+        # The freshly pruned credential cache reflects the account's current,
+        # usable devices, so it decides which fields to offer — the registry
+        # may be empty (no discovery succeeded yet) or hold removed devices.
         # Only fully-credentialed devices (secrets plus MAC): a partial record
         # cannot pass the authenticated probe, and setup counts its device as
         # incomplete rather than addressless.
-        owned = {
-            dr.format_mac(cred["mac"])
-            for cred in credentials.values()
+        macs: dict[str, str] = {
+            formatted: serial
+            for serial, cred in credentials.items()
             if has_full_credentials(cred)
+            and (formatted := dr.format_mac(cred["mac"])) not in stored
         }
+        # The registry supplies friendly names; a device never registered
+        # keeps its serial as the label.
         device_registry = dr.async_get(self.hass)
-        # Map each addressless device's formatted MAC (the address cache key)
-        # to its name.
-        macs: dict[str, str] = {}
         for device in dr.async_entries_for_config_entry(
             device_registry, self.entry.entry_id
         ):
@@ -125,11 +118,7 @@ class MissingAddressRepairFlow(RepairsFlow):
                 ),
                 None,
             )
-            if (
-                mac is not None
-                and (formatted := dr.format_mac(mac)) in owned
-                and formatted not in stored
-            ):
+            if mac is not None and (formatted := dr.format_mac(mac)) in macs:
                 macs[formatted] = device.name_by_user or device.name or formatted
 
         errors: dict[str, str] = {}

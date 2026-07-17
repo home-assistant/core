@@ -3,9 +3,14 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import DeviceInfo
+from mitsubishi_comfort.exceptions import DeviceConnectionError
 import pytest
 
-from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import (
+    CONF_ADDRESSES,
+    CONF_CREDENTIALS,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -306,6 +311,65 @@ async def test_fix_flow_lists_only_addressless_devices(
     second_mac = dr.format_mac("11:22:33:44:55:66")
     assert [field["name"] for field in data["data_schema"]] == [second_mac]
     assert data["description_placeholders"]["devices"] == f"Bedroom ({second_mac})"
+
+
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
+async def test_fix_flow_offers_cached_devices_before_first_discovery(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test the form offers cached devices when no discovery ever succeeded.
+
+    The registry is empty then, so the fields fall back to the credential
+    cache with the serial as the label; a registry-only form would render
+    zero fields and make the repair a dead-end loop while the cloud is down.
+    """
+    assert await async_setup_component(hass, "repairs", {})
+    mock_account, _ = mock_setup_integration
+    mock_account.login.side_effect = DeviceConnectionError("cloud down")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_CREDENTIALS: {
+                MOCK_SERIAL: {
+                    "password": "dGVzdHBhc3M=",
+                    "crypto_serial": "0102030405060708090a",
+                    "mac": MOCK_MAC,
+                }
+            },
+        },
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"missing_address_{entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    mac = dr.format_mac(MOCK_MAC)
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    assert [field["name"] for field in data["data_schema"]] == [mac]
+    assert data["description_placeholders"]["devices"] == f"{MOCK_SERIAL} ({mac})"
+
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.repairs.probe_candidate_ips",
+        return_value={MOCK_SERIAL: "192.168.1.50"},
+    ):
+        data = await process_repair_fix_flow(
+            client, data["flow_id"], json={mac: "192.168.1.50"}
+        )
+    assert data["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_ADDRESSES][mac] == "192.168.1.50"
+    # Every cached device is addressed now, so the failed reload (the cloud
+    # is still down) must not resurrect the issue.
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
