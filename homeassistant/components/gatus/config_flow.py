@@ -46,9 +46,8 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            url = URL(user_input[CONF_URL])
             user_input[CONF_URL] = str(
-                url.with_query(None)
+                URL(user_input[CONF_URL]).with_query(None)
                 .with_fragment(None)
                 .with_user(None)
                 .with_password(None)
