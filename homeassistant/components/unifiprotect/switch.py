@@ -387,8 +387,8 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="status_light",
         translation_key="status_light",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="light_device_settings.is_indicator_enabled",
-        ufp_set_method="set_status_light",
+        ufp_public_value="light_device_settings.is_indicator_enabled",
+        ufp_set_method="set_status_light_public",
         ufp_perm=PermRequired.WRITE,
     ),
 )

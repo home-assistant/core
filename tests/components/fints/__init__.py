@@ -1,1 +1,1 @@
-"""Tests for FinTS component."""
+"""Tests for FinTS integration."""

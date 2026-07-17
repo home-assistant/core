@@ -42,3 +42,15 @@ async def test_setup_auth_failed(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_update_failed(
+    hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
+) -> None:
+    """Test error while fetching sensor data during startup."""
+    mock_iotawatt.update.side_effect = httpx.HTTPStatusError(
+        "", request=MagicMock(), response=MagicMock()
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
