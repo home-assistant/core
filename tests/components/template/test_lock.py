@@ -1119,4 +1119,7 @@ async def test_restore_state(
         {"lock_state": LockState.UNLOCKED, "code_format": "\\\\d+"},
     )
 
-    assert_state_and_attributes(hass, TEST_LOCK, LockState.UNLOCKED, {})
+    # The first trigger should replace the restored code_format attribute
+    assert_state_and_attributes(
+        hass, TEST_LOCK, LockState.UNLOCKED, {"code_format": "\\\\d+"}
+    )
