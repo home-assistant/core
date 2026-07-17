@@ -164,12 +164,14 @@ async def websocket_supervisor_api(
         # sensitive information and the frontend does not require it for ingress.
         if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
-        connection.send_result(msg[WS_ID], data)
-
+        # Await so the frontend only sees the reload finish once the add-on
+        # update entities reflect the reloaded store.
         if command == STORE_RELOAD_ENDPOINT and (
             coordinator := hass.data.get(ADDONS_COORDINATOR)
         ):
-            hass.async_create_task(coordinator.async_refresh_after_store_reload())
+            await coordinator.async_refresh_after_store_reload()
+
+        connection.send_result(msg[WS_ID], data)
 
 
 @websocket_api.require_admin

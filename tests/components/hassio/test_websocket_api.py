@@ -420,7 +420,6 @@ async def test_websocket_store_reload_refreshes_update_entities(
     )
     msg = await websocket_client.receive_json()
     assert msg["success"]
-    await hass.async_block_till_done()
 
     assert hass.states.get("update.test_update").state == "on"
     supervisor_client.store.reload.assert_not_called()
