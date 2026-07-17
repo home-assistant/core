@@ -10,11 +10,7 @@ from homeassistant.components.radio_frequency import (
     async_get_transmitters,
     async_send_command,
 )
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
@@ -158,70 +154,15 @@ class VacmasterCardio54ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create or update the config entry."""
+        """Create the config entry."""
         assert self._transmitter_id is not None
         assert self._device_id is not None
-        data = {
-            CONF_TRANSMITTER: self._transmitter_id,
-            CONF_DEVICE_ID: self._device_id,
-        }
-        if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                data_updates=data,
-                unique_id=f"{self._transmitter_id}_{self._device_id:05X}",
-            )
-        return self.async_create_entry(title="Vacmaster Cardio54", data=data)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Re-select the transmitter for an existing fan; the device ID is kept."""
-        entry = self._get_reconfigure_entry()
-        self._device_id = entry.data[CONF_DEVICE_ID]
-
-        try:
-            transmitters = async_get_transmitters(self.hass, FREQUENCY, MODULATION)
-        except HomeAssistantError:
-            return self.async_abort(reason="no_transmitters")
-
-        if not transmitters:
-            return self.async_abort(
-                reason="no_compatible_transmitters",
-                description_placeholders={
-                    "frequency": f"{FREQUENCY / 1_000_000} MHz",
-                    "modulation": MODULATION.name,
-                },
-            )
-
-        if user_input is not None:
-            entity_entry = er.async_get(self.hass).async_get(
-                user_input[CONF_TRANSMITTER]
-            )
-            assert entity_entry is not None
-            unique_id = f"{entity_entry.id}_{self._device_id:05X}"
-            existing = self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, unique_id
-            )
-            if existing and existing.entry_id != entry.entry_id:
-                return self.async_abort(reason="already_configured")
-            self._transmitter_entity_id = entity_entry.entity_id
-            self._transmitter_id = entity_entry.id
-            return await self.async_step_finish()
-
-        current = er.async_get(self.hass).async_get(entry.data[CONF_TRANSMITTER])
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_TRANSMITTER,
-                        default=current.entity_id if current else vol.UNDEFINED,
-                    ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(include_entities=transmitters),
-                    ),
-                }
-            ),
+        return self.async_create_entry(
+            title="Vacmaster Cardio54",
+            data={
+                CONF_TRANSMITTER: self._transmitter_id,
+                CONF_DEVICE_ID: self._device_id,
+            },
         )
 
     async def _async_send(self, data: int, frame_repeats: int) -> None:

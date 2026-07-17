@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/vacmaster_cardio54",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "quality_scale": "gold"
+  "quality_scale": "silver"
 }

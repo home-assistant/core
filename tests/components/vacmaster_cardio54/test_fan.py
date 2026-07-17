@@ -267,6 +267,28 @@ async def test_restore_state_clamps_corrupted_percentage(
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
 
+async def test_restore_state_on_without_percentage_defaults_to_speed_one(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A restored ``on`` state without a percentage comes back at speed I.
+
+    Older HA versions may restore ``on`` without the percentage attribute;
+    the fan should default to the lowest speed instead of presenting as off.
+    """
+    mock_restore_cache(hass, [State(ENTITY_ID, STATE_ON)])
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 33
+    assert mock_rf_entity.send_command_calls == []
+
+
 async def test_restore_state_does_not_transmit(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
