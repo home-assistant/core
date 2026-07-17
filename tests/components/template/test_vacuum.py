@@ -1363,7 +1363,7 @@ async def test_restore_state(
     initial_state: str,
     initial_attributes: ConfigType,
 ) -> None:
-    """Test restoring trigger template weather."""
+    """Test restoring trigger template vacuum."""
 
     setup_mock_template_entity_restore_state(
         hass,
