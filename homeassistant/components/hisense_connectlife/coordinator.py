@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from datetime import timedelta
 import json
 import logging
@@ -215,12 +216,14 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             content_data = json.loads(content)
-            _LOGGER.debug("Parsed message content: %s", content_data)
         except json.JSONDecodeError as e:
             _LOGGER.warning("Failed to parse message content: %s", e)
             return None
-        else:
-            return content_data
+        if not isinstance(content_data, dict):
+            _LOGGER.warning("Message content is not an object")
+            return None
+        _LOGGER.debug("Parsed message content: %s", content_data)
+        return content_data
 
     def _find_device_by_puid(self, puid: str | None) -> DeviceInfo | None:
         """Find device with puid."""
@@ -294,6 +297,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
                 json.JSONDecodeError,
                 TypeError,
                 UnicodeDecodeError,
+                binascii.Error,
             ) as e:
                 _LOGGER.warning("Failed to decode base64 status: %s", e)
 

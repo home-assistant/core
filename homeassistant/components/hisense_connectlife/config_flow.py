@@ -176,7 +176,13 @@ class OAuth2FlowHandler(
         except Exception:
             _LOGGER.exception("Failed to generate authorize URL")
             return self.async_show_form(
-                step_id="user", errors={"base": "authorize_url_failure"}
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required("confirm_auth", default=True): bool,
+                    }
+                ),
+                errors={"base": "authorize_url_failure"},
             )
 
     async def async_step_creation(
@@ -193,14 +199,7 @@ class OAuth2FlowHandler(
             {k: "***" if k in ("token", "token_type") else v for k, v in data.items()},
         )
 
-        return self.async_create_entry(
-            title=self.flow_impl.name,
-            data={
-                **data,
-                "auth_implementation": DOMAIN,
-                "implementation": DOMAIN,
-            },
-        )
+        return self.async_create_entry(title=self.flow_impl.name, data=data)
 
     @staticmethod
     @callback

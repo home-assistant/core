@@ -169,16 +169,12 @@ async def test_async_setup_entry_client_error(
         mock_oauth_session.async_ensure_token_valid = AsyncMock()
         mock_oauth_session_cls.return_value = mock_oauth_session
 
-        # First call succeeds, second call raises ClientError
-        mock_oauth_session.async_ensure_token_valid.side_effect = [
-            None,
-            ClientResponseError(
-                request_info=MagicMock(),
-                history=(),
-                status=500,
-                message="Server Error",
-            ),
-        ]
+        mock_oauth_session.async_ensure_token_valid.side_effect = ClientResponseError(
+            request_info=MagicMock(),
+            history=(),
+            status=500,
+            message="Server Error",
+        )
 
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, mock_config_entry)

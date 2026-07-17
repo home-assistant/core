@@ -447,9 +447,8 @@ async def test_options_flow_refresh_devices_no_coordinator_error(
 
     result = await handler.async_step_init({"refresh_devices": True})
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["refresh_devices"] is True
-    # Code always creates entry even with errors
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_coordinator"}
 
 
 @pytest.mark.asyncio
@@ -531,9 +530,8 @@ async def test_options_flow_refresh_token_exception(
 
         result = await handler.async_step_init({"refresh_token": True})
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"]["refresh_token"] is True
-        # Code always creates entry even with errors
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "token_refresh_failed"}
 
 
 @pytest.mark.asyncio
@@ -561,6 +559,5 @@ async def test_options_flow_refresh_token_no_new_token(
 
         result = await handler.async_step_init({"refresh_token": True})
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"]["refresh_token"] is True
-        # Code always creates entry even with errors
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "token_refresh_failed"}

@@ -97,13 +97,13 @@ async def test_token_request_with_expires(oauth_impl) -> None:
         ),
     ):
         mock_session = MagicMock()
-        mock_session.post = AsyncMock(return_value=mock_resp)
+        mock_session.post.return_value.__aenter__.return_value = mock_resp
         mock_acs.return_value = mock_session
 
         result = await oauth_impl._token_request(test_data)
 
     assert result["expires_at"] == 4600.0
-    mock_session.post.assert_awaited_once()
+    mock_session.post.assert_called_once()
     _, kwargs = mock_session.post.call_args
     assert kwargs["data"]["grant_type"] == "authorization_code"
     assert kwargs["data"]["code"] == "test_code"

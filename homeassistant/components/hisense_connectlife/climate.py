@@ -31,7 +31,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 
 from .const import (
     DOMAIN,
@@ -159,9 +159,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._current_type_code = device.type_code
         self._current_feature_code = device.feature_code
 
-        # Get device parser to determine available modes and options.
-        # Parser availability is optional; missing parsers should fall back to
-        # the default OFF-only HVAC mode list instead of blocking entity setup.
+        # Parser availability is optional; initialize an OFF-only fallback.
+        self._attr_hvac_modes = [HVACMode.OFF]
         device_type = device.get_device_type()
         device_id = device.device_id or self._device_id
         if device_id:
@@ -316,7 +315,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             if upper_and_lower == "1":
                 swing_modes.append(SWING_VERTICAL)
 
-        # Special handling: if device feature_code == '199', disable horizontal swing
         if self._current_feature_code == "199":
             self._attr_swing_modes = swing_modes
             _LOGGER.debug(
@@ -537,8 +535,10 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                 puid=device_id,
                 properties={StatusKey.TARGET_TEMP: str(temperature)},
             )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.error("Failed to set temperature: %s", err)
+            # 包装异常向上传递给HA框架
+            raise UpdateFailed(f"Failed to set temperature: {err}") from err
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -605,8 +605,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                 _LOGGER.error(
                     "Could not find Hisense mode value for HA mode: %s", hvac_mode
                 )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.error("Failed to set hvac mode: %s", err)
+            raise UpdateFailed(f"Failed to set hvac mode: {err}") from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -650,8 +651,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                     puid=device_id,
                     properties={StatusKey.FAN_SPEED: hisense_fan_mode},
                 )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.error("Failed to set fan mode: %s", err)
+            raise UpdateFailed(f"Failed to set fan mode: {err}") from err
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
@@ -710,8 +712,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                         properties=supported_properties,
                     )
 
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.error("Failed to set swing mode: %s", err)
+            raise UpdateFailed(f"Failed to set swing mode: {err}") from err
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -738,8 +741,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                 puid=device_id,
                 properties={StatusKey.POWER: "0"},
             )
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.error("Failed to turn off: %s", err)
+            raise UpdateFailed(f"Failed to turn off: {err}") from err
 
     def _handle_coordinator_update(self) -> None:
         device_id = self._device_id

@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+    access_token = session.token.get("access_token")
 
     api_client = HisenseApiClient(token=access_token)
 
