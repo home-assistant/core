@@ -375,6 +375,56 @@ async def test_websocket_non_admin_user(
     assert msg["error"]["message"] == "Unauthorized"
 
 
+async def test_websocket_store_reload_refreshes_update_entities(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    addons_list: AsyncMock,
+) -> None:
+    """Test add-on update entities refresh after a store reload via the API proxy."""
+    addons_list.return_value = [
+        replace(
+            addons_list.return_value[0],
+            update_available=False,
+            version_latest="2.0.0",
+        )
+    ]
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").state == "off"
+
+    addons_list.return_value = [
+        replace(
+            addons_list.return_value[0],
+            update_available=True,
+            version_latest="2.0.1",
+        )
+    ]
+    aioclient_mock.post(
+        "http://127.0.0.1/store/reload", json={"result": "ok", "data": {}}
+    )
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json_auto_id(
+        {
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/store/reload",
+            ATTR_METHOD: "post",
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+
+    assert hass.states.get("update.test_update").state == "on"
+    supervisor_client.store.reload.assert_not_called()
+
+
 async def test_update_addon(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
