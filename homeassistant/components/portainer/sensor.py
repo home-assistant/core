@@ -6,7 +6,7 @@ from itertools import chain
 from typing import override
 
 from pyportainer import StackType
-from pyportainer.models.docker import DockerSystemDF
+from pyportainer.models.docker import DockerContainerState, DockerSystemDF
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -84,7 +84,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="container_state",
         value_fn=lambda data: data.container.state,
         device_class=SensorDeviceClass.ENUM,
-        options=["running", "exited", "paused", "restarting", "created", "dead"],
+        options=[state.value for state in DockerContainerState],
     ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
