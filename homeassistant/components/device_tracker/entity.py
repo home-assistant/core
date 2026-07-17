@@ -710,7 +710,7 @@ class ScannerEntity(
         dev_reg = dr.async_get(self.hass)
         # find_device_entry may return a synthesized pre-migration composite whose id is
         # not a real device and can't be assigned to an entity; resolve it to the split
-        # owned by this config entry so we attach to (and register on) a concrete device.
+        # owned by this config entry so we attach to a concrete device.
         if device_entry.id not in dev_reg.devices:
             device_entry = next(
                 (
@@ -730,16 +730,6 @@ class ScannerEntity(
         ):
             self.registry_entry = er.async_get(self.hass).async_update_entity(
                 self.entity_id, device_id=device_entry.id
-            )
-
-        # Attach device to config entry
-        if (
-            device_entry is not None
-            and self.platform.config_entry.entry_id not in device_entry.config_entries
-        ):
-            dev_reg.async_update_device(
-                device_entry.id,
-                add_config_entry_id=self.platform.config_entry.entry_id,
             )
 
         # Do this last or else the entity registry update listener has been installed
