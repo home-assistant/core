@@ -28,7 +28,11 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
-from .helpers import build_credentials, is_fully_credentialed
+from .helpers import (
+    async_create_missing_address_issue,
+    build_credentials,
+    is_fully_credentialed,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,19 +165,10 @@ async def async_setup_entry(
     # until DHCP discovery reaches it or the user enters an IP in the repair
     # flow; raise a fixable repair issue while any device lacks an address and
     # clear it once they all have one.
-    issue_id = f"missing_address_{entry.entry_id}"
     if no_address:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=True,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="missing_address",
-            data={"entry_id": entry.entry_id},
-        )
+        async_create_missing_address_issue(hass, entry.entry_id)
     else:
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
     # The three buckets reconcile: set up + awaiting address + incomplete local
     # data equals the number of devices on the account.
     _LOGGER.debug(

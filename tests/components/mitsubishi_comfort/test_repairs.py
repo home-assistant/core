@@ -120,6 +120,52 @@ async def test_fix_flow_blank_field_keeps_issue(
 
 
 @pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
+@pytest.mark.parametrize(
+    ("submission", "issue_expected"),
+    [
+        pytest.param({}, True, id="still_addressless"),
+        pytest.param(
+            {dr.format_mac(MOCK_MAC): "192.168.1.50"}, False, id="fully_addressed"
+        ),
+    ],
+)
+async def test_fix_flow_failed_reload_restores_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    submission: dict[str, str],
+    issue_expected: bool,
+) -> None:
+    """Test a reload whose unload fails restores the missing-address issue.
+
+    The repairs framework deletes the issue when the flow finishes, and a
+    failed unload stops the reload before setup can re-create it — so the
+    reload task restores the issue itself, but only while devices actually
+    remain addressless.
+    """
+    entry = await _setup_addressless_entry(hass)
+    issue_id = f"missing_address_{entry.entry_id}"
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    with (
+        patch(
+            "homeassistant.components.mitsubishi_comfort.repairs.probe_candidate_ips",
+            return_value={MOCK_SERIAL: "192.168.1.50"},
+        ),
+        patch(
+            "homeassistant.components.mitsubishi_comfort.async_unload_entry",
+            return_value=False,
+        ),
+    ):
+        data = await process_repair_fix_flow(client, data["flow_id"], json=submission)
+        assert data["type"] == "create_entry"
+        await hass.async_block_till_done()
+
+    assert bool(issue_registry.async_get_issue(DOMAIN, issue_id)) is issue_expected
+
+
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
 async def test_fix_flow_suggests_cached_ip(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

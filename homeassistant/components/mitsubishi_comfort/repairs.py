@@ -20,6 +20,27 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS
+from .helpers import async_create_missing_address_issue, has_full_credentials
+
+
+async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry, restoring the repair issue if the reload fails.
+
+    The repairs framework deletes the issue when the fix flow finishes, and
+    normally the reload's setup re-creates it while devices remain
+    addressless — but a failed unload ends the reload before setup runs,
+    which would leave the still-loaded entry without its fix flow.
+    """
+    if await hass.config_entries.async_reload(entry.entry_id):
+        return
+    addresses: dict[str, str] = entry.data.get(CONF_ADDRESSES, {})
+    credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
+    if any(
+        dr.format_mac(cred["mac"]) not in addresses
+        for cred in credentials.values()
+        if has_full_credentials(cred)
+    ):
+        async_create_missing_address_issue(hass, entry.entry_id)
 
 
 async def _async_probe(
@@ -79,7 +100,7 @@ class MissingAddressRepairFlow(RepairsFlow):
         owned = {
             dr.format_mac(cred["mac"])
             for cred in credentials.values()
-            if cred["password"] and cred["crypto_serial"] and cred["mac"]
+            if has_full_credentials(cred)
         }
         device_registry = dr.async_get(self.hass)
         # Map each addressless device's formatted MAC (the address cache key)
@@ -148,7 +169,7 @@ class MissingAddressRepairFlow(RepairsFlow):
                 # deletion and setup can re-create the issue if devices are
                 # still addressless.
                 self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.entry.entry_id),
+                    _async_reload_entry(self.hass, self.entry),
                     f"mitsubishi_comfort repair reload {self.entry.entry_id}",
                     eager_start=False,
                 )
