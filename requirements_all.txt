@@ -417,7 +417,7 @@ aiorussound==5.0.1
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.26.2
+aioshelly==13.27.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1371,7 +1371,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==7.0.0
+infrared-protocols==7.5.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1380,7 +1380,7 @@ inkbird-ble==1.4.4
 insteon-frontend-home-assistant==0.6.2
 
 # homeassistant.components.intellifire
-intellifire4py==4.4.0
+intellifire4py==4.5.0
 
 # homeassistant.components.iometer
 iometer==1.0.2
@@ -1595,13 +1595,10 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.3.2
+mitsubishi-comfort==0.5.0
 
 # homeassistant.components.moat
 moat-ble==0.1.1
-
-# homeassistant.components.modbus_connection
-modbus-connection[tmodbus]==3.7.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -1773,6 +1770,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.cloud
+# homeassistant.components.litellm
 # homeassistant.components.llama_cpp
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
@@ -2024,7 +2022,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.3.1
+pyairnow==1.4.0
 
 # homeassistant.components.airobot
 pyairobotrest==0.4.0
@@ -2655,7 +2653,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.8.0
+python-duco-connectivity==0.10.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2813,7 +2811,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
-pytrydan==1.0.3
+pytrydan==1.0.4
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==25.0.0
@@ -3261,7 +3259,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.12.2
+uiprotect==15.14.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3314,7 +3312,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.7.0
+victron-mqtt==2026.7.4
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.12
@@ -3472,7 +3470,7 @@ zeversolar==0.3.2
 zha-quirks==2.1.1
 
 # homeassistant.components.zha
-zha==2.0.0
+zha==2.0.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

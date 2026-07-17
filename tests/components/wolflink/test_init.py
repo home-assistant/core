@@ -11,7 +11,7 @@ from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError
 
 from homeassistant.components.wolflink.const import DOMAIN, MANUFACTURER
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -233,8 +233,9 @@ async def test_migration_merges_duplicate_v1_entries(
         wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
             "Unable to connect"
         )
+        # Setting up the first entry loads the integration, which sets up and migrates
+        # every wolflink entry: the first becomes the hub and the second merges into it.
         await hass.config_entries.async_setup(first_entry.entry_id)
-        await second_entry.async_migrate(hass)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -249,6 +250,58 @@ async def test_migration_merges_duplicate_v1_entries(
     device = device_registry.async_get(device_5678.id)
     assert device is not None
     assert device.config_entries == {surviving.entry_id}
+
+
+async def test_migration_merge_into_disabled_hub(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an enabled device merged onto a disabled hub entry gets disabled."""
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        version=2,
+        minor_version=2,
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    hub_entry.add_to_hass(hass)
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="5678",
+        data={**LEGACY_CONFIG, "device_id": 5678},
+        version=1,
+        minor_version=2,
+    )
+    legacy_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=legacy_entry.entry_id,
+        identifiers={(DOMAIN, "5678")},
+        manufacturer=MANUFACTURER,
+        name="test-device",
+    )
+
+    with patch(
+        "homeassistant.components.wolflink.WolfClient",
+        autospec=True,
+    ) as wolf_mock:
+        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
+            "Unable to connect"
+        )
+        await hass.config_entries.async_setup(legacy_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].entry_id == hub_entry.entry_id
+
+    # The device was reattached to the disabled hub entry, and its disabled
+    # state now reflects the new owning entry's disabled state.
+    migrated_device = device_registry.async_get(device.id)
+    assert migrated_device is not None
+    assert migrated_device.config_entries == {hub_entry.entry_id}
+    assert migrated_device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
 
 
 async def test_migration_v1_list_device_id(hass: HomeAssistant) -> None:

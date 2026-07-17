@@ -1034,6 +1034,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
+/homeassistant/components/litellm/ @luismalves
+/tests/components/litellm/ @luismalves
 /homeassistant/components/litterrobot/ @natekspencer @tkdrob
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
@@ -1148,8 +1150,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus_connection/ @home-assistant/core
-/tests/components/modbus_connection/ @home-assistant/core
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
