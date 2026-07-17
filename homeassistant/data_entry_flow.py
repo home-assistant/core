@@ -10,7 +10,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import (
+    Any,
+    Generic,
+    Literal,
+    NotRequired,
+    Required,
+    TypedDict,
+    TypeVar,
+    cast,
+)
 
 import voluptuous as vol
 
@@ -57,6 +66,120 @@ STEP_ID_OPTIONAL_STEPS = {
     FlowResultType.MENU,
     FlowResultType.SHOW_PROGRESS,
 }
+
+
+ConditionOperator = Literal["eq", "not_eq", "in", "not_in", "exists", "not_exists"]
+
+
+class FieldCondition(TypedDict):
+    """Condition matching a sibling field's value in the same step."""
+
+    field: str
+    operator: NotRequired[ConditionOperator]
+    value: NotRequired[Any]
+
+
+class AndCondition(TypedDict):
+    """Condition that matches when all sub-conditions match."""
+
+    condition: Literal["and"]
+    conditions: list[Condition]
+
+
+class OrCondition(TypedDict):
+    """Condition that matches when any sub-condition matches."""
+
+    condition: Literal["or"]
+    conditions: list[Condition]
+
+
+class NotCondition(TypedDict):
+    """Condition that matches when no sub-condition matches."""
+
+    condition: Literal["not"]
+    conditions: list[Condition]
+
+
+type Condition = FieldCondition | AndCondition | OrCondition | NotCondition
+
+
+def _condition_value_is_empty(value: Any) -> bool:
+    """Return True when a value counts as empty for existence checks."""
+    return value is None or value == ""
+
+
+def _evaluate_field_condition(
+    condition: Mapping[str, Any], data: Mapping[str, Any]
+) -> bool:
+    actual = data.get(condition["field"])
+    value = condition.get("value")
+    match condition.get("operator", "eq"):
+        case "eq":
+            return actual == value
+        case "not_eq":
+            return actual != value
+        case "in":
+            return isinstance(value, (list, tuple)) and actual in value
+        case "not_in":
+            return isinstance(value, (list, tuple)) and actual not in value
+        case "exists":
+            return not _condition_value_is_empty(actual)
+        case "not_exists":
+            return _condition_value_is_empty(actual)
+        case _:
+            return False
+
+
+def evaluate_condition(condition: Mapping[str, Any], data: Mapping[str, Any]) -> bool:
+    """Evaluate a field condition against submitted step data.
+
+    Mirrors the frontend `evaluateCondition` in ha-form/conditions.ts.
+    """
+    if (combinator := condition.get("condition")) is not None:
+        conditions: list[Mapping[str, Any]] = condition.get("conditions", [])
+        match combinator:
+            case "and":
+                return all(evaluate_condition(sub, data) for sub in conditions)
+            case "or":
+                return any(evaluate_condition(sub, data) for sub in conditions)
+            case "not":
+                return not any(evaluate_condition(sub, data) for sub in conditions)
+            case _:
+                return False
+    return _evaluate_field_condition(condition, data)
+
+
+def is_field_hidden(
+    hidden_condition: bool | Mapping[str, Any] | list[Mapping[str, Any]],
+    data: Mapping[str, Any],
+) -> bool:
+    """Return True when a field's hidden condition matches the submitted data.
+
+    Mirrors the frontend `isFieldHidden` in ha-form/conditions.ts: a list of
+    conditions is combined with AND.
+    """
+    if hidden_condition is True:
+        return True
+    if not hidden_condition:
+        return False
+    conditions = (
+        hidden_condition if isinstance(hidden_condition, list) else [hidden_condition]
+    )
+    return all(evaluate_condition(condition, data) for condition in conditions)
+
+
+def hidden(
+    marker: vol.Marker, condition: bool | Condition | list[Condition]
+) -> vol.Marker:
+    """Hide a schema field while a condition matches the other fields.
+
+    A hidden field is not rendered by the frontend, is treated as optional, and
+    its value is omitted from the submitted data. The backend mirrors this by
+    skipping the required check while the condition matches. A list of conditions
+    is combined with AND.
+    """
+    marker.hidden = condition  # type: ignore[attr-defined]
+    return marker
 
 
 _FlowContextT = TypeVar("_FlowContextT", bound="FlowContext", default="FlowContext")
@@ -351,8 +474,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
             data_schema = cast(vol.Schema, data_schema)
+            validation_schema, validation_input = _strip_hidden_fields(
+                data_schema, user_input
+            )
             try:
-                user_input = data_schema(user_input)
+                user_input = validation_schema(validation_input)
             except vol.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):
@@ -937,3 +1063,82 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
+
+
+def _strip_hidden_fields[_T: Mapping[str, Any]](
+    data_schema: vol.Schema, user_input: _T
+) -> tuple[vol.Schema, _T]:
+    """Remove currently hidden fields from the schema and the submitted input.
+
+    The frontend hides fields whose condition matches, treats them as optional,
+    and omits them from the submitted data. Mirror that server-side: a hidden
+    required field must not fail validation, and a hidden field must not inject a
+    default or keep a stale value. Conditions are evaluated against the original
+    input. Returns the schema and input unchanged when nothing is hidden.
+    """
+    if not isinstance(data_schema.schema, dict):
+        return data_schema, user_input
+
+    new_schema: dict[Any, Any] = {}
+    new_input: dict[str, Any] | None = None
+    for key, val in data_schema.schema.items():
+        name = key.schema if isinstance(key, vol.Marker) else key
+
+        if isinstance(val, section) and isinstance(
+            section_input := user_input.get(name), Mapping
+        ):
+            inner_schema, inner_input = _strip_hidden_fields(val.schema, section_input)
+            if inner_schema is not val.schema:
+                new_val = copy.copy(val)
+                new_val.schema = inner_schema
+                new_schema[key] = new_val
+                if new_input is None:
+                    new_input = dict(user_input)
+                new_input[name] = inner_input
+                continue
+
+        hidden_condition = getattr(key, "hidden", None)
+        if hidden_condition is not None and is_field_hidden(
+            hidden_condition, user_input
+        ):
+            if name in user_input:
+                if new_input is None:
+                    new_input = dict(user_input)
+                new_input.pop(name, None)
+            continue
+
+        new_schema[key] = val
+
+    if new_input is None and len(new_schema) == len(data_schema.schema):
+        return data_schema, user_input
+    return (
+        vol.Schema(new_schema, extra=data_schema.extra, required=data_schema.required),
+        cast(_T, new_input if new_input is not None else user_input),
+    )
+
+
+def add_hidden_conditions_to_serialized_schema(
+    data_schema: vol.Schema, serialized: list[dict[str, Any]]
+) -> None:
+    """Add `hidden` conditions from schema markers to the serialized fields.
+
+    `voluptuous_serialize` does not emit marker metadata beyond `description`, so
+    the condition attached by `hidden()` is injected here after conversion.
+    Recurses into serialized sections.
+    """
+    if not isinstance(data_schema.schema, dict):
+        return
+
+    fields_by_name: dict[Any, tuple[Any, Any]] = {}
+    for key, val in data_schema.schema.items():
+        name = key.schema if isinstance(key, vol.Marker) else key
+        fields_by_name[name] = (key, val)
+
+    for field in serialized:
+        if (entry := fields_by_name.get(field.get("name"))) is None:
+            continue
+        key, val = entry
+        if (hidden_condition := getattr(key, "hidden", None)) is not None:
+            field["hidden"] = hidden_condition
+        if isinstance(val, section) and isinstance(field.get("schema"), list):
+            add_hidden_conditions_to_serialized_schema(val.schema, field["schema"])
