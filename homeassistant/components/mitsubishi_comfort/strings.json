@@ -7,7 +7,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_devices": "No devices were found on this account",
-      "no_usable_devices": "The devices on this account did not return local-control credentials. Wait a few minutes and try again.",
+      "no_usable_devices": "The cloud did not return complete local-control information for any device on this account. Wait a few minutes and try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
