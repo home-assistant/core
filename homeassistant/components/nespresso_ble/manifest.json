@@ -5,6 +5,14 @@
     {
       "connectable": true,
       "service_uuid": "96600100-526e-4676-a11a-af1eb848165b"
+    },
+    {
+      "connectable": true,
+      "service_uuid": "06aa1910-f22a-11e3-9daa-0002a5d5c51b"
+    },
+    {
+      "connectable": true,
+      "service_uuid": "65241910-0253-11e7-93ae-92361f002671"
     }
   ],
   "codeowners": ["@joostlek"],
@@ -14,5 +22,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["nespresso-ble==0.2.0"]
+  "requirements": ["nespresso-ble==0.3.0"]
 }

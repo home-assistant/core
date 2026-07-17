@@ -649,6 +649,16 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": True,
+        "domain": "nespresso_ble",
+        "service_uuid": "06aa1910-f22a-11e3-9daa-0002a5d5c51b",
+    },
+    {
+        "connectable": True,
+        "domain": "nespresso_ble",
+        "service_uuid": "65241910-0253-11e7-93ae-92361f002671",
+    },
+    {
+        "connectable": True,
         "domain": "opendisplay",
         "manufacturer_id": 9286,
     },

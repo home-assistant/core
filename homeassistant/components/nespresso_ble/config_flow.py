@@ -1,8 +1,8 @@
-"""Config flow for the Nespresso Vertuo integration."""
+"""Config flow for the Nespresso integration."""
 
-import logging
 from typing import Any, override
 
+from nespresso_ble import is_supported
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -14,11 +14,9 @@ from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class NespressoBLEConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Nespresso Vertuo."""
+    """Handle a config flow for Nespresso."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -72,6 +70,8 @@ class NespressoBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
+                continue
+            if not is_supported(discovery_info.service_uuids):
                 continue
             self._discovered_devices[address] = discovery_info.name
 

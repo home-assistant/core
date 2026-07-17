@@ -1,5 +1,6 @@
-"""Coordinator for the Nespresso Vertuo integration."""
+"""Coordinator for the Nespresso integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import override
@@ -7,12 +8,12 @@ from typing import override
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
-from nespresso_ble import NespressoError, VMiniBluetoothDeviceData, VMiniDevice
+from nespresso_ble import NespressoBluetoothDeviceData, NespressoDevice, NespressoError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,15 +24,16 @@ _LOGGER = logging.getLogger(__name__)
 type NespressoBLEConfigEntry = ConfigEntry[NespressoBLECoordinator]
 
 
-class NespressoBLECoordinator(DataUpdateCoordinator[VMiniDevice]):
-    """Coordinator to fetch data from a Nespresso Vertuo machine over BLE."""
+class NespressoBLECoordinator(DataUpdateCoordinator[NespressoDevice]):
+    """Coordinator to fetch data from a Nespresso machine over BLE."""
 
-    ble_device: BLEDevice
     config_entry: NespressoBLEConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: NespressoBLEConfigEntry) -> None:
         """Initialize the coordinator."""
-        self._client = VMiniBluetoothDeviceData(_LOGGER)
+        self._client = NespressoBluetoothDeviceData(_LOGGER)
+        self._stream_task: asyncio.Task[None] | None = None
+        self._stop_stream: asyncio.Event | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -42,7 +44,7 @@ class NespressoBLECoordinator(DataUpdateCoordinator[VMiniDevice]):
 
     @override
     async def _async_setup(self) -> None:
-        """Resolve the BLE device and clean stale connections."""
+        """Clean up stale connections before the first refresh."""
         address = self.config_entry.unique_id
         assert address is not None
         await close_stale_connections_by_address(address)
@@ -70,14 +72,47 @@ class NespressoBLECoordinator(DataUpdateCoordinator[VMiniDevice]):
         return ble_device
 
     @override
-    async def _async_update_data(self) -> VMiniDevice:
-        """Fetch the latest data from the machine."""
+    async def _async_update_data(self) -> NespressoDevice:
+        """Fetch the latest data and (re)start push streaming if supported."""
         ble_device = self._async_get_ble_device()
         try:
-            return await self._client.update_device(ble_device)
+            device = await self._client.update_device(ble_device)
         except (BleakError, NespressoError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        if self._client.supports_push(ble_device) and (
+            self._stream_task is None or self._stream_task.done()
+        ):
+            self._start_stream(ble_device)
+        return device
+
+    def _start_stream(self, ble_device: BLEDevice) -> None:
+        """Start a background task streaming push updates from the machine."""
+        self._stop_stream = asyncio.Event()
+
+        @callback
+        def _on_update(device: NespressoDevice) -> None:
+            self.async_set_updated_data(device)
+
+        async def _run() -> None:
+            try:
+                await self._client.stream(ble_device, _on_update, self._stop_stream)
+            except (BleakError, NespressoError) as err:
+                _LOGGER.debug("Push stream ended for %s: %s", ble_device.address, err)
+
+        self._stream_task = self.config_entry.async_create_background_task(
+            self.hass, _run(), f"{DOMAIN}_stream_{ble_device.address}"
+        )
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop the push stream and shut the coordinator down."""
+        if self._stop_stream is not None:
+            self._stop_stream.set()
+        if self._stream_task is not None:
+            self._stream_task.cancel()
+        await super().async_shutdown()

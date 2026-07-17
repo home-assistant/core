@@ -1,4 +1,4 @@
-"""Common fixtures for the Nespresso Vertuo tests."""
+"""Common fixtures for the Nespresso tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
@@ -39,9 +39,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_update_device() -> Generator[AsyncMock]:
-    """Mock the VMini update_device call."""
-    with patch(
-        "homeassistant.components.nespresso_ble.coordinator.VMiniBluetoothDeviceData.update_device",
-        return_value=make_device(),
-    ) as mock:
+    """Mock the Nespresso client update_device call and disable push."""
+    with (
+        patch(
+            "homeassistant.components.nespresso_ble.coordinator.NespressoBluetoothDeviceData.update_device",
+            return_value=make_device(),
+        ) as mock,
+        patch(
+            "homeassistant.components.nespresso_ble.coordinator.NespressoBluetoothDeviceData.supports_push",
+            return_value=False,
+        ),
+    ):
         yield mock

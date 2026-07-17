@@ -1,4 +1,4 @@
-"""Test the Nespresso Vertuo config flow."""
+"""Test the Nespresso config flow."""
 
 from unittest.mock import AsyncMock, patch
 

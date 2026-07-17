@@ -1,4 +1,4 @@
-"""The Nespresso Vertuo integration."""
+"""The Nespresso integration."""
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -11,7 +11,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(
     hass: HomeAssistant, entry: NespressoBLEConfigEntry
 ) -> bool:
-    """Set up Nespresso Vertuo from a config entry."""
+    """Set up Nespresso from a config entry."""
     coordinator = NespressoBLECoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 

@@ -31,8 +31,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'descaling_alert',
-    'unique_id': '80:F1:B2:E1:48:76_descaling_alert',
+    'translation_key': 'descaling_needed',
+    'unique_id': '80:F1:B2:E1:48:76_descaling_needed',
     'unit_of_measurement': None,
   })
 # ---
@@ -101,56 +101,6 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[sensor][sensor.nespresso_vertuo_mini_error_code-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nespresso_vertuo_mini_error_code',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Error code',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Error code',
-    'platform': 'nespresso_ble',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'error_code',
-    'unique_id': '80:F1:B2:E1:48:76_error_code',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor][sensor.nespresso_vertuo_mini_error_code-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nespresso Vertuo Mini Error code',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.nespresso_vertuo_mini_error_code',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_error',
-  })
-# ---
 # name: test_entities[sensor][sensor.nespresso_vertuo_mini_machine_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -159,12 +109,29 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
         'ready',
         'brewing',
         'heating',
+        'cooldown',
         'descaling',
-        'standby',
+        'descaling_ready',
+        'cleaning',
+        'rinsing',
+        'emptying',
+        'power_save',
+        'updating',
+        'capsule_reading',
+        'tank_empty',
+        'service_mode',
+        'maintenance_menu',
+        'overheated',
+        'paused',
+        'setup',
+        'factory_reset',
+        'initializing',
         'error',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -203,12 +170,29 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nespresso Vertuo Mini Machine status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
         'ready',
         'brewing',
         'heating',
+        'cooldown',
         'descaling',
-        'standby',
+        'descaling_ready',
+        'cleaning',
+        'rinsing',
+        'emptying',
+        'power_save',
+        'updating',
+        'capsule_reading',
+        'tank_empty',
+        'service_mode',
+        'maintenance_menu',
+        'overheated',
+        'paused',
+        'setup',
+        'factory_reset',
+        'initializing',
         'error',
+        'unknown',
       ]),
     }),
     'context': <ANY>,

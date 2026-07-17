@@ -1,6 +1,12 @@
-"""Tests for the Nespresso Vertuo integration."""
+"""Tests for the Nespresso integration."""
 
-from nespresso_ble import VMiniDevice
+from nespresso_ble import (
+    MachineFamily,
+    MachineStatus,
+    NespressoDevice,
+    PairingStatus,
+    WaterHardness,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
@@ -52,28 +58,20 @@ NOT_NESPRESSO_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
-def make_device() -> VMiniDevice:
-    """Return a VMiniDevice with representative live data."""
-    return VMiniDevice(
+def make_device() -> NespressoDevice:
+    """Return a typed NespressoDevice with representative live VMini data."""
+    return NespressoDevice(
         address=ADDRESS,
         name="VL-MD1_26083MD1p00937820La",
+        family=MachineFamily.VMINI,
         serial="26083MD1p00937820La",
         firmware_version="4.5.3",
-        pairing_status="PAIRED",
+        pairing_status=PairingStatus.PAIRED,
         iot_market="NL",
         wifi_mac="80:f1:b2:e1:48:74",
-        asset_versions="fmw-main,4.5.3,1.1.0",
-        shadow_header="machineStatus,str",
-        sensors={
-            "machineStatus": "ready",
-            "descalingAlert": False,
-            "lastCoffeeFamilyID": 255,
-            "waterHardness": 4,
-            "errorCode": "no error",
-            "firstCoffee": False,
-            "firstRinsing": False,
-            "recipeTag": "unknown",
-            "customizationType": "vol and temp",
-            "pairing_status": "PAIRED",
-        },
+        status=MachineStatus.READY,
+        error=False,
+        error_code="no error",
+        water_hardness=WaterHardness.LEVEL_4,
+        descaling_needed=False,
     )

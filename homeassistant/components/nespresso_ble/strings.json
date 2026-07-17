@@ -15,7 +15,7 @@
           "address": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
-          "address": "The Nespresso Vertuo machine discovered via Bluetooth."
+          "address": "The Nespresso machine discovered via Bluetooth."
         },
         "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
@@ -23,23 +23,40 @@
   },
   "entity": {
     "binary_sensor": {
-      "descaling_alert": {
+      "descaling_needed": {
         "name": "Descaling needed"
+      },
+      "water_tank_empty": {
+        "name": "Water tank empty"
       }
     },
     "sensor": {
-      "error_code": {
-        "name": "Error code"
-      },
       "machine_status": {
         "name": "Machine status",
         "state": {
           "brewing": "Brewing",
+          "capsule_reading": "Reading capsule",
+          "cleaning": "Cleaning",
+          "cooldown": "Cooling down",
           "descaling": "Descaling",
+          "descaling_ready": "Descaling ready",
+          "emptying": "Emptying",
           "error": "Error",
+          "factory_reset": "Factory reset",
           "heating": "Heating",
+          "initializing": "Initializing",
+          "maintenance_menu": "Maintenance menu",
+          "overheated": "Overheated",
+          "paused": "Paused",
+          "power_save": "Power save",
           "ready": "Ready",
-          "standby": "Standby"
+          "rinsing": "Rinsing",
+          "service_mode": "Service mode",
+          "setup": "Setup",
+          "standby": "Standby",
+          "tank_empty": "Tank empty",
+          "unknown": "Unknown",
+          "updating": "Updating"
         }
       },
       "water_hardness": {
@@ -49,7 +66,7 @@
   },
   "exceptions": {
     "device_not_found": {
-      "message": "Could not find Nespresso Vertuo device with address {address}: {reason}"
+      "message": "Could not find Nespresso device with address {address}: {reason}"
     },
     "update_failed": {
       "message": "Unable to fetch data from the machine: {error}"

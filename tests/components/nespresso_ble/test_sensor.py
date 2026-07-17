@@ -1,4 +1,4 @@
-"""Test the Nespresso Vertuo entities."""
+"""Test the Nespresso entities."""
 
 from unittest.mock import AsyncMock, patch
 
