@@ -429,6 +429,7 @@ FLOWS = {
         "lifx",
         "linkplay",
         "litejet",
+        "litellm",
         "litterrobot",
         "livisi",
         "llama_cpp",
