@@ -10,6 +10,7 @@ import pytest
 from homeassistant.components.apsystems.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -44,6 +45,38 @@ async def test_setup_device_info_unavailable(
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_offline_then_recovers_device_info(
+    hass: HomeAssistant,
+    mock_apsystems: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device info is fetched and the registry updated after an offline start."""
+    mock_apsystems.get_device_info.side_effect = TimeoutError
+    mock_apsystems.get_output_data.side_effect = TimeoutError
+    mock_apsystems.get_alarm_info.side_effect = TimeoutError
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    identifiers = {(DOMAIN, "MY_SERIAL_NUMBER")}
+    device = device_registry.async_get_device(identifiers=identifiers)
+    assert device is not None
+    assert device.sw_version is None
+
+    mock_apsystems.get_device_info.side_effect = None
+    mock_apsystems.get_output_data.side_effect = None
+    mock_apsystems.get_alarm_info.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers=identifiers)
+    assert device is not None
+    assert device.sw_version == "1.0.0"
 
 
 async def test_update(

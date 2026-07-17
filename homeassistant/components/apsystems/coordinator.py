@@ -105,7 +105,6 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     @override
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:
-            # Fetch device info if it wasn't available during setup
             if not self.device_version:
                 await self._fetch_device_info()
             output_data = await self.api.get_output_data()
