@@ -350,10 +350,7 @@ class NexiaRoomIQSensor(NexiaRoomIQEntity, SensorEntity):
     def native_value(self) -> int | float:
         """Return the state of the RoomIQ sensor."""
         room_iq_sensor = self._zone.get_sensor_by_id(self._sensor_id)
-        val = self.entity_description.value_fn(room_iq_sensor)
-        if isinstance(val, float):
-            val = round(val, 1)
-        return val
+        return self.entity_description.value_fn(room_iq_sensor)
 
     @override
     async def async_added_to_hass(self) -> None:
