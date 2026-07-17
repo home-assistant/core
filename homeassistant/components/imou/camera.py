@@ -7,7 +7,7 @@ from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,14 +47,7 @@ async def async_setup_entry(
             for entity_type, resolution in CAMERA_TYPES
         )
 
-    coordinator.new_device_callbacks.append(_add_cameras)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_cameras in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_cameras)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_cameras))
     _add_cameras(coordinator.devices)
 
 
