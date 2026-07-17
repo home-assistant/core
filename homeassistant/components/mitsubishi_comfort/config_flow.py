@@ -81,10 +81,10 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(account.user_id)
                 self._abort_if_unique_id_configured()
 
-                # Persist the per-device credentials discovered here (the
-                # Socket.IO password fetch). async_setup_entry replays them
-                # via discover_devices(cached_credentials=...) so it never
-                # repeats that slow, rate-limited call.
+                # Persist the fields discovered here for async_setup_entry to
+                # replay via discover_devices(cached_credentials=...): the
+                # slow, rate-limited Socket.IO call then runs only for
+                # passwords still missing.
                 credentials = build_credentials(devices)
                 if credentials:
                     self._cached_credentials = credentials
