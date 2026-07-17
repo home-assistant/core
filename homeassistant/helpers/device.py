@@ -3,6 +3,7 @@
 from homeassistant.core import HomeAssistant, callback
 
 from . import device_registry as dr, entity_registry as er
+from .frame import ReportBehavior, report_usage
 
 
 @callback
@@ -41,13 +42,18 @@ def async_device_info_to_link_from_entity(
 ) -> dr.DeviceInfo | None:
     """DeviceInfo with information to link a device from an entity.
 
-    DeviceInfo will only return information to categorize as a link.
+    Deprecated, always returns None; set entity.device_entry instead.
     """
-
-    return async_device_info_to_link_from_device_id(
-        hass,
-        async_entity_id_to_device_id(hass, entity_id_or_uuid),
+    report_usage(
+        "calls async_device_info_to_link_from_entity, which is deprecated and always "
+        "returns None: a device_info carrying another device's identifiers implicitly "
+        "added the caller's config entry to that device, which a single-config-entry "
+        "device can't represent. Set entity.device_entry = "
+        "async_entity_id_to_device(hass, source_entity_id) instead",
+        core_behavior=ReportBehavior.LOG,
+        breaks_in_ha_version="2027.8.0",
     )
+    return None
 
 
 @callback
@@ -57,18 +63,17 @@ def async_device_info_to_link_from_device_id(
 ) -> dr.DeviceInfo | None:
     """DeviceInfo with information to link a device from a device id.
 
-    DeviceInfo will only return information to categorize as a link.
+    Deprecated, always returns None; set entity.device_entry instead.
     """
-
-    dev_reg = dr.async_get(hass)
-
-    if device_id is None or (device := dev_reg.async_get(device_id=device_id)) is None:
-        return None
-
-    return dr.DeviceInfo(
-        identifiers=device.identifiers,
-        connections=device.connections,
+    report_usage(
+        "calls async_device_info_to_link_from_device_id, which is deprecated and always "
+        "returns None: a device_info carrying another device's identifiers implicitly "
+        "added the caller's config entry to that device, which a single-config-entry "
+        "device can't represent. Set entity.device_entry to the target device instead",
+        core_behavior=ReportBehavior.LOG,
+        breaks_in_ha_version="2027.8.0",
     )
+    return None
 
 
 @callback
