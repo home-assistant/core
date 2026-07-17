@@ -131,6 +131,101 @@ async def test_user_step_persists_partial_records(
     }
 
 
+def _partial_device_info() -> DeviceInfo:
+    """Build a device with local secrets but no MAC: recoverable, not usable."""
+    return DeviceInfo(
+        serial=MOCK_SERIAL,
+        label="Living Room",
+        address="",
+        mac="",
+        unit_type="ductless",
+        password="dGVzdHBhc3M=",
+        crypto_serial="0102030405060708090a",
+    )
+
+
+async def test_user_step_retry_replays_partial_credentials(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a retry replays the fields recovered by a failed earlier attempt.
+
+    The Socket.IO password fetch is rate limited: one attempt can recover the
+    passwords yet miss the MACs, and its retry the reverse. Replaying the
+    recovered fields means no single attempt has to return everything.
+    """
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: _partial_device_info()
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+    assert (
+        mock_cloud_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
+    )
+
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: DeviceInfo(
+            serial=MOCK_SERIAL,
+            label="Living Room",
+            address="",
+            mac=MOCK_MAC,
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        )
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_cloud_account.discover_devices.call_args.kwargs[
+        "cached_credentials"
+    ] == {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": "",
+        }
+    }
+
+
+async def test_user_step_username_change_drops_cached_credentials(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test fields recovered for one account are not replayed for another."""
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: _partial_device_info()
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other@example.com", CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+    assert (
+        mock_cloud_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
+    )
+
+
 @pytest.mark.parametrize(
     ("side_effect", "discover_return", "expected_error"),
     [

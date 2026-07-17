@@ -31,6 +31,15 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        # Fields recovered by earlier attempts in this flow, replayed on retry:
+        # the rate-limited Socket.IO password fetch may succeed on one attempt
+        # and return nothing on the next, so no single attempt has to recover
+        # everything.
+        self._cached_credentials: dict[str, dict[str, str]] = {}
+        self._cached_username: str | None = None
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -39,6 +48,11 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # The recovered fields belong to the account entered.
+            if user_input[CONF_USERNAME] != self._cached_username:
+                self._cached_username = user_input[CONF_USERNAME]
+                self._cached_credentials = {}
+
             account = MitsubishiCloudAccount(
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
@@ -48,7 +62,9 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             devices: dict = {}
             try:
                 await account.login()
-                devices = await account.discover_devices()
+                devices = await account.discover_devices(
+                    cached_credentials=self._cached_credentials
+                )
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
@@ -70,6 +86,8 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                 # via discover_devices(cached_credentials=...) so it never
                 # repeats that slow, rate-limited call.
                 credentials = build_credentials(devices)
+                if credentials:
+                    self._cached_credentials = credentials
                 if not devices:
                     errors["base"] = "no_devices"
                 elif not any(is_fully_credentialed(info) for info in devices.values()):
