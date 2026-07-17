@@ -46,7 +46,7 @@ class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
         """Initialize AdGuard Home update."""
         super().__init__(data, entry)
 
-        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
             [DOMAIN, self.adguard.host, str(self.adguard.port), "update"]
         )
 

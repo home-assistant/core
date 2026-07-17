@@ -114,7 +114,7 @@ async def _get_coordinator(
         for entry_id in device.config_entries:
             entry = call.hass.config_entries.async_get_entry(entry_id)
             if entry and entry.domain == DOMAIN:
-                if entry.state != ConfigEntryState.LOADED:
+                if entry.state is not ConfigEntryState.LOADED:
                     raise HomeAssistantError(f"{entry.title} is not loaded")
                 return entry.runtime_data
 
