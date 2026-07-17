@@ -1363,7 +1363,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_get_info(
-        self, host: str, port: int, verify_ssl: bool = False
+        self, host: str, port: int, verify_ssl: bool
     ) -> dict[str, Any]:
         """Get info from shelly device."""
         return await get_info(
