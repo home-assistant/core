@@ -79,8 +79,8 @@ SELECT_TYPES = (
         translation_key=SELECT_GATEWAY_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="gateway_modes",
-        set_value_fn=lambda api, key, appl_or_loc_id, option, state: (
-            api.set_dset_selecthw_mode(key, appl_or_loc_id, option, state)
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
         ),
     ),
     PlugwiseSelectEntityDescription(
