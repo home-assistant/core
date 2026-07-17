@@ -166,8 +166,10 @@ async def websocket_supervisor_api(
             data.pop("options", None)
         # Await so the frontend only sees the reload finish once the add-on
         # update entities reflect the reloaded store.
-        if command == STORE_RELOAD_ENDPOINT and (
-            coordinator := hass.data.get(ADDONS_COORDINATOR)
+        if (
+            command == STORE_RELOAD_ENDPOINT
+            and msg[ATTR_METHOD] == "post"
+            and (coordinator := hass.data.get(ADDONS_COORDINATOR))
         ):
             await coordinator.async_refresh_after_store_reload()
 
