@@ -26,11 +26,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -38,6 +40,8 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry, assert_setup_component
@@ -212,6 +216,9 @@ async def test_template_select(hass: HomeAssistant, calls: list[ServiceCall]) ->
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "c", attributes)
     _verify(hass, "c", ["a", "b", "c"])
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "none", attributes)
+    _verify(hass, STATE_UNKNOWN, ["a", "b", "c"])
 
 
 def _verify(
@@ -555,4 +562,132 @@ async def test_nested_unique_id(
         entity_registry,
         TEST_OPTIONS_WITHOUT_STATE,
         "{{ 'test' }}",
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            "something",
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            "something",
+            {
+                "options": ["something", "anything"],
+            },
+        ),
+        (
+            "something",
+            {
+                "current_option": "something",
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            "something",
+            {
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "current_option": "something",
+                "options": ["something", "anything"],
+            },
+            STATE_UNKNOWN,
+            {
+                "options": [],
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring trigger template weather."""
+
+    restored_attributes = {  # These should be ignored
+        "current_position": 5,
+        "current_tilt_position": 5,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SELECT,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_SELECT,
+        style,
+        {
+            "state": "{{ state_attr('sensor.test_state', 'option') }}",
+            "options": "{{ state_attr('sensor.test_state', 'options') or [] }}",
+            "select_option": [],
+        },
+        "is_state('sensor.test_state', 'something_new')",
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SELECT,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {
+            "options": ["something", "anything", "something_new"],
+            "option": "something_new",
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_SELECT,
+        "something_new",
+        {
+            "options": ["something", "anything", "something_new"],
+        },
     )
