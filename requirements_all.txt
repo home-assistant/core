@@ -1230,6 +1230,9 @@ habluetooth==6.26.5
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
 
+# homeassistant.components.harbor
+harbor-python==1.2.1
+
 # homeassistant.components.cloud
 hass-nabucasa==2.2.0
 
@@ -1595,7 +1598,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.3.2
+mitsubishi-comfort==0.5.0
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -1770,6 +1773,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.cloud
+# homeassistant.components.litellm
 # homeassistant.components.llama_cpp
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
@@ -2021,7 +2025,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.3.1
+pyairnow==1.4.0
 
 # homeassistant.components.airobot
 pyairobotrest==0.4.0
@@ -2481,7 +2485,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.38
+pyportainer==1.0.42
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2652,7 +2656,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.9.0
+python-duco-connectivity==0.10.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -3469,7 +3473,7 @@ zeversolar==0.3.2
 zha-quirks==2.1.1
 
 # homeassistant.components.zha
-zha==2.0.0
+zha==2.0.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
