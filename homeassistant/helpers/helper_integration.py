@@ -43,6 +43,7 @@ def async_handle_source_entity_changes(
         entity or ask the user to select a new source entity.
     """
     if "add_helper_config_entry_to_device" in kwargs:
+        del kwargs["add_helper_config_entry_to_device"]
         # Adding the helper's config entry to the source device is no longer supported
         # now that a device belongs to a single config entry; the helper entities link to
         # the source device via their device_id instead.
@@ -51,6 +52,11 @@ def async_handle_source_entity_changes(
             "add_helper_config_entry_to_device, which no longer has any effect",
             core_behavior=ReportBehavior.LOG,
             breaks_in_ha_version="2027.8.0",
+        )
+    if kwargs:
+        raise TypeError(
+            "async_handle_source_entity_changes() got unexpected keyword arguments "
+            f"{', '.join(map(repr, kwargs))}"
         )
 
     async def async_registry_updated(

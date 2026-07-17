@@ -238,6 +238,25 @@ async def test_async_handle_source_entity_changes_deprecated_kwarg(
     assert "add_helper_config_entry_to_device" in report_usage.call_args[0][0]
 
 
+async def test_async_handle_source_entity_changes_rejects_unknown_kwarg(
+    hass: HomeAssistant,
+) -> None:
+    """An unknown keyword argument still raises, as it did before **kwargs was added.
+
+    **kwargs only exists to swallow the deprecated add_helper_config_entry_to_device;
+    anything else (e.g. a misspelling) must not be silently accepted.
+    """
+    with pytest.raises(TypeError, match="unexpected keyword arguments 'unknown_kwarg'"):
+        async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            set_source_entity_id_or_uuid=Mock(),
+            source_device_id=None,
+            source_entity_id_or_uuid="sensor.test",
+            unknown_kwarg=True,
+        )
+
+
 async def test_async_handle_source_entity_changes_without_deprecated_kwarg(
     hass: HomeAssistant,
 ) -> None:
