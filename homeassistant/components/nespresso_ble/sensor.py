@@ -39,7 +39,9 @@ SENSORS: tuple[NespressoBLESensorEntityDescription, ...] = (
             for status in MachineStatus
             if status is not MachineStatus.UNKNOWN
         ],
-        value_fn=lambda device: device.status.value,
+        value_fn=lambda device: (
+            device.status if device.status is not MachineStatus.UNKNOWN else None
+        ),
     ),
     NespressoBLESensorEntityDescription(
         key="water_hardness",
