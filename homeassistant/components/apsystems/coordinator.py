@@ -65,6 +65,14 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.battery_system = False
         self.inverter_connected = False
 
+    @property
+    def sw_version(self) -> str | None:
+        """Return the software version parsed from the device version."""
+        if not self.device_version:
+            return None
+        parts = self.device_version.split(" ")
+        return parts[1] if len(parts) > 1 else parts[0]
+
     @override
     async def _async_setup(self) -> None:
         try:
@@ -92,11 +100,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             identifiers={(DOMAIN, self.config_entry.unique_id)}
         )
         if device_entry:
-            version_parts = device_info.devVer.split(" ")
-            sw_version = (
-                version_parts[1] if len(version_parts) > 1 else version_parts[0]
-            )
-            registry.async_update_device(device_entry.id, sw_version=sw_version)
+            registry.async_update_device(device_entry.id, sw_version=self.sw_version)
 
     @override
     async def _async_update_data(self) -> ApSystemsSensorData:
