@@ -175,14 +175,17 @@ class CoverExtraStoredData(ExtraStoredData):
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored cover state from a dict."""
-        return cls(
-            current_cover_position=restored["current_cover_position"],
-            current_cover_tilt_position=restored["current_cover_tilt_position"],
-            is_opening=restored["is_opening"],
-            is_closing=restored["is_closing"],
-        )
+        try:
+            return cls(
+                current_cover_position=restored["current_cover_position"],
+                current_cover_tilt_position=restored["current_cover_tilt_position"],
+                is_opening=restored["is_opening"],
+                is_closing=restored["is_closing"],
+            )
+        except KeyError:
+            return None
 
 
 class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
