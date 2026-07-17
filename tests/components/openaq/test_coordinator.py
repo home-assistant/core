@@ -30,11 +30,12 @@ from tests.common import MockConfigEntry
 
 def test_create_openaq_client_uses_sync_openaq_client() -> None:
     """Test creating an OpenAQ client uses the sync SDK client."""
-    client = create_openaq_client("api-key")
+    api_key = "a" * 64
+    client = create_openaq_client(api_key)
 
     try:
         assert isinstance(client, OpenAQ)
-        assert client.api_key == "api-key"
+        assert client.api_key == api_key
     finally:
         client.close()
 
