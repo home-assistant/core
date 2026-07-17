@@ -407,14 +407,14 @@ async def test_websocket_store_reload_refreshes_update_entities(
         )
     ]
     aioclient_mock.post(
-        "http://127.0.0.1/addons/reload", json={"result": "ok", "data": {}}
+        "http://127.0.0.1/store/reload", json={"result": "ok", "data": {}}
     )
 
     websocket_client = await hass_ws_client(hass)
     await websocket_client.send_json_auto_id(
         {
             WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/addons/reload",
+            ATTR_ENDPOINT: "/store/reload",
             ATTR_METHOD: "post",
         }
     )

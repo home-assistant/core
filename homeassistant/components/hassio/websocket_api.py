@@ -60,9 +60,9 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
     r")$"
 )
 
-# Endpoints that reload the add-on store. After one of these the add-on update
+# Endpoint that reloads the add-on store. Afterwards the add-on update
 # entities must be refreshed so they don't report stale update information.
-STORE_RELOAD_ENDPOINTS = {"/addons/reload", "/store/reload"}
+STORE_RELOAD_ENDPOINT = "/store/reload"
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -166,7 +166,7 @@ async def websocket_supervisor_api(
             data.pop("options", None)
         connection.send_result(msg[WS_ID], data)
 
-        if command in STORE_RELOAD_ENDPOINTS and (
+        if command == STORE_RELOAD_ENDPOINT and (
             coordinator := hass.data.get(ADDONS_COORDINATOR)
         ):
             hass.async_create_task(coordinator.async_refresh_after_store_reload())
