@@ -142,17 +142,20 @@ class LockExtraStoredData(ExtraStoredData):
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored lock state from a dict."""
-        return cls(
-            code_format=restored["code_format"],
-            is_locked=restored["is_locked"],
-            is_locking=restored["is_locking"],
-            is_open=restored["is_open"],
-            is_opening=restored["is_opening"],
-            is_unlocking=restored["is_unlocking"],
-            is_jammed=restored["is_jammed"],
-        )
+        try:
+            return cls(
+                code_format=restored["code_format"],
+                is_locked=restored["is_locked"],
+                is_locking=restored["is_locking"],
+                is_open=restored["is_open"],
+                is_opening=restored["is_opening"],
+                is_unlocking=restored["is_unlocking"],
+                is_jammed=restored["is_jammed"],
+            )
+        except KeyError:
+            return None
 
 
 class AbstractTemplateLock(AbstractTemplateEntity, LockEntity, RestoreEntity):

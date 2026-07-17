@@ -1031,6 +1031,21 @@ async def test_flow_preview(
             },
         ),
         (
+            LockState.JAMMED,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            STATE_UNKNOWN,
+            {
+                "code_format": None,
+            },
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "code_format": ".+",
@@ -1072,7 +1087,7 @@ async def test_restore_state(
     initial_state: LockState | str,
     initial_attributes: ConfigType,
 ) -> None:
-    """Test restoring trigger template weather."""
+    """Test restoring state."""
 
     setup_mock_template_entity_restore_state(
         hass,
