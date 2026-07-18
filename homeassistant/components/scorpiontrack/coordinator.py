@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import ACTIVE_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
+        self._previous_share_had_active_vehicle = False
         self.vehicles_by_id: dict[int, ScorpionTrackVehicle] = {}
         super().__init__(
             hass,
@@ -55,6 +56,7 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
+                retry_after=DEFAULT_SCAN_INTERVAL.total_seconds(),
             ) from err
         except ScorpionTrackInvalidTokenError as err:
             raise ConfigEntryError(
@@ -68,4 +70,13 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
             ) from err
         else:
             self.vehicles_by_id = {vehicle.id: vehicle for vehicle in share.vehicles}
+            share_has_active_vehicle = any(
+                vehicle.position.ignition is True for vehicle in share.vehicles
+            )
+            self.update_interval = (
+                ACTIVE_SCAN_INTERVAL
+                if share_has_active_vehicle or self._previous_share_had_active_vehicle
+                else DEFAULT_SCAN_INTERVAL
+            )
+            self._previous_share_had_active_vehicle = share_has_active_vehicle
             return share

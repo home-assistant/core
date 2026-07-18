@@ -10,7 +10,8 @@ MANUFACTURER = "ScorpionTrack"
 
 CONF_SHARE_TOKEN = "share_token"
 
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
+ACTIVE_SCAN_INTERVAL = timedelta(seconds=15)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORMS: tuple[Platform, ...] = (
     Platform.BINARY_SENSOR,
