@@ -1,5 +1,6 @@
 """Tests for iZone config entry setup and unload."""
 
+from asyncio import CancelledError
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -391,6 +392,44 @@ async def test_setup_first_refresh_failure_closes_controller(
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_controller.close.assert_awaited()
+
+
+async def test_setup_platform_failure_closes_controller(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+) -> None:
+    """A failure after create_controller (platform forward) still closes it."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+        side_effect=RuntimeError("platform boom"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_controller.close.assert_awaited()
+
+
+async def test_setup_cancelled_closes_controller(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+) -> None:
+    """Cancellation after create_controller still closes it to release the UID claim."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.izone.IZoneCoordinator.async_config_entry_first_refresh",
+        side_effect=CancelledError,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_controller.close.assert_awaited()
 
 
