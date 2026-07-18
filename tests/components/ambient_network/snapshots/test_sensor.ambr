@@ -47,12 +47,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_absolute_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'pressure',
-      'friendly_name': 'Station A Absolute pressure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Absolute pressure',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_absolute_pressure',
@@ -110,12 +110,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_daily_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station A Daily rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Daily rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_daily_rain',
@@ -170,12 +170,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station A Dew point',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Dew point',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_dew_point',
@@ -230,12 +230,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station A Feels like',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Feels like',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_feels_like',
@@ -293,12 +293,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_hourly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation_intensity',
-      'friendly_name': 'Station A Hourly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Hourly rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_hourly_rain',
@@ -347,18 +347,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'humidity',
-      'friendly_name': 'Station A Humidity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Humidity',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_humidity',
@@ -413,12 +413,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_irradiance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'irradiance',
-      'friendly_name': 'Station A Irradiance',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'irradiance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Irradiance',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_irradiance',
@@ -468,9 +468,9 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_last_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'timestamp',
-      'friendly_name': 'Station A Last rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Last rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
     }),
     'context': <ANY>,
@@ -529,12 +529,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_max_daily_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station A Max daily gust',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Max daily gust',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_max_daily_gust',
@@ -592,12 +592,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_monthly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station A Monthly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Monthly rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_monthly_rain',
@@ -655,12 +655,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_relative_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'pressure',
-      'friendly_name': 'Station A Relative pressure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Relative pressure',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_relative_pressure',
@@ -715,12 +715,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station A Temperature',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Temperature',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_temperature',
@@ -775,11 +775,11 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'friendly_name': 'Station A UV index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A UV index',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'index',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'index',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_uv_index',
@@ -837,12 +837,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_weekly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station A Weekly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Weekly rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_weekly_rain',
@@ -897,12 +897,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_wind_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_direction',
-      'friendly_name': 'Station A Wind direction',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Wind direction',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_wind_direction',
@@ -960,12 +960,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_wind_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station A Wind gust',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Wind gust',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_wind_gust',
@@ -1023,12 +1023,12 @@
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station A Wind speed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Wind speed',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_wind_speed',
@@ -1086,12 +1086,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_absolute_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'pressure',
-      'friendly_name': 'Station C Absolute pressure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Absolute pressure',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_absolute_pressure',
@@ -1149,12 +1149,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_daily_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station C Daily rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Daily rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_daily_rain',
@@ -1209,12 +1209,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station C Dew point',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Dew point',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_dew_point',
@@ -1269,12 +1269,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station C Feels like',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Feels like',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_feels_like',
@@ -1332,12 +1332,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_hourly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation_intensity',
-      'friendly_name': 'Station C Hourly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Hourly rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_hourly_rain',
@@ -1386,18 +1386,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'humidity',
-      'friendly_name': 'Station C Humidity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Humidity',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_humidity',
@@ -1452,12 +1452,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_irradiance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'irradiance',
-      'friendly_name': 'Station C Irradiance',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'irradiance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Irradiance',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_irradiance',
@@ -1507,9 +1507,9 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_last_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'timestamp',
-      'friendly_name': 'Station C Last rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Last rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
     }),
     'context': <ANY>,
@@ -1568,12 +1568,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_max_daily_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station C Max daily gust',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Max daily gust',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_max_daily_gust',
@@ -1631,12 +1631,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_monthly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station C Monthly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Monthly rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_monthly_rain',
@@ -1694,12 +1694,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_relative_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'pressure',
-      'friendly_name': 'Station C Relative pressure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Relative pressure',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_relative_pressure',
@@ -1754,12 +1754,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station C Temperature',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Temperature',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_temperature',
@@ -1814,11 +1814,11 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'friendly_name': 'Station C UV index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C UV index',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'index',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'index',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_uv_index',
@@ -1876,12 +1876,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_weekly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station C Weekly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Weekly rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_weekly_rain',
@@ -1936,12 +1936,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_wind_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_direction',
-      'friendly_name': 'Station C Wind direction',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Wind direction',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_wind_direction',
@@ -1999,12 +1999,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_wind_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station C Wind gust',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Wind gust',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_wind_gust',
@@ -2062,12 +2062,12 @@
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station C Wind speed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Wind speed',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_wind_speed',
@@ -2125,11 +2125,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_absolute_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'pressure',
-      'friendly_name': 'Station D Absolute pressure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Absolute pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_absolute_pressure',
@@ -2187,11 +2187,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_daily_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station D Daily rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Daily rain',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_daily_rain',
@@ -2246,11 +2246,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station D Dew point',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Dew point',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_dew_point',
@@ -2305,11 +2305,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station D Feels like',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Feels like',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_feels_like',
@@ -2367,11 +2367,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_hourly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation_intensity',
-      'friendly_name': 'Station D Hourly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Hourly rain',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_hourly_rain',
@@ -2420,17 +2420,17 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'humidity',
-      'friendly_name': 'Station D Humidity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_humidity',
@@ -2485,11 +2485,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_irradiance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'irradiance',
-      'friendly_name': 'Station D Irradiance',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'irradiance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Irradiance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_irradiance',
@@ -2547,11 +2547,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_max_daily_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station D Max daily gust',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Max daily gust',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_max_daily_gust',
@@ -2609,11 +2609,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_monthly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station D Monthly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Monthly rain',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_monthly_rain',
@@ -2671,11 +2671,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_relative_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'pressure',
-      'friendly_name': 'Station D Relative pressure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Relative pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_relative_pressure',
@@ -2730,11 +2730,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'temperature',
-      'friendly_name': 'Station D Temperature',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_temperature',
@@ -2789,10 +2789,10 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'friendly_name': 'Station D UV index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D UV index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'index',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'index',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_uv_index',
@@ -2850,11 +2850,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_weekly_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'precipitation',
-      'friendly_name': 'Station D Weekly rain',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Weekly rain',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_weekly_rain',
@@ -2909,11 +2909,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_wind_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_direction',
-      'friendly_name': 'Station D Wind direction',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Wind direction',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_wind_direction',
@@ -2971,11 +2971,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_wind_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station D Wind gust',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Wind gust',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_wind_gust',
@@ -3033,11 +3033,11 @@
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by ambientnetwork.net',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Station D Wind speed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ambientnetwork.net',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Wind speed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_wind_speed',

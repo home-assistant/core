@@ -562,6 +562,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -696,6 +697,30 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 translation_key="command_failed",
                 translation_placeholders={
                     "command": "set_fan_speed",
+                },
+            ) from err
+
+    @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        return [
+            Segment(id=str(room.id), name=room.name)
+            for room in self.coordinator.api.map.rooms
+        ]
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments."""
+        try:
+            await self.coordinator.api.vacuum.clean_segments(
+                [int(seg_id) for seg_id in segment_ids]
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "clean_segments",
                 },
             ) from err
 

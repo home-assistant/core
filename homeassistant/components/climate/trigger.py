@@ -4,7 +4,7 @@ from typing import override
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS, UnitOfTemperature
+from homeassistant.const import CONF_OPTIONS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
@@ -24,7 +24,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import ATTR_HUMIDITY, ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
+from .const import DOMAIN, ClimateEntityStateAttribute, HVACAction, HVACMode
 
 CONF_HVAC_MODE = "hvac_mode"
 
@@ -55,7 +55,9 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
     """Mixin for climate target temperature triggers with unit conversion."""
 
     _base_unit = UnitOfTemperature.CELSIUS
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TEMPERATURE)
+    }
     _unit_converter = TemperatureConverter
 
     @override
@@ -63,7 +65,8 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
         """Skip climate entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_TEMPERATURE) is not None
+            and state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE)
+            is not None
         )
 
     @override
@@ -90,7 +93,9 @@ class ClimateTargetTemperatureCrossedThresholdTrigger(
 class _ClimateTargetHumidityTriggerMixin(EntityNumericalStateTriggerBase):
     """Mixin for climate target humidity triggers."""
 
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HUMIDITY)
+    }
     _valid_unit = "%"
 
     @override
@@ -98,7 +103,7 @@ class _ClimateTargetHumidityTriggerMixin(EntityNumericalStateTriggerBase):
         """Skip climate entities that do not expose a target humidity."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_HUMIDITY) is not None
+            and state.attributes.get(ClimateEntityStateAttribute.HUMIDITY) is not None
         )
 
 
@@ -117,10 +122,12 @@ class ClimateTargetHumidityCrossedThresholdTrigger(
 TRIGGERS: dict[str, type[Trigger]] = {
     "hvac_mode_changed": HVACModeChangedTrigger,
     "started_cooling": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.COOLING
+        {DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HVAC_ACTION)},
+        HVACAction.COOLING,
     ),
     "started_drying": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.DRYING
+        {DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HVAC_ACTION)},
+        HVACAction.DRYING,
     ),
     "target_humidity_changed": ClimateTargetHumidityChangedTrigger,
     "target_humidity_crossed_threshold": ClimateTargetHumidityCrossedThresholdTrigger,
@@ -144,7 +151,8 @@ TRIGGERS: dict[str, type[Trigger]] = {
         },
     ),
     "started_heating": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
+        {DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HVAC_ACTION)},
+        HVACAction.HEATING,
     ),
 }
 

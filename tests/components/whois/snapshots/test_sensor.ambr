@@ -2,7 +2,7 @@
 # name: test_whois_sensors[sensor.home_assistant_io_admin]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'home-assistant.io Admin',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Admin',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_admin',
@@ -52,8 +52,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_admin].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -74,7 +74,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -83,8 +82,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_created]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'home-assistant.io Created',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Created',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_created',
@@ -134,8 +133,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_created].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -156,7 +155,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -166,10 +164,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'expires': '2023-01-01T00:00:00',
-      'friendly_name': 'home-assistant.io Days until expiration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Days until expiration',
       'name_servers': 'ns1.example.com ns2.example.com',
       'registrar': 'My Registrar',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
       'updated': '2022-01-01T00:00:00+01:00',
     }),
     'context': <ANY>,
@@ -220,8 +218,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_days_until_expiration].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -242,7 +240,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -251,8 +248,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_expires]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'home-assistant.io Expires',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Expires',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_expires',
@@ -302,8 +299,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_expires].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -324,7 +321,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -333,8 +329,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_last_updated]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'home-assistant.io Last updated',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Last updated',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_last_updated',
@@ -384,8 +380,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_last_updated].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -406,7 +402,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -415,7 +410,7 @@
 # name: test_whois_sensors[sensor.home_assistant_io_owner]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'home-assistant.io Owner',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Owner',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_owner',
@@ -465,8 +460,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_owner].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -487,7 +482,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -496,7 +490,7 @@
 # name: test_whois_sensors[sensor.home_assistant_io_registrant]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'home-assistant.io Registrant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Registrant',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_registrant',
@@ -546,8 +540,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_registrant].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -568,7 +562,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -577,7 +570,7 @@
 # name: test_whois_sensors[sensor.home_assistant_io_registrar]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'home-assistant.io Registrar',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Registrar',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_registrar',
@@ -627,8 +620,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_registrar].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -649,7 +642,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -658,7 +650,7 @@
 # name: test_whois_sensors[sensor.home_assistant_io_reseller]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'home-assistant.io Reseller',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Reseller',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_reseller',
@@ -708,8 +700,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_reseller].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -730,7 +722,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -739,8 +730,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'home-assistant.io Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'add_period',
         'auto_renew_period',
@@ -841,8 +832,8 @@
 # name: test_whois_sensors[sensor.home_assistant_io_status].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -863,7 +854,6 @@
     'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -872,8 +862,8 @@
 # name: test_whois_sensors_missing_some_attrs
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'home-assistant.io Last updated',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home-assistant.io Last updated',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_last_updated',

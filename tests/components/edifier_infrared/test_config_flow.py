@@ -26,6 +26,7 @@ from tests.components.infrared import EMITTER_ENTITY_ID
         (EdifierModel.R1280T, EdifierCommandSet.R1280T),
         (EdifierModel.S360DB, EdifierCommandSet.S360DB),
         (EdifierModel.RC20G, EdifierCommandSet.RC20G),
+        (EdifierModel.S3000PRO, EdifierCommandSet.S3000PRO),
     ],
 )
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")

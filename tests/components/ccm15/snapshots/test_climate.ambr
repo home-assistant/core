@@ -129,7 +129,7 @@
         'medium',
         'high',
       ]),
-      'friendly_name': 'Midea 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Midea 0',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -140,7 +140,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
@@ -169,7 +169,7 @@
         'medium',
         'high',
       ]),
-      'friendly_name': 'Midea 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Midea 1',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -180,7 +180,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
@@ -324,7 +324,7 @@
         'medium',
         'high',
       ]),
-      'friendly_name': 'Midea 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Midea 0',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -335,7 +335,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'on',
@@ -359,7 +359,7 @@
         'medium',
         'high',
       ]),
-      'friendly_name': 'Midea 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Midea 1',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -370,7 +370,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
         'on',

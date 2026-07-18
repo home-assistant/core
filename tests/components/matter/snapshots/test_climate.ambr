@@ -47,14 +47,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.2,
-      'friendly_name': 'Floor Heating Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.5,
     }),
     'context': <ANY>,
@@ -113,14 +113,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.5,
-      'friendly_name': 'Connected Thermostat UTE 3000',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Connected Thermostat UTE 3000',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.5,
     }),
     'context': <ANY>,
@@ -179,14 +179,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.0,
-      'friendly_name': 'Eve Thermo 20EBP1701',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
     }),
     'context': <ANY>,
@@ -255,7 +255,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 16.2,
-      'friendly_name': 'Eve Thermo 20ECD1701',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -273,7 +273,7 @@
         'Eco',
         'none',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.5,
     }),
     'context': <ANY>,
@@ -334,7 +334,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 28.3,
-      'friendly_name': 'Longan link HVAC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -343,7 +343,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'supported_features': <ClimateEntityFeature: 387>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 387>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
@@ -404,14 +404,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
-      'friendly_name': 'Mock Air Purifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Air Purifier',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
     }),
     'context': <ANY>,
@@ -474,7 +474,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
-      'friendly_name': 'Room AirConditioner',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room AirConditioner',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -485,7 +485,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
     }),
     'context': <ANY>,
@@ -551,7 +551,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.0,
-      'friendly_name': 'Mock Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -567,7 +567,7 @@
         'away',
         'none',
       ]),
-      'supported_features': <ClimateEntityFeature: 403>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 403>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 26.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 20.0,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
@@ -630,7 +630,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.6,
-      'friendly_name': 'X2S Smart Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X2S Smart Thermostat',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -639,7 +639,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32.2,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 4.4,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.7,
     }),
     'context': <ANY>,
@@ -699,14 +699,14 @@
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 74.92,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.9,
-      'friendly_name': 'Smart Radiator Thermostat X',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Radiator Thermostat X',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
     }),
     'context': <ANY>,

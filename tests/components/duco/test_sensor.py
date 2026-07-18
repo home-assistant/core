@@ -1,17 +1,20 @@
 """Tests for the Duco sensor platform."""
 
+from dataclasses import replace
 import logging
 from unittest.mock import AsyncMock
 
 from duco_connectivity import (
     DucoConnectionError,
     DucoError,
+    DucoUnsupportedCapabilityError,
     Node,
     NodeGeneralInfo,
     NodeSensorInfo,
     NodeType,
     NodeVentilationInfo,
     VentilationState,
+    VentilationTemperatureInfo,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -27,6 +30,68 @@ from . import setup_platform_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining"
+VENTILATION_TEMPERATURE_ENTITY_IDS = (
+    "sensor.living_outdoor_air_temperature",
+    "sensor.living_supply_air_temperature",
+    "sensor.living_extract_air_temperature",
+    "sensor.living_exhaust_air_temperature",
+)
+
+
+@pytest.mark.parametrize(
+    "ventilation_node_type",
+    [
+        pytest.param(NodeType.BOX, id="box"),
+        pytest.param(NodeType.VLV, id="vlv"),
+        pytest.param(NodeType.VLVRH, id="vlvrh"),
+        pytest.param(NodeType.VLVVOC, id="vlvvoc"),
+        pytest.param(NodeType.VLVCO2, id="vlvco2"),
+        pytest.param(NodeType.VLVCO2RH, id="vlvco2rh"),
+        pytest.param(NodeType.EAV, id="eav"),
+        pytest.param(NodeType.EAVRH, id="eavrh"),
+        pytest.param(NodeType.EAVVOC, id="eavvoc"),
+        pytest.param(NodeType.EAVCO2, id="eavco2"),
+    ],
+)
+async def test_ventilation_related_sensors_created_for_supported_node_types(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    ventilation_node_type: NodeType,
+) -> None:
+    """Test ventilation-related sensors are created for supported node families."""
+    supported_node = replace(
+        mock_sensor_nodes[0],
+        general=replace(mock_sensor_nodes[0].general, node_type=ventilation_node_type),
+        ventilation=replace(
+            mock_sensor_nodes[0].ventilation,
+            flow_lvl_tgt=42,
+            time_state_end=1700000459,
+        ),
+    )
+    mock_duco_client.async_get_nodes.return_value = [
+        supported_node,
+        *mock_sensor_nodes[1:],
+    ]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.living_ventilation_state")
+    assert state is not None
+    assert state.state == "auto"
+
+    state = hass.states.get("sensor.living_target_flow_level")
+    assert state is not None
+    assert state.state == "42"
+
+    state = hass.states.get("sensor.living_state_end_time")
+    assert state is not None
+    assert state.state == "2023-11-14T22:20:59+00:00"
+
+    assert hass.states.get("sensor.office_co2_ventilation_state") is None
+    assert hass.states.get("sensor.office_co2_target_flow_level") is None
+    assert hass.states.get("sensor.office_co2_state_end_time") is None
 
 
 @pytest.fixture
@@ -164,6 +229,55 @@ async def test_time_filter_remaining_missing_skips_sensor_creation(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
+
+
+async def test_ventilation_temperatures_missing_skip_sensor_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unsupported ventilation temperatures never expose temperature states."""
+    mock_duco_client.async_get_ventilation_temperature_info.side_effect = [
+        DucoUnsupportedCapabilityError(400, "/info", '{"Code":3,"Result":"FAILED"}'),
+        VentilationTemperatureInfo(temp_oda=5.5),
+    ]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    for entity_id in VENTILATION_TEMPERATURE_ENTITY_IDS:
+        assert hass.states.get(entity_id) is None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in VENTILATION_TEMPERATURE_ENTITY_IDS:
+        assert hass.states.get(entity_id) is None
+
+
+async def test_partial_ventilation_temperatures_only_expose_available_sensor_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test only populated ventilation temperature fields are exposed as states."""
+    mock_duco_client.async_get_ventilation_temperature_info.return_value = (
+        VentilationTemperatureInfo(temp_oda=5.5, temp_eta=21.4)
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.living_outdoor_air_temperature")
+    assert state is not None
+    assert state.state == "5.5"
+
+    state = hass.states.get("sensor.living_extract_air_temperature")
+    assert state is not None
+    assert state.state == "21.4"
+
+    assert hass.states.get("sensor.living_supply_air_temperature") is None
+    assert hass.states.get("sensor.living_exhaust_air_temperature") is None
 
 
 async def test_time_filter_remaining_transient_failure_recovers_sensor_creation(

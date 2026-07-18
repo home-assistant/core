@@ -27,5 +27,9 @@ async def async_get_config_entry_diagnostics(
                 subentry_id: asdict(station)
                 for subentry_id, station in entry.runtime_data.velov_coordinator.data.items()
             },
+            "park_and_rides": {
+                subentry_id: asdict(park)
+                for subentry_id, park in entry.runtime_data.park_and_ride_coordinator.data.items()
+            },
         },
     }

@@ -45,7 +45,7 @@
 # name: test_select[envoy_eu_batt][select.envoy_1234_storage_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Envoy 1234 Storage mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy 1234 Storage mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'backup',
         'self_consumption',
@@ -106,7 +106,7 @@
 # name: test_select[envoy_metered_batt_relay][select.enpower_654321_storage_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Enpower 654321 Storage mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Storage mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'backup',
         'self_consumption',
@@ -168,7 +168,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_generator_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC1 Fixture Generator action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Generator action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -231,7 +231,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_grid_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC1 Fixture Grid action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Grid action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -294,7 +294,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_microgrid_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC1 Fixture Microgrid action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Microgrid action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -355,7 +355,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC1 Fixture Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
@@ -416,7 +416,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_generator_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC2 Fixture Generator action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Generator action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -479,7 +479,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_grid_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC2 Fixture Grid action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Grid action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -542,7 +542,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_microgrid_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC2 Fixture Microgrid action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Microgrid action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -603,7 +603,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC2 Fixture Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
@@ -664,7 +664,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_generator_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC3 Fixture Generator action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Generator action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -727,7 +727,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_grid_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC3 Fixture Grid action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Grid action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -790,7 +790,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_microgrid_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC3 Fixture Microgrid action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Microgrid action',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
@@ -851,7 +851,7 @@
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NC3 Fixture Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',

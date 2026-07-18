@@ -47,7 +47,7 @@
 # name: test_entities[select.jar_dimming_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Jar Dimming time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jar Dimming time',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '15',
         '30',
@@ -55,7 +55,7 @@
         '60',
         '90',
       ]),
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.jar_dimming_time',

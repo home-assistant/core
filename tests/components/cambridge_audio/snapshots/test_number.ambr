@@ -44,7 +44,7 @@
 # name: test_all_entities[number.cambridge_audio_cxnv2_room_correction_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Room correction intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Room correction intensity',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -15,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -103,12 +103,12 @@
 # name: test_all_entities[number.cambridge_audio_cxnv2_volume_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Volume limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Volume limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.cambridge_audio_cxnv2_volume_limit',

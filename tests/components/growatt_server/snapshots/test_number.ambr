@@ -44,12 +44,12 @@
 # name: test_number_entities[number.min123456_battery_charge_power_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MIN123456 Battery charge power limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MIN123456 Battery charge power limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.min123456_battery_charge_power_limit',
@@ -104,12 +104,12 @@
 # name: test_number_entities[number.min123456_battery_charge_soc_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MIN123456 Battery charge SOC limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MIN123456 Battery charge SOC limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.min123456_battery_charge_soc_limit',
@@ -164,12 +164,12 @@
 # name: test_number_entities[number.min123456_battery_discharge_power_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MIN123456 Battery discharge power limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MIN123456 Battery discharge power limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.min123456_battery_discharge_power_limit',
@@ -224,12 +224,12 @@
 # name: test_number_entities[number.min123456_battery_discharge_soc_limit_off_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MIN123456 Battery discharge SOC limit (off-grid)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MIN123456 Battery discharge SOC limit (off-grid)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.min123456_battery_discharge_soc_limit_off_grid',
@@ -284,12 +284,12 @@
 # name: test_number_entities[number.min123456_battery_discharge_soc_limit_on_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MIN123456 Battery discharge SOC limit (on-grid)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MIN123456 Battery discharge SOC limit (on-grid)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.min123456_battery_discharge_soc_limit_on_grid',

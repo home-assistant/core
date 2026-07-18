@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.2,
-      'friendly_name': 'thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'thermostat',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -55,7 +55,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
     }),
     'context': <ANY>,
@@ -69,8 +69,8 @@
 # name: test_states[thermostat-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -91,7 +91,6 @@
     'model_id': None,
     'name': 'thermostat',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': '1.0.0',
     'via_device_id': <ANY>,

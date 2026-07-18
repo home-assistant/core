@@ -44,10 +44,10 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy last month',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Energy last month',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_energy_last_month',
@@ -102,10 +102,10 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy this month',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Energy this month',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_energy_this_month',
@@ -160,10 +160,10 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Energy today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_energy_today',
@@ -218,10 +218,10 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy yesterday',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Energy yesterday',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
@@ -271,8 +271,8 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_filter_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test air conditioner Filter remaining',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Filter remaining',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_filter_remaining',
@@ -318,16 +318,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Test air conditioner Humidity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_humidity',
@@ -373,16 +373,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pm1',
-      'friendly_name': 'Test air conditioner PM1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner PM1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm1',
@@ -428,16 +428,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm10',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pm10',
-      'friendly_name': 'Test air conditioner PM10',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm10',
@@ -483,16 +483,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pm25',
-      'friendly_name': 'Test air conditioner PM2.5',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm2_5',
@@ -545,9 +545,9 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test air conditioner Schedule turn-off',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Schedule turn-off',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_schedule_turn_off',
@@ -600,9 +600,9 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test air conditioner Schedule turn-on',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Schedule turn-on',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_schedule_turn_on',
@@ -652,8 +652,8 @@
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test air conditioner Schedule turn-on',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Schedule turn-on',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_schedule_turn_on_2',
@@ -708,10 +708,10 @@
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_last_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test kimchi refrigerator Energy last month',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test kimchi refrigerator Energy last month',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_kimchi_refrigerator_energy_last_month',
@@ -766,10 +766,10 @@
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test kimchi refrigerator Energy this month',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test kimchi refrigerator Energy this month',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_kimchi_refrigerator_energy_this_month',
@@ -824,10 +824,10 @@
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test kimchi refrigerator Energy today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test kimchi refrigerator Energy today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_kimchi_refrigerator_energy_today',
@@ -882,10 +882,10 @@
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test kimchi refrigerator Energy yesterday',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test kimchi refrigerator Energy yesterday',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_kimchi_refrigerator_energy_yesterday',
@@ -941,8 +941,8 @@
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_middle_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test kimchi refrigerator middle temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test kimchi refrigerator middle temperature',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'kimchi',
         'meat_fish',
@@ -997,8 +997,8 @@
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_top_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test kimchi refrigerator top temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test kimchi refrigerator top temperature',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_kimchi_refrigerator_top_temperature',

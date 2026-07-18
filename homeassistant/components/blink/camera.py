@@ -56,7 +56,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         super().__init__(coordinator)
         Camera.__init__(self)
         self._camera = camera
-        self._attr_unique_id = f"{camera.serial}-camera"
+        self._attr_unique_id = f"{camera.serial}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
             serial_number=camera.serial,

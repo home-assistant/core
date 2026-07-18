@@ -183,10 +183,7 @@ def _remove_stale_devices(
             "Removing device: %s because it no longer exists in your account",
             device.name,
         )
-        device_registry.async_update_device(
-            device_id=device.id,
-            remove_config_entry_id=entry.entry_id,
-        )
+        device_registry.async_remove_device(device.id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
@@ -277,16 +274,21 @@ async def async_setup_device(
             _LOGGER.warning("Failed to close device %s: %s", device.duid, err)
         return
 
+    try:
+        await coordinator.async_refresh()
+    except RoborockException as err:
+        _LOGGER.error(
+            "Failed initial attempt to connect to device %s (%s): %s",
+            device.name,
+            device.duid,
+            err,
+        )
+
     entry.runtime_data.add(coordinator)
     async_dispatcher_send(
         hass,
         f"roborock_coordinator_added_{entry.entry_id}",
         coordinator,
-    )
-    entry.async_create_background_task(
-        hass,
-        coordinator.async_refresh(),
-        name=f"roborock_coordinator_refresh_{coordinator.duid}",
     )
 
 
