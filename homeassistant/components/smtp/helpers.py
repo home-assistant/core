@@ -5,6 +5,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import logging
+import mimetypes
 import os
 from pathlib import Path
 import smtplib
@@ -134,26 +135,35 @@ def _attach_file(
         _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
         return None
 
-    attachment: MIMEImage | MIMEApplication
+    attachment: MIMEImage | MIMEApplication | None = None
     try:
         attachment = MIMEImage(file_bytes)
     except TypeError:
+        # Not all valid images are recognized from their content, e.g. JPEGs
+        # written by ffmpeg for camera.snapshot start with a comment marker
+        # instead of JFIF/Exif, so fall back to guessing from the filename.
+        mime_type, _ = mimetypes.guess_type(atch_name)
+        maintype, _, subtype = (mime_type or "").partition("/")
+        if maintype == "image":
+            attachment = MIMEImage(file_bytes, _subtype=subtype)
+
+    if attachment is None:
         _LOGGER.warning(
-            "Attachment %s has an unknown MIME type. Falling back to file",
+            "Could not determine an image type for attachment %s from its"
+            " content or filename. Falling back to file",
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=os.path.basename(atch_name))
         attachment["Content-Disposition"] = (
             f'attachment; filename="{os.path.basename(atch_name)}"'
         )
+    elif content_id:
+        attachment.add_header("Content-ID", f"<{content_id}>")
     else:
-        if content_id:
-            attachment.add_header("Content-ID", f"<{content_id}>")
-        else:
-            attachment.add_header(
-                "Content-Disposition",
-                f"attachment; filename={os.path.basename(atch_name)}",
-            )
+        attachment.add_header(
+            "Content-Disposition",
+            f"attachment; filename={os.path.basename(atch_name)}",
+        )
 
     return attachment
 
