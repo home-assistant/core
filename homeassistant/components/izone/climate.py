@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Mapping
 from typing import Any, override
 
-from pizone import Controller, Zone
+from pizone import Controller, ControllerCommandError, Zone
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,7 +35,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
-
 
 _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
@@ -79,15 +79,35 @@ async def async_setup_entry(
     )
 
 
-
 async def _async_run_and_update(
     coordinator: IZoneCoordinator, coro: Awaitable[None]
 ) -> None:
-    """Run a controller/zone command and push local state to the coordinator."""
+    """Run a controller/zone command and push local state to the coordinator.
+
+    Rejected commands stay available and raise HomeAssistantError. Transport
+    failures mark the coordinator unavailable and also raise HomeAssistantError
+    so multi-step service calls stop. A successful command would clear that
+    failed flag via async_set_updated_data, but service calls skip unavailable
+    entities, so recovery in practice is a later successful coordinator refresh.
+    """
     try:
         await coro
+    except ControllerCommandError as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_rejected",
+            translation_placeholders={
+                "uid": coordinator.controller.device_uid,
+                "error": str(ex),
+            },
+        ) from ex
     except ConnectionError as ex:
         coordinator.async_set_update_error(ex)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unable_to_connect",
+            translation_placeholders={"uid": coordinator.controller.device_uid},
+        ) from ex
     else:
         coordinator.async_set_updated_data(coordinator.controller)
 

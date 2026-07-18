@@ -36,6 +36,8 @@ def create_mock_controller(
     zone_ctrl: int = 1,
     ras_mode: str = "master",
     free_air_enabled: bool = False,
+    free_air: bool = False,
+    is_on: bool = True,
 ) -> Mock:
     """Create a mock Controller with configurable parameters."""
     controller = Mock(spec=Controller)
@@ -46,8 +48,8 @@ def create_mock_controller(
     controller.zone_ctrl = zone_ctrl
     controller.ras_mode = ras_mode
     controller.free_air_enabled = free_air_enabled
-    controller.free_air = False
-    controller.is_on = True
+    controller.free_air = free_air
+    controller.is_on = is_on
     controller.mode = Controller.Mode.COOL
     controller.temp_setpoint = 24.0
     controller.temp_return = 22.0
