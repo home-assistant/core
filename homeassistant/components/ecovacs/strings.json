@@ -1,11 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_verification_code": "The verification code is invalid or has expired.",
       "invalid_url": "Invalid URL",
       "invalid_url_schema_override_mqtt_url": "Invalid MQTT URL scheme.\nThe URL should start with `mqtt://` or `mqtts://`.",
       "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nThe URL should start with `http://` or `https://`.",
@@ -25,6 +27,18 @@
           "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts).",
           "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https)."
         }
+      },
+      "device_verification": {
+        "data": {
+          "verification_code": "Verification code"
+        },
+        "description": "Enter the verification code Ecovacs sent to your email address. This verifies Home Assistant's stable client ID."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Enter your Ecovacs password to reconnect the integration."
       },
       "user": {
         "data": {

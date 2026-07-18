@@ -7,7 +7,12 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
-from deebot_client.exceptions import InvalidAuthenticationError, MqttError
+from deebot_client.exceptions import (
+    DeviceVerificationRequiredError,
+    InvalidAuthenticationError,
+    InvalidVerificationCodeError,
+    MqttError,
+)
 from deebot_client.mqtt_client import create_mqtt_config
 import pytest
 
@@ -18,8 +23,8 @@ from homeassistant.components.ecovacs.const import (
     DOMAIN,
     InstanceMode,
 )
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_MODE, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.const import CONF_DEVICE_ID, CONF_MODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -95,7 +100,13 @@ async def test_user_flow(
     result = await _test_user_flow(hass, test_fn_user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
-    assert result["data"] == entry_data
+    if test_fn_user_input.user == _USER_STEP_SELF_HOSTED:
+        assert result["data"] == entry_data
+    else:
+        assert result["data"] == entry_data | {
+            CONF_DEVICE_ID: result["data"][CONF_DEVICE_ID]
+        }
+        assert len(result["data"][CONF_DEVICE_ID]) == 8
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
     mock_mqtt_client.verify_config.assert_called()
@@ -190,7 +201,12 @@ async def test_user_flow_raise_error(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
-    assert result["data"] == entry_data
+    if test_fn_user_input.user == _USER_STEP_SELF_HOSTED:
+        assert result["data"] == entry_data
+    else:
+        assert result["data"] == entry_data | {
+            CONF_DEVICE_ID: result["data"][CONF_DEVICE_ID]
+        }
     mock_setup_entry.assert_called()
     mock_authenticator_authenticate.assert_called()
     mock_mqtt_client.verify_config.assert_called()
@@ -275,3 +291,104 @@ async def test_already_exists(
     assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_cloud_device_verification(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_authenticator: Mock,
+    mock_mqtt_client: Mock,
+) -> None:
+    """Test verifying and persisting a stable Ecovacs client device ID."""
+    mock_authenticator.authenticate.side_effect = [
+        DeviceVerificationRequiredError,
+        None,
+    ]
+
+    result = await _test_user_flow(hass, _TestFnUserInput(VALID_ENTRY_DATA_CLOUD))
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_verification"
+    mock_authenticator.request_device_verification_code.assert_awaited_once()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"verification_code": "123456"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == VALID_ENTRY_DATA_CLOUD | {
+        CONF_DEVICE_ID: result["data"][CONF_DEVICE_ID]
+    }
+    assert len(result["data"][CONF_DEVICE_ID]) == 8
+    mock_authenticator.verify_device.assert_awaited_once_with("123456")
+    mock_mqtt_client.verify_config.assert_called_once()
+    mock_setup_entry.assert_called_once()
+
+
+async def test_cloud_invalid_device_verification_code(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_authenticator: Mock,
+    mock_mqtt_client: Mock,
+) -> None:
+    """Test an invalid Ecovacs client device verification code."""
+    mock_authenticator.authenticate.side_effect = DeviceVerificationRequiredError
+
+    result = await _test_user_flow(hass, _TestFnUserInput(VALID_ENTRY_DATA_CLOUD))
+    mock_authenticator.verify_device.side_effect = InvalidVerificationCodeError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"verification_code": "expired"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_verification"
+    assert result["errors"] == {"base": "invalid_verification_code"}
+    mock_mqtt_client.verify_config.assert_not_called()
+    mock_setup_entry.assert_not_called()
+
+
+async def test_reauth_device_verification(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+    mock_mqtt_client: Mock,
+) -> None:
+    """Test device verification for an existing config entry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_authenticator.authenticate.side_effect = [
+        DeviceVerificationRequiredError,
+        None,
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: VALID_ENTRY_DATA_CLOUD[CONF_PASSWORD]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_verification"
+    mock_authenticator.request_device_verification_code.assert_awaited_once()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"verification_code": "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(mock_config_entry.data[CONF_DEVICE_ID]) == 8
+    mock_authenticator.verify_device.assert_awaited_once_with("123456")
+    mock_authenticator.teardown.assert_awaited_once()
+    mock_mqtt_client.verify_config.assert_called_once()
+    mock_setup_entry.assert_called_once()

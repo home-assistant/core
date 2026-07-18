@@ -18,8 +18,12 @@ if TYPE_CHECKING:
     from .controller import EcovacsController
 
 
-def get_client_device_id(hass: HomeAssistant, self_hosted: bool) -> str:
+def get_client_device_id(
+    hass: HomeAssistant, self_hosted: bool, configured_device_id: str | None = None
+) -> str:
     """Get client device id."""
+    if configured_device_id:
+        return configured_device_id
     if self_hosted:
         return f"HA-{slugify(hass.config.location_name)}"
 
