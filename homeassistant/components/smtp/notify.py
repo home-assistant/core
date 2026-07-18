@@ -258,7 +258,6 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
         ssl_context: SSLContext | None,
     ) -> None:
         """Initialize the SMTP service."""
-        self.registered_targets = {}
         self.recipients = config[CONF_RECIPIENT]
         entry: SmtpConfigEntry = config[CONF_ENTRY]
 
@@ -274,7 +273,6 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
             verify_ssl=entry.data[CONF_VERIFY_SSL],
             ssl_context=ssl_context,
         )
-        entry.async_on_unload(self.async_unregister_services)
 
     @override
     def send_message(self, message: str, **kwargs: Any) -> None:
