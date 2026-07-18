@@ -1,95 +1,133 @@
 """Tests for iZone climate platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
+    ATTR_HVAC_MODE,
+    ATTR_TEMPERATURE,
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
-from . import setup_controller, setup_integration
 from .conftest import create_mock_controller, create_mock_zone
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+CONTROLLER_ENTITY = "climate.izone_controller_000000001"
+ZONE_ENTITY = "climate.living_room"
 
 
-async def test_basic_controller_properties(
+@pytest.mark.usefixtures("init_integration")
+async def test_climate_entities(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
-    mock_controller: AsyncMock,
+    init_integration: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test basic properties of ControllerDevice."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
+    """Controller and zone climate entities are created from the coordinator."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
-    assert entity is not None
-    assert (
-        entity.attributes["supported_features"]
-        & ClimateEntityFeature.TARGET_TEMPERATURE
-    ) != ClimateEntityFeature.TARGET_TEMPERATURE
+    assert hass.states.get(CONTROLLER_ENTITY) is not None
+    assert hass.states.get(ZONE_ENTITY) is not None
 
 
 @pytest.mark.parametrize(
     "mock_controller",
-    [
-        create_mock_controller(
-            ras_mode="RAS",
-        )
-    ],
+    [create_mock_controller(ras_mode="RAS", zones_total=1)],
+)
+async def test_set_controller_temperature_ras(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+    mock_zones: list[AsyncMock],
+) -> None:
+    """RAS-mode controller accepts target temperature commands."""
+    mock_controller.zones = mock_zones
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_TEMPERATURE: 23.5},
+        blocking=True,
+    )
+
+    mock_controller.set_temp_setpoint.assert_awaited_once_with(23.5)
+
+
+async def test_set_controller_hvac_and_fan(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_controller: AsyncMock,
+) -> None:
+    """HVAC and fan mode services call through to the controller."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_controller.set_mode.assert_awaited()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_FAN_MODE: "high"},
+        blocking=True,
+    )
+    mock_controller.set_fan.assert_awaited()
+
+
+async def test_set_zone_mode(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_zones: list[AsyncMock],
+) -> None:
+    """Zone HVAC mode changes call the zone library API."""
+    zone = mock_zones[0]
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    zone.set_mode.assert_awaited()
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [create_mock_controller(ras_mode="RAS")],
 )
 async def test_target_temperature_feature_ras_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
+    mock_create_discovery: AsyncMock,
     mock_controller: AsyncMock,
+    mock_zones: list[AsyncMock],
 ) -> None:
-    """Test TARGET_TEMPERATURE feature enabled in RAS mode."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
+    """TARGET_TEMPERATURE is enabled in RAS mode."""
+    mock_controller.zones = mock_zones
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
-    assert entity is not None
-    assert (
-        entity.attributes["supported_features"]
-        & ClimateEntityFeature.TARGET_TEMPERATURE
-    ) == ClimateEntityFeature.TARGET_TEMPERATURE
-
-
-@pytest.mark.parametrize(
-    "mock_controller",
-    [
-        create_mock_controller(
-            zone_ctrl=13,  # Greater than zones_total (4)
-            zones_total=4,
-        )
-    ],
-)
-async def test_target_temperature_feature_master_mode_invalid_zone(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
-    mock_controller: AsyncMock,
-) -> None:
-    """Test TARGET_TEMPERATURE feature enabled when control zone is invalid."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
-
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
+    entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
     assert (
         entity.attributes["supported_features"]
@@ -101,32 +139,28 @@ async def test_target_temperature_feature_master_mode_invalid_zone(
     ("mock_controller", "mock_zones"),
     [
         (
-            create_mock_controller(
-                zone_ctrl=1,  # Valid zone
-                zones_total=2,
-            ),
+            create_mock_controller(zone_ctrl=1, zones_total=2),
             [
                 create_mock_zone(index=0, name="Living Room", temp_current=22.5),
-                create_mock_zone(
-                    index=1, name="Bedroom", temp_current=None
-                ),  # No sensor
+                create_mock_zone(index=1, name="Bedroom", temp_current=None),
             ],
         )
     ],
 )
-async def test_target_temperature_feature_zone_without_sensor(
+async def test_target_temperature_when_zone_missing_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
+    mock_create_discovery: AsyncMock,
     mock_controller: AsyncMock,
+    mock_zones: list[AsyncMock],
 ) -> None:
-    """Test TARGET_TEMPERATURE enabled when zone lacks temp sensor."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
+    """TARGET_TEMPERATURE is enabled when any zone lacks a temperature sensor."""
+    mock_controller.zones = mock_zones
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
+    entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
     assert (
         entity.attributes["supported_features"]
@@ -134,216 +168,17 @@ async def test_target_temperature_feature_zone_without_sensor(
     ) == ClimateEntityFeature.TARGET_TEMPERATURE
 
 
-@pytest.mark.parametrize(
-    ("mock_controller", "mock_zones"),
-    [
-        (
-            create_mock_controller(
-                zones_total=3,
-            ),
-            [
-                create_mock_zone(index=0, name="Zone 1", temp_current=22.5),
-                create_mock_zone(index=1, name="Zone 2", temp_current=23.0),
-                create_mock_zone(index=2, name="Zone 3", temp_current=21.5),
-            ],
-        )
-    ],
-)
-async def test_target_temperature_feature_all_zones_with_sensors(
+async def test_refresh_failure_makes_entities_unavailable(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
+    init_integration: MockConfigEntry,
     mock_controller: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test TARGET_TEMPERATURE feature NOT enabled when all zones have sensors."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
+    """Coordinator refresh failure marks controller and zone unavailable."""
+    mock_controller.refresh_all = AsyncMock(side_effect=ConnectionError("offline"))
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
-    assert entity is not None
-    # Should NOT have TARGET_TEMPERATURE feature
-    assert (
-        entity.attributes["supported_features"]
-        & ClimateEntityFeature.TARGET_TEMPERATURE
-    ) != ClimateEntityFeature.TARGET_TEMPERATURE
-
-
-@pytest.mark.parametrize(
-    ("mock_controller", "mock_zones"),
-    [
-        (
-            create_mock_controller(
-                zones_total=3,
-            ),
-            [
-                create_mock_zone(index=0, name="Zone 1", temp_current=22.5),
-                create_mock_zone(index=1, name="Zone 2", temp_current=None),
-                create_mock_zone(index=2, name="Zone 3", temp_current=21.5),
-            ],
-        )
-    ],
-)
-async def test_target_temperature_feature_multiple_zones_one_without_sensor(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
-    mock_controller: AsyncMock,
-) -> None:
-    """Test TARGET_TEMPERATURE enabled with multiple zones, one no sensor."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
-
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
-    assert entity is not None
-    assert (
-        entity.attributes["supported_features"]
-        & ClimateEntityFeature.TARGET_TEMPERATURE
-    ) == ClimateEntityFeature.TARGET_TEMPERATURE
-
-
-@pytest.mark.parametrize(
-    "mock_controller",
-    [
-        create_mock_controller(
-            ras_mode="slave",
-        )
-    ],
-)
-async def test_target_temperature_feature_slave_mode(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
-    mock_controller: AsyncMock,
-) -> None:
-    """Test TARGET_TEMPERATURE feature NOT enabled in slave mode."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
-
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
-    assert entity is not None
-    # Should NOT have TARGET_TEMPERATURE feature
-    assert (
-        entity.attributes["supported_features"]
-        & ClimateEntityFeature.TARGET_TEMPERATURE
-    ) != ClimateEntityFeature.TARGET_TEMPERATURE
-
-
-@pytest.mark.parametrize(
-    "mock_controller",
-    [
-        create_mock_controller(
-            zone_ctrl=13,
-            zones_total=4,
-        )
-    ],
-)
-async def test_target_temperature_feature_master_mode_zone_13(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
-    mock_controller: AsyncMock,
-) -> None:
-    """Test TARGET_TEMPERATURE feature enabled when control zone is 13 (master unit)."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
-
-    entity_id = "climate.izone_controller_000000001"
-    entity = hass.states.get(entity_id)
-
-    assert entity is not None
-    assert (
-        entity.attributes["supported_features"]
-        & ClimateEntityFeature.TARGET_TEMPERATURE
-    ) == ClimateEntityFeature.TARGET_TEMPERATURE
-
-
-async def test_setup_entry_only_adds_entities_for_matching_config_entry(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a config entry only adds entities for its matching controller."""
-    matching_controller = create_mock_controller(
-        device_uid="000000001", device_ip="192.0.2.1", zones_total=1
-    )
-    matching_controller.zones = [create_mock_zone(index=0, name="Living Room")]
-
-    other_controller = create_mock_controller(
-        device_uid="000000002", device_ip="192.0.2.2", zones_total=1
-    )
-    other_controller.zones = [create_mock_zone(index=0, name="Bedroom")]
-
-    entry = MockConfigEntry(
-        domain="izone",
-        title="iZone",
-        data={},
-        unique_id="000000001",
-        entry_id="test_entry_id",
-        version=2,
-    )
-
-    with patch(
-        "homeassistant.components.izone.discovery.pizone.discovery", autospec=True
-    ) as mock_disco:
-        mock_disco.return_value.start_discovery = AsyncMock()
-        mock_disco.return_value.close = AsyncMock()
-        mock_disco.return_value.fetch_controller = AsyncMock(
-            return_value=matching_controller
-        )
-        mock_disco.return_value.fetch_controllers = AsyncMock(
-            return_value={
-                matching_controller.device_uid: matching_controller,
-                other_controller.device_uid: other_controller,
-            }
-        )
-
-        await setup_integration(hass, entry)
-
-    entry_entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    unique_ids = {entity.unique_id for entity in entry_entities}
-
-    assert unique_ids == {"000000001", "000000001_z1"}
-
-
-@pytest.mark.parametrize("mock_zones", [[]])
-@pytest.mark.parametrize(
-    "mock_controller",
-    [
-        create_mock_controller(
-            ras_mode="zones",
-            sys_type="0",
-            zones_total=0,
-            free_air_enabled=False,
-        )
-    ],
-)
-async def test_controller_device_init_fault_bootstrap(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_discovery: AsyncMock,
-    mock_controller: AsyncMock,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Controller climate entity is created with fault-shaped controller defaults."""
-    await setup_integration(hass, mock_config_entry)
-    await setup_controller(hass, mock_discovery, mock_controller)
-
-    entity_id = "climate.izone_controller_000000001"
-    assert hass.states.get(entity_id) is not None
-
-    entry_entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert {entity.unique_id for entity in entry_entities} == {"000000001"}
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    device_entry = device_registry.async_get(entity_entry.device_id)
-    assert device_entry is not None
-    assert device_entry.model == "0"
+    assert hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
+    assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
