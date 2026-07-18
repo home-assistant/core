@@ -1,5 +1,7 @@
 """Sensor platform for the WattWächter Plus integration."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.sensor import (
@@ -9,6 +11,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -17,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 from .entity import WattwaechterEntity
@@ -211,6 +216,52 @@ OBIS_PHASE: dict[str, str] = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class WattwaechterDiagnosticSensorDescription(SensorEntityDescription):
+    """Describes a WattWächter diagnostic sensor sourced from system info."""
+
+    section: str
+    field: str
+    value_fn: Callable[[str], StateType] = lambda value: value
+    entity_registry_enabled_default: bool = False
+
+
+DIAGNOSTIC_SENSORS: tuple[WattwaechterDiagnosticSensorDescription, ...] = (
+    WattwaechterDiagnosticSensorDescription(
+        key="wifi_signal",
+        translation_key="wifi_signal",
+        section="wifi",
+        field="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=int,
+    ),
+    WattwaechterDiagnosticSensorDescription(
+        key="ssid",
+        translation_key="ssid",
+        section="wifi",
+        field="ssid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    WattwaechterDiagnosticSensorDescription(
+        key="ip_address",
+        translation_key="ip_address",
+        section="wifi",
+        field="ip_address",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    WattwaechterDiagnosticSensorDescription(
+        key="mdns_name",
+        translation_key="mdns_name",
+        section="wifi",
+        field="mdns_name",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WattwaechterConfigEntry,
@@ -219,15 +270,20 @@ async def async_setup_entry(
     """Set up WattWächter sensors from a config entry."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
+    entities: list[SensorEntity] = [
         WattwaechterObisSensor(
             coordinator=coordinator,
             description=KNOWN_OBIS_CODES[obis_code],
             obis_code=obis_code,
         )
-        for obis_code in coordinator.data.values
+        for obis_code in coordinator.data.meter.values
         if obis_code in KNOWN_OBIS_CODES
+    ]
+    entities.extend(
+        WattwaechterDiagnosticSensor(coordinator, description)
+        for description in DIAGNOSTIC_SENSORS
     )
+    async_add_entities(entities)
 
 
 class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
@@ -253,7 +309,37 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
     @override
     def native_value(self) -> float | str | None:
         """Return the current sensor value."""
-        obis = self.coordinator.data.values.get(self._obis_code)
+        obis = self.coordinator.data.meter.values.get(self._obis_code)
         if obis is None:
             return None
         return obis.value
+
+
+class WattwaechterDiagnosticSensor(WattwaechterEntity, SensorEntity):
+    """Diagnostic sensor sourced from the device system info."""
+
+    entity_description: WattwaechterDiagnosticSensorDescription
+
+    def __init__(
+        self,
+        coordinator: WattwaechterCoordinator,
+        description: WattwaechterDiagnosticSensorDescription,
+    ) -> None:
+        """Initialize the diagnostic sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the current diagnostic value."""
+        system = self.coordinator.data.system
+        if system is None:
+            return None
+        raw = system.get_value(
+            self.entity_description.section, self.entity_description.field
+        )
+        if not raw:
+            return None
+        return self.entity_description.value_fn(raw)

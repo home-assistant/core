@@ -18,6 +18,18 @@
       },
       "import_total": {
         "default": "mdi:meter-electric"
+      },
+      "ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "mdns_name": {
+        "default": "mdi:dns"
+      },
+      "ssid": {
+        "default": "mdi:access-point"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi"
       }
     }
   }
