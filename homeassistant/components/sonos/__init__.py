@@ -551,7 +551,7 @@ class SonosDiscoveryManager:
             )
         ):
             return False
-        return device.disabled_by is not None
+        return device.disabled
 
     async def _async_handle_discovery_message(
         self,
