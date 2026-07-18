@@ -105,6 +105,7 @@
           "dead": "Dead",
           "exited": "Exited",
           "paused": "Paused",
+          "removing": "Removing",
           "restarting": "Restarting",
           "running": "Running"
         }
