@@ -5,7 +5,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
-from pizone import ControllerEndpoint
+from pizone import ControllerEndpoint, DiscoveryService
 import pytest
 
 from homeassistant import config_entries
@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 def _mock_pizone_service() -> Mock:
     """Return a mock pizone DiscoveryService."""
-    service = Mock()
+    service = Mock(spec=DiscoveryService)
     service.scan = AsyncMock()
     service.close = AsyncMock()
     service.discover_all = AsyncMock(return_value=[])

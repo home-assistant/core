@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from pizone import Controller, ControllerEndpoint, Zone
+from pizone import Controller, ControllerEndpoint, DiscoveryService, Zone
 import pytest
 
 from homeassistant.components.izone.const import DOMAIN
@@ -201,7 +201,7 @@ def mock_controller(mock_zones: list[Mock]) -> Mock:
 @pytest.fixture
 def mock_discovery_service(mock_controller: Mock) -> Mock:
     """Return a mock pizone DiscoveryService wired for entry setup."""
-    service = Mock()
+    service = Mock(spec=DiscoveryService)
     service.scan = AsyncMock()
     service.close = AsyncMock()
     service.discover_all = AsyncMock(

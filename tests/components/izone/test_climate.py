@@ -1,5 +1,6 @@
 """Tests for iZone climate platform."""
 
+import logging
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -257,6 +258,32 @@ async def test_controller_command_error_handling(
     assert is_unavailable is expect_unavailable
 
 
+async def test_controller_rejected_command_does_not_log_warning(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_controller: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Rejected commands raise HomeAssistantError without a duplicate warning log."""
+    mock_controller.set_fan = AsyncMock(side_effect=ControllerCommandError("rejected"))
+    with (
+        caplog.at_level(logging.WARNING),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_FAN_MODE: "low"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "command_rejected"
+    assert not any(
+        record.name.startswith("homeassistant.components.izone")
+        for record in caplog.records
+    )
+
+
 @pytest.mark.parametrize(
     ("command_error", "expect_unavailable", "translation_key"),
     [
@@ -341,6 +368,52 @@ async def test_set_hvac_mode_free_air_noop_when_on(
 
     mock_controller.set_mode.assert_not_called()
     mock_controller.set_on.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [
+        create_mock_controller(
+            free_air_enabled=True,
+            free_air=True,
+            zone_ctrl=1,
+            zones_total=1,
+        )
+    ],
+)
+async def test_set_hvac_mode_free_air_noop_when_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+    mock_zones: list[AsyncMock],
+) -> None:
+    """Direct free-air fan_only while unavailable must not restore availability."""
+    mock_controller.zones = mock_zones
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_controller.set_fan = AsyncMock(side_effect=ConnectionError("disconnected"))
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_FAN_MODE: "low"},
+            blocking=True,
+        )
+    assert hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
+
+    mock_controller.set_mode = AsyncMock()
+    mock_controller.set_on = AsyncMock()
+
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(CONTROLLER_ENTITY)
+    assert entity is not None
+    await entity.async_set_hvac_mode(HVACMode.FAN_ONLY)
+
+    mock_controller.set_mode.assert_not_called()
+    mock_controller.set_on.assert_not_called()
+    assert hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
