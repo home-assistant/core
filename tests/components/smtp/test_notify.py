@@ -139,7 +139,7 @@ def test_send_message(
 
 
 def test_send_message_with_unsniffable_jpeg(
-    hass: HomeAssistant, message, tmp_path: Path
+    hass: HomeAssistant, message: MockSMTP, tmp_path: Path
 ) -> None:
     """Verify a JPEG the stdlib cannot sniff is still attached as an image.
 
