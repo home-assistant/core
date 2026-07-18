@@ -2,13 +2,9 @@
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .coordinator import GatusConfigEntry
-
-TO_REDACT = {CONF_URL}
 
 
 async def async_get_config_entry_diagnostics(
@@ -17,7 +13,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
     return {
-        "entry_data": async_redact_data(entry.data, TO_REDACT),
         "data": [
             {
                 "key": ep.key,
