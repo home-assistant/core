@@ -155,3 +155,18 @@ async def test_anna_select_unavailable_schedule_mode(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_loria_cooling_active"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.parametrize("platforms", [(SELECT_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_anna_entities_with_dhw_mode_select(
+    hass: HomeAssistant,
+    mock_smile_anna: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Adam select snapshot."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
