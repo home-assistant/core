@@ -632,8 +632,8 @@ async def test_segments_changed_issue_no_map_info(
         },
     )
 
-    # Empty map info
-    fake_vacuum.v1_properties.home.home_map_info = {}
+    # Map info not loaded
+    fake_vacuum.v1_properties.home.home_map_info = None
 
     coordinator = setup_entry.runtime_data.v1[0]
     await coordinator.async_refresh()
