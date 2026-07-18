@@ -32,5 +32,23 @@
     "share_unavailable": {
       "message": "The shared location is unavailable."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ignition": {
+        "name": "Ignition"
+      }
+    },
+    "sensor": {
+      "heading": {
+        "name": "Heading"
+      },
+      "last_reported": {
+        "name": "Last reported"
+      },
+      "speed": {
+        "name": "Speed"
+      }
+    }
   }
 }
