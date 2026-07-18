@@ -359,7 +359,12 @@ async def test_yaml_import_retry_success_clears_issue(
     )
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect") is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"yaml_import_cannot_connect_{MOCK_HOST}"
+        )
+        is None
+    )
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
