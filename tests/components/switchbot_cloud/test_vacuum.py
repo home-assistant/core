@@ -1,6 +1,6 @@
 """Test for the switchbot_cloud vacuum."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from switchbot_api import (
     Device,
@@ -297,11 +297,11 @@ async def test_k10_plus_webhook_updates_state_after_reload(
 
 async def test_webhook_partial_payload_keeps_known_state(
     hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
-    mock_get_webook_configuration,
-    mock_delete_webhook,
-    mock_setup_webhook,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    mock_get_webook_configuration: AsyncMock,
+    mock_delete_webhook: AsyncMock,
+    mock_setup_webhook: AsyncMock,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """A webhook payload missing keys should not clear known-good state."""
