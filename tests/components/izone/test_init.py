@@ -260,6 +260,7 @@ async def test_setup_after_last_unload_recreates_discovery(
     mock_create_discovery.assert_awaited_once()
     mock_discovery_service.create_controller.assert_awaited()
 
+
 @pytest.mark.usefixtures("init_integration")
 async def test_climate_platform_loaded(hass: HomeAssistant) -> None:
     """Loaded entry exposes the climate domain."""

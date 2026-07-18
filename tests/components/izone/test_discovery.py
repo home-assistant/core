@@ -177,6 +177,7 @@ async def test_maybe_stop_keeps_discovery_for_actionable_flow(
 
     mock_service.close.assert_not_awaited()
 
+
 async def test_maybe_stop_closes_when_only_disabled_entry_exists(
     hass: HomeAssistant,
     mock_pizone_create_discovery: tuple[AsyncMock, Mock],
@@ -198,6 +199,7 @@ async def test_maybe_stop_closes_when_only_disabled_entry_exists(
     await izone_discovery.async_maybe_stop_discovery(hass)
 
     mock_service.close.assert_awaited_once()
+
 
 async def test_maybe_stop_closes_when_idle(
     hass: HomeAssistant,
