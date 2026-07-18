@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from pexpect import pxssh
 
 from homeassistant.components.cisco_ios.const import DOMAIN
-from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
+from homeassistant.components.device_tracker import CONF_CONSIDER_HOME, CONF_TRACK_NEW
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -15,7 +15,7 @@ from .conftest import MOCK_CONFIG, MOCK_HOST
 
 from tests.common import MockConfigEntry
 
-MOCK_IMPORT_DATA = {**MOCK_CONFIG, CONF_CONSIDER_HOME: 240}
+MOCK_IMPORT_DATA = {**MOCK_CONFIG, CONF_CONSIDER_HOME: 240, CONF_TRACK_NEW: True}
 
 
 async def test_form(
@@ -99,7 +99,7 @@ async def test_import(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Cisco IOS ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG
-    assert result["options"] == {CONF_CONSIDER_HOME: 240}
+    assert result["options"] == {CONF_CONSIDER_HOME: 240, CONF_TRACK_NEW: True}
 
 
 async def test_import_cannot_connect(
@@ -150,7 +150,10 @@ async def test_options_flow(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {CONF_CONSIDER_HOME: 1800}
+    assert mock_config_entry.options == {
+        CONF_CONSIDER_HOME: 1800,
+        CONF_TRACK_NEW: False,
+    }
     # The entry is reloaded, so the new value is applied to the coordinator
     assert mock_config_entry.runtime_data.consider_home == timedelta(seconds=1800)
 
@@ -162,9 +165,9 @@ async def test_import_preserves_large_consider_home(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={**MOCK_CONFIG, CONF_CONSIDER_HOME: 1800},
+        data={**MOCK_CONFIG, CONF_CONSIDER_HOME: 1800, CONF_TRACK_NEW: True},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["options"] == {CONF_CONSIDER_HOME: 1800}
+    assert result["options"] == {CONF_CONSIDER_HOME: 1800, CONF_TRACK_NEW: True}

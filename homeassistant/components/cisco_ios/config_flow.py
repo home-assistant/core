@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.config_entries import (
@@ -36,6 +37,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
         ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(CONF_TRACK_NEW, default=False): bool,
     }
 )
 
@@ -117,6 +119,7 @@ class CiscoIOSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
 
         consider_home: int = import_data.pop(CONF_CONSIDER_HOME)
+        track_new: bool = import_data.pop(CONF_TRACK_NEW)
 
         try:
             await self.hass.async_add_executor_job(
@@ -128,7 +131,7 @@ class CiscoIOSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=f"{DEFAULT_NAME} ({import_data[CONF_HOST]})",
             data=import_data,
-            options={CONF_CONSIDER_HOME: consider_home},
+            options={CONF_CONSIDER_HOME: consider_home, CONF_TRACK_NEW: track_new},
         )
 
 

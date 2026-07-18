@@ -16,6 +16,7 @@ from homeassistant.components.cisco_ios.coordinator import (
 from homeassistant.components.cisco_ios.device_tracker import async_setup_scanner
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.const import CONF_HOST, STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
@@ -295,7 +296,7 @@ async def test_setup_scanner_legacy_platform_imports_config_entry(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data == MOCK_CONFIG
-    assert entries[0].options == {CONF_CONSIDER_HOME: 300}
+    assert entries[0].options == {CONF_CONSIDER_HOME: 300, CONF_TRACK_NEW: True}
     assert entries[0].source == config_entries.SOURCE_IMPORT
 
     issue = issue_registry.async_get_issue(
@@ -368,6 +369,23 @@ async def test_yaml_import_retry_success_clears_issue(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+
+
+async def test_yaml_import_enables_new_devices(
+    hass: HomeAssistant, mock_scanner: MagicMock
+) -> None:
+    """Test that entities of an imported entry are enabled by default."""
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {"device_tracker": [{"platform": DOMAIN, **MOCK_CONFIG}]},
+    )
+    await hass.async_block_till_done()
+
+    # track_new_devices defaults to true in the legacy platform, so the
+    # migrated entities are enabled without an existing registry entry
+    assert (state := hass.states.get("device_tracker.00_1d_ec_02_07_ab"))
+    assert state.state == STATE_HOME
 
 
 async def test_yaml_import_issues_are_scoped_per_host(

@@ -6,6 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
+    DEFAULT_TRACK_NEW,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
@@ -51,6 +53,7 @@ async def async_setup_scanner(
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
         CONF_CONSIDER_HOME: int(config[CONF_CONSIDER_HOME].total_seconds()),
+        CONF_TRACK_NEW: config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW),
     }
     if CONF_PORT in config:
         import_data[CONF_PORT] = config[CONF_PORT]
@@ -156,6 +159,18 @@ class CiscoIOSScannerEntity(
         MAC address based unique ID would collide between config entries.
         """
         return f"{self.coordinator.config_entry.entry_id}_{self._mac}"
+
+    @property
+    @override
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity is enabled by default.
+
+        Entries imported from YAML keep the legacy track_new_devices
+        behavior of tracking newly discovered devices.
+        """
+        if self.coordinator.track_new:
+            return True
+        return super().entity_registry_enabled_default
 
     @property
     @override

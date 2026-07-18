@@ -33,10 +33,12 @@
     "step": {
       "init": {
         "data": {
-          "consider_home": "Consider home"
+          "consider_home": "Consider home",
+          "track_new_devices": "Track new devices"
         },
         "data_description": {
-          "consider_home": "The number of seconds to wait before marking a device as away after it was last seen in the ARP table of the router."
+          "consider_home": "The number of seconds to wait before marking a device as away after it was last seen in the ARP table of the router.",
+          "track_new_devices": "Enable the entities of newly discovered devices automatically."
         }
       }
     }

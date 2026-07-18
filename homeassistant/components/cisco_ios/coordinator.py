@@ -9,6 +9,7 @@ from pexpect import pxssh
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -132,6 +133,10 @@ class CiscoIOSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, CiscoIOSDevi
                 CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
             )
         )
+        # Imported YAML entries carry the legacy track_new_devices setting,
+        # entries created through the UI keep the ScannerEntity default of
+        # not enabling newly discovered devices.
+        self.track_new = config_entry.options.get(CONF_TRACK_NEW, False)
         self._devices: dict[str, CiscoIOSDevice] = {}
 
         super().__init__(
