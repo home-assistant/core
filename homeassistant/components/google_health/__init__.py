@@ -1,5 +1,6 @@
 """The Google Health integration."""
 
+import asyncio
 from dataclasses import dataclass
 
 from google_health_api import GoogleHealthApi
@@ -18,7 +19,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import api
 from .const import DOMAIN
-from .coordinator import GoogleHealthActivityCoordinator, GoogleHealthBodyCoordinator
+from .coordinator import (
+    GoogleHealthActivityCoordinator,
+    GoogleHealthBodyCoordinator,
+    GoogleHealthSleepCoordinator,
+)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -29,6 +34,7 @@ class GoogleHealthData:
 
     activity_coordinator: GoogleHealthActivityCoordinator | None = None
     body_coordinator: GoogleHealthBodyCoordinator | None = None
+    sleep_coordinator: GoogleHealthSleepCoordinator | None = None
 
 
 type GoogleHealthConfigEntry = ConfigEntry[GoogleHealthData]
@@ -64,16 +70,36 @@ async def async_setup_entry(
     activity_coordinator = None
     if all(scope in scopes for scope in api_client.steps.required_read_scopes):
         activity_coordinator = GoogleHealthActivityCoordinator(hass, entry, api_client)
-        await activity_coordinator.async_config_entry_first_refresh()
 
     body_coordinator = None
     if all(scope in scopes for scope in api_client.weight.required_read_scopes):
         body_coordinator = GoogleHealthBodyCoordinator(hass, entry, api_client)
-        await body_coordinator.async_config_entry_first_refresh()
+
+    sleep_coordinator = None
+    if all(scope in scopes for scope in api_client.sleep.required_read_scopes):
+        sleep_coordinator = GoogleHealthSleepCoordinator(hass, entry, api_client)
+
+    coordinators: list[
+        GoogleHealthActivityCoordinator
+        | GoogleHealthBodyCoordinator
+        | GoogleHealthSleepCoordinator
+    ] = []
+    if activity_coordinator:
+        coordinators.append(activity_coordinator)
+    if body_coordinator:
+        coordinators.append(body_coordinator)
+    if sleep_coordinator:
+        coordinators.append(sleep_coordinator)
+
+    if coordinators:
+        await asyncio.gather(
+            *(coord.async_config_entry_first_refresh() for coord in coordinators)
+        )
 
     entry.runtime_data = GoogleHealthData(
         activity_coordinator=activity_coordinator,
         body_coordinator=body_coordinator,
+        sleep_coordinator=sleep_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
