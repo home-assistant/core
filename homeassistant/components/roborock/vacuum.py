@@ -184,10 +184,8 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         what was available when the area mapping was last configured.
         """
         super()._handle_coordinator_update()
-        # Avoid creating false-alarm issues if home map info is not yet loaded or has no rooms
-        if not self._home_trait.home_map_info or not any(
-            map_info.rooms for map_info in self._home_trait.home_map_info.values()
-        ):
+        # Avoid creating false-alarm issues if home map info is not yet loaded
+        if self._home_trait.home_map_info is None:
             return
         last_seen = self.last_seen_segments
         if last_seen is None:
