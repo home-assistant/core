@@ -35,7 +35,7 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
-        ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
     }
 )
 

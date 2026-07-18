@@ -145,14 +145,14 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_CONSIDER_HOME: 300},
+        user_input={CONF_CONSIDER_HOME: 1800},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {CONF_CONSIDER_HOME: 300}
+    assert mock_config_entry.options == {CONF_CONSIDER_HOME: 1800}
     # The entry is reloaded, so the new value is applied to the coordinator
-    assert mock_config_entry.runtime_data.consider_home == timedelta(seconds=300)
+    assert mock_config_entry.runtime_data.consider_home == timedelta(seconds=1800)
 
 
 async def test_import_preserves_large_consider_home(
