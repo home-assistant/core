@@ -13,7 +13,6 @@ from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
     Segment,
     StateVacuumEntity,
     VacuumActivity,
@@ -25,7 +24,6 @@ from homeassistant.exceptions import (
     ServiceNotSupported,
     ServiceValidationError,
 )
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -198,11 +196,11 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         }
         if current_ids != {seg.id for seg in last_seen}:
             self.async_create_segments_issue()
-        elif self.registry_entry:
-            issue_id = f"segments_changed_{self.registry_entry.id}"
-            if ir.async_get(self.hass).async_get_issue(VACUUM_DOMAIN, issue_id):
-                # Delete issues created by a bug during transient states
-                ir.async_delete_issue(self.hass, VACUUM_DOMAIN, issue_id)
+        else:
+            # We previously had a bug where we created segment repair
+            # issues before the rooms were loaded. We'll re-run the code in the
+            # parent class that can clear old issues.
+            self._async_delete_segments_issue()
 
     @property
     @override
