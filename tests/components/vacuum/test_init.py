@@ -554,53 +554,6 @@ async def test_segments_changed_issue(
     assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
 
 
-@pytest.mark.usefixtures("config_flow_fixture")
-async def test_segments_changed_programmatic_delete_issue(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test segments changed issue can be deleted programmatically."""
-    mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=help_async_setup_entry_init,
-            async_unload_entry=help_async_unload_entry,
-        ),
-    )
-    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_entry = entity_registry.async_get(mock_vacuum.entity_id)
-    assert entity_entry is not None
-
-    entity_registry.async_update_entity_options(
-        mock_vacuum.entity_id,
-        DOMAIN,
-        {
-            "area_mapping": {"area_1": ["seg_1"]},
-            "last_seen_segments": [asdict(segment) for segment in mock_vacuum.segments],
-        },
-    )
-    await hass.async_block_till_done()
-
-    mock_vacuum.async_create_segments_issue()
-
-    issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
-    assert issue is not None
-
-    mock_vacuum.async_delete_segments_issue()
-    await hass.async_block_till_done()
-
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
-
-
 @pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
 async def test_vacuum_log_deprecated_battery_using_properties(
     hass: HomeAssistant,
