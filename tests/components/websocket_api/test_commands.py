@@ -5081,6 +5081,44 @@ async def test_get_automation_component_lookup_table_scalar_target_shapes(
     assert blink_filter.domains == {"camera"}
 
 
+async def test_get_automation_component_lookup_table_unresolved_supported_features(
+    hass: HomeAssistant,
+) -> None:
+    """Test unresolved/nested supported_features are dropped, not just lists.
+
+    Descriptions registered directly via async_set_service_schema bypass
+    TargetSelector.CONFIG_SCHEMA, so supported_features can still contain
+    unresolved dotted feature-name strings (not just nested-list groups).
+    Keeping anything other than an already-resolved int would let a stray
+    string reach _EntityFilter.matches()'s `feature & entity_supported_features`
+    and raise TypeError.
+    """
+    services: dict[str, dict[str, Any] | None] = {
+        "siren.toggle": {
+            "target": {
+                "entity": {
+                    "domain": "siren",
+                    "supported_features": [
+                        8,
+                        "siren.SirenEntityFeature.TURN_ON",
+                        ["siren.SirenEntityFeature.TURN_OFF"],
+                    ],
+                }
+            }
+        },
+    }
+
+    lookup_table = _get_automation_component_lookup_table(hass, "services", services)
+
+    siren_filter = lookup_table.domain_components["siren"][0].filters[0]
+    assert siren_filter.supported_features == {8}
+
+    # Must not raise even though the source data had unresolved entries, and
+    # must match on the resolved mask alone.
+    hass.states.async_set("siren.test", "off", {"supported_features": 8})
+    assert siren_filter.matches(hass, "siren.test", "siren", "test") is True
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expect_success"),
     [(Exception("error"), False), (None, True)],

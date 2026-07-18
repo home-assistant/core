@@ -102,8 +102,6 @@ class _AutomationComponentLookupData:
         filters: list[_EntityFilter] = []
 
         primary_entities_only = target_description.get("primary_entities_only", True)
-        # TargetSelectorConfig.entity accepts a single filter dict or a list of
-        # them; normalize so both shapes can be iterated below.
         entity_filters_config = cv.ensure_list(target_description.get("entity", []))
         for entity_filter_config in entity_filters_config:
             entity_filter = _EntityFilter(
@@ -112,15 +110,16 @@ class _AutomationComponentLookupData:
                 device_classes=set(
                     cv.ensure_list(entity_filter_config.get("device_class", []))
                 ),
-                # A group can itself be a list of feature names requiring all of
-                # them together; that combination isn't resolved here, so drop
-                # it rather than crash on the unhashable list.
+                # Only keep already-resolved integer masks: a group can itself be
+                # an unhashable list of feature names, and directly registered
+                # schemas (async_set_service_schema) may leave dotted feature
+                # strings unresolved; both would crash matches()'s `feature & ...`.
                 supported_features={
                     feature
                     for feature in cv.ensure_list(
                         entity_filter_config.get("supported_features", [])
                     )
-                    if not isinstance(feature, list)
+                    if isinstance(feature, int)
                 },
             )
             filters.append(entity_filter)
