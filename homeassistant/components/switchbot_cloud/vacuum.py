@@ -122,10 +122,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         if self.coordinator.data is None:
             return
 
-        # Webhook pushes may omit keys that weren't part of the reported change
-        # (e.g. a follow-up event only carrying "battery"). Only update the
-        # attributes that are actually present so a partial payload doesn't
-        # clobber previously known-good state.
+        # Webhook payloads may omit keys not part of the reported change.
         if (online_status := self.coordinator.data.get("onlineStatus")) is not None:
             self._attr_available = online_status == "online"
 
