@@ -1,5 +1,6 @@
 """Tests for Roborock vacuums."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, call
 
@@ -46,11 +47,12 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, set_trait_attributes
 from .mock_data import STATUS
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
@@ -583,8 +585,7 @@ async def test_segments_changed_issue(
         },
     )
 
-    coordinator = setup_entry.runtime_data.v1[0]
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
     await hass.async_block_till_done()
 
     issue_id = f"segments_changed_{entity_entry.id}"
@@ -604,7 +605,7 @@ async def test_segments_changed_issue(
             ],
         )
     }
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done()
 
     # The issue should be deleted programmatically
@@ -635,8 +636,7 @@ async def test_segments_changed_issue_no_map_info(
     # Map info not loaded
     fake_vacuum.v1_properties.home.home_map_info = None
 
-    coordinator = setup_entry.runtime_data.v1[0]
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
     await hass.async_block_till_done()
 
     issue_id = f"segments_changed_{entity_entry.id}"
