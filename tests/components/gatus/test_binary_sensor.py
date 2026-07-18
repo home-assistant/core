@@ -168,6 +168,7 @@ async def test_binary_sensor_dynamic_endpoints(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new endpoints returned by the Gatus API at runtime dynamically create entities."""
     await setup_integration(hass, mock_config_entry)
@@ -190,7 +191,8 @@ async def test_binary_sensor_dynamic_endpoints(
         ),
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.core_new_service") is not None
