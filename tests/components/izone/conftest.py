@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator, Iterable
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, Mock, patch
 
-from pizone import Controller, Zone
+from pizone import Controller, ControllerEndpoint, Zone
 import pytest
 
 from homeassistant.components.izone.const import DOMAIN
@@ -62,6 +62,14 @@ def create_mock_controller(
         Controller.Fan.AUTO,
     ]
     return controller
+
+
+def create_mock_endpoint(
+    uid: str = "000000001",
+    host: str = "192.0.2.1",
+) -> ControllerEndpoint:
+    """Create a ControllerEndpoint for discovery/config-flow patches."""
+    return ControllerEndpoint(uid=uid, host=host)
 
 
 def create_mock_zone(
