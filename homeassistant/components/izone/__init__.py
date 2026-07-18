@@ -12,7 +12,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_CONFIG, DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
-from .discovery import async_ensure_discovery, async_stop_discovery
+from .discovery import (
+    async_discover_all_endpoints,
+    async_discover_endpoint,
+    async_ensure_discovery,
+    async_stop_discovery,
+    yaml_excluded_uids,
+)
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -46,19 +52,79 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
     """Set up from a config entry."""
-    if CONF_HOST not in entry.data:
-        raise ConfigEntryError("iZone config entry is missing host")
-
-    uid = entry.unique_id
-    if not isinstance(uid, str):
-        raise ConfigEntryError("iZone config entry is missing unique_id")
-
-    host: str = entry.data[CONF_HOST]
-
     try:
         discovery = await async_ensure_discovery(hass)
     except OSError as err:
         raise ConfigEntryNotReady("iZone discovery service failed to start") from err
+
+    # Heal legacy / hostless entries here (not in migrate) so ConfigEntryNotReady
+    # can retry. Upstream pairs migrate→data={} with this setup-time rebind.
+    if entry.unique_id == DOMAIN:
+        try:
+            endpoints = await async_discover_all_endpoints(hass)
+        except OSError as err:
+            raise ConfigEntryNotReady(
+                "iZone discovery failed while resolving legacy config entry"
+            ) from err
+
+        excluded_uids = yaml_excluded_uids(hass)
+        configured_uids = {
+            config_entry.unique_id
+            for config_entry in hass.config_entries.async_entries(DOMAIN)
+            if config_entry.entry_id != entry.entry_id
+            and config_entry.unique_id not in (None, DOMAIN)
+        }
+        eligible = [
+            endpoint
+            for endpoint in endpoints.values()
+            if endpoint.uid not in excluded_uids and endpoint.uid not in configured_uids
+        ]
+
+        if not eligible:
+            raise ConfigEntryNotReady(
+                "No eligible iZone controller found to bind to legacy config entry"
+            )
+
+        if len(eligible) > 1:
+            raise ConfigEntryError(
+                "Multiple eligible iZone controllers found for a legacy config entry; "
+                "delete this entry and re-add each controller individually"
+            )
+
+        endpoint = eligible[0]
+        new_title = (
+            f"iZone {endpoint.uid}" if entry.title == "iZone Aircon" else entry.title
+        )
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=endpoint.uid,
+            title=new_title,
+            data={CONF_HOST: endpoint.host},
+        )
+    elif CONF_HOST not in entry.data:
+        uid = entry.unique_id
+        if not isinstance(uid, str):
+            raise ConfigEntryError("iZone config entry is missing unique_id")
+        try:
+            resolved = await async_discover_endpoint(hass, uid)
+        except OSError as err:
+            raise ConfigEntryNotReady(
+                "iZone discovery failed while resolving config entry host"
+            ) from err
+        if resolved is None:
+            raise ConfigEntryNotReady(f"No iZone controller found for unique_id {uid}")
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_HOST: resolved.host},
+        )
+
+    uid = entry.unique_id
+    if not isinstance(uid, str):
+        raise ConfigEntryError("iZone config entry is missing unique_id")
+    if CONF_HOST not in entry.data:
+        raise ConfigEntryError("iZone config entry is missing host")
+
+    host: str = entry.data[CONF_HOST]
 
     @callback
     def _async_on_address_changed(endpoint: pizone.ControllerEndpoint) -> None:

@@ -1158,8 +1158,7 @@ async def test_async_migrate_entry_clears_legacy_data(
 
     ConfigEntryNotReady retry semantics only work inside async_setup_entry — raising
     from async_migrate_entry permanently lands the entry in MIGRATION_ERROR with no
-    retry path. Hostless migrated entries fail setup with ConfigEntryError until
-    remove-and-readd (unreleased WIP only).
+    retry path. Setup then heals unique_id=DOMAIN / missing CONF_HOST via discovery.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,

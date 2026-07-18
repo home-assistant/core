@@ -1,7 +1,8 @@
 """Fixtures for iZone integration tests."""
 
-from collections.abc import AsyncGenerator, Generator, Iterable
+from collections.abc import AsyncGenerator, Coroutine, Generator, Iterable
 from contextlib import contextmanager
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from pizone import Controller, ControllerEndpoint, Zone
@@ -152,7 +153,15 @@ def patch_discovered_controllers(
 
 async def async_load_yaml_exclude(hass: HomeAssistant, *uids: str) -> None:
     """Load deprecated YAML exclude config through the integration setup path."""
-    with patch.object(hass, "async_create_task"):
+
+    def _discard_task(
+        coro: Coroutine[Any, Any, Any], *_args: object, **_kwargs: object
+    ) -> Mock:
+        # Import flow is scheduled by async_setup; tests only need DATA_CONFIG.
+        coro.close()
+        return Mock()
+
+    with patch.object(hass, "async_create_task", side_effect=_discard_task):
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_EXCLUDE: list(uids)}}
         )

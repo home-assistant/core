@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .conftest import create_mock_controller
+from .conftest import async_load_yaml_exclude, create_mock_controller
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -44,11 +44,278 @@ async def test_setup_and_unload(
     mock_discovery_service.close.assert_awaited()
 
 
-async def test_setup_missing_host_fails(
+async def test_setup_heals_legacy_domain_unique_id(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """Legacy unique_id=DOMAIN binds the sole discovered endpoint and loads."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.1")]
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == "000000001"
+    assert entry.data[CONF_HOST] == "192.0.2.1"
+    assert entry.title == "iZone 000000001"
+    mock_discovery_service.create_controller.assert_awaited_once()
+
+
+async def test_setup_heals_legacy_domain_unique_id_keeps_custom_title(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """Legacy rebind keeps a user-customised title instead of rewriting it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="Living Room AC",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.1")]
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == "000000001"
+    assert entry.title == "Living Room AC"
+
+
+async def test_setup_legacy_domain_unique_id_filters_yaml_excluded(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """YAML exclude narrows multiple discoveries to one eligible controller."""
+    await async_load_yaml_exclude(hass, "000000002")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[
+            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
+            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
+        ]
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == "000000001"
+    assert entry.data[CONF_HOST] == "192.0.2.1"
+
+
+async def test_setup_legacy_domain_unique_id_filters_already_configured(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """Already-configured UIDs are skipped when binding a legacy DOMAIN entry."""
+    configured = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000002",
+        data={CONF_HOST: "192.0.2.2"},
+        version=2,
+    )
+    configured.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[
+            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
+            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
+        ]
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == "000000001"
+    assert entry.data[CONF_HOST] == "192.0.2.1"
+
+
+async def test_migrate_then_heals_legacy_domain_unique_id(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """v1 migrate clears data, then setup heal rebinds UID and CONF_HOST."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={"host": "203.0.113.1"},
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.1")]
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == "000000001"
+    assert entry.data == {CONF_HOST: "192.0.2.1"}
+    assert entry.title == "iZone 000000001"
+
+
+async def test_setup_legacy_domain_unique_id_no_eligible_retries(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+) -> None:
+    """Legacy unique_id=DOMAIN with no eligible endpoint leaves SETUP_RETRY."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(return_value=[])
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_legacy_domain_unique_id_multiple_eligible_fails(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+) -> None:
+    """Legacy unique_id=DOMAIN with multiple eligible endpoints is SETUP_ERROR."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(
+        return_value=[
+            ControllerEndpoint(uid="000000001", host="192.0.2.1"),
+            ControllerEndpoint(uid="000000002", host="192.0.2.2"),
+        ]
+    )
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_heals_missing_host_via_discover_endpoint(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """Real UID with empty data recovers CONF_HOST via discover_by_uid."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_by_uid = AsyncMock(
+        return_value=ControllerEndpoint(uid="000000001", host="192.0.2.1")
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_HOST] == "192.0.2.1"
+    mock_discovery_service.create_controller.assert_awaited_once()
+
+
+async def test_setup_missing_host_not_found_retries(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+) -> None:
+    """Real UID with empty data and no discovered endpoint leaves SETUP_RETRY."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_by_uid = AsyncMock(return_value=None)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_discovery_service.create_controller.assert_not_awaited()
+
+
+async def test_setup_legacy_domain_unique_id_discovery_oserror_retries(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
 ) -> None:
-    """Hostless entries fail setup (unreleased WIP only)."""
+    """OSError while discovering for legacy DOMAIN unique_id leaves SETUP_RETRY."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.izone.async_discover_all_endpoints",
+        new=AsyncMock(side_effect=OSError("bind failed")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_missing_host_discover_oserror_retries(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+) -> None:
+    """OSError while resolving host for a real UID leaves SETUP_RETRY."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
@@ -57,8 +324,13 @@ async def test_setup_missing_host_fails(
     )
     entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    with patch(
+        "homeassistant.components.izone.async_discover_endpoint",
+        new=AsyncMock(side_effect=OSError("bind failed")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
