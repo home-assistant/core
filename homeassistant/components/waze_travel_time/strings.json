@@ -11,7 +11,6 @@
       "user": {
         "data": {
           "destination": "Destination",
-          "name": "[%key:common::config_flow::data::name%]",
           "origin": "Origin",
           "region": "Region"
         },

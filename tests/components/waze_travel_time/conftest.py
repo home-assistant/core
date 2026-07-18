@@ -6,7 +6,7 @@ import pytest
 from pywaze.route_calculator import CalcRoutesResponse, WRCError
 
 from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
-from homeassistant.components.waze_travel_time.const import DOMAIN
+from homeassistant.components.waze_travel_time.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -17,6 +17,7 @@ async def mock_config_fixture(hass: HomeAssistant, data, options):
     """Mock a Waze Travel Time config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        title=DEFAULT_NAME,
         data=data,
         options=options,
         entry_id="test",
