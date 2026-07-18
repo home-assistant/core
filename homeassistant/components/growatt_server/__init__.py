@@ -23,6 +23,7 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Mapping
 import datetime
@@ -452,10 +453,7 @@ async def async_setup_entry(
                 for device_sn in device_domain_ids:
                     if coordinator := runtime_data.devices.pop(device_sn, None):
                         await coordinator.async_shutdown()
-                device_registry.async_update_device(
-                    device_entry.id,
-                    remove_config_entry_id=config_entry.entry_id,
-                )
+                device_registry.async_remove_device(device_entry.id)
 
         # Add new devices
         new_coordinators: list[GrowattCoordinator] = []

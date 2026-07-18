@@ -34,6 +34,14 @@
     }
   },
 
+  "exceptions": {
+    "invalid_entity_id": {
+      "message": "Unknown Genius Hub entity: {entity_id}"
+    },
+    "invalid_zone": {
+      "message": "Unknown Genius Hub zone: {entity_id}"
+    }
+  },
   "services": {
     "set_switch_override": {
       "description": "Overrides switch for a given duration.",

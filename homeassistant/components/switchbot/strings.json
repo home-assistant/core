@@ -187,6 +187,19 @@
             }
           }
         }
+      },
+      "standing_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::baby%]",
+              "custom_natural": "Custom natural",
+              "natural": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::natural%]",
+              "normal": "[%key:common::state::normal%]",
+              "sleep": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::sleep%]"
+            }
+          }
+        }
       }
     },
     "humidifier": {
@@ -417,6 +430,9 @@
     },
     "operation_error": {
       "message": "An error occurred while performing the action: {error}"
+    },
+    "set_fan_state_failed": {
+      "message": "Failed to send the command to the fan."
     },
     "value_error": {
       "message": "Switchbot device initialization failed because of incorrect configuration parameters: {error}"
