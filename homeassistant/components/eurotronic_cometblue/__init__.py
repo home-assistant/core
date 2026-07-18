@@ -3,7 +3,11 @@
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
@@ -30,7 +34,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Couldn't find a nearby device for address: {entry.data[CONF_ADDRESS]}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    hass,
+                    address,
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     cometblue_device = AsyncCometBlue(

@@ -47,5 +47,10 @@
         "name": "Setpoint offset"
       }
     }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Comet Blue device with address {address}: {reason}"
+    }
   }
 }
