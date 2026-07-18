@@ -39,12 +39,9 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
         """Initialize the coordinator."""
         super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
         self.base_topic: str = entry.data[CONF_BASE_TOPIC]
-        self.device = PrismDevice(self.base_topic, publish=self._async_publish)
+        self.device = PrismDevice(self.base_topic)
         self.device.on_status_update = self._on_status_update
         self.device.on_hello = self._on_hello
-
-    async def _async_publish(self, topic: str, payload: str) -> None:
-        await mqtt.async_publish(self.hass, topic, payload)
 
     @override
     async def _async_setup(self) -> None:

@@ -95,6 +95,24 @@ async def test_user_flow_mqtt_unavailable(
     assert result["errors"] == {"base": "mqtt_unavailable"}
 
 
+@pytest.mark.parametrize(
+    "base_topic",
+    ["prism/#", "+", "/"],
+    ids=["wildcard_hash", "wildcard_plus", "empty"],
+)
+async def test_user_flow_invalid_base_topic(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, base_topic: str
+) -> None:
+    """Test the user flow rejects base topics that are not valid MQTT topics."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_BASE_TOPIC: base_topic},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_BASE_TOPIC: "invalid_base_topic"}
+
+
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
@@ -122,6 +140,25 @@ async def test_probe_detects_no_traffic(
     ):
         assert await flow._async_probe(BASE_TOPIC) is False
     assert _PROBE_TIMEOUT == 5
+
+
+async def test_probe_ignores_unrecognized(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test the probe ignores traffic that is not a Prism protocol message."""
+    flow = PrismConfigFlow()
+    flow.hass = hass
+    with patch(
+        "homeassistant.components.silla_prism.config_flow._PROBE_TIMEOUT",
+        0.05,
+    ):
+        task = hass.async_create_task(flow._async_probe(BASE_TOPIC))
+        for _ in range(20):
+            await asyncio.sleep(0)
+            async_fire_mqtt_message(hass, "prism/not/a/prism/topic", "garbage")
+            if task.done():
+                break
+        assert await task is False
 
 
 async def test_discovery_flow(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:

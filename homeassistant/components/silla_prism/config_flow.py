@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, override
 
-from pysillaprism import parse_hello
+from pysillaprism import parse_hello, parse_message
 from pysillaprism.exceptions import PrismParseError
 import voluptuous as vol
 
@@ -11,6 +11,7 @@ from homeassistant.components.mqtt import (
     ReceiveMessage,
     async_wait_for_mqtt_client,
     client as mqtt,
+    valid_publish_topic,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
@@ -41,17 +42,22 @@ class PrismConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             base_topic = user_input[CONF_BASE_TOPIC].strip().strip("/")
-            await self.async_set_unique_id(base_topic)
-            self._abort_if_unique_id_configured()
-
-            if not await async_wait_for_mqtt_client(self.hass):
-                errors["base"] = "mqtt_unavailable"
-            elif not await self._async_probe(base_topic):
-                errors["base"] = "no_device"
+            try:
+                valid_publish_topic(base_topic)
+            except vol.Invalid:
+                errors[CONF_BASE_TOPIC] = "invalid_base_topic"
             else:
-                return self.async_create_entry(
-                    title="Silla Prism", data={CONF_BASE_TOPIC: base_topic}
-                )
+                await self.async_set_unique_id(base_topic)
+                self._abort_if_unique_id_configured()
+
+                if not await async_wait_for_mqtt_client(self.hass):
+                    errors["base"] = "mqtt_unavailable"
+                elif not await self._async_probe(base_topic):
+                    errors["base"] = "no_device"
+                else:
+                    return self.async_create_entry(
+                        title="Silla Prism", data={CONF_BASE_TOPIC: base_topic}
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -64,12 +70,15 @@ class PrismConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_probe(self, base_topic: str) -> bool:
-        """Return True if any retained message is seen under ``base_topic``."""
+        """Return True if a recognizable Prism message is seen under ``base_topic``."""
         seen = asyncio.Event()
 
         @callback
-        def _message(_msg: ReceiveMessage) -> None:
-            seen.set()
+        def _message(msg: ReceiveMessage) -> None:
+            if isinstance(msg.payload, str) and (
+                parse_message(base_topic, msg.topic, msg.payload) is not None
+            ):
+                seen.set()
 
         unsubscribe = await mqtt.async_subscribe(self.hass, f"{base_topic}/#", _message)
         try:
