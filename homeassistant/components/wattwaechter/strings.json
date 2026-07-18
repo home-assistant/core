@@ -39,7 +39,7 @@
         },
         "data_description": {
           "host": "[%key:component::wattwaechter::config::step::user::data_description::host%]",
-          "token": "Leave empty to keep the current API token."
+          "token": "[%key:component::wattwaechter::config::step::auth::data_description::token%]"
         },
         "title": "Reconfigure WattWächter Plus"
       },

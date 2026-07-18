@@ -492,15 +492,15 @@ async def test_reconfigure_flow_success(
     assert result["step_id"] == "reconfigure"
 
     new_host = "192.168.1.222"
+    # The token field is pre-filled with the stored token and submitted as-is
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: new_host}
+        result["flow_id"], {CONF_HOST: new_host, CONF_TOKEN: MOCK_TOKEN}
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == new_host
-    # Token is preserved when the field is left empty
     assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN
 
 

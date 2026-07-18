@@ -21,6 +21,11 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_FW_VERSION, DOMAIN
@@ -256,8 +261,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Keep the stored token when the field is left empty.
-            token = user_input.get(CONF_TOKEN) or reconfigure_entry.data.get(CONF_TOKEN)
+            token = user_input.get(CONF_TOKEN)
             errors, system_info, _ = await self._async_test_connection(
                 user_input[CONF_HOST], token
             )
@@ -273,16 +277,15 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
-                vol.Optional(CONF_TOKEN): str,
+                vol.Optional(CONF_TOKEN): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
             }
         )
-        # Preserve the entered host across validation errors without
-        # pre-filling the token field with the stored value.
-        suggested_host = (user_input or reconfigure_entry.data)[CONF_HOST]
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                schema, {CONF_HOST: suggested_host}
+                schema, user_input or reconfigure_entry.data
             ),
             errors=errors,
         )
