@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Cisco IOS router.",
+          "password": "The password used to log in to the router over SSH. Leave empty if no password is required.",
+          "port": "The SSH port of the router. Leave empty to use the default.",
+          "username": "The username used to log in to the router over SSH."
+        }
+      }
+    }
+  },
+  "issues": {
+    "yaml_import_cannot_connect": {
+      "description": "The YAML configuration for Cisco IOS at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
+      "title": "YAML configuration import failed: cannot connect"
+    }
+  }
+}

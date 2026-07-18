@@ -1,22 +1,25 @@
 """Support for Cisco IOS Routers."""
 
-import logging
 from typing import override
 
-from pexpect import pxssh
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import CiscoIOSConfigEntry, CiscoIOSDataUpdateCoordinator
 
 PLATFORM_SCHEMA = vol.All(
     DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
@@ -30,125 +33,106 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoDeviceScanner | None:
-    """Validate the configuration and return a Cisco scanner."""
-    scanner = CiscoDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    _async_see: AsyncSeeCallback,
+    _discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the legacy Cisco IOS device tracker."""
+    import_data = {
+        CONF_HOST: config[CONF_HOST],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+    }
+    if CONF_PORT in config:
+        import_data[CONF_PORT] = config[CONF_PORT]
 
-    return scanner if scanner.success_init else None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=import_data,
+    )
 
-
-class CiscoDeviceScanner(DeviceScanner):
-    """Class which queries a wireless router running Cisco IOS firmware."""
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.port = config.get(CONF_PORT)
-        self.password = config[CONF_PASSWORD]
-
-        self.last_results = {}
-
-        self.success_init = self._update_info()
-
-    @override
-    async def async_get_device_name(self, device: str) -> str | None:
-        """Get the firmware doesn't save the name of the wireless device."""
-        return None
-
-    @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        return self.last_results
-
-    def _update_info(self):
-        """Ensure the information from the Cisco router is up to date.
-
-        Returns boolean if scanning successful.
-        """
-        if string_result := self._get_arp_data():
-            self.last_results = []
-            last_results = []
-
-            lines_result = string_result.splitlines()
-
-            # Remove the first two lines, as they contains the arp command
-            # and the arp table titles e.g.
-            # show ip arp
-            # Protocol  Address | Age (min) | Hardware Addr | Type | Interface
-            lines_result = lines_result[2:]
-
-            for line in lines_result:
-                parts = line.split()
-                if len(parts) != 6:
-                    continue
-
-                # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
-                # 'GigabitEthernet0']
-                age = parts[2]
-                hw_addr = parts[3]
-
-                if age != "-":
-                    mac = _parse_cisco_mac_address(hw_addr)
-                    age = int(age)
-                    if age < 1:
-                        last_results.append(mac)
-
-            self.last_results = last_results
-            return True
-
+    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "yaml_import_cannot_connect",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_cannot_connect",
+            translation_placeholders={"host": config[CONF_HOST]},
+        )
         return False
 
-    def _get_arp_data(self) -> str | None:
-        """Open connection to the router and get arp entries."""
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+    )
 
-        try:
-            cisco_ssh: pxssh.pxssh[str] = pxssh.pxssh(encoding="utf-8")
-            cisco_ssh.login(
-                self.host,
-                self.username,
-                self.password,
-                port=self.port,
-                auto_prompt_reset=False,
-            )
-
-            # Find the hostname
-            initial_line = (cisco_ssh.before or "").splitlines()
-            router_hostname = initial_line[len(initial_line) - 1]
-            router_hostname += "#"
-            # Set the discovered hostname as prompt
-            cisco_ssh.PROMPT = f"(?i)^{router_hostname}"
-            # Allow full arp table to print at once
-            cisco_ssh.sendline("terminal length 0")
-            cisco_ssh.prompt(1)
-
-            cisco_ssh.sendline("show ip arp")
-            cisco_ssh.prompt(1)
-
-        except pxssh.ExceptionPxssh as px_e:
-            _LOGGER.error("Failed to login via pxssh: %s", px_e)
-            return None
-
-        return cisco_ssh.before
+    return True
 
 
-def _parse_cisco_mac_address(cisco_hardware_addr):
-    """Parse a Cisco formatted HW address to normal MAC.
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: CiscoIOSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker for Cisco IOS."""
+    coordinator = config_entry.runtime_data
+    tracked: set[str] = set()
 
-    e.g. convert
-    001d.ec02.07ab
+    @callback
+    def _async_update_devices() -> None:
+        """Add new devices from the coordinator."""
+        new_entities: list[CiscoIOSScannerEntity] = []
+        for mac in coordinator.data:
+            if mac not in tracked:
+                tracked.add(mac)
+                new_entities.append(CiscoIOSScannerEntity(coordinator, mac))
+        if new_entities:
+            async_add_entities(new_entities)
 
-    to:
-    00:1D:EC:02:07:AB
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
+    _async_update_devices()
 
-    Takes in cisco_hwaddr: HWAddr String from Cisco ARP table
-    Returns a regular standard MAC address
-    """
-    cisco_hardware_addr = cisco_hardware_addr.replace(".", "")
-    blocks = [
-        cisco_hardware_addr[x : x + 2] for x in range(0, len(cisco_hardware_addr), 2)
-    ]
 
-    return ":".join(blocks).upper()
+class CiscoIOSScannerEntity(
+    CoordinatorEntity[CiscoIOSDataUpdateCoordinator], ScannerEntity
+):
+    """Representation of a device connected to the Cisco IOS router."""
+
+    def __init__(self, coordinator: CiscoIOSDataUpdateCoordinator, mac: str) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self._mac = mac
+        self._attr_name = mac
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the router."""
+        return self._mac in self.coordinator.data
+
+    @property
+    @override
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    @property
+    @override
+    def ip_address(self) -> str | None:
+        """Return the IP address of the device."""
+        return self.coordinator.data.get(self._mac)
