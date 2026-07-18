@@ -162,3 +162,35 @@ async def test_binary_sensor_missing_status(
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
     assert state.state == "off"
+
+
+async def test_binary_sensor_dynamic_endpoints(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that new endpoints returned by the Gatus API at runtime dynamically create entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.core_backend_service") is not None
+    assert hass.states.get("binary_sensor.core_new_service") is None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group="Core",
+            results=[Result(success=True, status=200)],
+        ),
+        EndpointStatus(
+            key="new_service",
+            name="New Service",
+            group="Core",
+            results=[Result(success=True, status=200)],
+        ),
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+
+    assert hass.states.get("binary_sensor.core_new_service") is not None

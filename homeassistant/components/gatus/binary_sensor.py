@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -27,10 +27,21 @@ async def async_setup_entry(
     """Set up the Gatus binary sensor platform."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
-        for endpoint_key in coordinator.data
-    )
+    known_endpoints: set[str] = set()
+
+    @callback
+    def _check_endpoints() -> None:
+        current_endpoints = set(coordinator.data)
+        new_endpoints = current_endpoints - known_endpoints
+        if new_endpoints:
+            known_endpoints.update(new_endpoints)
+            async_add_entities(
+                GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
+                for endpoint_key in new_endpoints
+            )
+
+    _check_endpoints()
+    entry.async_on_unload(coordinator.async_add_listener(_check_endpoints))
 
 
 class GatusEndpointBinarySensor(
