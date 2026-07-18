@@ -192,7 +192,9 @@ async def test_anna_entities_with_dhw_mode_select(
 
 
 async def test_anna_select_dhw_mode(
-    hass: HomeAssistant, mock_smile_anna_loria: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_anna_loria: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test changing the dhw_mode select."""
     await hass.services.async_call(
