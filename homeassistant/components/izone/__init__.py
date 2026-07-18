@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -60,8 +60,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     except OSError as err:
         raise ConfigEntryNotReady("iZone discovery service failed to start") from err
 
+    @callback
+    def _async_on_address_changed(endpoint: pizone.ControllerEndpoint) -> None:
+        if endpoint.host == entry.data[CONF_HOST]:
+            return
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_HOST: endpoint.host},
+        )
+
     try:
-        controller = await discovery.create_controller(uid, host)
+        controller = await discovery.create_controller(
+            uid,
+            host,
+            on_address_changed=_async_on_address_changed,
+        )
     except pizone.UnpairedBridgeError as err:
         raise ConfigEntryError(
             "iZone bridge is not paired with an air conditioner"

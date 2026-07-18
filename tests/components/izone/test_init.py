@@ -122,6 +122,47 @@ async def test_setup_first_refresh_failure_closes_controller(
     mock_controller.close.assert_awaited()
 
 
+async def test_address_changed_updates_config_entry_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+) -> None:
+    """Library address-change callback persists the new host on the entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    on_address_changed = mock_discovery_service.create_controller.await_args.kwargs[
+        "on_address_changed"
+    ]
+    on_address_changed(ControllerEndpoint(uid="000000001", host="192.0.2.99"))
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data[CONF_HOST] == "192.0.2.99"
+
+
+async def test_address_changed_same_host_is_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+) -> None:
+    """Address callback with an unchanged host does not rewrite entry data."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    original = dict(mock_config_entry.data)
+    on_address_changed = mock_discovery_service.create_controller.await_args.kwargs[
+        "on_address_changed"
+    ]
+    on_address_changed(ControllerEndpoint(uid="000000001", host="192.0.2.1"))
+    await hass.async_block_till_done()
+
+    assert dict(mock_config_entry.data) == original
+
+
 async def test_coordinator_refresh_failure_marks_climate_unavailable(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
