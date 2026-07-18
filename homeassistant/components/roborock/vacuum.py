@@ -199,6 +199,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         if current_ids != {seg.id for seg in last_seen}:
             self.async_create_segments_issue()
         elif self.registry_entry:
+            # Delete any invalid repair issues previously created (e.g. during transient states)
             ir.async_delete_issue(
                 self.hass,
                 VACUUM_DOMAIN,
