@@ -376,6 +376,7 @@ async def test_zone_climate_properties(
         "expected_zone_state",
         "expected_climate_state",
         "expected_switch_state",
+        "main_mode",
     ),
     [
         pytest.param(
@@ -384,6 +385,7 @@ async def test_zone_climate_properties(
             "1",
             HVACMode.COOL,
             STATE_ON,
+            "cool",
             id="climate-turn-on",
         ),
         pytest.param(
@@ -392,6 +394,7 @@ async def test_zone_climate_properties(
             "0",
             HVACMode.OFF,
             STATE_OFF,
+            "cool",
             id="climate-turn-off",
         ),
         pytest.param(
@@ -400,7 +403,17 @@ async def test_zone_climate_properties(
             "0",
             HVACMode.OFF,
             STATE_OFF,
+            "cool",
             id="climate-toggle-off",
+        ),
+        pytest.param(
+            SERVICE_TOGGLE,
+            "1",
+            "0",
+            HVACMode.OFF,
+            STATE_OFF,
+            "off",
+            id="climate-toggle-zone-on-main-off",
         ),
     ],
 )
@@ -413,12 +426,13 @@ async def test_zone_climate_power_controls(
     expected_zone_state: str,
     expected_climate_state: HVACMode,
     expected_switch_state: str,
+    main_mode: str,
 ) -> None:
     """Zone climate and switch power controls stay synchronized."""
     configure_zone_device(
         zone_device,
         zones=[["Living", initial_zone_state, 22]],
-        mode="cool",
+        mode=main_mode,
     )
 
     async def set_zone(zone_id: int, key: str, value: str) -> None:

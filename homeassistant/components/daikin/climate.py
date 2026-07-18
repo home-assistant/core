@@ -540,6 +540,14 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     @override
+    async def async_toggle(self) -> None:
+        """Toggle the zone."""
+        if self.device.zones[self._zone_id][1] == "1":
+            await self.async_turn_off()
+        else:
+            await self.async_turn_on()
+
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Disallow changing HVAC mode via zone climate."""
         raise HomeAssistantError(
