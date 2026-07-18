@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import (
     SELECT_DHW_MODE,
+    SELECT_GATEWAY_MODE,
     SELECT_REGULATION_MODE,
     SELECT_SCHEDULE,
     SELECT_ZONE_PROFILE,
@@ -100,6 +101,23 @@ async def test_adam_select_regulation_mode(
         SELECT_REGULATION_MODE,
         "da224107914542988a88561b4452b0f6",
         "heating",
+        "on",
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.adam_gateway_mode",
+            ATTR_OPTION: "vacation",
+        },
+        blocking=True,
+    )
+    assert mock_smile_adam_heat_cool.set_select.call_count == 2
+    mock_smile_adam_heat_cool.set_select.assert_called_with(
+        SELECT_GATEWAY_MODE,
+        "da224107914542988a88561b4452b0f6",
+        "vacation",
         "on",
     )
 
