@@ -361,13 +361,20 @@ async def test_yaml_import_retry_success_clears_issue(
     )
 
 
-def test_scanner_raises_on_prompt_timeout() -> None:
+@pytest.mark.parametrize(
+    "prompt_results",
+    [
+        pytest.param([False], id="terminal_length"),
+        pytest.param([True, False], id="show_ip_arp"),
+    ],
+)
+def test_scanner_raises_on_prompt_timeout(prompt_results: list[bool]) -> None:
     """Test that a prompt timeout raises instead of accepting partial output."""
     with patch(
         "homeassistant.components.cisco_ios.coordinator.pxssh.pxssh"
     ) as mock_pxssh:
         mock_pxssh.return_value.before = ARP_OUTPUT
-        mock_pxssh.return_value.prompt.return_value = False
+        mock_pxssh.return_value.prompt.side_effect = prompt_results
         scanner = CiscoIOSArpScanner(
             host=MOCK_HOST, username="admin", password="password", port=22
         )
