@@ -1,6 +1,9 @@
 {
   "entity": {
     "binary_sensor": {
+      "freeze_prevent_enabled": {
+        "default": "mdi:snowflake-alert"
+      },
       "standby": {
         "default": "mdi:pause-circle"
       },
