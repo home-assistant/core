@@ -42,7 +42,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, title=f"Cisco IOS ({MOCK_HOST})"
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=f"Cisco IOS ({MOCK_HOST})",
+        entry_id="test",
     )
 
 

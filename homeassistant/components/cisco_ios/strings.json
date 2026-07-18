@@ -28,5 +28,17 @@
       "description": "The YAML configuration for Cisco IOS at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
       "title": "YAML configuration import failed: cannot connect"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "consider_home": "Consider home"
+        },
+        "data_description": {
+          "consider_home": "The number of seconds to wait before marking a device as away after it was last seen in the ARP table of the router."
+        }
+      }
+    }
   }
 }

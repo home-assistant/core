@@ -5,6 +5,8 @@ from typing import override
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
@@ -13,7 +15,11 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -44,6 +50,7 @@ async def async_setup_scanner(
         CONF_HOST: config[CONF_HOST],
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_CONSIDER_HOME: int(config[CONF_CONSIDER_HOME].total_seconds()),
     }
     if CONF_PORT in config:
         import_data[CONF_PORT] = config[CONF_PORT]
@@ -104,6 +111,23 @@ async def async_setup_entry(
         if new_entities:
             async_add_entities(new_entities)
 
+    # Restore previously registered devices, so a device that is away
+    # during a restart is reported as not_home instead of disappearing.
+    entity_registry = er.async_get(hass)
+    unique_id_prefix = f"{config_entry.entry_id}_"
+    restored_entities = [
+        CiscoIOSScannerEntity(
+            coordinator, registry_entry.unique_id.removeprefix(unique_id_prefix)
+        )
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if registry_entry.domain == DEVICE_TRACKER_DOMAIN
+    ]
+    tracked.update(entity.mac_address for entity in restored_entities)
+    if restored_entities:
+        async_add_entities(restored_entities)
+
     config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
     _async_update_devices()
 
@@ -121,9 +145,21 @@ class CiscoIOSScannerEntity(
 
     @property
     @override
+    def unique_id(self) -> str:
+        """Return the unique ID of the entity, scoped to the config entry.
+
+        The same client can be seen by multiple routers, so the default
+        MAC address based unique ID would collide between config entries.
+        """
+        return f"{self.coordinator.config_entry.entry_id}_{self._mac}"
+
+    @property
+    @override
     def is_connected(self) -> bool:
-        """Return true if the device is connected to the router."""
-        return self._mac in self.coordinator.data
+        """Return true if the device was recently seen by the router."""
+        if (device := self.coordinator.data.get(self._mac)) is None:
+            return False
+        return device.connected
 
     @property
     @override
@@ -135,4 +171,6 @@ class CiscoIOSScannerEntity(
     @override
     def ip_address(self) -> str | None:
         """Return the IP address of the device."""
-        return self.coordinator.data.get(self._mac)
+        if (device := self.coordinator.data.get(self._mac)) is None:
+            return None
+        return device.ip_address

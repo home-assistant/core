@@ -1,15 +1,21 @@
 """DataUpdateCoordinator for Cisco IOS."""
 
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
 from pexpect import pxssh
 
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -18,6 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 type CiscoIOSConfigEntry = ConfigEntry[CiscoIOSDataUpdateCoordinator]
+
+
+@dataclass
+class CiscoIOSDevice:
+    """Device seen in the ARP table of the router."""
+
+    ip_address: str
+    last_seen: datetime
+    connected: bool
 
 
 def _parse_cisco_mac_address(cisco_hardware_addr: str) -> str:
@@ -96,7 +111,7 @@ class CiscoIOSArpScanner:
         return cisco_ssh.before or ""
 
 
-class CiscoIOSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
+class CiscoIOSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, CiscoIOSDevice]]):
     """Class to manage fetching data from the Cisco IOS router."""
 
     config_entry: CiscoIOSConfigEntry
@@ -110,6 +125,12 @@ class CiscoIOSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             password=config_entry.data[CONF_PASSWORD],
             port=config_entry.data.get(CONF_PORT),
         )
+        self.consider_home = timedelta(
+            seconds=config_entry.options.get(
+                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+            )
+        )
+        self._devices: dict[str, CiscoIOSDevice] = {}
 
         super().__init__(
             hass,
@@ -120,11 +141,23 @@ class CiscoIOSDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
 
     @override
-    async def _async_update_data(self) -> dict[str, str]:
+    async def _async_update_data(self) -> dict[str, CiscoIOSDevice]:
         """Fetch the connected devices from the router."""
         try:
-            return await self.hass.async_add_executor_job(self.scanner.get_devices)
+            connected = await self.hass.async_add_executor_job(self.scanner.get_devices)
         except pxssh.ExceptionPxssh as err:
             raise UpdateFailed(
                 f"Failed to fetch data from Cisco IOS router {self.host}"
             ) from err
+
+        now = dt_util.utcnow()
+        for mac, ip_address in connected.items():
+            self._devices[mac] = CiscoIOSDevice(
+                ip_address=ip_address, last_seen=now, connected=True
+            )
+        # A device absent from the current scan stays connected until the
+        # consider_home grace period has elapsed since it was last seen.
+        for mac, device in self._devices.items():
+            if mac not in connected:
+                device.connected = now - device.last_seen <= self.consider_home
+        return dict(self._devices)

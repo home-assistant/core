@@ -5,8 +5,18 @@ from typing import Any, override
 from pexpect import pxssh
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -18,6 +28,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD, default=""): str,
         vol.Optional(CONF_PORT): cv.port,
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
+        ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
     }
 )
 
@@ -36,10 +54,37 @@ def validate_connection_data(data: dict[str, Any]) -> None:
         raise CannotConnect("Failed to connect to Cisco IOS router") from err
 
 
+class CiscoIOSOptionsFlow(OptionsFlowWithReload):
+    """Handle an options flow for Cisco IOS."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
+
+
 class CiscoIOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cisco IOS."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> CiscoIOSOptionsFlow:
+        """Get the options flow for this handler."""
+        return CiscoIOSOptionsFlow()
 
     @override
     async def async_step_user(
@@ -71,6 +116,9 @@ class CiscoIOSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import existing config from configuration.yaml."""
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
 
+        # Clamp to the range the options flow enforces
+        consider_home: int = min(import_data.pop(CONF_CONSIDER_HOME), 900)
+
         try:
             await self.hass.async_add_executor_job(
                 validate_connection_data, import_data
@@ -81,6 +129,7 @@ class CiscoIOSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=f"{DEFAULT_NAME} ({import_data[CONF_HOST]})",
             data=import_data,
+            options={CONF_CONSIDER_HOME: consider_home},
         )
 
 

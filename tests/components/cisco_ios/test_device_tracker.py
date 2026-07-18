@@ -11,7 +11,11 @@ from homeassistant.components.cisco_ios.coordinator import (
     UPDATE_INTERVAL,
     CiscoIOSArpScanner,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
+from homeassistant.const import CONF_HOST, STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
@@ -41,7 +45,7 @@ async def test_device_tracker_entities_created(
     entity_registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
-        "00:1D:EC:02:07:AB",
+        "test_00:1D:EC:02:07:AB",
         suggested_object_id="tracked_phone",
     )
     mock_config_entry.add_to_hass(hass)
@@ -55,10 +59,14 @@ async def test_device_tracker_entities_created(
         if entry.domain == "device_tracker" and entry.platform == DOMAIN
     ]
     assert len(entries) == 2
-    assert {entry.unique_id for entry in entries} == set(MOCK_DEVICE_DATA)
+    assert {entry.unique_id for entry in entries} == {
+        f"test_{mac}" for mac in MOCK_DEVICE_DATA
+    }
 
     assert (state := hass.states.get("device_tracker.tracked_phone"))
     assert state.state == STATE_HOME
+    assert state.attributes["ip"] == "192.168.1.100"
+    assert state.attributes["mac"] == "00:1D:EC:02:07:AB"
 
 
 async def test_new_device_creates_entity_after_setup(
@@ -76,7 +84,7 @@ async def test_new_device_creates_entity_after_setup(
 
     assert (
         entity_registry.async_get_entity_id(
-            "device_tracker", DOMAIN, "AA:BB:CC:DD:EE:FF"
+            "device_tracker", DOMAIN, "test_AA:BB:CC:DD:EE:FF"
         )
         is None
     )
@@ -90,22 +98,22 @@ async def test_new_device_creates_entity_after_setup(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(
-        "device_tracker", DOMAIN, "AA:BB:CC:DD:EE:FF"
+        "device_tracker", DOMAIN, "test_AA:BB:CC:DD:EE:FF"
     )
 
 
-async def test_device_disconnect_sets_not_home(
+async def test_device_disconnect_sets_not_home_after_consider_home(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_scanner: MagicMock,
     entity_registry: EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a device disappearing from the ARP table is marked not home."""
+    """Test that a disappeared device is marked not home after consider_home."""
     entity_registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
-        "00:1D:EC:02:07:AB",
+        "test_00:1D:EC:02:07:AB",
         suggested_object_id="tracked_phone",
     )
     mock_config_entry.add_to_hass(hass)
@@ -121,8 +129,121 @@ async def test_device_disconnect_sets_not_home(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Within the consider_home grace period the device is still home
+    assert (state := hass.states.get("device_tracker.tracked_phone"))
+    assert state.state == STATE_HOME
+
+    freezer.tick(DEFAULT_CONSIDER_HOME)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert (state := hass.states.get("device_tracker.tracked_phone"))
     assert state.state == STATE_NOT_HOME
+
+
+async def test_restored_devices_after_restart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_scanner: MagicMock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test that registered devices are restored, as not home when away."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        "test_AA:BB:CC:DD:EE:FF",
+        suggested_object_id="old_phone",
+        config_entry=mock_config_entry,
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        "test_00:1D:EC:02:07:AB",
+        suggested_object_id="tracked_phone",
+        config_entry=mock_config_entry,
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("device_tracker.old_phone"))
+    assert state.state == STATE_NOT_HOME
+    assert "ip" not in state.attributes
+
+    assert (state := hass.states.get("device_tracker.tracked_phone"))
+    assert state.state == STATE_HOME
+
+
+async def test_consider_home_zero(
+    hass: HomeAssistant,
+    mock_scanner: MagicMock,
+    entity_registry: EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that with consider_home 0 connected devices are still home."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options={CONF_CONSIDER_HOME: 0},
+        entry_id="test",
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        "test_00:1D:EC:02:07:AB",
+        suggested_object_id="tracked_phone",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("device_tracker.tracked_phone"))
+    assert state.state == STATE_HOME
+
+    mock_scanner.return_value.get_devices.return_value = {}
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("device_tracker.tracked_phone"))
+    assert state.state == STATE_NOT_HOME
+
+
+async def test_multiple_entries_track_same_client(
+    hass: HomeAssistant,
+    mock_scanner: MagicMock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test that the same client seen by two routers does not collide."""
+    entry_1 = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=f"Cisco IOS ({MOCK_HOST})",
+        entry_id="test",
+    )
+    entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: "192.168.2.1"},
+        title="Cisco IOS (192.168.2.1)",
+        entry_id="test2",
+    )
+    entry_1.add_to_hass(hass)
+    entry_2.add_to_hass(hass)
+
+    # Setting up the component sets up both config entries
+    assert await hass.config_entries.async_setup(entry_1.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry_2.state is config_entries.ConfigEntryState.LOADED
+
+    assert entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, "test_00:1D:EC:02:07:AB"
+    )
+    assert entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, "test2_00:1D:EC:02:07:AB"
+    )
 
 
 async def test_device_unavailable_on_update_failure(
@@ -136,7 +257,7 @@ async def test_device_unavailable_on_update_failure(
     entity_registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
-        "00:1D:EC:02:07:AB",
+        "test_00:1D:EC:02:07:AB",
         suggested_object_id="tracked_phone",
     )
     mock_config_entry.add_to_hass(hass)
@@ -160,13 +281,18 @@ async def test_setup_scanner_legacy_platform_imports_config_entry(
     assert await async_setup_component(
         hass,
         "device_tracker",
-        {"device_tracker": [{"platform": DOMAIN, **MOCK_CONFIG}]},
+        {
+            "device_tracker": [
+                {"platform": DOMAIN, **MOCK_CONFIG, CONF_CONSIDER_HOME: 300}
+            ]
+        },
     )
     await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data == MOCK_CONFIG
+    assert entries[0].options == {CONF_CONSIDER_HOME: 300}
     assert entries[0].source == config_entries.SOURCE_IMPORT
 
 
