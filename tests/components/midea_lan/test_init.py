@@ -20,11 +20,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import DummyDevice
+from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry
 
 _ENTRY_DATA = {
-    CONF_DEVICE_ID: 123,
+    CONF_DEVICE_ID: TEST_DEVICE_ID,
     CONF_NAME: "m",
     CONF_TYPE: DeviceType.AC,
     CONF_IP_ADDRESS: "1.1.1.1",
@@ -38,7 +39,7 @@ _ENTRY_DATA = {
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
-    """Test async_setup initialises the domain data."""
+    """Test the midea_lan domain can be set up without any config entries."""
     assert await async_setup_component(hass, DOMAIN, {})
 
 
@@ -72,7 +73,7 @@ async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
 
     entry2 = MockConfigEntry(
         domain=DOMAIN,
-        data={**_ENTRY_DATA, CONF_DEVICE_ID: 456},
+        data={**_ENTRY_DATA, CONF_DEVICE_ID: TEST_DEVICE_ID + 1},
     )
     entry2.add_to_hass(hass)
     with patch(

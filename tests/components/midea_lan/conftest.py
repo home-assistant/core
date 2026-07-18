@@ -33,7 +33,6 @@ class DummyDevice:
         device_type: int,
         *,
         attributes: dict | None = None,
-        available: bool = False,
     ) -> None:
         """Initialize fake device."""
         self.device_type = device_type
@@ -41,13 +40,23 @@ class DummyDevice:
         self.name = TEST_NAME
         self.model = TEST_MODEL
         self.subtype = TEST_SUBTYPE
-        self.available = available
+        self.available = False
         self.attributes = attributes or {}
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1
         self.fan_modes = ["Low", "Medium", "High", "Auto"]
-        self.modes = ["Auto", "ECO", "Sleep", "Comfort"]
+        self.modes = [
+            "Auto",
+            "ECO",
+            "Sleep",
+            "Anti-freezing",
+            "Comfort",
+            "Constant-temperature",
+            "Normal",
+            "Fast-heating",
+            "Standby",
+        ]
 
     def register_update(self, callback: Callable) -> None:
         """Record update callback registration."""

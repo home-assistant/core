@@ -84,7 +84,6 @@ CLIMATE_ENTITIES: list[MideaClimateEntityDescription] = [
     MideaClimateEntityDescription(
         key="climate",
         models=[DeviceType.AC, DeviceType.CC, DeviceType.CF, DeviceType.FB],
-        translation_key="climate_key",
     ),
     MideaClimateEntityDescription(
         key="climate_zone1",
@@ -282,14 +281,12 @@ class MideaClimate(MideaEntity, ClimateEntity):
     @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Midea Climate set preset mode."""
+        if new_attr := _PRESET_TO_ATTR.get(preset_mode):
+            self._device.set_attribute(attr=new_attr, value=True)
+            return
         old_mode = self.preset_mode
         old_attr = _PRESET_TO_ATTR.get(old_mode) if isinstance(old_mode, str) else None
-        if new_attr := _PRESET_TO_ATTR.get(preset_mode):
-            if old_attr and old_attr != new_attr:
-                self._device.set_attribute(attr=old_attr, value=False)
-            self._device.set_attribute(attr=new_attr, value=True)
-        elif old_attr:
-            # preset_mode is PRESET_NONE or unknown; clear the current active preset
+        if old_attr:
             self._device.set_attribute(attr=old_attr, value=False)
 
 
@@ -363,7 +360,7 @@ class MideaACClimate(MideaClimate):
         """Midea AC Climate min temperature."""
         min_temperature = self._float_attribute(ACAttributes.min_temperature)
         if min_temperature is None:
-            return TEMPERATURE_MIN
+            return float(TEMPERATURE_MIN)
         return min_temperature
 
     @property
@@ -517,7 +514,7 @@ class MideaCFClimate(MideaClimate):
         """Midea CF Climate min temperature."""
         min_temperature = self._float_attribute(CFAttributes.min_temperature)
         if min_temperature is None:
-            return TEMPERATURE_MIN
+            return float(TEMPERATURE_MIN)
         return min_temperature
 
     @property

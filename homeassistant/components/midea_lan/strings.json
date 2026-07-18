@@ -13,7 +13,8 @@
       "no_devices": "No devices found",
       "preset_login_failed": "Could not log in with the preset account",
       "protocol_mismatch": "The protocol does not match the discovered device",
-      "token_unavailable": "Could not get a valid token and key from the cloud"
+      "token_unavailable": "Could not get a valid token and key from the cloud",
+      "type_mismatch": "The type does not match the discovered device"
     },
     "step": {
       "auth_method": {

@@ -10,9 +10,8 @@ from midealocal.cloud import (
     get_preset_account_cloud,
 )
 from midealocal.const import DeviceType, ProtocolVersion
-from midealocal.device import AuthException, MideaDevice
+from midealocal.device import MideaDevice
 from midealocal.discover import discover
-from midealocal.exceptions import SocketException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -38,6 +37,14 @@ DEFAULT_CLOUD: str = get_default_cloud()
 
 LOGIN_MODE_PRESET = "preset"
 LOGIN_MODE_ACCOUNT = "account"
+
+
+def _connect_and_close(dm: MideaDevice) -> bool:
+    """Connect to the device, always closing the socket afterwards."""
+    try:
+        return dm.connect(check_protocol=True)
+    finally:
+        dm.close_socket()
 
 
 class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -139,24 +146,47 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Failed to login to %s cloud with user credentials",
                 cloud_server,
             )
-            return await self.async_step_login_credentials(error="login_failed")
+            return self._show_login_credentials_form(
+                cloud_server_options,
+                default_server,
+                user_input=user_input,
+                error="login_failed",
+            )
         # user not login, show login form in UI
+        return self._show_login_credentials_form(
+            cloud_server_options,
+            default_server,
+            user_input=None,
+            error=error,
+        )
+
+    def _show_login_credentials_form(
+        self,
+        cloud_server_options: list[str],
+        default_server: str,
+        user_input: dict[str, Any] | None,
+        error: str | None = None,
+    ) -> ConfigFlowResult:
+        """Show the login form, retaining any previously entered values."""
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ACCOUNT): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Required(
+                    CONF_SERVER,
+                    default=default_server,
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=cloud_server_options,
+                    )
+                ),
+            },
+        )
+        if user_input is not None:
+            schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
             step_id="login_credentials",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ACCOUNT): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(
-                        CONF_SERVER,
-                        default=default_server,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=cloud_server_options,
-                        )
-                    ),
-                },
-            ),
+            data_schema=schema,
             errors={"base": error} if error else None,
         )
 
@@ -351,17 +381,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 subtype=device.get(CONF_SUBTYPE, 0),
                 attributes={},
             )
-            if await self.hass.async_add_executor_job(dm.connect):
-                try:
-                    await self.hass.async_add_executor_job(dm.authenticate)
-                except AuthException:
-                    _LOGGER.debug("Unable to authenticate")
-                except SocketException:
-                    _LOGGER.debug("Socket closed")
-                else:
-                    return value
-                finally:
-                    await self.hass.async_add_executor_job(dm.close_socket)
+            connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
+            if connected:
+                return value
             # return debug log with failed key
             _LOGGER.debug(
                 "Connect device using method %s token/key failed",
@@ -482,9 +504,17 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any],
     ) -> ConfigFlowResult:
         """Validate device connection with all the input and create the entry."""
+        device_id = user_input[CONF_DEVICE_ID]
+
+        # check unique_id before attempting a connection, so a re-add of an
+        # already configured but currently offline device aborts (already_configured)
+        # instead of failing with device_auth_failed
+        await self.async_set_unique_id(str(device_id))
+        self._abort_if_unique_id_configured()
+
         dm = MideaDevice(
             name="",
-            device_id=user_input[CONF_DEVICE_ID],
+            device_id=device_id,
             device_type=user_input[CONF_TYPE],
             ip_address=user_input[CONF_IP_ADDRESS],
             port=user_input[CONF_PORT],
@@ -495,48 +525,31 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             subtype=user_input[CONF_SUBTYPE],
             attributes={},
         )
-        if await self.hass.async_add_executor_job(dm.connect):
-            authenticated = False
-            try:
-                if user_input[CONF_PROTOCOL] == ProtocolVersion.V3:
-                    await self.hass.async_add_executor_job(dm.authenticate)
-                authenticated = True
-            except SocketException:
-                _LOGGER.exception("Socket closed")
-            except AuthException:
-                _LOGGER.exception(
-                    "Unable to authenticate with provided key and token",
-                )
-            finally:
-                await self.hass.async_add_executor_job(dm.close_socket)
-            if authenticated:
-                device_id = user_input[CONF_DEVICE_ID]
-                device_type = user_input[CONF_TYPE]
-                found_name = self.found_device.get(CONF_NAME)
-                if isinstance(found_name, str) and found_name:
-                    name = found_name
-                else:
-                    name = self.supports.get(device_type, str(device_id))
-                data = {
-                    CONF_NAME: name,
-                    CONF_DEVICE_ID: device_id,
-                    CONF_TYPE: device_type,
-                    CONF_PROTOCOL: user_input[CONF_PROTOCOL],
-                    CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_MODEL: user_input[CONF_MODEL],
-                    CONF_SUBTYPE: user_input[CONF_SUBTYPE],
-                    CONF_TOKEN: user_input[CONF_TOKEN],
-                    CONF_KEY: user_input[CONF_KEY],
-                }
+        connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
+        if connected:
+            device_type = user_input[CONF_TYPE]
+            found_name = self.found_device.get(CONF_NAME)
+            if isinstance(found_name, str) and found_name:
+                name = found_name
+            else:
+                name = self.supports.get(device_type, str(device_id))
+            data = {
+                CONF_NAME: name,
+                CONF_DEVICE_ID: device_id,
+                CONF_TYPE: device_type,
+                CONF_PROTOCOL: user_input[CONF_PROTOCOL],
+                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_MODEL: user_input[CONF_MODEL],
+                CONF_SUBTYPE: user_input[CONF_SUBTYPE],
+                CONF_TOKEN: user_input[CONF_TOKEN],
+                CONF_KEY: user_input[CONF_KEY],
+            }
 
-                await self.async_set_unique_id(str(device_id))
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=name,
-                    data=data,
-                )
+            return self.async_create_entry(
+                title=name,
+                data=data,
+            )
         return self._show_manually_form(user_input, error="device_auth_failed")
 
     async def async_step_manually(
@@ -586,6 +599,11 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._show_manually_form(
                     user_input,
                     error="protocol_mismatch",
+                )
+            if user_input[CONF_TYPE] != device.get(CONF_TYPE):
+                return self._show_manually_form(
+                    user_input,
+                    error="type_mismatch",
                 )
 
             # try to get token/key with preset account

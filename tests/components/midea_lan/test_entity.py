@@ -53,7 +53,7 @@ async def test_entity_updates_from_device_callback(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
     update: dict[str, float],
-    status: dict[str, bool],
+    status: dict[str, bool | float],
     availability: bool,
     expected_current_temp: float | None,
     expected_unavailable: bool,
