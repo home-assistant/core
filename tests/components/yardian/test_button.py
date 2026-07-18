@@ -40,7 +40,7 @@ async def test_stop_all_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.yardian_smart_sprinkler"},
+        {ATTR_ENTITY_ID: "button.yardian_smart_sprinkler_stop_irrigation"},
         blocking=True,
     )
     mock_yardian_client.stop_irrigation.assert_called_once()
