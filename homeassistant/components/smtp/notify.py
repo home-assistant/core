@@ -123,7 +123,10 @@ async def async_get_service(
     )
     mail_service = MailNotificationService(discovery_info, ssl_context)
 
+    entry: SmtpConfigEntry = discovery_info[CONF_ENTRY]
+
     if await hass.async_add_executor_job(mail_service.connection_is_valid):
+        entry.async_on_unload(mail_service.async_unregister_services)
         return mail_service
 
     return None
