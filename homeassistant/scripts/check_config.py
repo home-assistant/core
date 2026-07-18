@@ -300,6 +300,8 @@ async def async_check_config(config_dir):
     hass = core.HomeAssistant(config_dir)
     loader.async_setup(hass)
     hass.config_entries = ConfigEntries(hass, {})
+    # The device registry migration waits for the config entries to load
+    await hass.config_entries.async_initialize()
     dr.async_setup(hass)
     await ar.async_load(hass)
     await dr.async_load(hass)

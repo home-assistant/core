@@ -45,11 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     try:
         devices = await client.get_devices()
     except LiebherrAuthenticationError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed("Invalid API key") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
+        ) from err
     except LiebherrConnectionError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryNotReady(f"Failed to connect to Liebherr API: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     # Create a coordinator for each device (may be empty if no devices)
     data = LiebherrData(client=client)
@@ -102,10 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                 for device_id in device_ids:
                     if coordinator := data.coordinators.pop(device_id, None):
                         await coordinator.async_shutdown()
-                device_registry.async_update_device(
-                    device_id=device_entry.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
+                device_registry.async_remove_device(device_entry.id)
 
         # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []
