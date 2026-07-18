@@ -19,6 +19,7 @@ from .. import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 
+# pylint: disable-next=home-assistant-missing-feature-implementation
 class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterEntity):
     """Representation of AtlanticDomesticHotWaterProductionMBLComponent (modbuslink)."""
 

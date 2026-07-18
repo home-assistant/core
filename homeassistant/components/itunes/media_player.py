@@ -179,6 +179,7 @@ def setup_platform(
     )
 
 
+# pylint: disable-next=home-assistant-missing-feature-implementation
 class ItunesDevice(MediaPlayerEntity):
     """Representation of an iTunes API instance."""
 

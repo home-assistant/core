@@ -91,6 +91,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
+# pylint: disable-next=home-assistant-missing-feature-implementation
 class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
     """Represent a thinq vacuum platform."""
 

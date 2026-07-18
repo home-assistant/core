@@ -89,6 +89,7 @@ from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
+from tests.supported_features_runtime import collect_via_add_hook
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
@@ -124,6 +125,27 @@ def prevent_io() -> Generator[None]:
         "homeassistant.components.http.ban.load_yaml_config_file",
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def enforce_supported_features_implemented() -> Generator[None]:
+    """Fail tests that add entities advertising unimplemented supported features."""
+    with collect_via_add_hook() as violations:
+        yield
+    if violations:
+        details = "\n".join(
+            violation["probe_error"]
+            if "probe_error" in violation
+            else (
+                f"{violation['entity_class']} declares {violation['domain']} feature "
+                f"{violation['feature']} but implements none of: "
+                f"{', '.join(violation['methods'])}"
+            )
+            for violation in violations
+        )
+        pytest.fail(
+            f"Entities advertise supported features they do not implement:\n{details}"
+        )
 
 
 @pytest.fixture
