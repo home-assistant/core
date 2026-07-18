@@ -264,13 +264,9 @@ class SonosDiscoveryManager:
             visible_zones = soco.visible_zones
             self._known_invisible = soco.all_zones - visible_zones
             for zone in visible_zones:
-                if zone.uid in self.data.discovered:
-                    continue
-                if self.is_device_disabled(zone.uid):
-                    _LOGGER.debug(
-                        "Skipping visible-zones discovery for disabled Sonos device: %s",
-                        zone.uid,
-                    )
+                if zone.uid in self.data.discovered or self.is_device_disabled(
+                    zone.uid
+                ):
                     continue
                 zones_to_add.add(zone)
 

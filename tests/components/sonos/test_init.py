@@ -667,7 +667,6 @@ async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
     soco_factory: SoCoMockFactory,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test disabled visible zone is skipped in visible-zones expansion."""
     soco_1 = soco_factory.cache_mock(
@@ -688,16 +687,11 @@ async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
-    with caplog.at_level(logging.DEBUG):
-        await _setup_hass(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await _setup_hass(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "media_player.living_room" in entity_registry.entities
     assert "media_player.bedroom" not in entity_registry.entities
-    assert (
-        f"Skipping visible-zones discovery for disabled Sonos device: {soco_2.uid}"
-        in caplog.text
-    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
