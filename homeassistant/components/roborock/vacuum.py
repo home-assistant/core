@@ -184,8 +184,10 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         what was available when the area mapping was last configured.
         """
         super()._handle_coordinator_update()
-        # Avoid creating false-alarm issues if home map info is not yet loaded
-        if not self._home_trait.home_map_info:
+        # Avoid creating false-alarm issues if home map info is not yet loaded or has no rooms
+        if not self._home_trait.home_map_info or not any(
+            map_info.rooms for map_info in self._home_trait.home_map_info.values()
+        ):
             return
         last_seen = self.last_seen_segments
         if last_seen is None:
@@ -199,13 +201,10 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         if current_ids != {seg.id for seg in last_seen}:
             self.async_create_segments_issue()
         elif self.registry_entry:
-            # Delete any invalid repair issues previously created (e.g. during transient states)
-            ir.async_delete_issue(
-                self.hass,
-                VACUUM_DOMAIN,
-                f"segments_changed_{self.registry_entry.id}",
-            )
-            self._segments_changed_last_seen = None
+            issue_id = f"segments_changed_{self.registry_entry.id}"
+            if ir.async_get(self.hass).async_get_issue(VACUUM_DOMAIN, issue_id):
+                # Delete any invalid repair issues previously created (e.g. during transient states)
+                ir.async_delete_issue(self.hass, VACUUM_DOMAIN, issue_id)
 
     @property
     @override
