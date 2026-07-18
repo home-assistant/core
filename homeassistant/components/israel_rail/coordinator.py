@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from israelrailapi import TrainSchedule
 from israelrailapi.api import TrainRoute
@@ -65,14 +66,15 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
         self._start = start
         self._destination = destination
 
+    @override
     async def _async_update_data(self) -> list[DataConnection]:
         try:
             train_routes = await self.hass.async_add_executor_job(
                 self._train_schedule.query,
                 self._start,
                 self._destination,
-                datetime.now().strftime("%Y-%m-%d"),
-                datetime.now().strftime("%H:%M"),
+                datetime.now().strftime("%Y-%m-%d"),  # pylint: disable=home-assistant-enforce-naive-now
+                datetime.now().strftime("%H:%M"),  # pylint: disable=home-assistant-enforce-naive-now
             )
         except Exception as e:
             raise UpdateFailed(

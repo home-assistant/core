@@ -27,6 +27,23 @@
       }
     }
   },
+  "exceptions": {
+    "error_while_executing": {
+      "message": "Error while executing \"{service}\": {error}"
+    },
+    "invalid_device_id": {
+      "message": "No device could be found for ID: {device_id}"
+    },
+    "no_base_station": {
+      "message": "No base station could be found for device ID: {device_id}"
+    },
+    "no_system_for_device": {
+      "message": "No SimpliSafe system could be found for device ID: {device_id}"
+    },
+    "set_system_properties_not_v3": {
+      "message": "System properties can only be set on V3 systems."
+    }
+  },
   "options": {
     "step": {
       "init": {

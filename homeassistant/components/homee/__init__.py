@@ -83,9 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, dr.format_mac(homee.settings.mac_address))
-        },
+        connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
         identifiers={(DOMAIN, homee.settings.uid)},
         manufacturer="homee",
         name=homee.settings.homee_name,
@@ -107,10 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
         )
         if not is_node_present:
             _LOGGER.info("Removing device %s", device.name)
-            device_registry.async_update_device(
-                device_id=device.id,
-                remove_config_entry_id=entry.entry_id,
-            )
+            device_registry.async_remove_device(device.id)
 
     # Remove device at runtime when node is removed in homee
     async def _remove_node_callback(node: HomeeNode, add: bool) -> None:

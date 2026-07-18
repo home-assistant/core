@@ -6,13 +6,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 28.0,
-      'min_temp': 15.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 15.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <TessieClimateKeeper.OFF: 'off'>,
         <TessieClimateKeeper.ON: 'on'>,
         <TessieClimateKeeper.DOG: 'dog'>,
@@ -52,23 +52,23 @@
 # name: test_climate[climate.test_climate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 30.5,
-      'friendly_name': 'Test Climate',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 30.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Climate',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 28.0,
-      'min_temp': 15.0,
-      'preset_mode': 'off',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 15.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <TessieClimateKeeper.OFF: 'off'>,
         <TessieClimateKeeper.ON: 'on'>,
         <TessieClimateKeeper.DOG: 'dog'>,
         <TessieClimateKeeper.CAMP: 'camp'>,
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'temperature': 22.5,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_climate',

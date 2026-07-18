@@ -1,7 +1,7 @@
 """Support for Vera devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
@@ -45,10 +45,12 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
                 f"_{self.vera_device.vera_device_id}"
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.controller.register(self.vera_device, self._update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from updates."""
         self.controller.unregister(self.vera_device, self._update_callback)
@@ -65,11 +67,13 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
             self.vera_device.refresh()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attr = {}
@@ -95,11 +99,13 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
         return attr
 
     @property
+    @override
     def available(self) -> bool:
         """If device communications have failed return false."""
         return not self.vera_device.comm_failure
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID.
 

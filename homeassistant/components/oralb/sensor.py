@@ -1,13 +1,9 @@
 """Support for OralB sensors."""
 
+from typing import override
+
 from oralb_ble import OralBSensor, SensorUpdate
-from oralb_ble.parser import (
-    IO_SERIES_MODES,
-    PRESSURE,
-    SECTOR_MAP,
-    SMART_SERIES_MODES,
-    STATES,
-)
+from oralb_ble.parser import IO_SERIES_MODES, PRESSURE, SMART_SERIES_MODES, STATES
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
@@ -44,7 +40,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key=OralBSensor.SECTOR,
         translation_key="sector",
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[v.replace(" ", "_") for v in set(SECTOR_MAP.values()) | {"no_sector"}],
+        options=["no_sector", *(f"sector_{sector}" for sector in range(1, 8))],
         device_class=SensorDeviceClass.ENUM,
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
@@ -149,6 +145,7 @@ class OralBBluetoothSensorEntity(
     """Representation of a OralB sensor."""
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the native value."""
         value = self.processor.entity_data.get(self.entity_key)
@@ -162,6 +159,7 @@ class OralBBluetoothSensorEntity(
         return value
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available.
 
@@ -174,6 +172,7 @@ class OralBBluetoothSensorEntity(
         return True
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if the device is no longer broadcasting."""
         return not self.processor.available

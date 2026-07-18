@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 import random
-from typing import TYPE_CHECKING, TypedDict, cast
+from typing import TYPE_CHECKING, TypedDict, cast, override
 
 from aiohttp.client_exceptions import ClientError
 import tibber
@@ -137,6 +137,7 @@ class TibberDataCoordinator(TibberCoordinator[None]):
             update_interval=timedelta(minutes=20),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data via API."""
         tibber_connection = await self._async_get_client()
@@ -308,6 +309,7 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
         self.async_set_updated_data(self._build_price_data())
 
     @callback
+    @override
     def _schedule_refresh(self) -> None:
         """Start listening to fetched price data when entities subscribe."""
         super()._schedule_refresh()
@@ -318,6 +320,7 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
                 )
             )
 
+    @override
     def _unschedule_refresh(self) -> None:
         """Stop listening to fetched price data when unused."""
         super()._unschedule_refresh()
@@ -339,6 +342,7 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
             )
         return next_run - now
 
+    @override
     async def _async_update_data(self) -> dict[str, TibberHomeData]:
         self.update_interval = self._time_until_next_15_minute()
         return self._build_price_data()
@@ -362,6 +366,7 @@ class TibberFetchPriceCoordinator(TibberCoordinator[dict[str, tibber.TibberHome]
             3600 * 14, 3600 * 22
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, tibber.TibberHome]:
         """Fetch latest price data via API and return per-home data."""
         tibber_connection = await self._async_get_client()
@@ -454,12 +459,14 @@ class TibberDataAPICoordinator(TibberCoordinator[dict[str, TibberDevice]]):
             return device_sensors.get(sensor_id)
         return None
 
+    @override
     async def _async_setup(self) -> None:
         """Initial load of Tibber Data API devices."""
         client = await self._async_get_client()
         devices = await client.data_api.get_all_devices()
         self._build_sensor_lookup(devices)
 
+    @override
     async def _async_update_data(self) -> dict[str, TibberDevice]:
         """Fetch the latest device capabilities from the Tibber Data API."""
         client = await self._async_get_client()
