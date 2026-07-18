@@ -142,9 +142,10 @@ def _attach_file(
         # Not all valid images are recognized from their content, e.g. JPEGs
         # written by ffmpeg for camera.snapshot start with a comment marker
         # instead of JFIF/Exif, so fall back to guessing from the filename.
-        mime_type, _ = mimetypes.guess_type(atch_name)
+        # Compressed files (e.g. .svgz) must not be labeled as plain images.
+        mime_type, encoding = mimetypes.guess_type(atch_name)
         maintype, _, subtype = (mime_type or "").partition("/")
-        if maintype == "image":
+        if encoding is None and maintype == "image":
             attachment = MIMEImage(file_bytes, _subtype=subtype)
 
     if attachment is None:
