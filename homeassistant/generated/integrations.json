@@ -2758,6 +2758,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "harbor": {
+      "name": "Harbor Sleep",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "hardkernel": {
       "name": "Hardkernel",
       "integration_type": "hardware",
@@ -3911,6 +3917,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "litellm": {
+      "name": "LiteLLM",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "litterrobot": {
       "name": "Whisker",
       "integration_type": "hub",
@@ -4412,14 +4424,9 @@
       "iot_class": "local_polling"
     },
     "modbus": {
+      "name": "Modbus",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "modbus_connection": {
-      "name": "Modbus Connection",
-      "integration_type": "hub",
-      "config_flow": true,
       "iot_class": "local_polling"
     },
     "modem_callerid": {
@@ -8554,7 +8561,6 @@
     "local_todo",
     "min_max",
     "mobile_app",
-    "modbus",
     "moehlenhoff_alpha2",
     "mold_indicator",
     "moon",

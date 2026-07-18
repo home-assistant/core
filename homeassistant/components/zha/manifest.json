@@ -23,7 +23,7 @@
     "universal_silabs_flasher",
     "serialx"
   ],
-  "requirements": ["zha==2.0.0", "zha-quirks==2.1.1"],
+  "requirements": ["zha==2.0.1", "zha-quirks==2.1.1"],
   "usb": [
     {
       "description": "*2652*",
