@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.gatus.coordinator import GatusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -44,3 +45,55 @@ async def test_setup_failure_retry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_remove_stale_device_runtime(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gatus_client: AsyncMock,
+) -> None:
+    """Test that a device is removed at runtime when it is no longer returned by the Gatus API."""
+    await setup_integration(hass, mock_config_entry)
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={("gatus", f"{mock_config_entry.entry_id}_backend_service")}
+    )
+    assert device is not None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = []
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+
+    device = device_registry.async_get_device(
+        identifiers={("gatus", f"{mock_config_entry.entry_id}_backend_service")}
+    )
+    assert device is None
+
+
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_remove_stale_device_on_startup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that stale devices in the registry are removed on startup."""
+    mock_config_entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("gatus", f"{mock_config_entry.entry_id}_stale_service")},
+        name="Stale Service",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(stale_device.id) is None
+
+    active_device = device_registry.async_get_device(
+        identifiers={("gatus", f"{mock_config_entry.entry_id}_backend_service")}
+    )
+    assert active_device is not None
