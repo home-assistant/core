@@ -112,6 +112,6 @@ class ScorpionTrackSensorEntity(ScorpionTrackEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> ScorpionTrackSensorValue:
+    def native_value(self) -> StateType | datetime:
         """Return the sensor value from the coordinator snapshot."""
         return self._available_value()
