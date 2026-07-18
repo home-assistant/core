@@ -592,6 +592,60 @@ async def test_segments_changed_issue(
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
 
+    # Set the last-seen segments to match what the vacuum currently reports
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+                {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
+                {"id": "0_18", "name": "Example room 3", "group": "Upstairs"},
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
+                {"id": "1_18", "name": "Example room 3", "group": "Downstairs"},
+            ],
+        },
+    )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # The issue should be deleted programmatically
+    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)
+    assert issue is None
+
+
+async def test_segments_changed_issue_no_map_info(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test no repair issue is created when map info is not loaded/empty."""
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_99", "name": "Old room", "group": "Downstairs"},
+            ],
+        },
+    )
+
+    # Empty map info
+    fake_vacuum.v1_properties.home.home_map_info = {}
+
+    coordinator = setup_entry.runtime_data.v1[0]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    issue_id = f"segments_changed_{entity_entry.id}"
+    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)
+    assert issue is None
+
 
 @pytest.fixture(name="q7_vacuum_api", autouse=False)
 def fake_q7_vacuum_api_fixture(

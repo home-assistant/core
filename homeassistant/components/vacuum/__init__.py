@@ -550,6 +550,16 @@ class StateVacuumEntity(
         self._segments_changed_last_seen = options.get("last_seen_segments")
 
     @callback
+    def async_delete_segments_issue(self) -> None:
+        """Delete the repair issue when vacuum segments match again."""
+        if self.registry_entry is None:
+            return
+
+        issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+        ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+        self._segments_changed_last_seen = None
+
+    @callback
     def _async_check_segments_issues(self) -> None:
         """Create or delete segment-related repair issues."""
         if self.registry_entry is None:
