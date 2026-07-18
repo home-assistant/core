@@ -212,6 +212,35 @@ async def test_http_messages_invalid_message_format(
     assert response_data == "Could not parse message"
 
 
+async def test_streamable_error_processing_request(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a failure while processing a streamable request returns a structured 400.
+
+    This simulates a client probing the endpoint (e.g. a schema/initialize
+    probe) in a way that causes the underlying MCP server run to fail. The
+    endpoint should respond with a structured client error instead of an
+    unhandled exception.
+    """
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.mcp_server.http.Server.run",
+        side_effect=RuntimeError("boom"),
+    ):
+        response = await client.post(
+            STREAMABLE_API,
+            json=INITIALIZE_MESSAGE,
+            headers={"accept": CONTENT_TYPE_JSON},
+        )
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+    response_data = await response.text()
+    assert response_data == "Could not process request"
+
+
 async def test_http_sse_multiple_config_entries(
     hass: HomeAssistant,
     setup_integration: None,

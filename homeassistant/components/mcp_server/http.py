@@ -281,12 +281,16 @@ async def _async_handle_streamable_message(
                 streams.read_stream, streams.write_stream, options, stateless=True
             )
 
-        async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
-            tg.start_soon(run_server)
+        try:
+            async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
+                tg.start_soon(run_server)
 
-            await streams.read_stream_writer.send(SessionMessage(message))
-            session_message = await anext(streams.write_stream_reader)
-            tg.cancel_scope.cancel()
+                await streams.read_stream_writer.send(SessionMessage(message))
+                session_message = await anext(streams.write_stream_reader)
+                tg.cancel_scope.cancel()
+        except* Exception as eg:
+            _LOGGER.debug("Error processing streamable MCP request: %s", eg.exceptions)
+            raise HTTPBadRequest(text="Could not process request") from eg
 
         _LOGGER.debug("Sending response: %s", session_message)
         return web.json_response(
