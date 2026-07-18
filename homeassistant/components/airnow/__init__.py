@@ -65,21 +65,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if entry.version == 1:
-        # Version 1 stored the radius in data; version 2 moved it to options.
-        new_options = {CONF_RADIUS: entry.data[CONF_RADIUS]}
-        new_data = {k: v for k, v in entry.data.items() if k != CONF_RADIUS}
-
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options, version=2
-        )
-
-    if entry.version == 2:
+    if entry.version < 3:
         # The 2026 AirNow API dropped the distance parameter, so the radius
-        # option no longer affects lookups. Remove it.
+        # option no longer affects lookups. Strip it from both older layouts:
+        # version 1 kept it in data, version 2 in options.
+        new_data = {k: v for k, v in entry.data.items() if k != CONF_RADIUS}
         new_options = {k: v for k, v in entry.options.items() if k != CONF_RADIUS}
 
-        hass.config_entries.async_update_entry(entry, options=new_options, version=3)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options, version=3
+        )
 
     _LOGGER.info("Migration to version %s successful", entry.version)
 
