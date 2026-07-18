@@ -39,9 +39,9 @@
 # name: test_lock_attributes[lock.vault_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'thumbturn',
-      'friendly_name': 'Vault Door',
-      'supported_features': <LockEntityFeature: 0>,
+      <LockEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'thumbturn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vault Door',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.vault_door',

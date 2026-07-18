@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '5',
         '15',
@@ -50,8 +50,8 @@
 # name: test_select_attributes[select.vault_door_auto_lock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vault Door Auto-lock time',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vault Door Auto-lock time',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '5',
         '15',

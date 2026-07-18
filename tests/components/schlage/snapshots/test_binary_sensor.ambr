@@ -39,8 +39,8 @@
 # name: test_binary_sensor_attributes[binary_sensor.vault_door_keypad_disabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Vault Door Keypad disabled',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vault Door Keypad disabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.vault_door_keypad_disabled',

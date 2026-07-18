@@ -46,7 +46,7 @@ async def mock_add_config_entry(
     mock_schlage: Mock,
     mock_lock: Mock,
 ) -> Callable[[], Awaitable[MockSchlageConfigEntry]]:
-    """Mock ConfigEntry that's been added to HA."""
+    """Return a callable that adds and sets up the mock ConfigEntry in HA."""
 
     async def callback() -> MockSchlageConfigEntry:
         mock_schlage.locks.return_value = [mock_lock]

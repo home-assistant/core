@@ -39,8 +39,8 @@
 # name: test_switch_attributes[switch.vault_door_1_touch_locking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Vault Door 1-Touch Locking',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vault Door 1-Touch Locking',
     }),
     'context': <ANY>,
     'entity_id': 'switch.vault_door_1_touch_locking',
@@ -90,8 +90,8 @@
 # name: test_switch_attributes[switch.vault_door_keypress_beep-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Vault Door Keypress Beep',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vault Door Keypress Beep',
     }),
     'context': <ANY>,
     'entity_id': 'switch.vault_door_keypress_beep',

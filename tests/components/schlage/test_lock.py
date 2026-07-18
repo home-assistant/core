@@ -48,14 +48,16 @@ async def test_lock_attributes(
 
 async def test_lock_jammed(
     hass: HomeAssistant,
-    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
     mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test lock jammed state."""
     mock_lock.is_locked = False
     mock_lock.is_jammed = True
-    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
-        await mock_add_config_entry()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     lock = hass.states.get("lock.vault_door")
     assert lock is not None
@@ -108,13 +110,15 @@ async def test_lock_services(
 async def test_changed_by(
     hass: HomeAssistant,
     mock_lock: Mock,
-    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+    mock_added_config_entry: MockSchlageConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test population of the changed_by attribute."""
     mock_lock.last_changed_by.reset_mock()
     mock_lock.last_changed_by.return_value = "access code - foo"
-    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
-        await mock_add_config_entry()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     lock = hass.states.get("lock.vault_door")
     assert lock is not None
