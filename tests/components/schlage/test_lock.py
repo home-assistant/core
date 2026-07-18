@@ -122,7 +122,7 @@ async def test_changed_by(
 
     lock = hass.states.get("lock.vault_door")
     assert lock is not None
-    assert lock.attributes.get("changed_by") == "access code - foo"
+    assert lock.attributes["changed_by"] == "access code - foo"
 
 
 @pytest.mark.parametrize(
