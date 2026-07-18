@@ -3,12 +3,14 @@
     "step": {
       "user": {
         "data": {
+          "all_statistics": "All statistics",
           "entity_ids": "Input entities",
           "name": "[%key:common::config_flow::data::name%]",
           "round_digits": "Precision",
           "type": "Statistic characteristic"
         },
         "data_description": {
+          "all_statistics": "Provide all statistics as attributes.",
           "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean, median or sum."
         },
         "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
@@ -20,6 +22,7 @@
     "step": {
       "init": {
         "data": {
+          "all_statistics": "[%key:component::min_max::config::step::user::data::all_statistics%]",
           "entity_ids": "[%key:component::min_max::config::step::user::data::entity_ids%]",
           "round_digits": "[%key:component::min_max::config::step::user::data::round_digits%]",
           "type": "[%key:component::min_max::config::step::user::data::type%]"

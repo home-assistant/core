@@ -41,6 +41,7 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
         "name": "My min_max",
         "round_digits": 2.0,
         "type": "max",
+        "all_statistics": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -51,6 +52,7 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
         "name": "My min_max",
         "round_digits": 2.0,
         "type": "max",
+        "all_statistics": False,
     }
     assert config_entry.title == "My min_max"
 
@@ -103,6 +105,7 @@ async def test_options(hass: HomeAssistant, platform: str) -> None:
         "name": "My min_max",
         "round_digits": 1,
         "type": "mean",
+        "all_statistics": False,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
@@ -110,6 +113,7 @@ async def test_options(hass: HomeAssistant, platform: str) -> None:
         "name": "My min_max",
         "round_digits": 1,
         "type": "mean",
+        "all_statistics": False,
     }
     assert config_entry.title == "My min_max"
 

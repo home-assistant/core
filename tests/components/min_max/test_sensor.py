@@ -101,6 +101,57 @@ async def test_min_sensor(
     assert entity.unique_id == "very_unique_id"
 
 
+async def test_min_sensor_all(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the min sensor."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_min",
+            "type": "min",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "all_statistics": True,
+            "unique_id": "very_unique_id",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_min")
+
+    assert str(float(MIN_VALUE)) == state.state
+    assert entity_ids[2] == state.attributes.get("min_entity_id")
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    assert state.attributes.get("last") == VALUES[-1]
+    assert state.attributes.get("last_entity_id") == entity_ids[-1]
+
+    assert state.attributes.get("max_value") == MAX_VALUE
+    assert entity_ids[1] == state.attributes.get("max_entity_id")
+
+    assert state.attributes.get("mean") == MEAN
+
+    assert state.attributes.get("median") == MEDIAN
+
+    assert state.attributes.get("min_value") == MIN_VALUE
+    assert entity_ids[2] == state.attributes.get("min_entity_id")
+
+    assert state.attributes.get("range") == RANGE_4_DIGITS
+
+    assert state.attributes.get("sum") == SUM_VALUE
+
+    entity = entity_registry.async_get("sensor.test_min")
+    assert entity.unique_id == "very_unique_id"
+
+
 async def test_max_sensor(hass: HomeAssistant) -> None:
     """Test the max sensor."""
     config = {

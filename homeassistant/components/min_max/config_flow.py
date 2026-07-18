@@ -15,7 +15,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+from .const import CONF_ALL_STATISTICS, CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 _STATISTIC_MEASURES = [
     "min",
@@ -46,6 +46,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
         ),
+        vol.Optional(CONF_ALL_STATISTICS, default=False): selector.BooleanSelector(),
     }
 )
 

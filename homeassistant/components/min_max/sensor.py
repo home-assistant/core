@@ -36,7 +36,13 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PLATFORMS
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+from .const import (
+    CONF_ALL_STATISTICS,
+    CONF_ENTITY_IDS,
+    CONF_ROUND_DIGITS,
+    DEFAULT_ALL_STATISTICS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +78,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
+        vol.Optional(CONF_ALL_STATISTICS, default=False): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -89,6 +96,9 @@ async def async_setup_entry(
     )
     sensor_type = config_entry.options[CONF_TYPE]
     round_digits = int(config_entry.options[CONF_ROUND_DIGITS])
+    all_statistics = config_entry.options.get(
+        CONF_ALL_STATISTICS, DEFAULT_ALL_STATISTICS
+    )
 
     async_add_entities(
         [
@@ -97,6 +107,7 @@ async def async_setup_entry(
                 config_entry.title,
                 sensor_type,
                 round_digits,
+                all_statistics,
                 config_entry.entry_id,
             )
         ]
@@ -114,12 +125,17 @@ async def async_setup_platform(
     name: str | None = config.get(CONF_NAME)
     sensor_type: str = config[CONF_TYPE]
     round_digits: int = config[CONF_ROUND_DIGITS]
+    all_statistics: bool = config[CONF_ALL_STATISTICS]
     unique_id = config.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     async_add_entities(
-        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
+        [
+            MinMaxSensor(
+                entity_ids, name, sensor_type, round_digits, all_statistics, unique_id
+            )
+        ]
     )
 
 
@@ -216,6 +232,7 @@ class MinMaxSensor(SensorEntity):
         name: str | None,
         sensor_type: str,
         round_digits: int,
+        all_statistics: bool,
         unique_id: str | None,
     ) -> None:
         """Initialize the min/max sensor."""
@@ -223,6 +240,7 @@ class MinMaxSensor(SensorEntity):
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
+        self._all_statistics = all_statistics
 
         if name:
             self._attr_name = name
@@ -285,11 +303,19 @@ class MinMaxSensor(SensorEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        attributes: dict[str, list[str] | str | None] = {
-            ATTR_ENTITY_ID: self._entity_ids
-        }
-
-        if self._sensor_type == "min":
+        attributes: dict[str, Any] = {ATTR_ENTITY_ID: self._entity_ids}
+        if self._all_statistics:
+            attributes[ATTR_MIN_VALUE] = self.min_value
+            attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
+            attributes[ATTR_MAX_VALUE] = self.max_value
+            attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
+            attributes[ATTR_MEAN] = self.mean
+            attributes[ATTR_MEDIAN] = self.median
+            attributes[ATTR_LAST] = self.last
+            attributes[ATTR_LAST_ENTITY_ID] = self.last_entity_id
+            attributes[ATTR_RANGE] = self.range
+            attributes[ATTR_SUM] = self.sum
+        elif self._sensor_type == "min":
             attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
         elif self._sensor_type == "max":
             attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
