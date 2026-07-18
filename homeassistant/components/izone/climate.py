@@ -1,8 +1,7 @@
 """Support for the iZone HVAC."""
 
-from collections.abc import Callable, Mapping
-import logging
-from typing import Any, Concatenate, override
+from collections.abc import Mapping
+from typing import Any, override
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -26,28 +25,16 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    DATA_DISCOVERY_SERVICE,
-    DISPATCH_CONTROLLER_DISCONNECTED,
-    DISPATCH_CONTROLLER_DISCOVERED,
-    DISPATCH_CONTROLLER_RECONNECTED,
-    DISPATCH_CONTROLLER_UPDATE,
-    DISPATCH_ZONE_UPDATE,
-    DOMAIN,
-    TIMEOUT_DISCOVERY,
-)
+from .const import DOMAIN
 
-type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
-_LOGGER = logging.getLogger(__name__)
 
 _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
@@ -74,37 +61,10 @@ async def async_setup_entry(
     config: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Initialize an IZone Controller."""
-    disco = hass.data[DATA_DISCOVERY_SERVICE]
-    entry_unique_id = config.unique_id
-    initialized = False
+    """Set up climate entity services.
 
-    @callback
-    def init_controller(ctrl: Controller):
-        """Register the controller device and the containing zones."""
-        nonlocal initialized
-        if entry_unique_id and ctrl.device_uid != entry_unique_id:
-            return
-        if initialized:
-            return
-
-        initialized = True
-        device = ControllerDevice(ctrl)
-        async_add_entities([device])
-        async_add_entities(device.zones.values())
-        _LOGGER.debug("Controller UID=%s initialized", ctrl.device_uid)
-
-    # Fetch the controller for this entry, waiting for discovery if it hasn't been found yet
-    if ctrl := await disco.pi_disco.fetch_controller(
-        entry_unique_id, timeout=TIMEOUT_DISCOVERY
-    ):
-        init_controller(ctrl)
-
-    # connect to register any further components
-    config.async_on_unload(
-        async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller)
-    )
-
+    Entity creation lands with CoordinatorEntity wiring.
+    """
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         IZONE_SERVICE_AIRFLOW_MIN,
@@ -117,22 +77,6 @@ async def async_setup_entry(
         "async_set_airflow_max",
     )
 
-
-def _return_on_connection_error[_DeviceT: ControllerDevice | ZoneDevice, **_P, _R, _T](
-    ret: _T = None,  # type: ignore[assignment]
-) -> Callable[[_FuncType[_DeviceT, _P, _R]], _FuncType[_DeviceT, _P, _R | _T]]:
-    def wrap(func: _FuncType[_DeviceT, _P, _R]) -> _FuncType[_DeviceT, _P, _R | _T]:
-        def wrapped_f(self: _DeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R | _T:
-            if not self.available:
-                return ret
-            try:
-                return func(self, *args, **kwargs)
-            except ConnectionError:
-                return ret
-
-        return wrapped_f
-
-    return wrap
 
 
 class ControllerDevice(ClimateEntity):
@@ -202,76 +146,6 @@ class ControllerDevice(ClimateEntity):
         for zone in controller.zones:
             self.zones[zone] = ZoneDevice(self, zone)
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Call on adding to hass."""
-
-        # Register for connect/disconnect/update events
-        @callback
-        def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
-            """Disconnected from controller."""
-            if ctrl is not self._controller:
-                return
-            self.set_available(False, ex)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DISPATCH_CONTROLLER_DISCONNECTED, controller_disconnected
-            )
-        )
-
-        @callback
-        def controller_reconnected(ctrl: Controller) -> None:
-            """Reconnected to controller."""
-            if ctrl is not self._controller:
-                return
-            self.set_available(True)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DISPATCH_CONTROLLER_RECONNECTED, controller_reconnected
-            )
-        )
-
-        @callback
-        def controller_update(ctrl: Controller) -> None:
-            """Handle controller data updates."""
-            if ctrl is not self._controller:
-                return
-            if not self.available:
-                return
-            self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DISPATCH_CONTROLLER_UPDATE, controller_update
-            )
-        )
-
-    @callback
-    def set_available(self, available: bool, ex: Exception | None = None) -> None:
-        """Set availability for the controller.
-
-        Also sets zone availability as they follow the same availability.
-        """
-        if self.available == available:
-            return
-
-        if available:
-            _LOGGER.warning("Reconnected controller %s ", self._controller.device_uid)
-        else:
-            _LOGGER.warning(
-                "Controller %s disconnected due to exception: %s",
-                self._controller.device_uid,
-                ex,
-            )
-
-        self._attr_available = available
-        self.async_write_ha_state()
-        for zone in self.zones.values():
-            if zone.hass is not None:
-                zone.async_schedule_update_ha_state()
-
     @property
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
@@ -316,7 +190,6 @@ class ControllerDevice(ClimateEntity):
         raise RuntimeError("Should be unreachable")
 
     @property
-    @_return_on_connection_error([])
     @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
@@ -325,14 +198,12 @@ class ControllerDevice(ClimateEntity):
         return [HVACMode.OFF, *self._state_to_pizone]
 
     @property
-    @_return_on_connection_error(PRESET_NONE)
     @override
     def preset_mode(self) -> str:
         """Eco mode is external air."""
         return PRESET_ECO if self._controller.free_air else PRESET_NONE
 
     @property
-    @_return_on_connection_error([PRESET_NONE])
     @override
     def preset_modes(self) -> list[str]:
         """Available preset modes, normal or eco."""
@@ -341,7 +212,6 @@ class ControllerDevice(ClimateEntity):
         return [PRESET_NONE]
 
     @property
-    @_return_on_connection_error()
     @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -378,7 +248,6 @@ class ControllerDevice(ClimateEntity):
         return zone.target_temperature
 
     @property
-    @_return_on_connection_error()
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
@@ -407,27 +276,27 @@ class ControllerDevice(ClimateEntity):
         return list(self._fan_to_pizone)
 
     @property
-    @_return_on_connection_error(0.0)
     @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.temp_min
 
     @property
-    @_return_on_connection_error(50.0)
     @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.temp_max
 
     async def wrap_and_catch(self, coro):
-        """Catch any connection errors and set unavailable."""
+        """Run a controller/zone command and refresh local entity state."""
         try:
             await coro
-        except ConnectionError as ex:
-            self.set_available(False, ex)
-        else:
-            self.set_available(True)
+        except ConnectionError:
+            return
+        self.async_write_ha_state()
+        for zone in self.zones.values():
+            if zone.hass is not None:
+                zone.async_schedule_update_ha_state()
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -512,46 +381,7 @@ class ZoneDevice(ClimateEntity):
             via_device=(DOMAIN, controller.unique_id),
         )
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Call on adding to hass."""
-
-        @callback
-        def controller_update(ctrl: Controller) -> None:
-            """Handle controller data updates."""
-            if ctrl.device_uid != self._controller.unique_id:
-                return
-            if not self.available:
-                return
-            self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DISPATCH_CONTROLLER_UPDATE, controller_update
-            )
-        )
-
-        @callback
-        def zone_update(ctrl: Controller, zone: Zone) -> None:
-            """Handle zone data updates."""
-            if zone is not self._zone:
-                return
-            if not self.available:
-                return
-            self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DISPATCH_ZONE_UPDATE, zone_update)
-        )
-
     @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._controller.available
-
-    @property
-    @_return_on_connection_error(ClimateEntityFeature(0))
     @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
@@ -616,14 +446,12 @@ class ZoneDevice(ClimateEntity):
         await self._controller.wrap_and_catch(
             self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
         )
-        self.async_write_ha_state()
 
     async def async_set_airflow_max(self, **kwargs):
         """Set new airflow maximum."""
         await self._controller.wrap_and_catch(
             self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
         )
-        self.async_write_ha_state()
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -638,7 +466,6 @@ class ZoneDevice(ClimateEntity):
         """Set new target operation mode."""
         mode = self._state_to_pizone[hvac_mode]
         await self._controller.wrap_and_catch(self._zone.set_mode(mode))
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
@@ -652,13 +479,11 @@ class ZoneDevice(ClimateEntity):
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.AUTO))
         else:
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.OPEN))
-        self.async_write_ha_state()
 
     @override
     async def async_turn_off(self) -> None:
         """Turn device off (close zone)."""
         await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
-        self.async_write_ha_state()
 
     @property
     def zone_index(self):
