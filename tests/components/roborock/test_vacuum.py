@@ -5,6 +5,7 @@ from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
+from roborock.data import CombinedMapInfo, NamedRoomMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
@@ -592,21 +593,17 @@ async def test_segments_changed_issue(
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
 
-    # Set the last-seen segments to match what the vacuum currently reports
-    entity_registry.async_update_entity_options(
-        ENTITY_ID,
-        VACUUM_DOMAIN,
-        {
-            "last_seen_segments": [
-                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
-                {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
-                {"id": "0_18", "name": "Example room 3", "group": "Upstairs"},
-                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
-                {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
-                {"id": "1_18", "name": "Example room 3", "group": "Downstairs"},
+    # Update the mocked home_map_info to report the saved segment IDs ("1_16" and "1_99")
+    fake_vacuum.v1_properties.home.home_map_info = {
+        1: CombinedMapInfo(
+            name="Downstairs",
+            map_flag=1,
+            rooms=[
+                NamedRoomMapping(segment_id=16, iot_id=16, raw_name="Example room 1"),
+                NamedRoomMapping(segment_id=99, iot_id=99, raw_name="Old room"),
             ],
-        },
-    )
+        )
+    }
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
