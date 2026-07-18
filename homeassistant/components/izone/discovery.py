@@ -173,6 +173,34 @@ async def async_ensure_discovery(hass: HomeAssistant) -> pizone.DiscoveryService
     return service
 
 
+async def async_discover_all_endpoints(
+    hass: HomeAssistant,
+) -> dict[str, pizone.ControllerEndpoint]:
+    """Scan and return all verified endpoints for user / HomeKit setup.
+
+    Starts shared discovery if needed.
+
+    Raises:
+        OSError: Discovery UDP socket could not be bound.
+    """
+    service = await async_ensure_discovery(hass)
+    return {endpoint.uid: endpoint for endpoint in await service.discover_all()}
+
+
+async def async_discover_endpoint(
+    hass: HomeAssistant, uid: str
+) -> pizone.ControllerEndpoint | None:
+    """Resolve one endpoint by UID for confirm / targeted HomeKit lookup.
+
+    Starts shared discovery if needed. Uses cache when the UID is already known.
+
+    Raises:
+        OSError: Discovery UDP socket could not be bound.
+    """
+    service = await async_ensure_discovery(hass)
+    return await service.discover_by_uid(uid)
+
+
 async def async_maybe_stop_discovery(hass: HomeAssistant) -> None:
     """Stop discovery when nothing actionable remains."""
     if DATA_DISCOVERY_SERVICE not in hass.data:
