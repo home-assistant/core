@@ -187,6 +187,33 @@ async def test_refresh_failure_makes_entities_unavailable(
     assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
 
 
+async def test_soft_fault_marks_entities_unavailable_until_reconnect(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_controller: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Successful refresh with connected=False marks entities unavailable."""
+    assert hass.states.get(CONTROLLER_ENTITY).state != STATE_UNAVAILABLE
+    assert hass.states.get(ZONE_ENTITY).state != STATE_UNAVAILABLE
+
+    mock_controller.connected = False
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
+    assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
+
+    mock_controller.connected = True
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(CONTROLLER_ENTITY).state != STATE_UNAVAILABLE
+    assert hass.states.get(ZONE_ENTITY).state != STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize(
     ("command_error", "expect_unavailable", "translation_key"),
     [

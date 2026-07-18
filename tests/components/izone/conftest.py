@@ -51,6 +51,7 @@ def create_mock_controller(
     controller.free_air_enabled = free_air_enabled
     controller.free_air = free_air
     controller.is_on = is_on
+    controller.connected = True
     controller.mode = Controller.Mode.COOL
     controller.temp_setpoint = 24.0
     controller.temp_return = 22.0
