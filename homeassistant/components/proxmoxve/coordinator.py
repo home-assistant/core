@@ -354,9 +354,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 for identifier in device.identifiers
             ):
                 _LOGGER.debug("Removing stale device: %s", device.identifiers)
-                registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                registry.async_remove_device(device.id)
 
 
 class ProxmoxSetupError(Exception):
