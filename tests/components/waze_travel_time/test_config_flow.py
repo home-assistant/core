@@ -87,6 +87,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == "Mock Title"
     assert entry.data == {
         CONF_ORIGIN: "location3",
         CONF_DESTINATION: "location4",
