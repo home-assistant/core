@@ -383,11 +383,38 @@ async def test_maybe_stop_keeps_discovery_for_actionable_flow(
     mock_service.close.assert_not_awaited()
 
 
-async def test_maybe_stop_closes_when_only_disabled_entry_exists(
+@pytest.mark.parametrize(
+    ("entry_state", "expect_close"),
+    [
+        pytest.param(
+            config_entries.ConfigEntryState.SETUP_RETRY,
+            False,
+            id="setup_retry",
+        ),
+        pytest.param(
+            config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+            False,
+            id="setup_in_progress",
+        ),
+        pytest.param(
+            config_entries.ConfigEntryState.SETUP_ERROR,
+            True,
+            id="setup_error",
+        ),
+        pytest.param(
+            config_entries.ConfigEntryState.NOT_LOADED,
+            True,
+            id="not_loaded",
+        ),
+    ],
+)
+async def test_maybe_stop_respects_entry_setup_state(
     hass: HomeAssistant,
     mock_pizone_create_discovery: tuple[AsyncMock, Mock],
+    entry_state: config_entries.ConfigEntryState,
+    expect_close: bool,
 ) -> None:
-    """A disabled (unloaded) entry alone does not keep discovery running."""
+    """Keep discovery for in-flight/retry setup; stop for error or unloaded."""
     _, mock_service = mock_pizone_create_discovery
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -397,13 +424,13 @@ async def test_maybe_stop_closes_when_only_disabled_entry_exists(
         version=2,
     )
     entry.add_to_hass(hass)
-    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    entry.mock_state(hass, entry_state)
 
     await izone_discovery.async_ensure_discovery(hass)
     mock_service.close.reset_mock()
     await izone_discovery.async_maybe_stop_discovery(hass)
 
-    mock_service.close.assert_awaited_once()
+    assert mock_service.close.await_count == int(expect_close)
 
 
 async def test_maybe_stop_closes_when_idle(

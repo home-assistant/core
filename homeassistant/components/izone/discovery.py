@@ -86,17 +86,6 @@ def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
 
 
 @callback
-def _async_has_actionable_flows(hass: HomeAssistant) -> bool:
-    """Return True when an in-progress iZone flow can create/update state."""
-    return any(
-        flow["context"].get("source") != config_entries.SOURCE_IGNORE
-        for flow in hass.config_entries.flow.async_progress_by_handler(
-            DOMAIN, include_uninitialized=True
-        )
-    )
-
-
-@callback
 def async_schedule_idle_stop(hass: HomeAssistant) -> None:
     """Schedule a delayed shutdown check for the shared discovery service."""
     runtime = hass.data.get(DATA_DISCOVERY_SERVICE)
@@ -231,12 +220,30 @@ async def async_discover_endpoint(
 
 
 async def async_maybe_stop_discovery(hass: HomeAssistant) -> None:
-    """Stop discovery when nothing actionable remains."""
+    """Stop discovery when nothing actionable remains.
+
+    Keeps the UDP listener while any entry is loaded, mid-setup, or in
+    ``SETUP_RETRY``, or while an actionable config flow is in progress.
+    """
     if DATA_DISCOVERY_SERVICE not in hass.data:
         return
 
-    if hass.config_entries.async_loaded_entries(DOMAIN) or _async_has_actionable_flows(
-        hass
+    if (
+        hass.config_entries.async_loaded_entries(DOMAIN)
+        or any(
+            entry.state
+            in (
+                config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+                config_entries.ConfigEntryState.SETUP_RETRY,
+            )
+            for entry in hass.config_entries.async_entries(DOMAIN)
+        )
+        or any(
+            flow["context"].get("source") != config_entries.SOURCE_IGNORE
+            for flow in hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN, include_uninitialized=True
+            )
+        )
     ):
         async_schedule_idle_stop(hass)
         return
