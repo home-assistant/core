@@ -201,7 +201,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         elif self.registry_entry:
             issue_id = f"segments_changed_{self.registry_entry.id}"
             if ir.async_get(self.hass).async_get_issue(VACUUM_DOMAIN, issue_id):
-                # Delete any invalid repair issues previously created (e.g. during transient states)
+                # Delete issues created by a bug during transient states
                 ir.async_delete_issue(self.hass, VACUUM_DOMAIN, issue_id)
 
     @property
