@@ -101,16 +101,16 @@ async def test_button_not_supported(
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
-@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40", "zoe_50"], indirect=True)
 async def test_button_start_charge(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
 ) -> None:
     """Test that button invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_zoe_40_start_charge",
+        ATTR_ENTITY_ID: f"button.reg_{vehicle_type}_start_charge",
     }
 
     with patch(
@@ -129,16 +129,16 @@ async def test_button_start_charge(
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
-@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40", "zoe_50"], indirect=True)
 async def test_button_stop_charge(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, vehicle_type: str
 ) -> None:
     """Test that button invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "button.reg_zoe_40_stop_charge",
+        ATTR_ENTITY_ID: f"button.reg_{vehicle_type}_stop_charge",
     }
 
     with patch(
