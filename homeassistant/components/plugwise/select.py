@@ -131,9 +131,9 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option.
 
-        Appliance ID (= device_id) is required for the dhw_mode select
-        Location ID is required for the thermostat-schedule and zone_profile selects.
-        STATE_ON is required for the thermostat-schedule select.
+        The location ID is required for the thermostat-schedule and zone_profile selects.
+        For the other selects the appliance ID (= device_id) is required.
+        STATE_ON is only required for the thermostat-schedule select.
         """
         await self.coordinator.api.set_select(
             self.entity_description.key, self._device_or_location, option, STATE_ON
