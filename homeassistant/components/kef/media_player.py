@@ -422,6 +422,8 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._dsp = None
 
 
+SOUND_MODES = ["default", "night", "movie", "music", "game"]
+
 _SOURCE_REVERSE: dict[str, str] = {v: k for k, v in XIO_SOURCES.items()}
 
 
@@ -441,10 +443,12 @@ class KefConnectMediaPlayer(CoordinatorEntity[KefCoordinator], MediaPlayerEntity
     _attr_name = None
     _attr_icon = "mdi:speaker-wireless"
     _attr_source_list = list(XIO_SOURCES)
+    _attr_sound_mode_list = SOUND_MODES
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.PLAY
@@ -491,7 +495,7 @@ class KefConnectMediaPlayer(CoordinatorEntity[KefCoordinator], MediaPlayerEntity
     @override
     def is_volume_muted(self) -> bool:
         """Return True if volume is muted."""
-        return self.coordinator.data.volume == 0
+        return self.coordinator.data.is_muted
 
     @property
     @override
@@ -522,6 +526,44 @@ class KefConnectMediaPlayer(CoordinatorEntity[KefCoordinator], MediaPlayerEntity
     def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
         return self.coordinator.data.media_image_url
+
+    @property
+    @override
+    def sound_mode(self) -> str | None:
+        """Return the current sound mode."""
+        data = self.coordinator.data
+        if data.profile_name:
+            return data.profile_name
+        return data.sound_profile
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes for DSP settings."""
+        data = self.coordinator.data
+        attrs: dict[str, Any] = {}
+        if data.sound_profile:
+            attrs["sound_profile"] = data.sound_profile
+        if data.profile_name:
+            attrs["profile_name"] = data.profile_name
+        attrs["dialogue_mode"] = data.dialogue_mode
+        if data.bass_extension:
+            attrs["bass_extension"] = data.bass_extension
+        attrs["wall_mode"] = data.wall_mode
+        attrs["desk_mode"] = data.desk_mode
+        attrs["subwoofer_out"] = data.sub_out
+        attrs["subwoofer_gain"] = data.sub_gain
+        attrs["treble"] = data.treble
+        return attrs
+
+    @override
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select sound mode."""
+        await self.coordinator.set_dsp_value(
+            "soundProfile",
+            {"type": "string_", "string_": sound_mode},
+        )
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_on(self) -> None:

@@ -10,7 +10,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import KefConfigEntry, KefCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KefConfigEntry) -> bool:

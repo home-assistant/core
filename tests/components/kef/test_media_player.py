@@ -53,6 +53,7 @@ def test_states(
             source="wifi",
             volume=50,
             is_playing=is_playing,
+            is_muted=False,
         ),
     )
 
@@ -74,6 +75,7 @@ def test_volume_source_and_media(
             source="wifi",
             volume=50,
             is_playing=True,
+            is_muted=False,
             media_title="Song",
             media_artist="Artist",
             media_album="Album",
@@ -106,6 +108,7 @@ async def test_controls(
             source="wifi",
             volume=50,
             is_playing=False,
+            is_muted=False,
         ),
     )
 

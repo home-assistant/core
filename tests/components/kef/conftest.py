@@ -93,7 +93,44 @@ class FakeKefConnector:
             "artist": None,
             "album": None,
             "cover_url": None,
+            "service_id": None,
         }
+
+    async def get_audio_codec_information(self) -> dict[str, str | int | None]:
+        """Return fake audio codec information."""
+        return {}
+
+    async def get_wifi_information(self) -> dict[str, str | int | None]:
+        """Return fake WiFi information."""
+        return {}
+
+    async def get_request(self, path: str, roles: str = "value") -> list:
+        """Return fake API data for a given path."""
+        if "mute" in path:
+            return [{"bool_": False}]
+        if "soundProfile" in path:
+            return [{"string_": "default"}]
+        if "profileName" in path:
+            return [{"string_": ""}]
+        if "dialogueMode" in path:
+            return [{"bool_": False}]
+        if "bassExtension" in path:
+            return [{"string_": "standard"}]
+        if "wallMode" in path:
+            return [{"bool_": False}]
+        if "deskMode" in path:
+            return [{"bool_": False}]
+        if "subwooferOut" in path:
+            return [{"bool_": False}]
+        if "subwooferGain" in path:
+            return [{"i32_": 0}]
+        if "trebleAmount" in path:
+            return [{"double_": 0.0}]
+        return [None]
+
+    async def _set_data(self, payload: dict) -> dict:
+        """Fake set data."""
+        return {}
 
 
 @pytest.fixture
