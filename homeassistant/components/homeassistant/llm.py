@@ -231,7 +231,7 @@ class GetLiveContextTool(Tool):
                     " (e.g. 'light', 'sensor')."
                     " Accepts a single domain or a list."
                 ),
-            ): vol.Any(cv.string, [cv.string]),
+            ): vol.Any(str, [str]),
             vol.Optional(
                 "area",
                 description="Filter entities by area name or alias (case-insensitive).",

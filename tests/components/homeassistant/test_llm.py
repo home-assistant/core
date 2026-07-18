@@ -393,3 +393,44 @@ async def test_get_live_context_tool_filter(
     assert result["result"].count("domain: climate") == 1
     assert "Kitchen" in result["result"]
     assert "Office" not in result["result"]
+
+
+async def test_get_live_context_domain_string_and_list(
+    hass: HomeAssistant,
+) -> None:
+    """Test GetLiveContext accepts domain as both string and list."""
+    from voluptuous_openapi import convert
+
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    tool = next(t for t in result.tools if t.name == "GetLiveContext")
+
+    converted = convert(tool.parameters)
+
+    def _assert_no_empty_schemas(obj, path: str = "") -> None:
+        if isinstance(obj, dict):
+            assert obj != {}, f"Empty schema at {path}"
+            for k, v in obj.items():
+                _assert_no_empty_schemas(v, f"{path}.{k}")
+        elif isinstance(obj, list):
+            for i, item in enumerate(obj):
+                _assert_no_empty_schemas(item, f"{path}[{i}]")
+
+    _assert_no_empty_schemas(converted)
+
+    domain_props = converted["properties"]["domain"]
+    assert domain_props.get("anyOf") == [
+        {"type": "string"},
+        {"type": "array", "items": {"type": "string"}},
+    ], f"Unexpected domain schema: {domain_props}"
+
+    async def _get_live_context(tool_args: dict) -> dict:
+        return await tool.async_call(
+            hass, llm.ToolInput("GetLiveContext", tool_args), llm_context
+        )
+
+    result = await _get_live_context({"domain": "light"})
+    assert result["success"] is True
+
+    result = await _get_live_context({"domain": ["light", "sensor"]})
+    assert result["success"] is True
