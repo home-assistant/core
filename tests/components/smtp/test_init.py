@@ -41,7 +41,7 @@ async def test_entry_setup_unload(
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.state is ConfigEntryState.LOADED
 
