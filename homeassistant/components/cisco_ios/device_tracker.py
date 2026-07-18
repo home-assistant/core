@@ -65,7 +65,7 @@ async def async_setup_scanner(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "yaml_import_cannot_connect",
+            f"yaml_import_cannot_connect_{config[CONF_HOST]}",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.ERROR,
@@ -74,9 +74,9 @@ async def async_setup_scanner(
         )
         return False
 
-    # The import succeeded, so a repair issue from an earlier failed
-    # import is no longer relevant.
-    ir.async_delete_issue(hass, DOMAIN, "yaml_import_cannot_connect")
+    ir.async_delete_issue(
+        hass, DOMAIN, f"yaml_import_cannot_connect_{config[CONF_HOST]}"
+    )
 
     ir.async_create_issue(
         hass,

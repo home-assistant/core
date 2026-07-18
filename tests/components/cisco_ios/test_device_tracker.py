@@ -323,7 +323,9 @@ async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
     )
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"yaml_import_cannot_connect_{MOCK_HOST}"
+    )
 
     assert len(issue_registry.issues) == 1
     assert issue is not None
@@ -344,7 +346,9 @@ async def test_yaml_import_retry_success_clears_issue(
     )
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"yaml_import_cannot_connect_{MOCK_HOST}"
+    )
 
     # Simulate the next Home Assistant start with a reachable router
     mock_scanner.return_value.get_devices.side_effect = None
@@ -359,6 +363,46 @@ async def test_yaml_import_retry_success_clears_issue(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+
+
+async def test_yaml_import_issues_are_scoped_per_host(
+    hass: HomeAssistant, mock_scanner: MagicMock, issue_registry: IssueRegistry
+) -> None:
+    """Test that a successful import does not clear another host's issue."""
+
+    def scanner_for_host(host: str, **kwargs: str | int | None) -> MagicMock:
+        scanner = MagicMock()
+        if host == MOCK_HOST:
+            scanner.get_devices.side_effect = pxssh.ExceptionPxssh("fail")
+        else:
+            scanner.get_devices.return_value = MOCK_DEVICE_DATA
+        return scanner
+
+    mock_scanner.side_effect = scanner_for_host
+
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {
+            "device_tracker": [
+                {"platform": DOMAIN, **MOCK_CONFIG},
+                {"platform": DOMAIN, **MOCK_CONFIG, CONF_HOST: "192.168.2.1"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The failing host has an issue, which the other host's success kept
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"yaml_import_cannot_connect_{MOCK_HOST}"
+    )
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect_192.168.2.1")
+        is None
+    )
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_HOST] == "192.168.2.1"
 
 
 @pytest.mark.parametrize(
