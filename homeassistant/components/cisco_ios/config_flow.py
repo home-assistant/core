@@ -116,8 +116,7 @@ class CiscoIOSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import existing config from configuration.yaml."""
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
 
-        # Clamp to the range the options flow enforces
-        consider_home: int = min(import_data.pop(CONF_CONSIDER_HOME), 900)
+        consider_home: int = import_data.pop(CONF_CONSIDER_HOME)
 
         try:
             await self.hass.async_add_executor_job(

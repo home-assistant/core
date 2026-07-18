@@ -155,10 +155,10 @@ async def test_options_flow(
     assert mock_config_entry.runtime_data.consider_home == timedelta(seconds=300)
 
 
-async def test_import_clamps_consider_home(
+async def test_import_preserves_large_consider_home(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_scanner: MagicMock
 ) -> None:
-    """Test the import flow clamps consider_home to the options flow range."""
+    """Test the import flow preserves values above the options flow maximum."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -167,4 +167,4 @@ async def test_import_clamps_consider_home(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["options"] == {CONF_CONSIDER_HOME: 900}
+    assert result["options"] == {CONF_CONSIDER_HOME: 1800}

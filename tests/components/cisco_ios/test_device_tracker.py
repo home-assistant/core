@@ -16,9 +16,9 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.const import CONF_HOST, STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers.issue_registry import IssueRegistry, IssueSeverity
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_CONFIG, MOCK_DEVICE_DATA, MOCK_HOST
@@ -275,7 +275,7 @@ async def test_device_unavailable_on_update_failure(
 
 
 async def test_setup_scanner_legacy_platform_imports_config_entry(
-    hass: HomeAssistant, mock_scanner: MagicMock
+    hass: HomeAssistant, mock_scanner: MagicMock, issue_registry: IssueRegistry
 ) -> None:
     """Test legacy device tracker setup triggers config flow import."""
     assert await async_setup_component(
@@ -294,6 +294,17 @@ async def test_setup_scanner_legacy_platform_imports_config_entry(
     assert entries[0].data == MOCK_CONFIG
     assert entries[0].options == {CONF_CONSIDER_HOME: 300}
     assert entries[0].source == config_entries.SOURCE_IMPORT
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.severity == IssueSeverity.WARNING
+    assert issue.translation_key == "deprecated_yaml"
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "Cisco IOS",
+    }
 
 
 async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
