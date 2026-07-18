@@ -431,7 +431,7 @@ def _filter_by_name(
             continue
 
         for candidate_name in async_get_entity_aliases(
-            hass, candidate.entity, state=candidate.state
+            hass, candidate.entity, state=candidate.state, allow_empty=False
         ):
             if _normalize_name(candidate_name) == name_norm:
                 candidate.matched_name = name

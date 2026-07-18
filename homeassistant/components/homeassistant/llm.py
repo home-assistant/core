@@ -106,7 +106,9 @@ def async_get_exposed_entities(
             if entity_entry is not None and entity_entry.device_id is not None
             else None
         )
-        names = intent.async_get_entity_aliases(hass, entity_entry, state=state)
+        names = intent.async_get_entity_aliases(
+            hass, entity_entry, state=state, allow_empty=False
+        )
         area_names = []
 
         if entity_entry is not None:

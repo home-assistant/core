@@ -393,3 +393,62 @@ async def test_get_live_context_tool_filter(
     assert result["result"].count("domain: climate") == 1
     assert "Kitchen" in result["result"]
     assert "Office" not in result["result"]
+
+
+async def test_get_exposed_entities_has_entity_name_no_aliases(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities with has_entity_name=True and empty aliases get computed names."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+    assert await async_setup_component(hass, "intent", {})
+
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "living_room")},
+        name="Living Room",
+    )
+
+    sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "temperature",
+        original_name="Temperature",
+        has_entity_name=True,
+        device_id=device.id,
+    )
+
+    async_expose_entity(hass, "conversation", sensor.entity_id, True)
+    hass.states.async_set(sensor.entity_id, "22.5")
+    await hass.async_block_till_done()
+
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+
+    assert sensor.entity_id in exposed
+    info = exposed[sensor.entity_id]
+    assert info["names"] != "", (
+        "Entity with has_entity_name=True and no aliases should have a"
+        f" computed name, got: '{info['names']}'"
+    )
+    assert "Living Room" in info["names"]
+    assert "Temperature" in info["names"]
+
+    # Verify name-filtering also works via the tool
+    llm_context = _llm_context()
+    tools = await llm_component.async_get_tools(hass, llm_context, "assist")
+    tool = next(t for t in tools.tools if t.name == "GetLiveContext")
+
+    result = await tool.async_call(
+        hass, llm.ToolInput("GetLiveContext", {"name": "Living Room Temperature"}), llm_context
+    )
+    assert result["success"] is True, (
+        f"Name filter with computed name should match, got: {result}"
+    )
+    assert "22.5" in result["result"], (
+        "Tool result should contain the entity state"
+    )
+
