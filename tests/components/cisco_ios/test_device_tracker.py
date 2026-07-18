@@ -1,9 +1,11 @@
 """Tests for the Cisco IOS device tracker."""
 
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pexpect import pxssh
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.cisco_ios.const import DOMAIN
@@ -11,6 +13,7 @@ from homeassistant.components.cisco_ios.coordinator import (
     UPDATE_INTERVAL,
     CiscoIOSArpScanner,
 )
+from homeassistant.components.cisco_ios.device_tracker import async_setup_scanner
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
@@ -326,6 +329,50 @@ async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
     assert issue is not None
     assert issue.translation_key == "yaml_import_cannot_connect"
     assert issue.translation_placeholders == {"host": MOCK_HOST}
+
+
+async def test_yaml_import_retry_success_clears_issue(
+    hass: HomeAssistant, mock_scanner: MagicMock, issue_registry: IssueRegistry
+) -> None:
+    """Test that a successful import clears an earlier failed-import issue."""
+    mock_scanner.return_value.get_devices.side_effect = pxssh.ExceptionPxssh("fail")
+
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {"device_tracker": [{"platform": DOMAIN, **MOCK_CONFIG}]},
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
+
+    # Simulate the next Home Assistant start with a reachable router
+    mock_scanner.return_value.get_devices.side_effect = None
+    assert await async_setup_scanner(
+        hass,
+        {**MOCK_CONFIG, CONF_CONSIDER_HOME: timedelta(seconds=180)},
+        AsyncMock(),
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect") is None
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+def test_scanner_raises_on_prompt_timeout() -> None:
+    """Test that a prompt timeout raises instead of accepting partial output."""
+    with patch(
+        "homeassistant.components.cisco_ios.coordinator.pxssh.pxssh"
+    ) as mock_pxssh:
+        mock_pxssh.return_value.before = ARP_OUTPUT
+        mock_pxssh.return_value.prompt.return_value = False
+        scanner = CiscoIOSArpScanner(
+            host=MOCK_HOST, username="admin", password="password", port=22
+        )
+        with pytest.raises(pxssh.ExceptionPxssh):
+            scanner.get_devices()
 
 
 def test_scanner_parses_arp_output() -> None:

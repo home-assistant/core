@@ -158,7 +158,7 @@ async def test_options_flow(
 async def test_import_preserves_large_consider_home(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_scanner: MagicMock
 ) -> None:
-    """Test the import flow preserves values above the options flow maximum."""
+    """Test the import flow preserves large consider_home values."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},

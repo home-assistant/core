@@ -103,10 +103,12 @@ class CiscoIOSArpScanner:
         cisco_ssh.PROMPT = f"(?i)^{router_hostname}"
         # Allow full arp table to print at once
         cisco_ssh.sendline("terminal length 0")
-        cisco_ssh.prompt(1)
+        if not cisco_ssh.prompt(1):
+            raise pxssh.ExceptionPxssh("Timed out waiting for the router prompt")
 
         cisco_ssh.sendline("show ip arp")
-        cisco_ssh.prompt(1)
+        if not cisco_ssh.prompt(1):
+            raise pxssh.ExceptionPxssh("Timed out waiting for the arp table")
 
         return cisco_ssh.before or ""
 
