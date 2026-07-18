@@ -29,7 +29,7 @@ async def test_device_registry(
     assert device_entry == snapshot
 
 
-async def test_notify_no_device(
+async def test_setup_retries_when_device_not_found(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,

@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
                 "address": address,
                 "reason": async_address_reachability_diagnostics(
                     hass,
-                    address,
+address.upper(),
                     BluetoothReachabilityIntent.CONNECTION,
                 ),
             },
