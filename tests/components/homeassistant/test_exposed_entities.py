@@ -803,3 +803,30 @@ async def test_purge_stale_legacy_entities_spans_multiple_chunks(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not exposed_entities.entities
+
+
+async def test_update_exposed_entity_preserves_orphaned_since(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Changing an assistant option doesn't reset the orphan retention clock.
+
+    A legacy entity that's still missing but has one of its assistant
+    options changed (e.g. by another assistant) must keep its existing
+    orphaned_since, not restart the retention window.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    orphaned_since = exposed_entities.entities["sensor.long_gone"].orphaned_since
+    assert orphaned_since is not None
+
+    async_expose_entity(hass, "test2", "sensor.long_gone", True)
+
+    assert (
+        exposed_entities.entities["sensor.long_gone"].orphaned_since == orphaned_since
+    )

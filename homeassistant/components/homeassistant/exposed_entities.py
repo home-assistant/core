@@ -270,9 +270,7 @@ class ExposedEntities:
         Runs in real time rather than waiting for the next sweep: an entity
         can go missing, come back, and go missing again between two sweeps,
         and a sweep alone can't tell that apart from having been missing the
-        whole time. Only ever clears tracking, never deletes anything, so it
-        can't reintroduce the immediate-purge-on-removal bug this design
-        deliberately avoids.
+        whole time. Only ever clears tracking, never deletes anything.
         """
         entity_id = event.data["entity_id"]
         if (
@@ -477,7 +475,7 @@ class ExposedEntities:
         assistants = dict(entity.assistants)
         old_settings = assistants.get(assistant, {})
         assistants[assistant] = old_settings | {key: value}
-        return ExposedEntity(assistants)
+        return dataclasses.replace(entity, assistants=assistants)
 
     def _new_exposed_entity(
         self, assistant: str, key: str, value: Any
