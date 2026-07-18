@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
-import dataclasses
 import io
 import threading
 from typing import Any
@@ -165,10 +164,18 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    device_in_area = dr.DeviceEntry(area_id="test-area")
-    device_no_area = dr.DeviceEntry(id="device-no-area-id")
-    device_diff_area = dr.DeviceEntry(area_id="diff-area")
-    device_area_a = dr.DeviceEntry(id="device-area-a-id", area_id="area-a")
+    device_in_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", area_id="test-area"
+    )
+    device_no_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-no-area-id"
+    )
+    device_diff_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", area_id="diff-area"
+    )
+    device_area_a = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-area-a-id", area_id="area-a"
+    )
 
     mock_device_registry(
         hass,
@@ -332,13 +339,21 @@ def label_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    device_has_label1 = dr.DeviceEntry(labels={"label1"})
-    device_has_label2 = dr.DeviceEntry(labels={"label2"})
+    device_has_label1 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", labels={"label1"}
+    )
+    device_has_label2 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", labels={"label2"}
+    )
     device_has_labels = dr.DeviceEntry(
-        labels={"label1", "label2"}, area_id=area_with_labels.id
+        config_entry_id="mock-config-entry",
+        labels={"label1", "label2"},
+        area_id=area_with_labels.id,
     )
     device_no_labels = dr.DeviceEntry(
-        id="device-no-labels", area_id=area_without_labels.id
+        config_entry_id="mock-config-entry",
+        id="device-no-labels",
+        area_id=area_without_labels.id,
     )
 
     mock_device_registry(
@@ -2496,7 +2511,10 @@ async def test_async_extract_entities_warn_referenced(
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     """Test we can find devices that have no entities."""
 
-    device_no_entities = dr.DeviceEntry(id="device-no-entities", config_entries={"abc"})
+    device_no_entities = dr.DeviceEntry(
+        config_entry_id="abc",
+        id="device-no-entities",
+    )
 
     call = ServiceCall(
         hass,
@@ -2775,83 +2793,6 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     # We don't try to reload the failed targets again, so only the
     # new reload is executed
     assert reloaded == unordered(["target1"])
-
-
-async def test_deprecated_service_target_selector_class(hass: HomeAssistant) -> None:
-    """Test that the deprecated ServiceTargetSelector class forwards correctly."""
-    call = ServiceCall(
-        hass,
-        "test",
-        "test",
-        {
-            "entity_id": ["light.test", "switch.test"],
-            "area_id": "kitchen",
-            "device_id": ["device1", "device2"],
-            "floor_id": "first_floor",
-            "label_id": ["label1", "label2"],
-        },
-    )
-    selector = service.ServiceTargetSelector(call)
-
-    assert selector.entity_ids == {"light.test", "switch.test"}
-    assert selector.area_ids == {"kitchen"}
-    assert selector.device_ids == {"device1", "device2"}
-    assert selector.floor_ids == {"first_floor"}
-    assert selector.label_ids == {"label1", "label2"}
-    assert selector.has_any_target is True
-
-
-async def test_deprecated_selected_entities_class(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that the deprecated SelectedEntities class forwards correctly."""
-    selected = service.SelectedEntities(
-        referenced={"entity.test"},
-        indirectly_referenced=set(),
-        referenced_devices=set(),
-        referenced_areas=set(),
-        missing_devices={"missing_device"},
-        missing_areas={"missing_area"},
-        missing_floors={"missing_floor"},
-        missing_labels={"missing_label"},
-    )
-
-    missing_entities = {"entity.missing"}
-    selected.log_missing(missing_entities)
-    assert (
-        "Referenced floors missing_floor, areas missing_area, "
-        "devices missing_device, entities entity.missing, "
-        "labels missing_label are missing or not currently available" in caplog.text
-    )
-
-
-async def test_deprecated_async_extract_referenced_entity_ids(
-    hass: HomeAssistant,
-) -> None:
-    """Test deprecated async_extract_referenced_entity_ids forwards correctly."""
-    from homeassistant.helpers import target  # noqa: PLC0415
-
-    mock_selected = target.SelectedEntities(
-        referenced={"entity.test"},
-        indirectly_referenced={"entity.indirect"},
-    )
-    with patch(
-        "homeassistant.helpers.target.async_extract_referenced_entity_ids",
-        return_value=mock_selected,
-    ) as mock_target_func:
-        call = ServiceCall(hass, "test", "test", {"entity_id": "light.test"})
-        result = service.async_extract_referenced_entity_ids(
-            hass, call, expand_group=False
-        )
-
-        # Verify target helper was called with correct parameters
-        mock_target_func.assert_called_once()
-        args = mock_target_func.call_args
-        assert args[0][0] is hass
-        assert args[0][1].entity_ids == {"light.test"}
-        assert args[0][2] is False
-
-        assert dataclasses.asdict(result) == dataclasses.asdict(mock_selected)
 
 
 async def test_register_platform_entity_service(
@@ -3391,4 +3332,44 @@ async def test_get_service_config_entry(hass: HomeAssistant) -> None:
     entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
     with pytest.raises(exceptions.ServiceValidationError) as err:
         service.async_get_config_entry(hass, domain, entry_id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_config_entry_none(hass: HomeAssistant) -> None:
+    """Test that we can get a service config entry if no entry ID is provided."""
+    domain = "mock_integration"
+
+    # No config entry exists
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, None)
+    assert err.value.translation_key == "service_found_no_config_entry_for_domain"
+
+    # A single config entry exists and is loaded
+    entry1 = MockConfigEntry(domain=domain)
+    entry1.add_to_hass(hass)
+    entry1.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    assert service.async_get_config_entry(hass, domain, None) is entry1
+
+    # Ignored and disabled entries are not counted
+    ignored_entry = MockConfigEntry(domain=domain, source=config_entries.SOURCE_IGNORE)
+    ignored_entry.add_to_hass(hass)
+    disabled_entry = MockConfigEntry(
+        domain=domain, disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    assert service.async_get_config_entry(hass, domain, None) is entry1
+
+    # Multiple config entries exist
+    entry2 = MockConfigEntry(domain=domain)
+    entry2.add_to_hass(hass)
+    entry2.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, None)
+    assert err.value.translation_key == "service_found_multiple_config_entry_for_domain"
+
+    # A single config entry exists, but is not loaded
+    await hass.config_entries.async_remove(entry2.entry_id)
+    entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, None)
     assert err.value.translation_key == "service_config_entry_not_loaded"

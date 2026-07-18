@@ -6,9 +6,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 6500,
-      'min_color_temp_kelvin': 2700,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
       ]),
@@ -46,33 +46,33 @@
 # name: test_state[light.test_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.RGBW: 'rgbw'>,
-      'color_temp_kelvin': None,
-      'friendly_name': 'Test Light',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGBW: 'rgbw'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Light',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         0.0,
       ),
-      'max_color_temp_kelvin': 6500,
-      'min_color_temp_kelvin': 2700,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         255,
         255,
       ),
-      'rgbw_color': tuple(
+      <LightEntityStateAttribute.RGBW_COLOR: 'rgbw_color'>: tuple(
         255,
         255,
         255,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.323,
         0.329,
       ),

@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -144,7 +145,7 @@ async def async_setup_entry(
                 description,
             )
             for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
+            if (description := SUPPORTED_STATES.get(state))
         )
 
     async_add_entities(entities)
@@ -156,6 +157,7 @@ class OverkizSelect(OverkizDescriptiveEntity, SelectEntity):
     entity_description: OverkizSelectDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
@@ -163,6 +165,7 @@ class OverkizSelect(OverkizDescriptiveEntity, SelectEntity):
 
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_option(

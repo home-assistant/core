@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -105,6 +105,7 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         self._attr_unique_id = f"{self.data['id']}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
 

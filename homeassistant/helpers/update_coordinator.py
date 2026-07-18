@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol, TypeVar, override
 import urllib.error
 
 import aiohttp
@@ -101,8 +101,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             frame.report_usage(
                 "relies on ContextVar, but should pass the config entry explicitly.",
                 core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
                 custom_integration_behavior=frame.ReportBehavior.IGNORE,
-                breaks_in_ha_version="2026.8",
             )
 
             self.config_entry = config_entries.current_entry.get()
@@ -167,6 +167,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -458,7 +459,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     raise ConfigEntryAuthFailed from err
 
                 if self.config_entry:
-                    self.config_entry.async_start_reauth(self.hass)
+                    self.config_entry.async_start_reauth_if_available(self.hass)
                 return
 
             # Recoverable error
@@ -536,7 +537,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 raise
 
             if self.config_entry:
-                self.config_entry.async_start_reauth(self.hass)
+                self.config_entry.async_start_reauth_if_available(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             self.last_update_success = False
@@ -625,6 +626,7 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     last_update_success_time: datetime | None = None
 
     @callback
+    @override
     def _async_refresh_finished(self) -> None:
         """Handle when a refresh has finished."""
         if self.last_update_success:
@@ -644,10 +646,12 @@ class BaseCoordinatorEntity[
         self.coordinator_context = context
 
     @cached_property
+    @override
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -689,10 +693,12 @@ class CoordinatorEntity[
         super().__init__(coordinator, context)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 

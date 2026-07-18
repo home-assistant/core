@@ -239,16 +239,12 @@ async def async_migrate_entry(
     version = config_entry.version
     minor_version = config_entry.minor_version
 
-    if version > 2:
-        # This means the user has downgraded from a future version
-        return False
-
     LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
         dev_reg = dr.async_get(hass)
-        dev_reg.async_clear_config_entry(config_entry.entry_id)
+        dev_reg.async_clear_config_entry(config_entry.entry_id, config_entry.domain)
 
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(config_entry.entry_id)

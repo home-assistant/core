@@ -1,6 +1,7 @@
 """Support for tariff selection."""
 
 import logging
+from typing import override
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -106,15 +107,18 @@ class TariffSelect(SelectEntity, RestoreEntity):
         self._attr_should_poll = False
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the available tariffs."""
         return self._tariffs
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return current tariff."""
         return self._current_tariff
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -125,6 +129,7 @@ class TariffSelect(SelectEntity, RestoreEntity):
         else:
             self._current_tariff = state.state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new tariff (option)."""
         self._current_tariff = option

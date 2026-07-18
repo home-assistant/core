@@ -1,7 +1,7 @@
 """Config flow to configure the GeoNet NZ Quakes integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -49,6 +49,7 @@ class GeonetnzQuakesFlowHandler(ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

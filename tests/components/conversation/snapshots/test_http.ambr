@@ -467,10 +467,11 @@
           'name': 'HassTurnOn',
         }),
         'match': True,
-        'sentence_template': '<turn> on (<area> <name>|<name> [in <area>])',
+        'sentence_template': '<turn> on [<the>] {name}',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -491,10 +492,11 @@
           'name': 'HassTurnOff',
         }),
         'match': True,
-        'sentence_template': '[<turn>] (<area> <name>|<name> [in <area>]) [to] off',
+        'sentence_template': '[<turn>] [<the>] {name} [to] off',
         'slots': dict({
           'name': 'my cool light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -520,11 +522,12 @@
           'name': 'HassTurnOn',
         }),
         'match': True,
-        'sentence_template': '<turn> on [(<all>|<the>)] <light> <in> <area>',
+        'sentence_template': '<turn> on [(<all>|<the>)] <light> <in> [<the>] {area}',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -542,7 +545,7 @@
           }),
           'domain': dict({
             'name': 'domain',
-            'text': 'lights',
+            'text': '',
             'value': 'light',
           }),
           'state': dict({
@@ -555,12 +558,13 @@
           'name': 'HassGetState',
         }),
         'match': True,
-        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [<in_area_floor>]',
+        'sentence_template': '<how_many> <light> <is> {on_off_states:state} [<in>] [<the>] {area}',
         'slots': dict({
           'area': 'kitchen',
-          'domain': 'lights',
+          'domain': 'light',
           'state': 'on',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
@@ -629,11 +633,12 @@
           'name': 'HassLightSet',
         }),
         'match': True,
-        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'sentence_template': '[<numeric_value_set>] [<the>] {name} brightness [to] {brightness}[([ ]%)| percent]',
         'slots': dict({
           'brightness': '100',
           'name': 'test light',
         }),
+        'source': 'builtin',
         'targets': dict({
           'light.demo_1234': dict({
             'matched': True,
@@ -660,10 +665,11 @@
           'name': 'HassLightSet',
         }),
         'match': False,
-        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'sentence_template': '[<numeric_value_set>] [<the>] {name} brightness [to] {brightness}[([ ]%)| percent]',
         'slots': dict({
           'name': 'test light',
         }),
+        'source': 'builtin',
         'targets': dict({
         }),
         'unmatched_slots': dict({

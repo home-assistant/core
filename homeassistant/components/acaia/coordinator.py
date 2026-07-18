@@ -2,8 +2,9 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
-from aioacaia.acaiascale import AcaiaScale
+from aioacaia import AcaiaScale
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components.bluetooth import async_get_scanner
@@ -59,6 +60,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         """Return the scale object."""
         return self._scale
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
 

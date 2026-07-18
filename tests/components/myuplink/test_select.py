@@ -6,6 +6,7 @@ from aiohttp import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_OPTION,
@@ -18,8 +19,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = Platform.SELECT
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.SELECT,)])
 
 ENTITY_ID = "select.gotham_city_comfort_mode"
 ENTITY_FRIENDLY_NAME = "Gotham City comfort mode"
@@ -34,7 +34,7 @@ async def test_selecting(
     """Test select option service."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Economy"},
         blocking=True,
@@ -47,7 +47,7 @@ async def test_selecting(
     mock_myuplink_client.async_set_device_points.side_effect = ClientError
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            TEST_PLATFORM,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Economy"},
             blocking=True,

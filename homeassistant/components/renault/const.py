@@ -1,20 +1,20 @@
 """Constants for the Renault component."""
 
-from enum import StrEnum
+from typing import Final
 
 from homeassistant.const import Platform
 
 DOMAIN = "renault"
 
 
-class RenaultConfigurationKeys(StrEnum):
+class RenaultConfigurationKeys:
     """Configuration keys."""
 
-    LOCALE = "locale"
-    KAMEREON_ACCOUNT_ID = "kamereon_account_id"
-    LOGIN_TOKEN = "login_token"
-    USERNAME = "username"
-    PASSWORD = "password"
+    KAMEREON_ACCOUNT_ID: Final = "kamereon_account_id"
+    LOCALE: Final = "locale"
+    LOGIN_TOKEN: Final = "login_token"
+    PASSWORD: Final = "password"
+    USERNAME: Final = "username"
 
 
 # normal number of allowed calls per hour to the API
