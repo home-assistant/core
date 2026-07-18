@@ -508,10 +508,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             identifier in current_devices for identifier in device_entry.identifiers
         ):
             LOGGER.debug("Removing stale device %s", device_entry.id)
-            device_registry.async_update_device(
-                device_id=device_entry.id,
-                remove_config_entry_id=entry.entry_id,
-            )
+            device_registry.async_remove_device(device_entry.id)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
