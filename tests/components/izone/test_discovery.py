@@ -1,5 +1,6 @@
 """Tests for iZone discovery service lifecycle."""
 
+import asyncio
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
@@ -9,7 +10,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.izone import discovery as izone_discovery
-from homeassistant.components.izone.const import DISCOVERY_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.izone.const import (
+    DATA_DISCOVERY_SERVICE,
+    DISCOVERY_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
@@ -67,6 +72,206 @@ async def test_ensure_discovery_starts_and_stops_on_homeassistant_stop(
     await hass.async_block_till_done()
 
     mock_service.close.assert_awaited_once()
+
+
+async def test_ensure_discovery_recreates_after_stop(
+    hass: HomeAssistant,
+) -> None:
+    """After a clean stop, ensure starts a fresh create_discovery."""
+    first_service = _mock_pizone_service()
+    second_service = _mock_pizone_service()
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.create_discovery",
+            new=AsyncMock(side_effect=[first_service, second_service]),
+        ) as mock_create,
+    ):
+        assert await izone_discovery.async_ensure_discovery(hass) is first_service
+        await izone_discovery.async_stop_discovery(hass)
+        first_service.close.assert_awaited_once()
+        assert DATA_DISCOVERY_SERVICE not in hass.data
+
+        assert await izone_discovery.async_ensure_discovery(hass) is second_service
+
+    assert mock_create.await_count == 2
+    assert isinstance(
+        hass.data[DATA_DISCOVERY_SERVICE], izone_discovery.DiscoveryRuntime
+    )
+
+
+async def test_ensure_discovery_serializes_concurrent_reopen(
+    hass: HomeAssistant,
+) -> None:
+    """Concurrent ensure after stop still shares a single reopen create."""
+    first_service = _mock_pizone_service()
+    second_service = _mock_pizone_service()
+    started = asyncio.Event()
+    release = asyncio.Event()
+    create_calls = 0
+
+    async def _create(**_kwargs: object) -> Mock:
+        nonlocal create_calls
+        create_calls += 1
+        if create_calls == 1:
+            return first_service
+        started.set()
+        await release.wait()
+        return second_service
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.create_discovery",
+            new=AsyncMock(side_effect=_create),
+        ) as mock_create,
+    ):
+        assert await izone_discovery.async_ensure_discovery(hass) is first_service
+        await izone_discovery.async_stop_discovery(hass)
+
+        task_one = hass.async_create_task(
+            izone_discovery.async_ensure_discovery(hass), eager_start=True
+        )
+        await started.wait()
+        task_two = hass.async_create_task(
+            izone_discovery.async_ensure_discovery(hass), eager_start=True
+        )
+        await asyncio.sleep(0)
+        assert create_calls == 2
+        assert isinstance(hass.data[DATA_DISCOVERY_SERVICE], asyncio.Future)
+
+        release.set()
+        service_one, service_two = await asyncio.gather(task_one, task_two)
+
+    assert service_one is second_service
+    assert service_two is second_service
+    assert mock_create.await_count == 2
+
+
+async def test_ensure_discovery_serializes_concurrent_create(
+    hass: HomeAssistant,
+) -> None:
+    """Concurrent ensure callers share one create_discovery and the same service."""
+    mock_service = _mock_pizone_service()
+    started = asyncio.Event()
+    release = asyncio.Event()
+    create_calls = 0
+
+    async def _slow_create(**_kwargs: object) -> Mock:
+        nonlocal create_calls
+        create_calls += 1
+        started.set()
+        await release.wait()
+        return mock_service
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.create_discovery",
+            new=AsyncMock(side_effect=_slow_create),
+        ) as mock_create,
+    ):
+        task_one = hass.async_create_task(
+            izone_discovery.async_ensure_discovery(hass), eager_start=True
+        )
+        await started.wait()
+        task_two = hass.async_create_task(
+            izone_discovery.async_ensure_discovery(hass), eager_start=True
+        )
+        await asyncio.sleep(0)
+        assert create_calls == 1
+        assert isinstance(hass.data[DATA_DISCOVERY_SERVICE], asyncio.Future)
+
+        release.set()
+        service_one, service_two = await asyncio.gather(task_one, task_two)
+
+    assert service_one is mock_service
+    assert service_two is mock_service
+    mock_create.assert_awaited_once()
+    assert isinstance(
+        hass.data[DATA_DISCOVERY_SERVICE], izone_discovery.DiscoveryRuntime
+    )
+
+
+async def test_ensure_discovery_failure_fails_concurrent_waiters(
+    hass: HomeAssistant,
+) -> None:
+    """Create failure clears the slot and fails every concurrent waiter."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _failing_create(**_kwargs: object) -> Mock:
+        started.set()
+        await release.wait()
+        raise OSError("bind failed")
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.create_discovery",
+            new=AsyncMock(side_effect=_failing_create),
+        ),
+    ):
+        task_one = hass.async_create_task(
+            izone_discovery.async_ensure_discovery(hass), eager_start=True
+        )
+        await started.wait()
+        task_two = hass.async_create_task(
+            izone_discovery.async_ensure_discovery(hass), eager_start=True
+        )
+        await asyncio.sleep(0)
+        release.set()
+        results = await asyncio.gather(task_one, task_two, return_exceptions=True)
+
+    assert all(isinstance(result, OSError) for result in results)
+    assert DATA_DISCOVERY_SERVICE not in hass.data
+
+
+async def test_stop_discovery_aborts_in_flight_create(
+    hass: HomeAssistant,
+) -> None:
+    """Stopping while create is pending fails the Future and clears the slot."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _slow_create(**_kwargs: object) -> Mock:
+        started.set()
+        await release.wait()
+        return _mock_pizone_service()
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.create_discovery",
+            new=AsyncMock(side_effect=_slow_create),
+        ),
+    ):
+        ensure_task = hass.async_create_task(
+            izone_discovery.async_ensure_discovery(hass), eager_start=True
+        )
+        await started.wait()
+        await izone_discovery.async_stop_discovery(hass)
+        release.set()
+        with pytest.raises(RuntimeError, match="stopped before start completed"):
+            await ensure_task
+
+    assert DATA_DISCOVERY_SERVICE not in hass.data
 
 
 async def test_slow_scan_fires_while_entry_loaded(
@@ -234,6 +439,36 @@ async def test_ensure_discovery_propagates_oserror(hass: HomeAssistant) -> None:
         pytest.raises(OSError, match="bind failed"),
     ):
         await izone_discovery.async_ensure_discovery(hass)
+
+    assert DATA_DISCOVERY_SERVICE not in hass.data
+
+
+async def test_setup_runtime_error_from_discovery_retries(
+    hass: HomeAssistant,
+) -> None:
+    """Process-global discovery conflicts surface as SETUP_RETRY."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.pizone.create_discovery",
+            new=AsyncMock(side_effect=RuntimeError("already running")),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert DATA_DISCOVERY_SERVICE not in hass.data
 
 
 async def test_discover_all_endpoints(

@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     """Set up from a config entry."""
     try:
         discovery = await async_ensure_discovery(hass)
-    except OSError as err:
+    except (OSError, RuntimeError) as err:
         raise ConfigEntryNotReady("iZone discovery service failed to start") from err
 
     # Heal legacy / hostless entries here (not in migrate) so ConfigEntryNotReady
