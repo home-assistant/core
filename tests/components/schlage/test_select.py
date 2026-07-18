@@ -43,17 +43,17 @@ async def test_select(
     with patch("homeassistant.components.schlage.PLATFORMS", [Platform.SELECT]):
         await mock_add_config_entry()
 
-        select = hass.states.get("select.vault_door_auto_lock_time")
-        assert select is not None
-        assert select.state == "15"
+    select = hass.states.get("select.vault_door_auto_lock_time")
+    assert select is not None
+    assert select.state == "15"
 
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: select.entity_id, ATTR_OPTION: "30"},
-            blocking=True,
-        )
-        mock_lock.set_auto_lock_time.assert_called_once_with(30)
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: select.entity_id, ATTR_OPTION: "30"},
+        blocking=True,
+    )
+    mock_lock.set_auto_lock_time.assert_called_once_with(30)
 
 
 async def test_auto_lock_time_translations(hass: HomeAssistant) -> None:

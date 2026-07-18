@@ -40,11 +40,12 @@ async def test_keypad_disabled_binary_sensor(
     mock_lock.keypad_disabled.return_value = True
     with patch("homeassistant.components.schlage.PLATFORMS", [Platform.BINARY_SENSOR]):
         await mock_add_config_entry()
-        keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
-        assert keypad is not None
-        assert keypad.state == STATE_ON
-        assert keypad.attributes["device_class"] == BinarySensorDeviceClass.PROBLEM
-        mock_lock.keypad_disabled.assert_called_once_with([])
+
+    keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
+    assert keypad is not None
+    assert keypad.state == STATE_ON
+    assert keypad.attributes["device_class"] == BinarySensorDeviceClass.PROBLEM
+    mock_lock.keypad_disabled.assert_called_once_with([])
 
 
 async def test_keypad_disabled_binary_sensor_logs_failure(
@@ -58,11 +59,12 @@ async def test_keypad_disabled_binary_sensor_logs_failure(
     mock_lock.logs.side_effect = UnknownError("Cannot load logs")
     with patch("homeassistant.components.schlage.PLATFORMS", [Platform.BINARY_SENSOR]):
         await mock_add_config_entry()
-        keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
-        assert keypad is not None
-        assert keypad.state == STATE_ON
-        assert keypad.attributes["device_class"] == BinarySensorDeviceClass.PROBLEM
-        mock_lock.keypad_disabled.assert_called_once_with([])
+
+    keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
+    assert keypad is not None
+    assert keypad.state == STATE_ON
+    assert keypad.attributes["device_class"] == BinarySensorDeviceClass.PROBLEM
+    mock_lock.keypad_disabled.assert_called_once_with([])
 
 
 async def test_keypad_disabled_uses_previous_logs_on_refresh_failure(
@@ -75,20 +77,20 @@ async def test_keypad_disabled_uses_previous_logs_on_refresh_failure(
     with patch("homeassistant.components.schlage.PLATFORMS", [Platform.BINARY_SENSOR]):
         await mock_add_config_entry()
 
-        keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
-        assert keypad is not None
-        assert keypad.state == STATE_OFF
+    keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
+    assert keypad is not None
+    assert keypad.state == STATE_OFF
 
-        mock_lock.keypad_disabled.reset_mock()
-        mock_lock.keypad_disabled.return_value = True
-        mock_lock.logs.side_effect = UnknownError("Cannot load logs")
+    mock_lock.keypad_disabled.reset_mock()
+    mock_lock.keypad_disabled.return_value = True
+    mock_lock.logs.side_effect = UnknownError("Cannot load logs")
 
-        freezer.tick(UPDATE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-        keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
-        assert keypad is not None
-        assert keypad.state == STATE_ON
-        # Previous logs (empty list from initial refresh) are passed when fetch fails.
-        mock_lock.keypad_disabled.assert_called_once_with([])
+    keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
+    assert keypad is not None
+    assert keypad.state == STATE_ON
+    # Previous logs (empty list from initial refresh) are passed when fetch fails.
+    mock_lock.keypad_disabled.assert_called_once_with([])

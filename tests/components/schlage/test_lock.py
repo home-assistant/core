@@ -56,9 +56,10 @@ async def test_lock_jammed(
     mock_lock.is_jammed = True
     with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
         await mock_add_config_entry()
-        lock = hass.states.get("lock.vault_door")
-        assert lock is not None
-        assert lock.state == LockState.JAMMED
+
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == LockState.JAMMED
 
 
 async def test_lock_disconnected(
@@ -114,9 +115,10 @@ async def test_changed_by(
     mock_lock.last_changed_by.return_value = "access code - foo"
     with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
         await mock_add_config_entry()
-        lock = hass.states.get("lock.vault_door")
-        assert lock is not None
-        assert lock.attributes.get("changed_by") == "access code - foo"
+
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.attributes.get("changed_by") == "access code - foo"
 
 
 @pytest.mark.parametrize(
