@@ -7,8 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from pizone import Controller, Zone
 import pytest
 
-from homeassistant.components.izone import discovery as izone_discovery
-from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.const import CONF_EXCLUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -27,16 +26,6 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="000000001",
         version=2,
     )
-
-
-@pytest.fixture
-def mock_pizone_discovery_service() -> Mock:
-    """Create a mock pizone discovery service."""
-    disco = Mock()
-    disco.fetch_controllers = AsyncMock(return_value={})
-    disco.start_discovery = AsyncMock()
-    disco.close = AsyncMock()
-    return disco
 
 
 def create_mock_controller(
@@ -142,28 +131,6 @@ async def async_load_yaml_exclude(hass: HomeAssistant, *uids: str) -> None:
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_EXCLUDE: list(uids)}}
         )
-
-
-async def async_install_discovery_service(
-    hass: HomeAssistant, *controllers: Mock
-) -> Mock:
-    """Start the discovery service with mocked pizone and optional controllers."""
-    mock_pi_disco = create_mock_discovery_service(*controllers).pi_disco
-    mock_pi_disco.start_discovery = AsyncMock()
-    mock_pi_disco.close = AsyncMock()
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
-            return_value=Mock(),
-        ),
-        patch(
-            "homeassistant.components.izone.discovery.pizone.discovery",
-            return_value=mock_pi_disco,
-        ),
-    ):
-        service = await izone_discovery.async_start_discovery_service(hass)
-    assert DATA_DISCOVERY_SERVICE in hass.data
-    return service
 
 
 @pytest.fixture
