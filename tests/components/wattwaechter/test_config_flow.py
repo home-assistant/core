@@ -504,6 +504,25 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN
 
 
+async def test_reconfigure_flow_clear_token(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test clearing the token field stores None instead of an empty string."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_TOKEN: ""}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_TOKEN] is None
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [

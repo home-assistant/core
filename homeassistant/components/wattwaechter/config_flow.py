@@ -261,7 +261,9 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            token = user_input.get(CONF_TOKEN)
+            # Normalize a cleared token field to None, matching how token-less
+            # devices are stored everywhere else in the integration.
+            token = user_input.get(CONF_TOKEN) or None
             errors, system_info, _ = await self._async_test_connection(
                 user_input[CONF_HOST], token
             )
