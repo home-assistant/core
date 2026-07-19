@@ -510,7 +510,6 @@ class OverkizConfigFlow(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        # Overkiz entries always have unique IDs; reauth context carries it.
         self._init_flow_from_entry(entry_data, cast(str, self.unique_id))
         return await self.async_step_user(dict(entry_data))
 
