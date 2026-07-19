@@ -303,10 +303,8 @@ async def test_init_attribute_variables_from_blueprint(hass: HomeAssistant) -> N
 
     # Reload the templates without any change, but with updated blueprint
     blueprint_config = yaml_util.load_yaml(
-        pathlib.Path(
-            pathlib.Path(__file__).resolve().parents[2]
-            / "testing_config/blueprints/template/"
-        )
+        pathlib.Path(__file__).resolve().parents[2]
+        / "testing_config/blueprints/template"
         / blueprint
     )
     blueprint_config["variables"]["extraa"] = "c"
