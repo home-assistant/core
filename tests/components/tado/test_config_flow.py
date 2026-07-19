@@ -131,6 +131,9 @@ async def test_auth_timeout(
         result["flow_id"], user_input={}
     )
 
+    # Retrying must generate a fresh device code
+    assert mock_tado_api.device_verification_url.call_count == 2
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
     assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
