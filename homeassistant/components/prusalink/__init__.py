@@ -19,6 +19,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from .config_flow import PrusaLinkConfigFlow
 from .const import DOMAIN
 from .coordinator import (
+    FileMetadataUpdateCoordinator,
     InfoUpdateCoordinator,
     JobUpdateCoordinator,
     LegacyStatusCoordinator,
@@ -48,14 +49,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) ->
         entry.data[CONF_PASSWORD],
     )
 
+    job_coordinator = JobUpdateCoordinator(hass, entry, api)
     coordinators: dict[str, PrusaLinkUpdateCoordinator] = {
         "legacy_status": LegacyStatusCoordinator(hass, entry, api),
         "status": StatusCoordinator(hass, entry, api),
-        "job": JobUpdateCoordinator(hass, entry, api),
+        "job": job_coordinator,
+        "file_metadata": FileMetadataUpdateCoordinator(
+            hass, entry, api, job_coordinator
+        ),
         "info": InfoUpdateCoordinator(hass, entry, api),
         "version": VersionUpdateCoordinator(hass, entry, api),
     }
-    for coordinator in coordinators.values():
+    for coordinator_type, coordinator in coordinators.items():
+        if coordinator_type == "file_metadata":
+            continue
         await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinators
