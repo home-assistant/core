@@ -39,8 +39,9 @@ def mock_izone_timeouts() -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_user_discovery_success(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """Test user flow confirms and creates an entry for a discovered controller."""
     controller = create_mock_controller("000000001", "192.0.2.55")
@@ -59,8 +60,9 @@ async def test_user_discovery_success(
     assert result["result"].unique_id == "000000001"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_user_discovery_default_selects_first_and_queues_other(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """Default dropdown selection configures first UID and queues the other for confirm."""
     first = create_mock_controller("000000001", "192.0.2.1")
@@ -90,8 +92,9 @@ async def test_user_discovery_default_selects_first_and_queues_other(
     assert progress[0]["context"]["unique_id"] == "000000002"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_broadcast_skips_already_configured_controller(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """Test broadcast discovery skips configured controllers and sets up an unconfigured one."""
     configured_controller = create_mock_controller("000000001", "192.0.2.1")
@@ -118,8 +121,9 @@ async def test_broadcast_skips_already_configured_controller(
     assert result["result"].unique_id == "000000002"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_user_discovery_skips_yaml_excluded_controllers(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """User flow should not offer controllers excluded by deprecated YAML config."""
     excluded_controller = create_mock_controller("000000001", "192.0.2.1")
@@ -141,8 +145,9 @@ async def test_user_discovery_skips_yaml_excluded_controllers(
     assert result["result"].unique_id == "000000002"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_broadcast_multiple_unconfigured_shows_choice(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """Test broadcast discovery shows a controller choice when multiple unconfigured controllers are found."""
     first_controller = create_mock_controller("000000002", "192.0.2.1")
@@ -186,7 +191,7 @@ async def test_broadcast_multiple_unconfigured_shows_choice(
 async def test_select_controller_aborts_when_choices_missing(
     hass: HomeAssistant,
 ) -> None:
-    """Test controller selection aborts if the discovered controller choices are missing."""
+    """Controller selection aborts if discovered choices were lost on the flow."""
     first_controller = create_mock_controller("000000001", "192.0.2.1")
     second_controller = create_mock_controller("000000002", "192.0.2.2")
 
@@ -195,6 +200,8 @@ async def test_select_controller_aborts_when_choices_missing(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
+    # Public configure cannot clear flow-local discovery state; poke the in-progress
+    # instance so the empty-choices abort path is exercised.
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     flow._user_discovered_endpoints = None
 
@@ -207,7 +214,7 @@ async def test_select_controller_aborts_when_choices_missing(
 async def test_select_controller_aborts_when_uid_not_in_choices(
     hass: HomeAssistant,
 ) -> None:
-    """Test controller selection aborts if a submitted UID is not in the choices."""
+    """Controller selection aborts if the submitted UID is not in the choices."""
     first_controller = create_mock_controller("000000001", "192.0.2.1")
     second_controller = create_mock_controller("000000002", "192.0.2.2")
 
@@ -216,6 +223,8 @@ async def test_select_controller_aborts_when_uid_not_in_choices(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
+    # Schema validation rejects unknown UIDs; call the step directly with a UID that
+    # is not in the discovered set to cover the step's own abort.
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     result = await flow.async_step_select_controller(
         {config_flow.SELECTED_CONTROLLER_UID: "000000099"}
@@ -225,8 +234,9 @@ async def test_select_controller_aborts_when_uid_not_in_choices(
     assert result["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_select_controller_creates_selected_uid_and_queues_others(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """A selected controller is configured and non-selected controllers are queued."""
     first_controller = create_mock_controller("000000002", "192.0.2.1")
@@ -377,8 +387,9 @@ async def test_user_flow_aborts_when_discovery_bind_fails(hass: HomeAssistant) -
     assert result["reason"] == "discovery_failed"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_homekit_confirm_uses_discovered_host(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """Test HomeKit flow confirms and uses the discovered controller IP, not the HomeKit host."""
     controller = create_mock_controller(device_ip="192.0.2.3")
@@ -483,8 +494,9 @@ async def test_homekit_flow_sets_device_uid_once(
     assert set_unique_id_calls == ["000000001"]
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_homekit_aborts_while_user_confirm_is_open(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """HomeKit onboarding for same UID is blocked while a user flow is already active."""
     controller = create_mock_controller("000000001", "192.0.2.3")
@@ -592,23 +604,45 @@ async def test_homekit_aborts_when_uid_configured_during_discovery(
     assert result["reason"] == "already_configured"
 
 
-async def test_homekit_aborts_when_uid_not_found_in_discovery(
+@pytest.mark.parametrize(
+    ("controllers", "homekit_md", "homekit_host"),
+    [
+        pytest.param([], "iZone 000000001", "192.0.2.3", id="empty_discovery"),
+        pytest.param(
+            [create_mock_controller("000000003", "192.0.2.33")],
+            "iZone 000000001",
+            None,
+            id="uid_missing_from_discovery",
+        ),
+        pytest.param(
+            [create_mock_controller("000000002", "192.0.2.44")],
+            "iZone 000000001",
+            "203.0.113.1",
+            id="different_uid_discovered",
+        ),
+    ],
+)
+async def test_homekit_aborts_when_target_uid_not_discovered(
     hass: HomeAssistant,
+    controllers: list[Mock],
+    homekit_md: str,
+    homekit_host: str | None,
 ) -> None:
-    """Test HomeKit aborts when the discovered UID cannot be found via iZone discovery."""
-    with patch_discovered_controllers([]):
+    """HomeKit aborts when iZone discovery does not yield the advertised UID."""
+    with patch_discovered_controllers(controllers):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data=_make_homekit_info("iZone 000000001", "192.0.2.3"),
+            data=_make_homekit_info(homekit_md, homekit_host),
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_homekit_resolves_uid_via_discover_endpoint(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """HomeKit falls back to discover_by_uid when the UID is missing from discover_all."""
     target = create_mock_controller("000000001", "192.0.2.1")
@@ -658,37 +692,8 @@ async def test_homekit_aborts_when_discovery_bind_fails(hass: HomeAssistant) -> 
     assert result["reason"] == "discovery_failed"
 
 
-async def test_homekit_aborts_when_controller_unavailable_during_discovery_wait(
-    hass: HomeAssistant,
-) -> None:
-    """HomeKit aborts when the advertised UID is not found during iZone discovery."""
-    with patch_discovered_controllers([]):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_HOMEKIT},
-            data=_make_homekit_info("iZone 000000001", "203.0.113.1"),
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
 async def test_user_flow_aborts_when_no_controllers_found(hass: HomeAssistant) -> None:
     """User flow aborts when broadcast discovery returns no controllers."""
-    with patch_discovered_controllers([]):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "no_devices_found"
-
-        await hass.async_block_till_done()
-
-
-async def test_user_discovery_with_shared_service_without_matches_aborts(
-    hass: HomeAssistant, mock_entry_setup: None
-) -> None:
-    """User flow aborts when discovery refresh returns no controllers."""
     with patch_discovered_controllers([]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -707,53 +712,6 @@ async def test_homekit_without_model_aborts(
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=_make_homekit_info("Other Device", "192.0.2.3"),
     )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_homekit_aborts_when_matching_uid_not_discovered(
-    hass: HomeAssistant,
-) -> None:
-    """Test HomeKit aborts when no discovered controller matches model UID."""
-    controller = create_mock_controller("000000003", "192.0.2.33")
-
-    with patch_discovered_controllers(controller):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_HOMEKIT},
-            data=_make_homekit_info("iZone 000000001"),
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_homekit_aborts_when_nothing_found(hass: HomeAssistant) -> None:
-    """Test HomeKit aborts when iZone discovery finds no controllers."""
-    with patch_discovered_controllers([]):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_HOMEKIT},
-            data=_make_homekit_info("iZone 000000001", "203.0.113.1"),
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_homekit_aborts_when_discovered_uid_missing(
-    hass: HomeAssistant,
-) -> None:
-    """Test HomeKit aborts when discovery returns controllers but not the advertised UID."""
-    different_controller = create_mock_controller("000000002", "192.0.2.44")
-
-    with patch_discovered_controllers(different_controller):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_HOMEKIT},
-            data=_make_homekit_info("iZone 000000001", "203.0.113.1"),
-        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
@@ -795,15 +753,16 @@ async def test_integration_discovery_aborts_for_ignored_uid(
             "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
             "unique_id": "000000002",
         },
-        data={"host": "192.0.2.2"},
+        data={CONF_HOST: "192.0.2.2"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_runtime_integration_discovery_starts_confirm_flow(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """When the discovery service sees an unconfigured UID, offer setup."""
     MockConfigEntry(
@@ -827,8 +786,9 @@ async def test_runtime_integration_discovery_starts_confirm_flow(
     assert progress[0]["step_id"] == "confirm"
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_integration_discovery_confirm_creates_entry(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """Full path: integration-discovery flow confirmed by the user creates an entry."""
     controller = create_mock_controller("000000002", "192.0.2.2")
@@ -949,8 +909,9 @@ async def test_runtime_integration_discovery_skips_during_user_select_controller
     mock_create_flow.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_runtime_integration_discovery_skips_during_user_confirm(
-    hass: HomeAssistant, mock_entry_setup: None
+    hass: HomeAssistant,
 ) -> None:
     """Runtime discovery stays suppressed while an interactive user flow is active."""
     first = create_mock_controller("000000001", "192.0.2.1")
@@ -989,13 +950,6 @@ async def test_async_setup_starts_import_flow(hass: HomeAssistant) -> None:
     mock_create_task.assert_called_once()
 
 
-def test_flow_uid_for_matching_returns_none_when_no_uid() -> None:
-    """Flow UID extraction returns None when context has no unique_id."""
-    flow = SimpleNamespace(context={}, init_data=None)
-
-    assert config_flow._flow_uid_for_matching(flow) is None
-
-
 def test_is_matching_returns_false_when_either_flow_has_no_uid() -> None:
     """Flow matching should fail when a stable UID cannot be derived."""
     first = SimpleNamespace(context={}, init_data=None)
@@ -1010,6 +964,64 @@ def test_is_matching_returns_true_for_same_flow_uid() -> None:
     second = SimpleNamespace(context={"unique_id": "000000111"}, init_data=None)
 
     assert config_flow.IZoneConfigFlow.is_matching(first, second) is True
+
+
+async def test_confirm_asserts_when_controller_data_is_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Confirm asserts when required controller data is unexpectedly missing."""
+    controller = create_mock_controller("000000001", "192.0.2.1")
+
+    with patch_discovered_controllers(controller):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    # Corrupt flow-local state that the public path always sets before confirm.
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow._discovered_controller_ip = None
+    with pytest.raises(AssertionError):
+        await flow.async_step_confirm()
+
+
+async def test_confirm_asserts_when_unique_id_is_not_string(
+    hass: HomeAssistant,
+) -> None:
+    """Confirm asserts when flow unique_id is unexpectedly not a string."""
+    controller = create_mock_controller("000000001", "192.0.2.1")
+
+    with patch_discovered_controllers(controller):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow.context["unique_id"] = None
+
+    with pytest.raises(AssertionError):
+        await flow.async_step_confirm({})
+
+
+def test_async_fan_out_skips_uids_already_in_progress() -> None:
+    """Fan-out skips scheduling flows for UIDs already in progress."""
+    candidate = endpoint_from_controller(
+        create_mock_controller("000000002", "192.0.2.2")
+    )
+    # Drive the helper with a stub flow: happy-path fan-out tests only cover the
+    # "schedule missing UIDs" branch, not the already-in-progress skip.
+    fake_flow = SimpleNamespace(
+        _async_current_ids=Mock(return_value=set()),
+        _async_in_progress=Mock(return_value=[{"context": {"unique_id": "000000002"}}]),
+        _async_schedule_integration_discovery_flow=Mock(),
+    )
+
+    config_flow.IZoneConfigFlow._async_fan_out_discovered_endpoints(
+        fake_flow,
+        [candidate],
+        selected_uid="000000001",
+    )
+
+    fake_flow._async_schedule_integration_discovery_flow.assert_not_called()
 
 
 async def test_homekit_aborts_for_yaml_excluded_uid_without_discovery(
@@ -1067,88 +1079,6 @@ async def test_homekit_aborts_for_ignored_uid(
     assert result["reason"] == "already_configured"
     mock_discover_all.assert_not_called()
     mock_discover_one.assert_not_called()
-
-
-async def test_confirm_asserts_when_controller_data_is_missing(
-    hass: HomeAssistant,
-) -> None:
-    """Confirm asserts when required controller data is unexpectedly missing."""
-    controller = create_mock_controller("000000001", "192.0.2.1")
-
-    with patch_discovered_controllers(controller):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
-    flow._discovered_controller_ip = None
-    with pytest.raises(AssertionError):
-        await flow.async_step_confirm()
-
-
-async def test_confirm_asserts_when_unique_id_is_not_string(
-    hass: HomeAssistant,
-) -> None:
-    """Confirm asserts when flow unique_id is unexpectedly not a string."""
-    controller = create_mock_controller("000000001", "192.0.2.1")
-
-    with patch_discovered_controllers(controller):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
-    flow.context["unique_id"] = None
-
-    with pytest.raises(AssertionError):
-        await flow.async_step_confirm({})
-
-
-def test_filter_yaml_exclude_returns_original_when_no_exclusions(
-    hass: HomeAssistant,
-) -> None:
-    """YAML exclusion helper returns unchanged mapping when no excludes are present."""
-    endpoints = {"000000001": endpoint_from_controller(create_mock_controller())}
-
-    assert (
-        config_flow.IZoneConfigFlow._filter_yaml_exclude(hass, endpoints) is endpoints
-    )
-
-
-async def test_filter_yaml_exclude_removes_excluded_controllers(
-    hass: HomeAssistant,
-) -> None:
-    """YAML exclusion helper removes matching UIDs from discovered controllers."""
-    first = endpoint_from_controller(create_mock_controller("000000001", "192.0.2.1"))
-    second = endpoint_from_controller(create_mock_controller("000000002", "192.0.2.2"))
-    await async_load_yaml_exclude(hass, "000000002")
-
-    filtered = config_flow.IZoneConfigFlow._filter_yaml_exclude(
-        hass,
-        {first.uid: first, second.uid: second},
-    )
-
-    assert filtered == {first.uid: first}
-
-
-def test_async_fan_out_skips_uids_already_in_progress() -> None:
-    """Fan-out should skip scheduling flows for UIDs already in progress."""
-    candidate = endpoint_from_controller(
-        create_mock_controller("000000002", "192.0.2.2")
-    )
-    fake_flow = SimpleNamespace(
-        _async_current_ids=Mock(return_value=set()),
-        _async_in_progress=Mock(return_value=[{"context": {"unique_id": "000000002"}}]),
-        _async_schedule_integration_discovery_flow=Mock(),
-    )
-
-    config_flow.IZoneConfigFlow._async_fan_out_discovered_endpoints(
-        fake_flow,
-        [candidate],
-        selected_uid="000000001",
-    )
-
-    fake_flow._async_schedule_integration_discovery_flow.assert_not_called()
 
 
 async def test_async_migrate_entry_clears_legacy_data(

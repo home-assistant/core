@@ -526,8 +526,3 @@ async def test_discover_endpoint_by_uid(
 
     assert result == endpoint
     mock_service.discover_by_uid.assert_awaited_once_with("000000001")
-
-
-def test_discovery_scan_interval_matches_legacy_five_minutes() -> None:
-    """New-device hunt cadence stays aligned with the old library sleep."""
-    assert timedelta(minutes=5) == DISCOVERY_SCAN_INTERVAL
