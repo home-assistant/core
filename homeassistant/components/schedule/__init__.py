@@ -1,6 +1,7 @@
 """Support for schedules in Home Assistant."""
 
 from collections.abc import Callable
+from copy import deepcopy
 from datetime import datetime, time, timedelta
 import itertools
 from typing import Any, Literal, override
@@ -45,6 +46,7 @@ from .const import (  # noqa: F401
     CONF_ALL_DAYS,
     CONF_DATA,
     CONF_FROM,
+    CONF_PREVIOUS,
     CONF_TO,
     DOMAIN,
     LOGGER,
@@ -87,6 +89,13 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
         previous_to = time_range[CONF_TO]
 
     return schedule
+
+
+def validate_not_all_previous(value: dict) -> dict:
+    """Ensure the schedule is not made entirely of 'previous'."""
+    if all(value[day] == CONF_PREVIOUS for day in CONF_ALL_DAYS):
+        raise vol.Invalid("Schedule cannot have all days set to 'previous'")
+    return value
 
 
 def deserialize_to_time(value: Any) -> Any:
@@ -136,31 +145,59 @@ STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
     }
 )
 
+
+def _validate_schedule_day(value: Any) -> Any:
+    if value == CONF_PREVIOUS:
+        return value
+    return vol.All(cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule)(value)
+
+
+def _validate_storage_schedule_day(value: Any) -> Any:
+    if value == CONF_PREVIOUS:
+        return value
+    return vol.All(
+        cv.ensure_list,
+        [TIME_RANGE_SCHEMA],
+        valid_schedule,
+        [STORAGE_TIME_RANGE_SCHEMA],
+    )(value)
+
+
 SCHEDULE_SCHEMA: VolDictType = {
-    vol.Optional(day, default=[]): vol.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
-    )
-    for day in CONF_ALL_DAYS
+    vol.Optional(day, default=[]): _validate_schedule_day for day in CONF_ALL_DAYS
 }
+
 STORAGE_SCHEDULE_SCHEMA: VolDictType = {
-    vol.Optional(day, default=[]): vol.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule, [STORAGE_TIME_RANGE_SCHEMA]
-    )
+    vol.Optional(day, default=[]): _validate_storage_schedule_day
     for day in CONF_ALL_DAYS
 }
 
+
 # Validate YAML config
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(vol.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            vol.All(
+                BASE_SCHEMA | SCHEDULE_SCHEMA,
+                validate_not_all_previous,
+            )
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 # Validate storage config
 STORAGE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA
+    vol.All(
+        {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA,
+        validate_not_all_previous,
+    )
 )
 # Validate + transform entity config
 ENTITY_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
+    vol.All(
+        {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA,
+        validate_not_all_previous,
+    )
 )
 
 
@@ -325,14 +362,34 @@ class Schedule(CollectionEntity):
         self._update()
 
     def get_schedule(self) -> ConfigType:
-        """Return the schedule."""
-        return {d: self._config[d] for d in WEEKDAY_TO_CONF.values()}
+        """Return the schedule, expanding 'previous' entries."""
+        days = list(WEEKDAY_TO_CONF.values())
+
+        expanded: ConfigType = {}
+
+        for i, day in enumerate(days):
+            value = self._config[day]
+
+            if value != CONF_PREVIOUS:
+                expanded[day] = value
+                continue
+
+            for offset in range(1, len(days) + 1):
+                prev_day = days[(i - offset) % len(days)]
+                prev_value = self._config[prev_day]
+
+                if prev_value != CONF_PREVIOUS:
+                    expanded[day] = deepcopy(prev_value)
+                    break
+
+        return expanded
 
     @callback
     def _update(self, _: datetime | None = None) -> None:
         """Update the states of the schedule."""
         now = dt_util.now()
-        todays_schedule = self._config.get(WEEKDAY_TO_CONF[now.weekday()], [])
+        schedule = self.get_schedule()
+        todays_schedule = schedule.get(WEEKDAY_TO_CONF[now.weekday()], [])
 
         # Determine current schedule state
         for time_range in todays_schedule:
@@ -353,9 +410,7 @@ class Schedule(CollectionEntity):
         # the current day) until the next event has been found.
         next_event = None
         for day in range(8):  # 8 because we need to search today's weekday next week
-            day_schedule = self._config.get(
-                WEEKDAY_TO_CONF[(now.weekday() + day) % 7], []
-            )
+            day_schedule = schedule.get(WEEKDAY_TO_CONF[(now.weekday() + day) % 7], [])
             times = sorted(
                 itertools.chain(
                     *[
@@ -406,9 +461,9 @@ class Schedule(CollectionEntity):
     def all_custom_data_keys(self) -> frozenset[str]:
         """Return the set of all currently used custom data attribute keys."""
         data_keys: set[str] = set()
-
+        schedule = self.get_schedule()
         for weekday in WEEKDAY_TO_CONF.values():
-            if not (weekday_config := self._config.get(weekday)):
+            if not (weekday_config := schedule.get(weekday)):
                 continue  # this weekday is not configured
 
             for time_range in weekday_config:

@@ -39,6 +39,7 @@ CONF_ALL_DAYS: Final = {
     CONF_SATURDAY,
     CONF_SUNDAY,
 }
+CONF_PREVIOUS: Final = "previous"
 
 ATTR_NEXT_EVENT: Final = "next_event"
 

@@ -113,6 +113,32 @@ async def test_invalid_schedules(
     assert error in caplog.text
 
 
+async def test_invalid_previous(
+    hass: HomeAssistant,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test overlapping time ranges invalidate."""
+    assert not await schedule_setup(
+        config={
+            DOMAIN: {
+                "from_yaml": {
+                    CONF_NAME: "from yaml",
+                    CONF_ICON: "mdi:party-pooper",
+                    CONF_SUNDAY: "previous",
+                    CONF_MONDAY: "previous",
+                    CONF_TUESDAY: "previous",
+                    CONF_WEDNESDAY: "previous",
+                    CONF_THURSDAY: "previous",
+                    CONF_FRIDAY: "previous",
+                    CONF_SATURDAY: "previous",
+                }
+            }
+        }
+    )
+    assert "Schedule cannot have all days set to 'previous'" in caplog.text
+
+
 async def test_events_one_day(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
@@ -746,3 +772,92 @@ async def test_service_get(
 
     assert set(result) == CONF_ALL_DAYS
     assert result == snapshot(name=f"{entity_id}-get-after-update")
+
+
+async def test_previous(
+    hass: HomeAssistant,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test 'previous' feature."""
+
+    TUESDAY_1PM = "2022-08-30 13:20:00-07:00"
+    SATURDAY_7AM = "2022-09-03T07:00:00-07:00"
+    SATURDAY_11AM = "2022-09-03T11:00:00-07:00"
+    SUNDAY_7AM = "2022-09-04T07:00:00-07:00"
+    SUNDAY_11AM = "2022-09-04T11:00:00-07:00"
+    MONDAY_7AM = "2022-09-05T07:00:00-07:00"
+    MONDAY_11AM = "2022-09-05T11:00:00-07:00"
+    NEXT_SATURDAY_7AM = "2022-09-10T07:00:00-07:00"
+
+    freezer.move_to(TUESDAY_1PM)
+
+    assert await schedule_setup(
+        config={
+            DOMAIN: {
+                "from_yaml": {
+                    CONF_NAME: "from yaml",
+                    CONF_ICON: "mdi:party-popper",
+                    CONF_SATURDAY: {CONF_FROM: "07:00:00", CONF_TO: "11:00:00"},
+                    CONF_SUNDAY: "previous",
+                    CONF_MONDAY: "previous",
+                    CONF_THURSDAY: "previous",
+                }
+            }
+        },
+        items=[],
+    )
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == SATURDAY_7AM
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == SATURDAY_11AM
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == SUNDAY_7AM
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == SUNDAY_11AM
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == MONDAY_7AM
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == MONDAY_11AM
+
+    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == NEXT_SATURDAY_7AM
