@@ -21,24 +21,27 @@ send_message:
       selector:
         text:
           multiline: true
-    cc:
+    attachments:
       required: false
       selector:
-        target:
-          entity:
-            domain: notify
-            integration: smtp
-    bcc:
-      required: false
-      selector:
-        target:
-          entity:
-            domain: notify
-            integration: smtp
-    attachment:
-      required: false
-      selector:
-        media:
+        object:
+          label_field: attachment
+          description_field: filename
           multiple: true
-          accept:
-            - "*"
+          fields:
+            attachment:
+              required: true
+              selector:
+                media:
+                  multiple: true
+                  accept:
+                    - "*"
+            filename:
+              required: false
+              selector:
+                text:
+            content_id:
+              required: false
+              selector:
+                text:
+          translation_key: attachments

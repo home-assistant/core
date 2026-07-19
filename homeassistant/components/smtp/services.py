@@ -11,14 +11,34 @@ from homeassistant.components.notify import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.selector import MediaSelector
 
-from .const import ATTR_HTML, DOMAIN
+from .const import (
+    ATTR_ATTACHMENT,
+    ATTR_ATTACHMENTS,
+    ATTR_CONTENT_ID,
+    ATTR_FILENAME,
+    ATTR_HTML,
+    DOMAIN,
+)
 
 SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Optional(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
         vol.Optional(ATTR_MESSAGE, default=""): cv.string,
         vol.Optional(ATTR_HTML): cv.string,
+        vol.Optional(ATTR_ATTACHMENTS): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(ATTR_ATTACHMENT): MediaSelector({"accept": ["*"]}),
+                        vol.Optional(ATTR_FILENAME, ATTR_FILENAME): cv.string,
+                        vol.Optional(ATTR_CONTENT_ID, ATTR_FILENAME): cv.string,
+                    }
+                )
+            ],
+        ),
     }
 )
 

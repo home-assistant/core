@@ -125,6 +125,12 @@
     "connection_error": {
       "message": "Failed to connect to SMTP server."
     },
+    "media_source_missing_filename": {
+      "message": "Cannot attach {media_content_id}. This media source does not provide a filename, you must explicitly specify a filename."
+    },
+    "media_source_not_supported": {
+      "message": "Media source {media_content_id} is not supported."
+    },
     "remote_path_not_allowed": {
       "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
     },
@@ -151,6 +157,22 @@
     }
   },
   "selector": {
+    "attachments": {
+      "fields": {
+        "attachment": {
+          "description": "Select a camera, image entity, or local media source to attach. Camera entities are captured as a snapshot when the email is sent.",
+          "name": "Attachment"
+        },
+        "content_id": {
+          "description": "A unique identifier used to embed this image directly inside an HTML email body.",
+          "name": "Content-ID"
+        },
+        "filename": {
+          "description": "Specify the filename for the attachment. This is required for camera and image entities, and optional for local media sources.",
+          "name": "Filename"
+        }
+      }
+    },
     "encryption": {
       "options": {
         "none": "None",
@@ -163,13 +185,9 @@
     "send_message": {
       "description": "Sends an email notification",
       "fields": {
-        "bcc": {
-          "description": "Sends the notification to additional recipients as blind carbon copies (BCC). If BCC recipients are specified, send the notification to only one primary recipient. Otherwise, BCC recipients may receive duplicate emails.",
-          "name": "BCC recipients"
-        },
-        "cc": {
-          "description": "Sends the notification to additional recipients as carbon copies (CC). If CC recipients are specified, send the notification to only one primary recipient. Otherwise, CC recipients may receive duplicate emails.",
-          "name": "CC recipients"
+        "attachments": {
+          "description": "Attach images or other files from camera, image, or local media source. When selecting a camera entity, a snapshot of the current view will be captured and attached to the email.",
+          "name": "Attachments"
         },
         "html": {
           "description": "The HTML body of the email notification. Use HTML to create rich email content with formatting, images, links, tables, and custom styling.",

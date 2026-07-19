@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import create_client_context
 
@@ -37,6 +37,8 @@ _LOGGER = logging.getLogger(__name__)
 type SmtpConfigEntry = ConfigEntry[SmtpClient]
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
