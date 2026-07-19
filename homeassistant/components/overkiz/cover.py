@@ -354,8 +354,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
     OverkizCoverDescription(
         key=UIWidget.RTS_GENERIC,
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
+        open_command=OverkizCommand.UP,
+        close_command=OverkizCommand.DOWN,
         stop_command=OverkizCommand.STOP,
     ),
     ##

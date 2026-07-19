@@ -22,7 +22,7 @@ from .const import DOMAIN
 from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(hours=1)
 
 
