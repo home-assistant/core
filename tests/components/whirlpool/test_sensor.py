@@ -196,14 +196,14 @@ async def test_oven_kitchen_timer_sensor(
     timer.get_state.return_value = KitchenTimerState.Standby
     await init_integration(hass)
 
-    # Test restored state.
+    # Test the restored value doesn't leak through while the timer isn't running.
     state = hass.states.get(entity_id)
-    assert state.state == restored_datetime.isoformat()
+    assert state.state == STATE_UNKNOWN
 
-    # Test no time change because the timer is not running.
+    # Test still no value while in standby.
     await trigger_attr_callback(hass, mock_oven_single_cavity_api)
     state = hass.states.get(entity_id)
-    assert state.state == restored_datetime.isoformat()
+    assert state.state == STATE_UNKNOWN
 
     # Test new time when the timer starts running.
     timer.get_state.return_value = KitchenTimerState.Running
@@ -227,17 +227,11 @@ async def test_oven_kitchen_timer_sensor(
         state.state == utc_from_timestamp(as_timestamp(expected_time) + 65).isoformat()
     )
 
-    # Test the end time freezes when the timer finishes.
+    # Test the end time clears when the timer finishes.
     timer.get_state.return_value = KitchenTimerState.Completed
     await trigger_attr_callback(hass, mock_oven_single_cavity_api)
     state = hass.states.get(entity_id)
-    finished_time = now.isoformat()
-    assert state.state == finished_time
-
-    # Test the end time doesn't change on subsequent polls while finished.
-    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
-    state = hass.states.get(entity_id)
-    assert state.state == finished_time
+    assert state.state == STATE_UNKNOWN
 
     # Test that periodic updates call the API to fetch data.
     mock_oven_single_cavity_api.fetch_data.reset_mock()
@@ -245,36 +239,6 @@ async def test_oven_kitchen_timer_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_oven_single_cavity_api.fetch_data.assert_called_once()
-
-
-@pytest.mark.freeze_time("2022-11-30 00:00:00")
-async def test_oven_kitchen_timer_sensor_no_restore(
-    hass: HomeAssistant,
-    mock_oven_single_cavity_api,
-) -> None:
-    """Test the oven kitchen timer end time sensor without state restore."""
-    entity_id = "sensor.single_cavity_oven_kitchen_timer_end_time"
-    now = utcnow()
-
-    timer = mock_oven_single_cavity_api.get_kitchen_timer.return_value
-    timer.get_state.return_value = KitchenTimerState.Standby
-    await init_integration(hass)
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_UNKNOWN
-
-    # Test no change because the timer is in standby.
-    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_UNKNOWN
-
-    # Test new time when the timer starts running.
-    timer.get_state.return_value = KitchenTimerState.Running
-    timer.get_remaining_time.return_value = 60
-    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
-    state = hass.states.get(entity_id)
-    expected_time = (now + timedelta(seconds=60)).isoformat()
-    assert state.state == expected_time
 
 
 @pytest.mark.parametrize(

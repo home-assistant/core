@@ -521,6 +521,22 @@ class OvenKitchenTimerSensor(WhirlpoolTimeSensorBase):
         """Return the primary kitchen timer."""
         return self._appliance.get_kitchen_timer()
 
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the timer's end time, or None while it isn't running."""
+        if not self._is_running():
+            self._value = None
+            return None
+        now = utcnow()
+        new_timestamp = now + timedelta(seconds=self._get_seconds_remaining())
+        if self._value is None or (
+            isinstance(self._value, datetime)
+            and abs(new_timestamp - self._value) > timedelta(seconds=60)
+        ):
+            self._value = new_timestamp
+        return self._value
+
     @override
     def _is_finished(self) -> bool:
         return self._get_kitchen_timer().get_state() in {
