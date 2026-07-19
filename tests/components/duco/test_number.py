@@ -1,6 +1,7 @@
 """Tests for the Duco number platform."""
 
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from duco_connectivity import (
@@ -8,11 +9,12 @@ from duco_connectivity import (
     DucoError,
     DucoRateLimitError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -20,7 +22,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_platform_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
@@ -282,6 +284,52 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == "68.9"
+
+
+async def test_bypass_supply_temperature_target_becomes_unavailable_when_omitted(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test an existing bypass target becomes unavailable when the zone omits it."""
+    zone_1_available = True
+
+    async def async_get_bypass_supply_temperature_target(
+        zone_id: int,
+    ) -> BypassSupplyTemperatureTarget | None:
+        if zone_id == 1 and not zone_1_available:
+            return None
+        return mock_bypass_supply_temperature_targets.get(zone_id)
+
+    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
+        async_get_bypass_supply_temperature_target
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == "20.0"
+
+    zone_1_available = False
+    freezer.tick(timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state is STATE_UNAVAILABLE
+
+    zone_1_available = True
+    freezer.tick(timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == "20.0"
 
 
 @pytest.mark.usefixtures("init_integration")

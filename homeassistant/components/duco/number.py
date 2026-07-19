@@ -114,6 +114,15 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return True if the zone currently exposes a bypass target."""
+        return (
+            super().available
+            and self._zone_id in self.coordinator.data.bypass_supply_temperature_targets
+        )
+
+    @property
+    @override
     def native_value(self) -> float | None:
         """Return the current bypass supply temperature target."""
         target = self.coordinator.data.bypass_supply_temperature_targets.get(
