@@ -661,19 +661,22 @@ async def test_async_poll_manual_hosts_startup_disabled_host_not_repolled(
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
-    with patch(
-        "homeassistant.components.sonos.sync_get_visible_zones",
-        wraps=sonos.sync_get_visible_zones,
-    ) as mock_get_visible_zones:
+    with patch.object(
+        type(soco),
+        "visible_zones",
+        new_callable=PropertyMock,
+        create=True,
+        side_effect=[{soco}, AssertionError("visible_zones should not be called")],
+    ) as mock_visible_zones:
         await _setup_hass_with_hosts(hass, ["10.10.10.1"])
 
         assert "media_player.living_room" not in entity_registry.entities
-        assert mock_get_visible_zones.call_count == 1
+        assert mock_visible_zones.call_count == 1
 
         async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert mock_get_visible_zones.call_count == 1
+    assert mock_visible_zones.call_count == 1
 
 
 async def test_async_poll_manual_hosts_7(
