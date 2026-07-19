@@ -2,6 +2,16 @@
 
 from ipaddress import ip_address
 
+from vizaio import (
+    AppConfig,
+    AppRecord,
+    PairChallenge,
+    SettingInfo,
+    SettingType,
+    StateExtended,
+)
+from vizaio.profiles import SOUNDBAR_PROFILE, TV_PROFILE
+
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     MediaPlayerDeviceClass,
@@ -39,26 +49,48 @@ UNIQUE_ID = "testid"
 MODEL = "model"
 VERSION = "version"
 
-CH_TYPE = 1
-RESPONSE_TOKEN = 1234
 PIN = "abcd"
 
+PAIR_CHALLENGE = PairChallenge(challenge_type=1, token=1234)
 
-class MockStartPairingResponse:
-    """Mock Vizio start pairing response."""
-
-    def __init__(self, ch_type: int, token: int) -> None:
-        """Initialize mock start pairing response."""
-        self.ch_type = ch_type
-        self.token = token
+MAX_VOLUME = {
+    MediaPlayerDeviceClass.TV: TV_PROFILE.max_volume,
+    MediaPlayerDeviceClass.SPEAKER: SOUNDBAR_PROFILE.max_volume,
+}
 
 
-class MockCompletePairingResponse:
-    """Mock Vizio complete pairing response."""
+def audio_setting(
+    name: str, value: int | str, options: tuple[str, ...] = ()
+) -> SettingInfo:
+    """Build an audio SettingInfo for mock device responses."""
+    return SettingInfo(
+        setting_type="audio",
+        name=name,
+        value=value,
+        hashval=0,
+        type=SettingType.SLIDER if isinstance(value, int) else SettingType.LIST,
+        options=options,
+    )
 
-    def __init__(self, auth_token: str) -> None:
-        """Initialize mock complete pairing response."""
-        self.auth_token = auth_token
+
+def state_extended(
+    *,
+    power_on: bool = True,
+    current_input: str = "HDMI",
+    current_app: AppConfig | None = None,
+) -> StateExtended:
+    """Build a StateExtended payload for mock device responses."""
+    return StateExtended(
+        power_on=power_on,
+        power_mode="Eco Mode" if not power_on else "Quick Start",
+        current_input=current_input,
+        current_input_hashval=None,
+        current_app=current_app,
+        screen_mode="Full screen",
+        media_state="MediaState::Stopped",
+        device_name=NAME,
+        raw={},
+    )
 
 
 CURRENT_EQ = "Music"
@@ -69,23 +101,25 @@ INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
 
 CURRENT_APP = "Hulu"
 CURRENT_APP_CONFIG = {CONF_APP_ID: "3", CONF_NAME_SPACE: 4, CONF_MESSAGE: None}
-APP_LIST = [
-    {
-        "name": "Hulu",
-        "country": ["*"],
-        "id": ["1"],
-        "config": [{"NAME_SPACE": 4, "APP_ID": "3", "MESSAGE": None}],
-    },
-    {
-        "name": "Netflix",
-        "country": ["*"],
-        "id": ["2"],
-        "config": [{"NAME_SPACE": 1, "APP_ID": "2", "MESSAGE": None}],
-    },
-]
-APP_NAME_LIST = [app["name"] for app in APP_LIST]
+CURRENT_APP_CONFIG_OBJ = AppConfig(app_id="3", name_space=4, message=None)
+APP_RECORDS = (
+    AppRecord(
+        name="Hulu",
+        country=("*",),
+        config=(AppConfig(app_id="3", name_space=4, message=None),),
+        id="1",
+    ),
+    AppRecord(
+        name="Netflix",
+        country=("*",),
+        config=(AppConfig(app_id="2", name_space=1, message=None),),
+        id="2",
+    ),
+)
+APP_NAME_LIST = [app.name for app in APP_RECORDS]
 INPUT_LIST_WITH_APPS = [*INPUT_LIST, "CAST"]
 CUSTOM_CONFIG = {CONF_APP_ID: "test", CONF_MESSAGE: None, CONF_NAME_SPACE: 10}
+CUSTOM_CONFIG_OBJ = AppConfig(app_id="test", name_space=10, message=None)
 ADDITIONAL_APP_CONFIG = {
     "name": CURRENT_APP,
     CONF_CONFIG: CUSTOM_CONFIG,
@@ -95,6 +129,7 @@ UNKNOWN_APP_CONFIG = {
     "NAME_SPACE": 10,
     "MESSAGE": None,
 }
+UNKNOWN_APP_CONFIG_OBJ = AppConfig(app_id="UNKNOWN", name_space=10, message=None)
 
 ENTITY_ID = f"{MP_DOMAIN}.{slugify(NAME)}"
 
