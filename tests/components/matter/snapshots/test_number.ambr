@@ -4566,7 +4566,7 @@
     'supported_features': 0,
     'translation_key': 'pump_setpoint',
     'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-pump_setpoint-8-0',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_numbers[mock_pump][number.mock_pump_setpoint-state]
@@ -4577,7 +4577,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mock_pump_setpoint',
@@ -4626,7 +4626,7 @@
     'supported_features': 0,
     'translation_key': 'speaker_setpoint',
     'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-speaker_setpoint-8-0',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_numbers[mock_speaker][number.mock_speaker_volume-state]
@@ -4637,7 +4637,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mock_speaker_volume',

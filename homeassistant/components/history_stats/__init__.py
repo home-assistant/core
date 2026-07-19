@@ -20,7 +20,7 @@ from .const import (
     CONF_MIN_STATE_DURATION,
     CONF_START,
     PLATFORMS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
@@ -44,8 +44,8 @@ async def async_setup_entry(
     min_state_duration: timedelta
     if duration_dict := entry.options.get(CONF_DURATION):
         duration = timedelta(**duration_dict)
-    advanced_settings = entry.options.get(SECTION_ADVANCED_SETTINGS, {})
-    if min_state_duration_dict := advanced_settings.get(CONF_MIN_STATE_DURATION):
+    additional_settings = entry.options.get(SECTION_ADDITIONAL_SETTINGS, {})
+    if min_state_duration_dict := additional_settings.get(CONF_MIN_STATE_DURATION):
         min_state_duration = timedelta(**min_state_duration_dict)
     else:
         min_state_duration = timedelta(0)
@@ -78,7 +78,6 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
-            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_entity_id_to_device_id(
@@ -120,6 +119,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             options[CONF_STATE_CLASS] = SensorStateClass.MEASUREMENT
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=3
+        )
+        # The "advanced_settings" section was renamed to "additional_settings"
+        if (additional := options.pop("advanced_settings", None)) is not None:
+            options[SECTION_ADDITIONAL_SETTINGS] = additional
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, version=2, minor_version=1
         )
 
     _LOGGER.debug(
