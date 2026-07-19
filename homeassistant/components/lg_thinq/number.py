@@ -15,7 +15,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
+from homeassistant.const import UnitOfRatio, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,13 +41,13 @@ NUMBER_DESC: dict[ThinQProperty, NumberEntityDescription] = {
     ),
     ThinQProperty.LIGHT_STATUS: NumberEntityDescription(
         key=ThinQProperty.LIGHT_STATUS,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.LIGHT_STATUS,
     ),
     ThinQProperty.TARGET_HUMIDITY: NumberEntityDescription(
         key=ThinQProperty.TARGET_HUMIDITY,
         device_class=NumberDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.TARGET_HUMIDITY,
     ),
     ThinQProperty.TARGET_TEMPERATURE: NumberEntityDescription(

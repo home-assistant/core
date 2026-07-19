@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
@@ -35,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -120,6 +121,12 @@ UP_DOWN_SHEER_SCREEN = FixtureDevice(
     "setup/cloud_somfy_connexoon_rts_asia.json",
     "rts://1234-1234-6362/16753206",
     "cover.palm_court_kitchen_sheer_screen",
+)
+# RTSGeneric only exposes raw up/down/stop commands (no open/close)
+RTS_GENERIC = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16718220",
+    "cover.palm_court_living_room_screen",
 )
 DISCRETE_GARAGE_DOOR = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json",
@@ -275,6 +282,7 @@ async def test_cover_entities_snapshot(
         ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (UP_DOWN_SHEER_SCREEN, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (RTS_GENERIC, SERVICE_OPEN_COVER, "up", None, CoverState.OPENING),
         (
             DYNAMIC_VENETIAN_BLIND,
             SERVICE_OPEN_COVER,
@@ -333,6 +341,7 @@ async def test_cover_entities_snapshot(
             CoverState.CLOSING,
         ),
         (UP_DOWN_SHEER_SCREEN, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
+        (RTS_GENERIC, SERVICE_CLOSE_COVER, "down", None, CoverState.CLOSING),
         (
             DYNAMIC_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER,
@@ -395,6 +404,7 @@ async def test_cover_entities_snapshot(
         ),
         (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", None, STATE_UNKNOWN),
         (UP_DOWN_SHEER_SCREEN, SERVICE_STOP_COVER, "stop", None, STATE_UNKNOWN),
+        (RTS_GENERIC, SERVICE_STOP_COVER, "stop", None, STATE_UNKNOWN),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
@@ -458,6 +468,7 @@ async def test_cover_entities_snapshot(
         "open-tilt-only-venetian-blind",
         "open-venetian-blind-rts",
         "open-sheer-screen-rts",
+        "open-rts-generic",
         "open-dynamic-venetian-blind",
         "close-roller-shutter",
         "close-awning",
@@ -478,6 +489,7 @@ async def test_cover_entities_snapshot(
         "close-tilt-only-venetian-blind",
         "close-venetian-blind-rts",
         "close-sheer-screen-rts",
+        "close-rts-generic",
         "close-dynamic-venetian-blind",
         "stop-roller-shutter",
         "stop-awning",
@@ -498,6 +510,7 @@ async def test_cover_entities_snapshot(
         "stop-tilt-tilt-only-venetian-blind",
         "stop-venetian-blind-rts",
         "stop-sheer-screen-rts",
+        "stop-rts-generic",
         "open-tilt-venetian-blind-rts",
         "close-tilt-venetian-blind-rts",
         "stop-tilt-venetian-blind-rts",
@@ -535,6 +548,82 @@ async def test_cover_service_actions(
         command_name=command_name,
         parameters=parameters,
     )
+
+
+async def test_merged_action_groups_keep_per_device_tracking(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that covers sharing a merged execution each keep their movement state.
+
+    The action queue can merge concurrent action groups into one execution and
+    return the same exec_id to every caller. Both covers must therefore report
+    OPENING, and both must clear once that execution completes.
+    """
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    # Both action groups merge into one execution sharing a single exec_id.
+    mock_client.execute_action_group.side_effect = None
+    mock_client.execute_action_group.return_value = "merged-exec"
+
+    for device in (SHUTTER, GARAGE):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: device.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
+    assert hass.states.get(GARAGE.entity_id).state == CoverState.OPENING
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="merged-exec",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+    assert hass.states.get(GARAGE.entity_id).state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutError("Connection timeout to host"),
+        ClientConnectorError(None, OSError()),
+        ServerDisconnectedError(),
+    ],
+    ids=["timeout", "client-connector", "server-disconnected"],
+)
+async def test_cover_command_connection_error_raises(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    exception: Exception,
+) -> None:
+    """Test that connection failures while sending a command raise HomeAssistantError."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    mock_client.execute_action_group.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match="Failed to connect"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: SHUTTER.entity_id},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(

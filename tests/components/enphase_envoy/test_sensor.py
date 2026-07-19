@@ -344,7 +344,7 @@ async def test_sensor_production_ct_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    data = mock_envoy.data.ctmeter_production
+    data = mock_envoy.data.ctmeters[CtType.PRODUCTION]
 
     CT_PRODUCTION_TARGETS_INT = (len(data.status_flags),)
     for name, target in list(
@@ -397,7 +397,7 @@ async def test_sensor_production_ct_phase_data(
 
     CT_PRODUCTION_NAMES_FLOAT_TARGET = [
         len(phase_data.status_flags)
-        for phase_data in mock_envoy.data.ctmeter_production_phases.values()
+        for phase_data in mock_envoy.data.ctmeters_phases[CtType.PRODUCTION].values()
     ]
 
     for name, target in list(
@@ -412,7 +412,7 @@ async def test_sensor_production_ct_phase_data(
 
     CT_PRODUCTION_NAMES_STR_TARGET = [
         phase_data.metering_status
-        for phase_data in mock_envoy.data.ctmeter_production_phases.values()
+        for phase_data in mock_envoy.data.ctmeters_phases[CtType.PRODUCTION].values()
     ]
 
     for name, target in list(
@@ -459,7 +459,7 @@ async def test_sensor_consumption_ct_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    data = mock_envoy.data.ctmeter_consumption
+    data = mock_envoy.data.ctmeters[mock_envoy.consumption_meter_type]
 
     CT_CONSUMPTION_TARGETS_FLOAT = (
         data.energy_delivered / 1000000.0,
@@ -527,7 +527,9 @@ async def test_sensor_consumption_ct_phase_data(
                 phase_data.voltage,
                 len(phase_data.status_flags),
             )
-            for phase_data in mock_envoy.data.ctmeter_consumption_phases.values()
+            for phase_data in mock_envoy.data.ctmeters_phases[
+                mock_envoy.consumption_meter_type
+            ].values()
         ]
     )
 
@@ -543,7 +545,9 @@ async def test_sensor_consumption_ct_phase_data(
 
     CT_CONSUMPTION_NAMES_STR_PHASE_TARGET = [
         phase_data.metering_status
-        for phase_data in mock_envoy.data.ctmeter_consumption_phases.values()
+        for phase_data in mock_envoy.data.ctmeters_phases[
+            mock_envoy.consumption_meter_type
+        ].values()
     ]
 
     for name, target in list(
@@ -587,7 +591,7 @@ async def test_sensor_storage_ct_data(
     sn = mock_envoy.serial_number
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
-    data = mock_envoy.data.ctmeter_storage
+    data = mock_envoy.data.ctmeters[CtType.STORAGE]
 
     CT_STORAGE_TARGETS_FLOAT = (
         data.energy_delivered / 1000000.0,
@@ -650,7 +654,7 @@ async def test_sensor_storage_ct_phase_data(
                 phase_data.voltage,
                 len(phase_data.status_flags),
             )
-            for phase_data in mock_envoy.data.ctmeter_storage_phases.values()
+            for phase_data in mock_envoy.data.ctmeters_phases[CtType.STORAGE].values()
         ]
     )
 
@@ -666,7 +670,7 @@ async def test_sensor_storage_ct_phase_data(
 
     CT_STORAGE_NAMES_STR_PHASE_TARGET = [
         phase_data.metering_status
-        for phase_data in mock_envoy.data.ctmeter_storage_phases.values()
+        for phase_data in mock_envoy.data.ctmeters_phases[CtType.STORAGE].values()
     ]
 
     for name, target in list(
@@ -1351,12 +1355,6 @@ async def test_sensor_missing_data(
     mock_envoy.data.system_production_phases["L2"] = None
     mock_envoy.data.system_consumption_phases["L2"] = None
     mock_envoy.data.system_net_consumption_phases["L2"] = None
-    mock_envoy.data.ctmeter_production = None
-    mock_envoy.data.ctmeter_consumption = None
-    mock_envoy.data.ctmeter_storage = None
-    mock_envoy.data.ctmeter_production_phases = None
-    mock_envoy.data.ctmeter_consumption_phases = None
-    mock_envoy.data.ctmeter_storage_phases = None
     del mock_envoy.data.ctmeters[CtType.NET_CONSUMPTION]
     del mock_envoy.data.ctmeters_phases[CtType.NET_CONSUMPTION][PhaseNames.PHASE_2]
     del mock_envoy.data.ctmeters[CtType.PRODUCTION]

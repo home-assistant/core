@@ -1,5 +1,6 @@
 """Test the Teslemetry select platform."""
 
+from collections.abc import Awaitable, Callable
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
@@ -15,15 +16,25 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.teslemetry.coordinator import ENERGY_INFO_INTERVAL
-from homeassistant.components.teslemetry.select import LOW
+from homeassistant.components.teslemetry.coordinator import (
+    ENERGY_INFO_INTERVAL,
+    VEHICLE_INTERVAL,
+)
+from homeassistant.components.teslemetry.select import HIGH, LEVEL, LOW, MEDIUM, OFF
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
-from .const import COMMAND_ERRORS, COMMAND_OK, METADATA, SITE_INFO, VEHICLE_DATA_ALT
+from .const import (
+    COMMAND_ERRORS,
+    COMMAND_OK,
+    METADATA,
+    METADATA_LEGACY,
+    SITE_INFO,
+    VEHICLE_DATA_ALT,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -183,6 +194,68 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
         call.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "seat_position"),
+    [
+        ("select.test_seat_cooler_front_left", 1),
+        ("select.test_seat_cooler_front_right", 2),
+    ],
+)
+async def test_seat_cooler_services(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    entity_id: str,
+    seat_position: int,
+) -> None:
+    """Test the seat cooler entities send the 1-indexed seat position.
+
+    remote_seat_cooler_request is 1-indexed (front-left=1, front-right=2),
+    unlike the 0-indexed Seat enum used for the seat heaters.
+    """
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["config"] = {"has_seat_cooling": True}
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.SELECT])
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.remote_seat_cooler_request",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: LOW},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).state == LOW
+        call.assert_called_once_with(seat_position, LEVEL[LOW])
+
+
+async def test_seat_cooler_polling(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test the seat cooler entities read polled state from seat_fan_front_*."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["polling"] = True
+    metadata["vehicles"][VEHICLE_VIN]["config"] = {"has_seat_cooling": True}
+    mock_metadata.return_value = metadata
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["seat_fan_front_left"] = 2
+    data["response"]["climate_state"]["seat_fan_front_right"] = 0
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, [Platform.SELECT])
+
+    assert hass.states.get("select.test_seat_cooler_front_left").state == MEDIUM
+    assert hass.states.get("select.test_seat_cooler_front_right").state == OFF
+
+
 @pytest.mark.parametrize("response", COMMAND_ERRORS)
 async def test_select_command_errors(
     hass: HomeAssistant, mock_vehicle_data: AsyncMock, response: dict
@@ -284,6 +357,79 @@ async def test_select_streaming(
     assert hass.states.get("select.test_seat_heater_rear_center").state == STATE_UNKNOWN
     assert hass.states.get("select.test_seat_heater_rear_right").state == "high"
     assert hass.states.get("select.test_steering_wheel_heater").state == "off"
+
+
+async def _drive_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    value: int,
+) -> None:
+    """Push a steering wheel level through the polling path."""
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["steering_wheel_heat_level"] = value
+    mock_vehicle_data.return_value = data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+
+
+async def _drive_streaming(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    value: int,
+) -> None:
+    """Push a steering wheel level through the streaming path."""
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.HVAC_STEERING_WHEEL_HEAT_LEVEL: value},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("metadata", "driver"),
+    [
+        pytest.param(METADATA_LEGACY, _drive_polling, id="polling"),
+        pytest.param(METADATA, _drive_streaming, id="streaming"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(2, HIGH, id="level_2_clamped"),
+        pytest.param(3, HIGH, id="level_3_clamped"),
+    ],
+)
+async def test_steering_wheel_heat_levels(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_metadata: AsyncMock,
+    mock_add_listener: AsyncMock,
+    metadata: dict,
+    driver: Callable[
+        [HomeAssistant, FrozenDateTimeFactory, AsyncMock, AsyncMock, int],
+        Awaitable[None],
+    ],
+    value: int,
+    expected: str,
+) -> None:
+    """A level beyond the last modeled option clamps to that option, high."""
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.SELECT])
+
+    await driver(hass, freezer, mock_vehicle_data, mock_add_listener, value)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_steering_wheel_heater")
+    assert state.state == expected
 
 
 async def test_export_rule_restore(

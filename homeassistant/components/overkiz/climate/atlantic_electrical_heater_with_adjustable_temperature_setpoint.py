@@ -105,9 +105,11 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         states = self.device.states
-        if (state := states[OverkizState.CORE_OPERATING_MODE]) and state.value_as_str:
+        if (
+            state := states.get(OverkizState.CORE_OPERATING_MODE)
+        ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
-        if (state := states[OverkizState.CORE_ON_OFF]) and state.value_as_str:
+        if (state := states.get(OverkizState.CORE_ON_OFF)) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
         return HVACMode.OFF
 
@@ -123,7 +125,9 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation ie. heating, idle, off."""
         states = self.device.states
-        if (state := states[OverkizState.CORE_REGULATION_MODE]) and state.value_as_str:
+        if (
+            state := states.get(OverkizState.CORE_REGULATION_MODE)
+        ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_ACTION[state.value_as_str]
         return HVACAction.OFF
 
@@ -135,12 +139,12 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         states = self.device.states
 
         if (
-            state := states[OverkizState.IO_TARGET_HEATING_LEVEL]
+            state := states.get(OverkizState.IO_TARGET_HEATING_LEVEL)
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
 
         if (
-            operating_mode := states[OverkizState.CORE_OPERATING_MODE]
+            operating_mode := states.get(OverkizState.CORE_OPERATING_MODE)
         ) and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL:
             return PRESET_EXTERNAL
         return None

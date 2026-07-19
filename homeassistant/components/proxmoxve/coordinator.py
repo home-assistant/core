@@ -20,8 +20,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import sanitize_config_entry
@@ -109,25 +110,21 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except SSLError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ConnectTimeout as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ProxmoxServerError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error_details",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ProxmoxPermissionsError as err:
             raise ConfigEntryAuthFailed(
@@ -143,7 +140,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
     @override
@@ -156,19 +152,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except SSLError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ConnectTimeout as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except ResourceException as err:
             raise UpdateFailed(
@@ -179,7 +172,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
         data: dict[str, ProxmoxNodeData] = {}
@@ -201,7 +193,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     def _init_proxmox(self) -> None:
         """Initialize ProxmoxAPI instance."""
         data = sanitize_config_entry(self.config_entry.data)
-        auth_kwargs = {
+        auth_kwargs: dict[str, Any] = {
             "password": data.get(CONF_PASSWORD),
         }
         if data.get(CONF_TOKEN):
@@ -330,6 +322,39 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ]
             for storages_callback in self.new_storages_callbacks:
                 storages_callback(new_storage_data)
+
+        self._async_remove_stale_devices(data)
+
+    @callback
+    def _async_remove_stale_devices(self, data: dict[str, ProxmoxNodeData]) -> None:
+        """Remove devices for nodes/VMs/containers/storages no longer present."""
+        valid_identifiers: set[str] = set()
+        for node_data in data.values():
+            valid_identifiers.add(
+                f"{self.config_entry.entry_id}_node_{node_data.node['id']}"
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_vm_{vmid}" for vmid in node_data.vms
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_container_{vmid}"
+                for vmid in node_data.containers
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_storage_{storage}"
+                for storage in node_data.storages
+            )
+
+        registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            registry, self.config_entry.entry_id
+        ):
+            if not any(
+                identifier[0] == DOMAIN and identifier[1] in valid_identifiers
+                for identifier in device.identifiers
+            ):
+                _LOGGER.debug("Removing stale device: %s", device.identifiers)
+                registry.async_remove_device(device.id)
 
 
 class ProxmoxSetupError(Exception):

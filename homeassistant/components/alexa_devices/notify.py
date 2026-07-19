@@ -23,6 +23,7 @@ class AmazonNotifyEntityDescription(NotifyEntityDescription):
     """Alexa Devices notify entity description."""
 
     is_supported: Callable[[AmazonDevice], bool] = lambda _device: True
+    is_available_fn: Callable[[AmazonDevice], bool] = lambda _device: True
     method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
     subkey: str
 
@@ -39,6 +40,9 @@ NOTIFY: Final = (
         key="announce",
         translation_key="announce",
         subkey="AUDIO_PLAYER",
+        is_available_fn=lambda device: (
+            device.communication_settings.get("communications") != "OFF"
+        ),
         method=lambda api, device, message: api.call_alexa_announcement(
             device, message
         ),
@@ -78,6 +82,14 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
     """Binary sensor notify platform."""
 
     entity_description: AmazonNotifyEntityDescription
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.entity_description.is_available_fn(self.device) and super().available
+        )
 
     @override
     async def async_send_message(

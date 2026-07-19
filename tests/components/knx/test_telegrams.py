@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from copy import copy
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
@@ -11,9 +12,12 @@ from knx_telegram_store import KnxTelegramStoreException, StoredTelegram, Telegr
 import pytest
 
 from homeassistant.components.knx.const import (
+    CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_BACKEND_POSTGRES,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
 )
 from homeassistant.components.knx.telegrams import TelegramDict
@@ -144,6 +148,34 @@ async def test_store_telegram_history_error_handling(
     with patch(
         "knx_telegram_store.BufferedSqliteStore.initialize",
         side_effect=side_effect,
+    ):
+        await knx.setup_integration()
+
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is None
+
+    # Check that the repair issue was created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+    assert issue is not None
+
+
+async def test_store_telegram_history_needs_migration_timeout(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test that store initialization is aborted when needs_migration times out."""
+
+    async def hanging_probe() -> bool:
+        await asyncio.Event().wait()
+        return False
+
+    with (
+        patch("homeassistant.components.knx.telegrams.STORE_INIT_TIMEOUT", 0.05),
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.needs_migration",
+            side_effect=hanging_probe,
+        ),
     ):
         await knx.setup_integration()
 
@@ -483,3 +515,39 @@ async def test_nightly_eviction_error_handling(
     assert "Database error evicting expired KNX telegrams" in caplog.text
     # Store remains operational after the failed eviction
     assert telegrams_module.store is not None
+
+
+async def test_postgres_backend_init_error(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test PostgreSQL backend DSN handling and init failure path."""
+    dsn = "postgresql://user:secret@db.local:5432/knx"
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        options=knx.mock_config_entry.options
+        | {
+            CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_POSTGRES,
+            CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: dsn,
+        },
+    )
+
+    # Mock the store to avoid constructing a real SQLAlchemy engine / connecting.
+    mock_store = AsyncMock()
+    mock_store.needs_migration.return_value = False
+    mock_store.initialize.side_effect = KnxTelegramStoreException("no server")
+    with patch(
+        "homeassistant.components.knx.telegrams.BufferedPostgresStore",
+        return_value=mock_store,
+    ):
+        await knx.setup_integration(add_entry_to_hass=False)
+
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is None
+
+    issue_registry = ir.async_get(hass)
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        is not None
+    )

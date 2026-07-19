@@ -27,11 +27,49 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_GROUP, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
+
+
+STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
 
 
 async def validate_input(
@@ -130,18 +168,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self._data[CONF_HOST]): cv.string,
-                    vol.Optional(CONF_SSL, default=self._data[CONF_SSL]): cv.boolean,
-                    vol.Optional(
-                        CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
-                    ): cv.boolean,
-                    vol.Optional(CONF_GROUP, default=self._data[CONF_GROUP]): vol.In(
-                        GROUPS
-                    ),
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values=user_input,
             ),
             errors=errors,
         )
@@ -172,20 +201,14 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SSL: user_input[CONF_SSL],
                         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                         CONF_GROUP: user_input[CONF_GROUP],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_SSL): cv.boolean,
-                        vol.Optional(CONF_VERIFY_SSL): cv.boolean,
-                        vol.Optional(CONF_GROUP): vol.In(GROUPS),
-                    }
-                ),
+                data_schema=STEP_USER_DATA_SCHEMA,
                 suggested_values=user_input or dict(reconf_entry.data),
             ),
             errors=errors,
@@ -221,7 +244,12 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             errors=errors,
@@ -290,17 +318,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_SSL, default=self._data[CONF_SSL]): cv.boolean,
-                    vol.Optional(
-                        CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
-                    ): cv.boolean,
-                    vol.Optional(CONF_GROUP, default=self._data[CONF_GROUP]): vol.In(
-                        GROUPS
-                    ),
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_DISCOVERY_CONFIRM_DATA_SCHEMA,
+                suggested_values=user_input,
             ),
             description_placeholders={CONF_HOST: self._data[CONF_HOST]},
             errors=errors,

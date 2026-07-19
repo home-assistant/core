@@ -13,12 +13,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -117,7 +116,7 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     CompitParameter.BOILER_TEMPERATURE: SensorEntityDescription(
         key=CompitParameter.BOILER_TEMPERATURE.value,
@@ -204,14 +203,14 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     CompitParameter.CO2_PERCENT: SensorEntityDescription(
         key=CompitParameter.CO2_PERCENT.value,
         translation_key="co2_percent",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     CompitParameter.COLLECTOR_POWER: SensorEntityDescription(
         key=CompitParameter.COLLECTOR_POWER.value,
@@ -290,7 +289,7 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         translation_key="fuel_level",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     CompitParameter.HEATING1_TARGET_TEMPERATURE: SensorEntityDescription(
         key=CompitParameter.HEATING1_TARGET_TEMPERATURE.value,
@@ -333,7 +332,7 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     CompitParameter.LOWER_SOURCE_TEMPERATURE: SensorEntityDescription(
         key=CompitParameter.LOWER_SOURCE_TEMPERATURE.value,
@@ -401,14 +400,14 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PM4_LEVEL_MEASURED: SensorEntityDescription(
         key=CompitParameter.PM4_LEVEL_MEASURED.value,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.PM4,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PM10_LEVEL: SensorEntityDescription(
         key=CompitParameter.PM10_LEVEL.value,
@@ -422,7 +421,7 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         key=CompitParameter.PM10_MEASURED.value,
         device_class=SensorDeviceClass.PM10,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PM25_LEVEL: SensorEntityDescription(
         key=CompitParameter.PM25_LEVEL.value,
@@ -436,7 +435,7 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         key=CompitParameter.PM25_MEASURED.value,
         device_class=SensorDeviceClass.PM25,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CompitParameter.PROTECTION_TEMPERATURE: SensorEntityDescription(
         key=CompitParameter.PROTECTION_TEMPERATURE.value,
@@ -574,6 +573,9 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             CompitParameter.PM25_LEVEL: DESCRIPTIONS[CompitParameter.PM25_LEVEL],
             CompitParameter.VENTILATION_ALARM: DESCRIPTIONS[
                 CompitParameter.VENTILATION_ALARM
+            ],
+            CompitParameter.VENTILATION_GEAR: DESCRIPTIONS[
+                CompitParameter.VENTILATION_GEAR
             ],
         },
     ),
