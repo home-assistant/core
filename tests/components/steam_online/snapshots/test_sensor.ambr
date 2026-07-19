@@ -5,7 +5,17 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offline',
+        'online',
+        'busy',
+        'away',
+        'snooze',
+        'looking_to_trade',
+        'looking_to_play',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -24,7 +34,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'steam_online',
@@ -39,6 +49,8 @@
 # name: test_sensors[sensor.testaccount1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'created': datetime.datetime(2010, 5, 15, 12, 58, 31, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount1',
       'game': 'The Witcher: Enhanced Edition',
@@ -46,8 +58,18 @@
       'game_id': '20900',
       'game_image_header': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/header.jpg',
       'game_image_main': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/capsule_616x353.jpg',
-      'last_online': datetime.datetime(2026, 4, 5, 10, 18, 7, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'last_online': datetime.datetime(2026, 4, 5, 17, 18, 7, tzinfo=datetime.timezone.utc),
       'level': 10,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offline',
+        'online',
+        'busy',
+        'away',
+        'snooze',
+        'looking_to_trade',
+        'looking_to_play',
+      ]),
+      'real_name': 'John Dough',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testaccount1',
@@ -57,13 +79,179 @@
     'state': 'online',
   })
 # ---
-# name: test_sensors[sensor.testaccount2-entry]
+# name: test_sensors[sensor.testaccount1_last_online-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testaccount1_last_online',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last online',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last online',
+    'platform': 'steam_online',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SteamSensor.LAST_ONLINE: 'last_online'>,
+    'unique_id': '12345678901234567_last_online',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testaccount1_last_online-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount1 Last online',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testaccount1_last_online',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-04-05T17:18:07+00:00',
+  })
+# ---
+# name: test_sensors[sensor.testaccount1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testaccount1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Level',
+    'platform': 'steam_online',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SteamSensor.LEVEL: 'level'>,
+    'unique_id': '12345678901234567_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testaccount1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount1 Level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testaccount1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensors[sensor.testaccount1_now_playing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testaccount1_now_playing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Now playing',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Now playing',
+    'platform': 'steam_online',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SteamSensor.NOW_PLAYING: 'now_playing'>,
+    'unique_id': '12345678901234567_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testaccount1_now_playing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_id': '20900',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/20900/746d1cd48fb2e57d579b05b6e9eccba95859e549.jpg',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount1 Now playing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testaccount1_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'The Witcher: Enhanced Edition',
+  })
+# ---
+# name: test_sensors[sensor.testaccount2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offline',
+        'online',
+        'busy',
+        'away',
+        'snooze',
+        'looking_to_trade',
+        'looking_to_play',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -82,7 +270,7 @@
     'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'steam_online',
@@ -97,10 +285,27 @@
 # name: test_sensors[sensor.testaccount2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'created': datetime.datetime(2011, 4, 19, 12, 57, 21, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount2',
-      'last_online': datetime.datetime(2026, 4, 5, 10, 18, 7, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'game': None,
+      'game_icon': None,
+      'game_id': None,
+      'game_image_header': None,
+      'game_image_main': None,
+      'last_online': datetime.datetime(2026, 4, 5, 17, 18, 7, tzinfo=datetime.timezone.utc),
       'level': 10,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offline',
+        'online',
+        'busy',
+        'away',
+        'snooze',
+        'looking_to_trade',
+        'looking_to_play',
+      ]),
+      'real_name': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testaccount2',
@@ -108,5 +313,160 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'busy',
+  })
+# ---
+# name: test_sensors[sensor.testaccount2_last_online-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testaccount2_last_online',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last online',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last online',
+    'platform': 'steam_online',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SteamSensor.LAST_ONLINE: 'last_online'>,
+    'unique_id': '12345678912345678_last_online',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testaccount2_last_online-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount2 Last online',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testaccount2_last_online',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-04-05T17:18:07+00:00',
+  })
+# ---
+# name: test_sensors[sensor.testaccount2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testaccount2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Level',
+    'platform': 'steam_online',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SteamSensor.LEVEL: 'level'>,
+    'unique_id': '12345678912345678_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testaccount2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount2 Level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testaccount2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensors[sensor.testaccount2_now_playing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testaccount2_now_playing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Now playing',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Now playing',
+    'platform': 'steam_online',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SteamSensor.NOW_PLAYING: 'now_playing'>,
+    'unique_id': '12345678912345678_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testaccount2_now_playing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_id': None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount2 Now playing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testaccount2_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---

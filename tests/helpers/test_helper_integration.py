@@ -1,7 +1,7 @@
 """Tests for the helper entity helpers."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -213,6 +213,67 @@ def listen_entity_registry_events(
     return events
 
 
+@pytest.mark.parametrize("add_helper_config_entry_to_device", [True, False])
+async def test_async_handle_source_entity_changes_deprecated_kwarg(
+    hass: HomeAssistant,
+    add_helper_config_entry_to_device: bool,
+) -> None:
+    """The removed add_helper_config_entry_to_device kwarg is accepted but reported.
+
+    It is swallowed by **kwargs so callers still passing it don't raise, and reported on
+    its presence rather than its value, since it no longer has any effect either way.
+    """
+    with patch("homeassistant.helpers.helper_integration.report_usage") as report_usage:
+        unsub = async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            set_source_entity_id_or_uuid=Mock(),
+            source_device_id=None,
+            source_entity_id_or_uuid="sensor.test",
+            add_helper_config_entry_to_device=add_helper_config_entry_to_device,
+        )
+    unsub()
+
+    report_usage.assert_called_once()
+    assert "add_helper_config_entry_to_device" in report_usage.call_args[0][0]
+
+
+async def test_async_handle_source_entity_changes_rejects_unknown_kwarg(
+    hass: HomeAssistant,
+) -> None:
+    """An unknown keyword argument still raises, as it did before **kwargs was added.
+
+    **kwargs only exists to swallow the deprecated add_helper_config_entry_to_device;
+    anything else (e.g. a misspelling) must not be silently accepted.
+    """
+    with pytest.raises(TypeError, match="unexpected keyword arguments 'unknown_kwarg'"):
+        async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            set_source_entity_id_or_uuid=Mock(),
+            source_device_id=None,
+            source_entity_id_or_uuid="sensor.test",
+            unknown_kwarg=True,
+        )
+
+
+async def test_async_handle_source_entity_changes_without_deprecated_kwarg(
+    hass: HomeAssistant,
+) -> None:
+    """Not passing the removed add_helper_config_entry_to_device kwarg is not reported."""
+    with patch("homeassistant.helpers.helper_integration.report_usage") as report_usage:
+        unsub = async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            set_source_entity_id_or_uuid=Mock(),
+            source_device_id=None,
+            source_entity_id_or_uuid="sensor.test",
+        )
+    unsub()
+
+    report_usage.assert_not_called()
+
+
 @pytest.mark.parametrize("source_entity_removed", [None])
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])
 @pytest.mark.usefixtures("mock_helper_flow", "mock_helper_integration")
@@ -230,33 +291,17 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     set_source_entity_id_or_uuid: Mock,
 ) -> None:
     """Test the helper config entry is removed when the source entity is removed."""
-    # Add the helper config entry to the source device
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=helper_config_entry.entry_id
-    )
-    # Add another config entry to the source device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=other_config_entry.entry_id
-    )
-
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check preconditions
+    # Check preconditions - the helper entity is linked to the source device
     helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
     assert helper_entity_entry.device_id == source_entity_entry.device_id
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
 
     events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
-    # Remove the source entitys's config entry from the device, this removes the
-    # source entity
-    device_registry.async_update_device(
-        source_device.id, remove_config_entry_id=source_config_entry.entry_id
-    )
+    # Remove the source entity
+    entity_registry.async_remove(source_entity_entry.entity_id)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -266,10 +311,6 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     async_unload_entry.assert_not_called()
     async_remove_entry.assert_not_called()
     set_source_entity_id_or_uuid.assert_not_called()
-
-    # Check that the helper config entry is not removed from the device
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
 
     # Check that the helper config entry is not removed
     assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -294,34 +335,18 @@ async def test_async_handle_source_entity_changes_source_entity_removed_custom_h
     set_source_entity_id_or_uuid: Mock,
     source_entity_removed: AsyncMock,
 ) -> None:
-    """Test the helper config entry is removed when the source entity is removed."""
-    # Add the helper config entry to the source device
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=helper_config_entry.entry_id
-    )
-    # Add another config entry to the source device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=other_config_entry.entry_id
-    )
-
+    """Test the source_entity_removed handler is called when the source entity is removed."""
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check preconditions
+    # Check preconditions - the helper entity is linked to the source device
     helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
     assert helper_entity_entry.device_id == source_entity_entry.device_id
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
 
     events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
-    # Remove the source entitys's config entry from the device, this removes the
-    # source entity
-    device_registry.async_update_device(
-        source_device.id, remove_config_entry_id=source_config_entry.entry_id
-    )
+    # Remove the source entity
+    entity_registry.async_remove(source_entity_entry.entity_id)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -331,9 +356,10 @@ async def test_async_handle_source_entity_changes_source_entity_removed_custom_h
     async_remove_entry.assert_not_called()
     set_source_entity_id_or_uuid.assert_not_called()
 
-    # Check that the helper config entry is not removed from the device
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
+    # Check that the custom handler took over: the helper entity is left linked to the
+    # source device
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id == source_device.id
 
     # Check that the helper config entry is not removed
     assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -357,20 +383,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     set_source_entity_id_or_uuid: Mock,
 ) -> None:
     """Test the source entity removed from the source device."""
-    # Add the helper config entry to the source device
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=helper_config_entry.entry_id
-    )
-
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check preconditions
+    # Check preconditions - the helper entity is linked to the source device
     helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
     assert helper_entity_entry.device_id == source_entity_entry.device_id
-
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
 
     events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
@@ -381,9 +399,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     async_unload_entry.assert_called_once()
     set_source_entity_id_or_uuid.assert_not_called()
 
-    # Check that the helper config entry is removed from the device
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id not in source_device.config_entries
+    # Check that the helper entity is not linked to the source device anymore
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id is None
 
     # Check that the helper config entry is not removed
     assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -408,11 +426,6 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     set_source_entity_id_or_uuid: Mock,
 ) -> None:
     """Test the source entity is moved to another device."""
-    # Add the helper config entry to the source device
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=helper_config_entry.entry_id
-    )
-
     # Create another device to move the source entity to
     source_device_2 = device_registry.async_get_or_create(
         config_entry_id=source_config_entry.entry_id,
@@ -422,14 +435,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check preconditions
+    # Check preconditions - the helper entity is linked to the source device
     helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
     assert helper_entity_entry.device_id == source_entity_entry.device_id
-
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
-    source_device_2 = device_registry.async_get(source_device_2.id)
-    assert helper_config_entry.entry_id not in source_device_2.config_entries
 
     events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
@@ -442,11 +450,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     async_unload_entry.assert_called_once()
     set_source_entity_id_or_uuid.assert_not_called()
 
-    # Check that the helper config entry is moved to the other device
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id not in source_device.config_entries
-    source_device_2 = device_registry.async_get(source_device_2.id)
-    assert helper_config_entry.entry_id in source_device_2.config_entries
+    # Check that the helper entity is relinked to the other device
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id == source_device_2.id
 
     # Check that the helper config entry is not removed
     assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -475,20 +481,12 @@ async def test_async_handle_source_entity_new_entity_id(
     set_source_entity_id_calls: int,
 ) -> None:
     """Test the source entity's entity ID is changed."""
-    # Add the helper config entry to the source device
-    device_registry.async_update_device(
-        source_device.id, add_config_entry_id=helper_config_entry.entry_id
-    )
-
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check preconditions
+    # Check preconditions - the helper entity is linked to the source device
     helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
     assert helper_entity_entry.device_id == source_entity_entry.device_id
-
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
 
     events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
@@ -501,9 +499,9 @@ async def test_async_handle_source_entity_new_entity_id(
     assert len(async_unload_entry.mock_calls) == unload_calls
     assert len(set_source_entity_id_or_uuid.mock_calls) == set_source_entity_id_calls
 
-    # Check that the helper config is still in the device
-    source_device = device_registry.async_get(source_device.id)
-    assert helper_config_entry.entry_id in source_device.config_entries
+    # Check that the helper entity is still linked to the source device
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id == source_device.id
 
     # Check that the helper config entry is not removed
     assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -520,13 +518,25 @@ async def test_async_remove_helper_config_entry_from_source_device(
     entity_registry: er.EntityRegistry,
     helper_config_entry: MockConfigEntry,
     helper_entity_entry: er.RegistryEntry,
+    source_config_entry: ConfigEntry,
     source_device: dr.DeviceEntry,
 ) -> None:
     """Test removing the helper config entry from the source device."""
-    # Add the helper config entry to the source device
+    # In the single-owner model the migration helper only acts when the helper config
+    # entry owns the source device. Move the source device to the helper config entry
+    # and record a pending move back to the source config entry, so removing the helper
+    # config entry hands the device back to the source config entry instead of deleting
+    # it.
     device_registry.async_update_device(
-        source_device.id, add_config_entry_id=helper_config_entry.entry_id
+        source_device.id,
+        add_config_entry_id=helper_config_entry.entry_id,
+        remove_config_entry_id=source_config_entry.entry_id,
     )
+    device_registry.async_update_device(
+        source_device.id, add_config_entry_id=source_config_entry.entry_id
+    )
+    source_device = device_registry.async_get(source_device.id)
+    assert source_device.config_entries == {helper_config_entry.entry_id}
 
     # Create a helper entity entry, not connected to the source device
     extra_helper_entity_entry = entity_registry.async_get_or_create(

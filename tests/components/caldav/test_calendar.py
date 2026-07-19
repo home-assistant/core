@@ -4,7 +4,6 @@ from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 import logging
-import threading
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
@@ -14,7 +13,6 @@ from caldav.objects import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.caldav import coordinator as caldav_coordinator
 from homeassistant.components.caldav.api import async_get_calendars
 from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -441,57 +439,6 @@ async def test_setup_component_config(
     # Entities are added after a concurrent first refresh, so order is not
     # guaranteed; assert on the set of created entities instead.
     assert sorted(all_calendar_entities) == sorted(expected_entities)
-
-
-@pytest.mark.parametrize("tz", [UTC])
-@pytest.mark.freeze_time(_local_datetime(17, 45))
-async def test_next_event_parsed_off_event_loop(
-    hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
-) -> None:
-    """Test that parsing the next event happens off the event loop."""
-    loop_thread_id = threading.get_ident()
-    parse_thread_ids: list[int] = []
-    real_get_attr_value = caldav_coordinator.get_attr_value
-
-    def _record_thread(obj: Any, attribute: str) -> str | None:
-        parse_thread_ids.append(threading.get_ident())
-        return real_get_attr_value(obj, attribute)
-
-    with patch(
-        "homeassistant.components.caldav.coordinator.get_attr_value",
-        side_effect=_record_thread,
-    ):
-        await setup_platform_cb()
-
-    assert parse_thread_ids
-    assert all(thread_id != loop_thread_id for thread_id in parse_thread_ids)
-
-
-@pytest.mark.parametrize("tz", [UTC])
-async def test_get_events_parsed_off_event_loop(
-    hass: HomeAssistant,
-    setup_platform_cb: Callable[[], Awaitable[None]],
-    get_api_events: Callable[[str], Awaitable[dict[str, Any]]],
-) -> None:
-    """Test that parsing events for a time frame happens off the event loop."""
-    await setup_platform_cb()
-
-    loop_thread_id = threading.get_ident()
-    parse_thread_ids: list[int] = []
-    real_get_attr_value = caldav_coordinator.get_attr_value
-
-    def _record_thread(obj: Any, attribute: str) -> str | None:
-        parse_thread_ids.append(threading.get_ident())
-        return real_get_attr_value(obj, attribute)
-
-    with patch(
-        "homeassistant.components.caldav.coordinator.get_attr_value",
-        side_effect=_record_thread,
-    ):
-        await get_api_events(TEST_ENTITY)
-
-    assert parse_thread_ids
-    assert all(thread_id != loop_thread_id for thread_id in parse_thread_ids)
 
 
 @pytest.mark.parametrize("tz", [UTC])

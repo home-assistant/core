@@ -15,7 +15,6 @@ from uiprotect.data import (
     Sensor,
     SmartDetectObjectType,
 )
-from uiprotect.data.nvr import EventMetadata
 from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.websocket import WebsocketState
 
@@ -51,9 +50,11 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_light,
     make_public_sensor,
     public_device_ws_message,
     remove_entities,
+    setup_public_light,
     setup_public_sensor,
 )
 
@@ -118,6 +119,7 @@ async def test_binary_sensor_setup_light(
 ) -> None:
     """Test binary_sensor entity setup for light devices."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
@@ -729,47 +731,38 @@ async def test_binary_sensor_update_motion(
 
 
 async def test_binary_sensor_update_light_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ) -> None:
-    """Test binary_sensor motion entity."""
+    """Test the light motion binary_sensor reads PIR motion from the public API."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, light, LIGHT_SENSOR_WRITE[1]
     )
+    assert hass.states.get(entity_id).state == STATE_OFF
 
-    event_metadata = EventMetadata(light_id=light.id)
-    event = Event(
-        model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.MOTION_LIGHT,
-        start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=100,
-        smart_detect_types=[],
-        smart_detect_event_ids=[],
-        metadata=event_metadata,
-        api=ufp.api,
-    )
-
-    new_light = light.model_copy()
-    new_light.is_pir_motion_detected = True
-    new_light.last_motion_event_id = event.id
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-
-    ufp.api.bootstrap.lights = {new_light.id: new_light}
-    ufp.api.bootstrap.events = {event.id: event}
-    ufp.ws_msg(mock_msg)
+    public = make_public_light(light, is_pir_motion_detected=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_binary_sensor_light_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The migrated light binary_sensors are unavailable without a public object."""
+
+    await init_entry(hass, ufp, [light])
+
+    for description in LIGHT_SENSOR_WRITE:
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.BINARY_SENSOR, light, description
+        )
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_binary_sensor_update_mount_type_window(
