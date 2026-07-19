@@ -260,7 +260,6 @@ class GoogleHealthDeviceSensor(
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.device_version or entry_title,
-            manufacturer="Google",
             model=device.device_type.title() if device.device_type else None,
             sw_version=device.device_version,
             via_device=(DOMAIN, entry_id),
