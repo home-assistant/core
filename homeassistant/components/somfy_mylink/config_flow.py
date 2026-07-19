@@ -182,6 +182,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             return await self.async_step_init()
 
         self._target_id = target_id
+        assert target_id is not None
 
         return self.async_show_form(
             step_id="target_config",
