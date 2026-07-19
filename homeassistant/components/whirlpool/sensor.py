@@ -519,7 +519,7 @@ class OvenKitchenTimerSensor(WhirlpoolTimeSensorBase):
 
     def _get_kitchen_timer(self) -> KitchenTimer:
         """Return the primary kitchen timer."""
-        return self._appliance.get_kitchen_timer(timer_id=OVEN_KITCHEN_TIMER_ID)
+        return self._appliance.get_kitchen_timer()
 
     @override
     def _is_finished(self) -> bool:
