@@ -1,4 +1,4 @@
-"""Alias functions for Home Assistant templates."""
+"""Alias function for Home Assistant templates."""
 
 from typing import TYPE_CHECKING, Any
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class AliasExtension(BaseTemplateExtension):
-    """Extension for alias-related template functions."""
+    """Extension for the alias template function."""
 
     def __init__(self, environment: TemplateEnvironment) -> None:
         """Initialize the alias extension."""
@@ -35,13 +35,10 @@ class AliasExtension(BaseTemplateExtension):
         )
 
     def aliases(self, lookup_value: Any) -> list[str]:
-        """Return the aliases of an entity, area, or floor ID.
+        """Return the sorted aliases of an entity, area, or floor ID ([] if unknown).
 
-        Dispatch mirrors ``labels()``: the entity ID is shape-checked with
-        ``cv.entity_id`` first, then the value is tried as an area ID and finally
-        a floor ID, first hit wins. Area and floor IDs are both bare slugs and
-        cannot be told apart by shape, so area-before-floor is the deterministic
-        tiebreak. Returns an empty list when nothing matches.
+        Area is tried before floor because their IDs are indistinguishable bare
+        slugs, so the order is the deterministic tiebreak.
         """
         lookup_value = str(lookup_value)
 
