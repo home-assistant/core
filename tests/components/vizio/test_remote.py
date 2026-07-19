@@ -68,7 +68,7 @@ async def test_remote_is_off_when_device_off(
 ) -> None:
     """Test remote state is off when device is off."""
     with patch(
-        "homeassistant.components.vizio.VizioAsync.get_power_state",
+        "homeassistant.components.vizio.Vizio.get_power_state",
         return_value=False,
     ):
         await setup_integration(hass, mock_speaker_config_entry)
@@ -79,8 +79,8 @@ async def test_remote_is_off_when_device_off(
 @pytest.mark.parametrize(
     ("service", "mock_method"),
     [
-        (SERVICE_TURN_ON, "pow_on"),
-        (SERVICE_TURN_OFF, "pow_off"),
+        (SERVICE_TURN_ON, "power_on"),
+        (SERVICE_TURN_OFF, "power_off"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -93,7 +93,7 @@ async def test_turn_on_off(
     """Test turning on/off the remote sends the correct power command."""
     await setup_integration(hass, mock_speaker_config_entry)
     with patch(
-        f"homeassistant.components.vizio.VizioAsync.{mock_method}",
+        f"homeassistant.components.vizio.Vizio.{mock_method}",
     ) as mock_power:
         await hass.services.async_call(
             REMOTE_DOMAIN,
@@ -101,7 +101,7 @@ async def test_turn_on_off(
             {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
             blocking=True,
         )
-        mock_power.assert_called_once_with(log_api_exception=False)
+        mock_power.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -111,7 +111,7 @@ async def test_turn_on_off(
         ("ch_up", "CH_UP"),
         ("SMARTCAST", "SMARTCAST"),
         # Aliases
-        ("closed_captions", "CC_TOGGLE"),
+        ("next_input", "INPUT_NEXT"),
         ("channel_up", "CH_UP"),
         ("enter", "OK"),
         ("volume_down", "VOL_DOWN"),
@@ -128,7 +128,7 @@ async def test_send_command_tv_valid(
     """Test send_command resolves valid TV commands."""
     await setup_integration(hass, mock_tv_config_entry)
     with patch(
-        "homeassistant.components.vizio.VizioAsync.remote",
+        "homeassistant.components.vizio.Vizio.send_key",
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
@@ -139,7 +139,7 @@ async def test_send_command_tv_valid(
             },
             blocking=True,
         )
-        mock_remote.assert_called_once_with(expected_key, log_api_exception=False)
+        mock_remote.assert_called_once_with(expected_key)
 
 
 @pytest.mark.parametrize("command", ["INVALID_KEY", "not_a_key"])
@@ -185,7 +185,7 @@ async def test_send_command_speaker_valid(
     """Test send_command resolves valid speaker commands."""
     await setup_integration(hass, mock_speaker_config_entry)
     with patch(
-        "homeassistant.components.vizio.VizioAsync.remote",
+        "homeassistant.components.vizio.Vizio.send_key",
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
@@ -196,7 +196,7 @@ async def test_send_command_speaker_valid(
             },
             blocking=True,
         )
-        mock_remote.assert_called_once_with(expected_key, log_api_exception=False)
+        mock_remote.assert_called_once_with(expected_key)
 
 
 @pytest.mark.parametrize(
@@ -237,7 +237,7 @@ async def test_send_command_multiple(
     """Test send_command with multiple commands in one call."""
     await setup_integration(hass, mock_tv_config_entry)
     with patch(
-        "homeassistant.components.vizio.VizioAsync.remote",
+        "homeassistant.components.vizio.Vizio.send_key",
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
@@ -249,8 +249,8 @@ async def test_send_command_multiple(
             blocking=True,
         )
         assert mock_remote.call_count == 2
-        mock_remote.assert_any_call("UP", log_api_exception=False)
-        mock_remote.assert_any_call("OK", log_api_exception=False)
+        mock_remote.assert_any_call("UP")
+        mock_remote.assert_any_call("OK")
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -261,7 +261,7 @@ async def test_send_command_invalid_skips_valid(
     await setup_integration(hass, mock_tv_config_entry)
     with (
         patch(
-            "homeassistant.components.vizio.VizioAsync.remote",
+            "homeassistant.components.vizio.Vizio.send_key",
         ) as mock_remote,
         pytest.raises(ServiceValidationError),
     ):
@@ -285,7 +285,7 @@ async def test_send_command_delay_between_repeats(
     await setup_integration(hass, mock_tv_config_entry)
     with (
         patch(
-            "homeassistant.components.vizio.VizioAsync.remote",
+            "homeassistant.components.vizio.Vizio.send_key",
         ) as mock_remote,
         patch(
             "homeassistant.components.vizio.remote.asyncio.sleep",
