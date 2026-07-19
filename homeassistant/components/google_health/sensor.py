@@ -181,7 +181,7 @@ async def async_setup_entry(
         def async_add_device_entities() -> None:
             """Add entities for new devices."""
             new_entities: list[SensorEntity] = []
-            for device in device_coordinator.data:
+            for device in device_coordinator.data.values():
                 if device.device_id in added_device_ids:
                     continue
                 added_device_ids.add(device.device_id)
@@ -189,7 +189,7 @@ async def async_setup_entry(
                     GoogleHealthDeviceSensor(
                         device_coordinator,
                         entry.entry_id,
-                        device.device_id,
+                        device,
                         description,
                     )
                     for description in DEVICE_SENSORS
@@ -245,60 +245,38 @@ class GoogleHealthDeviceSensor(
         self,
         coordinator: GoogleHealthDeviceCoordinator,
         entry_id: str,
-        device_id: str,
+        device: PairedDevice,
         description: GoogleHealthDeviceSensorEntityDescription,
     ) -> None:
         """Initialize the device sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.device_id = device_id
-        self._attr_unique_id = f"{entry_id}_{device_id}_{description.key}"
+        self.device_id = device.device_id
+        self._attr_unique_id = f"{device.device_id}_{description.key}"
 
-        device = self._get_device()
-        name = "Google Health Device"
-        model = None
-        sw_version = None
-
-        if device:
-            sw_version = device.device_version
-            if device.device_version:
-                name = device.device_version
-            elif device.device_type:
-                name = f"Google Health {device.device_type.title()}"
-
-            if device.device_type:
-                model = device.device_type.title()
-
+        name = device.device_version or (device.device_type or "Device").title()
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
+            identifiers={(DOMAIN, device.device_id)},
             name=name,
             manufacturer="Google",
-            model=model,
-            sw_version=sw_version,
+            model=device.device_type.title() if device.device_type else None,
+            sw_version=device.device_version,
             via_device=(DOMAIN, entry_id),
         )
-        if device and device.mac_address:
+        if device.mac_address:
             device_info["connections"] = {(CONNECTION_NETWORK_MAC, device.mac_address)}
         self._attr_device_info = device_info
-
-    def _get_device(self) -> PairedDevice | None:
-        """Find the device in the coordinator data."""
-        for device in self.coordinator.data:
-            if device.device_id == self.device_id:
-                return device
-        return None
 
     @property
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._get_device() is not None
+        return super().available and self.device_id in self.coordinator.data
 
     @property
     @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-
-        if not (device := self._get_device()):
+        if not (device := self.coordinator.data.get(self.device_id)):
             return None
         return self.entity_description.value_fn(device)

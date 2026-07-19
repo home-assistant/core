@@ -216,7 +216,7 @@ class GoogleHealthBodyCoordinator(
 
 
 class GoogleHealthDeviceCoordinator(
-    GoogleHealthDataUpdateCoordinator[list[PairedDevice]]
+    GoogleHealthDataUpdateCoordinator[dict[str, PairedDevice]]
 ):
     """Coordinator to fetch paired devices from Google Health API."""
 
@@ -237,10 +237,11 @@ class GoogleHealthDeviceCoordinator(
         )
 
     @override
-    async def _async_fetch_data(self) -> list[PairedDevice]:
+    async def _async_fetch_data(self) -> dict[str, PairedDevice]:
         """Fetch paired devices."""
-        devices: list[PairedDevice] = []
+        devices: dict[str, PairedDevice] = {}
         result = await self.api.paired_devices.list()
         async for page in result:
-            devices.extend(page.paired_devices)
+            for device in page.paired_devices:
+                devices[device.device_id] = device
         return devices
