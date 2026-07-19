@@ -516,11 +516,8 @@ class SonosDiscoveryManager:
                 cached_uid = self._manual_host_uids.get(ip_addr)
                 if cached_uid is None:
                     try:
-                        uid = cast(
-                            str,
-                            await self.hass.async_add_executor_job(
-                                getattr, soco, "uid"
-                            ),
+                        raw_uid = await self.hass.async_add_executor_job(
+                            getattr, soco, "uid"
                         )
                     except HTTPError as err:
                         await self._process_http_connection_error(err, ip_addr)
@@ -535,6 +532,14 @@ class SonosDiscoveryManager:
                             "Could not get Sonos uid from %s: %s", ip_addr, ex
                         )
                         continue
+
+                    if not isinstance(raw_uid, str) or not raw_uid:
+                        _LOGGER.warning(
+                            "Could not get Sonos uid from %s: invalid uid", ip_addr
+                        )
+                        continue
+
+                    uid = raw_uid
                     self._manual_host_uids[ip_addr] = uid
                 else:
                     uid = cached_uid
