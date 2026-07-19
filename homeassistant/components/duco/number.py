@@ -1,6 +1,6 @@
 """Number platform for the Duco integration."""
 
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 import logging
 from typing import override
 
@@ -141,9 +141,26 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 },
             )
 
+    def _normalize_step_value(self, value: float) -> float:
+        """Normalize converted temperature values to the nearest supported native step."""
+        if self.unit_of_measurement == self.native_unit_of_measurement:
+            return value
+
+        decimal_minimum = Decimal(str(self.native_min_value))
+        decimal_increment = Decimal(str(self.native_step))
+        decimal_value = Decimal(str(value))
+
+        # Home Assistant converts service values from the configured temperature
+        # unit first, which can land between valid Duco Celsius increments.
+        steps = (
+            (decimal_value - decimal_minimum) / decimal_increment
+        ).to_integral_value(rounding=ROUND_HALF_UP)
+        return float(decimal_minimum + (steps * decimal_increment))
+
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the bypass supply temperature target."""
+        value = self._normalize_step_value(value)
         self._validate_step(value)
 
         try:

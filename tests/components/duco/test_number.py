@@ -16,6 +16,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_platform_integration
 
@@ -234,6 +235,53 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
             {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.2},
             blocking=True,
         )
+
+
+async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
+    hass: HomeAssistant,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test Fahrenheit service writes normalize to the nearest supported Celsius step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_bypass_supply_temperature_targets[1] = replace(
+        mock_bypass_supply_temperature_targets[1],
+        minimum=10.0,
+        increment=0.5,
+        maximum=25.5,
+    )
+
+    async def async_set_bypass_supply_temperature_target(
+        zone_id: int,
+        temperature: float,
+    ) -> BypassSupplyTemperatureTarget:
+        target = replace(
+            mock_bypass_supply_temperature_targets[zone_id], value=temperature
+        )
+
+        mock_bypass_supply_temperature_targets[zone_id] = target
+        return target
+
+    mock_duco_client.async_set_bypass_supply_temperature_target.side_effect = (
+        async_set_bypass_supply_temperature_target
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 69.0},
+        blocking=True,
+    )
+
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
+        1, 20.5
+    )
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == "68.9"
 
 
 @pytest.mark.usefixtures("init_integration")
