@@ -1015,6 +1015,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/lg_tv_rs232/ @balloob
 /homeassistant/components/libre_hardware_monitor/ @Sab44
 /tests/components/libre_hardware_monitor/ @Sab44
+/homeassistant/components/librenms/ @mib1185
 /homeassistant/components/lichess/ @aryanhasgithub
 /tests/components/lichess/ @aryanhasgithub
 /homeassistant/components/lidarr/ @tkdrob
