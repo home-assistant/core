@@ -1,5 +1,6 @@
 """Home Assistant template extensions."""
 
+from .aliases import AliasExtension
 from .areas import AreaExtension
 from .base64 import Base64Extension
 from .collection import CollectionExtension
@@ -21,6 +22,7 @@ from .type_cast import TypeCastExtension
 from .version import VersionExtension
 
 __all__ = [
+    "AliasExtension",
     "AreaExtension",
     "Base64Extension",
     "CollectionExtension",
