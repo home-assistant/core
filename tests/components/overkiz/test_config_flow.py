@@ -977,6 +977,51 @@ async def test_local_reconfigure_success(hass: HomeAssistant) -> None:
     assert mock_entry.data["verify_ssl"] is True
 
 
+async def test_local_reconfigure_wrong_account(hass: HomeAssistant) -> None:
+    """Test local reconfiguration aborts when the gateway account differs."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID2,
+        version=2,
+        data={
+            "host": TEST_HOST,
+            "token": "old_token",
+            "verify_ssl": True,
+            "hub": TEST_SERVER,
+            "api_type": "local",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "local"},
+    )
+
+    assert result["step_id"] == "local"
+
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": TEST_HOST,
+                "token": "new_token",
+                "verify_ssl": True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_wrong_account"
+
+
 async def test_reconfigure_switch_cloud_to_local(hass: HomeAssistant) -> None:
     """Test reconfiguring a cloud entry to use the local API."""
     mock_entry = MockConfigEntry(
@@ -1525,4 +1570,73 @@ async def test_rexel_reauth_success(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_rexel_config_entry.data["token"]["access_token"] == "mock-access-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "setup_rexel_credentials")
+async def test_rexel_reconfigure_wrong_account(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_rexel_config_entry: MockConfigEntry,
+) -> None:
+    """Reconfigure with a different Rexel gateway aborts."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    # Reconfigure carries the stored hub, so the flow skips the server picker
+    # and goes to the local/cloud choice before re-running the OAuth2 flow.
+    result = await mock_rexel_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await _async_rexel_oauth_external_step(
+        hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+        return_value=[GatewayCandidate(gateway_id=TEST_GATEWAY_ID2, label="Other")],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_wrong_account"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "setup_rexel_credentials")
+async def test_rexel_reconfigure_success(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_rexel_config_entry: MockConfigEntry,
+) -> None:
+    """Reconfigure with the same Rexel gateway updates the entry and reloads."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    result = await mock_rexel_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await _async_rexel_oauth_external_step(
+        hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+        return_value=[GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="My Home")],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
     assert mock_rexel_config_entry.data["token"]["access_token"] == "mock-access-token"
