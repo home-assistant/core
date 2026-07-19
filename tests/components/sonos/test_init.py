@@ -331,6 +331,10 @@ class _MockSoCoUidError(MockSoCo):
 
 
 async def _setup_hass(hass: HomeAssistant):
+    await _setup_hass_with_hosts(hass, ["10.10.10.1", "10.10.10.2"])
+
+
+async def _setup_hass_with_hosts(hass: HomeAssistant, hosts: list[str]) -> None:
     await async_setup_component(
         hass,
         sonos.DOMAIN,
@@ -338,7 +342,7 @@ async def _setup_hass(hass: HomeAssistant):
             "sonos": {
                 "media_player": {
                     "interface_addr": "127.0.0.1",
-                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                    "hosts": hosts,
                 }
             }
         },
@@ -639,6 +643,37 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     soco.renderingControl.GetVolume.assert_not_called()
+
+
+async def test_async_poll_manual_hosts_startup_disabled_host_not_repolled(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test startup-disabled manual host is not polled on subsequent heartbeats."""
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    config_entry = MockConfigEntry(domain=sonos.DOMAIN)
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    with patch(
+        "homeassistant.components.sonos.sync_get_visible_zones",
+        wraps=sonos.sync_get_visible_zones,
+    ) as mock_get_visible_zones:
+        await _setup_hass_with_hosts(hass, ["10.10.10.1"])
+
+        assert "media_player.living_room" not in entity_registry.entities
+        assert mock_get_visible_zones.call_count == 1
+
+        async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_get_visible_zones.call_count == 1
 
 
 async def test_async_poll_manual_hosts_7(

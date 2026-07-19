@@ -180,6 +180,7 @@ class SonosDiscoveryManager:
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
+        self._manual_host_uids: dict[str, str] = {}
 
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
@@ -439,6 +440,10 @@ class SonosDiscoveryManager:
         # Soco attributes are available for it.
         for host in self.hosts.copy():
             ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            if (
+                cached_uid := self._manual_host_uids.get(ip_addr)
+            ) and self.is_device_disabled(cached_uid):
+                continue
             soco = SoCo(ip_addr)
             try:
                 visible_zones = await self.hass.async_add_executor_job(
@@ -479,6 +484,7 @@ class SonosDiscoveryManager:
             if self.is_device_invisible(ip_addr):
                 _LOGGER.debug("Discarding %s from manual hosts", ip_addr)
                 self.hosts.discard(ip_addr)
+                self._manual_host_uids.pop(ip_addr, None)
 
         # Loop through each configured host that is not in
         # error. Send a discovery message if a speaker does
@@ -498,6 +504,8 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
+            if known_speaker:
+                self._manual_host_uids[ip_addr] = known_speaker.uid
             if known_speaker and self.is_device_disabled(known_speaker.uid):
                 _LOGGER.debug(
                     "Skipping manual poll for disabled Sonos device: %s",
@@ -505,18 +513,36 @@ class SonosDiscoveryManager:
                 )
                 continue
             if not known_speaker:
-                try:
-                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
-                except HTTPError as err:
-                    await self._process_http_connection_error(err, ip_addr)
-                    continue
-                except (
-                    OSError,
-                    SoCoException,
-                    Timeout,
-                    TimeoutError,
-                ) as ex:
-                    _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
+                cached_uid = self._manual_host_uids.get(ip_addr)
+                if cached_uid is None:
+                    try:
+                        uid = cast(
+                            str,
+                            await self.hass.async_add_executor_job(
+                                getattr, soco, "uid"
+                            ),
+                        )
+                    except HTTPError as err:
+                        await self._process_http_connection_error(err, ip_addr)
+                        continue
+                    except (
+                        OSError,
+                        SoCoException,
+                        Timeout,
+                        TimeoutError,
+                    ) as ex:
+                        _LOGGER.warning(
+                            "Could not get Sonos uid from %s: %s", ip_addr, ex
+                        )
+                        continue
+                    self._manual_host_uids[ip_addr] = uid
+                else:
+                    uid = cached_uid
+                if self.is_device_disabled(uid):
+                    _LOGGER.debug(
+                        "Skipping manual poll for disabled Sonos device: %s",
+                        uid,
+                    )
                     continue
                 try:
                     await self._async_handle_discovery_message(
