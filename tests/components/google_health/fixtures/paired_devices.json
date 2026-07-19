@@ -1,0 +1,14 @@
+{
+  "pairedDevices": [
+    {
+      "name": "users/me/pairedDevices/watch_123",
+      "macAddress": "AA:BB:CC:DD:EE:FF",
+      "deviceType": "TRACKER",
+      "features": ["HEART_RATE", "STEPS"],
+      "lastSyncTime": "2026-07-18T15:30:00Z",
+      "batteryStatus": "NORMAL",
+      "batteryLevel": 85,
+      "deviceVersion": "Fitbit Charge 6"
+    }
+  ]
+}
