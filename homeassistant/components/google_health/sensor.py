@@ -254,7 +254,9 @@ class GoogleHealthDeviceSensor(
         self.device_id = device.device_id
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
-        name = device.device_version or (device.device_type or "Device").title()
+        name = device.device_version or (
+            device.device_type.title() if device.device_type else None
+        )
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=name,
