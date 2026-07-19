@@ -453,17 +453,31 @@ async def test_tvoc_level_sensor(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
-async def test_tvoc_concentration_sensor_ugm3(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
+@pytest.mark.usefixtures("matter_node")
+async def test_tvoc_concentration_sensor_ugm3(hass: HomeAssistant) -> None:
     """Test TVOC concentration sensor with µg/m³ unit and matching device class."""
     state = hass.states.get("sensor.mock_air_purifier_volatile_organic_compounds")
     assert state
     assert state.state == "2.0"
     assert state.attributes["device_class"] == "volatile_organic_compounds"
     assert state.attributes["unit_of_measurement"] == "μg/m³"
+
+
+@pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        pytest.param({"1/1037/8": 1}, id="unit_rejected_by_device_class"),
+        pytest.param({"1/1037/8": 2}, id="unit_without_ha_equivalent"),
+    ],
+)
+@pytest.mark.usefixtures("matter_node")
+async def test_concentration_sensor_unit_fallback(hass: HomeAssistant) -> None:
+    """Test the statically defined unit is kept for unusable MeasurementUnits."""
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide")
+    assert state
+    assert state.attributes["device_class"] == "carbon_dioxide"
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
