@@ -491,10 +491,11 @@ class OverkizConfigFlow(
 
         return await self.async_step_user()
 
-    def _init_flow_from_entry(self, entry_data: Mapping[str, Any]) -> None:
+    def _init_flow_from_entry(
+        self, entry_data: Mapping[str, Any], gateway_id: str
+    ) -> None:
         """Initialize the flow's state from an existing entry for reauth/reconfigure."""
-        # Overkiz entries always have unique IDs
-        self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
+        self.context["title_placeholders"] = {"gateway_id": gateway_id}
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
 
@@ -509,13 +510,14 @@ class OverkizConfigFlow(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        self._init_flow_from_entry(entry_data)
+        # Overkiz entries always have unique IDs; reauth context carries it.
+        self._init_flow_from_entry(entry_data, cast(str, self.unique_id))
         return await self.async_step_user(dict(entry_data))
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        entry_data = self._get_reconfigure_entry().data
-        self._init_flow_from_entry(entry_data)
-        return await self.async_step_user(dict(entry_data))
+        entry = self._get_reconfigure_entry()
+        self._init_flow_from_entry(entry.data, cast(str, entry.unique_id))
+        return await self.async_step_user(dict(entry.data))
