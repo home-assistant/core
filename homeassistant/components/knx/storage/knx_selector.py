@@ -112,6 +112,12 @@ class GroupSelectOption(KNXSelectorBase):
         }
 
 
+def _has_extra_keys_error(exc: prb.Invalid) -> bool:
+    """Check if any of the errors is about extra keys."""
+    errors = exc.errors if isinstance(exc, prb.MultipleInvalid) else [exc]
+    return any(isinstance(error, prb.ExtraKeysInvalid) for error in errors)
+
+
 class GroupSelectSchema:
     """Use the first validated value.
 
@@ -129,13 +135,13 @@ class GroupSelectSchema:
         for validator in self.validators:
             try:
                 return validator(value)
-            except prb.MultipleInvalid as exc:
-                errors.extend(exc.errors)
             except prb.Invalid as exc:
                 errors.append(exc)
         if errors:
+            # an option failing on extra keys wasn't the one configured by the
+            # user - prefer errors of an option matching the given keys
             raise next(
-                (err for err in errors if not isinstance(err, prb.ExtraKeysInvalid)),
+                (err for err in errors if not _has_extra_keys_error(err)),
                 errors[0],
             )
         raise prb.AnyInvalid("no valid value found")
