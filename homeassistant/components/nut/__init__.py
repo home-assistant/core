@@ -288,9 +288,9 @@ class PyNUTData:
         model_id: str | None = _strip_optional(self._status.get("device.part"))
         firmware = _strip_optional(_firmware_from_status(self._status))
         serial = _strip_optional(_serial_from_status(self._status))
-        mac_address: str | None = self._status.get("device.macaddr")
+        mac_address = _strip_optional(self._status.get("device.macaddr"))
         if mac_address is not None:
-            mac_address = format_mac(mac_address.strip().replace(" ", ":"))
+            mac_address = format_mac(mac_address.replace(" ", ":"))
         device_location: str | None = _strip_optional(
             self._status.get("device.location")
         )
