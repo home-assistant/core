@@ -52,20 +52,12 @@ rules:
   dynamic-devices:
     status: exempt
     comment: The integration connects to a single device.
-  entity-category:
-    status: exempt
-    comment: The integration only registers one entity.
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: The integration only registers one entity.
-  entity-translations:
-    status: exempt
-    comment: There are no entities to translate.
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: The only entity can use the device class.
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt

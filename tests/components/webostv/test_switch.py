@@ -58,7 +58,6 @@ async def test_screen_switch_state_updates(
     assert state is not None
     assert state.state == STATE_OFF
 
-    # Update TV state to screen on
     client.tv_state.is_screen_on = True
     await fire_state_update(client)
     await hass.async_block_till_done()
@@ -67,7 +66,6 @@ async def test_screen_switch_state_updates(
     assert state is not None
     assert state.state == STATE_ON
 
-    # TV powered off makes switch unavailable
     client.tv_state.is_on = False
     client.tv_state.is_screen_on = False
     await fire_state_update(client)

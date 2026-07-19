@@ -74,10 +74,16 @@ class LgWebOSScreenSwitchEntity(SwitchEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Connect to client signals."""
+        await super().async_added_to_hass()
         await self._client.register_state_update_callback(
             self.async_handle_state_update
         )
         self._update_states()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister state update callback."""
+        self._client.unregister_state_update_callback(self.async_handle_state_update)
 
     async def async_handle_state_update(self, tv_state: WebOsTvState) -> None:
         """Update state from WebOsClient."""
