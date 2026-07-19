@@ -9,7 +9,6 @@ from caldav.lib.error import DAVError, NotFoundError
 from caldav.objects import Todo
 import pytest
 
-from homeassistant.components.caldav import todo as caldav_todo
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
@@ -169,10 +168,22 @@ def compact_ics(ics: str) -> list[str]:
     ]
 
 
-def test_todo_item_without_data() -> None:
-    """Test a to-do resource with no data is skipped rather than raising."""
-    resource = Todo(client=None, url="0.ics", data=None, parent=None, id="0")
-    assert caldav_todo._todo_item(resource) is None
+async def test_todo_without_data_is_skipped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+) -> None:
+    """Test a to-do resource with no data is skipped without failing the update."""
+    calendar.search.return_value = [
+        Todo(client=None, url="0.ics", data=None, parent=calendar, id="0"),
+        create_todo(calendar, "1", TODO_NEEDS_ACTION),
+    ]
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
 
 
 @pytest.mark.parametrize(

@@ -1198,6 +1198,96 @@ END:VCALENDAR"""
     assert events[0]["summary"] == "Meeting"
 
 
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.freeze_time(_local_datetime(16, 0))
+async def test_event_without_data_is_skipped(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test an event resource with no data is skipped without failing the update."""
+    calendar = Mock()
+    calendar.name = "Example"
+    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+    calendar.search = MagicMock(
+        return_value=[
+            Event(None, "0.ics", None, calendar, "0"),
+            Event(None, "1.ics", EVENTS[0], calendar, "1"),
+        ]
+    )
+
+    with patch(
+        "homeassistant.components.caldav.calendar.caldav.DAVClient"
+    ) as mock_client:
+        mock_client.return_value.principal.return_value.calendars.return_value = [
+            calendar
+        ]
+        assert await async_setup_component(
+            hass, "calendar", {"calendar": CALDAV_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes["message"] == "This is a normal event"
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}?start=2017-11-27&end=2017-11-28"
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+
+    assert len(events) == 1
+    assert events[0]["summary"] == "This is a normal event"
+
+
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.freeze_time(_local_datetime(16, 0))
+async def test_rdate_only_event_is_expanded(hass: HomeAssistant) -> None:
+    """Test an event recurring solely via RDATE is expanded into its occurrences."""
+    # DTSTART is in the past so only an expanded RDATE occurrence can be the next
+    # event; an unexpanded master would be filtered out as already over.
+    vevent_with_rdate_only = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rdate-only-uid
+DTSTAMP:20171120T000000Z
+DTSTART:20171120T170000Z
+DTEND:20171120T180000Z
+RDATE:20171127T170000Z
+SUMMARY:This is an RDATE-only event
+END:VEVENT
+END:VCALENDAR"""
+    calendar = Mock()
+    calendar.name = "Example"
+    calendar.get_supported_components = MagicMock(return_value=["VEVENT"])
+    calendar.search = MagicMock(
+        return_value=[
+            Event(None, "0.ics", vevent_with_rdate_only, calendar, "rdate-only-uid")
+        ]
+    )
+
+    with patch(
+        "homeassistant.components.caldav.calendar.caldav.DAVClient"
+    ) as mock_client:
+        mock_client.return_value.principal.return_value.calendars.return_value = [
+            calendar
+        ]
+        assert await async_setup_component(
+            hass, "calendar", {"calendar": CALDAV_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "This is an RDATE-only event"
+    assert state.attributes["start_time"] == "2017-11-27 17:00:00"
+    assert state.attributes["end_time"] == "2017-11-27 18:00:00"
+
+
 @pytest.mark.parametrize(
     ("calendars"),
     [
