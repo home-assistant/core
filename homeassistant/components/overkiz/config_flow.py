@@ -162,10 +162,6 @@ class OverkizConfigFlow(
             if self._server in SERVERS_WITH_LOCAL_API:
                 return await self.async_step_local_or_cloud()
 
-            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
-            if self._server == Server.REXEL:
-                return await self.async_step_pick_implementation()
-
             return await self.async_step_cloud()
 
         return self.async_show_form(
