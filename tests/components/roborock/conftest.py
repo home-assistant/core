@@ -424,7 +424,6 @@ def make_device_features() -> Mock:
     device_features = MagicMock(spec=DeviceFeaturesTrait)
     device_features.is_supported_drying = True
     device_features.is_support_water_mode = True
-    device_features.is_clean_fluid_delivery_supported = True
     device_features.is_support_clean_estimate = True
     device_features.is_clean_route_setting_supported = True
     device_features.is_field_supported.return_value = True
