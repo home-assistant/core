@@ -13,7 +13,7 @@ from homeassistant.helpers.event import async_track_entity_registry_updated_even
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
-    async_remove_helper_device,
+    async_remove_helper_devices,
 )
 
 from tests.common import (
@@ -526,7 +526,7 @@ async def test_async_handle_source_entity_new_entity_id(
     "source_via_composite_id",
     [pytest.param(True, id="composite_id"), pytest.param(False, id="source_split")],
 )
-async def test_async_remove_helper_device(
+async def test_async_remove_helper_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -581,7 +581,7 @@ async def test_async_remove_helper_device(
         "sensor", HELPER_DOMAIN, "2", config_entry=helper_config_entry
     )
 
-    async_remove_helper_device(
+    async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=composite_id if source_via_composite_id else source_split.id,
@@ -599,7 +599,7 @@ async def test_async_remove_helper_device(
     assert device_registry.async_get(source_split.id) is not None
 
 
-async def test_async_remove_helper_device_multiple_co_owners(
+async def test_async_remove_helper_devices_multiple_co_owners(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -643,7 +643,7 @@ async def test_async_remove_helper_device_multiple_co_owners(
         device_id=helper_split.id,
     )
 
-    async_remove_helper_device(
+    async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=composite_id,
@@ -660,7 +660,7 @@ async def test_async_remove_helper_device_multiple_co_owners(
     assert device_registry.async_get(source_split.id) is not None
 
 
-async def test_async_remove_helper_device_fork(
+async def test_async_remove_helper_devices_fork(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -710,7 +710,7 @@ async def test_async_remove_helper_device_fork(
         device_id=unrelated_device.id,
     )
 
-    async_remove_helper_device(
+    async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=source_device.id,
@@ -731,7 +731,7 @@ async def test_async_remove_helper_device_fork(
     )
 
 
-async def test_async_remove_helper_device_sweep(
+async def test_async_remove_helper_devices_sweep(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -794,7 +794,7 @@ async def test_async_remove_helper_device_sweep(
         device_id=kept_device.id,
     )
 
-    async_remove_helper_device(
+    async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=source_device.id,
@@ -819,7 +819,7 @@ async def test_async_remove_helper_device_sweep(
     )
 
 
-async def test_async_remove_helper_device_sweep_source_device_gone(
+async def test_async_remove_helper_devices_sweep_source_device_gone(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -844,7 +844,7 @@ async def test_async_remove_helper_device_sweep_source_device_gone(
         device_id=stale_fork.id,
     )
 
-    async_remove_helper_device(
+    async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id="nonexistent_device_id",
@@ -860,9 +860,9 @@ async def test_async_remove_helper_config_entry_from_source_device_deprecated(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """The old name is a deprecated alias delegating to async_remove_helper_device."""
+    """The old name is a deprecated alias delegating to async_remove_helper_devices."""
     with patch(
-        "homeassistant.helpers.helper_integration.async_remove_helper_device"
+        "homeassistant.helpers.helper_integration.async_remove_helper_devices"
     ) as mock_remove_helper_device:
         async_remove_helper_config_entry_from_source_device(
             hass,
@@ -878,12 +878,12 @@ async def test_async_remove_helper_config_entry_from_source_device_deprecated(
     assert (
         "async_remove_helper_config_entry_from_source_device was called" in caplog.text
     )
-    assert "async_remove_helper_device instead" in caplog.text
+    assert "async_remove_helper_devices instead" in caplog.text
 
 
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])
 @pytest.mark.usefixtures("source_entity_entry")
-async def test_async_remove_helper_device_helper_not_in_device(
+async def test_async_remove_helper_devices_helper_not_in_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -904,7 +904,7 @@ async def test_async_remove_helper_device_helper_not_in_device(
 
     events = listen_entity_registry_events(hass)
 
-    async_remove_helper_device(
+    async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=source_device.id,

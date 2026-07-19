@@ -131,7 +131,7 @@ def async_handle_source_entity_changes(
     )
 
 
-def async_remove_helper_device(
+def async_remove_helper_devices(
     hass: HomeAssistant,
     *,
     helper_config_entry_id: str,
@@ -315,7 +315,7 @@ def _sweep_helper_devices(
 
 
 @deprecated_function(
-    "homeassistant.helpers.helper_integration.async_remove_helper_device",
+    "homeassistant.helpers.helper_integration.async_remove_helper_devices",
     breaks_in_ha_version="2027.8.0",
 )
 def async_remove_helper_config_entry_from_source_device(
@@ -326,9 +326,9 @@ def async_remove_helper_config_entry_from_source_device(
 ) -> None:
     """Migrate a helper which has tried to add its config entry to the source device.
 
-    Deprecated alias of async_remove_helper_device, kept for custom integrations.
+    Deprecated alias of async_remove_helper_devices, kept for custom integrations.
     """
-    async_remove_helper_device(
+    async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry_id,
         source_device_id=source_device_id,
