@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from vizaio import VizioAuthError
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -12,6 +13,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.vizio import DATA_APPS
 from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -23,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-from .const import APP_LIST, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
+from .const import APP_RECORDS, ENTITY_ID, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -116,8 +118,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=1))
         async_fire_time_changed(hass)
@@ -129,8 +131,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=2))
         async_fire_time_changed(hass)
@@ -168,3 +170,56 @@ async def test_device_registry_without_model_or_version(
     assert device.model is None
     assert device.sw_version is None
     assert device.manufacturer == "VIZIO"
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
+async def test_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    mock_tv_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth failure during refresh starts a reauth flow."""
+    await setup_integration(hass, mock_tv_config_entry)
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    with patch(
+        "homeassistant.components.vizio.Vizio.get_power_state",
+        side_effect=VizioAuthError("token rejected"),
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
+@pytest.mark.usefixtures("vizio_connect")
+async def test_auth_failure_at_setup_triggers_reauth(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test an auth failure during setup puts the entry in an error state."""
+    with (
+        patch(
+            "homeassistant.components.vizio.Vizio.get_power_state",
+            side_effect=VizioAuthError("token rejected"),
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_model_name",
+            return_value=MODEL,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_version",
+            return_value=VERSION,
+        ),
+    ):
+        mock_tv_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_tv_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_tv_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"

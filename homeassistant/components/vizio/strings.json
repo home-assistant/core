@@ -3,6 +3,7 @@
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "updated_entry": "This entry has already been set up but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
     },
     "error": {
@@ -26,6 +27,10 @@
         "description": "Your VIZIO SmartCast device is now connected to Home Assistant.\n\nYour access token is '**{access_token}**'.",
         "title": "[%key:component::vizio::config::step::pairing_complete::title%]"
       },
+      "reauth_confirm": {
+        "description": "The stored access token is no longer valid, so the device needs to be paired again. Make sure the TV is powered on and connected to the network, then continue to display a pairing code on the TV screen.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]",
@@ -41,6 +46,9 @@
     }
   },
   "exceptions": {
+    "command_error": {
+      "message": "Failed to send command to the device: {error}"
+    },
     "unknown_command": {
       "message": "Unknown remote command `{command}`. Valid commands for this device are listed in the integration documentation."
     }
