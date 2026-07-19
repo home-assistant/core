@@ -28,6 +28,10 @@ _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
 _ZONE_3_ENTITY_ID = "number.living_bypass_target_3"
 _ZONE_4_ENTITY_ID = "number.living_bypass_target_4"
+_ZONE_5_ENTITY_ID = "number.living_bypass_target_5"
+_ZONE_6_ENTITY_ID = "number.living_bypass_target_6"
+_ZONE_7_ENTITY_ID = "number.living_bypass_target_7"
+_ZONE_8_ENTITY_ID = "number.living_bypass_target_8"
 
 
 @pytest.fixture
@@ -58,13 +62,13 @@ async def test_bypass_supply_temperature_target_numbers(
     assert zone_2_state.state == "21.0"
 
 
-async def test_bypass_supply_temperature_target_numbers_support_four_zones(
+async def test_bypass_supply_temperature_target_numbers_support_eight_zones(
     hass: HomeAssistant,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test bypass target controls are created for all four supported zones."""
+    """Test bypass target controls are created for all eight supported zones."""
     mock_bypass_supply_temperature_targets.update(
         {
             3: BypassSupplyTemperatureTarget(
@@ -81,6 +85,34 @@ async def test_bypass_supply_temperature_target_numbers_support_four_zones(
                 increment=0.1,
                 maximum=25.0,
             ),
+            5: BypassSupplyTemperatureTarget(
+                zone_id=5,
+                value=24.0,
+                minimum=15.0,
+                increment=0.1,
+                maximum=25.0,
+            ),
+            6: BypassSupplyTemperatureTarget(
+                zone_id=6,
+                value=20.0,
+                minimum=15.0,
+                increment=0.1,
+                maximum=25.0,
+            ),
+            7: BypassSupplyTemperatureTarget(
+                zone_id=7,
+                value=20.0,
+                minimum=15.0,
+                increment=0.1,
+                maximum=25.0,
+            ),
+            8: BypassSupplyTemperatureTarget(
+                zone_id=8,
+                value=20.0,
+                minimum=15.0,
+                increment=0.1,
+                maximum=25.0,
+            ),
         }
     )
 
@@ -91,6 +123,10 @@ async def test_bypass_supply_temperature_target_numbers_support_four_zones(
         _ZONE_2_ENTITY_ID,
         _ZONE_3_ENTITY_ID,
         _ZONE_4_ENTITY_ID,
+        _ZONE_5_ENTITY_ID,
+        _ZONE_6_ENTITY_ID,
+        _ZONE_7_ENTITY_ID,
+        _ZONE_8_ENTITY_ID,
     ):
         assert hass.states.get(entity_id) is not None
 

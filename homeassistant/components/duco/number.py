@@ -26,6 +26,10 @@ _ZONE_TRANSLATION_KEYS = {
     2: "bypass_supply_target_temperature_zone_2",
     3: "bypass_supply_target_temperature_zone_3",
     4: "bypass_supply_target_temperature_zone_4",
+    5: "bypass_supply_target_temperature_zone_5",
+    6: "bypass_supply_target_temperature_zone_6",
+    7: "bypass_supply_target_temperature_zone_7",
+    8: "bypass_supply_target_temperature_zone_8",
 }
 
 

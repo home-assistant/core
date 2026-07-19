@@ -230,7 +230,7 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
 ) -> None:
     """Test unavailable bypass targets are not polled after setup."""
 
-    poll_count: dict[int, int] = dict.fromkeys(range(1, 5), 0)
+    poll_count: dict[int, int] = dict.fromkeys(range(1, 9), 0)
 
     async def async_get_bypass_supply_temperature_target(
         zone_id: int,
@@ -267,9 +267,8 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
     assert hass.states.get("number.living_bypass_target_1") is not None
     assert hass.states.get("number.living_bypass_target_2") is None
     assert poll_count[2] == poll_count_after_setup[2]
-    assert poll_count[1] > poll_count_after_setup[1]
-    assert poll_count[3] > poll_count_after_setup[3]
-    assert poll_count[4] > poll_count_after_setup[4]
+    for zone_id in (1, 3, 4, 5, 6, 7, 8):
+        assert poll_count[zone_id] > poll_count_after_setup[zone_id]
 
 
 async def test_missing_bypass_temperature_targets_are_retried(

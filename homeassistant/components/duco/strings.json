@@ -60,6 +60,18 @@
       },
       "bypass_supply_target_temperature_zone_4": {
         "name": "Bypass target 4"
+      },
+      "bypass_supply_target_temperature_zone_5": {
+        "name": "Bypass target 5"
+      },
+      "bypass_supply_target_temperature_zone_6": {
+        "name": "Bypass target 6"
+      },
+      "bypass_supply_target_temperature_zone_7": {
+        "name": "Bypass target 7"
+      },
+      "bypass_supply_target_temperature_zone_8": {
+        "name": "Bypass target 8"
       }
     },
     "select": {
