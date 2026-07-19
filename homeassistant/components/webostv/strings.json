@@ -40,6 +40,13 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "screen": {
+        "name": "Screen"
+      }
+    }
+  },
   "device_automation": {
     "trigger_type": {
       "webostv.turn_on": "Device is requested to turn on"

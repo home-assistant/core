@@ -1,6 +1,7 @@
 """Common fixtures and objects for the LG webOS TV integration tests."""
 
 from collections.abc import Generator
+import inspect
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiowebostv import WebOsTvInfo, WebOsTvState
@@ -64,7 +65,10 @@ def client_fixture():
         client.is_connected = Mock(return_value=True)
 
         async def mock_state_update_callback():
-            await client.register_state_update_callback.call_args[0][0](client.tv_state)
+            for call in client.register_state_update_callback.call_args_list:
+                res = call[0][0](client.tv_state)
+                if inspect.isawaitable(res):
+                    await res
 
         client.mock_state_update = AsyncMock(side_effect=mock_state_update_callback)
 

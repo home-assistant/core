@@ -8,7 +8,7 @@ from aiowebostv import WebOsTvCommandError
 from homeassistant.const import Platform
 
 DOMAIN = "webostv"
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 DEFAULT_NAME = "LG webOS TV"
 
 ATTR_PAYLOAD = "payload"
