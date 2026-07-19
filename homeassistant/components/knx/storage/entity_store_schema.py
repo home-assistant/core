@@ -3,7 +3,6 @@
 from enum import StrEnum, unique
 
 import probatio as prb
-import voluptuous as vol
 from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
 
@@ -23,7 +22,6 @@ from homeassistant.components.text import TextMode
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
-    CONF_ENTITY_ID,
     CONF_MODE,
     CONF_NAME,
     CONF_PLATFORM,
@@ -32,7 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import selector
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
-from homeassistant.helpers.typing import VolDictType
 
 from ..const import (
     CONF_CONTEXT_TIMEOUT,
@@ -126,6 +123,8 @@ from .knx_selector import (
 )
 from .vol_compat import VolValidator
 
+BOOLEAN_SELECTOR = VolValidator(selector.BooleanSelector())
+
 BASE_ENTITY_SCHEMA = prb.All(
     {
         prb.Optional(CONF_NAME, default=None): prb.Maybe(str),
@@ -157,11 +156,9 @@ BINARY_SENSOR_KNX_SCHEMA = prb.Schema(
         prb.Required(CONF_GA_SENSOR): GASelector(
             write=False, state_required=True, valid_dpt="1"
         ),
-        prb.Optional(CONF_INVERT): VolValidator(selector.BooleanSelector()),
+        prb.Optional(CONF_INVERT): BOOLEAN_SELECTOR,
         "section_advanced_options": KNXSectionFlat(collapsible=True),
-        prb.Optional(CONF_IGNORE_INTERNAL_STATE): VolValidator(
-            selector.BooleanSelector()
-        ),
+        prb.Optional(CONF_IGNORE_INTERNAL_STATE): BOOLEAN_SELECTOR,
         prb.Optional(CONF_CONTEXT_TIMEOUT): VolValidator(
             selector.NumberSelector(
                 selector.NumberSelectorConfig(
@@ -235,9 +232,7 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
     prb.Schema(
         {
             prb.Optional(CONF_GA_UP_DOWN): GASelector(state=False, valid_dpt="1"),
-            prb.Optional(CoverConf.INVERT_UPDOWN): VolValidator(
-                selector.BooleanSelector()
-            ),
+            prb.Optional(CoverConf.INVERT_UPDOWN): BOOLEAN_SELECTOR,
             prb.Optional(CONF_GA_STOP): GASelector(state=False, valid_dpt="1"),
             prb.Optional(CONF_GA_STEP): GASelector(state=False, valid_dpt="1"),
             "section_position_control": KNXSectionFlat(collapsible=True),
@@ -247,14 +242,10 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
             prb.Optional(CONF_GA_POSITION_STATE): GASelector(
                 write=False, valid_dpt="5.001"
             ),
-            prb.Optional(CoverConf.INVERT_POSITION): VolValidator(
-                selector.BooleanSelector()
-            ),
+            prb.Optional(CoverConf.INVERT_POSITION): BOOLEAN_SELECTOR,
             "section_tilt_control": KNXSectionFlat(collapsible=True),
             prb.Optional(CONF_GA_ANGLE): GASelector(valid_dpt="5.001"),
-            prb.Optional(CoverConf.INVERT_ANGLE): VolValidator(
-                selector.BooleanSelector()
-            ),
+            prb.Optional(CoverConf.INVERT_ANGLE): BOOLEAN_SELECTOR,
             "section_travel_time": KNXSectionFlat(),
             prb.Required(CoverConf.TRAVELLING_TIME_UP, default=25): VolValidator(
                 selector.NumberSelector(
@@ -301,9 +292,7 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
 DATE_KNX_SCHEMA = prb.Schema(
     {
         prb.Required(CONF_GA_DATE): GASelector(write_required=True, valid_dpt="11.001"),
-        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
-            selector.BooleanSelector()
-        ),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): BOOLEAN_SELECTOR,
         prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
 )
@@ -313,9 +302,7 @@ DATETIME_KNX_SCHEMA = prb.Schema(
         prb.Required(CONF_GA_DATETIME): GASelector(
             write_required=True, valid_dpt="19.001"
         ),
-        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
-            selector.BooleanSelector()
-        ),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): BOOLEAN_SELECTOR,
         prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
 )
@@ -521,9 +508,7 @@ NUMBER_KNX_SCHEMA = AllSerializeFirst(
             prb.Required(CONF_GA_SENSOR): GASelector(
                 write_required=True, dpt=["numeric"]
             ),
-            prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
-                selector.BooleanSelector()
-            ),
+            prb.Optional(CONF_RESPOND_TO_READ, default=False): BOOLEAN_SELECTOR,
             "section_advanced_options": KNXSectionFlat(collapsible=True),
             prb.Required(CONF_MODE, default=NumberMode.AUTO): VolValidator(
                 selector.SelectSelector(
@@ -598,12 +583,8 @@ SCENE_KNX_SCHEMA = prb.Schema(
 SWITCH_KNX_SCHEMA = prb.Schema(
     {
         prb.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
-        prb.Optional(CONF_INVERT, default=False): VolValidator(
-            selector.BooleanSelector()
-        ),
-        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
-            selector.BooleanSelector()
-        ),
+        prb.Optional(CONF_INVERT, default=False): BOOLEAN_SELECTOR,
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): BOOLEAN_SELECTOR,
         prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
 )
@@ -619,9 +600,7 @@ TEXT_KNX_SCHEMA = prb.Schema(
                 ),
             )
         ),
-        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
-            selector.BooleanSelector()
-        ),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): BOOLEAN_SELECTOR,
         prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
 )
@@ -629,9 +608,7 @@ TEXT_KNX_SCHEMA = prb.Schema(
 TIME_KNX_SCHEMA = prb.Schema(
     {
         prb.Required(CONF_GA_TIME): GASelector(write_required=True, valid_dpt="10.001"),
-        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
-            selector.BooleanSelector()
-        ),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): BOOLEAN_SELECTOR,
         prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
 )
@@ -740,7 +717,7 @@ CLIMATE_KNX_SCHEMA = prb.Schema(
         prb.Optional(CONF_GA_VALVE): GASelector(write=False, valid_dpt="5.001"),
         "section_operation_mode": KNXSectionFlat(collapsible=True),
         prb.Optional(CONF_GA_OPERATION_MODE): GASelector(valid_dpt="20.102"),
-        prb.Optional(CONF_IGNORE_AUTO_MODE): VolValidator(selector.BooleanSelector()),
+        prb.Optional(CONF_IGNORE_AUTO_MODE): BOOLEAN_SELECTOR,
         "section_operation_mode_individual": KNXSectionFlat(collapsible=True),
         prb.Optional(CONF_GA_OP_MODE_COMFORT): GASelector(state=False, valid_dpt="1"),
         prb.Optional(CONF_GA_OP_MODE_ECO): GASelector(state=False, valid_dpt="1"),
@@ -752,9 +729,7 @@ CLIMATE_KNX_SCHEMA = prb.Schema(
         prb.Optional(CONF_GA_HEAT_COOL): GASelector(valid_dpt="1.100"),
         "section_on_off": KNXSectionFlat(collapsible=True),
         prb.Optional(CONF_GA_ON_OFF): GASelector(valid_dpt="1"),
-        prb.Optional(ClimateConf.ON_OFF_INVERT): VolValidator(
-            selector.BooleanSelector()
-        ),
+        prb.Optional(ClimateConf.ON_OFF_INVERT): BOOLEAN_SELECTOR,
         "section_controller_mode": KNXSectionFlat(collapsible=True),
         prb.Optional(CONF_GA_CONTROLLER_MODE): GASelector(valid_dpt="20.105"),
         prb.Optional(CONF_GA_CONTROLLER_STATUS): GASelector(write=False),
@@ -846,9 +821,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     )
                 )
             ),
-            prb.Optional(CONF_ALWAYS_CALLBACK): VolValidator(
-                selector.BooleanSelector()
-            ),
+            prb.Optional(CONF_ALWAYS_CALLBACK): BOOLEAN_SELECTOR,
             prb.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
                 allow_false=True
             ),
@@ -874,7 +847,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.TIME: TIME_KNX_SCHEMA,
 }
 
-ENTITY_STORE_DATA_SCHEMA: prb.All = prb.All(
+ENTITY_STORE_DATA_SCHEMA = prb.All(
     prb.Schema(
         {
             prb.Required(CONF_PLATFORM): prb.All(
@@ -901,13 +874,3 @@ ENTITY_STORE_DATA_SCHEMA: prb.All = prb.All(
         },
     ),
 )
-
-CREATE_ENTITY_BASE_SCHEMA: VolDictType = {
-    vol.Required(CONF_PLATFORM): str,
-    vol.Required(CONF_DATA): dict,  # validated by ENTITY_STORE_DATA_SCHEMA for platform
-}
-
-UPDATE_ENTITY_BASE_SCHEMA = {
-    vol.Required(CONF_ENTITY_ID): str,
-    **CREATE_ENTITY_BASE_SCHEMA,
-}

@@ -119,10 +119,9 @@ class GroupSelectSchema:
     show proper invalid markers for sub-schema items in the UI.
     """
 
-    def __init__(self, *validators: Any, msg: str | None = None) -> None:
+    def __init__(self, *validators: Any) -> None:
         """Initialize the group select schema."""
         self.validators = list(validators)
-        self.msg = msg
 
     def __call__(self, value: Any) -> Any:
         """Validate the passed data against any of the options."""
@@ -139,7 +138,7 @@ class GroupSelectSchema:
                 (err for err in errors if not isinstance(err, prb.ExtraKeysInvalid)),
                 errors[0],
             )
-        raise prb.AnyInvalid(self.msg or "no valid value found")
+        raise prb.AnyInvalid("no valid value found")
 
 
 class GroupSelect(KNXSelectorBase):
