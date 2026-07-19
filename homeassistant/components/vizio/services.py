@@ -10,15 +10,21 @@ from homeassistant.helpers.typing import VolDictType
 from .const import DOMAIN
 
 SERVICE_UPDATE_SETTING = "update_setting"
+SERVICE_SEND_TEXT = "send_text"
 
 ATTR_SETTING_TYPE = "setting_type"
 ATTR_SETTING_NAME = "setting_name"
 ATTR_NEW_VALUE = "new_value"
+ATTR_TEXT = "text"
 
 UPDATE_SETTING_SCHEMA: VolDictType = {
     vol.Required(ATTR_SETTING_TYPE): vol.All(cv.string, vol.Lower, cv.slugify),
     vol.Required(ATTR_SETTING_NAME): vol.All(cv.string, vol.Lower, cv.slugify),
     vol.Required(ATTR_NEW_VALUE): vol.Any(vol.Coerce(int), cv.string),
+}
+
+SEND_TEXT_SCHEMA: VolDictType = {
+    vol.Required(ATTR_TEXT): cv.string,
 }
 
 
@@ -33,4 +39,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=UPDATE_SETTING_SCHEMA,
         func="async_update_setting",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SEND_TEXT,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema=SEND_TEXT_SCHEMA,
+        func="async_send_text",
     )
