@@ -520,6 +520,87 @@ async def test_notify_ws_not_confirming(
 
 
 @pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_ws_confirm_resets_timeout_count(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a timely confirm between two timeouts keeps the channel local."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # A timely confirm resets the consecutive timeout count
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "mock-webhook_id",
+            "confirm_id": msg_result["event"]["hass_confirm_id"],
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"]
+
+    # The next timeout is an isolated one again and must not open the breaker
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 3"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 3"
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # Local delivery continues
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 4"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 4"
+    assert len(aioclient_mock.mock_calls) == 2
+
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
 async def test_notify_ws_degraded_channel(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

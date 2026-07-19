@@ -3,10 +3,13 @@
 import asyncio
 from collections.abc import Callable
 from datetime import datetime
+import logging
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.uuid import random_uuid_hex
+
+_LOGGER = logging.getLogger(__name__)
 
 PUSH_CONFIRM_TIMEOUT = 10  # seconds
 
@@ -99,6 +102,8 @@ class PushChannel:
 
         self.pending_confirms.pop(confirm_id)["unsub_scheduled_push_failed"]()
         # A timely confirm proves the channel delivers
+        if self._degraded:
+            _LOGGER.debug("Push channel %s restored to local delivery", self.webhook_id)
         self._consecutive_timeouts = 0
         self._async_clear_degraded()
         return True
@@ -106,6 +111,13 @@ class PushChannel:
     @callback
     def _async_mark_degraded(self) -> None:
         """Route cloud-capable sends via cloud until a probe is confirmed."""
+        if not self._degraded:
+            _LOGGER.debug(
+                "Push channel %s degraded after %d consecutive confirm timeouts;"
+                " routing cloud-capable sends via cloud",
+                self.webhook_id,
+                self._consecutive_timeouts,
+            )
         self._degraded = True
         self._probe_permit = False
         if self._unsub_degraded_probe is None:
@@ -116,6 +128,9 @@ class PushChannel:
     @callback
     def _async_allow_probe(self, _now: datetime) -> None:
         """Let a single next send probe local delivery again."""
+        _LOGGER.debug(
+            "Allowing a local delivery probe for push channel %s", self.webhook_id
+        )
         self._unsub_degraded_probe = None
         self._probe_permit = True
 
