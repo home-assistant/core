@@ -5,7 +5,6 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
@@ -24,8 +23,8 @@ from .const import (
 
 SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
-        vol.Optional(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
-        vol.Optional(ATTR_MESSAGE, default=""): cv.string,
+        vol.Optional(ATTR_TITLE): cv.string,
+        vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_HTML): cv.string,
         vol.Optional(ATTR_ATTACHMENTS): vol.All(
             cv.ensure_list,
