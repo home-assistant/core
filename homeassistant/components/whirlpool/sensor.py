@@ -211,9 +211,6 @@ WASHER_DRYER_TIME_SENSORS: tuple[SensorEntityDescription] = (
     ),
 )
 
-# The primary kitchen timer; the library supports multiple timers per oven.
-OVEN_KITCHEN_TIMER_ID = 1
-
 OVEN_KITCHEN_TIMER_SENSORS: tuple[SensorEntityDescription] = (
     SensorEntityDescription(
         key="kitchen_timer_end_time",
