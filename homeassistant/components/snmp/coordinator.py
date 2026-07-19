@@ -201,7 +201,9 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
 
                         # Normalize: remove non-hex chars, lowercase, and re-format
                         mac = "".join(c for c in mac if c.isalnum()).lower()
-                        if len(mac) != 12:
+                        if len(mac) != 12 or not all(
+                            c in "0123456789abcdef" for c in mac
+                        ):
                             continue
                         mac = ":".join([mac[i : i + 2] for i in range(0, 12, 2)])
                     except AttributeError, UnicodeDecodeError:

@@ -449,11 +449,17 @@ async def test_device_tracker_update_empty_data(
     await hass.async_block_till_done()
 
     # Trigger update with empty data
-    mock_walk.side_effect = lambda *args, **kwargs: (yield from [])
+    async def mock_empty_walk(*args, **kwargs):
+        return
+        yield  # pylint: disable=unreachable
+
+    mock_walk.side_effect = mock_empty_walk
 
     freezer.tick(timedelta(seconds=20))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert entry.runtime_data.last_update_success
 
     # Entity should still exist in the registry but no new entities created
 
