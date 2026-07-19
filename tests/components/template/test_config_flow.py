@@ -321,7 +321,7 @@ async def test_config_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    availability = {"advanced_options": {"availability": "{{ True }}"}}
+    availability = {"additional_options": {"availability": "{{ True }}"}}
 
     with patch(
         "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
@@ -1103,7 +1103,7 @@ async def test_config_flow_preview(
     assert result["preview"] == "template"
 
     availability = {
-        "advanced_options": {
+        "additional_options": {
             "availability": "{{ is_state('binary_sensor.available', 'on') }}"
         }
     }
@@ -1131,6 +1131,7 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1155,6 +1156,7 @@ async def test_config_flow_preview(
             "attributes": {"friendly_name": "My template"}
             | extra_attributes[0]
             | extra_attributes[1],
+            "domain": template_type,
             "listeners": {
                 "all": False,
                 "domains": [],
@@ -1174,6 +1176,7 @@ async def test_config_flow_preview(
         "attributes": {"friendly_name": "My template"}
         | extra_attributes[0]
         | extra_attributes[1],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1617,6 +1620,7 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes,
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],

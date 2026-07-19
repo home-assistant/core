@@ -1,5 +1,7 @@
 """Support for Mopeka sensors."""
 
+from typing import override
+
 from mopeka_iot_ble import SensorUpdate
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -123,7 +125,9 @@ async def async_setup_entry(
             MopekaBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class MopekaBluetoothSensorEntity(
@@ -135,6 +139,7 @@ class MopekaBluetoothSensorEntity(
     """Representation of a Mopeka sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

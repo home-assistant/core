@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from google_air_quality_api.model import AirQualityCurrentConditionsData, Index
 
@@ -14,11 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -125,7 +121,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         native_unit_of_measurement_fn=lambda x: x.pollutants.co.concentration.units,
         exists_fn=lambda x: "co" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.co.concentration.value,
-        suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        suggested_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     AirQualitySensorEntityDescription(
         key="nh3",
@@ -204,7 +200,6 @@ async def async_setup_entry(
 
     for subentry_id, subentry in entry.subentries.items():
         coordinator = coordinators[subentry_id]
-        _LOGGER.debug("subentry.data: %s", subentry.data)
         async_add_entities(
             (
                 AirQualitySensorEntity(coordinator, description, subentry_id, subentry)
@@ -252,16 +247,19 @@ class AirQualitySensorEntity(
             )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def options(self) -> list[str] | None:
         """Return the option of the sensor."""
         return self.entity_description.options_fn(self.coordinator.data)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement of the sensor."""
         return self.entity_description.native_unit_of_measurement_fn(

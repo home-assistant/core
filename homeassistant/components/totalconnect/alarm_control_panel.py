@@ -1,5 +1,7 @@
 """Interfaces with TotalConnect alarm control panels."""
 
+from typing import override
+
 from total_connect_client import ArmingHelper
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 from total_connect_client.location import TotalConnectLocation
@@ -93,6 +95,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             self._attr_code_format = CodeFormat.NUMBER
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         state: AlarmControlPanelState | None = None
@@ -119,6 +122,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
 
         return state
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._check_usercode(code)
@@ -142,6 +146,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         """Disarm synchronous."""
         ArmingHelper(self._partition).disarm()
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._check_usercode(code)
@@ -165,6 +170,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         """Arm home synchronous."""
         ArmingHelper(self._partition).arm_stay()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._check_usercode(code)
@@ -188,6 +194,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         """Arm away synchronous."""
         ArmingHelper(self._partition).arm_away()
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self._check_usercode(code)

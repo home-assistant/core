@@ -57,6 +57,9 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.EVO_HOME_CONTROLLER: EvoHomeController,
     UIWidget.SOMFY_HEATING_TEMPERATURE_INTERFACE: SomfyHeatingTemperatureInterface,
     UIWidget.SOMFY_THERMOSTAT: SomfyThermostat,
+    UIWidget.THERMOSTAT_HEATING_TEMPERATURE_INTERFACE: (
+        ValveHeatingTemperatureInterface
+    ),
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: ValveHeatingTemperatureInterface,
     UIWidget.ATLANTIC_PASS_APC_HEAT_PUMP: AtlanticPassAPCHeatPumpMainComponent,
 }
@@ -115,12 +118,13 @@ async def async_setup_entry(
     # Match devices based on the widget and protocol.
     # #ie Hitachi Air To Air Heat Pumps
     entities_based_on_widget_and_protocol: list[Entity] = [
-        WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][device.protocol](
-            device.device_url, data.coordinator
-        )
+        WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][
+            device.identifier.protocol
+        ](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY
-        and device.protocol in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
+        and device.identifier.protocol
+        in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
     ]
 
     async_add_entities(

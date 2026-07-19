@@ -164,6 +164,26 @@ async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> N
     )
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow removing a Velbus device and its sub-devices.
+
+    Sub-devices are removed along with their parent. If the device is still
+    on the bus, it may be recreated when the integration is reloaded or
+    started again.
+    """
+    if config_entry.entry_id not in device_entry.config_entries:
+        return False
+    dev_reg = dr.async_get(hass)
+    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
+        if sub_device.via_device_id == device_entry.id:
+            dev_reg.async_remove_device(sub_device.id)
+    return True
+
+
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VelbusConfigEntry
 ) -> bool:

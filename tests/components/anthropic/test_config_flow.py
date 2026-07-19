@@ -27,12 +27,13 @@ from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -45,7 +46,7 @@ from homeassistant.components.anthropic.const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -274,9 +275,9 @@ async def test_subentry_options_thinking_budget_more_than_max(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
         {"chat_model": "claude-sonnet-4-5"},
@@ -329,9 +330,9 @@ async def test_subentry_web_search_user_location(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
         {
@@ -394,6 +395,8 @@ async def test_subentry_web_search_user_location(
         "timezone": "America/Los_Angeles",
         "tool_search": False,
         "user_location": True,
+        "web_fetch": False,
+        "web_fetch_max_uses": 5,
         "web_search": True,
         "web_search_max_uses": 5,
         "code_execution": False,
@@ -421,7 +424,7 @@ async def test_model_list(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
     assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
@@ -444,9 +447,9 @@ async def test_invalid_model(
         },
     )
     assert options["type"] is FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert options["step_id"] == "additional"
 
-    # Configure advanced step but with api error
+    # Configure additional step but with api error
     with patch(
         "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.retrieve",
         new_callable=AsyncMock,
@@ -557,6 +560,8 @@ async def test_invalid_model(
                 CONF_PROMPT: "bla",
                 CONF_PROMPT_CACHING: "prompt",
                 CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: True,
+                CONF_WEB_FETCH_MAX_USES: 6,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_MAX_USES: 4,
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -576,6 +581,8 @@ async def test_invalid_model(
                     CONF_PROMPT_CACHING: "off",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 7,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -589,6 +596,8 @@ async def test_invalid_model(
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 7,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -603,6 +612,8 @@ async def test_invalid_model(
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT_CACHING: "off",
                 CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -619,6 +630,8 @@ async def test_invalid_model(
                     CONF_PROMPT_CACHING: "automatic",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 8,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -635,6 +648,8 @@ async def test_invalid_model(
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
                 CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 8,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -644,10 +659,12 @@ async def test_invalid_model(
         (  # Model with thinking effort options
             {
                 CONF_RECOMMENDED: False,
-                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_CHAT_MODEL: "claude-fable-5",
                 CONF_PROMPT: "bla",
                 CONF_PROMPT_CACHING: "automatic",
                 CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -665,6 +682,8 @@ async def test_invalid_model(
                     CONF_PROMPT_CACHING: "prompt",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 9,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -681,6 +700,8 @@ async def test_invalid_model(
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_EFFORT: "xhigh",
                 CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 9,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -714,6 +735,8 @@ async def test_invalid_model(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_CODE_EXECUTION: False,
             },
         ),
@@ -726,6 +749,8 @@ async def test_invalid_model(
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -852,12 +877,12 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
-async def test_creating_ai_task_subentry_advanced(
+async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
 ) -> None:
-    """Test creating an AI task subentry with advanced settings."""
+    """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
@@ -866,7 +891,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
-    # Go to advanced settings
+    # Go to additional settings
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -876,9 +901,9 @@ async def test_creating_ai_task_subentry_advanced(
     )
 
     assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "advanced"
+    assert result2.get("step_id") == "additional"
 
-    # Configure advanced settings
+    # Configure additional settings
     result3 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -905,6 +930,8 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_CHAT_MODEL: "claude-sonnet-4-5",
         CONF_MAX_TOKENS: 1200,
         CONF_TOOL_SEARCH: False,
+        CONF_WEB_FETCH: False,
+        CONF_WEB_FETCH_MAX_USES: 5,
         CONF_WEB_SEARCH: False,
         CONF_WEB_SEARCH_MAX_USES: 5,
         CONF_WEB_SEARCH_USER_LOCATION: False,

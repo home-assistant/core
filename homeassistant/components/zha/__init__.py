@@ -5,9 +5,11 @@ import logging
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
+from yarl import URL
 from zha.application.const import BAUD_RATES, RadioType
 from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
+from zha.quirks import DEVICE_REGISTRY
 from zha.zigbee.device import get_device_automation_triggers
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
@@ -43,6 +45,7 @@ from .const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DOMAIN,
+    LEGACY_ZEROCONF_PORT,
 )
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
@@ -156,11 +159,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     zha_gateway = await Gateway.async_from_config(zha_lib_data)
 
-    # Load and cache device trigger information early
+    # Load and cache device trigger information early. Quirks were registered by
+    # `Gateway.async_from_config` above, so pass the resolver to quirk devices
+    # and surface quirk-defined triggers (e.g. remote button presses).
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    async with radio_mgr.create_zigpy_app(connect=False) as app:
+    async with radio_mgr.create_zigpy_app(
+        connect=False, device_resolver=DEVICE_REGISTRY.resolve
+    ) as app:
         for dev in app.devices.values():
             dev_entry = device_registry.async_get_device(
                 identifiers={(DOMAIN, str(dev.ieee))},
@@ -301,7 +308,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
     if config_entry.version == 1:
         data = {
@@ -361,5 +372,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 version=5,
             )
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    if config_entry.version == 5 and config_entry.minor_version < 2:
+        data = {**config_entry.data, CONF_DEVICE: {**config_entry.data[CONF_DEVICE]}}
+        device_path = data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+        if device_path.startswith(("socket://", "tcp://")):
+            url = URL(device_path)
+            if url.explicit_port is None:
+                data[CONF_DEVICE][CONF_DEVICE_PATH] = str(
+                    url.with_port(LEGACY_ZEROCONF_PORT)
+                )
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=data, version=5, minor_version=2
+        )
+
+    _LOGGER.info(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
     return True

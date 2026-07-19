@@ -1,5 +1,7 @@
 """Checking binary status values from your ROMY."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -66,6 +68,7 @@ class RomyBinarySensor(RomyEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value of the sensor."""
         return bool(self.romy.binary_sensors[self.entity_description.key])

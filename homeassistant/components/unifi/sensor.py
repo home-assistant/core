@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -50,6 +50,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
+from .device_tracker import async_client_allowed_fn
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -106,11 +107,16 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 
 @callback
 def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if client is wired and allowed."""
+    """Check if client is wired, tracked and reports a link speed.
+
+    Gate on the tracking options so the sensor (and its client device) is only
+    created for clients the user actually tracks, instead of every wired client
+    the controller has ever seen.
+    """
     client = hub.api.clients[obj_id]
     if not client.is_wired or client.wired_rate_mbps <= 0:
         return False
-    return True
+    return async_client_allowed_fn(hub, obj_id)
 
 
 @callback
@@ -719,6 +725,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             self.async_write_ha_state()
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
@@ -741,6 +748,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                     dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -755,6 +763,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 )
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()

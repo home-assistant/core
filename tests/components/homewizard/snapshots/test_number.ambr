@@ -2,12 +2,12 @@
 # name: test_number_entities[HWE-SKT-11]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Status light brightness',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Status light brightness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.device_status_light_brightness',
@@ -24,10 +24,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -62,8 +62,8 @@
 # name: test_number_entities[HWE-SKT-11].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -88,8 +88,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -97,12 +96,12 @@
 # name: test_number_entities[HWE-SKT-21]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Status light brightness',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Status light brightness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.device_status_light_brightness',
@@ -119,10 +118,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -157,8 +156,8 @@
 # name: test_number_entities[HWE-SKT-21].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -183,8 +182,7 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
   })

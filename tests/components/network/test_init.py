@@ -608,7 +608,7 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=[],
     ):
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
         with pytest.raises(HomeAssistantError):
             await network.async_get_source_ip(hass, MDNS_TARGET_IP)
@@ -770,7 +770,7 @@ async def test_websocket_network_url(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the network/url websocket command."""
-    assert await async_setup_component(hass, "network", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
 
@@ -812,7 +812,7 @@ async def test_repair_docker_host_network_not_docker(
 ) -> None:
     """Test repair is not created when not in Docker."""
     with patch("homeassistant.util.package.is_docker_env", return_value=False):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
 
@@ -827,7 +827,7 @@ async def test_repair_docker_host_network_with_host_networking(
         patch("homeassistant.util.package.is_docker_env", return_value=True),
         patch("homeassistant.components.network.Path.exists", return_value=True),
     ):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
 
@@ -844,7 +844,7 @@ async def test_repair_docker_host_network_without_host_networking(
         patch("homeassistant.util.package.is_docker_env", return_value=True),
         patch("homeassistant.components.network.Path.exists", return_value=False),
     ):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
     assert issue == snapshot

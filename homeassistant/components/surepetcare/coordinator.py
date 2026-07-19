@@ -2,13 +2,14 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from surepy import Surepy, SurepyEntity
 from surepy.enums import EntityType, Location, LockState
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import ATTR_LOCATION, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,7 +17,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ATTR_FLAP_ID,
-    ATTR_LOCATION,
     ATTR_LOCK_STATE,
     ATTR_PET_NAME,
     DOMAIN,
@@ -58,6 +58,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, SurepyEntity]:
         """Get the latest data from Sure Petcare."""
         try:

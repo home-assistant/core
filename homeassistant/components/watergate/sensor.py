@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     HomeAssistant,
@@ -208,6 +209,7 @@ class SonicSensor(WatergateEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -216,6 +218,7 @@ class SonicSensor(WatergateEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | int | float | datetime | PowerSupplyMode | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

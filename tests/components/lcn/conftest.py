@@ -40,7 +40,7 @@ class MockDeviceConnection(DeviceConnection):
     request_status_motor_position = AsyncMock()
     request_status_binary_sensors = AsyncMock()
     request_status_variable = AsyncMock()
-    request_status_led_and_logic_ops = AsyncMock()
+    request_status_leds_and_logic_ops = AsyncMock()
     request_status_locked_keys = AsyncMock()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
