@@ -11,6 +11,13 @@
     },
     "flow_title": "{mac} ({ip})",
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "system_id": "[%key:component::somfy_mylink::config::step::user::data::system_id%]"
+        },
+        "description": "The System ID for the Somfy MyLink hub at {host} is no longer valid. Enter the new System ID.",
+        "title": "Reauthenticate Somfy MyLink"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -21,13 +28,6 @@
           "host": "The hostname or IP address of your Somfy MyLink hub."
         },
         "description": "The System ID can be obtained in the MyLink app under Integration by selecting any non-Cloud service."
-      },
-      "reauth_confirm": {
-        "data": {
-          "system_id": "[%key:component::somfy_mylink::config::step::user::data::system_id%]"
-        },
-        "description": "The System ID for the Somfy MyLink hub at {host} is no longer valid. Enter the new System ID.",
-        "title": "Reauthenticate Somfy MyLink"
       }
     }
   },
