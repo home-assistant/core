@@ -6,6 +6,7 @@ from pysomfymylink import (
     Shade,
     SomfyMyLink,
     SomfyMyLinkApiError,
+    SomfyMyLinkAuthError,
     SomfyMyLinkConnectionError,
 )
 
@@ -37,13 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SomfyMyLinkConfigEntry) 
 
     try:
         shades = await somfy_mylink.status_info()
-    except SomfyMyLinkConnectionError as ex:
-        raise ConfigEntryNotReady(
-            "Unable to connect to the Somfy MyLink device, please check your settings"
-        ) from ex
-    except SomfyMyLinkApiError as ex:
+    except SomfyMyLinkAuthError as ex:
         raise ConfigEntryAuthFailed(
             f"The Somfy MyLink device rejected the System ID ({ex.message})"
+        ) from ex
+    except (SomfyMyLinkConnectionError, SomfyMyLinkApiError) as ex:
+        raise ConfigEntryNotReady(
+            "Unable to reach the Somfy MyLink device, please check your settings"
         ) from ex
 
     entry.runtime_data = SomfyMyLinkRuntimeData(

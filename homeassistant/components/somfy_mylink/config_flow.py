@@ -5,7 +5,12 @@ from copy import deepcopy
 import logging
 from typing import Any, override
 
-from pysomfymylink import SomfyMyLink, SomfyMyLinkApiError, SomfyMyLinkConnectionError
+from pysomfymylink import (
+    SomfyMyLink,
+    SomfyMyLinkApiError,
+    SomfyMyLinkAuthError,
+    SomfyMyLinkConnectionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -45,11 +50,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         await somfy_mylink.status_info()
-    except SomfyMyLinkConnectionError as ex:
-        raise CannotConnect from ex
-    except SomfyMyLinkApiError as ex:
+    except SomfyMyLinkAuthError as ex:
         _LOGGER.debug("Auth error: %s", ex)
         raise InvalidAuth from ex
+    except (SomfyMyLinkConnectionError, SomfyMyLinkApiError) as ex:
+        raise CannotConnect from ex
 
     return {"title": f"MyLink {data[CONF_HOST]}"}
 

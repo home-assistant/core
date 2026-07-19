@@ -13,5 +13,5 @@
   "integration_type": "hub",
   "iot_class": "assumed_state",
   "loggers": ["pysomfymylink"],
-  "requirements": ["pysomfymylink==1.0.0"]
+  "requirements": ["pysomfymylink==1.1.0"]
 }

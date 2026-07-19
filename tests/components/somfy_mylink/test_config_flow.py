@@ -2,7 +2,11 @@
 
 from unittest.mock import MagicMock
 
-from pysomfymylink import SomfyMyLinkApiError, SomfyMyLinkConnectionError
+from pysomfymylink import (
+    SomfyMyLinkApiError,
+    SomfyMyLinkAuthError,
+    SomfyMyLinkConnectionError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -84,7 +88,7 @@ async def test_form_invalid_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_somfy_mylink.status_info.side_effect = SomfyMyLinkApiError(
+    mock_somfy_mylink.status_info.side_effect = SomfyMyLinkAuthError(
         "Invalid auth", code=-32652
     )
     result2 = await hass.config_entries.flow.async_configure(
@@ -93,6 +97,25 @@ async def test_form_invalid_auth(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_api_error_is_cannot_connect(
+    hass: HomeAssistant, mock_somfy_mylink: MagicMock
+) -> None:
+    """Test a non-auth API error is treated as a connection problem."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_somfy_mylink.status_info.side_effect = SomfyMyLinkApiError(
+        "Method not found", code=-32601
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_empty_result_creates_entry(
@@ -304,7 +327,9 @@ async def test_reauth_flow_invalid_auth(
 
     result = await config_entry.start_reauth_flow(hass)
 
-    mock_somfy_mylink.status_info.side_effect = SomfyMyLinkApiError("bad id", code=4)
+    mock_somfy_mylink.status_info.side_effect = SomfyMyLinkAuthError(
+        "Invalid auth", code=-32652
+    )
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_SYSTEM_ID: "still-bad"}
     )

@@ -2605,7 +2605,7 @@ pysnooz==0.8.6
 pysoma==0.0.12
 
 # homeassistant.components.somfy_mylink
-pysomfymylink==1.0.0
+pysomfymylink==1.1.0
 
 # homeassistant.components.spc
 pyspcwebgw==0.7.0
