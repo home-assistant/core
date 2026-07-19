@@ -234,7 +234,7 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
 
     async def async_get_bypass_supply_temperature_target(
         zone_id: int,
-    ) -> BypassSupplyTemperatureTarget | None:
+    ) -> BypassSupplyTemperatureTarget:
         poll_count[zone_id] += 1
         if zone_id == 2:
             raise DucoUnsupportedCapabilityError(
@@ -242,7 +242,9 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
                 "/config",
                 '{"Code":3,"Result":"FAILED"}',
             )
-        return mock_bypass_supply_temperature_targets.get(zone_id)
+        if target := mock_bypass_supply_temperature_targets.get(zone_id):
+            return target
+        raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
 
     mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
         async_get_bypass_supply_temperature_target
@@ -270,23 +272,25 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
     assert poll_count[4] > poll_count_after_setup[4]
 
 
-async def test_omitted_bypass_temperature_targets_are_retried(
+async def test_missing_bypass_temperature_targets_are_retried(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test omitted bypass targets are retried and can later create entities."""
+    """Test missing bypass targets are retried and can later create entities."""
 
-    setup_complete = False
+    target_missing = True
 
     async def async_get_bypass_supply_temperature_target(
         zone_id: int,
-    ) -> BypassSupplyTemperatureTarget | None:
-        if zone_id == 1 and not setup_complete:
-            return None
-        return mock_bypass_supply_temperature_targets.get(zone_id)
+    ) -> BypassSupplyTemperatureTarget:
+        if zone_id == 1 and target_missing:
+            raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
+        if target := mock_bypass_supply_temperature_targets.get(zone_id):
+            return target
+        raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
 
     mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
         async_get_bypass_supply_temperature_target
@@ -299,7 +303,7 @@ async def test_omitted_bypass_temperature_targets_are_retried(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("number.living_bypass_target_1") is None
 
-    setup_complete = True
+    target_missing = False
     mock_duco_client.async_get_bypass_supply_temperature_target.reset_mock()
 
     freezer.tick(timedelta(days=1))
@@ -437,9 +441,21 @@ async def test_setup_entry_creates_http_client(
         (
             mock_client_class.return_value.async_get_ventilation_temperature_info.return_value
         ) = VentilationTemperatureInfo()
-        (
-            mock_client_class.return_value.async_get_bypass_supply_temperature_target.return_value
-        ) = None
+
+        async def async_get_bypass_supply_temperature_target(
+            zone_id: int,
+        ) -> BypassSupplyTemperatureTarget:
+            if zone_id == 1:
+                return BypassSupplyTemperatureTarget(
+                    zone_id=1,
+                    value=20.0,
+                    minimum=15.0,
+                    increment=0.1,
+                    maximum=25.0,
+                )
+            raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
+
+        mock_client_class.return_value.async_get_bypass_supply_temperature_target.side_effect = async_get_bypass_supply_temperature_target
         mock_client_class.return_value.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]

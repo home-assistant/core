@@ -14,7 +14,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -286,22 +286,24 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
     assert state.state == "68.9"
 
 
-async def test_bypass_supply_temperature_target_becomes_unavailable_when_omitted(
+async def test_bypass_supply_temperature_target_keeps_previous_value_on_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test an existing bypass target becomes unavailable when the zone omits it."""
+    """Test an existing bypass target keeps its value when refresh fails."""
     zone_1_available = True
 
     async def async_get_bypass_supply_temperature_target(
         zone_id: int,
-    ) -> BypassSupplyTemperatureTarget | None:
+    ) -> BypassSupplyTemperatureTarget:
         if zone_id == 1 and not zone_1_available:
-            return None
-        return mock_bypass_supply_temperature_targets.get(zone_id)
+            raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
+        if target := mock_bypass_supply_temperature_targets.get(zone_id):
+            return target
+        raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
 
     mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
         async_get_bypass_supply_temperature_target
@@ -320,8 +322,11 @@ async def test_bypass_supply_temperature_target_becomes_unavailable_when_omitted
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
-    assert state.state is STATE_UNAVAILABLE
+    assert state.state == "20.0"
 
+    mock_bypass_supply_temperature_targets[1] = replace(
+        mock_bypass_supply_temperature_targets[1], value=20.5
+    )
     zone_1_available = True
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
@@ -329,7 +334,7 @@ async def test_bypass_supply_temperature_target_becomes_unavailable_when_omitted
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
-    assert state.state == "20.0"
+    assert state.state == "20.5"
 
 
 @pytest.mark.usefixtures("init_integration")

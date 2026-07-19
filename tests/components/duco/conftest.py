@@ -15,6 +15,7 @@ from duco_connectivity import (
     ConfigNodeOverview,
     ConfigValueString,
     DiagComponent,
+    DucoError,
     KnownActionName,
     LanInfo,
     Node,
@@ -299,8 +300,10 @@ def mock_duco_client(
 
         async def async_get_bypass_supply_temperature_target(
             zone_id: int,
-        ) -> BypassSupplyTemperatureTarget | None:
-            return mock_bypass_supply_temperature_targets.get(zone_id)
+        ) -> BypassSupplyTemperatureTarget:
+            if target := mock_bypass_supply_temperature_targets.get(zone_id):
+                return target
+            raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
 
         client.async_get_bypass_supply_temperature_target.side_effect = (
             async_get_bypass_supply_temperature_target

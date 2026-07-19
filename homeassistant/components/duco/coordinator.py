@@ -230,10 +230,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                     exc_info=err,
                 )
             else:
-                if target is None:
-                    bypass_supply_temperature_targets.pop(zone_id, None)
-                else:
-                    bypass_supply_temperature_targets[zone_id] = target
+                bypass_supply_temperature_targets[zone_id] = target
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},
