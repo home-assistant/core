@@ -55,7 +55,7 @@ rules:
   stale-devices: todo
   docs-supported-functions: todo
   repair-issues: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   entity-category: done
   dynamic-devices: todo
   docs-troubleshooting: todo
