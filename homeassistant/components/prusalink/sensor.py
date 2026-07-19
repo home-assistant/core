@@ -11,6 +11,7 @@ from pyprusalink.types import (
     PrinterInfo,
     PrinterState,
     PrinterStatus,
+    PrintFileMetadata,
 )
 from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
 
@@ -24,7 +25,10 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     UnitOfLength,
+    UnitOfMass,
     UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -38,7 +42,7 @@ from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 @dataclass(frozen=True, kw_only=True)
 class PrusaLinkSensorEntityDescription[
-    T: (PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo, PrintFileMetadata, PrinterInfo)
 ](
     SensorEntityDescription,
     PrusaLinkEntityDescription,
@@ -46,6 +50,12 @@ class PrusaLinkSensorEntityDescription[
     """Describes PrusaLink sensor entity."""
 
     value_fn: Callable[[T], datetime | StateType]
+
+
+def _job_file_display_name(data: JobInfo) -> str:
+    """Return the display name for the active job file."""
+    job_file = cast(JobFilePrint, data["file"])
+    return job_file.get("display_name", job_file["name"])
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -175,11 +185,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.filename",
             translation_key="filename",
-            # `available_fn` guarantees `file` is not None at this point;
-            # the inner cast narrows the Optional for the index.
-            value_fn=lambda data: cast(
-                str, cast(JobFilePrint, data["file"])["display_name"]
-            ),
+            value_fn=_job_file_display_name,
             available_fn=lambda data: (
                 data.get("file") is not None
                 and data.get("state") != PrinterState.IDLE.value
@@ -214,6 +220,76 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 data.get("time_remaining") is not None
                 and data.get("state") != PrinterState.IDLE.value
             ),
+        ),
+    ),
+    "file_metadata": (
+        PrusaLinkSensorEntityDescription[PrintFileMetadata](
+            key="file.metadata.filament_used_g",
+            translation_key="filament_used_weight",
+            native_unit_of_measurement=UnitOfMass.GRAMS,
+            device_class=SensorDeviceClass.WEIGHT,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: data["filament_used_g"],
+            available_fn=lambda data: data.get("filament_used_g") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrintFileMetadata](
+            key="file.metadata.filament_used_mm",
+            translation_key="filament_used_length",
+            native_unit_of_measurement=UnitOfLength.METERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: data["filament_used_mm"] / 1000,
+            available_fn=lambda data: data.get("filament_used_mm") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrintFileMetadata](
+            key="file.metadata.filament_used_cm3",
+            translation_key="filament_used_volume",
+            native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+            device_class=SensorDeviceClass.VOLUME,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: data["filament_used_cm3"],
+            available_fn=lambda data: data.get("filament_used_cm3") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrintFileMetadata](
+            key="file.metadata.filament_cost",
+            translation_key="filament_cost",
+            value_fn=lambda data: data["filament_cost"],
+            available_fn=lambda data: data.get("filament_cost") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrintFileMetadata](
+            key="file.metadata.filament_type",
+            translation_key="file_filament_type",
+            value_fn=lambda data: data["filament_type"],
+            available_fn=lambda data: data.get("filament_type") is not None,
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrintFileMetadata](
+            key="file.metadata.estimated_printing_time_normal",
+            translation_key="estimated_printing_time_normal",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: data["estimated_printing_time_normal"],
+            available_fn=lambda data: (
+                data.get("estimated_printing_time_normal") is not None
+            ),
+            entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrintFileMetadata](
+            key="file.metadata.estimated_printing_time_silent",
+            translation_key="estimated_printing_time_silent",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: data["estimated_printing_time_silent"],
+            available_fn=lambda data: (
+                data.get("estimated_printing_time_silent") is not None
+            ),
+            entity_registry_enabled_default=False,
         ),
     ),
     "info": (
