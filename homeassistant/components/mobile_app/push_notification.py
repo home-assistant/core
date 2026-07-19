@@ -60,8 +60,12 @@ class PushChannel:
         return False
 
     @callback
-    def async_send_notification(self, data, fallback_send):
-        """Send a push notification."""
+    def async_send_notification(self, data, fallback_send: Callable | None):
+        """Send a push notification.
+
+        fallback_send is None for local-push-only registrations, which have no
+        cloud delivery to fall back to.
+        """
         if not self.support_confirm:
             self._send_message(data)
             return
@@ -80,6 +84,9 @@ class PushChannel:
                 self._consecutive_timeouts += 1
                 if self._consecutive_timeouts >= PUSH_DEGRADED_AFTER_TIMEOUTS:
                     self._async_mark_degraded()
+
+            if fallback_send is None:
+                return
 
             await fallback_send(data)
 

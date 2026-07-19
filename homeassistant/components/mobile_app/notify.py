@@ -112,7 +112,9 @@ class MobileAppNotifyEntity(NotifyEntity):
         ):
             push_channel.async_send_notification(
                 data,
-                partial(_send_message, self._session, self._config_entry),
+                partial(_send_message, self._session, self._config_entry)
+                if cloud_capable
+                else None,
             )
         # Sends notification via cloud push notification service
         elif cloud_capable:
@@ -231,7 +233,9 @@ class MobileAppNotificationService(BaseNotificationService):
             ):
                 push_channel.async_send_notification(
                     data,
-                    partial(self._async_send_remote_message_target, entry),
+                    partial(self._async_send_remote_message_target, entry)
+                    if cloud_capable
+                    else None,
                 )
                 async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
                 continue

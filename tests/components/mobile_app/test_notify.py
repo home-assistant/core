@@ -835,7 +835,8 @@ async def test_local_push_only_stays_local_when_degraded(
     assert msg_result["event"]["message"] == "Hello world 1"
     msg_result = await client.receive_json()
     assert msg_result["event"]["message"] == "Hello world 2"
-    assert len(mock_cloud_send.mock_calls) == 2
+    # A local-push-only registration has no cloud path to fall back to
+    assert len(mock_cloud_send.mock_calls) == 0
 
     # The channel reached the degraded threshold, but a local-push-only
     # target has no cloud path: the legacy service still delivers locally
@@ -880,6 +881,61 @@ async def test_local_push_only_stays_local_when_degraded(
     result = await client.receive_json()
     assert result["success"]
 
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_websocket_channel_only_push")
+async def test_local_push_only_missed_confirm(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a missed confirm without a cloud fallback keeps the channel working."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "websocket-push-webhook-id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    # The confirm times out and there is no cloud delivery to fall back to
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_websocket_push_name",
+            {"message": "Hello world 1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+
+    # The channel is still registered and keeps delivering locally
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_websocket_push_name",
+        {"message": "Hello world 2"},
+        blocking=True,
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+
+    # The pending confirm of the second message is flushed by the teardown
     await client.send_json_auto_id(
         {
             "type": "unsubscribe_events",
