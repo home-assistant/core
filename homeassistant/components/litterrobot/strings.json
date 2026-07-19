@@ -81,6 +81,11 @@
         "name": "Reset waste drawer"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "Camera"
+      }
+    },
     "light": {
       "night_light": {
         "name": "Night light"
@@ -297,6 +302,12 @@
     }
   },
   "exceptions": {
+    "camera_not_available": {
+      "message": "Camera is not available for this device: {error}"
+    },
+    "camera_stream_failed": {
+      "message": "Failed to start the camera stream: {error}"
+    },
     "cannot_connect": {
       "message": "Unable to fetch data from the Whisker API: {error}"
     },
