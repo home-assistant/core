@@ -3,23 +3,44 @@
 import logging
 from typing import override
 
+import voluptuous as vol
+
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     ScannerEntity,
 )
 from homeassistant.components.device_tracker.legacy import AsyncSeeCallback
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SnmpConfigEntry
-from .const import DOMAIN
+from .const import (
+    CONF_AUTH_KEY,
+    CONF_BASEOID,
+    CONF_COMMUNITY,
+    CONF_PRIV_KEY,
+    DEFAULT_COMMUNITY,
+    DOMAIN,
+)
 from .coordinator import SnmpUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_BASEOID): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+        vol.Inclusive(CONF_AUTH_KEY, "keys"): cv.string,
+        vol.Inclusive(CONF_PRIV_KEY, "keys"): cv.string,
+    }
+)
 
 
 async def async_setup_scanner(
