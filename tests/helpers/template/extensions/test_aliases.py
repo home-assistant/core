@@ -66,6 +66,28 @@ async def test_aliases_entity(
     assert info.rate_limit is None
 
 
+async def test_aliases_entity_case_insensitive(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a mixed-case entity ID is normalized before the registry lookup."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry
+    )
+    entity_registry.async_update_entity(entity_entry.entity_id, aliases=["Kitchen"])
+
+    upper_entity_id = entity_entry.entity_id.upper()
+    info = render_to_info(hass, f"{{{{ aliases('{upper_entity_id}') }}}}")
+    assert_result_info(info, ["Kitchen"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{upper_entity_id}' | aliases }}}}")
+    assert_result_info(info, ["Kitchen"])
+    assert info.rate_limit is None
+
+
 async def test_aliases_area(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,

@@ -47,11 +47,11 @@ class AliasExtension(BaseTemplateExtension):
         from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
 
         try:
-            cv.entity_id(lookup_value)
+            entity_id = cv.entity_id(lookup_value)
         except vol.Invalid:
             pass
         else:
-            if entity := er.async_get(self.hass).async_get(lookup_value):
+            if entity := er.async_get(self.hass).async_get(entity_id):
                 # entity.aliases may hold a non-str ComputedNameType sentinel
                 return sorted(a for a in entity.aliases if isinstance(a, str))
 
