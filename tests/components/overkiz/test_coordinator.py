@@ -13,13 +13,15 @@ from pyoverkiz.exceptions import (
 )
 import pytest
 
-from homeassistant.components.overkiz.const import UPDATE_INTERVAL
+from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
+from .helpers import async_deliver_events, device_removed_event
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -78,3 +80,64 @@ async def test_transient_error_is_retried(
     await hass.async_block_till_done()
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+
+async def test_device_removed_deletes_device(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A DEVICE_REMOVED event deletes a device owned only by this config entry."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    base_device_url = TEMPERATURE_SENSOR.device_url.split("#")[0]
+    assert device_registry.async_get_device(identifiers={(DOMAIN, base_device_url)})
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [device_removed_event(TEMPERATURE_SENSOR.device_url)],
+    )
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, base_device_url)})
+        is None
+    )
+
+
+async def test_device_removed_keeps_device_owned_by_other_entry(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A DEVICE_REMOVED event does not delete a device owned by another entry."""
+    config_entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    base_device_url = TEMPERATURE_SENSOR.device_url.split("#")[0]
+    device = device_registry.async_get_device(identifiers={(DOMAIN, base_device_url)})
+    assert device is not None
+
+    # Reassign the device away from the Overkiz entry; removing our entry must now
+    # be a no-op rather than deleting a device we no longer own.
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_update_device(
+        device.id, new_config_entry_id=other_entry.entry_id
+    )
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [device_removed_event(TEMPERATURE_SENSOR.device_url)],
+    )
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, base_device_url)})
+    assert device is not None
+    assert device.config_entry_id == other_entry.entry_id
+    assert config_entry.entry_id != other_entry.entry_id
