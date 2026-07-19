@@ -1,5 +1,6 @@
 """Alias function for Home Assistant templates."""
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -34,7 +35,7 @@ class AliasExtension(BaseTemplateExtension):
             ],
         )
 
-    def aliases(self, lookup_value: Any) -> list[str]:
+    def aliases(self, lookup_value: Any) -> Iterable[str]:
         """Return the sorted aliases of an entity, area, or floor ID ([] if unknown).
 
         Area is tried before floor because their IDs are indistinguishable bare
