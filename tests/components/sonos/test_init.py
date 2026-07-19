@@ -460,8 +460,6 @@ async def test_async_poll_manual_hosts_uid_invalid(
         f"Could not get Sonos uid from {soco_1.ip_address}: invalid uid" in caplog.text
     )
 
-    await hass.async_block_till_done(wait_background_tasks=True)
-
 
 async def test_async_poll_manual_hosts_2(
     hass: HomeAssistant,
