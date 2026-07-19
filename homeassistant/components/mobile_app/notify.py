@@ -98,20 +98,22 @@ class MobileAppNotifyEntity(NotifyEntity):
         if title is not None:
             data[ATTR_TITLE] = title
 
+        webhook_id = self._config_entry.data[ATTR_WEBHOOK_ID]
+        push_channel: PushChannel | None = self.hass.data[DOMAIN][
+            DATA_PUSH_CHANNEL
+        ].get(webhook_id)
+        cloud_capable = ATTR_PUSH_URL in self._config_entry.data[ATTR_APP_DATA]
+
         # Sends notification via local push if available
-        # and fallback to cloud push if fails
-        if (webhook_id := self._config_entry.data[ATTR_WEBHOOK_ID]) in self.hass.data[
-            DOMAIN
-        ][DATA_PUSH_CHANNEL]:
-            push_channel: PushChannel = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL][
-                webhook_id
-            ]
+        # and fallback to cloud push if fails; a degraded channel is
+        # bypassed for cloud-capable targets until a probe is confirmed
+        if push_channel is not None and not (cloud_capable and push_channel.degraded):
             push_channel.async_send_notification(
                 data,
                 partial(_send_message, self._session, self._config_entry),
             )
         # Sends notification via cloud push notification service
-        elif ATTR_PUSH_URL in self._config_entry.data[ATTR_APP_DATA]:
+        elif cloud_capable:
             await _send_message(self._session, self._config_entry, data)
         else:
             raise HomeAssistantError(
@@ -217,8 +219,15 @@ class MobileAppNotificationService(BaseNotificationService):
         for target in targets:
             entry: ConfigEntry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
 
-            if target in local_push_channels:
-                local_push_channels[target].async_send_notification(
+            push_channel = local_push_channels.get(target)
+            cloud_capable = ATTR_PUSH_URL in entry.data[ATTR_APP_DATA]
+
+            # A degraded channel is bypassed for cloud-capable targets
+            # until a probe is confirmed
+            if push_channel is not None and not (
+                cloud_capable and push_channel.degraded
+            ):
+                push_channel.async_send_notification(
                     data,
                     partial(self._async_send_remote_message_target, entry),
                 )
@@ -226,7 +235,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 continue
 
             # Test if local push only.
-            if ATTR_PUSH_URL not in entry.data[ATTR_APP_DATA]:
+            if not cloud_capable:
                 failed_targets.append(target)
                 continue
 

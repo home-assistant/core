@@ -11,6 +11,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
+from homeassistant.components.mobile_app.push_notification import (
+    PUSH_DEGRADED_PROBE_INTERVAL,
+)
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -33,6 +36,10 @@ from tests.common import (
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
+
+CONFIRM_TIMEOUT_PATCH = (
+    "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT"
+)
 
 
 @pytest.fixture
@@ -476,9 +483,7 @@ async def test_notify_ws_not_confirming(
     msg_result = await client.receive_json()
     assert msg_result["event"]["message"] == "Hello world 1"
 
-    with patch(
-        "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT", 0
-    ):
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
         await hass.services.async_call(
             "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
         )
@@ -501,6 +506,188 @@ async def test_notify_ws_not_confirming(
     assert len(aioclient_mock.mock_calls) == 1
 
     # Dropping the channel still flushes the unconfirmed messages via cloud once
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_ws_degraded_channel(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test consecutive confirm timeouts degrade the channel to cloud routing."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 1"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+
+    # Both messages were delivered locally and fell back via cloud unconfirmed
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # Two consecutive timeouts degraded the channel: this send goes straight
+    # via cloud without waiting out the confirm timeout
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 3"}, blocking=True
+    )
+    assert len(aioclient_mock.mock_calls) == 3
+
+    # After the probe interval the next send tries local delivery again
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=PUSH_DEGRADED_PROBE_INTERVAL + 1)
+    )
+    await hass.async_block_till_done()
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 4"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    # The probe was delivered locally and fell back via cloud unconfirmed;
+    # the bypassed message never reached the websocket
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 4"
+    assert len(aioclient_mock.mock_calls) == 4
+
+    # The unconfirmed probe kept the channel degraded
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 5"}, blocking=True
+    )
+    assert len(aioclient_mock.mock_calls) == 5
+
+    # Allow another probe and confirm it in time
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=PUSH_DEGRADED_PROBE_INTERVAL + 1)
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 6"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 6"
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "mock-webhook_id",
+            "confirm_id": msg_result["event"]["hass_confirm_id"],
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"]
+
+    # The confirmed probe restored local delivery
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 7"}, blocking=True
+    )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 7"
+    assert len(aioclient_mock.mock_calls) == 5
+
+    # Dropping the channel still flushes the unconfirmed message via cloud
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 6
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_send_message_degraded_channel(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test notify.send_message bypasses a degraded channel via cloud."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with patch(CONFIRM_TIMEOUT_PATCH, 0):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world 1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world 2"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # The degraded channel is bypassed straight via cloud
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world 3"},
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 3
+
     await client.send_json_auto_id(
         {
             "type": "unsubscribe_events",
