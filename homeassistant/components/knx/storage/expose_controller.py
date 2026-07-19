@@ -2,6 +2,7 @@
 
 from typing import Any, NotRequired, TypedDict
 
+import probatio as prb
 import voluptuous as vol
 from xknx import XKNX
 from xknx.dpt import DPTBase
@@ -17,6 +18,7 @@ from homeassistant.helpers import (
 from ..expose import KnxExposeEntity, KnxExposeOptions
 from .entity_store_validation import validate_config_store_data
 from .knx_selector import GASelector
+from .vol_compat import VolValidator
 
 
 class KNXExposeStoreOptionModel(TypedDict):
@@ -60,34 +62,37 @@ def validate_expose_template_no_coerce(value: str) -> str:
     return value  # return original string for storage and later template creation
 
 
-EXPOSE_OPTION_SCHEMA = vol.Schema(
+EXPOSE_OPTION_SCHEMA = prb.Schema(
     {
-        vol.Required("ga"): GASelector(
+        prb.Required("ga"): GASelector(
             state=False,
             passive=False,
             write_required=True,
             dpt=["numeric", "enum", "complex", "string"],
         ),
-        vol.Optional("attribute"): str,
-        vol.Optional("default"): object,
-        vol.Optional("cooldown"): cv.positive_float,  # frontend renders to duration
-        vol.Optional("periodic_send"): cv.positive_float,
-        vol.Optional("respond_to_read"): bool,
-        vol.Optional("value_template"): validate_expose_template_no_coerce,
+        prb.Optional("attribute"): str,
+        prb.Optional("default"): object,
+        # frontend renders cooldown to duration
+        prb.Optional("cooldown"): VolValidator(cv.positive_float),
+        prb.Optional("periodic_send"): VolValidator(cv.positive_float),
+        prb.Optional("respond_to_read"): bool,
+        prb.Optional("value_template"): VolValidator(
+            validate_expose_template_no_coerce
+        ),
     }
 )
 
-EXPOSE_CONFIG_SCHEMA = vol.Schema(
+EXPOSE_CONFIG_SCHEMA = prb.Schema(
     {
-        vol.Required("entity_id"): selector.EntitySelector(),
-        vol.Required("data"): vol.Schema(
+        prb.Required("entity_id"): VolValidator(selector.EntitySelector()),
+        prb.Required("data"): prb.Schema(
             {
-                vol.Required("options"): [EXPOSE_OPTION_SCHEMA],
-                vol.Optional("notes"): str,
+                prb.Required("options"): [EXPOSE_OPTION_SCHEMA],
+                prb.Optional("notes"): str,
             }
         ),
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=prb.REMOVE_EXTRA,
 )
 
 
