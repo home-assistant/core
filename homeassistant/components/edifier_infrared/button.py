@@ -8,6 +8,7 @@ from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
 from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 from infrared_protocols.codes.edifier.s360db import EdifierS360DBCode
+from infrared_protocols.codes.edifier.s3000pro import EdifierS3000ProCode
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -139,6 +140,48 @@ COMMAND_SET_BUTTONS: dict[
             key="coax",
             translation_key="coax",
             command_code=EdifierRC20GCode.COAX,
+        ),
+    ),
+    EdifierCommandSet.S3000PRO: (
+        EdifierIrButtonEntityDescription(
+            key="usb",
+            translation_key="usb",
+            command_code=EdifierS3000ProCode.USB,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierS3000ProCode.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line_bal",
+            translation_key="line_bal",
+            command_code=EdifierS3000ProCode.LINE_BAL,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="opt_coax",
+            translation_key="opt_coax",
+            command_code=EdifierS3000ProCode.OPT_COAX,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_monitor",
+            translation_key="eq_monitor",
+            command_code=EdifierS3000ProCode.EQ_MONITOR,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_dynamic",
+            translation_key="eq_dynamic",
+            command_code=EdifierS3000ProCode.EQ_DYNAMIC,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_classic",
+            translation_key="eq_classic",
+            command_code=EdifierS3000ProCode.EQ_CLASSIC,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="eq_vocal",
+            translation_key="eq_vocal",
+            command_code=EdifierS3000ProCode.EQ_VOCAL,
         ),
     ),
 }
