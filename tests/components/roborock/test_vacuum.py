@@ -6,7 +6,6 @@ from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
-from roborock.data import CombinedMapInfo, NamedRoomMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
@@ -593,24 +592,6 @@ async def test_segments_changed_issue(
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
-
-    # Update the mocked home_map_info to report the saved segment IDs ("1_16" and "1_99")
-    fake_vacuum.v1_properties.home.home_map_info = {
-        1: CombinedMapInfo(
-            name="Downstairs",
-            map_flag=1,
-            rooms=[
-                NamedRoomMapping(segment_id=16, iot_id=16, raw_name="Example room 1"),
-                NamedRoomMapping(segment_id=99, iot_id=99, raw_name="Old room"),
-            ],
-        )
-    }
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
-    await hass.async_block_till_done()
-
-    # The issue should be deleted programmatically
-    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)
-    assert issue is None
 
 
 async def test_segments_changed_issue_no_map_info(

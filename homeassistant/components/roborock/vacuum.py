@@ -196,11 +196,6 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         }
         if current_ids != {seg.id for seg in last_seen}:
             self.async_create_segments_issue()
-        else:
-            # We previously had a bug where we created segment repair
-            # issues before the rooms were loaded. We'll re-run the code in the
-            # parent class that can clear old issues.
-            self._async_delete_segments_issue()
 
     @property
     @override

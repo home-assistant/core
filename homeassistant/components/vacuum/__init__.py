@@ -561,15 +561,9 @@ class StateVacuumEntity(
             VacuumEntityFeature.CLEAN_AREA not in self.supported_features
             or options.get("last_seen_segments") != self._segments_changed_last_seen
         ):
-            self._async_delete_segments_issue()
+            issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             self._segments_changed_last_seen = None
-
-    def _async_delete_segments_issue(self) -> None:
-        """Delete segments changed repair issue."""
-        if self.registry_entry is None:
-            return
-        issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
-        ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
