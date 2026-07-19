@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-from .const import APP_LIST, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
+from .const import APP_RECORDS, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -116,8 +116,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=1))
         async_fire_time_changed(hass)
@@ -129,8 +129,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=2))
         async_fire_time_changed(hass)

@@ -5,8 +5,8 @@ import logging
 import socket
 from typing import Any, override
 
-from pyvizio import VizioAsync, async_guess_device_type
-from pyvizio.const import APP_HOME, APPS
+from vizaio import AppRecord, PairChallenge, Vizio, VizioError, async_is_tv
+from vizaio.apps import APP_HOME, BUNDLED_APPS
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -42,6 +42,7 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
+    VIZIO_DEVICE_CLASSES,
 )
 from .coordinator import VizioConfigEntry
 
@@ -104,16 +105,56 @@ def _host_is_same(host1: str, host2: str) -> bool:
     return host1 == host2
 
 
+def _get_device(
+    hass: HomeAssistant,
+    host: str,
+    device_class: str,
+    auth_token: str | None = None,
+) -> Vizio:
+    """Build a client for config flow validation calls."""
+    return Vizio(
+        host,
+        device_type=VIZIO_DEVICE_CLASSES[MediaPlayerDeviceClass(device_class)],
+        auth_token=auth_token,
+        session=async_get_clientsession(hass, False),
+    )
+
+
+async def _async_get_unique_id(
+    hass: HomeAssistant, host: str, device_class: str
+) -> str | None:
+    """Return the device serial number, or None if unavailable."""
+    try:
+        return await _get_device(hass, host, device_class).get_serial_number()
+    except VizioError:
+        return None
+
+
+async def _async_validate_config(
+    hass: HomeAssistant, host: str, auth_token: str | None, device_class: str
+) -> bool:
+    """Return whether the device is reachable (and the token valid, if any)."""
+    device = _get_device(hass, host, device_class, auth_token)
+    try:
+        if auth_token:
+            await device.ping_auth()
+        else:
+            await device.ping()
+    except VizioError:
+        return False
+    return True
+
+
 class VizioOptionsConfigFlow(OptionsFlow):
     """Handle Vizio options."""
 
-    def _get_app_list(self) -> list[dict[str, Any]]:
+    def _get_app_list(self) -> tuple[AppRecord, ...]:
         """Return the current apps list, falling back to defaults."""
         if (
             apps_coordinator := self.hass.data.get(DATA_APPS)
         ) and apps_coordinator.data:
             return apps_coordinator.data
-        return APPS
+        return BUNDLED_APPS
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -165,8 +206,8 @@ class VizioOptionsConfigFlow(OptionsFlow):
                         ),
                     ): cv.multi_select(
                         [
-                            APP_HOME["name"],
-                            *(app["name"] for app in self._get_app_list()),
+                            APP_HOME.name,
+                            *(app.name for app in self._get_app_list()),
                         ]
                     ),
                 }
@@ -193,8 +234,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self._user_schema: vol.Schema | None = None
         self._must_show_form: bool | None = None
-        self._ch_type: str | None = None
-        self._pairing_token: str | None = None
+        self._pair_challenge: PairChallenge | None = None
         self._data: dict[str, Any] | None = None
         self._apps: dict[str, list] = {}
 
@@ -220,10 +260,8 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
             if self.unique_id is None:
-                unique_id = await VizioAsync.get_unique_id(
-                    user_input[CONF_HOST],
-                    user_input[CONF_DEVICE_CLASS],
-                    session=async_get_clientsession(self.hass, False),
+                unique_id = await _async_get_unique_id(
+                    self.hass, user_input[CONF_HOST], user_input[CONF_DEVICE_CLASS]
                 )
 
                 # Check if unique ID was found, set unique ID, and abort if a flow with
@@ -249,11 +287,11 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ACCESS_TOKEN
                 ):
                     # Ensure config is valid for a device
-                    if not await VizioAsync.validate_ha_config(
+                    if not await _async_validate_config(
+                        self.hass,
                         user_input[CONF_HOST],
                         user_input.get(CONF_ACCESS_TOKEN),
                         user_input[CONF_DEVICE_CLASS],
-                        session=async_get_clientsession(self.hass, False),
                     ):
                         errors["base"] = "cannot_connect"
 
@@ -281,14 +319,14 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         num_chars_to_strip = len(discovery_info.type) + 1
         name = discovery_info.name[:-num_chars_to_strip]
 
-        device_class = await async_guess_device_type(host)
+        device_class = (
+            MediaPlayerDeviceClass.TV
+            if await async_is_tv(host)
+            else MediaPlayerDeviceClass.SPEAKER
+        )
 
         # Set unique ID early for discovery flow so we can abort if needed
-        unique_id = await VizioAsync.get_unique_id(
-            host,
-            device_class,
-            session=async_get_clientsession(self.hass, False),
-        )
+        unique_id = await _async_get_unique_id(self.hass, host, device_class)
 
         if not unique_id:
             return self.async_abort(reason="cannot_connect")
@@ -318,50 +356,40 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._data
 
         # Start pairing process if it hasn't already started
-        if not self._ch_type and not self._pairing_token:
-            dev = VizioAsync(
-                DEVICE_ID,
-                self._data[CONF_HOST],
-                self._data[CONF_NAME],
-                None,
-                self._data[CONF_DEVICE_CLASS],
-                session=async_get_clientsession(self.hass, False),
+        if not self._pair_challenge:
+            dev = _get_device(
+                self.hass, self._data[CONF_HOST], self._data[CONF_DEVICE_CLASS]
             )
-            pair_data = await dev.start_pair()
-
-            if pair_data:
-                self._ch_type = pair_data.ch_type
-                self._pairing_token = pair_data.token
-                return await self.async_step_pair_tv()
-
-            return self.async_show_form(
-                step_id="user",
-                data_schema=_get_config_schema(self._data),
-                errors={"base": "cannot_connect"},
-            )
+            try:
+                self._pair_challenge = await dev.begin_pair(
+                    device_id=DEVICE_ID, device_name=self._data[CONF_NAME]
+                )
+            except VizioError:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=_get_config_schema(self._data),
+                    errors={"base": "cannot_connect"},
+                )
+            return await self.async_step_pair_tv()
 
         # Complete pairing process if PIN has been provided
         if user_input and user_input.get(CONF_PIN):
-            dev = VizioAsync(
-                DEVICE_ID,
-                self._data[CONF_HOST],
-                self._data[CONF_NAME],
-                None,
-                self._data[CONF_DEVICE_CLASS],
-                session=async_get_clientsession(self.hass, False),
+            dev = _get_device(
+                self.hass, self._data[CONF_HOST], self._data[CONF_DEVICE_CLASS]
             )
-            pair_data = await dev.pair(
-                self._ch_type, self._pairing_token, user_input[CONF_PIN]
-            )
-
-            if pair_data:
-                self._data[CONF_ACCESS_TOKEN] = pair_data.auth_token
+            try:
+                auth_token = await dev.finish_pair(
+                    device_id=DEVICE_ID,
+                    challenge=self._pair_challenge,
+                    pin=user_input[CONF_PIN],
+                )
+            except VizioError:
+                # If pairing failed, it's assumed the PIN was invalid
+                errors[CONF_PIN] = "complete_pairing_failed"
+            else:
+                self._data[CONF_ACCESS_TOKEN] = auth_token
                 self._must_show_form = True
                 return await self.async_step_pairing_complete()
-
-            # If no data was retrieved, it's assumed that the pairing attempt was not
-            # successful
-            errors[CONF_PIN] = "complete_pairing_failed"
 
         return self.async_show_form(
             step_id="pair_tv",
