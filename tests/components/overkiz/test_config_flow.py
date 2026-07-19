@@ -116,9 +116,12 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY_RESPONSE,
         ),
     ):
@@ -151,9 +154,12 @@ async def test_form_only_cloud_supported(
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY_RESPONSE,
         ),
     ):
@@ -194,7 +200,7 @@ async def test_form_local_happy_flow(
     assert result["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
@@ -261,7 +267,10 @@ async def test_form_invalid_auth_cloud(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+        side_effect=side_effect,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
@@ -301,7 +310,10 @@ async def test_form_invalid_hardware_cloud(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+        side_effect=side_effect,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
@@ -348,7 +360,10 @@ async def test_form_invalid_hardware_cloud_local(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+        side_effect=side_effect,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
@@ -407,7 +422,10 @@ async def test_form_invalid_auth_local(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local"
 
-    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+        side_effect=side_effect,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -447,7 +465,10 @@ async def test_form_invalid_cozytouch_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
-    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+        side_effect=side_effect,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
@@ -492,9 +513,12 @@ async def test_cloud_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY_RESPONSE,
         ),
     ):
@@ -546,7 +570,7 @@ async def test_local_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
         get_setup_option=AsyncMock(return_value=True),
@@ -597,9 +621,12 @@ async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY_RESPONSE,
         ),
     ):
@@ -640,9 +667,12 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY_RESPONSE,
         ),
     ):
@@ -682,9 +712,12 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY2_RESPONSE,
         ),
     ):
@@ -730,7 +763,7 @@ async def test_local_reauth_legacy(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
@@ -781,7 +814,7 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
@@ -832,7 +865,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
@@ -870,9 +903,12 @@ async def test_cloud_reconfigure_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY_RESPONSE,
         ),
     ):
@@ -911,9 +947,12 @@ async def test_cloud_reconfigure_wrong_account(hass: HomeAssistant) -> None:
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY2_RESPONSE,
         ),
     ):
@@ -957,7 +996,7 @@ async def test_local_reconfigure_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
@@ -1005,7 +1044,7 @@ async def test_local_reconfigure_wrong_account(hass: HomeAssistant) -> None:
     assert result["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
@@ -1049,7 +1088,7 @@ async def test_reconfigure_switch_cloud_to_local(hass: HomeAssistant) -> None:
     assert result["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
@@ -1101,8 +1140,14 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     )
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
-        patch("pyoverkiz.client.OverkizClient.get_gateways", return_value=None),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
+            return_value=None,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1175,9 +1220,12 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     assert result["step_id"] == "cloud"
 
     with (
-        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
         patch(
-            "pyoverkiz.client.OverkizClient.get_gateways",
+            "homeassistant.components.overkiz.config_flow.OverkizClient.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.get_gateways",
             return_value=MOCK_GATEWAY_RESPONSE,
         ),
     ):
@@ -1228,7 +1276,7 @@ async def test_local_zeroconf_flow(
     assert result["step_id"] == "local"
 
     with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
+        "homeassistant.components.overkiz.config_flow.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
     ):
