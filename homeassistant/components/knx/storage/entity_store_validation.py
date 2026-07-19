@@ -50,20 +50,13 @@ def validate_config_store_data(
     try:
         # return so defaults are applied
         return schema(entity_data)
-    except prb.MultipleInvalid as exc:
-        raise EntityStoreValidationException(
-            validation_error={
-                "success": False,
-                "error_base": str(exc),
-                "errors": [parse_invalid(invalid) for invalid in exc.errors],
-            }
-        ) from exc
     except prb.Invalid as exc:
+        errors = exc.errors if isinstance(exc, prb.MultipleInvalid) else [exc]
         raise EntityStoreValidationException(
             validation_error={
                 "success": False,
                 "error_base": str(exc),
-                "errors": [parse_invalid(exc)],
+                "errors": [parse_invalid(invalid) for invalid in errors],
             }
         ) from exc
 

@@ -25,7 +25,7 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, VolDictType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
@@ -40,10 +40,6 @@ from .const import (
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
-from .storage.entity_store_schema import (
-    CREATE_ENTITY_BASE_SCHEMA,
-    UPDATE_ENTITY_BASE_SCHEMA,
-)
 from .storage.entity_store_validation import (
     EntityStoreValidationException,
     EntityStoreValidationSuccess,
@@ -487,6 +483,17 @@ def ws_subscribe_telegram(
 
     connection.subscriptions[msg["id"]] = stack.close
     connection.send_result(msg["id"])
+
+
+CREATE_ENTITY_BASE_SCHEMA: VolDictType = {
+    vol.Required(CONF_PLATFORM): str,
+    vol.Required(CONF_DATA): dict,  # validated by ENTITY_STORE_DATA_SCHEMA for platform
+}
+
+UPDATE_ENTITY_BASE_SCHEMA = {
+    vol.Required(CONF_ENTITY_ID): str,
+    **CREATE_ENTITY_BASE_SCHEMA,
+}
 
 
 @websocket_api.require_admin
