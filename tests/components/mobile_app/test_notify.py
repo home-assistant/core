@@ -25,7 +25,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, MockUser, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -412,6 +417,12 @@ async def test_notify_ws_confirming_works(
     result = await client.receive_json()
     assert result["success"]
 
+    # The timely confirm cancelled the fallback timer: advancing past the
+    # confirm timeout must not send anything via cloud
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
+    await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 0
+
     # Drop local push channel and try to confirm another message
     await client.send_json_auto_id(
         {
@@ -444,7 +455,7 @@ async def test_notify_ws_not_confirming(
     setup_push_receiver,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test we go via cloud when failed to confirm."""
+    """Test a late confirm falls back via cloud without dropping the channel."""
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -457,10 +468,13 @@ async def test_notify_ws_not_confirming(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    sub_id = sub_result["id"]
 
     await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world 1"}, blocking=True
     )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 1"
 
     with patch(
         "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT", 0
@@ -471,13 +485,31 @@ async def test_notify_ws_not_confirming(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    # When we fail, all unconfirmed ones and failed one are sent via cloud
-    assert len(aioclient_mock.mock_calls) == 2
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 2"
 
-    # All future ones also go via cloud
+    # Only the message that missed its confirmation falls back via cloud;
+    # the channel stays registered instead of being torn down
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Later messages keep being delivered locally
     await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world 3"}, blocking=True
     )
+    msg_result = await client.receive_json()
+    assert msg_result["event"]["message"] == "Hello world 3"
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Dropping the channel still flushes the unconfirmed messages via cloud once
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": sub_id,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 3
 

@@ -40,16 +40,10 @@ class PushChannel:
         data["hass_confirm_id"] = confirm_id
 
         async def handle_push_failed(_=None):
-            """Handle a failed local push notification."""
-            # Remove this handler from the pending dict
-            # If it didn't exist we hit a race condition between call_later and another
-            # push failing and tearing down the connection.
+            """Fall back to cloud for a local push left unconfirmed in time."""
+            # Already popped by a confirm or a teardown flush; nothing to fall back.
             if self.pending_confirms.pop(confirm_id, None) is None:
                 return
-
-            # Drop local channel if it's still open
-            if self.on_teardown is not None:
-                await self.async_teardown()
 
             await fallback_send(data)
 
