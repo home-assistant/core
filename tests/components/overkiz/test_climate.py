@@ -189,6 +189,7 @@ async def test_electrical_heater_adjustable_target_temperature(
         ],
     )
     state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == 20.0
 
     # While scheduled (auto), setting a temperature derogates the active
@@ -225,6 +226,7 @@ async def test_electrical_heater_adjustable_target_temperature(
         ],
     )
     state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == 19.0
 
     mock_client.execute_action_group.reset_mock()
@@ -250,6 +252,7 @@ async def test_electrical_heater_adjustable_target_temperature(
         ],
     )
     state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == 20.0
 
     await hass.services.async_call(
@@ -283,4 +286,5 @@ async def test_electrical_heater_adjustable_target_temperature(
         ],
     )
     state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == 21.0
