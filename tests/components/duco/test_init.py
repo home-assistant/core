@@ -271,6 +271,40 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
         assert poll_count[zone_id] > poll_count_after_setup[zone_id]
 
 
+async def test_bypass_temperature_connection_failure_stops_remaining_zone_polls(
+    hass: HomeAssistant,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test that a connection failure stops polling remaining bypass zones."""
+
+    poll_count: dict[int, int] = dict.fromkeys(range(1, 9), 0)
+
+    async def async_get_bypass_supply_temperature_target(
+        zone_id: int,
+    ) -> BypassSupplyTemperatureTarget:
+        poll_count[zone_id] += 1
+        if zone_id == 1:
+            raise DucoConnectionError("Connection timed out")
+        if target := mock_bypass_supply_temperature_targets.get(zone_id):
+            return target
+        raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
+
+    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
+        async_get_bypass_supply_temperature_target
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert poll_count[1] == 1
+    for zone_id in range(2, 9):
+        assert poll_count[zone_id] == 0
+
+
 async def test_missing_bypass_temperature_targets_are_retried(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

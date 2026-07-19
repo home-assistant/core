@@ -223,6 +223,13 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             except DucoUnsupportedCapabilityError:
                 self._bypass_supply_temperature_targets_supported[zone_id] = False
                 bypass_supply_temperature_targets.pop(zone_id, None)
+            except DucoConnectionError as err:
+                _LOGGER.debug(
+                    "Could not fetch Duco bypass supply target for zone %s",
+                    zone_id,
+                    exc_info=err,
+                )
+                break
             except DucoError as err:
                 _LOGGER.debug(
                     "Could not fetch Duco bypass supply target for zone %s",
