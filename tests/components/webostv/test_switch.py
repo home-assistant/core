@@ -1,13 +1,11 @@
 """Tests for LG webOS TV switch platform."""
 
-import inspect
 from unittest.mock import AsyncMock
 
 from aiowebostv import WebOsTvCommandError
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -57,6 +55,7 @@ async def test_screen_switch_state_updates(
     await setup_webostv(hass)
 
     state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
     assert state.state == STATE_OFF
 
     # Update TV state to screen on
@@ -65,6 +64,7 @@ async def test_screen_switch_state_updates(
     await hass.async_block_till_done()
 
     state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
     assert state.state == STATE_ON
 
     # TV powered off makes switch unavailable
@@ -74,6 +74,7 @@ async def test_screen_switch_state_updates(
     await hass.async_block_till_done()
 
     state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
 
