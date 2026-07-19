@@ -513,7 +513,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_set_window_open_good(
     hass: HomeAssistant,
     fritz: Mock,
-    service_data: dict,
+    service_data: dict[str, int],
 ) -> None:
     """Test set_window_open action with valid durations."""
     device = FritzDeviceClimateMock()
@@ -534,6 +534,11 @@ async def test_set_window_open_good(
         True,
     )
     assert fritz().set_window_open.call_count == 1
+    assert fritz().set_window_open.call_args.args == (
+        device.ain,
+        service_data[ATTR_DURATION],
+        True,
+    )
 
 
 @pytest.mark.parametrize(
@@ -556,7 +561,7 @@ async def test_set_window_open_good(
 async def test_set_window_open_bad(
     hass: HomeAssistant,
     fritz: Mock,
-    service_data: dict,
+    service_data: tuple[dict[str, int], str],
 ) -> None:
     """Test set_window_open action with invalid durations."""
     device = FritzDeviceClimateMock()
@@ -602,6 +607,11 @@ async def test_set_window_close(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     assert fritz().set_window_open.call_count == 1
+    assert fritz().set_window_open.call_args.args == (
+        device.ain,
+        0,
+        True,
+    )
 
 
 @pytest.mark.parametrize(
