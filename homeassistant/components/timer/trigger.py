@@ -26,7 +26,8 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import ATTR_FINISHES_AT, ATTR_LAST_TRANSITION, DOMAIN, STATUS_ACTIVE
+from . import DOMAIN, STATUS_ACTIVE
+from .const import TimerEntityStateAttribute
 
 CONF_REMAINING = "remaining"
 
@@ -86,7 +87,9 @@ class TimeRemainingTrigger(Trigger):
             if to_state.state != STATUS_ACTIVE:
                 return
 
-            finishes_at_str = to_state.attributes.get(ATTR_FINISHES_AT)
+            finishes_at_str = to_state.attributes.get(
+                TimerEntityStateAttribute.FINISHES_AT
+            )
             if finishes_at_str is None:
                 return
 
@@ -166,19 +169,24 @@ class TimeRemainingTrigger(Trigger):
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "cancelled": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "cancelled"
+        {DOMAIN: DomainSpec(value_source=TimerEntityStateAttribute.LAST_TRANSITION)},
+        "cancelled",
     ),
     "finished": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "finished"
+        {DOMAIN: DomainSpec(value_source=TimerEntityStateAttribute.LAST_TRANSITION)},
+        "finished",
     ),
     "paused": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "paused"
+        {DOMAIN: DomainSpec(value_source=TimerEntityStateAttribute.LAST_TRANSITION)},
+        "paused",
     ),
     "restarted": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "restarted"
+        {DOMAIN: DomainSpec(value_source=TimerEntityStateAttribute.LAST_TRANSITION)},
+        "restarted",
     ),
     "started": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "started"
+        {DOMAIN: DomainSpec(value_source=TimerEntityStateAttribute.LAST_TRANSITION)},
+        "started",
     ),
     "remaining_time_reached": TimeRemainingTrigger,
 }

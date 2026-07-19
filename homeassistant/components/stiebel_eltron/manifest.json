@@ -3,10 +3,15 @@
   "name": "STIEBEL ELTRON",
   "codeowners": ["@fucm", "@ThyMYthOS"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "servicewelt*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/stiebel_eltron",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pymodbus", "pystiebeleltron"],
-  "quality_scale": "bronze",
-  "requirements": ["pystiebeleltron==0.2.5"]
+  "quality_scale": "silver",
+  "requirements": ["pystiebeleltron==0.5.0"]
 }

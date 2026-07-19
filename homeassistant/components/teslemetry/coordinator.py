@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
+    InsufficientCredits,
     InvalidResponse,
     InvalidToken,
     LoginRequired,
@@ -48,6 +49,10 @@ ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 METADATA_INTERVAL = timedelta(hours=1)
+
+# Insufficient credits will not resolve themselves quickly, so back off polling
+# instead of hammering the API at the coordinator's normal interval.
+INSUFFICIENT_CREDITS_RETRY_AFTER = timedelta(hours=1).total_seconds()
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -139,6 +144,12 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
+        except InsufficientCredits as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_insufficient_credits",
+                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
+            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

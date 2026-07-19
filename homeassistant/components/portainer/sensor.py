@@ -6,7 +6,7 @@ from itertools import chain
 from typing import override
 
 from pyportainer import StackType
-from pyportainer.models.docker import DockerSystemDF
+from pyportainer.models.docker import DockerContainerState, DockerSystemDF
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -84,7 +84,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="container_state",
         value_fn=lambda data: data.container.state,
         device_class=SensorDeviceClass.ENUM,
-        options=["running", "exited", "paused", "restarting", "created", "dead"],
+        options=[state.value for state in DockerContainerState],
     ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
@@ -315,17 +315,11 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
     PortainerStackSensorEntityDescription(
         key="stack_type",
         translation_key="stack_type",
-        value_fn=lambda data: (
-            "swarm"
-            if data.stack.type == StackType.SWARM
-            else "compose"
-            if data.stack.type == StackType.COMPOSE
-            else "kubernetes"
-            if data.stack.type == StackType.KUBERNETES
-            else None
-        ),
+        value_fn=lambda data: {
+            stack.value: stack.name.lower() for stack in StackType
+        }.get(data.stack.type),
         device_class=SensorDeviceClass.ENUM,
-        options=["swarm", "compose", "kubernetes"],
+        options=[stack.name.lower() for stack in StackType],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerStackSensorEntityDescription(
