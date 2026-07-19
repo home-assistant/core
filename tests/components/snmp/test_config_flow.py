@@ -384,8 +384,8 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_v3_generic_err_status(hass: HomeAssistant) -> None:
-    """Test user setup flow failure - v3 generic err_status, then recovery."""
+async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
+    """Test v3 flow succeeds when sysDescr is denied by VACM but base OID works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -400,32 +400,16 @@ async def test_user_flow_v3_generic_err_status(hass: HomeAssistant) -> None:
         },
     )
 
-    # Step 2: V3 Auth fails with a generic err_status (not wrongdigests/decryptionerror)
+    # Step 2: sysDescr.0 returns err_status (VACM denial) but base OID succeeds
     mock_err_status = MagicMock()
     mock_err_status.prettyPrint.return_value = "authorizationError"
     with (
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, mock_err_status, None, None),
-        ),
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value="mock_target",
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "user", "auth_key": "pass"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Retry succeeds
-    with (
-        patch(
-            "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=(None, None, None, [[OctetString("98F")]]),
+            side_effect=[
+                (None, mock_err_status, None, None),  # sysDescr.0 denied
+                (None, None, None, [[OctetString("98F")]]),  # base OID succeeds
+            ],
         ),
         patch(
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
@@ -438,7 +422,7 @@ async def test_user_flow_v3_generic_err_status(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "correct_pass"},
+            {"username": "user", "auth_key": "pass"},
         )
         await hass.async_block_till_done()
 

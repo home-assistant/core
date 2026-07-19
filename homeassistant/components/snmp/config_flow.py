@@ -146,7 +146,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             or "decryptionerror" in err_status_str.lower()
         ):
             raise UsmWrongDigests from Exception(err_status_str)
-        raise InvalidAuth from Exception(err_status_str)
+        # Non-crypto err_status (e.g., VACM access denial on sysDescr.0)
+        # does not mean credentials are wrong — proceed to base-OID check.
+        _LOGGER.debug(
+            "sysDescr.0 returned err_status %s, continuing to base OID validation",
+            err_status_str,
+        )
 
     # Also verify that the user-provided baseoid is serializable and valid.
     # This catches errors like "Short OID 1" during the config flow.
