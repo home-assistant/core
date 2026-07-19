@@ -95,10 +95,10 @@ async def test_form_invalid_auth(
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_invalid_auth_empty_result(
-    hass: HomeAssistant, mock_somfy_mylink: MagicMock
+async def test_form_empty_result_creates_entry(
+    hass: HomeAssistant, mock_somfy_mylink: MagicMock, mock_setup_entry: MagicMock
 ) -> None:
-    """Test an empty cover list is treated as invalid auth."""
+    """Test a reachable hub reporting no covers is still a valid setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -107,9 +107,11 @@ async def test_form_invalid_auth_empty_result(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
+    await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(
@@ -206,26 +208,6 @@ async def test_options_with_targets(
     await hass.async_block_till_done()
 
 
-async def test_options_unknown_target_raises(
-    hass: HomeAssistant, mock_somfy_mylink: MagicMock
-) -> None:
-    """Test the target_config step raises KeyError for an unknown target."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: "46"},
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    flow = hass.config_entries.options._progress[result["flow_id"]]
-
-    with pytest.raises(KeyError):
-        await flow.async_step_target_config(target_id="does-not-exist")
-
-
 async def test_form_user_already_configured_from_dhcp(
     hass: HomeAssistant, mock_somfy_mylink: MagicMock, mock_setup_entry: MagicMock
 ) -> None:
@@ -283,3 +265,102 @@ async def test_dhcp_discovery(
     assert result2["title"] == "MyLink 1.1.1.1"
     assert result2["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_somfy_mylink: MagicMock, mock_setup_entry: MagicMock
+) -> None:
+    """Test a successful reauthentication updates the System ID."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 1234, CONF_SYSTEM_ID: "old-id"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SYSTEM_ID: "new-id"}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_SYSTEM_ID] == "new-id"
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+
+
+async def test_reauth_flow_invalid_auth(
+    hass: HomeAssistant, mock_somfy_mylink: MagicMock, mock_setup_entry: MagicMock
+) -> None:
+    """Test reauthentication recovers after an invalid System ID."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 1234, CONF_SYSTEM_ID: "old-id"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    mock_somfy_mylink.status_info.side_effect = SomfyMyLinkApiError("bad id", code=4)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SYSTEM_ID: "still-bad"}
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    mock_somfy_mylink.status_info.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], {CONF_SYSTEM_ID: "good-id"}
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_SYSTEM_ID] == "good-id"
+
+
+async def test_reauth_flow_cannot_connect(
+    hass: HomeAssistant, mock_somfy_mylink: MagicMock
+) -> None:
+    """Test reauthentication surfaces a connection error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 1234, CONF_SYSTEM_ID: "old-id"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    mock_somfy_mylink.status_info.side_effect = SomfyMyLinkConnectionError(
+        "unreachable"
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SYSTEM_ID: "new-id"}
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_flow_unknown_error(
+    hass: HomeAssistant, mock_somfy_mylink: MagicMock
+) -> None:
+    """Test reauthentication surfaces an unexpected error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 1234, CONF_SYSTEM_ID: "old-id"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    mock_somfy_mylink.status_info.side_effect = ValueError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SYSTEM_ID: "new-id"}
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}

@@ -41,32 +41,37 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_retries_on_api_error(
+async def test_setup_auth_error_triggers_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_somfy_mylink: MagicMock,
 ) -> None:
-    """Test an API (auth) error triggers a retry."""
+    """Test an API (auth) error aborts setup and starts a reauth flow."""
     mock_somfy_mylink.status_info.side_effect = SomfyMyLinkApiError("bad id", code=4)
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_setup_retries_on_empty_result(
+async def test_setup_empty_result_loads_without_covers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_somfy_mylink: MagicMock,
 ) -> None:
-    """Test an empty cover list triggers a retry."""
+    """Test a reachable hub reporting no covers still loads the entry."""
     mock_somfy_mylink.status_info.return_value = []
     mock_config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not hass.states.async_entity_ids("cover")
 
 
 async def test_unload_entry(

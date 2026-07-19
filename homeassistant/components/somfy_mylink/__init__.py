@@ -12,7 +12,7 @@ from pysomfymylink import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_SYSTEM_ID, DEFAULT_PORT, PLATFORMS
 
@@ -42,13 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SomfyMyLinkConfigEntry) 
             "Unable to connect to the Somfy MyLink device, please check your settings"
         ) from ex
     except SomfyMyLinkApiError as ex:
-        raise ConfigEntryNotReady(
-            f"The Somfy MyLink device rejected the request ({ex.message}), "
-            "please check your System ID"
+        raise ConfigEntryAuthFailed(
+            f"The Somfy MyLink device rejected the System ID ({ex.message})"
         ) from ex
-
-    if not shades:
-        raise ConfigEntryNotReady("The Somfy MyLink device returned no covers")
 
     entry.runtime_data = SomfyMyLinkRuntimeData(
         somfy_mylink=somfy_mylink,
