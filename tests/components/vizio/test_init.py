@@ -5,13 +5,14 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from vizaio import ChargingStatus, DeviceType
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
 )
 from homeassistant.components.vizio import DATA_APPS
-from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.components.vizio.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -23,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-from .const import APP_LIST, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
+from .const import APP_RECORDS, HOST2, MODEL, NAME2, UNIQUE_ID, VERSION
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -116,8 +117,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=1))
         async_fire_time_changed(hass)
@@ -129,8 +130,8 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
-        return_value=APP_LIST,
+        "homeassistant.components.vizio.coordinator.fetch_remote_app_catalog",
+        return_value=APP_RECORDS,
     ) as mock_fetch:
         freezer.tick(timedelta(days=2))
         async_fire_time_changed(hass)
@@ -168,3 +169,88 @@ async def test_device_registry_without_model_or_version(
     assert device.model is None
     assert device.sw_version is None
     assert device.manufacturer == "VIZIO"
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_classified_as_crave(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test a speaker entry is classified once and the result persisted."""
+    with (
+        patch(
+            "homeassistant.components.vizio.async_classify_device",
+            return_value=DeviceType.CRAVE360,
+        ) as mock_classify,
+        patch(
+            "homeassistant.components.vizio.Vizio.get_battery_level",
+            return_value=80,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_charging_status",
+            return_value=ChargingStatus.CHARGING,
+        ),
+    ):
+        await setup_integration(hass, mock_speaker_config_entry)
+
+    mock_classify.assert_called_once()
+    assert mock_speaker_config_entry.data[CONF_DEVICE_TYPE] == "crave360"
+    assert hass.states.get("sensor.vizio_battery").state == "80"
+
+    # Reload: the persisted device type is used without re-classifying
+    with (
+        patch(
+            "homeassistant.components.vizio.async_classify_device",
+        ) as mock_classify,
+        patch(
+            "homeassistant.components.vizio.Vizio.get_battery_level",
+            return_value=80,
+        ),
+        patch(
+            "homeassistant.components.vizio.Vizio.get_charging_status",
+            return_value=ChargingStatus.CHARGING,
+        ),
+    ):
+        assert await hass.config_entries.async_reload(
+            mock_speaker_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+    mock_classify.assert_not_called()
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_classification_unavailable(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test classification failure falls back to the soundbar profile."""
+    # The autouse vizio_no_classification fixture raises VizioConnectionError
+    await setup_integration(hass, mock_speaker_config_entry)
+
+    assert CONF_DEVICE_TYPE not in mock_speaker_config_entry.data
+    assert hass.states.get("sensor.vizio_battery") is None
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_speaker_classified_as_tv_not_persisted(
+    hass: HomeAssistant, mock_speaker_config_entry: MockConfigEntry
+) -> None:
+    """Test a TV classification result is ignored for a speaker entry."""
+    with patch(
+        "homeassistant.components.vizio.async_classify_device",
+        return_value=DeviceType.TV,
+    ):
+        await setup_integration(hass, mock_speaker_config_entry)
+
+    assert CONF_DEVICE_TYPE not in mock_speaker_config_entry.data
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_tv_not_classified(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test TV entries never trigger device classification."""
+    with patch(
+        "homeassistant.components.vizio.async_classify_device",
+    ) as mock_classify:
+        await setup_integration(hass, mock_tv_config_entry)
+
+    mock_classify.assert_not_called()

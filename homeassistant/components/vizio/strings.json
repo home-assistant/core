@@ -40,7 +40,22 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "charging_status": {
+        "name": "Charging status",
+        "state": {
+          "charging": "Charging",
+          "fully_charged": "Fully charged",
+          "not_charging": "Not charging"
+        }
+      }
+    }
+  },
   "exceptions": {
+    "command_error": {
+      "message": "Failed to send command to the device: {error}"
+    },
     "unknown_command": {
       "message": "Unknown remote command `{command}`. Valid commands for this device are listed in the integration documentation."
     }
