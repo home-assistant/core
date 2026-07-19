@@ -261,3 +261,27 @@ async def test_connection_restored_deletes_issue(
 
     await on_reconnect()
     assert (DOMAIN, issue_id) not in issue_registry.issues
+
+
+async def test_setup_deletes_stale_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Test that a successful setup removes a connection_lost issue from a previous run."""
+    issue_registry = ir.async_get(hass)
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="connection_lost",
+    )
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    await init_integration(hass, config_entry)
+
+    assert (DOMAIN, issue_id) not in issue_registry.issues
