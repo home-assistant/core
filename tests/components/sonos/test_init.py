@@ -431,6 +431,38 @@ async def test_async_poll_manual_hosts_uid_http_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+async def test_async_poll_manual_hosts_uid_invalid(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test uid lookup returning invalid value skips host and logs warning."""
+    soco_1 = soco_factory.cache_mock(_MockSoCoUidError(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    uid = soco_1.uid
+
+    with (
+        caplog.at_level(logging.WARNING),
+        patch.object(
+            type(soco_1),
+            "uid",
+            new_callable=PropertyMock,
+            create=True,
+            side_effect=chain([uid], repeat(None)),
+        ),
+    ):
+        await _setup_hass(hass)
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" not in entity_registry.entities
+    assert (
+        f"Could not get Sonos uid from {soco_1.ip_address}: invalid uid" in caplog.text
+    )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
 async def test_async_poll_manual_hosts_2(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
