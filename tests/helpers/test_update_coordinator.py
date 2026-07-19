@@ -1405,10 +1405,10 @@ async def set_stored_data(
     data: Any,
 ) -> None:
     """Seed the restore coordinator store and load it, as bootstrap would."""
-    bucket = entry.entry_id if entry else RESTORE_DOMAIN
+    storage_scope = entry.entry_id if entry else RESTORE_DOMAIN
     hass_storage[restore_state.RESTORE_STORAGE_KEY] = {
         "version": 1,
-        "data": {bucket: {RESTORE_KEY: data}},
+        "data": {storage_scope: {RESTORE_KEY: data}},
     }
     await restore_state.async_load_coordinator_data(hass)
 
@@ -1416,8 +1416,8 @@ async def set_stored_data(
 def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry | None) -> Any:
     """Return the stored data of the coordinator under test."""
     store_data = hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"]
-    bucket = entry.entry_id if entry else RESTORE_DOMAIN
-    return store_data[bucket][RESTORE_KEY]
+    storage_scope = entry.entry_id if entry else RESTORE_DOMAIN
+    return store_data[storage_scope][RESTORE_KEY]
 
 
 async def flush_restore_store(hass: HomeAssistant) -> None:
@@ -1471,6 +1471,45 @@ async def test_restore_on_first_refresh(
     assert seen == [{"value": "stored"}]
     # The fetch result overlays the restored data
     assert crd.data == {"value": "fetched"}
+
+    await flush_restore_store(hass)
+
+
+async def test_setup_method_data_not_overwritten_by_restore(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test data loaded by setup_method is not clobbered by restored data."""
+    await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
+    seen: list[Any] = []
+
+    async def setup_method() -> None:
+        crd.data = {"value": "setup"}
+
+    async def update_method() -> dict[str, Any]:
+        seen.append(crd.data)
+        return crd.data
+
+    crd: update_coordinator.RestoreDataUpdateCoordinator[Any] = (
+        update_coordinator.RestoreDataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            config_entry=restore_entry,
+            name="test",
+            storage_key=RESTORE_KEY,
+            setup_method=setup_method,
+            update_method=update_method,
+        )
+    )
+    restore_entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing"
+    )
+    await crd.async_config_entry_first_refresh()
+
+    # setup_method's data was available to the first fetch, unclobbered by restore
+    assert seen == [{"value": "setup"}]
+    assert crd.data == {"value": "setup"}
 
     await flush_restore_store(hass)
 
@@ -1663,6 +1702,19 @@ async def test_generic_non_dict_roundtrip(
     assert seen == [payload]
 
     await flush_restore_store(hass)
+
+
+async def test_persist_non_serializable_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test persisting non-JSON-serializable data raises when the store is flushed."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    crd.async_set_updated_data({"value": object()})
+
+    with pytest.raises(TypeError, match="not JSON serializable"):
+        await flush_restore_store(hass)
 
 
 async def test_coordinators_share_single_store(

@@ -706,8 +706,8 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     @override
     async def _async_setup(self) -> None:
         """Set up the coordinator and restore stored data."""
-        await super()._async_setup()
         self.async_restore_data()
+        await super()._async_setup()
 
     @callback
     def async_restore_data(self) -> None:
