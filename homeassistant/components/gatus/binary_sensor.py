@@ -39,6 +39,7 @@ async def async_setup_entry(
                 GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
                 for endpoint_key in new_endpoints
             )
+        known_endpoints.intersection_update(current_endpoints)
 
     _check_endpoints()
     entry.async_on_unload(coordinator.async_add_listener(_check_endpoints))

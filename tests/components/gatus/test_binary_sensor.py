@@ -196,3 +196,41 @@ async def test_binary_sensor_dynamic_endpoints(
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.core_new_service") is not None
+
+
+async def test_binary_sensor_readded_endpoint(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a removed endpoint can be successfully re-added and has its entity recreated."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.core_backend_service") is not None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = []
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # If the entity is still registered (prior to #176754 being merged), remove it.
+    # Once stale devices is merged, this will already be gone automatically.
+    entity_registry = er.async_get(hass)
+    if entity_registry.async_get("binary_sensor.core_backend_service") is not None:
+        entity_registry.async_remove("binary_sensor.core_backend_service")
+    assert hass.states.get("binary_sensor.core_backend_service") is None
+
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group="Core",
+            results=[Result(success=True, status=200)],
+        )
+    ]
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.core_backend_service") is not None
