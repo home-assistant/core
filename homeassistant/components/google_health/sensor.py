@@ -189,6 +189,7 @@ async def async_setup_entry(
                     GoogleHealthDeviceSensor(
                         device_coordinator,
                         entry.entry_id,
+                        entry.title,
                         device,
                         description,
                     )
@@ -245,6 +246,7 @@ class GoogleHealthDeviceSensor(
         self,
         coordinator: GoogleHealthDeviceCoordinator,
         entry_id: str,
+        entry_title: str,
         device: PairedDevice,
         description: GoogleHealthDeviceSensorEntityDescription,
     ) -> None:
@@ -254,17 +256,16 @@ class GoogleHealthDeviceSensor(
         self.device_id = device.device_id
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
-        name = device.device_version or (
-            device.device_type.title() if device.device_type else None
-        )
+        # device_version is the product name (e.g. 'Fitbit Charge 6', 'Pixel Watch 3')
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
-            name=name,
+            name=device.device_version or entry_title,
             manufacturer="Google",
             model=device.device_type.title() if device.device_type else None,
             sw_version=device.device_version,
             via_device=(DOMAIN, entry_id),
         )
+
         if device.mac_address:
             device_info["connections"] = {(CONNECTION_NETWORK_MAC, device.mac_address)}
         self._attr_device_info = device_info
