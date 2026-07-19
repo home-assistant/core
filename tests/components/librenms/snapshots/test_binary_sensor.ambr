@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'None_3_status',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_3_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'None_29_status',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_29_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -134,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'None_13_status',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_13_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'None_1_status',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_1_status',
     'unit_of_measurement': None,
   })
 # ---

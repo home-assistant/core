@@ -30,6 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=MOCK_CONFIG_ENTRY_DATA,
         title="librenms",
+        entry_id="01KXX1E2EMMSCDQ2K4A0C7JA9T",
     )
 
 
