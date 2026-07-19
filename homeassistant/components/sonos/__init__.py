@@ -502,9 +502,7 @@ class SonosDiscoveryManager:
                 uid = known_speaker.uid
             else:
                 try:
-                    raw_uid = await self.hass.async_add_executor_job(
-                        getattr, soco, "uid"
-                    )
+                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
                 except HTTPError as err:
                     await self._process_http_connection_error(err, ip_addr)
                     continue
@@ -517,13 +515,11 @@ class SonosDiscoveryManager:
                     _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
                     continue
 
-                if not isinstance(raw_uid, str) or not raw_uid:
+                if not isinstance(uid, str) or not uid:
                     _LOGGER.warning(
                         "Could not get Sonos uid from %s: invalid uid", ip_addr
                     )
                     continue
-
-                uid = raw_uid
 
             if self.is_device_disabled(uid):
                 _LOGGER.debug(
