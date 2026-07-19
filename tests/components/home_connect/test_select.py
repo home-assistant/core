@@ -60,7 +60,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SELECT]
 

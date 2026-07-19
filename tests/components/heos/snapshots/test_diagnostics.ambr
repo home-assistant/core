@@ -259,6 +259,7 @@
   dict({
     'device': dict({
       'area_id': None,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': list([
       ]),

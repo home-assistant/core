@@ -34,7 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
-            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_entity_id_to_device_id(
@@ -56,9 +55,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:

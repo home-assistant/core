@@ -1,0 +1,92 @@
+# serializer version: 1
+# name: test_conversation_entity
+  list([
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.llama_cpp_conversation',
+      'content': 'Hello, how can I help you?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call[config_entry_options0]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.llama_cpp_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.llama_cpp_conversation',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.llama_cpp_conversation',
+      'content': 'I have successfully called the function',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_exception[-config_entry_options0]
+  'Unexpected tool argument response: Expecting value: line 1 column 1 (char 0)'
+# ---
+# name: test_function_exception[{"para-config_entry_options0]
+  'Unexpected tool argument response: Unterminated string starting at: line 1 column 2 (char 1)'
+# ---
+# name: test_unknown_hass_api[config_entry_options0]
+  dict({
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'unknown',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Error preparing LLM API',
+        }),
+      }),
+    }),
+  })
+# ---

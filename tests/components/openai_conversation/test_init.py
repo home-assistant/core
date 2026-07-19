@@ -284,7 +284,7 @@ async def test_init_error(
         "openai.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, "openai_conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -305,7 +305,7 @@ async def test_init_auth_error(
             message="",
         ),
     ):
-        assert await async_setup_component(hass, "openai_conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -1278,7 +1278,7 @@ async def test_migration_from_v2_1(
     device_1 = device_registry.async_update_device(
         device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
     )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
+    assert device_1.config_entries_subentries == {"mock_entry_id": {"mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

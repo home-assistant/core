@@ -18,7 +18,7 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api import DOMAIN, const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -127,15 +127,30 @@ async def target_entities(
 
     area_registry.async_update(label_area.id, labels={label1.label_id})
 
-    device1 = dr.DeviceEntry(id="device1", identifiers={("test", "device1")})
-    device2 = dr.DeviceEntry(id="device2", identifiers={("test", "device2")})
+    device1 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device1",
+        identifiers={("test", "device1")},
+    )
+    device2 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device2",
+        identifiers={("test", "device2")},
+    )
     area_device = dr.DeviceEntry(
-        id="area_device", identifiers={("test", "device3")}, area_id=kitchen_area.id
+        config_entry_id=config_entry.entry_id,
+        id="area_device",
+        identifiers={("test", "device3")},
+        area_id=kitchen_area.id,
     )
     label2_device = dr.DeviceEntry(
-        id="label_device", identifiers={("test", "device4")}, labels={label2.label_id}
+        config_entry_id=config_entry.entry_id,
+        id="label_device",
+        identifiers={("test", "device4")},
+        labels={label2.label_id},
     )
     diag_only_device = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
         id="diag_only_device",
         identifiers={("test", "device5")},
         area_id=garage_area.id,
@@ -1238,7 +1253,7 @@ async def test_call_service_context_with_user(
     hass_access_token: str,
 ) -> None:
     """Test that the user is set in the service call context."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     calls = async_mock_service(hass, "domain_test", "test_service")
     client = await hass_client_no_auth()
@@ -4260,7 +4275,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
+@pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(

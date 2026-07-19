@@ -2,7 +2,7 @@
 
 import logging
 import threading
-from typing import Any
+from typing import Any, override
 
 import aprslib
 from aprslib import ConnectionError as AprsConnectionError, LoginError
@@ -152,6 +152,7 @@ class AprsListenerThread(threading.Thread):
         self.start_success = success
         self.start_event.set()
 
+    @override
     def run(self) -> None:
         """Connect to APRS and listen for data."""
         self.ais.set_filter(self.server_filter)

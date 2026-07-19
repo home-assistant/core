@@ -1,7 +1,7 @@
 """Tankerkoenig binary sensor integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiotankerkoenig import PriceInfo, Station, Status
 
@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
 class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorEntity):
     """Shows if a station is open or closed."""
 
-    _attr_device_class = BinarySensorDeviceClass.DOOR
+    _attr_device_class = BinarySensorDeviceClass.OPENING
     _attr_translation_key = "status"
 
     def __init__(
@@ -68,13 +68,14 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
             attrs["whole_day"] = station.whole_day
 
         if coordinator.show_on_map:
-            attrs[ATTR_LATITUDE] = station.lat
-            attrs[ATTR_LONGITUDE] = station.lng
+            attrs[EntityStateAttribute.LATITUDE] = station.lat
+            attrs[EntityStateAttribute.LONGITUDE] = station.lng
 
         if attrs:
             self._attr_extra_state_attributes = attrs
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the station is open."""
         data: PriceInfo = self.coordinator.data[self._station_id]
