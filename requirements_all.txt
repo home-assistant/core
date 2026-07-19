@@ -2659,7 +2659,7 @@ python-dropbox-api==0.1.4
 python-duco-connectivity==0.11.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.4.1
+python-ecobee-api==0.4.2
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
