@@ -2,6 +2,7 @@
 
 from enum import StrEnum, unique
 
+import probatio as prb
 import voluptuous as vol
 from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
@@ -29,9 +30,9 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     Platform,
 )
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
-from homeassistant.helpers.typing import VolDictType, VolSchemaType
+from homeassistant.helpers.typing import VolDictType
 
 from ..const import (
     CONF_CONTEXT_TIMEOUT,
@@ -123,52 +124,59 @@ from .knx_selector import (
     KNXSectionFlat,
     SyncStateSelector,
 )
+from .vol_compat import VolValidator
 
-BASE_ENTITY_SCHEMA = vol.All(
+BASE_ENTITY_SCHEMA = prb.All(
     {
-        vol.Optional(CONF_NAME, default=None): vol.Maybe(str),
-        vol.Optional(CONF_DEVICE_INFO, default=None): vol.Maybe(str),
-        vol.Optional(CONF_ENTITY_CATEGORY, default=None): vol.Any(
-            ENTITY_CATEGORIES_SCHEMA, vol.SetTo(None)
+        prb.Optional(CONF_NAME, default=None): prb.Maybe(str),
+        prb.Optional(CONF_DEVICE_INFO, default=None): prb.Maybe(str),
+        prb.Optional(CONF_ENTITY_CATEGORY, default=None): prb.Any(
+            VolValidator(ENTITY_CATEGORIES_SCHEMA), prb.SetTo(None)
         ),
     },
-    vol.Any(
-        vol.Schema(
+    prb.Any(
+        prb.Schema(
             {
-                vol.Required(CONF_NAME): vol.All(str, vol.IsTrue()),
+                prb.Required(CONF_NAME): prb.All(str, prb.IsTrue()),
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=prb.ALLOW_EXTRA,
         ),
-        vol.Schema(
+        prb.Schema(
             {
-                vol.Required(CONF_DEVICE_INFO): str,
+                prb.Required(CONF_DEVICE_INFO): str,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=prb.ALLOW_EXTRA,
         ),
         msg="One of `Device` or `Name` is required",
     ),
 )
 
 
-BINARY_SENSOR_KNX_SCHEMA = vol.Schema(
+BINARY_SENSOR_KNX_SCHEMA = prb.Schema(
     {
-        vol.Required(CONF_GA_SENSOR): GASelector(
+        prb.Required(CONF_GA_SENSOR): GASelector(
             write=False, state_required=True, valid_dpt="1"
         ),
-        vol.Optional(CONF_INVERT): selector.BooleanSelector(),
+        prb.Optional(CONF_INVERT): VolValidator(selector.BooleanSelector()),
         "section_advanced_options": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_IGNORE_INTERNAL_STATE): selector.BooleanSelector(),
-        vol.Optional(CONF_CONTEXT_TIMEOUT): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=10, step=0.1, unit_of_measurement="s"
+        prb.Optional(CONF_IGNORE_INTERNAL_STATE): VolValidator(
+            selector.BooleanSelector()
+        ),
+        prb.Optional(CONF_CONTEXT_TIMEOUT): VolValidator(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=10, step=0.1, unit_of_measurement="s"
+                )
             )
         ),
-        vol.Optional(CONF_RESET_AFTER): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=600, step=0.1, unit_of_measurement="s"
+        prb.Optional(CONF_RESET_AFTER): VolValidator(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=600, step=0.1, unit_of_measurement="s"
+                )
             )
         ),
-        vol.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
+        prb.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
             allow_false=True
         ),
     },
@@ -187,7 +195,7 @@ def _button_data_sub_validator(config: dict) -> dict:
             try:
                 transcoder.to_knx(config[CONF_DATA][CONF_VALUE])
             except ConversionError as ex:
-                raise vol.Invalid(
+                raise prb.Invalid(
                     f"Value invalid for DPT {transcoder.dpt_number_str()}",
                     path=([CONF_DATA]),
                 ) from ex
@@ -196,7 +204,7 @@ def _button_data_sub_validator(config: dict) -> dict:
             if length != transcoder.payload_length or (
                 length != 0 and transcoder.payload_type is DPTBinary
             ):
-                raise vol.Invalid(
+                raise prb.Invalid(
                     f"Payload length invalid for DPT {transcoder.dpt_number_str()}",
                     path=([CONF_DATA]),
                 )
@@ -204,78 +212,84 @@ def _button_data_sub_validator(config: dict) -> dict:
     # without DPT only raw allowed -> payload + payload_length (checked by KnxPayloadSelector)
     if CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
         return config
-    raise vol.Invalid("Invalid configuration for button entity")
+    raise prb.Invalid("Invalid configuration for button entity")
 
 
 BUTTON_KNX_SCHEMA = AllSerializeFirst(
-    vol.Schema(
+    prb.Schema(
         {
-            vol.Required(CONF_GA_SEND): GASelector(
+            prb.Required(CONF_GA_SEND): GASelector(
                 state=False,
                 write_required=True,
                 passive=False,
                 dpt=["numeric", "enum", "complex", "string"],
                 dpt_required=False,  # for raw payload support
             ),
-            vol.Required(CONF_DATA): KnxPayloadSelector(ga_path=CONF_GA_SEND),
+            prb.Required(CONF_DATA): KnxPayloadSelector(ga_path=CONF_GA_SEND),
         },
     ),
     _button_data_sub_validator,
 )
 
 COVER_KNX_SCHEMA = AllSerializeFirst(
-    vol.Schema(
+    prb.Schema(
         {
-            vol.Optional(CONF_GA_UP_DOWN): GASelector(state=False, valid_dpt="1"),
-            vol.Optional(CoverConf.INVERT_UPDOWN): selector.BooleanSelector(),
-            vol.Optional(CONF_GA_STOP): GASelector(state=False, valid_dpt="1"),
-            vol.Optional(CONF_GA_STEP): GASelector(state=False, valid_dpt="1"),
+            prb.Optional(CONF_GA_UP_DOWN): GASelector(state=False, valid_dpt="1"),
+            prb.Optional(CoverConf.INVERT_UPDOWN): VolValidator(
+                selector.BooleanSelector()
+            ),
+            prb.Optional(CONF_GA_STOP): GASelector(state=False, valid_dpt="1"),
+            prb.Optional(CONF_GA_STEP): GASelector(state=False, valid_dpt="1"),
             "section_position_control": KNXSectionFlat(collapsible=True),
-            vol.Optional(CONF_GA_POSITION_SET): GASelector(
+            prb.Optional(CONF_GA_POSITION_SET): GASelector(
                 state=False, valid_dpt="5.001"
             ),
-            vol.Optional(CONF_GA_POSITION_STATE): GASelector(
+            prb.Optional(CONF_GA_POSITION_STATE): GASelector(
                 write=False, valid_dpt="5.001"
             ),
-            vol.Optional(CoverConf.INVERT_POSITION): selector.BooleanSelector(),
+            prb.Optional(CoverConf.INVERT_POSITION): VolValidator(
+                selector.BooleanSelector()
+            ),
             "section_tilt_control": KNXSectionFlat(collapsible=True),
-            vol.Optional(CONF_GA_ANGLE): GASelector(valid_dpt="5.001"),
-            vol.Optional(CoverConf.INVERT_ANGLE): selector.BooleanSelector(),
+            prb.Optional(CONF_GA_ANGLE): GASelector(valid_dpt="5.001"),
+            prb.Optional(CoverConf.INVERT_ANGLE): VolValidator(
+                selector.BooleanSelector()
+            ),
             "section_travel_time": KNXSectionFlat(),
-            vol.Required(
-                CoverConf.TRAVELLING_TIME_UP, default=25
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, max=1000, step=0.1, unit_of_measurement="s"
+            prb.Required(CoverConf.TRAVELLING_TIME_UP, default=25): VolValidator(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0, max=1000, step=0.1, unit_of_measurement="s"
+                    )
                 )
             ),
-            vol.Required(
-                CoverConf.TRAVELLING_TIME_DOWN, default=25
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, max=1000, step=0.1, unit_of_measurement="s"
+            prb.Required(CoverConf.TRAVELLING_TIME_DOWN, default=25): VolValidator(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0, max=1000, step=0.1, unit_of_measurement="s"
+                    )
                 )
             ),
-            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+            prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
         },
-        extra=vol.REMOVE_EXTRA,
+        extra=prb.REMOVE_EXTRA,
     ),
-    vol.Any(
-        vol.Schema(
+    prb.Any(
+        prb.Schema(
             {
-                vol.Required(CONF_GA_UP_DOWN): GASelector(
+                prb.Required(CONF_GA_UP_DOWN): GASelector(
                     state=False, write_required=True
                 )
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=prb.ALLOW_EXTRA,
         ),
-        vol.Schema(
+        prb.Schema(
             {
-                vol.Required(CONF_GA_POSITION_SET): GASelector(
+                prb.Required(CONF_GA_POSITION_SET): GASelector(
                     state=False, write_required=True
                 )
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=prb.ALLOW_EXTRA,
         ),
         msg=(
             "At least one of 'Open/Close control' or"
@@ -284,35 +298,39 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
     ),
 )
 
-DATE_KNX_SCHEMA = vol.Schema(
+DATE_KNX_SCHEMA = prb.Schema(
     {
-        vol.Required(CONF_GA_DATE): GASelector(write_required=True, valid_dpt="11.001"),
-        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
-        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        prb.Required(CONF_GA_DATE): GASelector(write_required=True, valid_dpt="11.001"),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
+            selector.BooleanSelector()
+        ),
+        prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
 )
 
-DATETIME_KNX_SCHEMA = vol.Schema(
+DATETIME_KNX_SCHEMA = prb.Schema(
     {
-        vol.Required(CONF_GA_DATETIME): GASelector(
+        prb.Required(CONF_GA_DATETIME): GASelector(
             write_required=True, valid_dpt="19.001"
         ),
-        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
-        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
+            selector.BooleanSelector()
+        ),
+        prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
 )
 
 FAN_KNX_SCHEMA = AllSerializeFirst(
-    vol.Schema(
+    prb.Schema(
         {
-            vol.Optional(CONF_GA_SWITCH): GASelector(
+            prb.Optional(CONF_GA_SWITCH): GASelector(
                 write_required=True, valid_dpt="1"
             ),
-            vol.Optional(CONF_SPEED): GroupSelect(
+            prb.Optional(CONF_SPEED): GroupSelect(
                 GroupSelectOption(
                     translation_key="percentage_mode",
                     schema={
-                        vol.Required(CONF_GA_SPEED): GASelector(
+                        prb.Required(CONF_GA_SPEED): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
                     },
@@ -320,37 +338,37 @@ FAN_KNX_SCHEMA = AllSerializeFirst(
                 GroupSelectOption(
                     translation_key="step_mode",
                     schema={
-                        vol.Required(CONF_GA_STEP): GASelector(
+                        prb.Required(CONF_GA_STEP): GASelector(
                             write_required=True, valid_dpt="5.010"
                         ),
-                        vol.Required(
-                            FanConf.MAX_STEP, default=3
-                        ): selector.NumberSelector(
-                            selector.NumberSelectorConfig(
-                                min=1,
-                                max=100,
-                                step=1,
-                                mode=selector.NumberSelectorMode.BOX,
+                        prb.Required(FanConf.MAX_STEP, default=3): VolValidator(
+                            selector.NumberSelector(
+                                selector.NumberSelectorConfig(
+                                    min=1,
+                                    max=100,
+                                    step=1,
+                                    mode=selector.NumberSelectorMode.BOX,
+                                )
                             )
                         ),
                     },
                 ),
                 collapsible=False,
             ),
-            vol.Optional(CONF_GA_OSCILLATION): GASelector(
+            prb.Optional(CONF_GA_OSCILLATION): GASelector(
                 write_required=True, valid_dpt="1"
             ),
-            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+            prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
         }
     ),
-    vol.Any(
-        vol.Schema(
-            {vol.Required(CONF_GA_SWITCH): object},
-            extra=vol.ALLOW_EXTRA,
+    prb.Any(
+        prb.Schema(
+            {prb.Required(CONF_GA_SWITCH): object},
+            extra=prb.ALLOW_EXTRA,
         ),
-        vol.Schema(
-            {vol.Required(CONF_SPEED): object},
-            extra=vol.ALLOW_EXTRA,
+        prb.Schema(
+            {prb.Required(CONF_SPEED): object},
+            extra=prb.ALLOW_EXTRA,
         ),
         msg=("At least one of 'Switch' or 'Fan speed' is required."),
     ),
@@ -372,33 +390,37 @@ _hs_color_inclusion_msg = (
 
 
 LIGHT_KNX_SCHEMA = AllSerializeFirst(
-    vol.Schema(
+    prb.Schema(
         {
-            vol.Optional(CONF_GA_SWITCH): GASelector(
+            prb.Optional(CONF_GA_SWITCH): GASelector(
                 write_required=True, valid_dpt="1"
             ),
-            vol.Optional(CONF_GA_BRIGHTNESS): GASelector(
+            prb.Optional(CONF_GA_BRIGHTNESS): GASelector(
                 write_required=True, valid_dpt="5.001"
             ),
             "section_color_temp": KNXSectionFlat(collapsible=True),
-            vol.Optional(CONF_GA_COLOR_TEMP): GASelector(
+            prb.Optional(CONF_GA_COLOR_TEMP): GASelector(
                 write_required=True, dpt=ColorTempModes
             ),
-            vol.Required(CONF_COLOR_TEMP_MIN, default=2700): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
+            prb.Required(CONF_COLOR_TEMP_MIN, default=2700): VolValidator(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
                 )
             ),
-            vol.Required(CONF_COLOR_TEMP_MAX, default=6000): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=10000, step=1, unit_of_measurement="K"
+            prb.Required(CONF_COLOR_TEMP_MAX, default=6000): VolValidator(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=10000, step=1, unit_of_measurement="K"
+                    )
                 )
             ),
-            vol.Optional(CONF_COLOR): GroupSelect(
+            prb.Optional(CONF_COLOR): GroupSelect(
                 GroupSelectOption(
                     translation_key="single_address",
                     schema={
-                        vol.Optional(CONF_GA_COLOR): GASelector(
+                        prb.Optional(CONF_GA_COLOR): GASelector(
                             write_required=True, dpt=LightColorMode
                         )
                     },
@@ -406,28 +428,28 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                 GroupSelectOption(
                     translation_key="individual_addresses",
                     schema={
-                        vol.Optional(CONF_GA_RED_SWITCH): GASelector(
+                        prb.Optional(CONF_GA_RED_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
-                        vol.Required(CONF_GA_RED_BRIGHTNESS): GASelector(
+                        prb.Required(CONF_GA_RED_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
-                        vol.Optional(CONF_GA_GREEN_SWITCH): GASelector(
+                        prb.Optional(CONF_GA_GREEN_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
-                        vol.Required(CONF_GA_GREEN_BRIGHTNESS): GASelector(
+                        prb.Required(CONF_GA_GREEN_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
-                        vol.Optional(CONF_GA_BLUE_SWITCH): GASelector(
+                        prb.Optional(CONF_GA_BLUE_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
-                        vol.Required(CONF_GA_BLUE_BRIGHTNESS): GASelector(
+                        prb.Required(CONF_GA_BLUE_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
-                        vol.Optional(CONF_GA_WHITE_SWITCH): GASelector(
+                        prb.Optional(CONF_GA_WHITE_SWITCH): GASelector(
                             write_required=False, valid_dpt="1"
                         ),
-                        vol.Optional(CONF_GA_WHITE_BRIGHTNESS): GASelector(
+                        prb.Optional(CONF_GA_WHITE_BRIGHTNESS): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
                     },
@@ -435,50 +457,50 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                 GroupSelectOption(
                     translation_key="hsv_addresses",
                     schema={
-                        vol.Required(CONF_GA_HUE): GASelector(
+                        prb.Required(CONF_GA_HUE): GASelector(
                             write_required=True, valid_dpt="5.003"
                         ),
-                        vol.Required(CONF_GA_SATURATION): GASelector(
+                        prb.Required(CONF_GA_SATURATION): GASelector(
                             write_required=True, valid_dpt="5.001"
                         ),
                     },
                 ),
             ),
-            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+            prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
         }
     ),
-    vol.Any(
-        vol.Schema(
-            {vol.Required(CONF_GA_SWITCH): object},
-            extra=vol.ALLOW_EXTRA,
+    prb.Any(
+        prb.Schema(
+            {prb.Required(CONF_GA_SWITCH): object},
+            extra=prb.ALLOW_EXTRA,
         ),
-        vol.Schema(  # brightness addresses are required in INDIVIDUAL_COLOR_SCHEMA
-            {vol.Required(CONF_COLOR): {vol.Required(CONF_GA_RED_BRIGHTNESS): object}},
-            extra=vol.ALLOW_EXTRA,
+        prb.Schema(  # brightness addresses are required in INDIVIDUAL_COLOR_SCHEMA
+            {prb.Required(CONF_COLOR): {prb.Required(CONF_GA_RED_BRIGHTNESS): object}},
+            extra=prb.ALLOW_EXTRA,
         ),
         msg="either 'address' or 'individual_colors' is required",
     ),
-    vol.Any(
-        vol.Schema(  # 'brightness' is non-optional for hs-color
+    prb.Any(
+        prb.Schema(  # 'brightness' is non-optional for hs-color
             {
-                vol.Required(CONF_GA_BRIGHTNESS, msg=_hs_color_inclusion_msg): object,
-                vol.Required(CONF_COLOR): {
-                    vol.Required(CONF_GA_HUE, msg=_hs_color_inclusion_msg): object,
-                    vol.Required(
+                prb.Required(CONF_GA_BRIGHTNESS, msg=_hs_color_inclusion_msg): object,
+                prb.Required(CONF_COLOR): {
+                    prb.Required(CONF_GA_HUE, msg=_hs_color_inclusion_msg): object,
+                    prb.Required(
                         CONF_GA_SATURATION, msg=_hs_color_inclusion_msg
                     ): object,
                 },
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=prb.ALLOW_EXTRA,
         ),
-        vol.Schema(  # hs-colors not used
+        prb.Schema(  # hs-colors not used
             {
-                vol.Optional(CONF_COLOR): {
-                    vol.Optional(CONF_GA_HUE): None,
-                    vol.Optional(CONF_GA_SATURATION): None,
+                prb.Optional(CONF_COLOR): {
+                    prb.Optional(CONF_GA_HUE): None,
+                    prb.Optional(CONF_GA_SATURATION): None,
                 },
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=prb.ALLOW_EXTRA,
         ),
         msg=_hs_color_inclusion_msg,
     ),
@@ -494,103 +516,123 @@ def _number_limit_sub_validator(config: dict) -> dict:
 
 
 NUMBER_KNX_SCHEMA = AllSerializeFirst(
-    vol.Schema(
+    prb.Schema(
         {
-            vol.Required(CONF_GA_SENSOR): GASelector(
+            prb.Required(CONF_GA_SENSOR): GASelector(
                 write_required=True, dpt=["numeric"]
             ),
-            vol.Optional(
-                CONF_RESPOND_TO_READ, default=False
-            ): selector.BooleanSelector(),
+            prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
+                selector.BooleanSelector()
+            ),
             "section_advanced_options": KNXSectionFlat(collapsible=True),
-            vol.Required(CONF_MODE, default=NumberMode.AUTO): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(NumberMode),
-                    translation_key="component.knx.config_panel.entities.create.number.knx.mode",
-                ),
-            ),
-            vol.Optional(NumberConf.MIN): selector.NumberSelector(),
-            vol.Optional(NumberConf.MAX): selector.NumberSelector(),
-            vol.Optional(NumberConf.STEP): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, step="any", mode=selector.NumberSelectorMode.BOX
-                )
-            ),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=sorted(
-                        {
-                            str(unit)
-                            for units in NUMBER_DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
+            prb.Required(CONF_MODE, default=NumberMode.AUTO): VolValidator(
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=list(NumberMode),
+                        translation_key="component.knx.config_panel.entities.create.number.knx.mode",
                     ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    custom_value=True,
-                ),
-            ),
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in NumberDeviceClass],
-                    # should align with sensor
-                    translation_key="component.knx.selector.sensor_device_class",
-                    sort=True,
                 )
             ),
-            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+            prb.Optional(NumberConf.MIN): VolValidator(selector.NumberSelector()),
+            prb.Optional(NumberConf.MAX): VolValidator(selector.NumberSelector()),
+            prb.Optional(NumberConf.STEP): VolValidator(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0, step="any", mode=selector.NumberSelectorMode.BOX
+                    )
+                )
+            ),
+            prb.Optional(CONF_UNIT_OF_MEASUREMENT): VolValidator(
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=sorted(
+                            {
+                                str(unit)
+                                for units in NUMBER_DEVICE_CLASS_UNITS.values()
+                                for unit in units
+                                if unit is not None
+                            }
+                        ),
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        custom_value=True,
+                    ),
+                )
+            ),
+            prb.Optional(CONF_DEVICE_CLASS): VolValidator(
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in NumberDeviceClass],
+                        # should align with sensor
+                        translation_key="component.knx.selector.sensor_device_class",
+                        sort=True,
+                    )
+                )
+            ),
+            prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
         },
     ),
-    _number_limit_sub_validator,
+    VolValidator(_number_limit_sub_validator),
 )
 
-SCENE_KNX_SCHEMA = vol.Schema(
+SCENE_KNX_SCHEMA = prb.Schema(
     {
-        vol.Required(CONF_GA_SCENE): GASelector(
+        prb.Required(CONF_GA_SCENE): GASelector(
             state=False,
             passive=False,
             write_required=True,
             valid_dpt=["17.001", "18.001"],
         ),
-        vol.Required(SceneConf.SCENE_NUMBER): AllSerializeFirst(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
+        prb.Required(SceneConf.SCENE_NUMBER): AllSerializeFirst(
+            VolValidator(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
+                    )
                 )
             ),
-            vol.Coerce(int),
+            prb.Coerce(int),
         ),
     },
 )
 
-SWITCH_KNX_SCHEMA = vol.Schema(
+SWITCH_KNX_SCHEMA = prb.Schema(
     {
-        vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
-        vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
-        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
-        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    },
-)
-
-TEXT_KNX_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_GA_TEXT): GASelector(write_required=True, dpt=["string"]),
-        vol.Required(CONF_MODE, default=TextMode.TEXT): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=list(TextMode),
-                translation_key="component.knx.config_panel.entities.create.text.knx.mode",
-            ),
+        prb.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
+        prb.Optional(CONF_INVERT, default=False): VolValidator(
+            selector.BooleanSelector()
         ),
-        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
-        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
+            selector.BooleanSelector()
+        ),
+        prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
 )
 
-TIME_KNX_SCHEMA = vol.Schema(
+TEXT_KNX_SCHEMA = prb.Schema(
     {
-        vol.Required(CONF_GA_TIME): GASelector(write_required=True, valid_dpt="10.001"),
-        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
-        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        prb.Required(CONF_GA_TEXT): GASelector(write_required=True, dpt=["string"]),
+        prb.Required(CONF_MODE, default=TextMode.TEXT): VolValidator(
+            selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(TextMode),
+                    translation_key="component.knx.config_panel.entities.create.text.knx.mode",
+                ),
+            )
+        ),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
+            selector.BooleanSelector()
+        ),
+        prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    },
+)
+
+TIME_KNX_SCHEMA = prb.Schema(
+    {
+        prb.Required(CONF_GA_TIME): GASelector(write_required=True, valid_dpt="10.001"),
+        prb.Optional(CONF_RESPOND_TO_READ, default=False): VolValidator(
+            selector.BooleanSelector()
+        ),
+        prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
 )
 
@@ -611,128 +653,142 @@ class ConfClimateFanSpeedMode(StrEnum):
     STEPS = "5.010"
 
 
-CLIMATE_KNX_SCHEMA = vol.Schema(
+CLIMATE_KNX_SCHEMA = prb.Schema(
     {
-        vol.Required(CONF_GA_TEMPERATURE_CURRENT): GASelector(
+        prb.Required(CONF_GA_TEMPERATURE_CURRENT): GASelector(
             write=False, state_required=True, valid_dpt="9.001"
         ),
-        vol.Optional(CONF_GA_HUMIDITY_CURRENT): GASelector(
+        prb.Optional(CONF_GA_HUMIDITY_CURRENT): GASelector(
             write=False, valid_dpt="9.007"
         ),
-        vol.Required(CONF_TARGET_TEMPERATURE): GroupSelect(
+        prb.Required(CONF_TARGET_TEMPERATURE): GroupSelect(
             GroupSelectOption(
                 translation_key="group_direct_temp",
                 schema={
-                    vol.Required(CONF_GA_TEMPERATURE_TARGET): GASelector(
+                    prb.Required(CONF_GA_TEMPERATURE_TARGET): GASelector(
                         write_required=True, valid_dpt="9.001"
                     ),
-                    vol.Required(
-                        ClimateConf.MIN_TEMP, default=7
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=-20, max=80, step=1, unit_of_measurement="°C"
+                    prb.Required(ClimateConf.MIN_TEMP, default=7): VolValidator(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=-20, max=80, step=1, unit_of_measurement="°C"
+                            )
                         )
                     ),
-                    vol.Required(
-                        ClimateConf.MAX_TEMP, default=28
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0, max=100, step=1, unit_of_measurement="°C"
+                    prb.Required(ClimateConf.MAX_TEMP, default=28): VolValidator(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=0, max=100, step=1, unit_of_measurement="°C"
+                            )
                         )
                     ),
-                    vol.Required(
+                    prb.Required(
                         ClimateConf.TEMPERATURE_STEP, default=0.1
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0.1, max=2, step=0.1, unit_of_measurement="K"
-                        ),
+                    ): VolValidator(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=0.1, max=2, step=0.1, unit_of_measurement="K"
+                            ),
+                        )
                     ),
                 },
             ),
             GroupSelectOption(
                 translation_key="group_setpoint_shift",
                 schema={
-                    vol.Required(CONF_GA_TEMPERATURE_TARGET): GASelector(
+                    prb.Required(CONF_GA_TEMPERATURE_TARGET): GASelector(
                         write=False, state_required=True, valid_dpt="9.001"
                     ),
-                    vol.Required(CONF_GA_SETPOINT_SHIFT): GASelector(
+                    prb.Required(CONF_GA_SETPOINT_SHIFT): GASelector(
                         write_required=True,
                         state_required=True,
                         dpt=ConfSetpointShiftMode,
                     ),
-                    vol.Required(
+                    prb.Required(
                         ClimateConf.SETPOINT_SHIFT_MIN, default=-6
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=-32, max=0, step=1, unit_of_measurement="K"
+                    ): VolValidator(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=-32, max=0, step=1, unit_of_measurement="K"
+                            )
                         )
                     ),
-                    vol.Required(
+                    prb.Required(
                         ClimateConf.SETPOINT_SHIFT_MAX, default=6
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0, max=32, step=1, unit_of_measurement="K"
+                    ): VolValidator(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=0, max=32, step=1, unit_of_measurement="K"
+                            )
                         )
                     ),
-                    vol.Required(
+                    prb.Required(
                         ClimateConf.TEMPERATURE_STEP, default=0.1
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0.1, max=2, step=0.1, unit_of_measurement="K"
-                        ),
+                    ): VolValidator(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=0.1, max=2, step=0.1, unit_of_measurement="K"
+                            ),
+                        )
                     ),
                 },
             ),
             collapsible=False,
         ),
         "section_activity": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_ACTIVE): GASelector(write=False, valid_dpt="1"),
-        vol.Optional(CONF_GA_VALVE): GASelector(write=False, valid_dpt="5.001"),
+        prb.Optional(CONF_GA_ACTIVE): GASelector(write=False, valid_dpt="1"),
+        prb.Optional(CONF_GA_VALVE): GASelector(write=False, valid_dpt="5.001"),
         "section_operation_mode": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_OPERATION_MODE): GASelector(valid_dpt="20.102"),
-        vol.Optional(CONF_IGNORE_AUTO_MODE): selector.BooleanSelector(),
+        prb.Optional(CONF_GA_OPERATION_MODE): GASelector(valid_dpt="20.102"),
+        prb.Optional(CONF_IGNORE_AUTO_MODE): VolValidator(selector.BooleanSelector()),
         "section_operation_mode_individual": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_OP_MODE_COMFORT): GASelector(state=False, valid_dpt="1"),
-        vol.Optional(CONF_GA_OP_MODE_ECO): GASelector(state=False, valid_dpt="1"),
-        vol.Optional(CONF_GA_OP_MODE_STANDBY): GASelector(state=False, valid_dpt="1"),
-        vol.Optional(CONF_GA_OP_MODE_PROTECTION): GASelector(
+        prb.Optional(CONF_GA_OP_MODE_COMFORT): GASelector(state=False, valid_dpt="1"),
+        prb.Optional(CONF_GA_OP_MODE_ECO): GASelector(state=False, valid_dpt="1"),
+        prb.Optional(CONF_GA_OP_MODE_STANDBY): GASelector(state=False, valid_dpt="1"),
+        prb.Optional(CONF_GA_OP_MODE_PROTECTION): GASelector(
             state=False, valid_dpt="1"
         ),
         "section_heat_cool": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_HEAT_COOL): GASelector(valid_dpt="1.100"),
+        prb.Optional(CONF_GA_HEAT_COOL): GASelector(valid_dpt="1.100"),
         "section_on_off": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_ON_OFF): GASelector(valid_dpt="1"),
-        vol.Optional(ClimateConf.ON_OFF_INVERT): selector.BooleanSelector(),
+        prb.Optional(CONF_GA_ON_OFF): GASelector(valid_dpt="1"),
+        prb.Optional(ClimateConf.ON_OFF_INVERT): VolValidator(
+            selector.BooleanSelector()
+        ),
         "section_controller_mode": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_CONTROLLER_MODE): GASelector(valid_dpt="20.105"),
-        vol.Optional(CONF_GA_CONTROLLER_STATUS): GASelector(write=False),
-        vol.Required(
+        prb.Optional(CONF_GA_CONTROLLER_MODE): GASelector(valid_dpt="20.105"),
+        prb.Optional(CONF_GA_CONTROLLER_STATUS): GASelector(write=False),
+        prb.Required(
             ClimateConf.DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=list(HVACMode),
-                translation_key="component.climate.selector.hvac_mode",
+        ): VolValidator(
+            selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(HVACMode),
+                    translation_key="component.climate.selector.hvac_mode",
+                )
             )
         ),
         "section_fan": KNXSectionFlat(collapsible=True),
-        vol.Optional(CONF_GA_FAN_SPEED): GASelector(dpt=ConfClimateFanSpeedMode),
-        vol.Required(ClimateConf.FAN_MAX_STEP, default=3): AllSerializeFirst(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(min=1, max=100, step=1)
+        prb.Optional(CONF_GA_FAN_SPEED): GASelector(dpt=ConfClimateFanSpeedMode),
+        prb.Required(ClimateConf.FAN_MAX_STEP, default=3): AllSerializeFirst(
+            VolValidator(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(min=1, max=100, step=1)
+                )
             ),
-            vol.Coerce(int),
+            prb.Coerce(int),
         ),
-        vol.Required(
-            ClimateConf.FAN_ZERO_MODE, default=FanZeroMode.OFF
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=list(FanZeroMode),
-                translation_key="component.knx.config_panel.entities.create.climate.knx.fan_zero_mode",
+        prb.Required(ClimateConf.FAN_ZERO_MODE, default=FanZeroMode.OFF): VolValidator(
+            selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(FanZeroMode),
+                    translation_key="component.knx.config_panel.entities.create.climate.knx.fan_zero_mode",
+                )
             )
         ),
-        vol.Optional(CONF_GA_FAN_SWING): GASelector(valid_dpt="1"),
-        vol.Optional(CONF_GA_FAN_SWING_HORIZONTAL): GASelector(valid_dpt="1"),
-        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        prb.Optional(CONF_GA_FAN_SWING): GASelector(valid_dpt="1"),
+        prb.Optional(CONF_GA_FAN_SWING_HORIZONTAL): GASelector(valid_dpt="1"),
+        prb.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
 )
 
@@ -745,52 +801,60 @@ def _sensor_attribute_sub_validator(config: dict) -> dict:
 
 
 SENSOR_KNX_SCHEMA = AllSerializeFirst(
-    vol.Schema(
+    prb.Schema(
         {
-            vol.Required(CONF_GA_SENSOR): GASelector(
+            prb.Required(CONF_GA_SENSOR): GASelector(
                 write=False, state_required=True, dpt=["numeric", "string"]
             ),
             "section_advanced_options": KNXSectionFlat(collapsible=True),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=sorted(
-                        {
-                            str(unit)
-                            for units in SENSOR_DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
+            prb.Optional(CONF_UNIT_OF_MEASUREMENT): VolValidator(
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=sorted(
+                            {
+                                str(unit)
+                                for units in SENSOR_DEVICE_CLASS_UNITS.values()
+                                for unit in units
+                                if unit is not None
+                            }
+                        ),
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="component.knx.selector.sensor_unit_of_measurement",
+                        custom_value=True,
                     ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="component.knx.selector.sensor_unit_of_measurement",
-                    custom_value=True,
-                ),
-            ),
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        cls.value
-                        for cls in SensorDeviceClass
-                        if cls != SensorDeviceClass.ENUM
-                    ],
-                    translation_key="component.knx.selector.sensor_device_class",
-                    sort=True,
                 )
             ),
-            vol.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(SensorStateClass),
-                    translation_key="component.knx.selector.sensor_state_class",
-                    mode=selector.SelectSelectorMode.DROPDOWN,
+            prb.Optional(CONF_DEVICE_CLASS): VolValidator(
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            cls.value
+                            for cls in SensorDeviceClass
+                            if cls != SensorDeviceClass.ENUM
+                        ],
+                        translation_key="component.knx.selector.sensor_device_class",
+                        sort=True,
+                    )
                 )
             ),
-            vol.Optional(CONF_ALWAYS_CALLBACK): selector.BooleanSelector(),
-            vol.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
+            prb.Optional(CONF_SENSOR_STATE_CLASS): VolValidator(
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=list(SensorStateClass),
+                        translation_key="component.knx.selector.sensor_state_class",
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            ),
+            prb.Optional(CONF_ALWAYS_CALLBACK): VolValidator(
+                selector.BooleanSelector()
+            ),
+            prb.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
                 allow_false=True
             ),
         },
     ),
-    _sensor_attribute_sub_validator,
+    VolValidator(_sensor_attribute_sub_validator),
 )
 
 KNX_SCHEMA_FOR_PLATFORM = {
@@ -810,28 +874,28 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.TIME: TIME_KNX_SCHEMA,
 }
 
-ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(
-    vol.Schema(
+ENTITY_STORE_DATA_SCHEMA: prb.All = prb.All(
+    prb.Schema(
         {
-            vol.Required(CONF_PLATFORM): vol.All(
-                vol.Coerce(Platform),
-                vol.In(SUPPORTED_PLATFORMS_UI),
+            prb.Required(CONF_PLATFORM): prb.All(
+                prb.Coerce(Platform),
+                prb.In(SUPPORTED_PLATFORMS_UI),
             ),
-            vol.Required(CONF_DATA): dict,
+            prb.Required(CONF_DATA): dict,
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=prb.ALLOW_EXTRA,
     ),
-    cv.key_value_schemas(
+    prb.TaggedUnion(
         CONF_PLATFORM,
         {
-            platform: vol.Schema(
+            platform: prb.Schema(
                 {
-                    vol.Required(CONF_DATA): {
-                        vol.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
-                        vol.Required(DOMAIN): knx_schema,
+                    prb.Required(CONF_DATA): {
+                        prb.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
+                        prb.Required(DOMAIN): knx_schema,
                     },
                 },
-                extra=vol.ALLOW_EXTRA,
+                extra=prb.ALLOW_EXTRA,
             )
             for platform, knx_schema in KNX_SCHEMA_FOR_PLATFORM.items()
         },
