@@ -18,6 +18,7 @@ from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
+    SONOS_VANISHED,
     UPNP_ISSUE_ID,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
@@ -28,7 +29,10 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -603,6 +607,38 @@ async def test_async_poll_manual_hosts_6(
             assert speaker_2_activity.call_count == 0
 
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabled manual-host speakers are not pinged on heartbeat."""
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+
+    await _setup_hass(hass)
+
+    assert "media_player.living_room" in entity_registry.entities
+
+    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
+    assert device is not None
+    device_registry.async_update_device(
+        device.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    # Mark the speaker unavailable through its dispatcher signal.
+    async_dispatcher_send(hass, f"{SONOS_VANISHED}-{soco.uid}", "test")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # SonosSpeaker.ping uses RenderingControl.GetVolume under the hood.
+    soco.renderingControl.GetVolume.reset_mock()
+    async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.renderingControl.GetVolume.assert_not_called()
 
 
 async def test_async_poll_manual_hosts_7(

@@ -498,6 +498,12 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
+            if known_speaker and self.is_device_disabled(known_speaker.uid):
+                _LOGGER.debug(
+                    "Skipping manual poll for disabled Sonos device: %s",
+                    known_speaker.uid,
+                )
+                continue
             if not known_speaker:
                 try:
                     uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
