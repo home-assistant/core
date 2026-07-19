@@ -505,14 +505,9 @@ class SonosDiscoveryManager:
                 None,
             )
             if known_speaker:
-                self._manual_host_uids[ip_addr] = known_speaker.uid
-            if known_speaker and self.is_device_disabled(known_speaker.uid):
-                _LOGGER.debug(
-                    "Skipping manual poll for disabled Sonos device: %s",
-                    known_speaker.uid,
-                )
-                continue
-            if not known_speaker:
+                uid = known_speaker.uid
+                self._manual_host_uids[ip_addr] = uid
+            else:
                 cached_uid = self._manual_host_uids.get(ip_addr)
                 if cached_uid is None:
                     try:
@@ -543,12 +538,14 @@ class SonosDiscoveryManager:
                     self._manual_host_uids[ip_addr] = uid
                 else:
                     uid = cached_uid
-                if self.is_device_disabled(uid):
-                    _LOGGER.debug(
-                        "Skipping manual poll for disabled Sonos device: %s",
-                        uid,
-                    )
-                    continue
+
+            if self.is_device_disabled(uid):
+                _LOGGER.debug(
+                    "Skipping manual poll for disabled Sonos device: %s",
+                    uid,
+                )
+                continue
+            if not known_speaker:
                 try:
                     await self._async_handle_discovery_message(
                         uid,
