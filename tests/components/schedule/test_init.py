@@ -118,7 +118,7 @@ async def test_invalid_previous(
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test overlapping time ranges invalidate."""
+    """Test schedules with every day set to 'previous' are invalid."""
     assert not await schedule_setup(
         config={
             DOMAIN: {
