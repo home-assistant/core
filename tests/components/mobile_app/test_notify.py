@@ -603,6 +603,13 @@ async def test_notify_ws_degraded_channel(
     msg_result = await client.receive_json()
     assert msg_result["event"]["message"] == "Hello world 6"
 
+    # Only a single send probes: a message sent while the probe is still
+    # unconfirmed keeps routing via cloud
+    await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 6b"}, blocking=True
+    )
+    assert len(aioclient_mock.mock_calls) == 6
+
     await client.send_json_auto_id(
         {
             "type": "mobile_app/push_notification_confirm",
@@ -619,7 +626,7 @@ async def test_notify_ws_degraded_channel(
     )
     msg_result = await client.receive_json()
     assert msg_result["event"]["message"] == "Hello world 7"
-    assert len(aioclient_mock.mock_calls) == 5
+    assert len(aioclient_mock.mock_calls) == 6
 
     # Dropping the channel still flushes the unconfirmed message via cloud
     await client.send_json_auto_id(
@@ -632,7 +639,7 @@ async def test_notify_ws_degraded_channel(
     assert sub_result["success"]
     await hass.async_block_till_done()
 
-    assert len(aioclient_mock.mock_calls) == 6
+    assert len(aioclient_mock.mock_calls) == 7
 
 
 @pytest.mark.usefixtures("setup_push_receiver")

@@ -106,8 +106,10 @@ class MobileAppNotifyEntity(NotifyEntity):
 
         # Sends notification via local push if available
         # and fallback to cloud push if fails; a degraded channel is
-        # bypassed for cloud-capable targets until a probe is confirmed
-        if push_channel is not None and not (cloud_capable and push_channel.degraded):
+        # bypassed for cloud-capable targets except a single probe send
+        if push_channel is not None and (
+            not cloud_capable or push_channel.async_should_send_local()
+        ):
             push_channel.async_send_notification(
                 data,
                 partial(_send_message, self._session, self._config_entry),
@@ -223,9 +225,9 @@ class MobileAppNotificationService(BaseNotificationService):
             cloud_capable = ATTR_PUSH_URL in entry.data[ATTR_APP_DATA]
 
             # A degraded channel is bypassed for cloud-capable targets
-            # until a probe is confirmed
-            if push_channel is not None and not (
-                cloud_capable and push_channel.degraded
+            # except a single probe send
+            if push_channel is not None and (
+                not cloud_capable or push_channel.async_should_send_local()
             ):
                 push_channel.async_send_notification(
                     data,

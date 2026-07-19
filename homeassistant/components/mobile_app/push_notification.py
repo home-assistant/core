@@ -40,12 +40,21 @@ class PushChannel:
         self.pending_confirms: dict[str, dict] = {}
         self._consecutive_timeouts = 0
         self._degraded = False
+        self._probe_permit = False
         self._unsub_degraded_probe: CALLBACK_TYPE | None = None
 
-    @property
-    def degraded(self) -> bool:
-        """Return if sends should be routed via cloud where possible."""
-        return self._degraded
+    @callback
+    def async_should_send_local(self) -> bool:
+        """Return if the next send should be delivered locally.
+
+        Consumes the single probe permit of a degraded channel.
+        """
+        if not self._degraded:
+            return True
+        if self._probe_permit:
+            self._probe_permit = False
+            return True
+        return False
 
     @callback
     def async_send_notification(self, data, fallback_send):
@@ -98,6 +107,7 @@ class PushChannel:
     def _async_mark_degraded(self) -> None:
         """Route cloud-capable sends via cloud until a probe is confirmed."""
         self._degraded = True
+        self._probe_permit = False
         if self._unsub_degraded_probe is None:
             self._unsub_degraded_probe = async_call_later(
                 self.hass, PUSH_DEGRADED_PROBE_INTERVAL, self._async_allow_probe
@@ -105,9 +115,9 @@ class PushChannel:
 
     @callback
     def _async_allow_probe(self, _now: datetime) -> None:
-        """Let the next send probe local delivery again."""
+        """Let a single next send probe local delivery again."""
         self._unsub_degraded_probe = None
-        self._degraded = False
+        self._probe_permit = True
 
     @callback
     def _async_clear_degraded(self) -> None:
@@ -115,6 +125,7 @@ class PushChannel:
         if self._unsub_degraded_probe is not None:
             self._unsub_degraded_probe()
             self._unsub_degraded_probe = None
+        self._probe_permit = False
         self._degraded = False
 
     async def async_teardown(self):
