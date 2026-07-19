@@ -13,6 +13,7 @@ from homeassistant.helpers.event import async_track_entity_registry_updated_even
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
+    async_remove_helper_device,
 )
 
 from tests.common import (
@@ -511,17 +512,36 @@ async def test_async_handle_source_entity_new_entity_id(
     assert events == []
 
 
-async def test_async_remove_helper_config_entry_from_pre_split_composite_device(
+@pytest.mark.parametrize(
+    ("helper_identifiers", "helper_has_composite_identifiers"),
+    [
+        # Freshly split: the helper's split still carries the identifiers copied from the
+        # co-owned device
+        pytest.param({(SOURCE_DOMAIN, "1")}, True, id="not_activated"),
+        # Activated: the helper re-registered its device, pruning it to its own identifiers
+        pytest.param({(HELPER_DOMAIN, "1")}, False, id="activated"),
+    ],
+)
+@pytest.mark.parametrize(
+    "source_via_composite_id",
+    [pytest.param(True, id="composite_id"), pytest.param(False, id="source_split")],
+)
+async def test_async_remove_helper_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    helper_identifiers: set[tuple[str, str]],
+    helper_has_composite_identifiers: bool,
+    source_via_composite_id: bool,
 ) -> None:
-    """Test migrating a helper off a pre-migration composite source device.
+    """Test migrating a helper off a device it co-owned before the migration split.
 
-    The single-config-entry migration split a device co-owned by the source and helper
-    config entries into one device per config entry, sharing the pre-migration id as their
-    composite id. A helper storing that pre-migration id as its source device is migrated
-    by moving its entities onto the source-owned split and removing the helper-owned split.
+    The migration split the co-owned device into a source split and a helper split sharing
+    the pre-migration id as their composite id. The helper's split is found via that id -
+    both while it still carries the identifiers copied at the split and once the helper has
+    re-registered and pruned them to its own - and whether the caller passes the composite
+    id or the concrete source split. Its entities move onto the source split; its split is
+    removed.
     """
     source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
     source_config_entry.add_to_hass(hass)
@@ -531,19 +551,23 @@ async def test_async_remove_helper_config_entry_from_pre_split_composite_device(
 
     source_split = device_registry.async_get_or_create(
         config_entry_id=source_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={(SOURCE_DOMAIN, "1")},
     )
     helper_split = device_registry.async_get_or_create(
         config_entry_id=helper_config_entry.entry_id,
-        identifiers={(HELPER_DOMAIN, "1")},
+        identifiers=helper_identifiers,
     )
-    # Simulate the migration split: both devices share the pre-migration composite id
+    # Both are splits of the same pre-migration device, sharing its id and primary owner
     device_registry.devices[source_split.id] = attr.evolve(
-        source_split, composite_device_id=composite_id
+        source_split,
+        composite_device_id=composite_id,
+        composite_primary_config_entry=source_config_entry.entry_id,
     )
     device_registry.devices[helper_split.id] = attr.evolve(
-        helper_split, composite_device_id=composite_id
+        helper_split,
+        composite_device_id=composite_id,
+        composite_primary_config_entry=source_config_entry.entry_id,
+        has_composite_identifiers=helper_has_composite_identifiers,
     )
     # A helper entity on the helper's split, plus one not linked to any device
     helper_entity_entry = entity_registry.async_get_or_create(
@@ -556,16 +580,14 @@ async def test_async_remove_helper_config_entry_from_pre_split_composite_device(
     extra_helper_entity_entry = entity_registry.async_get_or_create(
         "sensor", HELPER_DOMAIN, "2", config_entry=helper_config_entry
     )
-    # The helper stores the pre-migration composite id as its source device
-    assert device_registry.async_get(composite_id) is not None
 
-    async_remove_helper_config_entry_from_source_device(
+    async_remove_helper_device(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
-        source_device_id=composite_id,
+        source_device_id=composite_id if source_via_composite_id else source_split.id,
     )
 
-    # The helper's entity moved onto the source-owned split; its own split was removed
+    # The helper's entity moved onto the source split; its own split was removed
     assert (
         entity_registry.async_get(helper_entity_entry.entity_id).device_id
         == source_split.id
@@ -577,9 +599,291 @@ async def test_async_remove_helper_config_entry_from_pre_split_composite_device(
     assert device_registry.async_get(source_split.id) is not None
 
 
+async def test_async_remove_helper_device_multiple_co_owners(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """With more than two co-owners, the helper's entities go to the primary's split.
+
+    A pre-migration device can be co-owned by more than two config entries. The source
+    split is identified by the composite's recorded primary owner, not by split order, so
+    the helper's entities are not relinked onto an unrelated integration's split.
+    """
+    source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
+    source_config_entry.add_to_hass(hass)
+    other_config_entry = MockConfigEntry(domain="other")
+    other_config_entry.add_to_hass(hass)
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+    composite_id = "pre_split_composite_id"
+
+    # other_split is indexed before source_split, so a split-order heuristic would wrongly
+    # pick it as the source; the recorded primary (source) must win instead.
+    other_split = device_registry.async_get_or_create(
+        config_entry_id=other_config_entry.entry_id, identifiers={("other", "1")}
+    )
+    source_split = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id, identifiers={(SOURCE_DOMAIN, "1")}
+    )
+    helper_split = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id, identifiers={(HELPER_DOMAIN, "1")}
+    )
+    for split in (other_split, source_split, helper_split):
+        device_registry.devices[split.id] = attr.evolve(
+            split,
+            composite_device_id=composite_id,
+            composite_primary_config_entry=source_config_entry.entry_id,
+        )
+    helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "1",
+        config_entry=helper_config_entry,
+        device_id=helper_split.id,
+    )
+
+    async_remove_helper_device(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=composite_id,
+    )
+
+    # Relinked to the primary owner's (source) split, not the unrelated other split, which
+    # is left untouched
+    assert (
+        entity_registry.async_get(helper_entity_entry.entity_id).device_id
+        == source_split.id
+    )
+    assert device_registry.async_get(helper_split.id) is None
+    assert device_registry.async_get(other_split.id) is not None
+    assert device_registry.async_get(source_split.id) is not None
+
+
+async def test_async_remove_helper_device_fork(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A helper that forked the source device via device_info is cleaned up.
+
+    Declaring a foreign device's identifiers/connections in device_info no longer co-owns
+    it; it forks a separate helper-owned device with no composite lineage. The fork is
+    removed and its entities relinked to the source device, while unrelated helper-owned
+    devices are left alone.
+    """
+    source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
+    source_config_entry.add_to_hass(hass)
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+
+    source_device = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={(SOURCE_DOMAIN, "1")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    # The helper forked the source device by copying its identity into device_info
+    fork = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(SOURCE_DOMAIN, "1")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert fork.id != source_device.id
+    assert fork.composite_device_id is None
+    helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "1",
+        config_entry=helper_config_entry,
+        device_id=fork.id,
+    )
+    # An unrelated device the helper owns, which must be left untouched
+    unrelated_device = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "unrelated")},
+    )
+    unrelated_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "2",
+        config_entry=helper_config_entry,
+        device_id=unrelated_device.id,
+    )
+
+    async_remove_helper_device(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=source_device.id,
+    )
+
+    # The fork is removed and its entity relinked to the source device
+    assert (
+        entity_registry.async_get(helper_entity_entry.entity_id).device_id
+        == source_device.id
+    )
+    assert device_registry.async_get(fork.id) is None
+    assert device_registry.async_get(source_device.id) is not None
+    # The unrelated helper-owned device and its entity are untouched
+    assert device_registry.async_get(unrelated_device.id) is not None
+    assert (
+        entity_registry.async_get(unrelated_entity_entry.entity_id).device_id
+        == unrelated_device.id
+    )
+
+
+async def test_async_remove_helper_device_sweep(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Broad mode sweeps every helper device except the source and the allow-list.
+
+    A helper that forked a device for each source it linked to, without removing the
+    old forks, accumulates stale devices that don't match the current source (so the
+    targeted match never sees them). sweep_helper_devices removes them and relinks the
+    helper's entities - including a stranded, device-less one - to the source, while
+    keep_device_ids and the source device are preserved.
+    """
+    source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
+    source_config_entry.add_to_hass(hass)
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+
+    source_device = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={(SOURCE_DOMAIN, "current")},
+    )
+    # Two stale forks left behind from previously-selected source devices (their identity
+    # no longer matches the current source)
+    stale_fork_1 = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "stale_1")},
+    )
+    stale_fork_2 = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "stale_2")},
+    )
+    # A device the helper legitimately owns, kept via the allow-list
+    kept_device = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "kept")},
+    )
+    entity_on_stale_1 = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "1",
+        config_entry=helper_config_entry,
+        device_id=stale_fork_1.id,
+    )
+    entity_on_stale_2 = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "2",
+        config_entry=helper_config_entry,
+        device_id=stale_fork_2.id,
+    )
+    # A stranded helper entity, not linked to any device
+    stranded_entity = entity_registry.async_get_or_create(
+        "sensor", HELPER_DOMAIN, "3", config_entry=helper_config_entry
+    )
+    entity_on_kept = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "4",
+        config_entry=helper_config_entry,
+        device_id=kept_device.id,
+    )
+
+    async_remove_helper_device(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=source_device.id,
+        sweep_helper_devices=True,
+        keep_device_ids={kept_device.id},
+    )
+
+    # Both stale forks are removed; the kept device and the source device remain
+    assert device_registry.async_get(stale_fork_1.id) is None
+    assert device_registry.async_get(stale_fork_2.id) is None
+    assert device_registry.async_get(kept_device.id) is not None
+    assert device_registry.async_get(source_device.id) is not None
+    # Entities off the removed forks - and the stranded one - are relinked to the source
+    for entity_entry in (entity_on_stale_1, entity_on_stale_2, stranded_entity):
+        assert (
+            entity_registry.async_get(entity_entry.entity_id).device_id
+            == source_device.id
+        )
+    # The entity on the kept device is left alone
+    assert (
+        entity_registry.async_get(entity_on_kept.entity_id).device_id == kept_device.id
+    )
+
+
+async def test_async_remove_helper_device_sweep_source_device_gone(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Sweep mode removes the helper's devices even when the source device is gone.
+
+    With no source device to relink to, the helper's entities are left without a device and
+    its devices are still removed.
+    """
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+
+    stale_fork = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "stale")},
+    )
+    entity_on_fork = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "1",
+        config_entry=helper_config_entry,
+        device_id=stale_fork.id,
+    )
+
+    async_remove_helper_device(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id="nonexistent_device_id",
+        sweep_helper_devices=True,
+    )
+
+    # The helper's device is removed and its entity left without a device
+    assert device_registry.async_get(stale_fork.id) is None
+    assert entity_registry.async_get(entity_on_fork.entity_id).device_id is None
+
+
+async def test_async_remove_helper_config_entry_from_source_device_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The old name is a deprecated alias delegating to async_remove_helper_device."""
+    with patch(
+        "homeassistant.helpers.helper_integration.async_remove_helper_device"
+    ) as mock_remove_helper_device:
+        async_remove_helper_config_entry_from_source_device(
+            hass,
+            helper_config_entry_id="helper_config_entry_id",
+            source_device_id="source_device_id",
+        )
+
+    mock_remove_helper_device.assert_called_once_with(
+        hass,
+        helper_config_entry_id="helper_config_entry_id",
+        source_device_id="source_device_id",
+    )
+    assert (
+        "async_remove_helper_config_entry_from_source_device was called" in caplog.text
+    )
+    assert "async_remove_helper_device instead" in caplog.text
+
+
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])
 @pytest.mark.usefixtures("source_entity_entry")
-async def test_async_remove_helper_config_entry_from_source_device_helper_not_in_device(
+async def test_async_remove_helper_device_helper_not_in_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -600,7 +904,7 @@ async def test_async_remove_helper_config_entry_from_source_device_helper_not_in
 
     events = listen_entity_registry_events(hass)
 
-    async_remove_helper_config_entry_from_source_device(
+    async_remove_helper_device(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
         source_device_id=source_device.id,
@@ -608,71 +912,3 @@ async def test_async_remove_helper_config_entry_from_source_device_helper_not_in
 
     # Check we got the expected events
     assert events == []
-
-
-@pytest.mark.parametrize("use_entity_registry_id", [True, False])
-@pytest.mark.usefixtures("source_entity_entry")
-async def test_async_remove_helper_config_entry_from_source_device_post_split(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    helper_config_entry: MockConfigEntry,
-    source_config_entry: ConfigEntry,
-    source_device: dr.DeviceEntry,
-) -> None:
-    """Test cleaning up a helper-owned device split off from the source device.
-
-    In the single-config-entry model the migration splits a device co-owned by the source
-    and helper config entries into a source-owned device and a separate helper-owned
-    device. The helper's entities must be moved onto the source device and the helper's
-    device removed.
-    """
-    # The helper owns a separate device (the migration split it off from the source
-    # device), with a helper entity linked to it.
-    helper_device = device_registry.async_get_or_create(
-        config_entry_id=helper_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
-    )
-    helper_entity_entry = entity_registry.async_get_or_create(
-        "sensor",
-        HELPER_DOMAIN,
-        helper_config_entry.entry_id,
-        config_entry=helper_config_entry,
-        device_id=helper_device.id,
-        original_name="ABC",
-    )
-    # A second helper entity, not connected to any device
-    extra_helper_entity_entry = entity_registry.async_get_or_create(
-        "sensor",
-        HELPER_DOMAIN,
-        f"{helper_config_entry.entry_id}_2",
-        config_entry=helper_config_entry,
-        original_name="ABC",
-    )
-
-    events = listen_entity_registry_events(hass)
-
-    async_remove_helper_config_entry_from_source_device(
-        hass,
-        helper_config_entry_id=helper_config_entry.entry_id,
-        source_device_id=source_device.id,
-    )
-
-    # The helper entity was moved to the source device and the helper device removed
-    assert (
-        entity_registry.async_get(helper_entity_entry.entity_id).device_id
-        == source_device.id
-    )
-    assert (
-        entity_registry.async_get(extra_helper_entity_entry.entity_id).device_id is None
-    )
-    assert device_registry.async_get(helper_device.id) is None
-
-    # Check we got the expected events
-    assert events == [
-        {
-            "action": "update",
-            "changes": {"device_id": helper_device.id},
-            "entity_id": helper_entity_entry.entity_id,
-        },
-    ]
