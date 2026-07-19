@@ -13,6 +13,11 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_AUTH_KEY,
@@ -42,6 +47,7 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -56,18 +62,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_V1_V2C_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): PASSWORD_SELECTOR,
     }
 )
 
 STEP_V3_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
-        vol.Optional(CONF_AUTH_KEY): str,
+        vol.Optional(CONF_AUTH_KEY): PASSWORD_SELECTOR,
         vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
             list(MAP_AUTH_PROTOCOLS)
         ),
-        vol.Optional(CONF_PRIV_KEY): str,
+        vol.Optional(CONF_PRIV_KEY): PASSWORD_SELECTOR,
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             list(MAP_PRIV_PROTOCOLS)
         ),
