@@ -272,6 +272,7 @@ class MailNotifyEntity(NotifyEntity):
             msg.attach(attachment)
 
         await self.hass.async_add_executor_job(self._send_email, msg)
+        self._async_record_notification()
 
     def _send_email(self, msg: MIMEMultipart | MIMEText) -> None:
         """Send the message."""

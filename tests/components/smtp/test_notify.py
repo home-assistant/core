@@ -22,6 +22,7 @@ from homeassistant.components.notify import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.components.smtp.const import (
+    ATTR_HTML,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,
@@ -394,3 +395,67 @@ async def test_legacy_notify_exception(
 
     assert e.value.translation_key == "send_mail_connection_error"
     assert smtp.sendmail.call_count == 2
+
+
+@pytest.mark.usefixtures("make_msgid", "randrange")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_smtp_send_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+) -> None:
+    """Test sending an email message via smtp.send_message action."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.home_assistant_recipient")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+            ATTR_MESSAGE: "Hello World",
+            ATTR_HTML: """<html>\n    <body>\n        <img src="cid:avatar.png">\n    </body>\n</html>""",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("notify.home_assistant_recipient")
+    assert state
+    assert state.state == "2026-05-03T03:09:37+00:00"
+
+    smtp.sendmail.assert_called_once_with(
+        "email@example.com",
+        "recipient@example.com",
+        'Content-Type: multipart/related; boundary="===============1234567890123456789==.0"\n'
+        "MIME-Version: 1.0\n"
+        "Subject: Home Assistant\n"
+        "From: Home Assistant <email@example.com>\n"
+        "To: Recipient <recipient@example.com>\n"
+        "X-Mailer: Home Assistant\n"
+        "Date: Sat, 02 May 2026 20:09:37 -0700\n"
+        "Message-Id: <177777777700.12345.12345678901234567890@mock>\n\n"
+        "--===============1234567890123456789==.0\n"
+        'Content-Type: multipart/alternative; boundary="===============1234567890123456789=="\n'
+        "MIME-Version: 1.0\n\n"
+        "--===============1234567890123456789==\n"
+        'Content-Type: text/plain; charset="utf-8"\n'
+        "MIME-Version: 1.0\n"
+        "Content-Transfer-Encoding: base64\n\n"
+        "SGVsbG8gV29ybGQ=\n\n"
+        "--===============1234567890123456789==\n"
+        'Content-Type: text/html; charset="utf-8"\n'
+        "MIME-Version: 1.0\n"
+        "Content-Transfer-Encoding: base64\n\n"
+        "PGh0bWw+CiAgICA8Ym9keT4KICAgICAgICA8aW1nIHNyYz0iY2lkOmF2YXRhci5wbmciPgogICAg\n"
+        "PC9ib2R5Pgo8L2h0bWw+\n\n"
+        "--===============1234567890123456789==--\n\n"
+        "--===============1234567890123456789==.0--\n",
+    )

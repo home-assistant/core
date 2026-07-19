@@ -33,7 +33,6 @@ send_message:
               required: true
               selector:
                 media:
-                  multiple: true
                   accept:
                     - "*"
             filename:

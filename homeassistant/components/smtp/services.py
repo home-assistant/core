@@ -33,8 +33,8 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
                 vol.Schema(
                     {
                         vol.Required(ATTR_ATTACHMENT): MediaSelector({"accept": ["*"]}),
-                        vol.Optional(ATTR_FILENAME, ATTR_FILENAME): cv.string,
-                        vol.Optional(ATTR_CONTENT_ID, ATTR_FILENAME): cv.string,
+                        vol.Optional(ATTR_FILENAME): cv.string,
+                        vol.Optional(ATTR_CONTENT_ID): cv.string,
                     }
                 )
             ],
