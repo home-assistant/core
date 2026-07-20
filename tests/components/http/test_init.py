@@ -1033,6 +1033,75 @@ async def test_yaml_migration_matches_stable_no_pending(
     assert issue is not None
 
 
+@pytest.mark.parametrize(
+    ("yaml_extra", "expected_stable_proxies", "expected_pending"),
+    [
+        pytest.param(
+            {},
+            ["127.0.0.0/8", "10.11.12.0/24"],
+            None,
+            id="only-lost-masks-repairs-stable",
+        ),
+        pytest.param(
+            {"server_port": 8765},
+            ["127.0.0.0/32", "10.11.12.0/32"],
+            {
+                "server_port": 8765,
+                "cors_allowed_origins": ["https://example.com"],
+                "use_x_forwarded_for": True,
+                "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
+                "ip_ban_enabled": False,
+                "login_attempts_threshold": -1,
+                "ssl_profile": "modern",
+                "use_x_frame_options": True,
+            },
+            id="other-change-creates-pending",
+        ),
+    ],
+)
+async def test_yaml_migration_stable_lost_trusted_proxy_masks(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    yaml_extra: dict[str, Any],
+    expected_stable_proxies: list[str],
+    expected_pending: dict[str, Any] | None,
+) -> None:
+    """Test YAML migration against a stable config with lost trusted proxy masks.
+
+    Releases up to 2026.7.1 stored trusted proxies without the network mask,
+    which the v1->v2 store migration turned into host networks. If the YAML
+    config only differs from stable by those lost masks, the masks must be
+    restored in stable instead of staging the unchanged YAML as pending.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "server_port": 9123,
+            "cors_allowed_origins": ["https://example.com"],
+            "use_x_forwarded_for": True,
+            "trusted_proxies": ["127.0.0.0/32", "10.11.12.0/32"],
+            "ip_ban_enabled": False,
+        },
+        yaml_migration_done=False,
+    )
+
+    yaml_conf = {
+        "server_port": 9123,
+        "cors_allowed_origins": ["https://example.com"],
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
+        "ip_ban_enabled": False,
+        **yaml_extra,
+    }
+    assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    stored = hass_storage[DOMAIN]["data"]
+    assert stored["yaml_migration_done"] is True
+    assert stored["pending"] == expected_pending
+    assert stored["stable"]["trusted_proxies"] == expected_stable_proxies
+
+
 async def test_yaml_migration_differs_from_stable_creates_pending(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -1671,6 +1740,38 @@ async def test_bound_server_closed_on_stop_before_start(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert not server.sockets
+
+
+async def test_stop_completes_with_open_connections(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Stopping the server must not wait for connected clients to disconnect.
+
+    Server.wait_closed() waits for all client connections to terminate since
+    Python 3.12.1, but connections are only torn down by the runner cleanup,
+    so waiting for them first hangs shutdown while a client (e.g. an open
+    websocket) stays connected.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.http._server is not None
+    port = hass.http._server.sockets[0].getsockname()[1]
+    reader, writer = await asyncio.open_connection("127.0.0.1", port)
+
+    try:
+        # Complete a request/response round trip so the connection is
+        # accepted and tracked by the server (a mere TCP connect may still
+        # sit in the listen backlog), then keep the connection open.
+        writer.write(b"GET / HTTP/1.1\r\nHost: localhost\r\n\r\n")
+        await writer.drain()
+        assert await reader.readline()
+
+        await asyncio.wait_for(hass.http.stop(), timeout=15)
+    finally:
+        writer.close()
 
 
 async def test_stable_config_bind_failure_fails_setup(
