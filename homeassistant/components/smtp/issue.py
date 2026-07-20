@@ -72,6 +72,8 @@ def deprecated_notify_action_call(hass: HomeAssistant, service_name: str) -> Non
             "example_yaml": """
 ```
 action: smtp.send_message
+target:
+    entity_id: notify.recipient
 data:
   title: Hello
   message: Hello World
