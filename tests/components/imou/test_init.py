@@ -15,7 +15,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DEFAULT_MOCK_DEVICES, create_offline_device, create_online_device
+from .const import create_offline_device, create_online_device, default_mock_devices
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -23,6 +23,7 @@ EXPECTED_TRANSLATION_KEYS = {
     "mute": PARAM_MUTE,
     "camera_sd": "camera_sd",
     "camera_hd": "camera_hd",
+    "status": PARAM_STATUS,
 }
 
 
@@ -110,7 +111,7 @@ async def test_multiple_channels_create_separate_devices(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entries) == 6
+    assert len(entries) == 8
     assert {entry.unique_id for entry in entries} == {
         "dev-1_ch9$mute",
         "dev-1_ch10$mute",
@@ -118,6 +119,8 @@ async def test_multiple_channels_create_separate_devices(
         "dev-1_ch9$camera_hd",
         "dev-1_ch10$camera_sd",
         "dev-1_ch10$camera_hd",
+        "dev-1_ch9$status",
+        "dev-1_ch10$status",
     }
     for entry in entries:
         device_key, entity_type = entry.unique_id.split("$", 1)
@@ -147,7 +150,7 @@ async def test_coordinator_adds_entities_after_initial_empty_device_list(
         == 0
     )
 
-    mock_imou_ha_device_manager.async_get_devices.return_value = DEFAULT_MOCK_DEVICES
+    mock_imou_ha_device_manager.async_get_devices.return_value = default_mock_devices()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -155,8 +158,9 @@ async def test_coordinator_adds_entities_after_initial_empty_device_list(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entries) == 3
+    assert len(entries) == 4
     assert {entry.unique_id for entry in entries} == {
+        "d1$status",
         "d1$mute",
         "d1$ptz_up",
         "d1$restart_device",
@@ -179,11 +183,11 @@ async def test_coordinator_adds_entities_for_new_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 3
+        == 4
     )
 
     mock_imou_ha_device_manager.async_get_devices.return_value = [
-        *DEFAULT_MOCK_DEVICES,
+        *default_mock_devices(),
         create_online_device("d2", "Device 2", button_keys=(PARAM_PTZ_UP,)),
     ]
     freezer.tick(SCAN_INTERVAL)
@@ -193,7 +197,7 @@ async def test_coordinator_adds_entities_for_new_device(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entries) == 4
+    assert len(entries) == 6
     assert "d2$ptz_up" in {entry.unique_id for entry in entries}
     ptz_entry = next(entry for entry in entries if entry.unique_id == "d2$ptz_up")
     assert hass.states.get(ptz_entry.entity_id).state != STATE_UNAVAILABLE
@@ -239,10 +243,12 @@ async def test_coordinator_removes_device_updates_registries(
     )
     assert {entry.unique_id for entry in entries_before} == {
         "d1$mute",
+        "d1$status",
         "d2$ptz_up",
+        "d2$status",
     }
 
-    mock_imou_ha_device_manager.async_get_devices.return_value = DEFAULT_MOCK_DEVICES
+    mock_imou_ha_device_manager.async_get_devices.return_value = default_mock_devices()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -256,7 +262,7 @@ async def test_coordinator_removes_device_updates_registries(
     entries_after = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert {entry.unique_id for entry in entries_after} == {"d1$mute"}
+    assert {entry.unique_id for entry in entries_after} == {"d1$mute", "d1$status"}
     mute_entry = next(entry for entry in entries_after if entry.unique_id == "d1$mute")
     assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
 
