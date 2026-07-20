@@ -348,6 +348,11 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "paperless_ngx": {
+        # pypaperless 5.2.2 has requires-python = "<3.15"
+        # which is overly restrictive; the package works with Python 3.14
+        "homeassistant": {"pypaperless"}
+    },
     "python_script": {
         # Security audits are needed for each Python version
         "homeassistant": {"restrictedpython"}
