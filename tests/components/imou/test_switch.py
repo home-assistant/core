@@ -21,6 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -48,6 +49,7 @@ SWITCH_MOCK_DEVICES = [
 ]
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_switch_entities_snapshot(
