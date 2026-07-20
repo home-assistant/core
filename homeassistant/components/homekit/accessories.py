@@ -591,9 +591,16 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                 attr: baseline_state.attributes.get(attr)
                 for attr in self._reload_on_change_attrs
             }
-        if state is not None and state is not baseline_state:
-            # Catch up on changes between construction and run.
-            self._async_reload_if_attrs_changed(state)
+        if (
+            state is not None
+            and state is not baseline_state
+            and self._async_reload_attrs_diverged(state)
+        ):
+            # Catch up on changes between construction and run. The reload
+            # is deferred: dispatcher targets start eagerly, so an inline
+            # reload would stop and replace this accessory before it
+            # finished starting.
+            self.hass.loop.call_soon(self.async_reload)
         self._subscriptions.append(
             async_track_state_change_event(
                 self.hass,
@@ -642,13 +649,15 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             self.async_update_battery(battery_state, battery_charging_state)
 
     @ha_callback
-    def _async_reload_if_attrs_changed(self, new_state: State) -> bool:
-        """Request a reload if any reload attr diverged from the baseline.
+    def _async_reload_attrs_diverged(self, new_state: State) -> bool:
+        """Check if any reload attr diverged from the baseline.
 
         The baseline is the state the accessory was built from, so
         changes that arrive while the entity is unavailable (which
-        strips most attributes) still trigger a reload once the entity
-        is back. Returns True if a reload was requested.
+        strips most attributes) are still detected once the entity is
+        back. On divergence the baseline advances so a reload is only
+        requested once; the recreated accessory captures a fresh
+        baseline.
         """
         if (
             new_state.state == STATE_UNAVAILABLE
@@ -666,14 +675,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                     baseline_value,
                     new_attributes.get(attr),
                 )
-                # Advance the baseline so the reload is only requested
-                # once per divergence; the recreated accessory will
-                # capture a fresh baseline.
                 self._reload_attr_baseline = {
                     reload_attr: new_attributes.get(reload_attr)
                     for reload_attr in baseline
                 }
-                self.async_reload()
                 return True
         return False
 
@@ -684,7 +689,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Handle state change event listener callback."""
         new_state = event.data["new_state"]
         self._update_available_from_state(new_state)
-        if new_state and self._async_reload_if_attrs_changed(new_state):
+        if new_state and self._async_reload_attrs_diverged(new_state):
+            self.async_reload()
             return
         self.async_update_state_callback(new_state)
 

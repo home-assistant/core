@@ -1196,6 +1196,39 @@ async def test_homekit_reload_tv_accessory_on_attr_change(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf", "mock_hap")
+async def test_homekit_reload_tv_accessory_attrs_changed_before_run(
+    hass: HomeAssistant,
+) -> None:
+    """Test catch-up reload for changes between accessory creation and run.
+
+    The replaced accessory must not keep any state subscriptions behind.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "media_player.television"
+    hass.states.async_set(entity_id, STATE_OFF, TV_ATTRS_OFF)
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        acc = homekit.driver.accessory
+        assert acc.sources == ["Live TV"]
+        hass.states.async_set(entity_id, STATE_ON, TV_ATTRS_ON)
+        acc.run()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        new_acc = homekit.driver.accessory
+        assert new_acc is not acc
+        assert new_acc.sources == ["Live TV", "HDMI 1", "HDMI 2", "Netflix"]
+        assert not acc._subscriptions
+
+        await homekit.async_stop()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "mock_hap")
 async def test_homekit_reload_bridged_tv_when_source_list_grows(
     hass: HomeAssistant,
 ) -> None:
