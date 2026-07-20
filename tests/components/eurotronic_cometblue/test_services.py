@@ -1,4 +1,4 @@
-"""Test the eurotronic_cometblue sensor platform."""
+"""Test eurotronic_cometblue services."""
 
 from freezegun import freeze_time
 import pytest
@@ -23,7 +23,7 @@ async def test_get_schedule(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensor entity state and registry data."""
+    """Test getting the schedule."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
     schedule = await hass.services.async_call(
@@ -42,7 +42,7 @@ async def test_set_schedule(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensor entity state and registry data."""
+    """Test setting the schedule."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
     # Only changed days should be updated, the rest remains the same.
@@ -118,7 +118,7 @@ async def test_set_schedule_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensor entity state and registry data."""
+    """Test set_schedule service error handling."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
     # voloptuous schema should catch invalid time formats and incorrect data
@@ -218,7 +218,7 @@ async def test_set_holiday(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensor entity state and registry data."""
+    """Test set_holiday service."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
     # Only changed days should be updated, the rest remains the same.
@@ -250,7 +250,7 @@ async def test_set_holiday_errors(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test sensor entity state and registry data."""
+    """Test set_holiday service error handling."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
     # Start date must be in the future (at least 1 hour ahead as time is floored to hours on device)
