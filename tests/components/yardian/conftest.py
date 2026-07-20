@@ -52,7 +52,8 @@ def mock_yardian_client() -> Generator[AsyncMock]:
         ),
     ):
         client = client_cls.return_value
-        client_cls.create = AsyncMock(return_value=client)
+
+        client_cls.create.return_value = client
 
         client.fetch_device_info.return_value = {
             "name": "fake_name",
