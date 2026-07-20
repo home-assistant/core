@@ -110,12 +110,12 @@ async def test_oauth_token_expiration_triggers_reauth(
                 request_info=MagicMock(), status=400, domain=DOMAIN
             ),
         ),
-        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
+        patch.object(hass, "async_create_task") as mock_create_task,
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Should trigger reauth
-    mock_reauth.assert_called_once()
+    # Should schedule reauth task
+    assert mock_create_task.called
     # Should mark as setup error
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
