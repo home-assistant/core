@@ -1673,6 +1673,31 @@ async def test_bound_server_closed_on_stop_before_start(
     assert not server.sockets
 
 
+async def test_stop_completes_with_open_connections(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Stopping the server must not wait for connected clients to disconnect.
+
+    Server.wait_closed() waits for all client connections to terminate since
+    Python 3.12.1, but connections are only torn down by the runner cleanup,
+    so waiting for them first hangs shutdown while a client (e.g. an open
+    websocket) stays connected.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.http._server is not None
+    port = hass.http._server.sockets[0].getsockname()[1]
+    _reader, writer = await asyncio.open_connection("127.0.0.1", port)
+
+    try:
+        await asyncio.wait_for(hass.http.stop(), timeout=15)
+    finally:
+        writer.close()
+
+
 async def test_stable_config_bind_failure_fails_setup(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
