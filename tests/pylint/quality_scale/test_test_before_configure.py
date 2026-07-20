@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import astroid
+from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
 from pylint_home_assistant.checkers.quality_scale.test_before_configure import (
     TestBeforeConfigureChecker,
@@ -57,6 +58,19 @@ def _parse_config_flow(
     root_node = astroid.parse(source, module_name)
     root_node.file = str(integration_dir / "config_flow.py")
     return root_node
+
+
+def _expect_missing(class_node: nodes.ClassDef) -> MessageTest:
+    """Build the expected MessageTest for a flagged config flow class."""
+    pos = class_node.position
+    return MessageTest(
+        msg_id="home-assistant-missing-test-before-configure",
+        node=class_node,
+        line=pos.lineno,
+        col_offset=pos.col_offset,
+        end_line=pos.end_lineno,
+        end_col_offset=pos.end_col_offset,
+    )
 
 
 @pytest.mark.parametrize(
@@ -213,17 +227,7 @@ def test_before_configure_missing_fires(
     root_node = _parse_config_flow(integration_dir, flow_source)
     class_node = root_node.body[-1]
 
-    with assert_adds_messages(
-        linter,
-        MessageTest(
-            msg_id="home-assistant-missing-test-before-configure",
-            node=class_node,
-            line=4,
-            col_offset=0,
-            end_line=4,
-            end_col_offset=18,
-        ),
-    ):
+    with assert_adds_messages(linter, _expect_missing(class_node)):
         walk_checker(linter, configure_checker, root_node)
 
 
@@ -313,17 +317,7 @@ class MyConfigFlow(BaseSharedFlow, domain="test_integration"):
     )
     class_node = root_node.body[-1]
 
-    with assert_adds_messages(
-        linter,
-        MessageTest(
-            msg_id="home-assistant-missing-test-before-configure",
-            node=class_node,
-            line=4,
-            col_offset=0,
-            end_line=4,
-            end_col_offset=18,
-        ),
-    ):
+    with assert_adds_messages(linter, _expect_missing(class_node)):
         walk_checker(linter, configure_checker, root_node)
 
 
