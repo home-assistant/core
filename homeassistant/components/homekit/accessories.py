@@ -449,6 +449,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             **kwargs,
         )
         self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
+        self._reload_attr_baseline: dict[str, Any] | None = None
+        self._creation_state: State | None = None
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id
@@ -522,6 +524,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         state = self.hass.states.get(self.entity_id)
         self._update_available_from_state(state)
         assert state is not None
+        self._creation_state = state
         entity_attributes = state.attributes
         battery_found = entity_attributes.get(ATTR_BATTERY_LEVEL)
 
@@ -579,6 +582,18 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         if state := self.hass.states.get(self.entity_id):
             self.async_update_state_callback(state)
         self._update_available_from_state(state)
+        baseline_state = self._creation_state or state
+        self._creation_state = None
+        if self._reload_attr_baseline is None and baseline_state is not None:
+            # Materialized here, not in __init__: subclasses extend
+            # _reload_on_change_attrs after HomeAccessory.__init__.
+            self._reload_attr_baseline = {
+                attr: baseline_state.attributes.get(attr)
+                for attr in self._reload_on_change_attrs
+            }
+        if state is not None and state is not baseline_state:
+            # Catch up on changes between construction and run.
+            self._async_reload_if_attrs_changed(state)
         self._subscriptions.append(
             async_track_state_change_event(
                 self.hass,
@@ -627,32 +642,50 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             self.async_update_battery(battery_state, battery_charging_state)
 
     @ha_callback
+    def _async_reload_if_attrs_changed(self, new_state: State) -> bool:
+        """Request a reload if any reload attr diverged from the baseline.
+
+        The baseline is the state the accessory was built from, so
+        changes that arrive while the entity is unavailable (which
+        strips most attributes) still trigger a reload once the entity
+        is back. Returns True if a reload was requested.
+        """
+        if (
+            new_state.state == STATE_UNAVAILABLE
+            or (baseline := self._reload_attr_baseline) is None
+        ):
+            return False
+        new_attributes = new_state.attributes
+        for attr, baseline_value in baseline.items():
+            if baseline_value != new_attributes.get(attr):
+                _LOGGER.debug(
+                    "%s: Reloading HomeKit accessory since"
+                    " %s has changed from %s -> %s",
+                    self.entity_id,
+                    attr,
+                    baseline_value,
+                    new_attributes.get(attr),
+                )
+                # Advance the baseline so the reload is only requested
+                # once per divergence; the recreated accessory will
+                # capture a fresh baseline.
+                self._reload_attr_baseline = {
+                    reload_attr: new_attributes.get(reload_attr)
+                    for reload_attr in baseline
+                }
+                self.async_reload()
+                return True
+        return False
+
+    @ha_callback
     def async_update_event_state_callback(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         new_state = event.data["new_state"]
-        old_state = event.data["old_state"]
         self._update_available_from_state(new_state)
-        if (
-            new_state
-            and old_state
-            and STATE_UNAVAILABLE not in (old_state.state, new_state.state)
-        ):
-            old_attributes = old_state.attributes
-            new_attributes = new_state.attributes
-            for attr in self._reload_on_change_attrs:
-                if old_attributes.get(attr) != new_attributes.get(attr):
-                    _LOGGER.debug(
-                        "%s: Reloading HomeKit accessory since"
-                        " %s has changed from %s -> %s",
-                        self.entity_id,
-                        attr,
-                        old_attributes.get(attr),
-                        new_attributes.get(attr),
-                    )
-                    self.async_reload()
-                    return
+        if new_state and self._async_reload_if_attrs_changed(new_state):
+            return
         self.async_update_state_callback(new_state)
 
     @ha_callback
