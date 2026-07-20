@@ -31,52 +31,52 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: |
+      - The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: Integration has no configuration parameters
-  docs-installation-parameters: done
+  docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: done
-  reauthentication-flow:
-    status: exempt
+  parallel-updates: todo
+  reauthentication-flow: todo
+  test-coverage:
+    status: todo
     comment: |
-      WiiM devices are configured by local host discovery and do not use credentials or tokens.
-  test-coverage: done
+      - Increase test coverage for the media_player platform
+
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info: done
   discovery: done
-  docs-data-update: done
-  docs-examples: done
-  docs-known-limitations: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: done
-  docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: |
-      This integration has a fixed single device per config entry.
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: |
+      Set appropriate device classes for all entities where applicable.
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: |
-      This integration doesn't have any cases where raising an issue is needed.
-  stale-devices:
-    status: exempt
-    comment: |
-      This integration has a fixed single device per config entry.
+    comment: No known use cases for repair issues or flows, yet
+  stale-devices: todo
 
   # Platinum
   async-dependency: done

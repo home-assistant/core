@@ -4,7 +4,6 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from wiim.models import WiimProbeResult
 
 from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -233,81 +232,3 @@ async def test_zeroconf_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"
-
-
-async def test_reconfigure_flow_updates_host(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_probe_player: AsyncMock,
-) -> None:
-    """Test reconfigure updates the host for the same WiiM device."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    mock_probe_player.return_value = WiimProbeResult(
-        host="192.168.1.111",
-        udn="uuid:test-udn-1234",
-        name="WiiM Pro",
-        location="http://192.168.1.111:49152/description.xml",
-        model="WiiM Pro",
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.111"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.111"
-
-
-async def test_reconfigure_flow_cannot_connect(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_probe_player: AsyncMock,
-) -> None:
-    """Test reconfigure keeps the form open when the new host cannot connect."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    mock_probe_player.side_effect = TimeoutError
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.111"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
-
-
-async def test_reconfigure_flow_wrong_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_probe_player: AsyncMock,
-) -> None:
-    """Test reconfigure rejects a host that belongs to a different WiiM device."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    mock_probe_player.return_value = WiimProbeResult(
-        host="192.168.1.111",
-        udn="uuid:different-device",
-        name="Other WiiM",
-        location="http://192.168.1.111:49152/description.xml",
-        model="WiiM Pro",
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.111"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "wrong_device"}
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
