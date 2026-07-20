@@ -627,7 +627,7 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
     icon="mdi:memory",
     translated_name=True,
-    value_fn=lambda module, idx: module.sensors[idx].value,
+    value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 DISK_DESCRIPTION = HbtnSensorEntityDescription(
@@ -637,7 +637,7 @@ DISK_DESCRIPTION = HbtnSensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
     icon="mdi:harddisk",
     translated_name=True,
-    value_fn=lambda module, idx: module.sensors[idx].value,
+    value_fn=lambda hub, idx: hub.sensors[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
@@ -649,7 +649,7 @@ CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda module, idx: module.diags[idx].value,
+    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
 )
 CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
@@ -662,7 +662,7 @@ CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda module, idx: module.diags[idx].value,
+    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
 )
 CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
@@ -674,7 +674,7 @@ CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
-    value_fn=lambda module, idx: module.diags[idx].value,
+    value_fn=lambda hub, idx: hub.diags[idx].value if hub.host_diags_valid else None,
     subscribe_fn=lambda module, idx: module.diags[idx],
 )
 LOGIC_DESCRIPTION = HbtnSensorEntityDescription(

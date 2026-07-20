@@ -161,6 +161,9 @@ async def test_update_swallows_habitron_error(smart_hub_stub: SmartHub) -> None:
     smart_hub_stub.comm.get_smhub_update.side_effect = HabitronError("boom")
     await smart_hub_stub.update()  # must not raise
     smart_hub_stub.comm.get_smhub_update.assert_awaited_once()
+    # Nothing was read, so the host readings must stay unknown rather than
+    # publishing the zero defaults as if they were measurements.
+    assert smart_hub_stub.host_diags_valid is False
 
 
 async def test_update_short_circuits_when_no_diags(smart_hub_stub: SmartHub) -> None:
@@ -209,6 +212,7 @@ async def test_update_writes_diag_sensor_and_log_levels(
     assert smart_hub_stub.sensors[1].value == 30.0
     assert smart_hub_stub.loglvl[0].value == 3
     assert smart_hub_stub.loglvl[1].value == 4
+    assert smart_hub_stub.host_diags_valid is True
 
 
 async def test_async_close_delegates_to_comm(
