@@ -49,9 +49,19 @@ SELECT_TYPES = (
         ),
     ),
     PlugwiseSelectEntityDescription(
-        key=SELECT_SCHEDULE,
-        translation_key=SELECT_SCHEDULE,
-        options_key="available_schedules",
+        key=SELECT_DHW_MODE,
+        translation_key=SELECT_DHW_MODE,
+        entity_category=EntityCategory.CONFIG,
+        options_key="dhw_modes",
+        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
+            key, appl_or_loc_id, option, state
+        ),
+    ),
+    PlugwiseSelectEntityDescription(
+        key=SELECT_GATEWAY_MODE,
+        translation_key=SELECT_GATEWAY_MODE,
+        entity_category=EntityCategory.CONFIG,
+        options_key="gateway_modes",
         set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
             key, appl_or_loc_id, option, state
         ),
@@ -66,19 +76,9 @@ SELECT_TYPES = (
         ),
     ),
     PlugwiseSelectEntityDescription(
-        key=SELECT_DHW_MODE,
-        translation_key=SELECT_DHW_MODE,
-        entity_category=EntityCategory.CONFIG,
-        options_key="dhw_modes",
-        set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
-            key, appl_or_loc_id, option, state
-        ),
-    ),
-    PlugwiseSelectEntityDescription(
-        key=SELECT_GATEWAY_MODE,
-        translation_key=SELECT_GATEWAY_MODE,
-        entity_category=EntityCategory.CONFIG,
-        options_key="gateway_modes",
+        key=SELECT_SCHEDULE,
+        translation_key=SELECT_SCHEDULE,
+        options_key="available_schedules",
         set_value_fn=lambda api, key, appl_or_loc_id, option, state: api.set_select(
             key, appl_or_loc_id, option, state
         ),
@@ -113,7 +113,11 @@ async def async_setup_entry(
             PlugwiseSelectEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in SELECT_TYPES
-            if coordinator.data[device_id].get(description.key)
+            if (
+                coordinator.data[device_id].get(description.key)
+                # block the 2-option dhw_mode select for now
+                and len(coordinator.data[device_id][description.options_key]) > 2
+            )
         )
 
     _add_entities()
