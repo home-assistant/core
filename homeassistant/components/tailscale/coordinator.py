@@ -5,7 +5,6 @@ from typing import override
 from tailscale import Device, Tailscale, TailscaleAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
@@ -32,21 +31,12 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def __init__(self, hass: HomeAssistant, config_entry: TailscaleConfigEntry) -> None:
         """Initialize the Tailscale coordinator."""
         session = async_get_clientsession(hass)
-        # Either an API access token or OAuth client credentials are used;
-        # the library rejects being given both at the same time.
-        if oauth_client_id := config_entry.data.get(CONF_OAUTH_CLIENT_ID):
-            self.tailscale = Tailscale(
-                session=session,
-                oauth_client_id=oauth_client_id,
-                oauth_client_secret=config_entry.data[CONF_OAUTH_CLIENT_SECRET],
-                tailnet=config_entry.data[CONF_TAILNET],
-            )
-        else:
-            self.tailscale = Tailscale(
-                session=session,
-                api_key=config_entry.data[CONF_API_KEY],
-                tailnet=config_entry.data[CONF_TAILNET],
-            )
+        self.tailscale = Tailscale(
+            session=session,
+            oauth_client_id=config_entry.data[CONF_OAUTH_CLIENT_ID],
+            oauth_client_secret=config_entry.data[CONF_OAUTH_CLIENT_SECRET],
+            tailnet=config_entry.data[CONF_TAILNET],
+        )
         self.previous_devices: set[str] = set()
 
         super().__init__(

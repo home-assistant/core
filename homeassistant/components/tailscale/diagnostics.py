@@ -4,14 +4,14 @@ import json
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_TAILNET
+from .const import CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET, CONF_TAILNET
 from .coordinator import TailscaleConfigEntry
 
 TO_REDACT = {
-    CONF_API_KEY,
+    CONF_OAUTH_CLIENT_ID,
+    CONF_OAUTH_CLIENT_SECRET,
     CONF_TAILNET,
     "addresses",
     "device_id",

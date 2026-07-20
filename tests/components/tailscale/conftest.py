@@ -20,26 +20,26 @@ from tests.common import MockConfigEntry, load_fixture
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        title="homeassistant.github",
-        domain=DOMAIN,
-        data={CONF_TAILNET: "homeassistant.github", CONF_API_KEY: "tskey-MOCK"},
-        unique_id="homeassistant.github",
-    )
-
-
-@pytest.fixture
-def mock_config_entry_oauth() -> MockConfigEntry:
-    """Return a mocked config entry using OAuth client credentials."""
+    """Return the default mocked config entry, using OAuth client credentials."""
     return MockConfigEntry(
         title="homeassistant.github",
         domain=DOMAIN,
         data={
             CONF_TAILNET: "homeassistant.github",
             CONF_OAUTH_CLIENT_ID: "tskey-client-MOCK",
-            CONF_OAUTH_CLIENT_SECRET: "tskey-client-MOCK-SECRET",
+            CONF_OAUTH_CLIENT_SECRET: "mock-oauth-client-secret",
         },
+        unique_id="homeassistant.github",
+    )
+
+
+@pytest.fixture
+def mock_config_entry_api_key() -> MockConfigEntry:
+    """Return a legacy mocked config entry still using an API access token."""
+    return MockConfigEntry(
+        title="homeassistant.github",
+        domain=DOMAIN,
+        data={CONF_TAILNET: "homeassistant.github", CONF_API_KEY: "tskey-MOCK"},
         unique_id="homeassistant.github",
     )
 

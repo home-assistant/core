@@ -10,20 +10,6 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
-      "api_key": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "description": "Create an API access token at {authkeys_url}.\n\nTailscale API access tokens are valid for 90 days, after which a fresh token has to be entered."
-      },
-      "credentials": {
-        "description": "Choose how Home Assistant should authenticate with Tailscale.",
-        "menu_options": {
-          "api_key": "API access token (expires after 90 days)",
-          "oauth": "OAuth client (recommended, does not expire)"
-        },
-        "title": "Authentication method"
-      },
       "oauth": {
         "data": {
           "oauth_client_id": "OAuth client ID",
@@ -33,16 +19,10 @@
       },
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "description": "Tailscale API access tokens are valid for 90 days. Create a fresh one at {authkeys_url}.\n\nTo stop having to replace it, reconfigure this entry to use an OAuth client instead, which does not expire."
-      },
-      "reauth_confirm_oauth": {
-        "data": {
           "oauth_client_id": "[%key:component::tailscale::config::step::oauth::data::oauth_client_id%]",
           "oauth_client_secret": "[%key:component::tailscale::config::step::oauth::data::oauth_client_secret%]"
         },
-        "description": "Re-enter the credentials of your Tailscale OAuth client, managed at {oauth_url}."
+        "description": "Enter the credentials of a Tailscale OAuth client so Home Assistant can keep authenticating. Create one at {oauth_url} and grant it the **Devices: Core** read scope.\n\nOAuth clients do not expire, so they do not need to be replaced periodically."
       },
       "reconfigure": {
         "data": {

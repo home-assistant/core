@@ -21,13 +21,12 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 OAUTH_INPUT = {
     CONF_OAUTH_CLIENT_ID: "tskey-client-FAKE",
-    CONF_OAUTH_CLIENT_SECRET: "tskey-client-FAKE-SECRET",
+    CONF_OAUTH_CLIENT_SECRET: "fake-oauth-client-secret",
 }
-API_KEY_INPUT = {CONF_API_KEY: "tskey-FAKE"}
 
 
-async def _async_reach_credentials_menu(hass: HomeAssistant) -> str:
-    """Start a user flow and return the flow ID at the credentials menu."""
+async def _async_reach_oauth_form(hass: HomeAssistant) -> str:
+    """Start a user flow and return the flow ID at the OAuth credentials form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -37,50 +36,31 @@ async def _async_reach_credentials_menu(hass: HomeAssistant) -> str:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_TAILNET: "homeassistant.github"}
     )
-    assert result.get("type") is FlowResultType.MENU
-    assert result.get("step_id") == "credentials"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "oauth"
     return result["flow_id"]
 
 
-@pytest.mark.parametrize(
-    ("menu_option", "user_input"),
-    [("oauth", OAUTH_INPUT), ("api_key", API_KEY_INPUT)],
-)
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_tailscale_config_flow: MagicMock,
     mock_setup_entry: AsyncMock,
-    menu_option: str,
-    user_input: dict[str, str],
 ) -> None:
-    """Test the full user configuration flow, for both credential types."""
-    flow_id = await _async_reach_credentials_menu(hass)
+    """Test the full user configuration flow."""
+    flow_id = await _async_reach_oauth_form(hass)
 
     result = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": menu_option}
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == menu_option
-
-    result = await hass.config_entries.flow.async_configure(
-        flow_id, user_input=user_input
+        flow_id, user_input=OAUTH_INPUT
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "homeassistant.github"
-    assert result.get("data") == {
-        CONF_TAILNET: "homeassistant.github",
-        **user_input,
-    }
+    assert result.get("data") == {CONF_TAILNET: "homeassistant.github", **OAUTH_INPUT}
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    ("menu_option", "user_input"),
-    [("oauth", OAUTH_INPUT), ("api_key", API_KEY_INPUT)],
-)
 @pytest.mark.parametrize(
     ("side_effect", "reason"),
     [
@@ -92,31 +72,25 @@ async def test_full_flow_with_error(
     hass: HomeAssistant,
     mock_tailscale_config_flow: MagicMock,
     mock_setup_entry: AsyncMock,
-    menu_option: str,
-    user_input: dict[str, str],
     side_effect: type[Exception],
     reason: str,
 ) -> None:
     """Test the user flow recovering from an error entering credentials."""
-    flow_id = await _async_reach_credentials_menu(hass)
-
-    await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": menu_option}
-    )
+    flow_id = await _async_reach_oauth_form(hass)
 
     mock_tailscale_config_flow.devices.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
-        flow_id, user_input=user_input
+        flow_id, user_input=OAUTH_INPUT
     )
 
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == menu_option
+    assert result.get("step_id") == "oauth"
     assert result.get("errors") == {"base": reason}
     assert len(mock_setup_entry.mock_calls) == 0
 
     mock_tailscale_config_flow.devices.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        flow_id, user_input=user_input
+        flow_id, user_input=OAUTH_INPUT
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
@@ -148,41 +122,12 @@ async def test_reauth_flow(
     mock_tailscale_config_flow: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test reauthentication of an entry using an API access token."""
+    """Test reauthentication of an entry using OAuth client credentials."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "tskey-REAUTH"}
-    )
-    await hass.async_block_till_done()
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
-    assert mock_config_entry.data == {
-        CONF_TAILNET: "homeassistant.github",
-        CONF_API_KEY: "tskey-REAUTH",
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_tailscale_config_flow.devices.mock_calls) == 1
-
-
-async def test_reauth_flow_oauth(
-    hass: HomeAssistant,
-    mock_config_entry_oauth: MockConfigEntry,
-    mock_tailscale_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test reauthentication of an entry using OAuth client credentials."""
-    mock_config_entry_oauth.add_to_hass(hass)
-
-    result = await mock_config_entry_oauth.start_reauth_flow(hass)
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm_oauth"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], OAUTH_INPUT
@@ -191,13 +136,40 @@ async def test_reauth_flow_oauth(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
-    assert mock_config_entry_oauth.data == {
+    assert mock_config_entry.data == {
         CONF_TAILNET: "homeassistant.github",
         **OAUTH_INPUT,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1
+
+
+async def test_reauth_flow_migrates_api_key_entry(
+    hass: HomeAssistant,
+    mock_config_entry_api_key: MockConfigEntry,
+    mock_tailscale_config_flow: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauthentication migrates a legacy API access token entry to OAuth."""
+    mock_config_entry_api_key.add_to_hass(hass)
+
+    result = await mock_config_entry_api_key.start_reauth_flow(hass)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], OAUTH_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    assert mock_config_entry_api_key.data == {
+        CONF_TAILNET: "homeassistant.github",
+        **OAUTH_INPUT,
+    }
+    assert CONF_API_KEY not in mock_config_entry_api_key.data
 
 
 @pytest.mark.parametrize(
@@ -222,7 +194,7 @@ async def test_reauth_with_error(
 
     mock_tailscale_config_flow.devices.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: "tskey-INVALID"}
+        result["flow_id"], OAUTH_INPUT
     )
     await hass.async_block_till_done()
 
@@ -233,7 +205,7 @@ async def test_reauth_with_error(
 
     mock_tailscale_config_flow.devices.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_KEY: "tskey-VALID"}
+        result["flow_id"], user_input=OAUTH_INPUT
     )
     await hass.async_block_till_done()
 
@@ -241,25 +213,29 @@ async def test_reauth_with_error(
     assert result.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_TAILNET: "homeassistant.github",
-        CONF_API_KEY: "tskey-VALID",
+        **OAUTH_INPUT,
     }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_flow_migrates_to_oauth(
+async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_tailscale_config_flow: MagicMock,
 ) -> None:
-    """Test an API access token entry can be migrated to an OAuth client."""
+    """Test reconfiguring an entry's OAuth client credentials."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reconfigure"
 
+    new_input = {
+        CONF_OAUTH_CLIENT_ID: "tskey-client-NEW",
+        CONF_OAUTH_CLIENT_SECRET: "new-oauth-client-secret",
+    }
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], OAUTH_INPUT
+        result["flow_id"], new_input
     )
     await hass.async_block_till_done()
 
@@ -268,7 +244,7 @@ async def test_reconfigure_flow_migrates_to_oauth(
 
     assert mock_config_entry.data == {
         CONF_TAILNET: "homeassistant.github",
-        **OAUTH_INPUT,
+        **new_input,
     }
     assert CONF_API_KEY not in mock_config_entry.data
 
@@ -306,7 +282,8 @@ async def test_reconfigure_with_error(
 
     assert mock_config_entry.data == {
         CONF_TAILNET: "homeassistant.github",
-        CONF_API_KEY: "tskey-MOCK",
+        CONF_OAUTH_CLIENT_ID: "tskey-client-MOCK",
+        CONF_OAUTH_CLIENT_SECRET: "mock-oauth-client-secret",
     }
 
 
@@ -318,8 +295,9 @@ async def test_oauth_flow_closes_client(
     """Test validating OAuth credentials does not leave the client open.
 
     This exercises the actual library rather than mocking it: validating
-    credentials triggers a token request, which schedules a refresh task that
-    has to be cancelled again. A lingering task is caught by verify_cleanup.
+    credentials triggers a token request, which schedules a token-expiration
+    task that has to be cancelled again. A lingering task is caught by
+    verify_cleanup.
     """
     aioclient_mock.post(
         "https://api.tailscale.com/api/v2/oauth/token",
@@ -330,10 +308,7 @@ async def test_oauth_flow_closes_client(
         text=await async_load_fixture(hass, "devices.json", DOMAIN),
     )
 
-    flow_id = await _async_reach_credentials_menu(hass)
-    await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "oauth"}
-    )
+    flow_id = await _async_reach_oauth_form(hass)
     result = await hass.config_entries.flow.async_configure(
         flow_id, user_input=OAUTH_INPUT
     )

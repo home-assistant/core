@@ -80,9 +80,30 @@ async def test_config_entry_authentication_failed(
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
 
 
+async def test_api_key_entry_triggers_migration_reauth(
+    hass: HomeAssistant,
+    mock_config_entry_api_key: MockConfigEntry,
+) -> None:
+    """Test a legacy API access token entry is migrated to OAuth via reauth."""
+    mock_config_entry_api_key.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_api_key.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_api_key.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry_api_key.entry_id
+
+
 async def test_setup_with_oauth_client_credentials(
     hass: HomeAssistant,
-    mock_config_entry_oauth: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an entry configured with an OAuth client sets the client up as such."""
     with patch(
@@ -92,25 +113,24 @@ async def test_setup_with_oauth_client_credentials(
             await async_load_fixture(hass, "devices.json", DOMAIN)
         ).devices
 
-        mock_config_entry_oauth.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry_oauth.entry_id)
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry_oauth.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # The library must be handed the OAuth credentials and no API access token;
-    # it rejects being given both at the same time.
+    # The library is handed the OAuth credentials, not an API access token.
     assert tailscale_mock.call_args.kwargs == {
         "session": ANY,
-        "oauth_client_id": mock_config_entry_oauth.data[CONF_OAUTH_CLIENT_ID],
-        "oauth_client_secret": mock_config_entry_oauth.data[CONF_OAUTH_CLIENT_SECRET],
-        "tailnet": mock_config_entry_oauth.data[CONF_TAILNET],
+        "oauth_client_id": mock_config_entry.data[CONF_OAUTH_CLIENT_ID],
+        "oauth_client_secret": mock_config_entry.data[CONF_OAUTH_CLIENT_SECRET],
+        "tailnet": mock_config_entry.data[CONF_TAILNET],
     }
 
 
 async def test_oauth_access_token_is_requested(
     hass: HomeAssistant,
-    mock_config_entry_oauth: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the OAuth client credentials are exchanged for an access token."""
@@ -123,28 +143,28 @@ async def test_oauth_access_token_is_requested(
         text=await async_load_fixture(hass, "devices.json", DOMAIN),
     )
 
-    mock_config_entry_oauth.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_oauth.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry_oauth.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     token_request = aioclient_mock.mock_calls[0]
     assert token_request[2] == {
         "client_id": "tskey-client-MOCK",
-        "client_secret": "tskey-client-MOCK-SECRET",
+        "client_secret": "mock-oauth-client-secret",
     }
 
     devices_request = aioclient_mock.mock_calls[1]
     assert devices_request[3]["Authorization"] == "Bearer tskey-api-TEMPORARY"
 
-    assert await hass.config_entries.async_unload(mock_config_entry_oauth.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
 
 async def test_oauth_client_closed_when_setup_fails(
     hass: HomeAssistant,
-    mock_config_entry_oauth: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the token-expiration task is cancelled when setup fails."""
@@ -157,8 +177,8 @@ async def test_oauth_client_closed_when_setup_fails(
         status=500,
     )
 
-    mock_config_entry_oauth.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_oauth.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry_oauth.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
