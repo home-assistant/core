@@ -244,8 +244,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     def handle_deleted_device(device_id: str) -> None:
         """Handle a deleted device."""
-        dev_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)},
+        dev_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), entry.entry_id
         )
         if dev_entry is not None:
             device_registry.async_update_device(
@@ -587,7 +587,9 @@ def create_devices(
                 if mac_connections:
                     kwargs.setdefault(ATTR_CONNECTIONS, set()).update(mac_connections)
         if (
-            device_registry.async_get_device({(DOMAIN, device.device.device_id)})
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, device.device.device_id), entry.entry_id
+            )
             is None
         ):
             kwargs.update(
