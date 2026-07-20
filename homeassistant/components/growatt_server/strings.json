@@ -652,6 +652,12 @@
     "login_failed": {
       "message": "Growatt login failed: {message}"
     },
+    "mix_settings_empty": {
+      "message": "The Growatt Mix device returned no charge/discharge settings."
+    },
+    "mix_settings_read_failed": {
+      "message": "Failed to read charge/discharge settings from the Growatt Mix device."
+    },
     "no_devices_configured": {
       "message": "No {device_type} devices are configured."
     },
