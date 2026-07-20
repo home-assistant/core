@@ -1,11 +1,10 @@
 """This file is used for communicating with the device."""
 
-# TODO: add other methods of communicating as well (modbus, USB, etc)
-
 import logging
+import xml.etree.ElementTree as ET
 
 import aiohttp
-import defusedxml.ElementTree as ET
+import defusedxml.ElementTree as defused_ET
 
 from .const import ENCODING
 
@@ -13,6 +12,7 @@ INFO_URL = "is.xml"
 DATA_URL = "fresh.xml"
 SETTINGS_URL = "settings.xml"
 SET_URL = "set.xml"
+SAVE_URL = "save.xml"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,9 +43,23 @@ class PapouchApiClient:
         return await self._fetch(SETTINGS_URL)
 
     async def send_command_GET(self, params: dict) -> None:
-        """Command for communicating with any device by using GET request."""
+        """Command for communicating with any device by using GET request.
+
+        Parameters are queries that will be added to the request.
+        """
 
         async with self.session.get(self.base_url + SET_URL, params=params) as response:
+            if response.status != 200:
+                _LOGGER.error("Failed to send command: %s", response.status)
+
+            self._check_response(await response.text(encoding=ENCODING))
+
+    async def send_command_POST(self, data: str) -> None:
+        """Command for communicating with any device by using POST request.
+
+        Data contains the payload that will be sent in the request body.
+        """
+        async with self.session.post(self.base_url + SAVE_URL, data=data) as response:
             if response.status != 200:
                 _LOGGER.error("Failed to send command: %s", response.status)
 
@@ -69,19 +83,14 @@ class PapouchApiClient:
             _LOGGER.error("Response doesn't have result tag!")
 
     async def get_device_mode(self):
-        """Function is used for the resolving the mode of the device."""
+        """Function is used for the resolving the mode of the device.
+
+        Suppose that every device will have "info.xml" and heartbeat tag otherwise return -1.
+        """
         info_xml = await self.fetch_info()
-        heartbeat_tag = ET.fromstring(info_xml).find("heartbeat")
+        heartbeat_tag = defused_ET.fromstring(info_xml).find("heartbeat")
         if heartbeat_tag is not None:
             return heartbeat_tag.attrib.get("mode")
 
         _LOGGER.error("Response doesn't have heartbeat tag!")
         return -1
-
-    async def switch_to_web_mode(self) -> bool:
-        """Function that enables WEB mode in the device."""
-
-        raw_xml_info = await self.fetch_info()
-        root = ET.fromstring(raw_xml_info)
-
-        # TODO: dodělat

@@ -1,7 +1,6 @@
 """Initialization file of the integration."""
 
-import logging
-
+import aiohttp
 import defusedxml.ElementTree as ET
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,14 +15,13 @@ from .APIClient import PapouchApiClient
 from .coordinator import PapouchDataUpdateCoordinator
 from .devices import PapouchDevice, Quido
 
-_LOGGER = logging.getLogger(__name__)
-
 DOMAIN = "papouch"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -42,7 +40,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     session = async_get_clientsession(hass)
     api_client = PapouchApiClient(entry.data["ip_address"], session)
 
-    device = await create_device(api_client)
+    try:
+        device = await create_device(api_client)
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to Papouch device: {err}"
+        ) from err
 
     if device is None:
         raise ConfigEntryNotReady(
@@ -58,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     return True
 
 
-async def create_device(api_client: PapouchApiClient) -> PapouchDevice:
+async def create_device(api_client: PapouchApiClient) -> PapouchDevice | None:
     """Function that creates proper device instance."""
 
     info = await api_client.fetch_info()
@@ -68,6 +71,7 @@ async def create_device(api_client: PapouchApiClient) -> PapouchDevice:
         device = device.split()
         number_inputs = device[2].split("/")[0]
         number_outputs = device[2].split("/")[1]
-        return Quido(api_client, int(number_inputs), int(number_outputs))
+        settings = await api_client.fetch_settings()
+        return Quido(api_client, settings, int(number_inputs), int(number_outputs))
 
     return None

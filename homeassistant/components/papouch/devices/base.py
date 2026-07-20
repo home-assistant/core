@@ -33,3 +33,11 @@ class PapouchDevice(ABC):
     @abstractmethod
     def get_supported_switches(self) -> list[dict[str, str]]:
         """Return the configuration data for switches (outputs) this device supports."""
+
+    @abstractmethod
+    def get_supported_selects(self) -> list[dict[str, str]]:
+        """Return the configuration data for select menus (e.g. choose the mode of the input) this device supports."""
+
+    @abstractmethod
+    def switch_to_web_mode(self) -> None:
+        """Return the configuration data for select menus (e.g. choose the mode of the input) this device supports."""

@@ -1,8 +1,4 @@
-"""Config flow for the Papouch integration.
-
-There is a disabled code of options flow, for now it has no usage.
-TODO: Also there is untested DHCP connection.
-"""
+"""Config flow for the Papouch integration."""
 
 import logging
 import re
@@ -10,19 +6,14 @@ import re
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    # ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    # OptionsFlow,
-)
-
-# from homeassistant.core import callback
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import create_device
 from .APIClient import PapouchApiClient
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, WEB_MODE_INDEX
+from .discovery import async_discover_papouch_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,124 +21,162 @@ _LOGGER = logging.getLogger(__name__)
 class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Papouch."""
 
-    # @staticmethod
-    # @callback
-    # def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-    #     """Tell Home Assistant to use our Options Flow."""
-    #     return PapouchOptionsFlowHandler(config_entry)
-
     def __init__(self) -> None:
-        """Initialization of the config flow."""
+        """Initialize the config flow."""
         self.discovered_ip: str | None = None
-        self._saved_input = None
+        self._saved_input: dict | None = None
+        self._discovered_ips: list[str] | None = None
+
+    async def _test_connection(
+        self, ip_address: str
+    ) -> tuple[dict[str, str], int | None]:
+        """Test the connection and return any errors and the device mode."""
+        if not re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address):
+            return {"ip_address": "invalid_ip_format"}, None
+
+        session = async_get_clientsession(self.hass)
+        client = PapouchApiClient(ip_address, session)
+
+        try:
+            await client.fetch_info()
+            mode_device = await client.get_device_mode()
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Failed to connect to the device: %s", err)
+            return {"base": "cannot_connect"}, None
+        else:
+            return {}, mode_device
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Discovering the device from DHCP request."""
-
+        """Discover the device from a DHCP request."""
         self.discovered_ip = discovery_info.ip
         discovered_mac = discovery_info.macaddress
 
         await self.async_set_unique_id(discovered_mac)
-
         self._abort_if_unique_id_configured(updates={"ip_address": self.discovered_ip})
 
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
-        """Handle the initial step where the user enters the device IP and scan interval."""
+        """Handle the initial step featuring active UDP discovery."""
         errors = {}
 
         if user_input is not None:
-            ip_address = user_input["ip_address"]
+            if user_input["ip_address"] == "manual":
+                self._saved_input = user_input
+                return await self.async_step_manual()
 
-            if not re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address):
-                errors["ip_address"] = "Invalid format of the IP address (IPv4)"
-            else:
-                session = async_get_clientsession(self.hass)
-                client = PapouchApiClient(ip_address, session)
+            errors, mode_device = await self._test_connection(user_input["ip_address"])
 
-                try:
-                    await client.fetch_info()
-                    mode_device = await client.get_device_mode()
+            if not errors:
+                self._saved_input = user_input
+                if mode_device == -1:
+                    return self.async_abort(reason="mode_is_missing")
+                if mode_device != WEB_MODE_INDEX:
+                    return await self.async_step_web_mode()
 
-                    _LOGGER.error("Mode of the device: %s", mode_device)
+                return self.async_create_entry(
+                    title=f"Papouch {user_input['ip_address']}", data=user_input
+                )
 
-                    self._saved_input = user_input
+        if self._discovered_ips is None:
+            self._discovered_ips = await async_discover_papouch_devices()
 
-                    if mode_device == -1:
-                        self.async_abort(reason="mode_is_missing")
+        if not self._discovered_ips and not self.discovered_ip and not errors:
+            return await self.async_step_manual()
 
-                    if mode_device != WEB_MODE_INDEX:
-                        return await self.async_step_web_mode()
+        options = {ip: ip for ip in self._discovered_ips}
+        if self.discovered_ip and self.discovered_ip not in options:
+            options[self.discovered_ip] = self.discovered_ip
 
-                    return self.async_create_entry(
-                        title=f"Papouch {ip_address}", data=user_input
-                    )
-                except aiohttp.ClientError as err:
-                    _LOGGER.error("Failed to connect to the device: %s", err)
-                    errors["base"] = "cannot_connect"
+        options["manual"] = "Enter IP manually"
 
-        default_ip = self.discovered_ip or ""
+        default_interval = (
+            user_input.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+            if user_input
+            else DEFAULT_SCAN_INTERVAL
+        )
 
         schema = vol.Schema(
             {
-                vol.Required("ip_address", default=default_ip): str,
-                vol.Required("scan_interval", default=DEFAULT_SCAN_INTERVAL): vol.All(
-                    int,
-                    vol.Range(min=1, max=3600),  # TODO: hard-coded
+                vol.Required("ip_address"): vol.In(options),
+                vol.Required("scan_interval", default=default_interval): vol.All(
+                    int, vol.Range(min=1, max=3600)
                 ),
             }
         )
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_web_mode(self, user_input=None) -> ConfigFlowResult:
-        """Step where user can change the device into WEB mode."""
+    async def async_step_manual(self, user_input=None) -> ConfigFlowResult:
+        """Handle manual IP entry when discovery fails or is bypassed."""
         errors = {}
 
         if user_input is not None:
-            if user_input["switch_mode"]:
-                session = async_get_clientsession(self.hass)
-                client = PapouchApiClient(self._saved_input["ip_address"], session)
+            errors, mode_device = await self._test_connection(user_input["ip_address"])
 
-                try:
-                    await client.switch_to_web_mode()
+            if not errors:
+                self._saved_input = user_input
+                if mode_device == -1:
+                    return self.async_abort(reason="mode_is_missing")
+                if mode_device != WEB_MODE_INDEX:
+                    return await self.async_step_web_mode()
 
-                    return self.async_create_entry(
-                        title=f"Papouch {self._saved_input['ip_address']}",
-                        data=self._saved_input,
-                    )
-                except aiohttp.ClientError:
-                    errors["base"] = "cannot_connect"
-            else:
-                return self.async_abort(reason="web_mode_required")
+                return self.async_create_entry(
+                    title=f"Papouch {user_input['ip_address']}", data=user_input
+                )
+
+        default_ip = self.discovered_ip or ""
+        default_interval = DEFAULT_SCAN_INTERVAL
+
+        if self._saved_input and "scan_interval" in self._saved_input:
+            default_interval = self._saved_input["scan_interval"]
+        if user_input and "scan_interval" in user_input:
+            default_interval = user_input["scan_interval"]
+        if user_input and "ip_address" in user_input:
+            default_ip = user_input["ip_address"]
 
         schema = vol.Schema(
             {
-                vol.Required("switch_mode", default=True): bool,
+                vol.Required("ip_address", default=default_ip): str,
+                vol.Required("scan_interval", default=default_interval): vol.All(
+                    int, vol.Range(min=1, max=3600)
+                ),
             }
         )
 
-        return self.async_show_form(
-            step_id="web_mode",
-            data_schema=schema,
-            errors=errors,
+        return self.async_show_form(step_id="manual", data_schema=schema, errors=errors)
+
+    async def async_step_web_mode(self, user_input=None) -> ConfigFlowResult:
+        """Step where the user can switch the device into WEB mode via buttons."""
+        return self.async_show_menu(
+            step_id="web_mode", menu_options=["execute_switch", "abort_switch"]
         )
 
+    async def async_step_execute_switch(self, user_input=None) -> ConfigFlowResult:
+        """Action when user clicks the switch button."""
+        session = async_get_clientsession(self.hass)
+        client = PapouchApiClient(self._saved_input["ip_address"], session)
 
-# Options are unused for now
-# class PapouchOptionsFlowHandler(OptionsFlow):
-#     """Handle options flow for Papouch."""
+        try:
+            # Note that this is a dummy device and wouldn't be used later.
+            # Used for DRY rule
+            device = await create_device(client)
 
-#     def __init__(self, config_entry) -> None:
-#         """Initialize options flow."""
-#         self.config_entry = config_entry
+            if device is None:
+                return self.async_abort(reason="unsupported_device")
 
-#     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
-#         """Manage the options."""
-#         # if user_input is not None:
-#         #     return self.async_create_entry(title="", data=user_input)
+            await device.switch_to_web_mode()
 
-#         # pass
+            return self.async_create_entry(
+                title=f"Papouch {self._saved_input['ip_address']}",
+                data=self._saved_input,
+                description="web_mode_success",
+            )
+        except aiohttp.ClientError:
+            return self.async_abort(reason="cannot_connect")
+
+    async def async_step_abort_switch(self, user_input=None) -> ConfigFlowResult:
+        """Action when user clicks cancel."""
+        return self.async_abort(reason="web_mode_required")

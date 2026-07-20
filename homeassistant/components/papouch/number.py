@@ -27,16 +27,15 @@ async def async_setup_entry(
 class PapouchCounter(PapouchEntity, NumberEntity):
     """Default counter of the Papouch's device used for decreasing."""
 
-    _attr_native_min_value = 0
-    _attr_native_max_value = 2**16 - 1  # TODO: hard-coded
-    _attr_native_step = 1
-
     def __init__(self, coordinator, entry, item_id) -> None:
         """Constructor of the UI counter."""
         super().__init__(coordinator, entry)
         self.item_id = item_id
         self._attr_unique_id = f"{entry.entry_id}_counter_{item_id}"
         self._attr_name = f"Decrease counter {item_id} by: "
+        self._attr_native_min_value = 0
+        self._attr_native_max_value = 2**coordinator.device.size_counter_bits - 1
+        self._attr_native_step = 1
 
     @property
     def native_value(self) -> float | None:

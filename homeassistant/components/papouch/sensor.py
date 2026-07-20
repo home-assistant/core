@@ -51,6 +51,7 @@ class PapouchTemperatureSensor(PapouchEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
+        # TODO: solve this problem
         return self.coordinator.data.get("temp", {}).get(self.item_id)
 
 
