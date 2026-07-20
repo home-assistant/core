@@ -372,15 +372,7 @@ def _categorize_nodes(
             isy_data.nodes[Platform.SENSOR].append(node)
             continue
 
-        # Parallel classification: nodes can match a NODE_PARALLEL_PLATFORMS
-        # entry in addition to their primary platform (e.g. a switch that also
-        # emits button-press events). Stop at the first matcher per parallel
-        # platform and falls through to primary classification below.
-        # NOTE: ``_check_for_insteon_type`` contains hardcoded redirects for
-        # specific *primary* platforms (FAN→LIGHT, CLIMATE→BINARY_SENSOR,
-        # etc.). Those don't fire today for parallel platforms, but if a new
-        # special-case is added there for a NODE_PARALLEL_PLATFORMS entry,
-        # update this loop to account for it.
+        # Add matching parallel platforms without changing primary classification.
         for parallel_platform in NODE_PARALLEL_PLATFORMS:
             if _check_for_node_def(isy_data, node, single_platform=parallel_platform):
                 continue
