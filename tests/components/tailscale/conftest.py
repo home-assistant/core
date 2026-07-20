@@ -6,7 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from tailscale.models import Devices
 
-from homeassistant.components.tailscale.const import CONF_TAILNET, DOMAIN
+from homeassistant.components.tailscale.const import (
+    CONF_OAUTH_CLIENT_ID,
+    CONF_OAUTH_CLIENT_SECRET,
+    CONF_TAILNET,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
@@ -20,6 +25,21 @@ def mock_config_entry() -> MockConfigEntry:
         title="homeassistant.github",
         domain=DOMAIN,
         data={CONF_TAILNET: "homeassistant.github", CONF_API_KEY: "tskey-MOCK"},
+        unique_id="homeassistant.github",
+    )
+
+
+@pytest.fixture
+def mock_config_entry_oauth() -> MockConfigEntry:
+    """Return a mocked config entry using OAuth client credentials."""
+    return MockConfigEntry(
+        title="homeassistant.github",
+        domain=DOMAIN,
+        data={
+            CONF_TAILNET: "homeassistant.github",
+            CONF_OAUTH_CLIENT_ID: "tskey-client-MOCK",
+            CONF_OAUTH_CLIENT_SECRET: "tskey-client-MOCK-SECRET",
+        },
         unique_id="homeassistant.github",
     )
 

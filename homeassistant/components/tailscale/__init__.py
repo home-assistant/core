@@ -21,4 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) -> bool:
     """Unload Tailscale config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # Cancels the OAuth access token refresh task, when one is scheduled.
+        await entry.runtime_data.tailscale.close()
+    return unload_ok

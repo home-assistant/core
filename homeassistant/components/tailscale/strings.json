@@ -2,25 +2,60 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Create an API access token at {authkeys_url}.\n\nTailscale API access tokens are valid for 90 days, after which a fresh token has to be entered."
+      },
+      "credentials": {
+        "description": "Choose how Home Assistant should authenticate with Tailscale.",
+        "menu_options": {
+          "api_key": "API access token (expires after 90 days)",
+          "oauth": "OAuth client (recommended, does not expire)"
+        },
+        "title": "Authentication method"
+      },
+      "oauth": {
+        "data": {
+          "oauth_client_id": "OAuth client ID",
+          "oauth_client_secret": "OAuth client secret"
+        },
+        "description": "Create an OAuth client at {oauth_url} and grant it the **Devices: Core** read scope.\n\nOAuth clients do not expire, so they do not need to be replaced periodically."
+      },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
-        "description": "Tailscale API access tokens are valid for 90-days. You can create a fresh Tailscale API access token at {authkeys_url}."
+        "description": "Tailscale API access tokens are valid for 90 days. Create a fresh one at {authkeys_url}.\n\nTo stop having to replace it, reconfigure this entry to use an OAuth client instead, which does not expire."
+      },
+      "reauth_confirm_oauth": {
+        "data": {
+          "oauth_client_id": "[%key:component::tailscale::config::step::oauth::data::oauth_client_id%]",
+          "oauth_client_secret": "[%key:component::tailscale::config::step::oauth::data::oauth_client_secret%]"
+        },
+        "description": "Re-enter the credentials of your Tailscale OAuth client, managed at {oauth_url}."
+      },
+      "reconfigure": {
+        "data": {
+          "oauth_client_id": "[%key:component::tailscale::config::step::oauth::data::oauth_client_id%]",
+          "oauth_client_secret": "[%key:component::tailscale::config::step::oauth::data::oauth_client_secret%]"
+        },
+        "description": "Switch this entry over to an OAuth client, which does not expire. Create one at {oauth_url} and grant it the **Devices: Core** read scope."
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
           "tailnet": "Tailnet"
         },
-        "description": "This integration monitors your Tailscale network, it **DOES NOT** make your Home Assistant accessible via Tailscale VPN. \n\nTo authenticate with Tailscale you'll need to create an API access token at {authkeys_url}.\n\nA Tailnet is the name of your Tailscale network. You can find it in the top left corner in the Tailscale Admin Panel (beside the Tailscale logo)."
+        "description": "This integration monitors your Tailscale network, it **DOES NOT** make your Home Assistant accessible via Tailscale VPN.\n\nA Tailnet is the name of your Tailscale network. You can find it in the top left corner in the Tailscale Admin Panel (beside the Tailscale logo)."
       }
     }
   },
