@@ -12,7 +12,6 @@ from homeassistant.components.habitron.config_flow import (
     CannotConnect,
     ConfigFlow,
     HostNotFound,
-    InvalidHost,
     validate_input,
 )
 from homeassistant.components.habitron.const import DOMAIN
@@ -299,20 +298,23 @@ async def test_validate_input_local_loopback_rewrites_host(
     assert info == {"title": MOCK_NAME}
 
 
-async def test_validate_input_invalid_host_too_short(hass: HomeAssistant) -> None:
-    """A host string shorter than 4 chars raises ``InvalidHost``."""
+async def test_validate_input_accepts_short_hostname(
+    hass: HomeAssistant,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A short host name is passed to the probe, not rejected up front.
 
-    with (
-        patch(
-            "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
-            new=AsyncMock(return_value="10.0.0.5"),
-        ),
-        pytest.raises(InvalidHost),
+    ``pi`` or ``hub`` are perfectly ordinary LAN names, so whether a host is
+    usable is for the connection test to decide.
+    """
+
+    with patch(
+        "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
+        new=AsyncMock(return_value="10.0.0.5"),
     ):
-        await validate_input(
-            hass,
-            {KEY_HOST: "abc", "websock_token": ""},
-        )
+        info = await validate_input(hass, {KEY_HOST: "pi", "websock_token": ""})
+
+    assert info == {"title": MOCK_NAME}
 
 
 async def test_validate_input_host_not_found_for_dns_failure(
@@ -585,7 +587,7 @@ async def test_ssdp_discovery_confirm_cannot_connect_retries(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize("error", [HostNotFound, InvalidHost])
+@pytest.mark.parametrize("error", [HostNotFound])
 async def test_ssdp_discovery_confirm_host_error_retries(
     hass: HomeAssistant,
     setup_homeassistant: None,
@@ -659,23 +661,6 @@ async def test_user_flow_truly_unknown_exception_maps_to_unknown(
             result["flow_id"], user_input=MOCK_CONFIG_DATA
         )
     assert result["errors"] == {"base": "unknown"}
-
-
-async def test_user_flow_short_host_maps_to_host_not_found(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """A host string shorter than 4 chars triggers ``host_not_found``."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={**MOCK_CONFIG_DATA, "habitron_host": "ab"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "host_not_found"}
 
 
 async def test_user_flow_unexpected_exception_maps_to_unknown(

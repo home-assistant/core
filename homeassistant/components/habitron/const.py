@@ -18,12 +18,3 @@ CONF_DEFAULT_HOST = "local"  # default host string of SmartCenter, uses own ip
 # so a fixed value is the right shape.
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 RESTART_ALL = 0xFF
-HUB_UID = "hub_uid"
-ROUTER_NMBR = "rtr_nmbr"
-MOD_NMBR = "mod_nmbr"
-EVNT_TYPE = "evnt_type"
-EVNT_ARG1 = "evnt_arg1"
-EVNT_ARG2 = "evnt_arg2"
-EVNT_ARG3 = "evnt_arg3"
-EVNT_ARG4 = "evnt_arg4"
-EVNT_ARG5 = "evnt_arg5"
