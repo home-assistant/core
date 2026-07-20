@@ -10,6 +10,7 @@ from pyanglianwater.exceptions import (
     ExpiredAccessTokenError,
     UnknownEndpointError,
 )
+from pyanglianwater.meter import SmartMeter
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -194,3 +195,65 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 "Adding %s statistics for %s", len(usage_statistics), usage_statistic_id
             )
             async_add_external_statistics(self.hass, usage_metadata, usage_statistics)
+            await self._insert_cost_statistics(meter, id_prefix, name_prefix)
+
+    async def _insert_cost_statistics(
+        self, meter: SmartMeter, id_prefix: str, name_prefix: str
+    ) -> None:
+        """Insert cost statistics for a water meter into Home Assistant.
+
+        Costs are provided by the library per reading (each day's total cost
+        distributed across that day's readings by consumption), so they can
+        be tracked against the usage statistic in the water dashboard.
+        """
+        hourly_costs = meter.get_hourly_costs()
+        if not hourly_costs:
+            _LOGGER.debug(
+                "No cost data available for meter %s, skipping cost statistics",
+                meter.serial_number,
+            )
+            return
+        cost_statistic_id = f"{DOMAIN}:{id_prefix}_cost".lower()
+        cost_metadata = StatisticMetaData(
+            mean_type=StatisticMeanType.NONE,
+            has_sum=True,
+            name=f"{name_prefix} Cost",
+            source=DOMAIN,
+            statistic_id=cost_statistic_id,
+            unit_class=None,
+            unit_of_measurement="GBP",
+        )
+        last_stat = await get_instance(self.hass).async_add_executor_job(
+            get_last_statistics, self.hass, 1, cost_statistic_id, True, {"sum"}
+        )
+        if last_stat:
+            last_records = last_stat[cost_statistic_id]
+            cost_sum = float(last_records[0].get("sum") or 0.0)
+            last_stats_time = last_records[0]["start"]
+        else:
+            cost_sum = 0.0
+            last_stats_time = None
+        cost_statistics = []
+        for entry in hourly_costs:
+            parsed_read_at = dt_util.parse_datetime(entry["read_at"])
+            if not parsed_read_at:
+                _LOGGER.debug(
+                    "Could not parse read_at time %s, skipping cost entry",
+                    entry["read_at"],
+                )
+                continue
+            # Align with usage statistics: attribute the reading to the hour
+            # it covers rather than the hour it was taken.
+            start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
+            if last_stats_time is not None and start.timestamp() <= last_stats_time:
+                continue
+            cost_sum += entry["cost"]
+            cost_statistics.append(
+                StatisticData(start=start, state=entry["cost"], sum=cost_sum)
+            )
+        if not cost_statistics:
+            return
+        _LOGGER.debug(
+            "Adding %s statistics for %s", len(cost_statistics), cost_statistic_id
+        )
+        async_add_external_statistics(self.hass, cost_metadata, cost_statistics)

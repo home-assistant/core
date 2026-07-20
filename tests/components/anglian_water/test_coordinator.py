@@ -227,6 +227,97 @@ async def test_coordinator_subsequent_run_missing_period_statistics(
     assert corrected_stats[statistic_id][0]["sum"] == 70
 
 
+async def test_coordinator_cost_statistics_first_run(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test cost statistics distribute the day's cost by consumption share."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_cost"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    rows = stats[statistic_id]
+    # £1.00 for the day, split across 10L/15L/25L readings
+    assert [round(row["state"], 2) for row in rows] == [0.2, 0.3, 0.5]
+    assert round(rows[-1]["sum"], 2) == 1.0
+
+
+async def test_coordinator_cost_statistics_subsequent_run(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smart_meter: SmartMeter,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test cost statistics only append hours newer than the last stored one."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # A new reading arrives for the same day.
+    mock_smart_meter.readings.append(
+        {"read_at": "2024-06-01T15:00:00", "consumption": 50, "read": 100}
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_cost"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    rows = stats[statistic_id]
+    assert len(rows) == 4
+    # The new hour is 50L of the day's (now) 100L -> £0.50, appended to the sum
+    assert round(rows[-1]["state"], 2) == 0.5
+    assert round(rows[-1]["sum"], 2) == 1.5
+
+
+async def test_coordinator_no_cost_data(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smart_meter: SmartMeter,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test that no cost statistics are inserted when no cost data exists."""
+    mock_smart_meter.daily_costs = {}
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"anglian_water:{ACCOUNT_NUMBER}_testsn_cost"
+    stats = await hass.async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, True, {"sum"}
+    )
+    assert not stats
+
+
 async def test_coordinator_period_statistics_without_sum(
     recorder_mock: Recorder,
     hass: HomeAssistant,
