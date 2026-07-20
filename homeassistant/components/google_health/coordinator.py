@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, HealthApiScope
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import GoogleHealthConfigEntry
@@ -51,8 +51,6 @@ class GoogleHealthActivityData:
     active_energy_burned: ActiveEnergyBurnedRollupValue | None = None
     total_calories: TotalCaloriesRollupValue | None = None
     floors: FloorsRollupValue | None = None
-    hydration: HydrationLogRollupValue | None = None
-    nutrition: NutritionLogRollupValue | None = None
 
 
 @dataclass
@@ -137,38 +135,27 @@ class GoogleHealthActivityCoordinator(
         calories, and floors. If no data points exist for today yet, the API
         returns None, which the sensors default to 0.
         """
-        assert self.config_entry is not None
-        scopes = self.config_entry.data.get("token", {}).get("scope", "").split()
-        tasks = [
+        (
+            steps_rollup,
+            distance_rollup,
+            active_energy_rollup,
+            total_calories_rollup,
+            floors_rollup,
+        ) = await asyncio.gather(
             self.api.steps.today(self.hass.config.time_zone),
             self.api.distance.today(self.hass.config.time_zone),
             self.api.active_energy_burned.today(self.hass.config.time_zone),
             self.api.total_calories.today(self.hass.config.time_zone),
             self.api.floors.today(self.hass.config.time_zone),
-        ]
+        )
 
-        has_nutrition = HealthApiScope.NUTRITION_READ in scopes
-        if has_nutrition:
-            tasks.extend(
-                [
-                    self.api.hydration_log.today(self.hass.config.time_zone),
-                    self.api.nutrition_log.today(self.hass.config.time_zone),
-                ]
-            )
-
-        results = await asyncio.gather(*tasks)
-
-        steps = results[0].data if results[0] else None
-        distance = results[1].data if results[1] else None
-        active_energy_burned = results[2].data if results[2] else None
-        total_calories = results[3].data if results[3] else None
-        floors = results[4].data if results[4] else None
-
-        hydration = None
-        nutrition = None
-        if has_nutrition:
-            hydration = results[5].data if results[5] else None
-            nutrition = results[6].data if results[6] else None
+        steps = steps_rollup.data if steps_rollup else None
+        distance = distance_rollup.data if distance_rollup else None
+        active_energy_burned = (
+            active_energy_rollup.data if active_energy_rollup else None
+        )
+        total_calories = total_calories_rollup.data if total_calories_rollup else None
+        floors = floors_rollup.data if floors_rollup else None
 
         return GoogleHealthActivityData(
             steps=steps,
@@ -176,8 +163,6 @@ class GoogleHealthActivityCoordinator(
             active_energy_burned=active_energy_burned,
             total_calories=total_calories,
             floors=floors,
-            hydration=hydration,
-            nutrition=nutrition,
         )
 
 
@@ -265,3 +250,49 @@ class GoogleHealthSleepCoordinator(
         sleep_result = await self.api.sleep.list(page_size=DEFAULT_PAGE_SIZE)
         sleep = sleep_result.data_points[0].data if sleep_result.data_points else None
         return GoogleHealthSleepData(sleep=sleep)
+
+
+@dataclass
+class GoogleHealthNutritionData:
+    """Class to hold hydration and nutrition data."""
+
+    hydration: HydrationLogRollupValue | None = None
+    nutrition: NutritionLogRollupValue | None = None
+
+
+class GoogleHealthNutritionCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthNutritionData]
+):
+    """Coordinator to fetch nutrition data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_nutrition",
+            update_interval=POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthNutritionData:
+        """Fetch hydration and nutrition rollups for today."""
+        hydration_rollup, nutrition_rollup = await asyncio.gather(
+            self.api.hydration_log.today(self.hass.config.time_zone),
+            self.api.nutrition_log.today(self.hass.config.time_zone),
+        )
+
+        hydration = hydration_rollup.data if hydration_rollup else None
+        nutrition = nutrition_rollup.data if nutrition_rollup else None
+
+        return GoogleHealthNutritionData(
+            hydration=hydration,
+            nutrition=nutrition,
+        )

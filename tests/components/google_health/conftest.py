@@ -154,6 +154,9 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.hydration_log.today.return_value = _rollup_fixture(
             "hydration.json", HydrationLogRollupValue, "hydrationLog"
         )
+        client.hydration_log.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.nutrition.readonly"
+        ]
         client.nutrition_log = AsyncMock()
         client.nutrition_log.today.return_value = _rollup_fixture(
             "nutrition.json", NutritionLogRollupValue, "nutritionLog"
