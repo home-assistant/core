@@ -63,6 +63,7 @@ async def test_full_flow(
         "&scope=https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
         "+https://www.googleapis.com/auth/googlehealth.profile.readonly"
         "+https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+        "+https://www.googleapis.com/auth/googlehealth.sleep.readonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline"
         "&prompt=consent"

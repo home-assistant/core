@@ -47,6 +47,21 @@
       "resting_heart_rate": {
         "name": "Resting heart rate"
       },
+      "sleep_minutes_after_wake_up": {
+        "name": "Minutes after wake up"
+      },
+      "sleep_minutes_asleep": {
+        "name": "Minutes asleep"
+      },
+      "sleep_minutes_awake": {
+        "name": "Minutes awake"
+      },
+      "sleep_minutes_in_sleep_period": {
+        "name": "Minutes in sleep period"
+      },
+      "sleep_minutes_to_fall_asleep": {
+        "name": "Minutes to fall asleep"
+      },
       "steps": {
         "name": "Steps",
         "unit_of_measurement": "steps"

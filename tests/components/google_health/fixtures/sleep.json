@@ -1,0 +1,19 @@
+{
+  "dataPoints": [
+    {
+      "sleep": {
+        "interval": {
+          "startTime": "2026-06-28T22:30:00Z",
+          "endTime": "2026-06-29T06:30:00Z"
+        },
+        "summary": {
+          "minutesToFallAsleep": 15,
+          "minutesAfterWakeUp": 10,
+          "minutesAsleep": 420,
+          "minutesInSleepPeriod": 450,
+          "minutesAwake": 30
+        }
+      }
+    }
+  ]
+}

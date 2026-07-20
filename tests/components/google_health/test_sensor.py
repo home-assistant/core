@@ -1,7 +1,7 @@
 """Tests for Google Health sensor platform."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -61,3 +61,18 @@ async def test_sensor_empty_rollup(
     floors_state = hass.states.get("sensor.google_health_floors")
     assert floors_state is not None
     assert floors_state.state == "0"
+
+
+async def test_sensor_empty_sleep(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test sleep sensors when the endpoint returns no data."""
+    mock_google_health_client.sleep.list.return_value = Mock(data_points=[])
+
+    assert await integration_setup()
+
+    sleep_state = hass.states.get("sensor.google_health_minutes_asleep")
+    assert sleep_state is not None
+    assert sleep_state.state == "unknown"
