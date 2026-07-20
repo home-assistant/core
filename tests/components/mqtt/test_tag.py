@@ -46,6 +46,20 @@ DEFAULT_TAG_SCAN_JSON = (
 )
 
 
+def _get_device_for_config_entry(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    *,
+    identifiers: set[tuple[str, str]] | None = None,
+    connections: set[tuple[str, str]] | None = None,
+) -> dr.DeviceEntry | None:
+    """Return the device for a config entry matching identifiers or connections."""
+    for device in device_registry.devices.get_entries(identifiers, connections):
+        if device.config_entry_id == config_entry_id:
+            return device
+    return None
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_tag(
     hass: HomeAssistant,
@@ -570,24 +584,45 @@ async def test_cleanup_tag(
     async_fire_mqtt_message(hass, "homeassistant/tag/bla2/config", data2)
     await hass.async_block_till_done()
 
-    # Verify device registry entries are created
-    device_entry1 = device_registry.async_get_device(
-        identifiers={("mqtt", "helloworld")}
+    # Verify device registry entries are created. Identifiers are unique per config
+    # entry, so the test config entry and MQTT get separate "helloworld" devices
+    device_entry1 = _get_device_for_config_entry(
+        device_registry,
+        config_entry.entry_id,
+        identifiers={("mqtt", "helloworld")},
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == {config_entry.entry_id, mqtt_entry.entry_id}
+    assert device_entry1.config_entries == {config_entry.entry_id}
+    mqtt_device_entry1 = _get_device_for_config_entry(
+        device_registry,
+        mqtt_entry.entry_id,
+        identifiers={("mqtt", "helloworld")},
+    )
+    assert mqtt_device_entry1 is not None
+    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
 
-    # Remove other config entry from the device
+    # Removing the test config entry deletes its device; the MQTT device is untouched
+    # and MQTT does not clear its discovery topic
     device_registry.async_update_device(
         device_entry1.id, remove_config_entry_id=config_entry.entry_id
     )
-    device_entry1 = device_registry.async_get_device(
-        identifiers={("mqtt", "helloworld")}
+    assert (
+        _get_device_for_config_entry(
+            device_registry,
+            config_entry.entry_id,
+            identifiers={("mqtt", "helloworld")},
+        )
+        is None
     )
-    assert device_entry1 is not None
-    assert device_entry1.config_entries == {mqtt_entry.entry_id}
+    mqtt_device_entry1 = _get_device_for_config_entry(
+        device_registry,
+        mqtt_entry.entry_id,
+        identifiers={("mqtt", "helloworld")},
+    )
+    assert mqtt_device_entry1 is not None
+    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
     mqtt_mock.async_publish.assert_not_called()
@@ -595,7 +630,7 @@ async def test_cleanup_tag(
     # Remove MQTT from the device
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     response = await ws_client.remove_device(
-        device_entry1.id, mqtt_config_entry.entry_id
+        mqtt_device_entry1.id, mqtt_config_entry.entry_id
     )
     assert response["success"]
     await hass.async_block_till_done()

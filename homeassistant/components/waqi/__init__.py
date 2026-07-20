@@ -14,7 +14,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import CONF_STATION_NUMBER, DOMAIN, SUBENTRY_TYPE_STATION
 from .coordinator import WAQIConfigEntry, WAQIDataUpdateCoordinator
@@ -126,10 +126,10 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
         if device is not None:
-            # Device and entity registries don't update the disabled_by flag when
-            # moving a device or entity from one config entry to another, so we
-            # need to do it manually.
-            device_disabled_by = device.disabled_by
+            # The device registry will set the disabled_by flag to None when
+            # moving a device disabled by CONFIG_ENTRY to an enabled config
+            # entry, but we want to set it to USER instead.
+            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -138,20 +138,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             device_registry.async_update_device(
                 device.id,
                 disabled_by=device_disabled_by,
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=parent_entry.entry_id,
+                new_config_entry_id=parent_entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
             )
-            if parent_entry.entry_id != entry.entry_id:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
-                )
 
         if parent_entry.entry_id != entry.entry_id:
             await hass.config_entries.async_remove(entry.entry_id)
