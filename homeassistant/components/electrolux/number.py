@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar, override
+from typing import Any, Concatenate, override
 
 from electrolux_group_developer_sdk.appliance_config.cr_config import FREEZER, FRIDGE
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
@@ -50,57 +50,46 @@ ELECTROLUX_TO_HA_TEMPERATURE_UNIT = {
     "FAHRENHEIT": UnitOfTemperature.FAHRENHEIT,
 }
 
-T = TypeVar("T", bound=ApplianceData, default=ApplianceData)
-
 
 @dataclass(frozen=True, kw_only=True)
-class ElectroluxNumberDescription[T = ApplianceData](NumberEntityDescription):
+class ElectroluxNumberBaseDescription[T: ApplianceData, **P1 = [T], **P2 = [T]](
+    NumberEntityDescription
+):
     """Custom number description for Electrolux numbers."""
 
-    exists_fn: Callable[[T], bool] = lambda appliance: True
-    value_fn: Callable[[T], float | None] = lambda appliance: None
-    min_fn: Callable[[T], float]
-    max_fn: Callable[[T], float]
-    step_fn: Callable[[T], float]
-    command_payload_fn: Callable[[T, float], dict[str, Any]]
+    exists_fn: Callable[P1, bool] = lambda *_, **__: True
+    value_fn: Callable[P2, float | None]
+    min_fn: Callable[P1, float]
+    max_fn: Callable[P1, float]
+    step_fn: Callable[P1, float]
+    command_payload_fn: Callable[Concatenate[float, P2], dict[str, Any]]
 
 
 @dataclass(frozen=True, kw_only=True)
-class ElectroluxTemperatureNumberDescription[T = ApplianceData](
-    NumberEntityDescription
+class ElectroluxNumberDescription[T: ApplianceData](
+    ElectroluxNumberBaseDescription[T, [T], [T]]
 ):
-    """Custom number description for Electrolux temperature numbers."""
-
-    exists_fn: Callable[[T], bool] = lambda appliance: True
-    value_fn: Callable[[T, UnitOfTemperature], float | None] = (
-        lambda appliance, temp_unit: None
-    )
-    min_fn: Callable[[T], float]
-    max_fn: Callable[[T], float]
-    step_fn: Callable[[T], float]
-    command_payload_fn: Callable[[T, UnitOfTemperature, float], dict[str, Any]]
+    """Custom number description for Electrolux numbers."""
 
 
 @dataclass(frozen=True, kw_only=True)
-class ElectroluxSubmoduleTemperatureNumberDescription[T = ApplianceData](
-    NumberEntityDescription
+class ElectroluxTemperatureNumberDescription[T: ApplianceData](
+    ElectroluxNumberBaseDescription[T, [T], [T, UnitOfTemperature]]
 ):
     """Custom number description for Electrolux temperature numbers."""
 
-    exists_fn: Callable[[T, str], bool] = lambda appliance, submodule: True
-    value_fn: Callable[[T, str, UnitOfTemperature], float | None] = (
-        lambda appliance, submodule, temp_unit: None
-    )
-    min_fn: Callable[[T, str], float]
-    max_fn: Callable[[T, str], float]
-    step_fn: Callable[[T, str], float]
-    command_payload_fn: Callable[[T, str, UnitOfTemperature, float], dict[str, Any]]
+
+@dataclass(frozen=True, kw_only=True)
+class ElectroluxSubmoduleTemperatureNumberDescription[T: ApplianceData](
+    ElectroluxNumberBaseDescription[T, [T, str], [T, str, UnitOfTemperature]]
+):
+    """Custom number description for Electrolux temperature numbers."""
 
 
 OVEN_TEMPERATURE_NUMBERS: tuple[
     ElectroluxTemperatureNumberDescription[OVAppliance], ...
 ] = (
-    ElectroluxTemperatureNumberDescription(
+    ElectroluxTemperatureNumberDescription[OVAppliance](
         key="target_temperature",
         translation_key="target_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -115,7 +104,7 @@ OVEN_TEMPERATURE_NUMBERS: tuple[
         min_fn=lambda appliance: appliance.get_supported_min_temp(),
         max_fn=lambda appliance: appliance.get_supported_max_temp(),
         step_fn=lambda appliance: appliance.get_supported_step_temp(),
-        command_payload_fn=lambda appliance, temp_unit, value: (
+        command_payload_fn=lambda value, appliance, temp_unit: (
             appliance.get_temperature_c_command(value)
             if temp_unit == UnitOfTemperature.CELSIUS
             else appliance.get_temperature_f_command(value)
@@ -147,7 +136,7 @@ STRUCTURED_OVEN_TEMPERATURE_NUMBERS: tuple[
         step_fn=lambda appliance, submodule: appliance.get_cavity_supported_step_temp(
             submodule
         ),
-        command_payload_fn=lambda appliance, submodule, temp_unit, value: (
+        command_payload_fn=lambda value, appliance, submodule, temp_unit: (
             appliance.get_temperature_c_command(submodule, value)
             if temp_unit == UnitOfTemperature.CELSIUS
             else appliance.get_temperature_f_command(submodule, value)
@@ -180,7 +169,7 @@ FRIDGE_FREEZER_TEMPERATURE_NUMBERS: tuple[
         step_fn=lambda appliance, submodule: appliance.get_supported_step_temperature(
             submodule
         ),
-        command_payload_fn=lambda appliance, submodule, temp_unit, value: (
+        command_payload_fn=lambda value, appliance, submodule, temp_unit: (
             appliance.get_set_cavity_temperature_c_command(submodule, value)
             if temp_unit == UnitOfTemperature.CELSIUS
             else appliance.get_set_cavity_temperature_f_command(submodule, value)
@@ -195,11 +184,13 @@ HOOD_NUMBERS: tuple[ElectroluxNumberDescription[HDAppliance], ...] = (
         exists_fn=lambda appliance: appliance.is_feature_supported(
             LIGHT_COLOR_TEMPERATURE
         ),
-        value_fn=lambda appliance: appliance.get_current_light_color_temperature(),
+        value_fn=lambda appliance, **kwargs: (
+            appliance.get_current_light_color_temperature()
+        ),
         min_fn=lambda appliance: appliance.get_min_light_color_temperature_range(),
         max_fn=lambda appliance: appliance.get_max_light_color_temperature_range(),
         step_fn=lambda appliance: appliance.get_step_light_color_temperature_range(),
-        command_payload_fn=lambda appliance, value: (
+        command_payload_fn=lambda value, appliance: (
             appliance.get_set_light_color_temperature_command(round(value))
         ),
     ),
@@ -207,11 +198,11 @@ HOOD_NUMBERS: tuple[ElectroluxNumberDescription[HDAppliance], ...] = (
         key="light_intensity",
         translation_key="light_intensity",
         exists_fn=lambda appliance: appliance.is_feature_supported(LIGHT_INTENSITY),
-        value_fn=lambda appliance: appliance.get_current_light_intensity(),
+        value_fn=lambda appliance, **kwargs: appliance.get_current_light_intensity(),
         min_fn=lambda appliance: appliance.get_min_light_intensity(),
         max_fn=lambda appliance: appliance.get_max_light_intensity(),
         step_fn=lambda appliance: appliance.get_step_light_intensity(),
-        command_payload_fn=lambda appliance, value: (
+        command_payload_fn=lambda value, appliance: (
             appliance.get_set_light_intensity_command(round(value))
         ),
     ),
@@ -282,7 +273,9 @@ async def async_setup_entry(
     )
 
 
-class ElectroluxBaseNumber(ElectroluxBaseEntity[T], NumberEntity, ABC):
+class ElectroluxBaseNumber[T: ApplianceData](
+    ElectroluxBaseEntity[T], NumberEntity, ABC
+):
     """Base class for Electrolux integration number entities."""
 
     def __init__(
@@ -351,7 +344,7 @@ class ElectroluxBaseNumber(ElectroluxBaseEntity[T], NumberEntity, ABC):
         await self.coordinator.client.send_command(self._appliance_id, command)
 
 
-class ElectroluxNumber(ElectroluxBaseNumber[T]):
+class ElectroluxNumber[T: ApplianceData](ElectroluxBaseNumber[T]):
     """Representation of an Electrolux light intensity selection."""
 
     entity_description: ElectroluxNumberDescription[T]
@@ -386,7 +379,8 @@ class ElectroluxNumber(ElectroluxBaseNumber[T]):
     def _get_command_payload(self, value: float) -> dict[str, Any]:
         rounded_value = round_to_valid_step(value, self._get_min(), self._get_step())
         return self.entity_description.command_payload_fn(
-            self._appliance_data, rounded_value
+            rounded_value,
+            self._appliance_data,
         )
 
 
@@ -443,7 +437,7 @@ class ElectroluxTemperatureNumber[T: OVAppliance](ElectroluxBaseNumber[T]):
             self.entity_description.step_fn(self._appliance_data),
         )
         return self.entity_description.command_payload_fn(
-            self._appliance_data, temp_unit, rounded_value
+            rounded_value, self._appliance_data, temp_unit
         )
 
     @override
@@ -526,7 +520,7 @@ class ElectroluxSubmoduleTemperatureNumber[T: CRAppliance | SOAppliance](
             self.entity_description.step_fn(self._appliance_data, self._submodule),
         )
         return self.entity_description.command_payload_fn(
-            self._appliance_data, self._submodule, temp_unit, rounded_value
+            rounded_value, self._appliance_data, self._submodule, temp_unit
         )
 
     @override
