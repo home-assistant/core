@@ -1,6 +1,6 @@
 """Tests for the Habitron SmartHub class."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from habitron_client import Diagnostic, HabitronClient, HabitronError, Router, Sensor
 import pytest
@@ -213,6 +213,70 @@ async def test_update_writes_diag_sensor_and_log_levels(
     assert smart_hub_stub.loglvl[0].value == 3
     assert smart_hub_stub.loglvl[1].value == 4
     assert smart_hub_stub.host_diags_valid is True
+
+
+async def test_update_notifies_all_members_on_first_success(
+    smart_hub_stub: SmartHub,
+) -> None:
+    """The first successful read notifies every member, even unchanged ones.
+
+    When the setup-time reads failed, the entities report ``unknown``. A later
+    successful read must publish *all* host readings, including members whose
+    value happens to equal the placeholder they were seeded with -- those do
+    not notify on their own, and with an otherwise idle bus their entities
+    would stay ``unknown`` indefinitely.
+    """
+    smart_hub_stub.comm.get_smhub_update.return_value = {
+        "hardware": {
+            "cpu": {
+                "frequency current": "1500MHz",
+                "load": "12%",
+                "temperature": "55.5°C",
+            },
+            "memory": {"percent": "60%"},
+            "disk": {"percent": "30%"},
+        },
+        "software": {"loglevel": {"console": "0", "file": "0"}},
+    }
+    # Seed every member with the value the read will return, so no _set() call
+    # sees a change and none of them notifies by itself.
+    smart_hub_stub.diags = [
+        Diagnostic(name="CPU Frequency", nmbr=0, type=10, value=1500.0),
+        Diagnostic(name="CPU load", nmbr=1, type=10, value=12.0),
+        Diagnostic(name="CPU Temperature", nmbr=2, type=10, value=55.5),
+    ]
+    smart_hub_stub.sensors = [
+        Sensor(name="Memory usage", nmbr=0, type=2, value=60.0),
+        Sensor(name="Disk usage", nmbr=1, type=2, value=30.0),
+    ]
+    smart_hub_stub.loglvl = [
+        Sensor(name="Logging level console", nmbr=0, type=2, value=0),
+        Sensor(name="Logging level file", nmbr=1, type=2, value=0),
+    ]
+    members = [
+        *smart_hub_stub.diags,
+        *smart_hub_stub.sensors,
+        *smart_hub_stub.loglvl,
+    ]
+    for member in members:
+        member.notify = Mock()
+    smart_hub_stub.host_diags_valid = False
+
+    await smart_hub_stub.update()
+
+    assert smart_hub_stub.host_diags_valid is True
+    for member in members:
+        assert member.notify.call_count == 1
+
+    # A subsequent unchanged read must not re-notify: the entities are already
+    # showing these values.
+    for member in members:
+        member.notify.reset_mock()
+
+    await smart_hub_stub.update()
+
+    for member in members:
+        member.notify.assert_not_called()
 
 
 async def test_async_close_delegates_to_comm(
