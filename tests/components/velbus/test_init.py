@@ -307,30 +307,104 @@ _PROPERTY_KEY_MAP = {
 
 
 @pytest.mark.parametrize(
-    "original_name",
+    ("domain", "device_serial", "old_unique_id", "original_name", "expected_unique_id"),
     [
-        pytest.param("selected_program", id="spec_key"),
-        pytest.param("Selected program", id="display_name"),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-0-program_select",
+            "selected_program",
+            "test_serial-SelectedProgram",
+            id="rename_select_spec_key",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-0-program_select",
+            "Selected program",
+            "test_serial-SelectedProgram",
+            id="rename_select_display_name",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-5-program_select",
+            "selected_program",
+            "test_serial-SelectedProgram",
+            id="rename_select_legacy_channel",
+        ),
+        pytest.param(
+            "sensor",
+            "test_serial",
+            "test_serial-0",
+            "light_value",
+            "test_serial-LightValue",
+            id="rename_sensor",
+        ),
+        pytest.param(
+            "sensor",
+            "overwritten_serial",
+            "test_serial-0",
+            "light_value",
+            "test_serial-LightValue",
+            id="serial_taken_from_unique_id_not_device",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-SelectedProgram",
+            "selected_program",
+            "test_serial-SelectedProgram",
+            id="already_correct",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-old_format",
+            None,
+            "test_serial-old_format",
+            id="skipped_without_name",
+        ),
+        pytest.param(
+            "select",
+            "test_serial",
+            "test_serial-old_format",
+            "not_a_property",
+            "test_serial-old_format",
+            id="skipped_unknown_name",
+        ),
+        pytest.param(
+            "sensor",
+            "test_serial",
+            "test_serial-3",
+            "light_value",
+            "test_serial-3",
+            id="skipped_colliding_channel",
+        ),
     ],
 )
-async def test_migrate_property_unique_ids_rename(
+async def test_migrate_property_unique_ids(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     controller: MagicMock,
-    original_name: str,
+    domain: str,
+    device_serial: str,
+    old_unique_id: str,
+    original_name: str | None,
+    expected_unique_id: str,
 ) -> None:
-    """Test that a property entity with an outdated unique_id gets renamed."""
+    """Test the property unique_id migration for every legacy and skip case."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "1")},
-        serial_number="test_serial",
+        serial_number=device_serial,
     )
-    entity_registry.async_get_or_create(
-        "select",
+    entity = entity_registry.async_get_or_create(
+        domain,
         DOMAIN,
-        "test_serial-0-program_select",
+        old_unique_id,
         config_entry=config_entry,
         device_id=device.id,
         original_name=original_name,
@@ -342,12 +416,9 @@ async def test_migrate_property_unique_ids_rename(
     ):
         await init_integration(hass, config_entry)
 
-    assert not entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-0-program_select"
-    )
-    assert entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-SelectedProgram"
-    )
+    migrated = entity_registry.async_get(entity.entity_id)
+    assert migrated
+    assert migrated.unique_id == expected_unique_id
 
 
 async def test_migrate_property_unique_ids_remove_stale(
@@ -363,7 +434,6 @@ async def test_migrate_property_unique_ids_remove_stale(
         identifiers={(DOMAIN, "1")},
         serial_number="test_serial",
     )
-    # The correct entity already exists
     entity_registry.async_get_or_create(
         "select",
         DOMAIN,
@@ -372,7 +442,6 @@ async def test_migrate_property_unique_ids_remove_stale(
         device_id=device.id,
         original_name="selected_program",
     )
-    # The stale entity with an old unique_id also exists
     entity_registry.async_get_or_create(
         "select",
         DOMAIN,
@@ -396,61 +465,31 @@ async def test_migrate_property_unique_ids_remove_stale(
     )
 
 
-async def test_migrate_property_unique_ids_already_correct(
+async def test_migrate_property_unique_ids_preserves_entity_id(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     controller: MagicMock,
 ) -> None:
-    """Test that a property entity with a correct unique_id is left unchanged."""
+    """Test that a migrated property keeps its entity_id once the bus scan registers it."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1")},
-        serial_number="test_serial",
+        identifiers={(DOMAIN, "2")},
+        serial_number="a1b2c3d4e5f6",
     )
-    entity_registry.async_get_or_create(
-        "select",
-        DOMAIN,
-        "test_serial-SelectedProgram",
-        config_entry=config_entry,
-        device_id=device.id,
-        original_name="selected_program",
-    )
-
-    with patch(
-        "homeassistant.components.velbus.get_property_key_map",
-        return_value=_PROPERTY_KEY_MAP,
-    ):
-        await init_integration(hass, config_entry)
-
-    assert entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-SelectedProgram"
-    )
-
-
-async def test_migrate_property_unique_ids_serial_from_unique_id(
-    hass: HomeAssistant,
-    config_entry: VelbusConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    controller: MagicMock,
-) -> None:
-    """Test that the new unique_id serial is taken from the old unique_id, not the device."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1")},
-        # A different serial that another integration could have written
-        serial_number="overwritten_serial",
-    )
-    entity_registry.async_get_or_create(
+    # Same serial as the scanned LightValue property, so migrating before the scan makes
+    # the scan reuse this entry instead of registering a second one.
+    legacy_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        "test_serial-0",
+        "a1b2c3d4e5f6-0",
         config_entry=config_entry,
         device_id=device.id,
         original_name="light_value",
+        suggested_object_id="legacy_light_value",
     )
+    assert legacy_entity.entity_id == "sensor.legacy_light_value"
 
     with patch(
         "homeassistant.components.velbus.get_property_key_map",
@@ -458,180 +497,7 @@ async def test_migrate_property_unique_ids_serial_from_unique_id(
     ):
         await init_integration(hass, config_entry)
 
-    assert entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "test_serial-LightValue"
-    )
-    assert not entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "overwritten_serial-LightValue"
-    )
-
-
-async def test_migrate_property_unique_ids_skipped_without_name(
-    hass: HomeAssistant,
-    config_entry: VelbusConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    controller: MagicMock,
-) -> None:
-    """Test that migration skips entities without an original_name."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1")},
-        serial_number="test_serial",
-    )
-    entity_registry.async_get_or_create(
-        "select",
-        DOMAIN,
-        "test_serial-old_format",
-        config_entry=config_entry,
-        device_id=device.id,
-    )
-
-    with patch(
-        "homeassistant.components.velbus.get_property_key_map",
-        return_value=_PROPERTY_KEY_MAP,
-    ):
-        await init_integration(hass, config_entry)
-
-    assert entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-old_format"
-    )
-
-
-async def test_migrate_property_unique_ids_skipped_unknown_name(
-    hass: HomeAssistant,
-    config_entry: VelbusConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    controller: MagicMock,
-) -> None:
-    """Test that migration skips entities whose name is not a known property."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1")},
-        serial_number="test_serial",
-    )
-    entity_registry.async_get_or_create(
-        "select",
-        DOMAIN,
-        "test_serial-old_format",
-        config_entry=config_entry,
-        device_id=device.id,
-        original_name="not_a_property",
-    )
-
-    with patch(
-        "homeassistant.components.velbus.get_property_key_map",
-        return_value=_PROPERTY_KEY_MAP,
-    ):
-        await init_integration(hass, config_entry)
-
-    assert entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-old_format"
-    )
-
-
-async def test_migrate_property_unique_ids_rename_select_legacy_channel(
-    hass: HomeAssistant,
-    config_entry: VelbusConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    controller: MagicMock,
-) -> None:
-    """Test that a program select using a legacy channel number gets renamed."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1")},
-        serial_number="test_serial",
-    )
-    # Before it became a property, the program select used a real channel number
-    entity_registry.async_get_or_create(
-        "select",
-        DOMAIN,
-        "test_serial-5-program_select",
-        config_entry=config_entry,
-        device_id=device.id,
-        original_name="selected_program",
-    )
-
-    with patch(
-        "homeassistant.components.velbus.get_property_key_map",
-        return_value=_PROPERTY_KEY_MAP,
-    ):
-        await init_integration(hass, config_entry)
-
-    assert not entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-5-program_select"
-    )
-    assert entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-SelectedProgram"
-    )
-
-
-async def test_migrate_property_unique_ids_rename_sensor(
-    hass: HomeAssistant,
-    config_entry: VelbusConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    controller: MagicMock,
-) -> None:
-    """Test that a LightValue sensor entity with an outdated unique_id gets renamed."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1")},
-        serial_number="test_serial",
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        "test_serial-0",
-        config_entry=config_entry,
-        device_id=device.id,
-        original_name="light_value",
-    )
-
-    with patch(
-        "homeassistant.components.velbus.get_property_key_map",
-        return_value=_PROPERTY_KEY_MAP,
-    ):
-        await init_integration(hass, config_entry)
-
-    assert not entity_registry.async_get_entity_id("sensor", DOMAIN, "test_serial-0")
-    assert entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "test_serial-LightValue"
-    )
-
-
-async def test_migrate_property_unique_ids_skips_colliding_channel(
-    hass: HomeAssistant,
-    config_entry: VelbusConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    controller: MagicMock,
-) -> None:
-    """Test that a regular channel whose name matches a property is left unchanged."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1")},
-        serial_number="test_serial",
-    )
-    # A regular channel (number >=1) whose original_name coincidentally matches a property
-    entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        "test_serial-3",
-        config_entry=config_entry,
-        device_id=device.id,
-        original_name="light_value",
-    )
-
-    with patch(
-        "homeassistant.components.velbus.get_property_key_map",
-        return_value=_PROPERTY_KEY_MAP,
-    ):
-        await init_integration(hass, config_entry)
-
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test_serial-3")
-    assert not entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "test_serial-LightValue"
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, "a1b2c3d4e5f6-LightValue")
+        == "sensor.legacy_light_value"
     )
