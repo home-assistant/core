@@ -10,19 +10,28 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET, CONF_TAILNET, DOMAIN
 
 AUTHKEYS_URL = "https://login.tailscale.com/admin/settings/keys"
 OAUTH_URL = "https://login.tailscale.com/admin/settings/oauth"
 
+SECRET_SELECTOR = TextSelector(
+    config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+)
+
 STEP_OAUTH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OAUTH_CLIENT_ID): str,
-        vol.Required(CONF_OAUTH_CLIENT_SECRET): str,
+        vol.Required(CONF_OAUTH_CLIENT_SECRET): SECRET_SELECTOR,
     }
 )
-STEP_API_KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_API_KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): SECRET_SELECTOR})
 
 
 def _credentials(user_input: Mapping[str, Any]) -> dict[str, Any]:
