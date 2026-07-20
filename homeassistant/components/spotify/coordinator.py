@@ -32,6 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+BUILD_ID = "20260721-001"  # Increment for each deployment
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
@@ -100,6 +101,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         try:
             self.current_user = await self.client.get_current_user()
         except OAuth2TokenRequestReauthError as err:
+            _LOGGER.warning(
+                "[%s] Spotify token expired in _async_setup for %s",
+                BUILD_ID,
+                self.config_entry.title,
+            )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
@@ -126,6 +132,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         try:
             current = await self.client.get_playback()
         except OAuth2TokenRequestReauthError as err:
+            _LOGGER.warning(
+                "[%s] Spotify token expired in _async_update_data for %s",
+                BUILD_ID,
+                self.config_entry.title,
+            )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
@@ -217,6 +228,11 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
         try:
             return await self._client.get_devices()
         except OAuth2TokenRequestReauthError as err:
+            _LOGGER.warning(
+                "[%s] Spotify token expired in device coordinator for %s",
+                BUILD_ID,
+                self.config_entry.title,
+            )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
