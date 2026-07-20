@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .api import get_attr_value
+from .api import get_attr_dt, get_attr_str
 
 if TYPE_CHECKING:
     from . import CalDavConfigEntry
@@ -82,13 +82,13 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 continue
             event_list.append(
                 CalendarEvent(
-                    summary=get_attr_value(vevent, "summary") or "",
+                    summary=get_attr_str(vevent, "summary") or "",
                     start=self.to_local(vevent["DTSTART"].dt),
                     end=self.to_local(self.get_end_date(vevent)),
-                    location=get_attr_value(vevent, "location"),
-                    description=get_attr_value(vevent, "description"),
-                    uid=get_attr_value(vevent, "uid"),
-                    recurrence_id=get_attr_value(vevent, "recurrence_id"),
+                    location=get_attr_str(vevent, "location"),
+                    description=get_attr_str(vevent, "description"),
+                    uid=get_attr_str(vevent, "uid"),
+                    recurrence_id=get_attr_str(vevent, "recurrence_id"),
                 )
             )
 
@@ -162,16 +162,16 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         # Populate the entity attributes with the event values
         (summary, offset) = extract_offset(
-            get_attr_value(vevent, "summary") or "", OFFSET
+            get_attr_str(vevent, "summary") or "", OFFSET
         )
         next_event = CalendarEvent(
             summary=summary,
             start=self.to_local(vevent["DTSTART"].dt),
             end=self.to_local(self.get_end_date(vevent)),
-            location=get_attr_value(vevent, "location"),
-            description=get_attr_value(vevent, "description"),
-            uid=get_attr_value(vevent, "uid"),
-            recurrence_id=get_attr_value(vevent, "recurrence_id"),
+            location=get_attr_str(vevent, "location"),
+            description=get_attr_str(vevent, "description"),
+            uid=get_attr_str(vevent, "uid"),
+            recurrence_id=get_attr_str(vevent, "recurrence_id"),
         )
         return next_event, offset
 
@@ -221,19 +221,20 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         return obj
 
     @staticmethod
-    def get_end_date(obj):
+    def get_end_date(obj: icalendar.cal.Component) -> date | datetime:
         """Return the end datetime as determined by dtend or duration."""
-        if "DTEND" in obj:
-            enddate = obj["DTEND"].dt
-        elif "DURATION" in obj:
-            enddate = obj["DTSTART"].dt + obj["DURATION"].dt
+        dtstart = obj["DTSTART"].dt
+        if (dtend := get_attr_dt(obj, "dtend")) is not None:
+            enddate = dtend
+        elif (duration := obj.get("DURATION")) is not None:
+            enddate = dtstart + duration.dt
         else:
-            enddate = obj["DTSTART"].dt + timedelta(days=1)
+            enddate = dtstart + timedelta(days=1)
 
         # End date for an all day event is exclusive. This fixes the case where
         # an all day event has a start and end values are the same, or the event
         # has a zero duration.
-        if not isinstance(enddate, datetime) and obj["DTSTART"].dt == enddate:
+        if not isinstance(enddate, datetime) and dtstart == enddate:
             enddate += timedelta(days=1)
 
         return enddate

@@ -1,7 +1,7 @@
 """CalDAV todo platform."""
 
 import asyncio
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import Any, cast, override
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
-from .api import async_get_calendars, get_attr_value
+from .api import async_get_calendars, get_attr_dt, get_attr_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,24 +75,22 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     vtodo = _get_vtodo(resource)
     if (
         vtodo is None
-        or (uid := get_attr_value(vtodo, "uid")) is None
-        or (summary := get_attr_value(vtodo, "summary")) is None
+        or (uid := get_attr_str(vtodo, "uid")) is None
+        or (summary := get_attr_str(vtodo, "summary")) is None
     ):
         return None
-    due: date | datetime | None = None
-    if (due_prop := vtodo.get("DUE")) is not None:
-        due = due_prop.dt
-        if isinstance(due, datetime):
-            due = dt_util.as_local(due)
+    due = get_attr_dt(vtodo, "due")
+    if isinstance(due, datetime):
+        due = dt_util.as_local(due)
     return TodoItem(
         uid=uid,
         summary=summary,
         status=TODO_STATUS_MAP.get(
-            get_attr_value(vtodo, "status") or "",
+            get_attr_str(vtodo, "status") or "",
             TodoItemStatus.NEEDS_ACTION,
         ),
         due=due,
-        description=get_attr_value(vtodo, "description"),
+        description=get_attr_str(vtodo, "description"),
     )
 
 

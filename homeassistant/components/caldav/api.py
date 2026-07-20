@@ -1,6 +1,7 @@
 """Library for working with CalDAV api."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
+from datetime import date, datetime
 import logging
 
 import caldav
@@ -73,8 +74,17 @@ async def async_get_calendars(
     return calendars
 
 
-def get_attr_value(component: icalendar.cal.Component, attribute: str) -> str | None:
-    """Return the value of an iCalendar component property as a string."""
+def get_attr_str(component: icalendar.cal.Component, attribute: str) -> str | None:
+    """Return an iCalendar component property as a string."""
     if (value := component.get(attribute.upper().replace("_", "-"))) is not None:
         return str(value.dt) if hasattr(value, "dt") else str(value)
+    return None
+
+
+def get_attr_dt(
+    component: icalendar.cal.Component, attribute: str
+) -> date | datetime | None:
+    """Return an iCalendar component property as a date/datetime."""
+    if (value := component.get(attribute.upper().replace("_", "-"))) is not None:
+        return value.dt
     return None
