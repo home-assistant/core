@@ -1317,6 +1317,12 @@ async def test_show_advanced_options(
         # an absent field is not equal to an explicit None value
         ({"field": "a", "value": None}, {}, False),
         ({"field": "a", "value": None}, {"a": None}, True),
+        # an omitted condition value only matches an absent field
+        ({"field": "a"}, {}, True),
+        ({"field": "a"}, {"a": None}, False),
+        ({"field": "a"}, {"a": "x"}, False),
+        ({"field": "a", "operator": "not_eq"}, {}, False),
+        ({"field": "a", "operator": "not_eq"}, {"a": "x"}, True),
         # containers never compare equal
         ({"field": "a", "value": ["x"]}, {"a": ["x"]}, False),
         ({"field": "a", "operator": "not_eq", "value": ["x"]}, {"a": ["x"]}, True),
@@ -1576,6 +1582,46 @@ async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
         form["flow_id"], {"enable_advanced": False, "advanced": {"token": "stale"}}
     )
     assert result["data"] == {"enable_advanced": False}
+
+
+async def test_hidden_field_reads_as_absent_to_other_conditions(
+    manager: MockFlowManager,
+) -> None:
+    """Test a hidden field holds no value for the conditions of other fields."""
+    schema = vol.Schema(
+        {
+            vol.Optional("mode", default="simple"): str,
+            # hidden while "simple", so its default must not leak to "extra"
+            data_entry_flow.Optional(
+                "token",
+                default="from_default",
+                hidden={"field": "mode", "value": "simple"},
+            ): str,
+            data_entry_flow.Required(
+                "extra",
+                hidden={"field": "token", "operator": "not_exists"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "token" is hidden, so it reads as absent and hides the required "extra"
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"mode": "simple"})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"mode": "simple"}
+
+    # "token" is visible, so "extra" stays required
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {"mode": "advanced"})
+    assert "extra" in err.value.schema_errors
 
 
 async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> None:

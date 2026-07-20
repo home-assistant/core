@@ -106,12 +106,13 @@ def _condition_value_is_empty(value: Any) -> bool:
 def _strict_equal(actual: Any, value: Any) -> bool:
     """Compare by value and type, so a boolean never equals a number.
 
-    An absent field equals nothing, and containers never compare equal, matching
-    a renderer where a missing value is distinct from ``None`` and separately
-    parsed lists or dicts are distinct references.
+    A missing field and an omitted condition value are both undefined, so they
+    equal each other but nothing else, and containers never compare equal,
+    matching a renderer where a missing value is distinct from ``None`` and
+    separately parsed lists or dicts are distinct references.
     """
-    if actual is _MISSING:
-        return False
+    if actual is _MISSING or value is _MISSING:
+        return actual is value
     if isinstance(actual, (list, tuple, dict)) or isinstance(
         value, (list, tuple, dict)
     ):
@@ -125,7 +126,7 @@ def _evaluate_field_condition(
     condition: Mapping[str, Any], data: Mapping[str, Any]
 ) -> bool:
     actual = data.get(condition["field"], _MISSING)
-    value = condition.get("value")
+    value = condition.get("value", _MISSING)
     match condition.get("operator", "eq"):
         case "eq":
             return _strict_equal(actual, value)
@@ -1124,30 +1125,43 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
     required field must not fail validation and a hidden field must not inject a
     default or keep a stale value. Conditions are evaluated against the input
     with schema defaults applied, so a field omitted by the client resolves the
-    same as one that was submitted. Returns the schema and input unchanged when
-    nothing is hidden, leaving schemas without hidden fields untouched.
+    same as one that was submitted. Because a hidden field holds no value, its
+    visibility is resolved until stable: once hidden, a field reads as absent to
+    the conditions of the other fields. Returns the schema and input unchanged
+    when nothing is hidden, leaving schemas without hidden fields untouched.
     """
     if not _schema_has_hidden(data_schema):
         return data_schema, user_input
 
     eval_data = dict(user_input)
+    conditions: dict[Any, Any] = {}
     for key in data_schema.schema:
+        name = key.schema if isinstance(key, vol.Marker) else key
         if (
             isinstance(key, (vol.Optional, vol.Required))
-            and key.schema not in eval_data
+            and name not in eval_data
             and not isinstance(key.default, vol.Undefined)
         ):
-            eval_data[key.schema] = key.default()
+            eval_data[name] = key.default()
+        if (hidden_condition := getattr(key, "hidden", None)) is not None:
+            conditions[name] = hidden_condition
+
+    hidden_names: set[Any] = set()
+    while newly_hidden := {
+        name
+        for name, condition in conditions.items()
+        if name not in hidden_names and is_field_hidden(condition, eval_data)
+    }:
+        hidden_names |= newly_hidden
+        for name in newly_hidden:
+            eval_data.pop(name, None)
 
     new_schema: dict[Any, Any] = {}
     new_input: dict[str, Any] | None = None
     for key, val in data_schema.schema.items():
         name = key.schema if isinstance(key, vol.Marker) else key
 
-        hidden_condition = getattr(key, "hidden", None)
-        if hidden_condition is not None and is_field_hidden(
-            hidden_condition, eval_data
-        ):
+        if name in hidden_names:
             if name in user_input:
                 if new_input is None:
                     new_input = dict(user_input)
