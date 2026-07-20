@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_DETECTION_TIME,
     DHCP,
     DOMAIN,
+    HEALTH,
     IDENTITY,
     INFO,
     IS_CAPSMAN,
@@ -38,6 +39,7 @@ from .const import (
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
+    SYSTEM,
     WIFI,
     WIFIWAVE2,
     WIRELESS,
@@ -72,6 +74,7 @@ class MikrotikData:
         self.model: str = ""
         self.firmware: str = ""
         self.serial_number: str = ""
+        self.sensors: dict[str, Any] = {}
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -164,6 +167,13 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
+            self.sensors[HEALTH] = (
+                self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []
+            )
+            self.sensors[SYSTEM] = (
+                self.command(MIKROTIK_SERVICES[SYSTEM], suppress_errors=True) or []
+            )
+
         if not device_list:
             return
 
@@ -224,9 +234,7 @@ class MikrotikData:
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
-        with mikrotik_config_entry_errors(
-            suppress_errors=suppress_errors, host=self._host
-        ):
+        with mikrotik_config_entry_errors(suppress_errors=suppress_errors):
             if params:
                 return list(self.api(cmd, **params))
             return list(self.api(cmd))
@@ -331,7 +339,7 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             _error = api_error
 
     if _error is not None:
-        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], _error)
+        _LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], _error)
         if "invalid user name or password" in str(_error):
             raise LoginError from _error
         raise CannotConnect from _error

@@ -49,6 +49,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_OFF,
     STATE_PLAYING,
     STATE_STANDBY,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
@@ -543,7 +544,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _entity_component_unrecorded_attributes = frozenset(
         {
             MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL,
-            ATTR_ENTITY_PICTURE,
+            EntityStateAttribute.ENTITY_PICTURE,
             MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST,
             MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
             MediaPlayerEntityStateAttribute.MEDIA_POSITION,

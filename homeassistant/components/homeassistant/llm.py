@@ -8,7 +8,8 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.components.llm import LLMTools
-from homeassistant.components.sensor import async_rounded_state
+from homeassistant.components.sensor import SensorDeviceClass, async_rounded_state
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -17,13 +18,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
-from homeassistant.helpers.llm import (
-    LLM_API_ASSIST,
-    NO_ENTITIES_PROMPT,
-    LLMContext,
-    Tool,
-    ToolInput,
-)
+from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
 
@@ -32,6 +27,41 @@ from .exposed_entities import async_should_expose
 # Domains bucketed out of the exposed-entity overview.
 CALENDAR_DOMAIN = "calendar"
 SCRIPT_DOMAIN = "script"
+
+NO_ENTITIES_PROMPT = (
+    "Only if the user wants to control a device, tell them to expose entities "
+    "to their voice assistant in Home Assistant."
+)
+
+DYNAMIC_CONTEXT_PROMPT = (
+    "You ARE equipped to answer questions about the"
+    " current state of\n"
+    "the home using the `GetLiveContext` tool."
+    " This is a primary function."
+    " Do not state you lack the\n"
+    "functionality if the question requires live data.\n"
+    "If the user asks about device existence/type"
+    ' (e.g., "Do I have lights in the bedroom?"):'
+    " Answer\n"
+    "from the static context below.\n"
+    "If the user asks about the CURRENT state, value,"
+    ' or mode (e.g., "Is the lock locked?",\n'
+    '"Is the fan on?",'
+    ' "What mode is the thermostat in?",'
+    ' "What is the temperature outside?"):\n'
+    "    1.  Recognize this requires live data.\n"
+    "    2.  You MUST call `GetLiveContext`."
+    " This tool will provide the needed real-time"
+    " information (like temperature from the local"
+    " weather, lock status, etc.).\n"
+    "    3.  Use the tool's response** to answer the"
+    " user accurately"
+    ' (e.g., "The temperature outside is'
+    ' [value from tool].").\n'
+    "For general knowledge questions not about the"
+    " home: Answer truthfully from internal"
+    " knowledge.\n"
+)
 
 
 @callback
@@ -113,7 +143,11 @@ def async_get_exposed_entities(
                 info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
-            if state.attributes.get("device_class") == "timestamp" and state.state:
+            if (
+                state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+                == SensorDeviceClass.TIMESTAMP
+                and state.state
+            ):
                 if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
                     info["state"] = dt_util.as_local(parsed_utc).isoformat()
 
@@ -285,10 +319,23 @@ class GetLiveContextTool(Tool):
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Return the GetLiveContext tool.
-
-    The tool is always offered; it reports when nothing is exposed at call time.
-    """
+    """Return the GetLiveContext tool and the smart home context prompt."""
     if api_id != LLM_API_ASSIST:
         return None
-    return LLMTools(tools=[GetLiveContextTool()])
+
+    exposed_entities = async_get_exposed_entities(
+        hass, llm_context.assistant, include_state=False
+    )
+    if exposed_entities:
+        prompt = "\n".join(
+            [
+                DYNAMIC_CONTEXT_PROMPT,
+                "Static Context: An overview of the areas"
+                " and the devices in this smart home:",
+                yaml_util.dump(list(exposed_entities.values())),
+            ]
+        )
+    else:
+        prompt = NO_ENTITIES_PROMPT
+
+    return LLMTools(tools=[GetLiveContextTool()], prompt=prompt)
