@@ -35,7 +35,7 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-005"  # Increment for each deployment
+BUILD_ID = "20260721-006"  # Increment for each deployment
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -68,7 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
             entry.title,
         )
         entry.async_start_reauth(hass)
-        return False
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_token_reauth_required",
+        ) from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 

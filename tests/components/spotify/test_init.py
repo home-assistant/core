@@ -100,7 +100,7 @@ async def test_oauth_token_expiration_triggers_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that expired/revoked refresh token triggers reauth."""
+    """Test that expired/revoked refresh token triggers reauth and raises error."""
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -119,3 +119,5 @@ async def test_oauth_token_expiration_triggers_reauth(
     mock_reauth.assert_called_once_with(hass)
     # Setup should fail
     assert result is False
+    # Should mark entry as failed
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

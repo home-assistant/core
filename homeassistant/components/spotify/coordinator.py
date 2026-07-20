@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-005"  # Increment for each deployment
+BUILD_ID = "20260721-006"  # Increment for each deployment
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
