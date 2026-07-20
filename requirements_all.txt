@@ -2464,7 +2464,7 @@ pyoverkiz[nexity]==2.1.0
 pypalazzetti==0.1.20
 
 # homeassistant.components.paperless_ngx
-pypaperless==4.1.1
+pypaperless==5.2.2
 
 # homeassistant.components.elv
 pypca==0.0.7
