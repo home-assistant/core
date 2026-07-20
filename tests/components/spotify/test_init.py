@@ -8,6 +8,7 @@ from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 from homeassistant.components.spotify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -92,3 +93,24 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_oauth_token_expiration_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that expired/revoked refresh token triggers reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.spotify.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=MagicMock(), status=400, domain=DOMAIN
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Should trigger setup error and reauth, not infinite retry
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
