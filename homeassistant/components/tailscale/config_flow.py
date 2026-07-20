@@ -210,13 +210,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Migrate an existing entry to OAuth client credentials.
-
-        API access tokens expire after 90 days and have to be replaced by hand,
-        while OAuth clients do not expire. Re-authentication only starts once
-        the current credentials have already failed, so this offers a way to
-        switch over while the entry is still working.
-        """
+        """Migrate an existing entry to OAuth client credentials."""
         reconfigure_entry = self._get_reconfigure_entry()
         errors = {}
 
