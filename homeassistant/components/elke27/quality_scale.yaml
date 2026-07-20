@@ -42,7 +42,6 @@ rules:
   integration-owner: todo
   log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow: todo
   test-coverage: todo
 
   # Gold
@@ -79,6 +78,4 @@ rules:
   inject-websession:
     status: exempt
     comment: The Elke27 client library uses a local TCP socket protocol, not an HTTP web session.
-  strict-typing:
-    status: exempt
-    comment: Strict typing will be added in a later milestone.
+  strict-typing: todo

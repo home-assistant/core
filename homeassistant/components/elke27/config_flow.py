@@ -160,7 +160,11 @@ async def _async_disconnect_client(client: Elke27Client) -> None:
         await client.async_disconnect()
     except asyncio.CancelledError:
         raise
-    except Exception:  # noqa: BLE001
+    except (
+        Elke27ConnectionError,
+        Elke27TimeoutError,
+        Elke27DisconnectedError,
+    ):
         pass
 
 

@@ -1,333 +1,431 @@
 """Tests for Elke27 alarm control panel areas."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Callable
+from types import SimpleNamespace
+from typing import Any
+from unittest.mock import MagicMock
 
-from elke27_lib import (
-    AreaState,
-    ArmMode,
-    PanelInfo,
-    PanelSnapshot,
-    TableInfo,
-    ZoneState,
-)
+from elke27_lib import AreaState, ArmMode, PanelSnapshot, ZoneState
 from elke27_lib.errors import Elke27PinRequiredError
 import pytest
 
-from homeassistant.components.elke27 import alarm_control_panel as alarm_module
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.components.elke27.const import DOMAIN
-from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
-from homeassistant.const import CONF_CLIENT_ID, CONF_HOST
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt as dt_util
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import (
+    build_snapshot,
+    connection_state_changed_event,
+    csm_snapshot_updated_event,
+    setup_integration,
+    zone_status_updated_event,
+)
 
 from tests.common import MockConfigEntry
 
-
-class _Hub:
-    def __init__(self) -> None:
-        self.is_ready = True
-        self.panel_name = None
-        self.async_arm_area = AsyncMock()
-        self.async_disarm_area = AsyncMock()
-        self.async_set_zone_bypass = AsyncMock(return_value=True)
+AREA_1_ENTITY_ID = "alarm_control_panel.area_1"
 
 
-def _snapshot(
-    *,
-    areas: dict[int, AreaState] | None = None,
-    zones: dict[int, ZoneState] | None = None,
-) -> PanelSnapshot:
-    return PanelSnapshot(
-        panel=PanelInfo(serial="1234"),
-        table_info=TableInfo(),
-        areas=areas or {},
-        zones=zones or {},
-        zone_definitions={},
-        outputs={},
-        output_definitions={},
-        lights={},
-        barriers={},
-        locks={},
-        thermostats={},
-        version=1,
-        updated_at=dt_util.utcnow(),
-    )
-
-
-def _setup_area_entities(
+async def test_area_entities_and_devices(
     hass: HomeAssistant,
-    snapshot: PanelSnapshot,
-) -> tuple[_Hub, list[alarm_module.Elke27AreaAlarmControlPanel]]:
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.60", CONF_CLIENT_ID: "entryclientid"},
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test area entities are created with per-area devices."""
+    mock_client.get_snapshot.return_value = build_snapshot(
+        areas={
+            1: AreaState(area_id=1, name="Area 1"),
+            2: AreaState(area_id=2, name="Area 2", arm_mode=ArmMode.ARMED_AWAY),
+        }
     )
-    entry.add_to_hass(hass)
-    hub = _Hub()
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
-    coordinator.async_set_updated_data(snapshot)
-    entities = [
-        alarm_module.Elke27AreaAlarmControlPanel(coordinator, hub, entry, area)
-        for area in snapshot.areas.values()
-    ]
-    return hub, entities
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(AREA_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.DISARMED
+    assert state.attributes["code_format"] == "number"
+    assert state.attributes["supported_features"] == (
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    )
+    state = hass.states.get("alarm_control_panel.area_2")
+    assert state is not None
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
+
+    entity_entry = entity_registry.async_get(AREA_1_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "1234:1"
+
+    panel_device = device_registry.async_get_device({(DOMAIN, "1234")})
+    assert panel_device is not None
+    area_device = device_registry.async_get_device({(DOMAIN, "1234:area:1")})
+    assert area_device is not None
+    assert area_device.name == "Area 1"
+    assert area_device.via_device_id == panel_device.id
 
 
-async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
-    """Test area entities are created and update from snapshots."""
-    hub, entities = _setup_area_entities(
-        hass,
-        _snapshot(
-            areas={
-                1: AreaState(area_id=1, name="Area 1"),
-                2: AreaState(area_id=2, name="Area 2", arm_mode=ArmMode.ARMED_AWAY),
-            }
+@pytest.mark.parametrize(
+    ("area", "expected_state"),
+    [
+        pytest.param(
+            AreaState(area_id=1, name="Area 1"),
+            AlarmControlPanelState.DISARMED,
+            id="no-arm-mode",
         ),
+        pytest.param(
+            AreaState(area_id=1, name="Area 1", arm_mode=ArmMode.DISARMED),
+            AlarmControlPanelState.DISARMED,
+            id="disarmed",
+        ),
+        pytest.param(
+            AreaState(area_id=1, name="Area 1", arm_mode=ArmMode.ARMED_STAY),
+            AlarmControlPanelState.ARMED_HOME,
+            id="armed-stay",
+        ),
+        pytest.param(
+            AreaState(area_id=1, name="Area 1", arm_mode=ArmMode.ARMED_NIGHT),
+            AlarmControlPanelState.ARMED_NIGHT,
+            id="armed-night",
+        ),
+        pytest.param(
+            AreaState(area_id=1, name="Area 1", arm_mode=ArmMode.ARMED_AWAY),
+            AlarmControlPanelState.ARMED_AWAY,
+            id="armed-away",
+        ),
+        pytest.param(
+            AreaState(area_id=1, name="Area 1", alarm_active=True),
+            AlarmControlPanelState.TRIGGERED,
+            id="triggered",
+        ),
+    ],
+)
+async def test_area_state_mapping(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    area: AreaState,
+    expected_state: AlarmControlPanelState,
+) -> None:
+    """Test panel area states map to alarm control panel states."""
+    mock_client.get_snapshot.return_value = build_snapshot(areas={1: area})
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(AREA_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "event_factory",
+    [
+        pytest.param(csm_snapshot_updated_event, id="csm-snapshot"),
+        pytest.param(lambda _snapshot: zone_status_updated_event(1), id="zone-status"),
+    ],
+)
+async def test_panel_events_update_state(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    event_factory: Callable[[PanelSnapshot], Any],
+) -> None:
+    """Test pushed panel events update the entity state."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(AREA_1_ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    snapshot = build_snapshot(
+        areas={1: AreaState(area_id=1, name="Area 1", arm_mode=ArmMode.ARMED_STAY)},
+        version=2,
     )
-    del hub
-
-    assert len(entities) == 2
-    assert {entity.unique_id for entity in entities} == {
-        "entryclientid:1",
-        "entryclientid:2",
-    }
-    area_1 = next(entity for entity in entities if entity._area_id == 1)
-    area_2 = next(entity for entity in entities if entity._area_id == 2)
-
-    assert area_1.device_info == {
-        "identifiers": {(DOMAIN, "entryclientid:area:1")},
-        "name": "Area 1",
-        "via_device": (DOMAIN, "entryclientid"),
-    }
-    assert area_1.name is None
-    assert area_1.state == "disarmed"
-    assert area_2.state == "armed_away"
-
-    area_1.coordinator.async_set_updated_data(
-        _snapshot(
-            areas={1: AreaState(area_id=1, name="Area 1", arm_mode=ArmMode.ARMED_STAY)}
-        )
-    )
+    mock_client.get_snapshot.return_value = snapshot
+    mock_client.event_callback(event_factory(snapshot))
     await hass.async_block_till_done()
 
-    assert area_1.state == "armed_home"
-    assert area_1.area == AreaState(
-        area_id=1, name="Area 1", arm_mode=ArmMode.ARMED_STAY
-    )
+    assert hass.states.get(AREA_1_ENTITY_ID).state == AlarmControlPanelState.ARMED_HOME
 
 
-async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
-    """Test area action methods and PIN-required handling."""
-    hub, entities = _setup_area_entities(
-        hass,
-        _snapshot(
-            areas={1: AreaState(area_id=1, name="Area 1")},
-            zones={
-                1: ZoneState(
-                    zone_id=1,
-                    name="Front Door",
-                    area_id=1,
-                    open=True,
-                    bypassed=False,
-                ),
-                2: ZoneState(zone_id=2, name="Window", open=False, bypassed=False),
-                3: ZoneState(zone_id=3, name="Garage", open=True, bypassed=True),
-            },
-        ),
-    )
-    area_1 = entities[0]
-
-    await area_1.async_alarm_arm_away(code="1234")
-    hub.async_arm_area.assert_awaited_once_with(
-        1, alarm_module.ArmMode.ARMED_AWAY, "1234"
-    )
-
-    hub.async_arm_area.reset_mock()
-    await area_1.async_alarm_arm_home(code="1234")
-    hub.async_arm_area.assert_awaited_once_with(
-        1, alarm_module.ArmMode.ARMED_STAY, "1234"
-    )
-
-    hub.async_arm_area.reset_mock()
-    await area_1.async_alarm_arm_night(code="1234")
-    hub.async_arm_area.assert_awaited_once_with(
-        1, alarm_module.ArmMode.ARMED_NIGHT, "1234"
-    )
-
-    hub.async_arm_area.reset_mock()
-    hub.async_set_zone_bypass.reset_mock()
-    await area_1.async_alarm_arm_custom_bypass(code="1234")
-    hub.async_set_zone_bypass.assert_awaited_once_with(1, bypassed=True, pin="1234")
-    hub.async_arm_area.assert_awaited_once_with(
-        1,
-        alarm_module._custom_bypass_mode(),
-        "1234",
-    )
-
-    hub.async_disarm_area.side_effect = Elke27PinRequiredError
-    with pytest.raises(
-        HomeAssistantError, match="PIN required to perform this action."
-    ):
-        await area_1.async_alarm_disarm()
-
-    hub.async_disarm_area.reset_mock()
-    hub.async_disarm_area.side_effect = None
-    hub.async_disarm_area.return_value = False
-    with pytest.raises(
-        HomeAssistantError, match="Area disarm command was not acknowledged."
-    ):
-        await area_1.async_alarm_disarm(code="1234")
-
-    hub.async_set_zone_bypass.reset_mock()
-    hub.async_arm_area.reset_mock()
-    hub.async_set_zone_bypass.side_effect = None
-    hub.async_set_zone_bypass.return_value = False
-    with pytest.raises(HomeAssistantError, match="Zone 1 bypass was not acknowledged."):
-        await area_1.async_alarm_arm_custom_bypass(code="1234")
-    hub.async_arm_area.assert_not_awaited()
-
-    hub.async_set_zone_bypass.reset_mock()
-    hub.async_set_zone_bypass.return_value = True
-    hub.async_set_zone_bypass.side_effect = Elke27PinRequiredError
-    with pytest.raises(
-        HomeAssistantError, match="PIN required to perform this action."
-    ):
-        await area_1.async_alarm_arm_custom_bypass(code="1234")
-
-    hub.async_arm_area.reset_mock()
-    hub.async_arm_area.side_effect = Elke27PinRequiredError
-    with pytest.raises(
-        HomeAssistantError, match="PIN required to perform this action."
-    ):
-        await area_1.async_alarm_arm_home(code="1234")
-
-    hub.async_arm_area.reset_mock()
-    hub.async_arm_area.side_effect = None
-    hub.async_arm_area.return_value = False
-    with pytest.raises(
-        HomeAssistantError, match="Area arm command was not acknowledged."
-    ):
-        await area_1.async_alarm_arm_away(code="1234")
-
-
-async def test_custom_bypass_handles_multiple_faulted_zones(
+@pytest.mark.parametrize(
+    ("service", "expected_mode"),
+    [
+        pytest.param(SERVICE_ALARM_ARM_AWAY, ArmMode.ARMED_AWAY, id="away"),
+        pytest.param(SERVICE_ALARM_ARM_HOME, ArmMode.ARMED_STAY, id="home"),
+        pytest.param(SERVICE_ALARM_ARM_NIGHT, ArmMode.ARMED_NIGHT, id="night"),
+    ],
+)
+async def test_arm_services_call_client(
     hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    expected_mode: ArmMode,
 ) -> None:
-    """Test custom bypass handles all faulted zones before arming."""
-    hub, entities = _setup_area_entities(
-        hass,
-        _snapshot(
-            areas={1: AreaState(area_id=1, name="Area 1")},
-            zones={
-                1: ZoneState(
-                    zone_id=1,
-                    name="Front Door",
-                    area_id=1,
-                    open=True,
-                    bypassed=False,
-                ),
-                2: ZoneState(
-                    zone_id=2,
-                    name="Window",
-                    area_id=1,
-                    open=True,
-                    bypassed=False,
-                ),
-            },
-        ),
+    """Test arm services send the mapped arm mode to the panel."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: AREA_1_ENTITY_ID, ATTR_CODE: "1234"},
+        blocking=True,
     )
-    area_1 = entities[0]
-    hub.async_set_zone_bypass.side_effect = [True, False]
+
+    mock_client.async_arm_area.assert_awaited_once_with(
+        1,
+        mode=expected_mode,
+        pin="1234",
+        auto_stay_cancel=False,
+        exit_delay_cancel=False,
+    )
+
+
+async def test_disarm_service_calls_client(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the disarm service sends the disarm command to the panel."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_DISARM,
+        {ATTR_ENTITY_ID: AREA_1_ENTITY_ID, ATTR_CODE: "1234"},
+        blocking=True,
+    )
+
+    mock_client.async_disarm_area.assert_awaited_once_with(
+        1,
+        pin="1234",
+        auto_stay_cancel=False,
+        exit_delay_cancel=False,
+    )
+
+
+async def test_custom_bypass_bypasses_area_faulted_zones(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test custom bypass bypasses this area's faulted zones, then arms away."""
+    mock_client.get_snapshot.return_value = build_snapshot(
+        areas={1: AreaState(area_id=1, name="Area 1")},
+        zones={
+            1: ZoneState(
+                zone_id=1, name="Front Door", area_id=1, open=True, bypassed=False
+            ),
+            2: ZoneState(
+                zone_id=2, name="Window", area_id=2, open=True, bypassed=False
+            ),
+            3: ZoneState(zone_id=3, name="Garage", area_id=1, open=True, bypassed=True),
+        },
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        {ATTR_ENTITY_ID: AREA_1_ENTITY_ID, ATTR_CODE: "1234"},
+        blocking=True,
+    )
+
+    mock_client.async_set_zone_bypass.assert_awaited_once_with(
+        1, bypassed=True, pin="1234"
+    )
+    mock_client.async_arm_area.assert_awaited_once_with(
+        1,
+        mode=ArmMode.ARMED_AWAY,
+        pin="1234",
+        auto_stay_cancel=False,
+        exit_delay_cancel=False,
+    )
+
+
+async def test_custom_bypass_aborts_when_bypass_rejected(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test custom bypass stops on the first rejected zone bypass."""
+    mock_client.get_snapshot.return_value = build_snapshot(
+        areas={1: AreaState(area_id=1, name="Area 1")},
+        zones={
+            1: ZoneState(
+                zone_id=1, name="Front Door", area_id=1, open=True, bypassed=False
+            ),
+            2: ZoneState(
+                zone_id=2, name="Window", area_id=1, open=True, bypassed=False
+            ),
+        },
+    )
+    await setup_integration(hass, mock_config_entry)
+    mock_client.async_set_zone_bypass.side_effect = [True, False]
 
     with pytest.raises(HomeAssistantError, match="Zone 2 bypass was not acknowledged."):
-        await area_1.async_alarm_arm_custom_bypass(code="1234")
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            {ATTR_ENTITY_ID: AREA_1_ENTITY_ID, ATTR_CODE: "1234"},
+            blocking=True,
+        )
 
-    assert hub.async_set_zone_bypass.await_count == 2
-    hub.async_arm_area.assert_not_awaited()
+    assert mock_client.async_set_zone_bypass.await_count == 2
+    mock_client.async_arm_area.assert_not_awaited()
 
 
-async def test_custom_bypass_skips_other_area_faulted_zones(
-    hass: HomeAssistant,
-) -> None:
-    """Test custom bypass only bypasses faulted zones assigned to the area."""
-    hub, entities = _setup_area_entities(
-        hass,
-        _snapshot(
-            areas={1: AreaState(area_id=1, name="Area 1")},
-            zones={
-                1: ZoneState(
-                    zone_id=1,
-                    name="Front Door",
-                    area_id=1,
-                    open=True,
-                    bypassed=False,
-                ),
-                2: ZoneState(
-                    zone_id=2,
-                    name="Window",
-                    area_id=2,
-                    open=True,
-                    bypassed=False,
-                ),
-            },
+@pytest.mark.parametrize(
+    ("side_effect", "return_value", "error_match"),
+    [
+        pytest.param(
+            None, False, "Area arm command was not acknowledged", id="not-acknowledged"
         ),
-    )
+        pytest.param(
+            Elke27PinRequiredError(),
+            None,
+            "PIN required to perform this action",
+            id="pin-rejected",
+        ),
+        pytest.param(
+            None,
+            SimpleNamespace(ok=False, error="bad"),
+            "Area arming failed: bad",
+            id="command-rejected",
+        ),
+    ],
+)
+async def test_arm_service_errors(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception | None,
+    return_value: Any,
+    error_match: str,
+) -> None:
+    """Test failed arm commands raise Home Assistant errors."""
+    await setup_integration(hass, mock_config_entry)
+    mock_client.async_arm_area.side_effect = side_effect
+    mock_client.async_arm_area.return_value = return_value
 
-    await entities[0].async_alarm_arm_custom_bypass(code="1234")
-
-    hub.async_set_zone_bypass.assert_awaited_once_with(1, bypassed=True, pin="1234")
-    hub.async_arm_area.assert_awaited_once()
-
-
-def test_area_state_helpers() -> None:
-    """Verify state mapping."""
-    assert (
-        alarm_module._area_state_to_ha(AreaState(area_id=1, alarm_active=True))
-        == "triggered"
-    )
-    assert alarm_module._area_state_to_ha(AreaState(area_id=1)) == "disarmed"
-    assert (
-        alarm_module._area_state_to_ha(AreaState(area_id=1, arm_mode=ArmMode.DISARMED))
-        == "disarmed"
-    )
-    assert (
-        alarm_module._area_state_to_ha(
-            AreaState(area_id=1, arm_mode=ArmMode.ARMED_STAY)
+    with pytest.raises(HomeAssistantError, match=error_match):
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_ARM_AWAY,
+            {ATTR_ENTITY_ID: AREA_1_ENTITY_ID, ATTR_CODE: "1234"},
+            blocking=True,
         )
-        == "armed_home"
-    )
-    assert (
-        alarm_module._area_state_to_ha(
-            AreaState(area_id=1, arm_mode=ArmMode.ARMED_NIGHT)
+
+
+async def test_disarm_without_code_fails(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test disarming without a code fails before reaching the panel."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        HomeAssistantError, match="PIN required to perform this action."
+    ):
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_DISARM,
+            {ATTR_ENTITY_ID: AREA_1_ENTITY_ID},
+            blocking=True,
         )
-        == "armed_night"
-    )
-    assert (
-        alarm_module._area_state_to_ha(
-            AreaState(area_id=1, arm_mode=ArmMode.ARMED_AWAY)
+
+    mock_client.async_disarm_area.assert_not_awaited()
+
+
+async def test_arm_without_code_fails(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test arming without a code fails before reaching the panel."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_ARM_AWAY,
+            {ATTR_ENTITY_ID: AREA_1_ENTITY_ID},
+            blocking=True,
         )
-        == "armed_away"
-    )
+
+    mock_client.async_arm_area.assert_not_awaited()
 
 
-async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
-    """Verify properties handle missing area data."""
-    hub, entities = _setup_area_entities(
-        hass,
-        _snapshot(areas={1: AreaState(area_id=1, name="Area 1")}),
-    )
-    area = entities[0]
-    area.coordinator.async_set_updated_data(_snapshot())
+async def test_non_numeric_code_fails(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a non-numeric code is rejected."""
+    await setup_integration(hass, mock_config_entry)
 
-    assert area.state is None
-    hub.is_ready = False
-    assert area.available is False
+    with pytest.raises(ServiceValidationError, match="Code must be numeric."):
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_DISARM,
+            {ATTR_ENTITY_ID: AREA_1_ENTITY_ID, ATTR_CODE: "12ab"},
+            blocking=True,
+        )
+
+    mock_client.async_disarm_area.assert_not_awaited()
 
 
-def test_normalize_code() -> None:
-    """Verify code normalization."""
-    assert alarm_module._normalize_code(None) is None
-    assert alarm_module._normalize_code(" 1234 ") == "1234"
-    with pytest.raises(HomeAssistantError):
-        alarm_module._normalize_code("12ab")
+async def test_entities_unavailable_when_disconnected(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entities become unavailable on disconnect and recover on reconnect."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(AREA_1_ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+    mock_client.is_ready = False
+    mock_client.connection_callback(connection_state_changed_event(connected=False))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(AREA_1_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_client.is_ready = True
+    mock_client.connection_callback(connection_state_changed_event(connected=True))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(AREA_1_ENTITY_ID).state == AlarmControlPanelState.DISARMED
+
+
+async def test_entity_unavailable_when_area_missing(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entity becomes unavailable when its area leaves the snapshot."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot = build_snapshot(version=2)
+    mock_client.get_snapshot.return_value = snapshot
+    mock_client.event_callback(csm_snapshot_updated_event(snapshot))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(AREA_1_ENTITY_ID).state == STATE_UNAVAILABLE

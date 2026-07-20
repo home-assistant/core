@@ -1,6 +1,5 @@
 """Alarm control panel platform for Elke27 areas."""
 
-import asyncio
 from typing import override
 
 from elke27_lib import AreaState, ArmMode, PanelSnapshot
@@ -21,7 +20,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
 from .helpers import build_unique_id, unique_base
-from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
 
 PARALLEL_UPDATES = 1
@@ -33,12 +31,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elke27 area alarm control panels from a config entry."""
-    data = entry.runtime_data
-    hub = data.hub
-    coordinator = data.coordinator
+    coordinator = entry.runtime_data.coordinator
     snapshot = coordinator.data
     entities = [
-        Elke27AreaAlarmControlPanel(coordinator, hub, entry, area)
+        Elke27AreaAlarmControlPanel(coordinator, entry, area)
         for area in snapshot.areas.values()
     ]
     if entities:
@@ -65,13 +61,11 @@ class Elke27AreaAlarmControlPanel(
     def __init__(
         self,
         coordinator: Elke27DataUpdateCoordinator,
-        hub: Elke27Hub,
         entry: Elke27ConfigEntry,
         area: AreaState,
     ) -> None:
         """Initialize the area entity."""
         super().__init__(coordinator)
-        self._hub = hub
         self._entry = entry
         self._area_id = area.area_id
         self._attr_unique_id = build_unique_id(
@@ -104,7 +98,7 @@ class Elke27AreaAlarmControlPanel(
     @override
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and self._hub.is_ready and self.area is not None
+        return super().available and self.coordinator.is_ready and self.area is not None
 
     @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
@@ -130,35 +124,26 @@ class Elke27AreaAlarmControlPanel(
             for zone in self.coordinator.data.faulted_zones
             if zone.area_id == self._area_id
         ]
-        results = await asyncio.gather(
-            *(
-                self._hub.async_set_zone_bypass(zone.zone_id, bypassed=True, pin=code)
-                for zone in faulted_zones
-            ),
-            return_exceptions=True,
-        )
-        for zone, result in zip(faulted_zones, results, strict=True):
-            if isinstance(result, asyncio.CancelledError):
-                raise result
-            if isinstance(result, Elke27PinRequiredError):
+        for zone in faulted_zones:
+            try:
+                result = await self.coordinator.async_set_zone_bypass(
+                    zone.zone_id, bypassed=True, pin=code
+                )
+            except Elke27PinRequiredError as err:
                 msg = "PIN required to perform this action."
-                raise HomeAssistantError(msg) from result
-            if isinstance(result, HomeAssistantError):
-                raise result
-            if isinstance(result, Exception):
-                msg = f"Zone {zone.zone_id} bypass failed."
-                raise HomeAssistantError(msg) from result
+                raise HomeAssistantError(msg) from err
             if not result:
                 msg = f"Zone {zone.zone_id} bypass was not acknowledged."
                 raise HomeAssistantError(msg)
-        await self._async_arm(_custom_bypass_mode(), code)
+        # E27 has no native custom-bypass arm mode; arm away after bypassing.
+        await self._async_arm(ArmMode.ARMED_AWAY, code)
 
     @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the area."""
         code = _normalize_code(code)
         try:
-            disarmed = await self._hub.async_disarm_area(self._area_id, code)
+            disarmed = await self.coordinator.async_disarm_area(self._area_id, code)
         except Elke27PinRequiredError as err:
             msg = "PIN required to perform this action."
             raise HomeAssistantError(msg) from err
@@ -166,11 +151,11 @@ class Elke27AreaAlarmControlPanel(
             msg = "Area disarm command was not acknowledged."
             raise HomeAssistantError(msg)
 
-    async def _async_arm(self, mode: ArmMode | str, code: str | None) -> None:
+    async def _async_arm(self, mode: ArmMode, code: str | None) -> None:
         """Arm the area using the requested mode."""
         code = _normalize_code(code)
         try:
-            armed = await self._hub.async_arm_area(self._area_id, mode, code)
+            armed = await self.coordinator.async_arm_area(self._area_id, mode, code)
         except Elke27PinRequiredError as err:
             msg = "PIN required to perform this action."
             raise HomeAssistantError(msg) from err
@@ -198,10 +183,6 @@ def _area_state_to_ha(area: AreaState) -> AlarmControlPanelState | None:
     if arm_mode is ArmMode.ARMED_AWAY:
         return AlarmControlPanelState.ARMED_AWAY
     return None
-
-
-def _custom_bypass_mode() -> str:
-    return "ARMED_CUSTOM_BYPASS"
 
 
 def _normalize_code(code: str | None) -> str | None:
