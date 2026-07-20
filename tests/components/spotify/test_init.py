@@ -100,7 +100,7 @@ async def test_oauth_token_expiration_triggers_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that expired/revoked refresh token triggers reauth and raises error."""
+    """Test that expired/revoked refresh token triggers reauth flow."""
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -110,13 +110,17 @@ async def test_oauth_token_expiration_triggers_reauth(
                 request_info=MagicMock(), status=400, domain=DOMAIN
             ),
         ),
-        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
+        patch.object(hass.config_entries.flow, "async_init") as mock_init,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Should have called async_start_reauth
-    mock_reauth.assert_called_once_with(hass)
+    # Should have initiated reauth flow
+    mock_init.assert_called_once()
+    call_args = mock_init.call_args
+    assert call_args[0][0] == DOMAIN
+    assert call_args[1]["context"]["source"] == "reauth"
+    assert call_args[1]["context"]["entry_id"] == mock_config_entry.entry_id
     # Setup should fail
     assert result is False
     # Should mark entry as failed
