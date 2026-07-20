@@ -25,11 +25,11 @@ send_message:
       required: false
       selector:
         object:
-          label_field: attachment
+          label_field: media_source
           description_field: filename
           multiple: true
           fields:
-            attachment:
+            media_source:
               required: true
               selector:
                 media:

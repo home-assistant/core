@@ -23,11 +23,11 @@ from homeassistant.components.notify import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.components.smtp.const import (
-    ATTR_ATTACHMENT,
     ATTR_ATTACHMENTS,
     ATTR_CONTENT_ID,
     ATTR_FILENAME,
     ATTR_HTML,
+    ATTR_MEDIA_SOURCE,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,
@@ -455,7 +455,7 @@ async def test_smtp_send_message_local_media_source(
             ATTR_MESSAGE: "Hello World",
             ATTR_ATTACHMENTS: [
                 {
-                    ATTR_ATTACHMENT: {
+                    ATTR_MEDIA_SOURCE: {
                         "media_content_id": (
                             "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
                         ),
@@ -503,7 +503,7 @@ async def test_smtp_send_message_camera_source(
                 ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
                 ATTR_ATTACHMENTS: [
                     {
-                        ATTR_ATTACHMENT: {
+                        ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://camera/camera.demo_camera",
                             "media_content_type": "image/jpeg",
                         },
@@ -548,7 +548,7 @@ async def test_smtp_send_message_image_source(
                 ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
                 ATTR_ATTACHMENTS: [
                     {
-                        ATTR_ATTACHMENT: {
+                        ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://image/image.test",
                             "media_content_type": "image/png",
                         },
@@ -593,7 +593,7 @@ async def test_smtp_send_message_tts_source(
                 ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
                 ATTR_ATTACHMENTS: [
                     {
-                        ATTR_ATTACHMENT: {
+                        ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://tts/demo?message=Hello+World%21&language=en",
                             "media_content_type": "audio/mp3",
                         },
@@ -643,7 +643,7 @@ async def test_smtp_send_message_media_source_not_supported(
                 ATTR_MESSAGE: "Hello World",
                 ATTR_ATTACHMENTS: [
                     {
-                        ATTR_ATTACHMENT: {
+                        ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://xbox/123456789/",
                             "media_content_type": "video",
                         },
@@ -688,7 +688,7 @@ async def test_smtp_send_message_media_source_missing_filename(
                 ATTR_MESSAGE: "Hello World",
                 ATTR_ATTACHMENTS: [
                     {
-                        ATTR_ATTACHMENT: {
+                        ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://image/image.test",
                             "media_content_type": "image/png",
                         }

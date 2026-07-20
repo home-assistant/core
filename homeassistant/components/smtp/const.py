@@ -8,7 +8,7 @@ ATTR_IMAGES: Final = "images"  # optional embedded image file attachments
 ATTR_HTML: Final = "html"
 ATTR_SENDER_NAME: Final = "sender_name"
 ATTR_ATTACHMENTS: Final = "attachments"
-ATTR_ATTACHMENT: Final = "attachment"
+ATTR_MEDIA_SOURCE: Final = "media_source"
 ATTR_FILENAME: Final = "filename"
 ATTR_CONTENT_ID: Final = "content_id"
 

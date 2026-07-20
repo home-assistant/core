@@ -13,11 +13,11 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import MediaSelector
 
 from .const import (
-    ATTR_ATTACHMENT,
     ATTR_ATTACHMENTS,
     ATTR_CONTENT_ID,
     ATTR_FILENAME,
     ATTR_HTML,
+    ATTR_MEDIA_SOURCE,
     DOMAIN,
 )
 
@@ -31,7 +31,9 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
             [
                 vol.Schema(
                     {
-                        vol.Required(ATTR_ATTACHMENT): MediaSelector({"accept": ["*"]}),
+                        vol.Required(ATTR_MEDIA_SOURCE): MediaSelector(
+                            {"accept": ["*"]}
+                        ),
                         vol.Optional(ATTR_FILENAME): cv.string,
                         vol.Optional(ATTR_CONTENT_ID): cv.string,
                     }

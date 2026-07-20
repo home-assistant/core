@@ -59,12 +59,12 @@ from homeassistant.util.ssl import create_client_context
 
 from . import SmtpConfigEntry
 from .const import (
-    ATTR_ATTACHMENT,
     ATTR_ATTACHMENTS,
     ATTR_CONTENT_ID,
     ATTR_FILENAME,
     ATTR_HTML,
     ATTR_IMAGES,
+    ATTR_MEDIA_SOURCE,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,
@@ -233,7 +233,10 @@ class MailNotifyEntity(NotifyEntity):
         attachments = kwargs.get(ATTR_ATTACHMENTS, [])
 
         resolved = await asyncio.gather(
-            *(_resolve_media(self.hass, file[ATTR_ATTACHMENT]) for file in attachments)
+            *(
+                _resolve_media(self.hass, file[ATTR_MEDIA_SOURCE])
+                for file in attachments
+            )
         )
 
         for file, (content, mime_type, filename) in zip(
@@ -258,7 +261,7 @@ class MailNotifyEntity(NotifyEntity):
                     translation_domain=DOMAIN,
                     translation_key="media_source_missing_filename",
                     translation_placeholders={
-                        "media_content_id": file[ATTR_ATTACHMENT]["media_content_id"]
+                        "media_content_id": file[ATTR_MEDIA_SOURCE]["media_content_id"]
                     },
                 )
             if cid := file.get(ATTR_CONTENT_ID):

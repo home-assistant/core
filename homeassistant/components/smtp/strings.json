@@ -163,10 +163,6 @@
   "selector": {
     "attachments": {
       "fields": {
-        "attachment": {
-          "description": "Select a camera, image, TTS, or a local media source to attach. Camera sources are captured as an image snapshot when the email is sent.",
-          "name": "Attachment"
-        },
         "content_id": {
           "description": "A unique identifier used to embed this image directly inside an HTML email body.",
           "name": "Content-ID"
@@ -174,6 +170,10 @@
         "filename": {
           "description": "Specify the filename for the attachment. This is required for camera, image, and TTS media sources, and optional for local media sources.",
           "name": "Filename"
+        },
+        "media_source": {
+          "description": "Select a camera, image, TTS, or a local media source to attach. Camera sources are captured as an image snapshot when the email is sent.",
+          "name": "Media source"
         }
       }
     },
