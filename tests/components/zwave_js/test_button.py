@@ -74,7 +74,7 @@ async def test_ping_entity(
     assert node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN, "sensor", f"{get_valueless_base_unique_id(driver, node)}.ping"
+            BUTTON_DOMAIN, DOMAIN, f"{get_valueless_base_unique_id(driver, node)}.ping"
         )
         is None
     )
