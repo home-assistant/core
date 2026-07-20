@@ -2321,6 +2321,71 @@ async def test_async_get_device_prefers_matching_domain(
     assert device_registry.async_get_device(identifiers={("domain_a", "1")}) is device_a
 
 
+@pytest.mark.parametrize(
+    ("method", "create_kwargs", "key", "miss_key"),
+    [
+        pytest.param(
+            "async_get_device_by_identifier",
+            {"identifiers": {("test", "shared")}},
+            ("test", "shared"),
+            ("test", "other"),
+            id="identifier",
+        ),
+        pytest.param(
+            "async_get_device_by_connection",
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}},
+            (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"),
+            (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ff"),
+            id="connection",
+        ),
+    ],
+)
+async def test_async_get_device_scoped_to_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    method: str,
+    create_kwargs: dict[str, set[tuple[str, str]]],
+    key: tuple[str, str],
+    miss_key: tuple[str, str],
+) -> None:
+    """A single-key lookup scoped to a config entry resolves a shared key uniquely."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, **create_kwargs
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, **create_kwargs
+    )
+    assert device_1.id != device_2.id
+
+    lookup = getattr(device_registry, method)
+    assert lookup(key, entry_1.entry_id) is device_1
+    assert lookup(key, entry_2.entry_id) is device_2
+    assert lookup(miss_key, entry_1.entry_id) is None
+    assert lookup(key, "unknown_entry_id") is None
+
+
+async def test_async_get_device_by_connection_normalizes(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """MAC connection values are normalized before the scoped lookup."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "12-34-56-ab-cd-ef"), entry.entry_id
+        )
+        is device
+    )
+
+
 async def test_async_remove_device_fans_out_to_migration_composite(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

@@ -1370,6 +1370,32 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return device
         return matches[0]
 
+    @callback
+    def async_get_device_by_identifier(
+        self, identifier: tuple[str, str], config_entry_id: str
+    ) -> DeviceEntry | None:
+        """Get the device with the identifier, owned by the config entry.
+
+        Identifiers are unique within a config entry, so unlike async_get_device
+        the lookup cannot be ambiguous.
+        """
+        return self.devices.get_entry(
+            identifiers={identifier}, config_entry_id=config_entry_id
+        )
+
+    @callback
+    def async_get_device_by_connection(
+        self, connection: tuple[str, str], config_entry_id: str
+    ) -> DeviceEntry | None:
+        """Get the device with the connection, owned by the config entry.
+
+        Connections are unique within a config entry, so unlike async_get_device
+        the lookup cannot be ambiguous.
+        """
+        return self.devices.get_entry(
+            connections={connection}, config_entry_id=config_entry_id
+        )
+
     def _first_device_in_domain(
         self, devices: Iterable[DeviceEntry], domain: str
     ) -> DeviceEntry | None:
