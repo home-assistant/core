@@ -2,7 +2,7 @@
 
 from functools import partial
 
-from aioesphomeapi import VoiceAssistantTimerEventType
+from aioesphomeapi import VoiceAssistantFeature, VoiceAssistantTimerEventType
 
 from homeassistant.components.timer_list import (
     InMemoryTimerListEntity,
@@ -46,11 +46,14 @@ async def async_setup_entry(
     entry: ESPHomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the timer list for a voice-capable ESPHome device."""
+    """Set up the timer list for a timer-capable ESPHome device."""
     entry_data = entry.runtime_data
     device_info = entry_data.device_info
     assert device_info is not None
-    if not device_info.voice_assistant_feature_flags_compat(entry_data.api_version):
+    feature_flags = device_info.voice_assistant_feature_flags_compat(
+        entry_data.api_version
+    )
+    if not (feature_flags & VoiceAssistantFeature.TIMERS):
         return
 
     mac = device_info.mac_address

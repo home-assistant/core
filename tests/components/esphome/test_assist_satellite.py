@@ -831,6 +831,24 @@ async def test_timer_events(
     )
 
 
+async def test_no_timer_list_without_timers_flag(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a voice device without the TIMERS flag gets no timer list entity."""
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids("timer_list") == []
+
+
 async def test_unknown_timer_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

@@ -101,6 +101,9 @@ class InMemoryTimerListEntity(TimerListEntity):
     async def async_cancel_timer(self, timer_id: str) -> None:
         """Cancel a timer, archiving it in the ``cancelled`` state."""
         timer = self._get_timer(timer_id)
+        if timer.status in _FINISHED_STATUSES:
+            # Already archived (finished or cancelled); nothing to cancel.
+            return
         self._unschedule(timer_id)
         timer.status = TimerStatus.CANCELLED
         timer.finishes_at = None
