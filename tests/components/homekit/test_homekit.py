@@ -1111,9 +1111,10 @@ TV_ATTRS_ON = {
             {
                 ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
                 ATTR_SUPPORTED_FEATURES: TV_FEATURES_ON,
+                ATTR_INPUT_SOURCE_LIST: ["Live TV"],
             },
-            [],
-            False,
+            ["Live TV"],
+            True,
             [(STATE_ON, TV_ATTRS_ON)],
             ["Live TV", "HDMI 1", "HDMI 2", "Netflix"],
             id="created_while_unavailable",
@@ -1159,10 +1160,10 @@ async def test_homekit_reload_tv_accessory_on_attr_change(
 ) -> None:
     """Test a TV accessory in accessory mode is recreated when reload attrs change.
 
-    An unavailable entity has most attributes stripped, so an accessory
-    created while unavailable has no input sources. An available
-    webOS-style TV starts with only the "Live TV" fallback and TURN_ON
-    support that is dropped once the TV is on.
+    A webOS-style TV that is off/unreachable at startup reports only the
+    "Live TV" fallback in its source list; turning the TV on delivers
+    the full source list (and drops TURN_ON support) in a transition the
+    old code either skipped (unavailable) or must not miss (off -> on).
     """
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}

@@ -1,5 +1,6 @@
 """Extend the basic Accessory and Bridge functions."""
 
+import asyncio
 import logging
 from typing import Any, cast
 from uuid import UUID
@@ -451,6 +452,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
         self._reload_attr_baseline: dict[str, Any] | None = None
         self._creation_state: State | None = None
+        self._pending_reload: asyncio.Handle | None = None
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id
@@ -600,7 +602,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             # is deferred: dispatcher targets start eagerly, so an inline
             # reload would stop and replace this accessory before it
             # finished starting.
-            self.hass.loop.call_soon(self.async_reload)
+            self._pending_reload = self.hass.loop.call_soon(self.async_reload)
         self._subscriptions.append(
             async_track_state_change_event(
                 self.hass,
@@ -652,12 +654,14 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
     def _async_reload_attrs_diverged(self, new_state: State) -> bool:
         """Check if any reload attr diverged from the baseline.
 
-        The baseline is the state the accessory was built from, so
-        changes that arrive while the entity is unavailable (which
-        strips most attributes) are still detected once the entity is
-        back. On divergence the baseline advances so a reload is only
-        requested once; the recreated accessory captures a fresh
-        baseline.
+        The baseline holds the attribute values the accessory structure
+        was built from. Comparing against it instead of the previous
+        event's state also detects changes that land where pairwise
+        comparison cannot see them: transitions involving unavailable
+        states, entity remove/re-add (no old state), and the window
+        between accessory construction and driver start. On divergence
+        the baseline advances so a reload is only requested once; the
+        recreated accessory captures a fresh baseline.
         """
         if (
             new_state.state == STATE_UNAVAILABLE
@@ -868,6 +872,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
     @ha_callback
     def async_stop(self) -> None:
         """Cancel any subscriptions when the bridge is stopped."""
+        if self._pending_reload is not None:
+            self._pending_reload.cancel()
+            self._pending_reload = None
         while self._subscriptions:
             self._subscriptions.pop(0)()
 
