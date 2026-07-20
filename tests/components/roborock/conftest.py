@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from roborock import (
+    CleaningMode,
     CleanRoutes,
     HomeDataRoom,
     MultiMapsListMapInfo,
@@ -424,7 +425,6 @@ def make_device_features() -> Mock:
     device_features = MagicMock(spec=DeviceFeaturesTrait)
     device_features.is_supported_drying = True
     device_features.is_support_water_mode = True
-    device_features.is_clean_fluid_delivery_supported = True
     device_features.is_support_clean_estimate = True
     device_features.is_clean_route_setting_supported = True
     device_features.is_field_supported.return_value = True
@@ -453,6 +453,8 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.status.mop_route_options = list(CleanRoutes)
     v1_properties.status.mop_route_mapping = _mop_route_mapping
     v1_properties.status.mop_route_name = _mop_route_mapping.get(STATUS.mop_mode)
+    v1_properties.status.cleaning_mode_options = list(CleaningMode)
+    v1_properties.status.current_cleaning_mode_name = CleaningMode.VAC_AND_MOP.value
     v1_properties.dnd = make_dnd_timer(dataclass_template=DND_TIMER)
     v1_properties.clean_summary = make_mock_trait(
         trait_spec=CleanSummaryTrait,

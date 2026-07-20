@@ -1,10 +1,12 @@
 """Tests for the Sonos config flow."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 from itertools import chain, repeat
 import logging
-from unittest.mock import Mock, PropertyMock, patch
+from typing import Any
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -21,7 +23,11 @@ from homeassistant.components.sonos.const import (
 from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
@@ -165,6 +171,64 @@ async def test_discovery_exception(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert "This is a test" in caplog.text
+
+
+async def test_discovery_skips_disabled_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test discovery message handling skips disabled Sonos devices."""
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.zoneGroupTopology.subscribe.assert_not_awaited()
+    assert not er.async_entries_for_device(entity_registry, device.id)
+
+
+async def test_discovery_reenable_device_on_new_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    discover: MagicMock,
+    fire_zgs_event: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Test re-enabling a disabled device allows subscriptions and entities."""
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.zoneGroupTopology.subscribe.assert_not_awaited()
+    assert not er.async_entries_for_device(entity_registry, device.id)
+
+    device_registry.async_update_device(device.id, disabled_by=None)
+
+    # Re-run discovery using the fixture's own mocked callback path.
+    discover.side_effect(*discover.call_args.args, **discover.call_args.kwargs)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await fire_zgs_event()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert soco.zoneGroupTopology.subscribe.await_count > 0
+    assert er.async_entries_for_device(entity_registry, device.id)
 
 
 async def test_async_poll_manual_hosts_warnings(
@@ -595,6 +659,39 @@ async def test_async_poll_manual_hosts_8(
     assert "media_player.basement" in entity_registry.entities
     assert "media_player.garage" in entity_registry.entities
     assert "media_player.studio" in entity_registry.entities
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_poll_manual_hosts_skips_disabled_visible_zone(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabled visible zone is skipped in visible-zones expansion."""
+    soco_1 = soco_factory.cache_mock(
+        _MockSoCoVisibleZones(), "10.10.10.1", "Living Room"
+    )
+    # Host 2 is marked disabled in the device registry.
+    # Host 1's visible-zones expansion encounters host 2 and exercises the
+    # _async_add_visible_zones disabled filter branch.
+    soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+
+    soco_1.set_visible_zones({soco_1, soco_2})
+
+    config_entry = MockConfigEntry(domain=sonos.DOMAIN)
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco_2.uid)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    await _setup_hass(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "media_player.living_room" in entity_registry.entities
+    assert "media_player.bedroom" not in entity_registry.entities
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
