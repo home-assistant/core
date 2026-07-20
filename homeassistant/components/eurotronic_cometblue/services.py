@@ -1,6 +1,6 @@
 """Comet Blue services."""
 
-from datetime import datetime, time, timedelta
+from datetime import time, timedelta
 import logging
 from typing import Final, TypedDict, cast
 
@@ -17,6 +17,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .climate import MAX_TEMP, MIN_TEMP
@@ -211,7 +212,7 @@ async def set_holiday(
         minute=0, second=0, microsecond=0
     ) + timedelta(hours=1)
 
-    if away_start < datetime.now():
+    if away_start < dt_util.naive_now():
         raise ServiceValidationError(
             "Start date (ceiled to next hour) must be in the future"
         )
