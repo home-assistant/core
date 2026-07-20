@@ -50,3 +50,220 @@
     'state': 'unknown',
   })
 # ---
+# name: test_notify_send_message
+  '''
+  Content-Type: text/plain; charset="us-ascii"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: 7bit
+  Subject: Home Assistant
+  From: Home Assistant <email@example.com>
+  To: Recipient <recipient@example.com>
+  X-Mailer: Home Assistant
+  Date: Sat, 02 May 2026 20:09:37 -0700
+  Message-Id: <177777777700.12345.12345678901234567890@mock>
+  
+  Hello World
+  '''
+# ---
+# name: test_smtp_send_message
+  '''
+  Content-Type: multipart/related; boundary="===============1234567890123456789==.0"
+  MIME-Version: 1.0
+  Subject: Home Assistant
+  From: Home Assistant <email@example.com>
+  To: Recipient <recipient@example.com>
+  X-Mailer: Home Assistant
+  Date: Sat, 02 May 2026 20:09:37 -0700
+  Message-Id: <177777777700.12345.12345678901234567890@mock>
+  
+  --===============1234567890123456789==.0
+  Content-Type: multipart/alternative; boundary="===============1234567890123456789=="
+  MIME-Version: 1.0
+  
+  --===============1234567890123456789==
+  Content-Type: text/plain; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  SGVsbG8gV29ybGQ=
+  
+  --===============1234567890123456789==
+  Content-Type: text/html; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  PGh0bWw+PGJvZHk+PGltZyBzcmM9ImNpZDphdmF0YXIucG5nIj48L2JvZHk+PC9odG1sPg==
+  
+  --===============1234567890123456789==--
+  
+  --===============1234567890123456789==.0--
+  
+  '''
+# ---
+# name: test_smtp_send_message_camera_source
+  '''
+  Content-Type: multipart/related; boundary="===============1234567890123456789==.0"
+  MIME-Version: 1.0
+  Subject: Home Assistant
+  From: Home Assistant <email@example.com>
+  To: Recipient <recipient@example.com>
+  X-Mailer: Home Assistant
+  Date: Sat, 02 May 2026 20:09:37 -0700
+  Message-Id: <177777777700.12345.12345678901234567890@mock>
+  
+  --===============1234567890123456789==.0
+  Content-Type: multipart/alternative; boundary="===============1234567890123456789=="
+  MIME-Version: 1.0
+  
+  --===============1234567890123456789==
+  Content-Type: text/plain; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  SGVsbG8gV29ybGQ=
+  
+  --===============1234567890123456789==
+  Content-Type: text/html; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  PGh0bWw+PGJvZHk+PGltZyBzcmM9ImNpZDoxMzEyIj48L2JvZHk+PC9odG1sPg==
+  
+  --===============1234567890123456789==--
+  
+  --===============1234567890123456789==.0
+  Content-Type: image/jpeg
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  Content-ID: <1312>
+  Content-Disposition: inline; filename="Epic Sax Guy 10 Hours.jpg"
+  
+  SSBwbGF5IHRoZSBzYXgK
+  
+  --===============1234567890123456789==.0--
+  
+  '''
+# ---
+# name: test_smtp_send_message_image_source
+  '''
+  Content-Type: multipart/related; boundary="===============1234567890123456789==.0"
+  MIME-Version: 1.0
+  Subject: Home Assistant
+  From: Home Assistant <email@example.com>
+  To: Recipient <recipient@example.com>
+  X-Mailer: Home Assistant
+  Date: Sat, 02 May 2026 20:09:37 -0700
+  Message-Id: <177777777700.12345.12345678901234567890@mock>
+  
+  --===============1234567890123456789==.0
+  Content-Type: multipart/alternative; boundary="===============1234567890123456789=="
+  MIME-Version: 1.0
+  
+  --===============1234567890123456789==
+  Content-Type: text/plain; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  SGVsbG8gV29ybGQ=
+  
+  --===============1234567890123456789==
+  Content-Type: text/html; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  PGh0bWw+PGJvZHk+PGltZyBzcmM9ImNpZDoxMzEyIj48L2JvZHk+PC9odG1sPg==
+  
+  --===============1234567890123456789==--
+  
+  --===============1234567890123456789==.0
+  Content-Type: image/jpeg
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  Content-ID: <1312>
+  Content-Disposition: inline; filename="test.png"
+  
+  iVBORw==
+  
+  --===============1234567890123456789==.0--
+  
+  '''
+# ---
+# name: test_smtp_send_message_local_media_source
+  '''
+  Content-Type: multipart/related; boundary="===============1234567890123456789==.0"
+  MIME-Version: 1.0
+  Subject: Home Assistant
+  From: Home Assistant <email@example.com>
+  To: Recipient <recipient@example.com>
+  X-Mailer: Home Assistant
+  Date: Sat, 02 May 2026 20:09:37 -0700
+  Message-Id: <177777777700.12345.12345678901234567890@mock>
+  
+  --===============1234567890123456789==.0
+  Content-Type: multipart/alternative; boundary="===============1234567890123456789=="
+  MIME-Version: 1.0
+  
+  --===============1234567890123456789==
+  Content-Type: text/plain; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  SGVsbG8gV29ybGQ=
+  
+  --===============1234567890123456789==--
+  
+  --===============1234567890123456789==.0
+  Content-Type: application/octet-stream
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  Content-Disposition: attachment; filename="epic.mp4"
+  
+  SSBwbGF5IHRoZSBzYXgK
+  
+  --===============1234567890123456789==.0--
+  
+  '''
+# ---
+# name: test_smtp_send_message_tts_source
+  '''
+  Content-Type: multipart/related; boundary="===============1234567890123456789==.0"
+  MIME-Version: 1.0
+  Subject: Home Assistant
+  From: Home Assistant <email@example.com>
+  To: Recipient <recipient@example.com>
+  X-Mailer: Home Assistant
+  Date: Sat, 02 May 2026 20:09:37 -0700
+  Message-Id: <177777777700.12345.12345678901234567890@mock>
+  
+  --===============1234567890123456789==.0
+  Content-Type: multipart/alternative; boundary="===============1234567890123456789=="
+  MIME-Version: 1.0
+  
+  --===============1234567890123456789==
+  Content-Type: text/plain; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  SGVsbG8gV29ybGQ=
+  
+  --===============1234567890123456789==
+  Content-Type: text/html; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  
+  PGh0bWw+PGJvZHk+PGltZyBzcmM9ImNpZDoxMzEyIj48L2JvZHk+PC9odG1sPg==
+  
+  --===============1234567890123456789==--
+  
+  --===============1234567890123456789==.0
+  Content-Type: application/octet-stream
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: base64
+  Content-Disposition: attachment; filename="helloworld.mp3"
+  
+  SGVsbG8gV29ybGQh
+  
+  --===============1234567890123456789==.0--
+  
+  '''
+# ---

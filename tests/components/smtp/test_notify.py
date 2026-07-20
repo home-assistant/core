@@ -15,6 +15,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import camera, image
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TARGET,
@@ -22,6 +23,10 @@ from homeassistant.components.notify import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.components.smtp.const import (
+    ATTR_ATTACHMENT,
+    ATTR_ATTACHMENTS,
+    ATTR_CONTENT_ID,
+    ATTR_FILENAME,
     ATTR_HTML,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
@@ -44,6 +49,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import create_client_context
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -245,6 +251,7 @@ async def test_notify_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     smtp: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test sending an email message via notify.send_message action."""
 
@@ -272,22 +279,9 @@ async def test_notify_send_message(
     assert state
     assert state.state == "2026-05-03T03:09:37+00:00"
 
-    smtp.sendmail.assert_called_once_with(
-        "email@example.com",
-        "recipient@example.com",
-        (
-            'Content-Type: text/plain; charset="us-ascii"\n'
-            "MIME-Version: 1.0\n"
-            "Content-Transfer-Encoding: 7bit\n"
-            "Subject: Home Assistant\n"
-            "From: Home Assistant <email@example.com>\n"
-            "To: Recipient <recipient@example.com>\n"
-            "X-Mailer: Home Assistant\n"
-            "Date: Sat, 02 May 2026 20:09:37 -0700\n"
-            "Message-Id: <177777777700.12345.12345678901234567890@mock>\n\n"
-            "Hello World"
-        ),
-    )
+    assert smtp.sendmail.call_args[0][0] == "email@example.com"
+    assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
+    assert smtp.sendmail.call_args[0][2] == snapshot
 
 
 @pytest.mark.parametrize(
@@ -403,6 +397,7 @@ async def test_smtp_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     smtp: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test sending an email message via smtp.send_message action."""
 
@@ -422,7 +417,7 @@ async def test_smtp_send_message(
         {
             ATTR_ENTITY_ID: "notify.home_assistant_recipient",
             ATTR_MESSAGE: "Hello World",
-            ATTR_HTML: """<html>\n    <body>\n        <img src="cid:avatar.png">\n    </body>\n</html>""",
+            ATTR_HTML: """<html><body><img src="cid:avatar.png"></body></html>""",
         },
         blocking=True,
     )
@@ -431,31 +426,184 @@ async def test_smtp_send_message(
     assert state
     assert state.state == "2026-05-03T03:09:37+00:00"
 
-    smtp.sendmail.assert_called_once_with(
-        "email@example.com",
-        "recipient@example.com",
-        'Content-Type: multipart/related; boundary="===============1234567890123456789==.0"\n'
-        "MIME-Version: 1.0\n"
-        "Subject: Home Assistant\n"
-        "From: Home Assistant <email@example.com>\n"
-        "To: Recipient <recipient@example.com>\n"
-        "X-Mailer: Home Assistant\n"
-        "Date: Sat, 02 May 2026 20:09:37 -0700\n"
-        "Message-Id: <177777777700.12345.12345678901234567890@mock>\n\n"
-        "--===============1234567890123456789==.0\n"
-        'Content-Type: multipart/alternative; boundary="===============1234567890123456789=="\n'
-        "MIME-Version: 1.0\n\n"
-        "--===============1234567890123456789==\n"
-        'Content-Type: text/plain; charset="utf-8"\n'
-        "MIME-Version: 1.0\n"
-        "Content-Transfer-Encoding: base64\n\n"
-        "SGVsbG8gV29ybGQ=\n\n"
-        "--===============1234567890123456789==\n"
-        'Content-Type: text/html; charset="utf-8"\n'
-        "MIME-Version: 1.0\n"
-        "Content-Transfer-Encoding: base64\n\n"
-        "PGh0bWw+CiAgICA8Ym9keT4KICAgICAgICA8aW1nIHNyYz0iY2lkOmF2YXRhci5wbmciPgogICAg\n"
-        "PC9ib2R5Pgo8L2h0bWw+\n\n"
-        "--===============1234567890123456789==--\n\n"
-        "--===============1234567890123456789==.0--\n",
+    assert smtp.sendmail.call_args[0][0] == "email@example.com"
+    assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
+    assert smtp.sendmail.call_args[0][2] == snapshot
+
+
+@pytest.mark.usefixtures("make_msgid", "randrange")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_smtp_send_message_local_media_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sending an email message via smtp.send_message action with attachment from local media source."""
+    assert await async_setup_component(hass, "media_source", {})
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+            ATTR_MESSAGE: "Hello World",
+            ATTR_ATTACHMENTS: [
+                {
+                    ATTR_ATTACHMENT: {
+                        "media_content_id": (
+                            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                        ),
+                        "media_content_type": "video/mp4",
+                    },
+                    ATTR_FILENAME: "epic.mp4",
+                }
+            ],
+        },
+        blocking=True,
     )
+
+    assert smtp.sendmail.call_args[0][0] == "email@example.com"
+    assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
+    assert smtp.sendmail.call_args[0][2] == snapshot
+
+
+@pytest.mark.usefixtures("make_msgid", "randrange")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_smtp_send_message_camera_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sending an email message via smtp.send_message action with attachment from camera source snapshot."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with (
+        patch(
+            "homeassistant.components.camera.async_get_image",
+            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
+        ) as mock_get_image,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+                ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
+                ATTR_ATTACHMENTS: [
+                    {
+                        ATTR_ATTACHMENT: {
+                            "media_content_id": "media-source://camera/camera.demo_camera",
+                            "media_content_type": "image/jpeg",
+                        },
+                        ATTR_FILENAME: "Epic Sax Guy 10 Hours.jpg",
+                        ATTR_CONTENT_ID: "1312",
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    mock_get_image.assert_called_once_with(hass, "camera.demo_camera")
+    assert smtp.sendmail.call_args[0][0] == "email@example.com"
+    assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
+    assert smtp.sendmail.call_args[0][2] == snapshot
+
+
+@pytest.mark.usefixtures("make_msgid", "randrange")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_smtp_send_message_image_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sending an email message via smtp.send_message action with attachment from image source."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with patch(
+        "homeassistant.components.image.async_get_image",
+        return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+    ) as mock_get_image:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+                ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
+                ATTR_ATTACHMENTS: [
+                    {
+                        ATTR_ATTACHMENT: {
+                            "media_content_id": "media-source://image/image.test",
+                            "media_content_type": "image/png",
+                        },
+                        ATTR_FILENAME: "test.png",
+                        ATTR_CONTENT_ID: "1312",
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    mock_get_image.assert_called_once_with(hass, "image.test")
+    assert smtp.sendmail.call_args[0][0] == "email@example.com"
+    assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
+    assert smtp.sendmail.call_args[0][2] == snapshot
+
+
+@pytest.mark.usefixtures("make_msgid", "randrange")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_smtp_send_message_tts_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sending an email message via smtp.send_message action with audio attachment from tts source."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with patch(
+        "homeassistant.components.tts.async_get_media_source_audio",
+        return_value=("mp3", b"Hello World!"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+                ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
+                ATTR_ATTACHMENTS: [
+                    {
+                        ATTR_ATTACHMENT: {
+                            "media_content_id": "media-source://tts/demo?message=Hello+World%21&language=en",
+                            "media_content_type": "audio/mp3",
+                        },
+                        ATTR_FILENAME: "helloworld.mp3",
+                    }
+                ],
+            },
+            blocking=True,
+        )
+
+    assert smtp.sendmail.call_args[0][0] == "email@example.com"
+    assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
+    assert smtp.sendmail.call_args[0][2] == snapshot
