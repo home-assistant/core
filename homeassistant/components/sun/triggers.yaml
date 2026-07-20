@@ -15,6 +15,25 @@
   selector:
     duration:
 
+.offset: &trigger_offset
+  offset:
+    required: true
+    default:
+      hours: 0
+      minutes: 0
+      seconds: 0
+    selector:
+      duration:
+  offset_type:
+    required: true
+    default: before
+    selector:
+      select:
+        translation_key: trigger_offset_type
+        options:
+          - before
+          - after
+
 .elevation_threshold_entity: &trigger_elevation_threshold_entity
   - domain: input_number
     unit_of_measurement: "°"
@@ -29,18 +48,31 @@
   mode: box
   unit_of_measurement: "°"
 
-sunrise: {}
-sunset: {}
-solar_noon: {}
-solar_midnight: {}
+sunrise:
+  fields:
+    <<: *trigger_offset
+
+sunset:
+  fields:
+    <<: *trigger_offset
+
+solar_noon:
+  fields:
+    <<: *trigger_offset
+
+solar_midnight:
+  fields:
+    <<: *trigger_offset
 
 dawn:
   fields:
     type: *twilight_type
+    <<: *trigger_offset
 
 dusk:
   fields:
     type: *twilight_type
+    <<: *trigger_offset
 
 elevation_changed:
   fields:

@@ -2,6 +2,10 @@
   "common": {
     "condition_threshold_name": "Threshold type",
     "trigger_for_name": "For at least",
+    "trigger_offset_description": "Time to offset the trigger from the solar event.",
+    "trigger_offset_name": "Offset",
+    "trigger_offset_type_description": "Whether to trigger before or after the solar event.",
+    "trigger_offset_type_name": "Offset type",
     "trigger_threshold_name": "Threshold type",
     "twilight_type_description": "The phase of twilight.",
     "twilight_type_name": "Twilight type"
@@ -95,6 +99,12 @@
     }
   },
   "selector": {
+    "trigger_offset_type": {
+      "options": {
+        "after": "After",
+        "before": "Before"
+      }
+    },
     "twilight_type": {
       "options": {
         "any": "Any",
@@ -109,6 +119,14 @@
     "dawn": {
       "description": "Triggers at dawn, when civil, nautical, or astronomical twilight begins.",
       "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
         "type": {
           "description": "[%key:component::sun::common::twilight_type_description%]",
           "name": "[%key:component::sun::common::twilight_type_name%]"
@@ -119,6 +137,14 @@
     "dusk": {
       "description": "Triggers at dusk, when civil, nautical, or astronomical twilight ends.",
       "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        },
         "type": {
           "description": "[%key:component::sun::common::twilight_type_description%]",
           "name": "[%key:component::sun::common::twilight_type_name%]"
@@ -149,18 +175,58 @@
     },
     "solar_midnight": {
       "description": "Triggers when the sun reaches its lowest point.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
       "name": "Solar midnight"
     },
     "solar_noon": {
       "description": "Triggers when the sun reaches its highest point.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
       "name": "Solar noon"
     },
     "sunrise": {
       "description": "Triggers when the sun rises.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
       "name": "Sunrise"
     },
     "sunset": {
       "description": "Triggers when the sun sets.",
+      "fields": {
+        "offset": {
+          "description": "[%key:component::sun::common::trigger_offset_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_name%]"
+        },
+        "offset_type": {
+          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
+          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
+        }
+      },
       "name": "Sunset"
     }
   }
