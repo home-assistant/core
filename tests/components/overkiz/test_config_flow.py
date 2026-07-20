@@ -1322,6 +1322,32 @@ async def test_zeroconf_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_local_zeroconf_flow_updates_host(hass: HomeAssistant) -> None:
+    """Test that rediscovery of a local gateway refreshes the stored host."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "host": "gateway-1234-5678-9123.local:9999",
+            "token": TEST_TOKEN,
+            "verify_ssl": False,
+            "hub": TEST_SERVER,
+            "api_type": "local",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=FAKE_ZERO_CONF_INFO_LOCAL,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data["host"] == "gateway-1234-5678-9123.local:8443"
+
+
 @pytest.fixture
 async def setup_rexel_credentials(hass: HomeAssistant) -> None:
     """Set up the application credential used by the Rexel OAuth2 flow."""
