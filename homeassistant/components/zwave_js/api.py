@@ -90,6 +90,7 @@ from .const import (
 from .helpers import (
     CannotConnect,
     async_enable_statistics,
+    async_get_config_entry_from_node,
     async_get_node_from_device_id,
     async_get_provisioning_entry_from_device_id,
     async_get_version_info,
@@ -2738,7 +2739,10 @@ def _get_node_statistics_dict(
         """Convert a node to a device id."""
         driver = node.client.driver
         assert driver
-        device = dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+        entry = async_get_config_entry_from_node(hass, node)
+        device = dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, node), entry.entry_id
+        )
         assert device
         return device.id
 
