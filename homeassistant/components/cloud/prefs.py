@@ -1,7 +1,7 @@
 """Preference management for cloud."""
 
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import Any, override
 import uuid
 
 from hass_nabucasa.voice import MAP_VOICE, Gender
@@ -9,12 +9,13 @@ from hass_nabucasa.voice import MAP_VOICE, Gender
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
-from homeassistant.components.google_assistant.http import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.google_assistant.http import (  # pylint: disable=home-assistant-component-root-import
     async_get_users as async_get_google_assistant_users,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
@@ -23,6 +24,7 @@ from .const import (
     DEFAULT_GOOGLE_REPORT_STATE,
     DEFAULT_TTS_DEFAULT_VOICE,
     DOMAIN,
+    ONBOARDING_ITEMS,
     PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_ENTITY_CONFIGS,
     PREF_ALEXA_REPORT_STATE,
@@ -41,6 +43,8 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_GOOGLE_SETTINGS_VERSION,
     PREF_INSTANCE_ID,
+    PREF_ONBOARDED_ITEMS,
+    PREF_ONBOARDING_POSTPONED_UNTIL,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_REMOTE_DOMAIN,
     PREF_TTS_DEFAULT_VOICE,
@@ -58,6 +62,7 @@ GOOGLE_SETTINGS_VERSION = 3
 class CloudPreferencesStore(Store):
     """Store cloud preferences."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -174,6 +179,8 @@ class CloudPreferences:
         google_settings_version: int | UndefinedType = UNDEFINED,
         remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
         remote_domain: str | None | UndefinedType = UNDEFINED,
+        onboarded_items: list[str] | UndefinedType = UNDEFINED,
+        onboarding_postponed_until: str | None | UndefinedType = UNDEFINED,
         remote_enabled: bool | UndefinedType = UNDEFINED,
         tts_default_voice: tuple[str, str] | UndefinedType = UNDEFINED,
     ) -> None:
@@ -196,6 +203,8 @@ class CloudPreferences:
                     (PREF_GOOGLE_REPORT_STATE, google_report_state),
                     (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
                     (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
+                    (PREF_ONBOARDED_ITEMS, onboarded_items),
+                    (PREF_ONBOARDING_POSTPONED_UNTIL, onboarding_postponed_until),
                     (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
                     (PREF_REMOTE_DOMAIN, remote_domain),
                     (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
@@ -246,6 +255,8 @@ class CloudPreferences:
             PREF_GOOGLE_DEFAULT_EXPOSE: self.google_default_expose,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
+            PREF_ONBOARDED_ITEMS: self.onboarded_items,
+            PREF_ONBOARDING_POSTPONED_UNTIL: self.onboarding_postponed_until,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
         }
@@ -284,7 +295,8 @@ class CloudPreferences:
     def alexa_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Alexa.
 
-        Can return None, in which case for backwards should be interpreted as allow all domains.
+        Can return None, in which case for backwards
+        should be interpreted as allow all domains.
         """
         return self._prefs.get(PREF_ALEXA_DEFAULT_EXPOSE)
 
@@ -342,7 +354,8 @@ class CloudPreferences:
     def google_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Google.
 
-        Can return None, in which case for backwards should be interpreted as allow all domains.
+        Can return None, in which case for backwards
+        should be interpreted as allow all domains.
         """
         return self._prefs.get(PREF_GOOGLE_DEFAULT_EXPOSE)
 
@@ -355,6 +368,31 @@ class CloudPreferences:
     def instance_id(self) -> str | None:
         """Return the instance ID."""
         return self._prefs.get(PREF_INSTANCE_ID)
+
+    @property
+    def onboarded_items(self) -> list[str]:
+        """Return list of completed onboarding items."""
+        onboarded_items: list[str] = self._prefs.get(PREF_ONBOARDED_ITEMS, [])
+        return onboarded_items
+
+    @property
+    def onboarding_completed(self) -> bool:
+        """Return if all onboarding items are completed."""
+        return ONBOARDING_ITEMS.issubset(self.onboarded_items)
+
+    @property
+    def onboarding_postponed_until(self) -> str | None:
+        """Return the datetime until which onboarding is postponed."""
+        return self._prefs.get(PREF_ONBOARDING_POSTPONED_UNTIL)
+
+    @property
+    def onboarding_postponed(self) -> bool:
+        """Return if onboarding is currently postponed."""
+        if (postponed_until := self.onboarding_postponed_until) is None:
+            return False
+        if (parsed := dt_util.parse_datetime(postponed_until)) is None:
+            return False
+        return parsed > dt_util.utcnow()
 
     @property
     def tts_default_voice(self) -> tuple[str, str]:
@@ -427,6 +465,8 @@ class CloudPreferences:
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_INSTANCE_ID: uuid.uuid4().hex,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
+            PREF_ONBOARDED_ITEMS: [],
+            PREF_ONBOARDING_POSTPONED_UNTIL: None,
             PREF_REMOTE_DOMAIN: None,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: True,
             PREF_USERNAME: username,

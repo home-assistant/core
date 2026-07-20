@@ -1,17 +1,21 @@
 """The Nobø Ecohub integration."""
 
-from pynobo import nobo
+import logging
+
+from pynobo import PynoboConnectionError, nobo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -22,6 +26,8 @@ from .const import (
     DOMAIN,
     NOBO_MANUFACTURER,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
@@ -47,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
 
     try:
         hub = await _connect(stored_ip)
-    except OSError as err:
+    except PynoboConnectionError as err:
         # Stored IP may be stale - try UDP rediscovery to pick up a new
         # DHCP lease (or a hub that's been moved).
         discovered = await nobo.async_discover_hubs(serial=serial)
@@ -60,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
         new_ip, _ = next(iter(discovered))
         try:
             hub = await _connect(new_ip)
-        except OSError as rediscover_err:
+        except PynoboConnectionError as rediscover_err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -78,12 +84,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
     )
+
+    def _log_connection_state(_hub: nobo, connected: bool) -> None:
+        """Log hub connection-state transitions."""
+        if connected:
+            _LOGGER.info("Reconnected to Nobø Ecohub %s", serial)
+        else:
+            _LOGGER.info("Lost connection to Nobø Ecohub %s", serial)
+
+    hub.register_connection_callback(_log_connection_state)
+    entry.async_on_unload(
+        lambda: hub.deregister_connection_callback(_log_connection_state)
+    )
     entry.runtime_data = hub
 
     device_registry = dr.async_get(hass)
+    connections: set[tuple[str, str]] = set()
+    if mac := entry.data.get(CONF_MAC):
+        connections.add((CONNECTION_NETWORK_MAC, mac))
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hub.hub_serial)},
+        connections=connections,
         serial_number=hub.hub_serial,
         name=hub.hub_info[ATTR_NAME],
         manufacturer=NOBO_MANUFACTURER,
@@ -93,6 +115,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def _cleanup_devices(_hub: nobo) -> None:
+        """Remove devices for zones and components no longer on the hub."""
+        if not hub.connected:
+            # While disconnected pynobo may hold stale topology; only reconcile
+            # against a live, fully-synced hub.
+            return
+        expected_identifiers = {(DOMAIN, hub.hub_serial)}
+        expected_identifiers.update(
+            (DOMAIN, f"{hub.hub_serial}:{zone_id}") for zone_id in hub.zones
+        )
+        expected_identifiers.update((DOMAIN, serial) for serial in hub.components)
+        # Runs inside pynobo's update-callback dispatch: removing a device
+        # deregisters its entities' callbacks mid-iteration, which can skip a
+        # following callback. Safe because a pynobo message carries a single
+        # topology change, so a removal never coincides with a surviving
+        # entity's update in the same dispatch.
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            if device.identifiers.isdisjoint(expected_identifiers):
+                device_registry.async_remove_device(device.id)
+
+    _cleanup_devices(hub)
+    hub.register_callback(_cleanup_devices)
+    entry.async_on_unload(lambda: hub.deregister_callback(_cleanup_devices))
 
     await hub.start()
 

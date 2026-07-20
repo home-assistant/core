@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue, InvalidByteValueError
@@ -86,6 +86,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                 ) from ex
         return None
 
+    @override
     async def _async_update_data(self) -> CometBlueCoordinatorData:
         """Poll the device."""
         data = CometBlueCoordinatorData()
@@ -96,7 +97,8 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
             try:
                 retry_count += 1
                 async with self.device:
-                    # temperatures are required and must trigger a retry if not available
+                    # temperatures are required and must trigger
+                    # a retry if not available
                     if not data.temperatures:
                         data.temperatures = await self.device.get_temperature_async()
                     # holiday and battery are optional and should not trigger a retry

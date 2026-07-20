@@ -18,7 +18,8 @@ def icon_value_validator(value: Any) -> str:
     value = cv.string_with_no_html(value)
     if not value.startswith("mdi:"):
         raise vol.Invalid(
-            "The icon needs to be a valid icon from Material Design Icons and start with `mdi:`"
+            "The icon needs to be a valid icon from Material"
+            " Design Icons and start with `mdi:`"
         )
     return str(value)
 

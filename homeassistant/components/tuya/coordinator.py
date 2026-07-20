@@ -3,7 +3,9 @@
 from pathlib import Path
 from typing import Any
 
-from tuya_device_handlers.devices import TUYA_QUIRKS_REGISTRY, register_tuya_quirks
+import requests
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
@@ -13,7 +15,7 @@ from tuya_sharing import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
@@ -28,6 +30,7 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
+from .util import get_device_info
 
 type TuyaConfigEntry = ConfigEntry[DeviceListener]
 
@@ -78,6 +81,9 @@ class DeviceListener(SharingDeviceListener):
         # Get all devices from Tuya, makes blocking web calls
         try:
             manager.update_device_cache()
+        except requests.exceptions.ConnectionError as exc:
+            msg = "Unable to connect to Tuya"
+            raise ConfigEntryNotReady(msg) from exc
         except Exception as exc:
             # While in general, we should avoid catching broad exceptions,
             # we have no other way of detecting this case.
@@ -145,14 +151,7 @@ class DeviceListener(SharingDeviceListener):
 
         device_registry.async_get_or_create(
             config_entry_id=self._entry.entry_id,
-            identifiers={(DOMAIN, device.id)},
-            manufacturer="Tuya",
-            name=device.name,
-            # Note: the model is overridden via entity.device_info property
-            # when the entity is created. If no entities are generated, it will
-            # stay as unsupported
-            model=f"{device.product_name} (unsupported)",
-            model_id=device.product_id,
+            **get_device_info(device, initial=True),
         )
 
     def remove_device(self, device_id: str) -> None:

@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, override
 
 from tplink_omada_client import OmadaSiteClient, OmadaSwitchPortDetails
 from tplink_omada_client.clients import OmadaWirelessClient
@@ -53,6 +53,7 @@ class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
         )
         self.omada_client = omada_client
 
+    @override
     async def _async_update_data(self) -> dict[str, _T]:
         """Fetch data from API endpoint."""
         try:
@@ -86,6 +87,7 @@ class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):
         )
         self._network_switch = network_switch
 
+    @override
     async def poll_update(self) -> dict[str, OmadaSwitchPortDetails]:
         """Poll a switch's current state."""
         ports = await self.omada_client.get_switch_ports(self._network_switch)
@@ -106,6 +108,7 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         super().__init__(hass, config_entry, omada_client, "Gateway", POLL_GATEWAY)
         self.mac = mac
 
+    @override
     async def poll_update(self) -> dict[str, OmadaGateway]:
         """Poll a the gateway's current state."""
         gateway = await self.omada_client.get_gateway(self.mac)
@@ -124,6 +127,7 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
 
+    @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
         return {d.mac: d for d in await self.omada_client.get_devices()}
@@ -141,6 +145,7 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "ClientsList", POLL_CLIENTS)
 
+    @override
     async def poll_update(self) -> dict[str, OmadaWirelessClient]:
         """Poll the site's current active wi-fi clients."""
         return {
@@ -158,7 +163,7 @@ class FirmwareUpdateStatus(NamedTuple):
 
 
 class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
-    """Coordinator for getting details about available firmware updates for Omada devices."""
+    """Coordinator for Omada device firmware update details."""
 
     def __init__(
         self,
@@ -202,6 +207,7 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         )
         return updates
 
+    @override
     async def poll_update(self) -> dict[str, FirmwareUpdateStatus]:
         """Poll the state of Omada Devices firmware update availability."""
         return {d.device.mac: d for d in await self._get_firmware_updates()}

@@ -10,6 +10,15 @@ ATTR_IS_CLOSED = "is_closed"
 ATTR_POSITION = "position"
 ATTR_TILT_POSITION = "tilt_position"
 
+
+class CoverEntityStateAttribute(StrEnum):
+    """State attributes for cover entities."""
+
+    IS_CLOSED = "is_closed"
+    CURRENT_POSITION = "current_position"
+    CURRENT_TILT_POSITION = "current_tilt_position"
+
+
 INTENT_OPEN_COVER = "HassOpenCover"
 INTENT_CLOSE_COVER = "HassCloseCover"
 

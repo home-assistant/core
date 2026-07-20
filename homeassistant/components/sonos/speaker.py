@@ -17,10 +17,11 @@ from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
 from sonos_websocket import SonosWebsocket
+from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -44,6 +45,7 @@ from .const import (
     SONOS_CREATE_ALARM,
     SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
+    SONOS_CREATE_BUTTON,
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
@@ -186,6 +188,9 @@ class SonosSpeaker:
         self.snapshot_group: list[SonosSpeaker] = []
         self._group_members_missing: set[str] = set()
 
+        # Announcement tracking
+        self.last_announce_id: str | None = None
+
     async def async_setup(
         self,
         entry: SonosConfigEntry,
@@ -198,6 +203,7 @@ class SonosSpeaker:
             self._battery_poll_timer = async_track_time_interval(
                 self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
             )
+        entry.async_on_unload(self.async_shutdown)
 
         self.websocket = SonosWebsocket(
             self.soco.ip_address,
@@ -260,6 +266,7 @@ class SonosSpeaker:
 
         dispatches.append((SONOS_CREATE_SELECTS, self))
         dispatches.append((SONOS_CREATE_SWITCHES, self))
+        dispatches.append((SONOS_CREATE_BUTTON, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
 
@@ -351,7 +358,7 @@ class SonosSpeaker:
     def log_subscription_result(
         self, result: Any, event: str, level: int = logging.DEBUG
     ) -> None:
-        """Log a message if a subscription action (create/renew/stop) results in an exception."""
+        """Log if a subscription action results in an exception."""
         if not isinstance(result, Exception):
             return
 
@@ -438,6 +445,17 @@ class SonosSpeaker:
         for result in results:
             self.log_subscription_result(result, "Unsubscribe")
         self._subscriptions = []
+
+    @callback
+    def async_shutdown(self) -> None:
+        """Cancel speaker-owned timers during unload."""
+        if self._battery_poll_timer:
+            self._battery_poll_timer()
+            self._battery_poll_timer = None
+
+        if self._poll_timer:
+            self._poll_timer()
+            self._poll_timer = None
 
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
@@ -966,7 +984,8 @@ class SonosSpeaker:
             new_members = set(sonos_group[1:])
             removed_members = old_members - new_members
             for removed_speaker in removed_members:
-                # Only clear if this speaker was coordinated by self and in the same group
+                # Only clear if this speaker was coordinated
+                # by self and in the same group
                 if (
                     removed_speaker.coordinator == self
                     and removed_speaker.sonos_group is self.sonos_group
@@ -1176,10 +1195,12 @@ class SonosSpeaker:
             if not with_group:
                 return groups
 
-            # Unjoin non-coordinator speakers not contained in the desired snapshot group
+            # Unjoin non-coordinator speakers not contained in
+            # the desired snapshot group
             #
-            # If a coordinator is unjoined from its group, another speaker from the group
-            # will inherit the coordinator's playqueue and its own playqueue will be lost
+            # If a coordinator is unjoined from its group,
+            # another speaker from the group will inherit the
+            # coordinator's playqueue and its own will be lost
             speakers_to_unjoin = set()
             for speaker in speakers:
                 if speaker.sonos_group == speaker.snapshot_group:
@@ -1265,7 +1286,8 @@ class SonosSpeaker:
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
             group_description = "; ".join(
-                f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
+                f"{group[0].zone_name}: "
+                f"{', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
             )
             raise HomeAssistantError(
@@ -1277,6 +1299,35 @@ class SonosSpeaker:
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
+
+    async def async_cancel_announcement(self) -> None:
+        """Cancel the current announcement audio clip."""
+        if self.last_announce_id is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cancel_announcement_no_id",
+            )
+        if not self.websocket:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="announcement_connection_error",
+                translation_placeholders={"error": "websocket not available"},
+            )
+        try:
+            response, _ = await self.websocket.cancel_clip(self.last_announce_id)
+        except SonosWebsocketError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="announcement_connection_error",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        if not response.get("success"):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cancel_announcement_error",
+                translation_placeholders={"response": str(response)},
+            )
+        self.last_announce_id = None
 
     #
     # Media and playback state handlers

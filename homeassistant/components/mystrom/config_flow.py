@@ -1,7 +1,7 @@
 """Config flow for myStrom integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import pymystrom
 from pymystrom.exceptions import MyStromConnectionError
@@ -19,6 +19,8 @@ DEFAULT_NAME = "myStrom Device"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
     }
@@ -32,6 +34,7 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -53,6 +56,7 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

@@ -8,10 +8,18 @@ from nacl.secret import SecretBox
 
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import SourceType
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
+from homeassistant.components.zone import ZoneEntityStateAttribute
+from homeassistant.const import STATE_HOME, EntityStateAttribute
 from homeassistant.util import decorator, dt as dt_util, slugify
 
-from .const import ATTR_UPDATE_TIMESTAMP
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_BATTERY_STATUS,
+    ATTR_COURSE,
+    ATTR_TID,
+    ATTR_UPDATE_TIMESTAMP,
+    ATTR_VELOCITY,
+)
 from .helper import supports_encryption
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,15 +80,15 @@ def _parse_see_args(message, subscribe_topic):
     if "batt" in message:
         kwargs["battery"] = message["batt"]
     if "vel" in message:
-        kwargs["attributes"]["velocity"] = message["vel"]
+        kwargs["attributes"][ATTR_VELOCITY] = message["vel"]
     if "tid" in message:
-        kwargs["attributes"]["tid"] = message["tid"]
+        kwargs["attributes"][ATTR_TID] = message["tid"]
     if "addr" in message:
-        kwargs["attributes"]["address"] = message["addr"]
+        kwargs["attributes"][ATTR_ADDRESS] = message["addr"]
     if "cog" in message:
-        kwargs["attributes"]["course"] = message["cog"]
+        kwargs["attributes"][ATTR_COURSE] = message["cog"]
     if "bs" in message:
-        kwargs["attributes"]["battery_status"] = message["bs"]
+        kwargs["attributes"][ATTR_BATTERY_STATUS] = message["bs"]
     if "t" in message:
         if message["t"] in ("c", "u"):
             kwargs["source_type"] = SourceType.GPS
@@ -101,10 +109,10 @@ def _set_gps_from_zone(kwargs, location, zone):
     """
     if zone is not None:
         kwargs["gps"] = (
-            zone.attributes[ATTR_LATITUDE],
-            zone.attributes[ATTR_LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
         )
-        kwargs["gps_accuracy"] = zone.attributes["radius"]
+        kwargs["gps_accuracy"] = zone.attributes[ZoneEntityStateAttribute.RADIUS]
         kwargs["location_name"] = location
     return kwargs
 

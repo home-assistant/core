@@ -41,6 +41,7 @@ from . import (
     PRESENCE_SENSOR_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
     REMOTE_SERVICE_INFO,
+    WEATHER_STATION_SERVICE_INFO,
     WOHAND_SERVICE_INFO,
     WOHUB2_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
@@ -1170,6 +1171,59 @@ async def test_air_purifier_pm25_sensor_unknown_before_first_poll(
     # aqi_level comes from broadcast data and is always available.
     aqi_sensor = hass.states.get("sensor.test_name_air_quality_level")
     assert aqi_sensor is not None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_weather_station_sensor(hass: HomeAssistant) -> None:
+    """Test setting up creates the sensors for Weather Station."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WEATHER_STATION_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "weather_station",
+        },
+        unique_id="aabbccddeeff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 4
+
+    temperature_sensor = hass.states.get("sensor.test_name_temperature")
+    temperature_sensor_attrs = temperature_sensor.attributes
+    assert temperature_sensor.state == "26.6"
+    assert temperature_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Temperature"
+    assert temperature_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temperature_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    humidity_sensor = hass.states.get("sensor.test_name_humidity")
+    humidity_sensor_attrs = humidity_sensor.attributes
+    assert humidity_sensor.state == "35"
+    assert humidity_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Humidity"
+    assert humidity_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert humidity_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    battery_sensor = hass.states.get("sensor.test_name_battery")
+    battery_sensor_attrs = battery_sensor.attributes
+    assert battery_sensor.state == "80"
+    assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
+    assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    rssi_sensor = hass.states.get("sensor.test_name_bluetooth_signal")
+    rssi_sensor_attrs = rssi_sensor.attributes
+    assert rssi_sensor.state == "-60"
+    assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
+    assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

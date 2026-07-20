@@ -1,7 +1,6 @@
 """Tests for the Mitsubishi Comfort climate entity."""
 
-from __future__ import annotations
-
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -31,7 +30,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import _make_device_status
@@ -321,21 +320,23 @@ async def test_set_hvac_mode(
     assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
 
 
-async def test_set_hvac_mode_failed_keeps_state(
+async def test_set_hvac_mode_failed_raises_and_keeps_state(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test failed set_hvac_mode does not change reported state."""
+    """Test a failed set_hvac_mode raises and keeps state."""
     device = setup_climate
     device.set_mode = AsyncMock(return_value=CommandResult(success=False))
 
-    await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            blocking=True,
+        )
 
+    assert err.value.translation_key == "set_hvac_mode_failed"
     assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
 
 
@@ -440,22 +441,90 @@ async def test_set_temperature_high_low(
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 19.0
 
 
-async def test_set_temperature_failed_keeps_state(
+@pytest.mark.parametrize(
+    ("device_mode", "fail_method", "kept_temperature"),
+    [
+        pytest.param("cool", "set_cool_setpoint", 24.0, id="cool"),
+        pytest.param("heat", "set_heat_setpoint", 21.0, id="heat"),
+    ],
+)
+async def test_set_temperature_failed_raises_and_keeps_state(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+    device_mode: str,
+    fail_method: str,
+    kept_temperature: float,
+) -> None:
+    """Test a failed set_temperature raises and keeps the reported setpoint."""
+    device = setup_climate
+    device.status = _make_device_status(mode=device_mode)
+    await _refresh(hass, freezer)
+    setattr(device, fail_method, AsyncMock(return_value=CommandResult(success=False)))
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "set_temperature_failed"
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == kept_temperature
+
+
+async def test_set_temperature_range_failed_raises(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_climate: MagicMock,
 ) -> None:
-    """Test failed set_temperature does not change reported setpoint."""
+    """Test a failed high/low set_temperature in auto mode raises."""
     device = setup_climate
+    device.status = _make_device_status(mode="auto")
+    await _refresh(hass, freezer)
     device.set_cool_setpoint = AsyncMock(return_value=CommandResult(success=False))
+    device.set_heat_setpoint = AsyncMock(return_value=CommandResult(success=False))
 
-    await hass.services.async_call(
-        "climate",
-        "set_temperature",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TARGET_TEMP_HIGH: 25.0,
+                ATTR_TARGET_TEMP_LOW: 19.0,
+            },
+            blocking=True,
+        )
 
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 24.0
+    assert err.value.translation_key == "set_temperature_failed"
+
+
+async def test_set_temperature_no_applicable_setpoint(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_climate: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test set_temperature in a mode with no matching setpoint is ignored and logged."""
+    device = setup_climate
+    device.status = _make_device_status(mode="dry")
+    await _refresh(hass, freezer)
+
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.mitsubishi_comfort"
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+            blocking=True,
+        )
+
+    device.set_cool_setpoint.assert_not_awaited()
+    device.set_heat_setpoint.assert_not_awaited()
+    assert "no setpoint applies" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -527,21 +596,45 @@ async def test_set_fan_mode_unknown(
         )
 
 
-async def test_set_fan_mode_failed_keeps_state(
+async def test_set_fan_mode_unmapped_returns(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test failed set_fan_mode does not change reported fan mode."""
+    """Test a supported fan mode missing from the speed map does not call the device."""
+    device = setup_climate
+
+    with patch.dict(
+        "homeassistant.components.mitsubishi_comfort.climate._FAN_SPEED_MAP",
+        {"auto": FanSpeed.AUTO},
+        clear=True,
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_fan_mode",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "quiet"},
+            blocking=True,
+        )
+
+    device.set_fan_speed.assert_not_awaited()
+
+
+async def test_set_fan_mode_failed_raises_and_keeps_state(
+    hass: HomeAssistant,
+    setup_climate: MagicMock,
+) -> None:
+    """Test a failed set_fan_mode raises and keeps the reported fan mode."""
     device = setup_climate
     device.set_fan_speed = AsyncMock(return_value=CommandResult(success=False))
 
-    await hass.services.async_call(
-        "climate",
-        "set_fan_mode",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "quiet"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "climate",
+            "set_fan_mode",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "quiet"},
+            blocking=True,
+        )
 
+    assert err.value.translation_key == "set_fan_mode_failed"
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == "auto"
 
 
@@ -580,21 +673,45 @@ async def test_set_swing_mode_unknown(
         )
 
 
-async def test_set_swing_mode_failed_keeps_state(
+async def test_set_swing_mode_unmapped_returns(
     hass: HomeAssistant,
     setup_climate: MagicMock,
 ) -> None:
-    """Test failed set_swing_mode does not change reported swing mode."""
+    """Test a supported swing mode missing from the direction map does not call the device."""
+    device = setup_climate
+
+    with patch.dict(
+        "homeassistant.components.mitsubishi_comfort.climate._VANE_DIR_MAP",
+        {"auto": VaneDirection.AUTO},
+        clear=True,
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_swing_mode",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "horizontal"},
+            blocking=True,
+        )
+
+    device.set_vane_direction.assert_not_awaited()
+
+
+async def test_set_swing_mode_failed_raises_and_keeps_state(
+    hass: HomeAssistant,
+    setup_climate: MagicMock,
+) -> None:
+    """Test a failed set_swing_mode raises and keeps the reported swing mode."""
     device = setup_climate
     device.set_vane_direction = AsyncMock(return_value=CommandResult(success=False))
 
-    await hass.services.async_call(
-        "climate",
-        "set_swing_mode",
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "swing"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "climate",
+            "set_swing_mode",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "swing"},
+            blocking=True,
+        )
 
+    assert err.value.translation_key == "set_swing_mode_failed"
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == "auto"
 
 
@@ -615,6 +732,25 @@ async def test_turn_off(
 
     device.set_mode.assert_awaited_once_with(Mode.OFF)
     assert hass.states.get(ENTITY_ID).state == HVACMode.OFF
+
+
+async def test_turn_off_failed_raises(
+    hass: HomeAssistant,
+    setup_climate: MagicMock,
+) -> None:
+    """Test a failed turn_off (which routes through set_hvac_mode) raises."""
+    device = setup_climate
+    device.set_mode = AsyncMock(return_value=CommandResult(success=False))
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "climate",
+            "turn_off",
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "set_hvac_mode_failed"
 
 
 # -- Optimistic state cleared on next refresh --

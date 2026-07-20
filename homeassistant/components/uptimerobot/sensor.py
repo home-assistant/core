@@ -1,5 +1,7 @@
 """UptimeRobot sensor platform."""
 
+from typing import override
+
 from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.components.sensor import (
@@ -41,11 +43,11 @@ async def async_setup_entry(
                         "not_checked_yet",
                         "pause",
                         "seems_down",
+                        "started",
                         "up",
                     ],
                     translation_key="monitor_status",
                 ),
-                monitor=monitor,
             )
             for monitor in new_monitors
         ]
@@ -59,6 +61,7 @@ class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     """Representation of a UptimeRobot sensor."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the status of the monitor."""
         if not self._monitor.status:

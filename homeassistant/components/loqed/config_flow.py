@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from loqedAPI import cloud_loqed, loqed
@@ -79,6 +79,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("HTTP Connection error to loqed lock")
             raise CannotConnect from aiohttp.ClientError
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -97,6 +98,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -110,6 +112,8 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             if self._host
             else vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_API_TOKEN): str,
                 }

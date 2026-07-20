@@ -1,6 +1,6 @@
 """UptimeRobot switch platform."""
 
-from typing import Any
+from typing import Any, override
 
 from pyuptimerobot import UptimeRobotMonitor
 
@@ -12,7 +12,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import STATUS_UP
+from .const import STATUSES_ON
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
 from .utils import new_device_listener, uptimerobot_api_call
@@ -38,7 +38,6 @@ async def async_setup_entry(
                     key=str(monitor.id),
                     device_class=SwitchDeviceClass.SWITCH,
                 ),
-                monitor=monitor,
             )
             for monitor in new_monitors
         ]
@@ -54,17 +53,20 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
     _attr_translation_key = "monitor_status"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return bool(self._monitor.status == STATUS_UP)
+        return bool(self._monitor.status in STATUSES_ON)
 
     @uptimerobot_api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.api.async_pause_monitor(monitor_id=self._monitor.id)
         await self.coordinator.async_request_refresh()
 
     @uptimerobot_api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.api.async_start_monitor(monitor_id=self._monitor.id)

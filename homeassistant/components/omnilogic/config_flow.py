@@ -1,7 +1,7 @@
 """Config flow for Omnilogic integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from omnilogic import LoginException, OmniLogic, OmniLogicException
 import voluptuous as vol
@@ -28,12 +28,14 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -89,7 +91,7 @@ class OptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=hass-config-flow-polling-field
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(

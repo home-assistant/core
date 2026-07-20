@@ -1,6 +1,6 @@
 """Support for ISY sensors."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -261,6 +261,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         return UOM_FRIENDLY_NAME.get(uom)
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Get the state of the ISY sensor device."""
         if self.target is None:
@@ -279,10 +280,6 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         if uom in (UOM_INDEX, UOM_ON_OFF):
             return cast(str, self.target.formatted)
 
-        # Check if this is an index type and get formatted value
-        if uom == UOM_INDEX and hasattr(self.target, "formatted"):
-            return cast(str, self.target.formatted)
-
         # Handle ISY precision and rounding
         value = convert_isy_value_to_hass(value, uom, self.target.prec)
         if value is None:
@@ -296,6 +293,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         return value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Get the Home Assistant unit of measurement for the device."""
         raw_units = self.raw_unit_of_measurement
@@ -353,6 +351,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_name = f"{node.name} {name.replace('_', ' ').title()}"
 
     @property
+    @override
     def target(self) -> Node | NodeProperty | None:
         """Return target for the sensor."""
         if self._control not in self._node.aux_properties:
@@ -361,11 +360,13 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         return cast(NodeProperty, self._node.aux_properties[self._control])
 
     @property
+    @override
     def target_value(self) -> Any:
         """Return the target value."""
         return None if self.target is None else self.target.value
 
-    # pylint: disable-next=hass-missing-super-call
+    @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events.
 
@@ -385,11 +386,13 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         )
 
     @callback
+    @override
     def async_on_update(self, event: NodeProperty | NodeChangedEvent) -> None:
         """Handle a control event from the ISY Node."""
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return cast(bool, self._node.enabled)

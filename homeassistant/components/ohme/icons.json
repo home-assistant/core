@@ -60,6 +60,9 @@
         "state": {
           "off": "mdi:sleep-off"
         }
+      },
+      "solar_boost": {
+        "default": "mdi:solar-power"
       }
     },
     "time": {

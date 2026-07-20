@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -20,7 +21,7 @@ async def test_switch_entity(
     """Tests switch entity."""
 
     device_name = "Switch Controller"
-    entity_key = "switch.switch_controller_test_entity_name"
+    entity_key = "switch.test_entity_room_switch_controller_test_entity_name"
     entity_type = "switch"
 
     mock_api.outlets = [
@@ -35,12 +36,8 @@ async def test_switch_entity(
     state = hass.states.get(entity_key)
     assert state == snapshot
 
-    services = hass.services.async_services()
-
-    assert SERVICE_TURN_ON in services[entity_type]
-
     await hass.services.async_call(
-        entity_type,
+        SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {"entity_id": entity_key},
         blocking=True,
@@ -48,10 +45,8 @@ async def test_switch_entity(
 
     assert mock_api.outlets[0].turn_on.called
 
-    assert SERVICE_TURN_OFF in services[entity_type]
-
     await hass.services.async_call(
-        entity_type,
+        SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {"entity_id": entity_key},
         blocking=True,

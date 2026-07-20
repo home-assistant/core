@@ -53,8 +53,8 @@ class MockAlarmControlPanel(AlarmControlPanelEntity):
 
     def __init__(
         self,
-        supported_features: AlarmControlPanelEntityFeature = AlarmControlPanelEntityFeature(
-            0
+        supported_features: AlarmControlPanelEntityFeature = (
+            AlarmControlPanelEntityFeature(0)
         ),
         code_format: CodeFormat | None = None,
         code_arm_required: bool = True,

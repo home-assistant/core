@@ -1,9 +1,9 @@
 """Integrates Native Apps to Home Assistant."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import cloud, intent, notify as hass_notify
@@ -12,7 +12,13 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONF_WEBHOOK_ID,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -34,14 +40,14 @@ from . import (  # noqa: F401
 )
 from .const import (
     ATTR_DEVICE_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_CLEANUP_CANCEL,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
     DATA_STORE,
@@ -49,9 +55,11 @@ from .const import (
     SENSOR_TYPES,
     STORAGE_KEY,
     STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
 )
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
+from .live_activity.store import async_cleanup_expired_live_activity_tokens
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
@@ -68,23 +76,27 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    store = _MobileAppStore(
+        hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+    )
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):
-        app_config = {
-            DATA_CONFIG_ENTRIES: {},
-            DATA_DELETED_IDS: [],
-        }
+        app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
 
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
+        DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
+        DATA_LIVE_ACTIVITY_CLEANUP_CANCEL: None,
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
+
+    # Tokens can expire while Home Assistant is stopped.
+    hass.async_create_task(async_cleanup_expired_live_activity_tokens(hass))
 
     hass.http.register_view(RegistrationsView())
 
@@ -174,7 +186,8 @@ async def _async_setup_cloudhook(
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
     elif CONF_CLOUDHOOK_URL in entry.data:
-        # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
+        # If we have a cloudhook but no longer logged in
+        # to the cloud, remove it from the entry
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
@@ -238,10 +251,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 
     if CONF_CLOUDHOOK_URL in entry.data:
         with suppress(cloud.CloudNotAvailable, ValueError):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+
+
+class _MobileAppStore(Store[dict[str, Any]]):
+    """Store persisted mobile_app integration data."""
+
+    @override
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate mobile_app storage to the current version."""
+        if old_major_version == 1 and old_minor_version < 2:
+            old_data.setdefault(DATA_LIVE_ACTIVITY_TOKENS, {})
+        return old_data

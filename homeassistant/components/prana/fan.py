@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 import math
-from typing import Any
+from typing import Any, override
 
 from prana_local_api_client.models.prana_state import FanState
 
@@ -106,13 +106,15 @@ class PranaFan(PranaBaseEntity, FanEntity):
     @property
     def _api_target_key(self) -> str:
         """Return the correct target key for API commands based on bounded state."""
-        # If the device is in bound mode, both supply and extract fans control the same bounded fan speeds.
+        # If the device is in bound mode, both supply and
+        # extract fans control the same bounded fan speeds.
         if self.coordinator.data.bound:
             return PranaFanType.BOUNDED
         # Otherwise, return the specific fan type (supply or extract) for API commands.
         return self.entity_description.key
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(
@@ -120,6 +122,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
         )
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current fan speed percentage."""
         current_speed = self.entity_description.value_fn(self.coordinator).speed
@@ -127,6 +130,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
             self.entity_description.speed_range(self.coordinator), current_speed
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set fan speed (0-100%) by converting to device-specific speed steps."""
         if percentage == 0:
@@ -145,10 +149,12 @@ class PranaFan(PranaBaseEntity, FanEntity):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the fan is on."""
         return self.entity_description.value_fn(self.coordinator).is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -168,17 +174,20 @@ class PranaFan(PranaBaseEntity, FanEntity):
         if percentage is None and preset_mode is None:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.coordinator.api_client.set_speed_is_on(False, self._api_target_key)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode (e.g., night or boost)."""
         await self.coordinator.api_client.set_switch(preset_mode, True)
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if self.coordinator.data.night:

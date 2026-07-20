@@ -1,5 +1,5 @@
 """The EARN-E P1 Meter integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Listener
 

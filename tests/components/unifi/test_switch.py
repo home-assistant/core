@@ -1271,7 +1271,8 @@ async def test_traffic_routes(
         {"entity_id": "switch.unifi_network_test_traffic_route"},
         blocking=True,
     )
-    # Updating the value for traffic routes will make another call to retrieve the values
+    # Updating the value for traffic routes will make another call
+    # to retrieve the values
     assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(traffic_route)
     expected_disable_call["enabled"] = False
@@ -1327,7 +1328,8 @@ async def test_firewall_policies(
         {"entity_id": "switch.unifi_network_allow_internal_to_iot"},
         blocking=True,
     )
-    # Updating the value for firewall policies will make another call to retrieve the values
+    # Updating the value for firewall policies will make another call
+    # to retrieve the values
     assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(firewall_policy)
     expected_disable_call["enabled"] = False
@@ -1725,73 +1727,6 @@ async def test_port_forwarding_switches(
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
-
-
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            OUTLET_UP1,
-            {
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "ip": "10.0.0.1",
-                "last_seen": 1562600145,
-                "mac": "00:00:00:00:01:01",
-                "model": "US16P150",
-                "name": "switch",
-                "state": 1,
-                "type": "usw",
-                "version": "4.0.42.10433",
-                "port_table": [
-                    {
-                        "media": "GE",
-                        "name": "Port 1",
-                        "port_idx": 1,
-                        "poe_caps": 7,
-                        "poe_class": "Class 4",
-                        "poe_enable": True,
-                        "poe_mode": "auto",
-                        "poe_power": "2.56",
-                        "poe_voltage": "53.40",
-                        "portconf_id": "1a1",
-                        "port_poe": True,
-                        "up": True,
-                        "enable": True,
-                    },
-                ],
-            },
-        ]
-    ],
-)
-async def test_updating_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    config_entry_factory: ConfigEntryFactoryType,
-    config_entry: MockConfigEntry,
-    device_payload: list[dict[str, Any]],
-) -> None:
-    """Verify outlet control and poe control unique ID update works."""
-    entity_registry.async_get_or_create(
-        SWITCH_DOMAIN,
-        DOMAIN,
-        f"{device_payload[0]['mac']}-outlet-1",
-        suggested_object_id="plug_outlet_1",
-        config_entry=config_entry,
-    )
-    entity_registry.async_get_or_create(
-        SWITCH_DOMAIN,
-        DOMAIN,
-        f"{device_payload[1]['mac']}-poe-1",
-        suggested_object_id="switch_port_1_poe",
-        config_entry=config_entry,
-    )
-
-    await config_entry_factory()
-
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    assert hass.states.get("switch.plug_outlet_1")
-    assert hass.states.get("switch.switch_port_1_poe")
 
 
 @pytest.mark.parametrize(

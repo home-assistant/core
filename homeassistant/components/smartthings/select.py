@@ -1,7 +1,7 @@
 """Support for select entities through the SmartThings cloud API."""
 
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -165,13 +165,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_AMOUNT,
         entity_category=EntityCategory.CONFIG,
     ),
-    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
-        key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
-        translation_key="flexible_detergent_amount",
-        options_attribute=Attribute.SUPPORTED_AMOUNT,
-        status_attribute=Attribute.AMOUNT,
-        command=Command.SET_AMOUNT,
-        entity_category=EntityCategory.CONFIG,
+    Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: (
+        SmartThingsSelectDescription(
+            key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
+            translation_key="flexible_detergent_amount",
+            options_attribute=Attribute.SUPPORTED_AMOUNT,
+            status_attribute=Attribute.AMOUNT,
+            command=Command.SET_AMOUNT,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     Capability.SAMSUNG_CE_LAMP: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_LAMP,
@@ -361,9 +363,15 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             capabilities.update(extra_capabilities)
         super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{entity_description.key}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{entity_description.key}"
+            f"_{entity_description.status_attribute}"
+            f"_{entity_description.status_attribute}"
+        )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the list of options."""
         options: list[str] = (
@@ -383,6 +391,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         return options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         option = self.get_attribute_value(
@@ -407,6 +416,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
                 "Can only be updated when remote control is enabled"
             )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         self._validate_before_select()
@@ -453,6 +463,7 @@ class SmartThingsDishwasherWashingOptionSelectEntity(SmartThingsSelectEntity):
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the list of options."""
         device_options = self.get_attribute_value(
@@ -480,12 +491,14 @@ class SmartThingsDishwasherWashingOptionSelectEntity(SmartThingsSelectEntity):
         return [option for option in device_options if option in course_options]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.get_attribute_value(
             self.entity_description.key, self.entity_description.status_attribute
         )["value"]
 
+    @override
     def _validate_before_select(self) -> None:
         """Validate that the select can be used."""
         super()._validate_before_select()
@@ -499,6 +512,7 @@ class SmartThingsDishwasherWashingOptionSelectEntity(SmartThingsSelectEntity):
                 "Can only be updated when dishwasher machine state is stop"
             )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         self._validate_before_select()

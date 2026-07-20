@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from hole import HoleV5, HoleV6
 from hole.exceptions import HoleError
@@ -52,6 +53,7 @@ class PiHoleUpdateCoordinator(DataUpdateCoordinator[None]):
         self._name = config_entry.data[CONF_NAME]
         self._host = config_entry.data[CONF_HOST]
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from the Pi-hole API."""
         try:
@@ -70,18 +72,27 @@ class PiHoleUpdateCoordinator(DataUpdateCoordinator[None]):
                         and "/admin/api" in hint
                     ):
                         _LOGGER.warning(
-                            "Pi-hole API v6 returned an error that is expected when using v5 endpoints please re-configure your authentication"
+                            "Pi-hole API v6 returned an error that "
+                            "is expected when using v5 endpoints. "
+                            "Please reconfigure your authentication"
                         )
                         raise ConfigEntryAuthFailed
         except HoleError as err:
             if str(err) == "Authentication failed: Invalid password":
                 raise ConfigEntryAuthFailed(
-                    f"Pi-hole {self._name} at host {self._host}, reported an invalid password"
+                    f"Pi-hole {self._name} at host"
+                    f" {self._host}, reported an invalid"
+                    " password"
                 ) from err
             raise UpdateFailed(
-                f"Pi-hole {self._name} at host {self._host}, update failed with HoleError: {err}"
+                f"Pi-hole {self._name} at host"
+                f" {self._host}, update failed with"
+                f" HoleError: {err}"
             ) from err
         if not isinstance(self._api.data, dict):
             raise ConfigEntryAuthFailed(
-                f"Pi-hole {self._name} at host {self._host}, returned an unexpected response: {self._api.data}, assuming authentication failed"
+                f"Pi-hole {self._name} at host"
+                f" {self._host}, returned an unexpected"
+                f" response: {self._api.data},"
+                " assuming authentication failed"
             )

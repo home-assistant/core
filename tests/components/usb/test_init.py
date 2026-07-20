@@ -253,7 +253,7 @@ async def test_discovered_by_websocket_scan(
 async def test_discovered_by_websocket_scan_limited_by_description_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is limited by the description matcher."""
+    """Test websocket scan discovery is limited by the description matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*2652*"}
     ]
@@ -380,7 +380,7 @@ async def test_most_targeted_matcher_wins(
 async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan rejected by the description matcher."""
+    """Test websocket scan discovery rejected by the description matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*not_it*"}
     ]
@@ -418,7 +418,7 @@ async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
 async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is limited by the serial_number matcher."""
+    """Test websocket scan discovery is limited by the serial_number matcher."""
     new_usb = [
         {
             "domain": "test1",
@@ -462,7 +462,7 @@ async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
 async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is rejected by the serial_number matcher."""
+    """Test websocket scan discovery is rejected by the serial_number matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
     ]
@@ -500,7 +500,7 @@ async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
 async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is limited by the manufacturer matcher."""
+    """Test websocket scan discovery is limited by the manufacturer matcher."""
     new_usb = [
         {
             "domain": "test1",
@@ -544,7 +544,7 @@ async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
 async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is rejected by the manufacturer matcher."""
+    """Test websocket scan discovery is rejected by the manufacturer matcher."""
     new_usb = [
         {
             "domain": "test1",
@@ -587,7 +587,7 @@ async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
 async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket is rejected with empty serial number."""
+    """Test websocket discovery is rejected with empty serial number."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
     ]
@@ -662,7 +662,7 @@ async def test_discovered_by_websocket_scan_match_vid_only(
 async def test_discovered_by_websocket_scan_match_vid_wrong_pid(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan only matching vid but wrong pid."""
+    """Test websocket scan discovery matching vid but wrong pid."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "9999"}]
 
     mock_ports = [
@@ -769,7 +769,7 @@ async def test_non_matching_discovered_by_scanner_after_started(
 async def test_aiousbwatcher_on_wsl_fallback_without_throwing_exception(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that aiousbwatcher on WSL failure results in fallback to scanning without raising an exception."""
+    """Test aiousbwatcher WSL failure falls back to scanning without exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
 
     mock_ports = [
@@ -1329,7 +1329,7 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             device="/dev/ttyAMA1",
             serial_number=None,
             manufacturer=None,
-            description=None,
+            description="ttyAMA1",
         ),
         USBDevice(
             device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
@@ -1337,7 +1337,7 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             pid="4001",
             serial_number="10B41DE589FC",
             manufacturer="Nabu Casa",
-            description="ZBT-2",
+            description="ZBT-2 - Nabu Casa ZBT-2",
             bcd_device=257,
             interface_description="Nabu Casa ZBT-2",
             interface_num=0,

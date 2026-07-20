@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from aioswitcher.device import (
     DeviceCategory,
@@ -93,7 +93,7 @@ async def async_setup_entry(
     @callback
     def async_add_sensors(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add sensors from Switcher device."""
-        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+        if coordinator.data.device_type.category is DeviceCategory.POWER_PLUG:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in POWER_PLUG_SENSORS
@@ -106,7 +106,7 @@ async def async_setup_entry(
                 SwitcherSensorEntity(coordinator, description)
                 for description in HEATER_SENSORS
             )
-        elif coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+        elif coordinator.data.device_type.category is DeviceCategory.THERMOSTAT:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in THERMOSTAT_SENSORS
@@ -134,6 +134,7 @@ class SwitcherSensorEntity(SwitcherEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

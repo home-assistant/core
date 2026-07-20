@@ -5,7 +5,7 @@ from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
 import math
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import av
 import av.container
@@ -47,6 +47,7 @@ class RecorderOutput(StreamOutput):
         self.video_path: str
 
     @property
+    @override
     def name(self) -> str:
         """Return provider name."""
         return RECORDER_PROVIDER
@@ -55,6 +56,7 @@ class RecorderOutput(StreamOutput):
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
+    @override
     def cleanup(self) -> None:
         """Handle cleanup."""
         self.idle_timer.idle = True
@@ -80,10 +82,12 @@ class RecorderOutput(StreamOutput):
         def write_segment(segment: Segment) -> None:
             """Write a segment to output."""
             # fmt: off
-            nonlocal output, output_v, output_a, last_stream_id, running_duration, last_sequence
+            nonlocal output, output_v, output_a
+            nonlocal last_stream_id, running_duration, last_sequence
             # fmt: on
-            # Because the stream_worker is in a different thread from the record service,
-            # the lookback segments may still have some overlap with the recorder segments
+            # Because the stream_worker is in a different
+            # thread from the record service, the lookback
+            # segments may still overlap with recorder ones
             if segment.sequence <= last_sequence:
                 return
             last_sequence = segment.sequence

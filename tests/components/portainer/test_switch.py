@@ -124,7 +124,7 @@ async def test_turn_off_on_exceptions(
     raise_exception: Exception,
     expected_exception: Exception,
 ) -> None:
-    """Test the switches. Have you tried to turn it off and on again? This time they will do boom!"""
+    """Test switch actions raise on client errors."""
     await setup_integration(hass, mock_config_entry)
 
     client_method = (

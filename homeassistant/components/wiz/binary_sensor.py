@@ -1,8 +1,7 @@
 """WiZ integration binary sensor platform."""
 
 from collections.abc import Callable
-
-from pywizlight.bulb import PIR_SOURCE
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_WIZ_PIR
+from .const import DOMAIN, OCCUPANCY_SOURCES, SIGNAL_WIZ_PIR
 from .coordinator import WizConfigEntry, WizData
 from .entity import WizEntity
 
@@ -71,7 +70,8 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        if self._device.state.get_source() == PIR_SOURCE:
+        if self._device.state.get_source() in OCCUPANCY_SOURCES:
             self._attr_is_on = self._device.status

@@ -54,7 +54,7 @@ def zeroconf_discovery_info_no_mac() -> ZeroconfServiceInfo:
 
 @pytest.fixture
 def zeroconf_discovery_info_different_mac() -> ZeroconfServiceInfo:
-    """Return zeroconf discovery info with a different MAC than the device API returns."""
+    """Return zeroconf discovery info with a different MAC than the device API."""
     return ZeroconfServiceInfo(
         ip_address=ip_address("10.0.2.60"),
         ip_addresses=[ip_address("10.0.2.60")],
@@ -174,14 +174,49 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     "side_effect",
     [BSBLANError, TimeoutError],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_circuit_discovery_failure_falls_back_to_default(
-    hass: HomeAssistant,
-    mock_bsblan: MagicMock,
-    mock_setup_entry: AsyncMock,
-    side_effect: type[Exception],
+    hass: HomeAssistant, mock_bsblan: MagicMock, side_effect: type[Exception]
 ) -> None:
     """Test that circuit discovery failure falls back to single circuit."""
     mock_bsblan.initialize.side_effect = side_effect
+
+    result = await _init_user_flow(hass)
+    _assert_form_result(result, "user")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_create_entry_result(
+        result,
+        "BSB-LAN",
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_circuit_discovery_empty_result_falls_back_to_default(
+    hass: HomeAssistant, mock_bsblan: MagicMock
+) -> None:
+    """Test that empty circuit discovery falls back to single circuit."""
+    mock_bsblan.get_available_circuits.return_value = []
 
     result = await _init_user_flow(hass)
     _assert_form_result(result, "user")
@@ -447,7 +482,8 @@ async def test_zeroconf_discovery_no_mac_requires_auth(
         "00:80:41:19:69:90",
     )
 
-    # Should be called 3 times: once without auth (fails), twice with auth (in _validate_and_create)
+    # Should be called 3 times: once without auth (fails),
+    # twice with auth (in _validate_and_create)
     assert len(mock_bsblan.device.mock_calls) == 3
 
 
@@ -457,7 +493,7 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     mock_setup_entry: AsyncMock,
     zeroconf_discovery_info_no_mac: ZeroconfServiceInfo,
 ) -> None:
-    """Test Zeroconf discovery when no MAC in announcement but device accessible without auth."""
+    """Test Zeroconf discovery when no MAC but device accessible without auth."""
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info_no_mac)
 
     # Should now show the discovery_confirm form to the user
@@ -691,7 +727,7 @@ async def test_zeroconf_discovery_no_mac_duplicate_host_port(
     mock_bsblan: MagicMock,
     zeroconf_discovery_info_no_mac: ZeroconfServiceInfo,
 ) -> None:
-    """Test Zeroconf discovery aborts when no MAC and same host/port already configured."""
+    """Test Zeroconf discovery aborts when no MAC and same host/port configured."""
     # Create an existing entry with same host/port but no unique_id
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1147,6 +1183,38 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
     assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]
+
+
+async def test_reconfigure_flow_empty_circuit_discovery_falls_back(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure stores single circuit when discovery returns no circuits."""
+    mock_config_entry.add_to_hass(hass)
+    mock_bsblan.get_available_circuits.return_value = []
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    _assert_form_result(result, "reconfigure")
+
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 8080,
+            CONF_PASSKEY: "new_passkey",
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    _assert_abort_result(result, "reconfigure_successful")
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
+    assert mock_config_entry.data[CONF_PORT] == 8080
     assert mock_config_entry.data[CONF_HEATING_CIRCUITS] == [1]
 
 

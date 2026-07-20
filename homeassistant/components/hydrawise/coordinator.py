@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
+from typing import override
 
 from pydrawise import HydrawiseBase
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
@@ -82,8 +83,13 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         self.new_zones_callbacks: list[
             Callable[[Iterable[tuple[Zone, Controller]]], None]
         ] = []
+
+    @callback
+    def async_track_zones(self) -> None:
+        """Begin tracking zone and controller add/remove on updates."""
         self.async_add_listener(self._add_remove_zones)
 
+    @override
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         # Don't fetch zones. We'll fetch them for each controller later.
@@ -136,17 +142,13 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         if removed_zones := previous_zones - current_zones:
             LOGGER.debug("Removed zones: %s", ", ".join(removed_zones))
             for zone_id in removed_zones:
-                device_registry.async_update_device(
-                    device_id=previous_zones_by_id[zone_id].id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                device_registry.async_remove_device(previous_zones_by_id[zone_id].id)
 
         if removed_controllers := previous_controllers - current_controllers:
             LOGGER.debug("Removed controllers: %s", ", ".join(removed_controllers))
             for controller_id in removed_controllers:
-                device_registry.async_update_device(
-                    device_id=previous_controllers_by_id[controller_id].id,
-                    remove_config_entry_id=self.config_entry.entry_id,
+                device_registry.async_remove_device(
+                    previous_controllers_by_id[controller_id].id
                 )
 
         if new_controller_ids := current_controllers - previous_controllers:
@@ -198,6 +200,24 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         self.api = api
         self._main_coordinator = main_coordinator
 
+    @callback
+    def async_track_zones(self) -> None:
+        """Begin tracking zone and controller add/remove on updates."""
+        self._main_coordinator.async_add_listener(self._sync_data_from_main)
+
+    @callback
+    def _sync_data_from_main(self) -> None:
+        """Sync data references from the main coordinator after it updates."""
+        if self.data is None or self._main_coordinator.data is None:
+            return  # type: ignore[unreachable]
+        main_data = self._main_coordinator.data
+        self.data.user = main_data.user
+        self.data.controllers = main_data.controllers
+        self.data.zones = main_data.zones
+        self.data.zone_id_to_controller = main_data.zone_id_to_controller
+        self.data.sensors = main_data.sensors
+
+    @override
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         daily_water_summary: dict[int, ControllerWaterUseSummary] = {}

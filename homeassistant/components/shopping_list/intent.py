@@ -1,5 +1,7 @@
 """Intents for the Shopping List integration."""
 
+from typing import override
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
@@ -26,6 +28,7 @@ class AddItemIntent(intent.IntentHandler):
     slot_schema = {"item": cv.string}
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
@@ -45,6 +48,7 @@ class CompleteItemIntent(intent.IntentHandler):
     slot_schema = {"item": cv.string}
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
@@ -73,6 +77,7 @@ class ListTopItemsIntent(intent.IntentHandler):
     slot_schema = {"item": cv.string}
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         items = _get_shopping_data(intent_obj.hass).items[-5:]
@@ -83,6 +88,8 @@ class ListTopItemsIntent(intent.IntentHandler):
         else:
             items_list = ", ".join(str(itm["name"]) for itm in reversed(items))
             response.async_set_speech(
-                f"These are the top {min(len(items), 5)} items on your shopping list: {items_list}"
+                "These are the top"
+                f" {min(len(items), 5)} items on your"
+                f" shopping list: {items_list}"
             )
         return response

@@ -39,8 +39,8 @@
 # name: test_switch_entities[air_conditioner][switch.test_air_conditioner_air_purify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test air conditioner Air purify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Air purify',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_air_conditioner_air_purify',
@@ -90,8 +90,8 @@
 # name: test_switch_entities[air_conditioner][switch.test_air_conditioner_energy_saving-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test air conditioner Energy saving',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Energy saving',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_air_conditioner_energy_saving',
@@ -141,8 +141,8 @@
 # name: test_switch_entities[air_conditioner][switch.test_air_conditioner_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test air conditioner Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_air_conditioner_power',
@@ -192,8 +192,8 @@
 # name: test_switch_entities[dehumidifier][switch.test_dehumidifier_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test dehumidifier Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test dehumidifier Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_dehumidifier_power',
@@ -243,8 +243,8 @@
 # name: test_switch_entities[washer][switch.test_washer_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test washer Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test washer Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_washer_power',

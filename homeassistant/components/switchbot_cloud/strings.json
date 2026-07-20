@@ -90,5 +90,32 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "SwitchBot Cloud command failed: {error}"
+    },
+    "connection_error": {
+      "message": "Error communicating with SwitchBot Cloud: {error}"
+    },
+    "device_offline": {
+      "message": "SwitchBot Cloud device is offline."
+    }
+  },
+  "services": {
+    "upload_art_frame_image": {
+      "description": "Upload web images to the device.",
+      "fields": {
+        "device_id": {
+          "description": "The target AI Art Frame device.",
+          "name": "Devices"
+        },
+        "image_url": {
+          "description": "The URL of the image to upload.",
+          "name": "Image URL"
+        }
+      },
+      "name": "Upload AI Art Frame image"
+    }
   }
 }

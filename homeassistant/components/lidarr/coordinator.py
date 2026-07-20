@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar, cast, override
 
 from aiopyarr import LidarrAlbum, LidarrQueue, LidarrRootFolder, exceptions
 from aiopyarr.lidarr_client import LidarrClient
@@ -33,7 +33,7 @@ T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum 
 type LidarrConfigEntry = ConfigEntry[LidarrData]
 
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Lidarr integration."""
 
     config_entry: LidarrConfigEntry
@@ -56,6 +56,7 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
         self.api_client = api_client
         self.host_configuration = host_configuration
 
+    @override
     async def _async_update_data(self) -> T:
         """Get the latest data from Lidarr."""
         try:
@@ -79,6 +80,7 @@ class DiskSpaceDataUpdateCoordinator(
 ):
     """Disk space update coordinator for Lidarr."""
 
+    @override
     async def _fetch_data(self) -> list[LidarrRootFolder]:
         """Fetch the data."""
         return cast(
@@ -89,6 +91,7 @@ class DiskSpaceDataUpdateCoordinator(
 class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
     """Queue update coordinator."""
 
+    @override
     async def _fetch_data(self) -> LidarrQueue:
         """Fetch the album count in queue."""
         return await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
@@ -97,6 +100,7 @@ class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
 class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator[str]):
     """Status update coordinator for Lidarr."""
 
+    @override
     async def _fetch_data(self) -> str:
         """Fetch the data."""
         return (await self.api_client.async_get_system_status()).version
@@ -105,6 +109,7 @@ class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator[str]):
 class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrAlbum]):
     """Wanted update coordinator."""
 
+    @override
     async def _fetch_data(self) -> LidarrAlbum:
         """Fetch the wanted data."""
         return cast(
@@ -116,6 +121,7 @@ class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrAlbum]):
 class AlbumsDataUpdateCoordinator(LidarrDataUpdateCoordinator[int]):
     """Albums update coordinator."""
 
+    @override
     async def _fetch_data(self) -> int:
         """Fetch the album data."""
         return len(cast(list[LidarrAlbum], await self.api_client.async_get_albums()))

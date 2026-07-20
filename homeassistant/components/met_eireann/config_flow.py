@@ -1,6 +1,6 @@
 """Config flow to configure Met Éireann component."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -16,6 +16,7 @@ class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -31,6 +32,8 @@ class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=vol.Schema(
                     {
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=home-assistant-config-flow-name-field
                         vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
                         vol.Required(
                             CONF_LATITUDE, default=self.hass.config.latitude

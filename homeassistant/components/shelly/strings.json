@@ -72,11 +72,13 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "[%key:component::shelly::config::step::user_manual::data_description::host%]",
-          "port": "[%key:component::shelly::config::step::user_manual::data_description::port%]"
+          "port": "[%key:component::shelly::config::step::user_manual::data_description::port%]",
+          "verify_ssl": "[%key:component::shelly::config::step::user_manual::data_description::verify_ssl%]"
         },
         "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
       },
@@ -92,11 +94,13 @@
       "user_manual": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the Shelly device to connect to.",
-          "port": "The TCP port of the Shelly device to connect to (Gen2+)."
+          "port": "The TCP port of the Shelly device to connect to (Gen2+).",
+          "verify_ssl": "Verify SSL/TLS certificate when connecting on HTTPS (port 443, Gen2+)."
         },
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
       },
@@ -673,7 +677,7 @@
       "message": "An error occurred while reconnecting to {device}"
     },
     "update_error_sleeping_device": {
-      "message": "Sleeping device did not update within {period} seconds interval"
+      "message": "Sleeping device {device} did not update within {period} seconds interval"
     }
   },
   "issues": {
@@ -685,7 +689,7 @@
         },
         "step": {
           "confirm": {
-            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as a BLE scanner in Active or Auto mode. This firmware version is not supported for these BLE scanner modes.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
             "title": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::title%]"
           }
         }
@@ -787,16 +791,17 @@
         "data_description": {
           "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
         },
-        "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices."
+        "description": "Auto is recommended for most setups; the Shelly listens passively and only briefly switches to active when needed, saving battery on your Bluetooth devices."
       }
     }
   },
   "selector": {
     "ble_scanner_mode": {
       "options": {
-        "active": "[%key:common::state::active%]",
+        "active": "Active (uses more device battery, fastest updates)",
+        "auto": "Auto (recommended, saves device battery)",
         "disabled": "[%key:common::state::disabled%]",
-        "passive": "Passive"
+        "passive": "Passive (lowest device battery use, some details may be missing)"
       }
     },
     "device": {

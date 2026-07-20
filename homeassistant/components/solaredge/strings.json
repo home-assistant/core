@@ -118,6 +118,13 @@
       "gateways": {
         "name": "Gateways"
       },
+      "grid_flow_direction": {
+        "name": "Grid flow direction",
+        "state": {
+          "export": "Export",
+          "import": "Import"
+        }
+      },
       "grid_power": {
         "name": "Grid power"
       },
@@ -156,6 +163,13 @@
       },
       "storage_discharge_energy": {
         "name": "Storage discharge energy today"
+      },
+      "storage_flow_direction": {
+        "name": "Storage flow direction",
+        "state": {
+          "charge": "Charge",
+          "discharge": "Discharge"
+        }
       },
       "storage_level": {
         "name": "Storage level"

@@ -1,7 +1,5 @@
 """Base entity for Mitsubishi Comfort integration."""
 
-from __future__ import annotations
-
 from mitsubishi_comfort import IndoorUnit, KumoStation
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
