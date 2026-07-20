@@ -1,6 +1,6 @@
 """The pi_hole component."""
 
-from __future__ import annotations
+from typing import override
 
 from hole import Hole
 
@@ -28,6 +28,7 @@ class PiHoleEntity(CoordinatorEntity[PiHoleUpdateCoordinator]):
         self._server_unique_id = server_unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         if (

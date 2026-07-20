@@ -1,10 +1,9 @@
 """Component to interface with switches that can be controlled remotely."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 import logging
+from typing import override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -21,7 +20,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -51,7 +49,6 @@ DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the switch is on based on the statemachine.
 
@@ -102,6 +99,7 @@ class SwitchEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     _attr_device_class: SwitchDeviceClass | None
 
     @cached_property
+    @override
     def device_class(self) -> SwitchDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

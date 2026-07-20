@@ -1,13 +1,12 @@
-"""NINA sensor platform."""
+"""NINA binary sensor platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -16,7 +15,6 @@ from .const import (
     ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
-    ATTR_ID,
     ATTR_RECOMMENDED_ACTIONS,
     ATTR_SENDER,
     ATTR_SENT,
@@ -25,6 +23,17 @@ from .const import (
     ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
+    SERVICE_DATA_AFFECTED_AREAS,
+    SERVICE_DATA_DESCRIPTION,
+    SERVICE_DATA_EXPIRES,
+    SERVICE_DATA_HEADLINE,
+    SERVICE_DATA_ID,
+    SERVICE_DATA_RECOMMENDED_ACTIONS,
+    SERVICE_DATA_SENDER,
+    SERVICE_DATA_SENT,
+    SERVICE_DATA_SEVERITY,
+    SERVICE_DATA_START,
+    SERVICE_DATA_WEB,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
 from .entity import NinaEntity
@@ -72,6 +81,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{region}-{slot_id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         if self._get_active_warnings_count() <= self._warning_index:
@@ -80,6 +90,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         return self._get_warning_data().is_valid
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
         if not self.is_on:
@@ -88,15 +99,41 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         data = self._get_warning_data()
 
         return {
-            ATTR_HEADLINE: data.headline,
-            ATTR_DESCRIPTION: data.description,
-            ATTR_SENDER: data.sender,
-            ATTR_SEVERITY: data.severity,
+            ATTR_HEADLINE: data.headline,  # Deprecated, remove in 2026.11
+            ATTR_DESCRIPTION: data.description,  # Deprecated, remove in 2026.11
+            ATTR_SENDER: data.sender,  # Deprecated, remove in 2026.11
+            ATTR_SEVERITY: data.severity or "Unknown",  # Deprecated, remove in 2026.11
+            # Deprecated, remove in 2026.11
             ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
-            ATTR_AFFECTED_AREAS: data.affected_areas,
-            ATTR_WEB: data.web,
+            ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.11
+            ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.11
             ATTR_ID: data.id,
-            ATTR_SENT: data.sent,
-            ATTR_START: data.start,
-            ATTR_EXPIRES: data.expires,
+            ATTR_SENT: data.sent.isoformat(),  # Deprecated, remove in 2026.11
+            ATTR_START: data.start.isoformat()
+            if data.start
+            else "",  # Deprecated, remove in 2026.11
+            ATTR_EXPIRES: data.expires.isoformat()
+            if data.expires
+            else "",  # Deprecated, remove in 2026.11
+        }
+
+    def get_details(self) -> dict[str, str] | None:
+        """Return the details of the warning."""
+        if not self.is_on:
+            return None
+
+        data = self._get_warning_data()
+
+        return {
+            SERVICE_DATA_HEADLINE: data.headline,
+            SERVICE_DATA_DESCRIPTION: data.description,
+            SERVICE_DATA_SENDER: data.sender,
+            SERVICE_DATA_SEVERITY: data.severity or "Unknown",
+            SERVICE_DATA_RECOMMENDED_ACTIONS: data.recommended_actions,
+            SERVICE_DATA_AFFECTED_AREAS: data.affected_areas,
+            SERVICE_DATA_WEB: data.more_info_url,
+            SERVICE_DATA_ID: data.id,
+            SERVICE_DATA_SENT: data.sent.isoformat(),
+            SERVICE_DATA_START: data.start.isoformat() if data.start else "",
+            SERVICE_DATA_EXPIRES: data.expires.isoformat() if data.expires else "",
         }

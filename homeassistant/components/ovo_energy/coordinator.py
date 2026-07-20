@@ -1,10 +1,9 @@
 """Coordinator for the OVO Energy integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 import aiohttp
 from ovoenergy import OVOEnergy
@@ -21,16 +20,18 @@ from .const import CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
+type OVOEnergyConfigEntry = ConfigEntry[OVOEnergyDataUpdateCoordinator]
+
 
 class OVOEnergyDataUpdateCoordinator(DataUpdateCoordinator[OVODailyUsage]):
     """Class to manage fetching OVO Energy data."""
 
-    config_entry: ConfigEntry
+    config_entry: OVOEnergyConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OVOEnergyConfigEntry,
         client: OVOEnergy,
     ) -> None:
         """Initialize."""
@@ -43,6 +44,7 @@ class OVOEnergyDataUpdateCoordinator(DataUpdateCoordinator[OVODailyUsage]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> OVODailyUsage:
         """Fetch data from OVO Energy."""
         if (custom_account := self.config_entry.data.get(CONF_ACCOUNT)) is not None:

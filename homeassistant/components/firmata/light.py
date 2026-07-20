@@ -1,9 +1,7 @@
 """Support for Firmata light output."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -70,20 +68,24 @@ class FirmataLight(FirmataPinEntity, LightEntity):
         # Default first turn on to max
         self._last_on_level = 255
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a light."""
         await self._api.start_pin()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._api.state > 0
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return self._api.state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         level = kwargs.get(ATTR_BRIGHTNESS, self._last_on_level)
@@ -91,6 +93,7 @@ class FirmataLight(FirmataPinEntity, LightEntity):
         self.async_write_ha_state()
         self._last_on_level = level
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self._api.set_level(0)

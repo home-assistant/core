@@ -1,40 +1,28 @@
 """The Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 from functools import partial
-from pathlib import Path
 from types import MappingProxyType
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-)
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
-    HomeAssistantError,
 )
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    issue_registry as ir,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import (
-    CONF_PROMPT,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TITLE,
@@ -47,11 +35,6 @@ from .const import (
     RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
-from .entity import async_prepare_files_for_prompt
-
-SERVICE_GENERATE_CONTENT = "generate_content"
-CONF_IMAGE_FILENAME = "image_filename"
-CONF_FILENAMES = "filenames"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
@@ -69,88 +52,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_migrate_integration(hass)
 
-    async def generate_content(call: ServiceCall) -> ServiceResponse:
-        """Generate content from text and optionally images."""
-        LOGGER.warning(
-            "Action '%s.%s' is deprecated and will be removed in the 2026.4.0 release. "
-            "Please use the 'ai_task.generate_data' action instead",
-            DOMAIN,
-            SERVICE_GENERATE_CONTENT,
-        )
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_generate_content",
-            breaks_in_ha_version="2026.4.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_generate_content",
-        )
-
-        prompt_parts = [call.data[CONF_PROMPT]]
-
-        config_entry: GoogleGenerativeAIConfigEntry = (
-            hass.config_entries.async_loaded_entries(DOMAIN)[0]
-        )
-
-        client = config_entry.runtime_data
-
-        files = call.data[CONF_FILENAMES]
-
-        if files:
-            for filename in files:
-                if not hass.config.is_allowed_path(filename):
-                    raise HomeAssistantError(
-                        f"Cannot read `{filename}`, no access to path; "
-                        "`allowlist_external_dirs` may need to be adjusted in "
-                        "`configuration.yaml`"
-                    )
-
-            prompt_parts.extend(
-                await async_prepare_files_for_prompt(
-                    hass, client, [(Path(filename), None) for filename in files]
-                )
-            )
-
-        try:
-            response = await client.aio.models.generate_content(
-                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
-            )
-        except (
-            APIError,
-            ValueError,
-        ) as err:
-            raise HomeAssistantError(f"Error generating content: {err}") from err
-
-        if response.prompt_feedback:
-            raise HomeAssistantError(
-                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
-            )
-
-        if (
-            not response.candidates
-            or not response.candidates[0].content
-            or not response.candidates[0].content.parts
-        ):
-            raise HomeAssistantError("Unknown error generating content")
-
-        return {"text": response.text}
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GENERATE_CONTENT,
-        generate_content,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional(CONF_FILENAMES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-            }
-        ),
-        supports_response=SupportsResponse.ONLY,
-        description_placeholders={"example_image_path": "/config/www/image.jpg"},
-    )
     return True
 
 
@@ -281,7 +182,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by = device.disabled_by
+            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -291,20 +192,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 device.id,
                 disabled_by=device_disabled_by,
                 new_identifiers={(DOMAIN, subentry.subentry_id)},
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=parent_entry.entry_id,
+                new_config_entry_id=parent_entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
             )
-            if parent_entry.entry_id != entry.entry_id:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
-                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
@@ -324,10 +214,6 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 2 and entry.minor_version == 1:
         # Add TTS subentry which was missing in 2025.7.0b0

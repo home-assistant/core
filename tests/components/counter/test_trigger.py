@@ -17,10 +17,10 @@ from tests.components.common import (
     BasicTriggerStateDescription,
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
@@ -53,23 +53,32 @@ async def target_counters(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "counter.decremented",
-        "counter.incremented",
-        "counter.maximum_reached",
-        "counter.minimum_reached",
-        "counter.reset",
+        ("counter.incremented", None, False, False),
+        ("counter.decremented", None, False, False),
+        ("counter.maximum_reached", {}, True, True),
+        ("counter.minimum_reached", {}, True, True),
+        ("counter.reset", {}, True, True),
     ],
 )
-async def test_counter_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_counter_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the counter triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that counter triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -154,7 +163,6 @@ async def test_counter_state_trigger(
         calls.clear()
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -162,7 +170,7 @@ async def test_counter_state_trigger(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"), BEHAVIOR_AWARE_TRIGGERS
 )
-async def test_counter_state_trigger_behavior_any(
+async def test_counter_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
@@ -172,8 +180,8 @@ async def test_counter_state_trigger_behavior_any(
     trigger_options: dict[str, Any] | None,
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when any counter state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test counter trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_counters,
         trigger_target_config=trigger_target_config,
@@ -185,7 +193,6 @@ async def test_counter_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -203,7 +210,7 @@ async def test_counter_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when the first counter changes to a specific state."""
+    """Test counter trigger fires on first state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_counters,
@@ -216,7 +223,6 @@ async def test_counter_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -224,7 +230,7 @@ async def test_counter_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"), BEHAVIOR_AWARE_TRIGGERS
 )
-async def test_counter_state_trigger_behavior_last(
+async def test_counter_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_counters: dict[str, list[str]],
     trigger_target_config: dict,
@@ -234,8 +240,8 @@ async def test_counter_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the counter state trigger fires when the last counter changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test counter trigger fires when all counters have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_counters,
         trigger_target_config=trigger_target_config,

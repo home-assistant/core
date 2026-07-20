@@ -1,7 +1,5 @@
 """Config flow for the NEW_NAME integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -10,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -96,9 +93,9 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(HomeAssistantError):
+class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(HomeAssistantError):
+class InvalidAuth(Exception):
     """Error to indicate there is invalid auth."""

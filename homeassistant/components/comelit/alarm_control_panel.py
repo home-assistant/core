@@ -1,9 +1,7 @@
 """Support for Comelit VEDO system."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from aiocomelit.api import ComelitVedoAreaObject
 from aiocomelit.const import ALARM_AREA, AlarmAreaState
@@ -110,13 +108,15 @@ class ComelitAlarmEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if alarm is available."""
-        if self._area.human_status in [AlarmAreaState.ANOMALY, AlarmAreaState.UNKNOWN]:
+        if self._area.human_status is AlarmAreaState.UNKNOWN:
             return False
         return super().available
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
 
@@ -126,7 +126,7 @@ class ComelitAlarmEntity(
             self._area.human_status,
             self._area.armed,
         )
-        if self._area.human_status == AlarmAreaState.ARMED:
+        if self._area.human_status is AlarmAreaState.ARMED:
             if self._area.armed == ALARM_AREA_ARMED_STATUS[AWAY]:
                 return AlarmControlPanelState.ARMED_AWAY
             if self._area.armed == ALARM_AREA_ARMED_STATUS[NIGHT]:
@@ -146,39 +146,43 @@ class ComelitAlarmEntity(
         self._area.armed = armed
         self.async_write_ha_state()
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code != str(self.coordinator.api.device_pin):
             return
         await self.coordinator.api.set_zone_status(
-            self._area.index, ALARM_ACTIONS[DISABLE]
+            self._area.index, ALARM_ACTIONS[DISABLE], self._area.anomaly
         )
         await self._async_update_state(
             AlarmAreaState.DISARMED, ALARM_AREA_ARMED_STATUS[DISABLE]
         )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.coordinator.api.set_zone_status(
-            self._area.index, ALARM_ACTIONS[AWAY]
+            self._area.index, ALARM_ACTIONS[AWAY], self._area.anomaly
         )
         await self._async_update_state(
             AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[AWAY]
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.coordinator.api.set_zone_status(
-            self._area.index, ALARM_ACTIONS[HOME]
+            self._area.index, ALARM_ACTIONS[HOME], self._area.anomaly
         )
         await self._async_update_state(
             AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[HOME_P1]
         )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self.coordinator.api.set_zone_status(
-            self._area.index, ALARM_ACTIONS[NIGHT]
+            self._area.index, ALARM_ACTIONS[NIGHT], self._area.anomaly
         )
         await self._async_update_state(
             AlarmAreaState.ARMED, ALARM_AREA_ARMED_STATUS[NIGHT]

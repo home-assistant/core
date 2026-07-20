@@ -1,9 +1,8 @@
 """Viessmann ViCare select device."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -109,6 +108,7 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
+    @override
     def select_option(self, option: str) -> None:
         """Set the DHW operating mode."""
         api_mode = DHW_MODE_HA_TO_API.get(option, option)

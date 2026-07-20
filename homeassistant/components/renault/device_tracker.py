@@ -1,8 +1,7 @@
 """Support for Renault device trackers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from renault_api.kamereon.models import KamereonVehicleLocationData
 
@@ -50,14 +49,16 @@ class RenaultDeviceTracker(
     entity_description: RenaultTrackerEntityDescription
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        return self.coordinator.data.gpsLatitude if self.coordinator.data else None
+        return self.coordinator.data.gpsLatitude
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        return self.coordinator.data.gpsLongitude if self.coordinator.data else None
+        return self.coordinator.data.gpsLongitude
 
 
 DEVICE_TRACKER_TYPES: tuple[RenaultTrackerEntityDescription, ...] = (

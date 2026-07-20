@@ -1,8 +1,6 @@
 """Support for KNX number entities."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from xknx.devices import NumericValue
 
@@ -80,23 +78,24 @@ class _KnxNumber(RestoreNumber):
 
     _device: NumericValue
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if (
-            not self._device.sensor_value.readable
-            and (last_state := await self.async_get_last_state())
-            and (last_number_data := await self.async_get_last_number_data())
+        if (last_state := await self.async_get_last_state()) and (
+            last_number_data := await self.async_get_last_number_data()
         ):
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.sensor_value.value = last_number_data.native_value
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the entity value to represent the entity state."""
         # self._device.sensor_value.value is set in __init__ so it is never None
         return cast(float, self._device.resolve_state())
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._device.set(value)
@@ -129,7 +128,9 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         self._attr_device_class = config.get(
             CONF_DEVICE_CLASS,
             try_parse_enum(
-                # sensor device classes should, with some exceptions ("enum" etc.), align with number device classes
+                # sensor device classes should, with some
+                # exceptions ("enum" etc.), align with
+                # number device classes
                 NumberDeviceClass,
                 dpt_info["sensor_device_class"],
             ),
@@ -193,7 +194,9 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
             )
         else:
             self._attr_device_class = try_parse_enum(
-                # sensor device classes should, with some exceptions ("enum" etc.), align with number device classes
+                # sensor device classes should, with some
+                # exceptions ("enum" etc.), align with
+                # number device classes
                 NumberDeviceClass,
                 dpt_info["sensor_device_class"],
             )

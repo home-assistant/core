@@ -1,12 +1,10 @@
 """Support for OneDrive backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
 from time import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiohttp import ClientTimeout
 from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
@@ -83,6 +81,7 @@ def handle_backup_errors[_R, **P](
             return await func(self, *args, **kwargs)
         except AuthenticationError as err:
             self._entry.async_start_reauth(self._hass)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Authentication error") from err
         except OneDriveException as err:
             _LOGGER.error(
@@ -91,12 +90,14 @@ def handle_backup_errors[_R, **P](
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Backup operation failed") from err
         except TimeoutError as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
                 func.__name__,
             )
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Backup operation timed out") from err
 
     return wrapper
@@ -128,6 +129,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
@@ -141,6 +143,7 @@ class OneDriveBackupAgent(BackupAgent):
         return stream.iter_chunked(1024)
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -185,13 +188,15 @@ class OneDriveBackupAgent(BackupAgent):
                 ),
             )
         except HashMismatchError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
                 "Hash validation failed, backup file might be corrupt"
             ) from err
 
         _LOGGER.debug("Uploaded backup to %s", backup_filename)
 
-        # Store metadata in separate metadata file (just backup.as_dict(), no extra fields)
+        # Store metadata in separate metadata file
+        # (just backup.as_dict(), no extra fields)
         metadata_content = json_dumps(backup.as_dict())
         try:
             await self._client.upload_file(
@@ -213,6 +218,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -235,11 +241,13 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._list_cached_metadata_files()).values())
 
     @handle_backup_errors
+    @override
     async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
         """Return a backup."""
         return await self._find_backup_by_id(backup_id)
@@ -293,4 +301,5 @@ class OneDriveBackupAgent(BackupAgent):
         if backup := metadata_files.get(backup_id):
             return backup
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ZinvoltConfigEntry, ZinvoltData, ZinvoltDeviceCoordinator
-from .entity import ZinvoltEntity
+from .entity import ZinvoltEntity, ZinvoltUnitEntity
 
 POINT_ENTITIES = {
     "communication": BinarySensorDeviceClass.PROBLEM,
@@ -30,7 +31,7 @@ POINT_ENTITIES = {
 class ZinvoltBatteryStateDescription(BinarySensorEntityDescription):
     """Binary sensor description for Zinvolt battery state."""
 
-    is_on_fn: Callable[[ZinvoltData], bool]
+    is_on_fn: Callable[[ZinvoltData], bool | None]
 
 
 SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
@@ -57,9 +58,10 @@ async def async_setup_entry(
         for coordinator in entry.runtime_data.values()
     ]
     entities.extend(
-        ZinvoltPointBinarySensor(coordinator, point)
+        ZinvoltPointBinarySensor(coordinator, battery.serial_number, point)
         for coordinator in entry.runtime_data.values()
-        for point in coordinator.data.points
+        for battery in coordinator.battery_units.values()
+        for point in coordinator.data.batteries[battery.serial_number].points
         if point in POINT_ENTITIES
     )
     async_add_entities(entities)
@@ -83,30 +85,35 @@ class ZinvoltBatteryStateBinarySensor(ZinvoltEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
 
-class ZinvoltPointBinarySensor(ZinvoltEntity, BinarySensorEntity):
+class ZinvoltPointBinarySensor(ZinvoltUnitEntity, BinarySensorEntity):
     """Zinvolt battery state binary sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: ZinvoltDeviceCoordinator, point: str) -> None:
+    def __init__(
+        self, coordinator: ZinvoltDeviceCoordinator, unit_serial_number: str, point: str
+    ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, unit_serial_number)
         self.point = point
         self._attr_translation_key = point
         self._attr_device_class = POINT_ENTITIES[point]
-        self._attr_unique_id = f"{coordinator.data.battery.serial_number}.{point}"
+        self._attr_unique_id = f"{self.serial_number}.{point}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the binary sensor."""
-        return super().available and self.point in self.coordinator.data.points
+        return super().available and self.point in self.battery.points
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
-        return not self.coordinator.data.points[self.point]
+        return not self.battery.points[self.point]

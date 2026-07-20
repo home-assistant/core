@@ -1,12 +1,11 @@
 """Component providing Lights for UniFi Protect."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, cast, override
 
 from uiprotect.data import Light, ModelType, ProtectAdoptableDeviceModel
 from uiprotect.data.devices import LightDeviceSettings
+from uiprotect.data.public_devices import PublicLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
@@ -63,16 +62,33 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Read state from the public API (primed before the first update)."""
+        self._ufp_uses_public = True
+        self._ufp_public_obj = self.data.async_get_public_device(self.device)
+        self.async_on_remove(
+            self.data.async_subscribe_public(
+                self.device.mac, self._async_public_updated
+            )
+        )
+        await super().async_added_to_hass()
+
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        updated_device = self.device
-        self._attr_is_on = updated_device.is_light_on
-        self._attr_brightness = unifi_brightness_to_hass(
-            updated_device.light_device_settings.led_level
+        if (public := self._ufp_public_obj) is None:
+            return
+        light = cast(PublicLight, public)
+        self._attr_is_on = light.is_light_on
+        led_level = light.light_device_settings.led_level
+        self._attr_brightness = (
+            None if led_level is None else unifi_brightness_to_hass(led_level)
         )
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -103,6 +119,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         )
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")

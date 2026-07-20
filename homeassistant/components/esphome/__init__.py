@@ -1,37 +1,70 @@
 """Support for esphome devices."""
 
-from __future__ import annotations
-
 import logging
 
-from aioesphomeapi import APIClient, APIConnectionError
+from aioesphomeapi import APIConnectionError
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    __version__ as ha_version,
+from homeassistant.components.usb import (
+    SerialDevice,
+    USBDevice,
+    async_register_serial_port_scanner,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
-from . import assist_satellite, dashboard, ffmpeg_proxy
+from . import assist_satellite, dashboard, ffmpeg_proxy, serial_proxy
 from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
-from .manager import DEVICE_CONFLICT_ISSUE_FORMAT, ESPHomeManager, cleanup_instance
+from .manager import (
+    DEVICE_CONFLICT_ISSUE_FORMAT,
+    ESPHomeManager,
+    async_create_api_client,
+    cleanup_instance,
+)
 from .websocket_api import async_setup as async_setup_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-CLIENT_INFO = f"Home Assistant {ha_version}"
+
+@callback
+def _async_scan_serial_ports(
+    hass: HomeAssistant,
+) -> list[USBDevice | SerialDevice]:
+    """Return serial-proxy ports exposed by connected ESPHome devices."""
+    ports: list[USBDevice | SerialDevice] = []
+
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        entry_data = entry.runtime_data
+        if not entry_data.available:
+            continue
+
+        device_info = entry_data.device_info
+        if device_info is None:
+            continue
+
+        ports.extend(
+            SerialDevice(
+                device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
+                serial_number=(
+                    device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
+                ),
+                manufacturer=device_info.manufacturer,
+                description=f"{device_info.model} ({proxy.name})",
+            )
+            for proxy in device_info.serial_proxies
+        )
+
+    return ports
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -40,26 +73,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
     async_setup_websocket_api(hass)
+
+    if "usb" in hass.config.components:
+        async_register_serial_port_scanner(hass, _async_scan_serial_ports)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            serial_proxy.register_serialx_transport(hass.loop),
+        )
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Set up the esphome component."""
     host: str = entry.data[CONF_HOST]
-    port: int = entry.data[CONF_PORT]
     password: str | None = entry.data[CONF_PASSWORD]
-    noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
-    cli = APIClient(
-        host,
-        port,
-        password,
-        client_info=CLIENT_INFO,
-        zeroconf_instance=zeroconf_instance,
-        noise_psk=noise_psk,
-        timezone=hass.config.time_zone,
+    cli = async_create_api_client(
+        hass, entry, zeroconf_instance, noise_psk=entry.data.get(CONF_NOISE_PSK)
     )
 
     domain_data = DomainData.get(hass)
@@ -115,21 +148,10 @@ async def _async_clear_dynamic_encryption_key(
     if await storage.async_get_key(entry.unique_id) is None:
         return
 
-    host: str = entry.data[CONF_HOST]
-    port: int = entry.data[CONF_PORT]
-    password: str | None = entry.data[CONF_PASSWORD]
-    noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
-
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
-    cli = APIClient(
-        host,
-        port,
-        password,
-        client_info=CLIENT_INFO,
-        zeroconf_instance=zeroconf_instance,
-        noise_psk=noise_psk,
-        timezone=hass.config.time_zone,
+    cli = async_create_api_client(
+        hass, entry, zeroconf_instance, noise_psk=entry.data.get(CONF_NOISE_PSK)
     )
 
     try:
@@ -137,13 +159,15 @@ async def _async_clear_dynamic_encryption_key(
         # Clear the encryption key on the device by passing an empty key
         if not await cli.noise_encryption_set_key(b""):
             _LOGGER.debug(
-                "Could not clear dynamic encryption key for ESPHome device %s: Device rejected key removal",
+                "Could not clear dynamic encryption key for"
+                " ESPHome device %s: Device rejected key removal",
                 entry.unique_id,
             )
             return
     except APIConnectionError as exc:
         _LOGGER.debug(
-            "Could not connect to ESPHome device %s to clear dynamic encryption key: %s",
+            "Could not connect to ESPHome device %s to clear"
+            " dynamic encryption key: %s",
             entry.unique_id,
             exc,
         )

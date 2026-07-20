@@ -1,9 +1,7 @@
 """Support for the PRT Heatmiser thermostats using the V3 protocol."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from heatmiserv3 import connection, heatmiser
 import voluptuous as vol
@@ -91,6 +89,7 @@ class HeatmiserV3Thermostat(ClimateEntity):
         self.dcb = None
         self._attr_hvac_mode = HVACMode.HEAT
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:

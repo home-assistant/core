@@ -1,11 +1,9 @@
 """Config flow for Nanoleaf integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aionanoleaf2 import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
@@ -51,6 +49,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -94,6 +93,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._get_reauth_entry().title}
         return await self.async_step_link()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -101,6 +101,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
         return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -118,6 +119,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.properties[ATTR_PROPERTIES_ID],
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

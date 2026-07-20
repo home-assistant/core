@@ -1,7 +1,5 @@
 """The OpenAI Conversation integration."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from types import MappingProxyType
 
@@ -17,7 +15,7 @@ from openai.types.responses import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_PROMPT, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -38,14 +36,15 @@ from homeassistant.helpers import (
     selector,
 )
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import (
     CONF_CHAT_MODEL,
     CONF_FILENAMES,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DEFAULT_AI_TASK_NAME,
@@ -58,6 +57,8 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
@@ -208,7 +209,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
             ),
             "user": call.context.user_id,
-            "store": False,
+            "store": conversation_subentry.data.get(
+                CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
+            ),
         }
 
         if model.startswith("o"):
@@ -282,7 +285,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
         http_client=get_async_client(hass),
     )
 
-    # Cache current platform data which gets added to each request (caching done by library)
+    # Cache current platform data which gets added to each request
+    # (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
@@ -382,7 +386,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by = device.disabled_by
+            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -392,20 +396,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 device.id,
                 disabled_by=device_disabled_by,
                 new_identifiers={(DOMAIN, subentry.subentry_id)},
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=parent_entry.entry_id,
+                new_config_entry_id=parent_entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
             )
-            if parent_entry.entry_id != entry.entry_id:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
-                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
@@ -423,10 +416,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 2 and entry.minor_version == 1:
         # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
@@ -485,6 +474,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
     if entry.version == 2 and entry.minor_version == 5:
         _add_stt_subentry(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=6)
+
+    if entry.version == 2 and entry.minor_version == 6:
+        for subentry in entry.subentries.values():
+            if subentry.subentry_type in ("conversation", "ai_task_data"):
+                data = dict(subentry.data)
+                updated = False
+                if data.get(CONF_REASONING_SUMMARY) == "short":
+                    data[CONF_REASONING_SUMMARY] = "concise"
+                    updated = True
+                if data.get(CONF_REASONING_SUMMARY) == "concise" and not data.get(
+                    CONF_CHAT_MODEL, ""
+                ).startswith("gpt-5"):
+                    data[CONF_REASONING_SUMMARY] = RECOMMENDED_REASONING_SUMMARY
+                    updated = True
+                if updated:
+                    hass.config_entries.async_update_subentry(
+                        entry, subentry, data=data
+                    )
+        hass.config_entries.async_update_entry(entry, minor_version=7)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

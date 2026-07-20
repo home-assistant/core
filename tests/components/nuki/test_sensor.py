@@ -26,8 +26,10 @@ async def test_sensors(
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
-    # Unload the config entry after taking a snapshot is required because the integration may cache
-    # DNS results or keep references to the original gethostbyname, so unloading ensures the patch
-    # is effective for subsequent tests and avoids DNS lookups
+    # Unload the config entry after taking a snapshot is required
+    # because the integration may cache DNS results or keep
+    # references to the original gethostbyname, so unloading
+    # ensures the patch is effective for subsequent tests and
+    # avoids DNS lookups
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

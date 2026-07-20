@@ -1,9 +1,7 @@
 """DataUpdateCoordinator for the Yale integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from yalesmartalarmclient import YaleLock
 from yalesmartalarmclient.client import YaleSmartAlarmClient
@@ -38,20 +36,28 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.locks: list[YaleLock] = []
 
+    def _yale_setup(self) -> tuple[YaleSmartAlarmClient, list[YaleLock]]:
+        """Set up connection to Yale."""
+        yale = YaleSmartAlarmClient(
+            self.config_entry.data[CONF_USERNAME],
+            self.config_entry.data[CONF_PASSWORD],
+        )
+        locks = yale.get_locks()
+        return yale, locks
+
+    @override
     async def _async_setup(self) -> None:
         """Set up connection to Yale."""
         try:
-            self.yale = await self.hass.async_add_executor_job(
-                YaleSmartAlarmClient,
-                self.config_entry.data[CONF_USERNAME],
-                self.config_entry.data[CONF_PASSWORD],
+            self.yale, self.locks = await self.hass.async_add_executor_job(
+                self._yale_setup
             )
-            self.locks = await self.hass.async_add_executor_job(self.yale.get_locks)
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
             raise UpdateFailed from error
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 

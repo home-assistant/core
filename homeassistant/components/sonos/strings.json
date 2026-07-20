@@ -18,6 +18,11 @@
         "name": "Microphone"
       }
     },
+    "button": {
+      "cancel_announcement": {
+        "name": "Cancel announcement"
+      }
+    },
     "number": {
       "audio_delay": {
         "name": "Audio delay"
@@ -96,12 +101,30 @@
       },
       "surround_mode": {
         "name": "Surround music full volume"
+      },
+      "tv_autoplay": {
+        "name": "TV autoplay"
+      },
+      "ungroup_on_autoplay": {
+        "name": "Ungroup on autoplay"
       }
     }
   },
   "exceptions": {
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
+    },
+    "announcement_connection_error": {
+      "message": "Failed to reach Sonos speaker for announcement: {error}"
+    },
+    "call_failed": {
+      "message": "Error on {target}: {error}"
+    },
+    "cancel_announcement_error": {
+      "message": "Cancelling announcement failed: {response}"
+    },
+    "cancel_announcement_no_id": {
+      "message": "No active announcement to cancel"
     },
     "entity_not_found": {
       "message": "Entity {entity_id} not found."
@@ -118,6 +141,9 @@
     "invalid_media": {
       "message": "Could not find media in library: {media_id}"
     },
+    "invalid_media_content_type": {
+      "message": "Media content type {media_content_type} is not supported"
+    },
     "invalid_sonos_playlist": {
       "message": "Could not find Sonos playlist: {name}"
     },
@@ -129,6 +155,15 @@
     },
     "timeout_unjoin": {
       "message": "Timeout while waiting for Sonos player to unjoin the group {group_description}"
+    },
+    "toggle_failed": {
+      "message": "Could not toggle {entity_id}."
+    },
+    "upnp_call_failed": {
+      "message": "Error on {target} (UPnP error code {error_code}): {error}"
+    },
+    "upnp_call_failed_music_service_unavailable": {
+      "message": "Error on {target} (UPnP error code {error_code}): {error}. This may indicate the selected music service is not available on the speaker."
     }
   },
   "issues": {
@@ -173,10 +208,6 @@
     "restore": {
       "description": "Restores a snapshot of a media player.",
       "fields": {
-        "entity_id": {
-          "description": "Name of entity that will be restored.",
-          "name": "Entity"
-        },
         "with_group": {
           "description": "Whether the group layout and the state of other speakers in the group should also be restored.",
           "name": "[%key:component::sonos::services::snapshot::fields::with_group::name%]"
@@ -197,10 +228,6 @@
     "snapshot": {
       "description": "Takes a snapshot of a media player.",
       "fields": {
-        "entity_id": {
-          "description": "Name of entity that will be snapshot.",
-          "name": "Entity"
-        },
         "with_group": {
           "description": "Whether the snapshot should include the group layout and the state of other speakers in the group.",
           "name": "With group"

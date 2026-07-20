@@ -1,8 +1,6 @@
 """Light/LED support for the Skybell HD Doorbell."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aioskybell.helpers.const import BRIGHTNESS, RGB_COLOR
 
@@ -13,23 +11,22 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import SkybellConfigEntry
 from .entity import SkybellEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SkybellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Skybell switch."""
     async_add_entities(
         SkybellLight(coordinator, LightEntityDescription(key="light"))
-        for coordinator in hass.data[DOMAIN][entry.entry_id]
+        for coordinator in entry.runtime_data
     )
 
 
@@ -40,6 +37,7 @@ class SkybellLight(SkybellEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_name = None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_RGB_COLOR in kwargs:
@@ -48,21 +46,25 @@ class SkybellLight(SkybellEntity, LightEntity):
             level = int((kwargs.get(ATTR_BRIGHTNESS, 0) * 100) / 255)
             await self._device.async_set_setting(BRIGHTNESS, level)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._device.async_set_setting(ATTR_BRIGHTNESS, 0)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.led_intensity > 0
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return int((self._device.led_intensity * 255) / 100)
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
         return self._device.led_rgb

@@ -16,7 +16,11 @@ from . import configure_integration
 
 
 async def test_pressmode_bot(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_setup_webhook,
+    mock_get_webook_configuration,
 ) -> None:
     """Test press."""
     mock_list_devices.return_value = [
@@ -30,6 +34,17 @@ async def test_pressmode_bot(
     ]
 
     mock_get_status.return_value = {"deviceMode": "pressMode"}
+
+    mock_setup_webhook.return_value = {
+        "statusCode": 100,
+        "body": {},
+        "message": "success",
+    }
+    mock_get_webook_configuration.return_value = {
+        "statusCode": 100,
+        "body": {},
+        "message": "success",
+    }
 
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
@@ -49,7 +64,11 @@ async def test_pressmode_bot(
 
 
 async def test_switchmode_bot_no_button_entity(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_setup_webhook,
+    mock_get_webook_configuration,
 ) -> None:
     """Test a switchMode bot isn't added as a button."""
     mock_list_devices.return_value = [
@@ -63,6 +82,16 @@ async def test_switchmode_bot_no_button_entity(
     ]
 
     mock_get_status.return_value = {"deviceMode": "switchMode"}
+    mock_setup_webhook.return_value = {
+        "statusCode": 100,
+        "body": {},
+        "message": "success",
+    }
+    mock_get_webook_configuration.return_value = {
+        "statusCode": 100,
+        "body": {},
+        "message": "success",
+    }
 
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED

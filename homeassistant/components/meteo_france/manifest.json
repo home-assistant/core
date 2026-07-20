@@ -1,7 +1,7 @@
 {
   "domain": "meteo_france",
   "name": "M\u00e9t\u00e9o-France",
-  "codeowners": ["@hacf-fr", "@oncleben31", "@Quentame"],
+  "codeowners": ["@hacf-fr/reviewers", "@oncleben31", "@Quentame"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/meteo_france",
   "integration_type": "service",

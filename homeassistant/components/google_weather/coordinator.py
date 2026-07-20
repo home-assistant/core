@@ -1,17 +1,16 @@
 """The Google Weather coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TypeVar
+from typing import TypeVar, override
 
 from google_weather_api import (
     CurrentConditionsResponse,
     DailyForecastResponse,
     GoogleWeatherApi,
+    GoogleWeatherApiAuthError,
     GoogleWeatherApiError,
     HourlyForecastResponse,
 )
@@ -19,6 +18,7 @@ from google_weather_api import (
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -85,6 +85,7 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
         self._data_type_name = data_type_name
         self._api_method = api_method
 
+    @override
     async def _async_update_data(self) -> T:
         """Fetch data from API and handle errors."""
         try:
@@ -92,6 +93,14 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 self.subentry.data[CONF_LATITUDE],
                 self.subentry.data[CONF_LONGITUDE],
             )
+        except GoogleWeatherApiAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={
+                    "error": str(err),
+                },
+            ) from err
         except GoogleWeatherApiError as err:
             _LOGGER.error(
                 "Error fetching %s for %s: %s",

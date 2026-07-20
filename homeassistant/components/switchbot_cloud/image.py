@@ -1,27 +1,26 @@
 """Support for the Switchbot Image."""
 
 import datetime
+from typing import override
 
 from switchbot_api import Device, Remote, SwitchBotAPI
 from switchbot_api.utils import get_file_stream_from_cloud
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     async_add_entities(
         _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.images
@@ -44,6 +43,7 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
         ImageEntity.__init__(self, self.coordinator.hass)
         self._image_content = b""
 
+    @override
     async def async_image(self) -> bytes | None:
         """Async image."""
         if (
@@ -55,11 +55,12 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
         self._image_content = await get_file_stream_from_cloud(self._attr_image_url, 5)
         return self._image_content
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-        self._attr_image_last_updated = datetime.datetime.now()
+        self._attr_image_last_updated = datetime.datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         self._attr_image_url = self.coordinator.data.get("imageUrl")
 
 

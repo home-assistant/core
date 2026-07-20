@@ -1,10 +1,8 @@
 """Support for manual alarms controllable via MQTT."""
 
-from __future__ import annotations
-
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -306,6 +304,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._payload_arm_custom_bypass = payload_arm_custom_bypass
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
         if self._state == AlarmControlPanelState.TRIGGERED:
@@ -346,6 +345,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
     @property
+    @override
     def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
@@ -354,6 +354,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._async_validate_code(code, AlarmControlPanelState.DISARMED)
@@ -361,31 +362,37 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_HOME)
         self._async_update_state(AlarmControlPanelState.ARMED_HOME)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_AWAY)
         self._async_update_state(AlarmControlPanelState.ARMED_AWAY)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_NIGHT)
         self._async_update_state(AlarmControlPanelState.ARMED_NIGHT)
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_VACATION)
         self._async_update_state(AlarmControlPanelState.ARMED_VACATION)
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         self._async_validate_code(code, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
         self._async_update_state(AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command.
 
@@ -443,6 +450,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         raise HomeAssistantError("Invalid alarm code provided")
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.state != AlarmControlPanelState.PENDING:
@@ -457,6 +465,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         async_track_state_change_event(

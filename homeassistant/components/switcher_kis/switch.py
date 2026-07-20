@@ -1,9 +1,7 @@
 """Switcher integration Switch platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioswitcher.api import Command
 from aioswitcher.device import (
@@ -77,7 +75,7 @@ async def async_setup_entry(
         """Add switch from Switcher device."""
         entities: list[SwitchEntity] = []
 
-        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+        if coordinator.data.device_type.category is DeviceCategory.POWER_PLUG:
             entities.append(SwitcherPowerPlugSwitchEntity(coordinator))
         elif coordinator.data.device_type.category in [
             DeviceCategory.WATER_HEATER,
@@ -118,6 +116,7 @@ class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._update_data()
 
+    @override
     def _update_data(self) -> None:
         """Update data from device."""
         if self.control_result is not None:
@@ -125,14 +124,16 @@ class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
             self.control_result = None
             return
 
-        self._attr_is_on = bool(self.coordinator.data.device_state == DeviceState.ON)
+        self._attr_is_on = bool(self.coordinator.data.device_state is DeviceState.ON)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_call_api(API_CONTROL_DEVICE, Command.ON)
         self._attr_is_on = self.control_result = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_call_api(API_CONTROL_DEVICE, Command.OFF)
@@ -182,6 +183,7 @@ class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         self.control_result: bool | None = None
         self._update_data()
 
+    @override
     def _update_data(self) -> None:
         """Update data from device."""
         if self.control_result is not None:
@@ -190,8 +192,9 @@ class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
             return
 
         data = cast(SwitcherShutter, self.coordinator.data)
-        self._attr_is_on = bool(data.child_lock[self._cover_id] == ShutterChildLock.ON)
+        self._attr_is_on = bool(data.child_lock[self._cover_id] is ShutterChildLock.ON)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_call_api(
@@ -200,6 +203,7 @@ class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         self._attr_is_on = self.control_result = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_call_api(

@@ -1,14 +1,13 @@
 """The venstar component."""
 
-from __future__ import annotations
+from typing import override
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import VenstarDataUpdateCoordinator
+from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 
 
 class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
@@ -19,7 +18,7 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
     def __init__(
         self,
         venstar_data_coordinator: VenstarDataUpdateCoordinator,
-        config: ConfigEntry,
+        config: VenstarConfigEntry,
     ) -> None:
         """Initialize the data object."""
         super().__init__(venstar_data_coordinator)
@@ -27,11 +26,13 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
         self._client = venstar_data_coordinator.client
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information for this entity."""
         firmware_version = self._client.get_firmware_ver()
@@ -40,5 +41,5 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
             name=self._client.name,
             manufacturer="Venstar",
             model=f"{self._client.model}-{self._client.get_type()}",
-            sw_version=f"{firmware_version[0]}.{firmware_version[1]}",
+            sw_version=f"{firmware_version[0]}.{firmware_version[1]:02}",
         )

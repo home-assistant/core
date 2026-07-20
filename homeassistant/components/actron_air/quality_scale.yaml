@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not have custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: This integration does not subscribe to external events.
@@ -41,7 +47,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: This integration uses DHCP discovery, however is cloud polling. Therefore there is no information to update.
@@ -54,19 +60,13 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: This integration does not use entity categories.
-  entity-device-class:
-    status: exempt
-    comment: This integration does not use entity device classes.
-  entity-disabled-by-default:
-    status: exempt
-    comment: Not required for this integration at this stage.
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
+  entity-category: done
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not have any known issues that require repair.
@@ -75,4 +75,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done

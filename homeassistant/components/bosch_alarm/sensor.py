@@ -1,9 +1,8 @@
 """Support for Bosch Alarm Panel History as a sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from bosch_alarm_mode2 import Panel
 from bosch_alarm_mode2.const import ALARM_MEMORY_PRIORITIES
@@ -117,6 +116,7 @@ class BoschAreaSensor(BoschAlarmAreaEntity, SensorEntity):
         self._attr_unique_id = f"{self._area_unique_id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> str | int:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._area)

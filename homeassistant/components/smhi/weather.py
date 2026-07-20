@@ -1,9 +1,7 @@
 """Support for the Swedish weather institute weather service."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import Any, Final, override
 
 from pysmhi import SMHIForecast
 
@@ -117,6 +115,7 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
     )
     _attr_name = None
 
+    @override
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if daily_data := self.coordinator.data.daily:
@@ -135,6 +134,7 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
                 self._attr_condition = ATTR_CONDITION_CLEAR_NIGHT
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if daily_data := self.coordinator.data.daily:
@@ -144,6 +144,7 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_entity_data()
@@ -192,14 +193,17 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
 
         return data
 
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Service to retrieve the daily forecast."""
         return self._get_forecast_data(self.coordinator.data.daily, "daily")
 
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Service to retrieve the hourly forecast."""
         return self._get_forecast_data(self.coordinator.data.hourly, "hourly")
 
+    @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Service to retrieve the twice daily forecast."""
         return self._get_forecast_data(self.coordinator.data.twice_daily, "twice_daily")

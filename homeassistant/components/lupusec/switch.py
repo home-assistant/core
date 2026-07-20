@@ -1,10 +1,8 @@
 """Support for Lupusec Security System switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import lupupy.constants as CONST
 
@@ -42,15 +40,18 @@ class LupusecSwitch(LupusecBaseSensor, SwitchEntity):
 
     _attr_name = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         self._device.switch_on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         self._device.switch_off()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.is_on

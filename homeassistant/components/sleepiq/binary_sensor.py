@@ -1,27 +1,28 @@
 """Support for SleepIQ sensors."""
 
+from typing import override
+
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ICON_EMPTY, ICON_OCCUPIED, IS_IN_BED
-from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
+from .const import ICON_EMPTY, ICON_OCCUPIED, IS_IN_BED
+from .coordinator import SleepIQConfigEntry, SleepIQDataUpdateCoordinator
 from .entity import SleepIQSleeperEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SleepIQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed binary sensors."""
-    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(
         IsInBedBinarySensor(data.data_coordinator, bed, sleeper)
         for bed in data.client.beds.values()
@@ -46,6 +47,7 @@ class IsInBedBinarySensor(
         super().__init__(coordinator, bed, sleeper, IS_IN_BED)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         self._attr_is_on = self.sleeper.in_bed

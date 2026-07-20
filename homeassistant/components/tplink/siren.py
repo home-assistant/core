@@ -1,11 +1,9 @@
 """Support for TPLink siren entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import math
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from kasa import Device, Module
 
@@ -126,6 +124,7 @@ class TPLinkSirenEntity(CoordinatedTPLinkModuleEntity, SirenEntity):
         self._alarm_duration_max = alarm_duration_feat.maximum_value
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         turn_on_params = cast(SirenTurnOnServiceParameters, kwargs)
@@ -151,11 +150,13 @@ class TPLinkSirenEntity(CoordinatedTPLinkModuleEntity, SirenEntity):
         )
 
     @async_refresh_after
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         await self._alarm_module.stop()
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = self._alarm_module.active

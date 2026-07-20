@@ -1,9 +1,7 @@
 """Support for X10 switch over Mochad."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymochad import controller, device
 from pymochad.exceptions import MochadException
@@ -67,6 +65,7 @@ class MochadSwitch(SwitchEntity):
         else:
             self._attr_is_on = False
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
 
@@ -80,9 +79,11 @@ class MochadSwitch(SwitchEntity):
                 if self._comm_type == "pl":
                     self._controller.read_data()
                 self._attr_is_on = True
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
 
@@ -96,6 +97,7 @@ class MochadSwitch(SwitchEntity):
                 if self._comm_type == "pl":
                     self._controller.read_data()
                 self._attr_is_on = False
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 

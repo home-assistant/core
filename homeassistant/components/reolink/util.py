@@ -1,7 +1,5 @@
 """Utility functions for the Reolink component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -53,7 +51,7 @@ def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) 
     """Check if an existing entry has a proper connection."""
     return (
         hasattr(config_entry, "runtime_data")
-        and config_entry.state == config_entries.ConfigEntryState.LOADED
+        and config_entry.state is config_entries.ConfigEntryState.LOADED
         and config_entry.runtime_data.device_coordinator.last_update_success
     )
 
@@ -64,6 +62,7 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
         config_entry_id
     )
     if config_entry is None:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise Unresolvable(
             f"Could not find Reolink config entry id '{config_entry_id}'."
         )
@@ -101,6 +100,8 @@ def get_device_uid_and_ch(
     elif device_uid[1].startswith("chime"):
         ch = int(device_uid[1][5:])
         is_chime = True
+    elif device_uid[1].startswith("lens"):
+        ch = int(device_uid[1][4:])
     else:
         device_uid_part = "_".join(device_uid[1:])
         ch = host.api.channel_for_uid(device_uid_part)

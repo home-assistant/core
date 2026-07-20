@@ -1,34 +1,23 @@
 """The Anthropic integration."""
 
-from __future__ import annotations
+from anthropic.resources.messages.messages import DEPRECATED_MODELS
 
-import anthropic
-
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import (
-    CONF_CHAT_MODEL,
-    DEFAULT_CONVERSATION_NAME,
-    DEPRECATED_MODELS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -39,38 +28,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Set up Anthropic from a config entry."""
-    client = anthropic.AsyncAnthropic(
-        api_key=entry.data[CONF_API_KEY], http_client=get_async_client(hass)
-    )
-    try:
-        await client.models.list(timeout=10.0)
-    except anthropic.AuthenticationError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="api_authentication_error",
-            translation_placeholders={"message": err.message},
-        ) from err
-    except anthropic.AnthropicError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="api_error",
-            translation_placeholders={
-                "message": err.message
-                if isinstance(err, anthropic.APIError)
-                else str(err)
-            },
-        ) from err
-
-    entry.runtime_data = client
+    coordinator = AnthropicCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    LOGGER.debug("Available models: %s", coordinator.data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     for subentry in entry.subentries.values():
-        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model.startswith(
-            tuple(DEPRECATED_MODELS)
-        ):
+        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model in DEPRECATED_MODELS:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -169,7 +137,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by = device.disabled_by
+            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -179,20 +147,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 device.id,
                 disabled_by=device_disabled_by,
                 new_identifiers={(DOMAIN, subentry.subentry_id)},
-                add_config_subentry_id=subentry.subentry_id,
-                add_config_entry_id=parent_entry.entry_id,
+                new_config_entry_id=parent_entry.entry_id,
+                new_config_subentry_id=subentry.subentry_id,
             )
-            if parent_entry.entry_id != entry.entry_id:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
-                )
 
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
@@ -209,10 +166,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 2 and entry.minor_version == 1:
         # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
@@ -259,6 +212,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
                     disabled_by=er.RegistryEntryDisabler.DEVICE,
                 )
         hass.config_entries.async_update_entry(entry, minor_version=3)
+
+    if entry.version == 2 and entry.minor_version == 3:
+        # Remove Temperature parameter
+        temperature_key = "temperature"
+
+        for subentry in entry.subentries.values():
+            data = subentry.data.copy()
+            if temperature_key not in data:
+                continue
+            data.pop(temperature_key, None)
+            hass.config_entries.async_update_subentry(entry, subentry, data=data)
+
+        hass.config_entries.async_update_entry(entry, minor_version=4)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

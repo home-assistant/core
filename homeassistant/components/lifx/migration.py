@@ -1,7 +1,5 @@
 """Migrate lifx devices to their own config entry."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -63,8 +61,7 @@ def async_migrate_entities_devices(
                 migrated_devices.append(dev_entry.id)
                 device_registry.async_update_device(
                     dev_entry.id,
-                    add_config_entry_id=new_entry.entry_id,
-                    remove_config_entry_id=legacy_entry_id,
+                    new_config_entry_id=new_entry.entry_id,
                 )
 
     entity_registry = er.async_get(hass)

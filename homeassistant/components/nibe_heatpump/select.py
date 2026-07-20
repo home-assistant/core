@@ -1,28 +1,26 @@
 """The Nibe Heat Pump select."""
 
-from __future__ import annotations
+from typing import override
 
 from nibe.coil import Coil, CoilData
 
 from homeassistant.components.select import ENTITY_ID_FORMAT, SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import CoilCoordinator
+from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
 from .entity import CoilEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NibeHeatpumpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         Select(coordinator, coil)
@@ -43,6 +41,7 @@ class Select(CoilEntity, SelectEntity):
         self._attr_options = list(coil.mappings.values())
         self._attr_current_option = None
 
+    @override
     def _async_read_coil(self, data: CoilData) -> None:
         if not isinstance(data.value, str):
             self._attr_current_option = None
@@ -50,6 +49,7 @@ class Select(CoilEntity, SelectEntity):
 
         self._attr_current_option = data.value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Support writing value."""
         await self._async_write_coil(option)

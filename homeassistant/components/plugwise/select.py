@@ -1,8 +1,7 @@
 """Plugwise Select component for Home Assistant."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import STATE_ON, EntityCategory
@@ -10,6 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    LOCATION,
     SELECT_DHW_MODE,
     SELECT_GATEWAY_MODE,
     SELECT_REGULATION_MODE,
@@ -107,26 +107,34 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
         self.entity_description = entity_description
 
-        self._location = device_id
-        if (location := self.device.get("location")) is not None:
-            self._location = location
+        self._device_or_location = device_id
+        if (
+            self.entity_description.key in (SELECT_SCHEDULE, SELECT_ZONE_PROFILE)
+            and (location := self.device.get(LOCATION)) is not None
+        ):
+            self._device_or_location = location
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.device[self.entity_description.key]
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the available select-options."""
         return self.device[self.entity_description.options_key]
 
     @plugwise_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option.
 
-        self._location and STATE_ON are required for the thermostat-schedule select.
+        The appliance ID (= device_id) is required for the dhw_mode select.
+        The location ID is required for the thermostat schedule and zone_profile selects.
+        STATE_ON is required for the thermostat schedule select.
         """
         await self.coordinator.api.set_select(
-            self.entity_description.key, self._location, option, STATE_ON
+            self.entity_description.key, self._device_or_location, option, STATE_ON
         )

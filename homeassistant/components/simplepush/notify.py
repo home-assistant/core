@@ -1,9 +1,7 @@
 """Simplepush notification service."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from simplepush import BadRequest, UnknownError, send
 
@@ -43,6 +41,7 @@ class SimplePushNotificationService(BaseNotificationService):
         self._password: str | None = config.get(CONF_PASSWORD)
         self._salt: str | None = config.get(CONF_SALT)
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a Simplepush user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -98,6 +97,7 @@ class SimplePushNotificationService(BaseNotificationService):
                     event=event,
                 )
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except BadRequest:
             _LOGGER.error("Bad request. Title or message are too long")
         except UnknownError:

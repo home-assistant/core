@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from asyncsleepiq import AsyncSleepIQ, SleepIQAPIException, SleepIQTimeoutException
 
@@ -18,16 +19,18 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 LONGER_UPDATE_INTERVAL = timedelta(minutes=5)
 SLEEP_DATA_UPDATE_INTERVAL = timedelta(hours=1)  # Sleep data doesn't change frequently
 
+type SleepIQConfigEntry = ConfigEntry[SleepIQData]
+
 
 class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SleepIQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SleepIQConfigEntry,
         client: AsyncSleepIQ,
     ) -> None:
         """Initialize coordinator."""
@@ -40,23 +43,29 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         tasks = [self.client.fetch_bed_statuses()] + [
             bed.foundation.update_foundation_status()
             for bed in self.client.beds.values()
         ]
-        await asyncio.gather(*tasks)
+        try:
+            await asyncio.gather(*tasks)
+        except SleepIQTimeoutException as err:
+            raise UpdateFailed(f"Timed out fetching SleepIQ data: {err}") from err
+        except SleepIQAPIException as err:
+            raise UpdateFailed(f"Failed to fetch SleepIQ data: {err}") from err
 
 
 class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
-    """SleepIQ data update coordinator."""
+    """SleepIQ pause update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SleepIQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SleepIQConfigEntry,
         client: AsyncSleepIQ,
     ) -> None:
         """Initialize coordinator."""
@@ -69,21 +78,27 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
-        await asyncio.gather(
-            *[bed.fetch_pause_mode() for bed in self.client.beds.values()]
-        )
+        try:
+            await asyncio.gather(
+                *[bed.fetch_pause_mode() for bed in self.client.beds.values()]
+            )
+        except SleepIQTimeoutException as err:
+            raise UpdateFailed(f"Timed out fetching SleepIQ pause data: {err}") from err
+        except SleepIQAPIException as err:
+            raise UpdateFailed(f"Failed to fetch SleepIQ pause data: {err}") from err
 
 
 class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ sleep health data coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SleepIQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SleepIQConfigEntry,
         client: AsyncSleepIQ,
     ) -> None:
         """Initialize coordinator."""
@@ -96,6 +111,7 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch sleep health data from API via asyncsleepiq library."""
         try:

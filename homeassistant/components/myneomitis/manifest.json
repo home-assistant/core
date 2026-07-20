@@ -1,11 +1,11 @@
 {
   "domain": "myneomitis",
   "name": "MyNeomitis",
-  "codeowners": ["@l-pr"],
+  "codeowners": ["@Epyes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/myneomitis",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["pyaxencoapi==1.0.6"]
+  "requirements": ["pyaxencoapi==1.0.7"]
 }

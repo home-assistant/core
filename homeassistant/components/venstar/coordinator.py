@@ -1,9 +1,8 @@
 """Coordinator for the venstar component."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
+from typing import override
 
 from requests import RequestException
 from venstarcolortouch import VenstarColorTouch
@@ -14,16 +13,18 @@ from homeassistant.helpers import update_coordinator
 
 from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP
 
+type VenstarConfigEntry = ConfigEntry[VenstarDataUpdateCoordinator]
+
 
 class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None]):
     """Class to manage fetching Venstar data."""
 
-    config_entry: ConfigEntry
+    config_entry: VenstarConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: VenstarConfigEntry,
         venstar_connection: VenstarColorTouch,
     ) -> None:
         """Initialize global Venstar data updater."""
@@ -37,6 +38,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
         self.client = venstar_connection
         self.runtimes: list[dict[str, int]] = []
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the state.
 
