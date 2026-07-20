@@ -110,7 +110,9 @@
       }
     ],
     "Labels": {
-      "com.docker.compose.project": "webstack"
+      "com.docker.compose.project": "webstack",
+      "org.opencontainers.image.version": "1.29.3",
+      "org.opencontainers.image.created": "2026-05-02T14:31:00Z"
     },
     "State": "running",
     "Status": "Up 2 days"
@@ -130,7 +132,9 @@
       }
     ],
     "Labels": {
-      "com.docker.compose.project": "webstack"
+      "com.docker.compose.project": "webstack",
+      "org.opencontainers.image.version": "15.14",
+      "org.opencontainers.image.created": "not-a-timestamp"
     },
     "State": "running",
     "Status": "Up 1 day"
