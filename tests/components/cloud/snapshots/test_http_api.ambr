@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 23
+  Built-in integrations: 25
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -48,9 +48,11 @@
   repairs | Repairs
   stt | Speech-to-text (STT)
   system_health | System Health
+  timer_list | Timer list
   tts | Text-to-speech (TTS)
   web_rtc | WebRTC
   webhook | Webhook
+  websocket_api | Home Assistant WebSocket API
   
   </details>
   
@@ -157,7 +159,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 23
+  Built-in integrations: 25
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -184,9 +186,11 @@
   repairs | Repairs
   stt | Speech-to-text (STT)
   system_health | System Health
+  timer_list | Timer list
   tts | Text-to-speech (TTS)
   web_rtc | WebRTC
   webhook | Webhook
+  websocket_api | Home Assistant WebSocket API
   
   </details>
   

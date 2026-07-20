@@ -173,6 +173,25 @@ async def test_cancel_timer_archives_timer(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("test_entity")
+async def test_cancel_already_archived_timer_is_noop(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test cancelling an already-archived timer does not rewrite it."""
+    timer_id = await _start_timer(hass)
+    await _call(hass, "cancel_timer", timer_id=timer_id)
+    finished_at = (await _get_timers(hass))[0]["finished_at"]
+
+    # Cancelling again must not refresh the timestamp or re-fire a change
+    freezer.tick(timedelta(seconds=5))
+    await _call(hass, "cancel_timer", timer_id=timer_id)
+
+    timers = await _get_timers(hass)
+    assert len(timers) == 1
+    assert timers[0]["status"] == "cancelled"
+    assert timers[0]["finished_at"] == finished_at
+
+
+@pytest.mark.usefixtures("test_entity")
 async def test_archive_limit_evicts_oldest(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
