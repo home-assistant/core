@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import camera, image
+from homeassistant.components import camera, image, media_source
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TARGET,
@@ -607,6 +607,101 @@ async def test_smtp_send_message_tts_source(
     assert smtp.sendmail.call_args[0][0] == "email@example.com"
     assert smtp.sendmail.call_args[0][1] == "recipient@example.com"
     assert smtp.sendmail.call_args[0][2] == snapshot
+
+
+@pytest.mark.usefixtures("smtp")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_smtp_send_message_media_source_not_supported(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test sending an email message via smtp.send_message action with attachment from an unsupported media source."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with (
+        patch(
+            "homeassistant.components.smtp.helpers.async_resolve_media",
+            return_value=media_source.PlayMedia(
+                url="https://gameclipscontent-d2009.media.xboxlive.com/123456789",
+                mime_type="video/mp4",
+                path=None,
+            ),
+        ),
+        pytest.raises(
+            ServiceValidationError,
+        ) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+                ATTR_ATTACHMENTS: [
+                    {
+                        ATTR_ATTACHMENT: {
+                            "media_content_id": "media-source://xbox/123456789/",
+                            "media_content_type": "video",
+                        },
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "media_source_not_supported"
+    assert err.value.translation_placeholders == {
+        "media_content_id": "media-source://xbox/123456789/"
+    }
+
+
+@pytest.mark.usefixtures("smtp")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_smtp_send_message_media_source_missing_filename(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test sending an email message via smtp.send_message action with attachment from a media source that does not provide a filename."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with (
+        patch(
+            "homeassistant.components.image.async_get_image",
+            return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+        ) as mock_get_image,
+        pytest.raises(
+            ServiceValidationError,
+        ) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+                ATTR_ATTACHMENTS: [
+                    {
+                        ATTR_ATTACHMENT: {
+                            "media_content_id": "media-source://image/image.test",
+                            "media_content_type": "image/png",
+                        }
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    mock_get_image.assert_called_once_with(hass, "image.test")
+    assert err.value.translation_key == "media_source_missing_filename"
+    assert err.value.translation_placeholders == {
+        "media_content_id": "media-source://image/image.test"
+    }
 
 
 @pytest.mark.usefixtures("smtp")
