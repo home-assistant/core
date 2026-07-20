@@ -140,7 +140,7 @@
   },
   "issues": {
     "deprecated_notify_action": {
-      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `{new_action_1}` or `{new_action_2}` actions instead.\n\n## Example automation:\n\n{example_yaml}",
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `{new_action_1}` or `{new_action_2}` actions instead.\n\n## Example automation using `{new_action_1}` action:\n\n{example_yaml_1}\n\n## Example automation using `{new_action_2}` action:\n\n{example_yaml_2}",
       "title": "Detected use of deprecated action {action}"
     },
     "deprecated_yaml_import_issue_error": {
