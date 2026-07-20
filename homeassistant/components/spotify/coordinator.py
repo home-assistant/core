@@ -100,9 +100,6 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         try:
             self.current_user = await self.client.get_current_user()
         except OAuth2TokenRequestReauthError as err:
-            self.hass.async_create_task(
-                self.config_entry.async_start_reauth(self.hass)
-            )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
@@ -129,9 +126,6 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         try:
             current = await self.client.get_playback()
         except OAuth2TokenRequestReauthError as err:
-            self.hass.async_create_task(
-                self.config_entry.async_start_reauth(self.hass)
-            )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
@@ -223,9 +217,6 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
         try:
             return await self._client.get_devices()
         except OAuth2TokenRequestReauthError as err:
-            self.hass.async_create_task(
-                self.config_entry.async_start_reauth(self.hass)
-            )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",

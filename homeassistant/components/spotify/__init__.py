@@ -1,5 +1,6 @@
 """The spotify integration."""
 
+import logging
 from typing import TYPE_CHECKING
 
 import aiohttp
@@ -33,6 +34,8 @@ from .util import (
     spotify_uri_from_media_browser_url,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 __all__ = [
@@ -58,7 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        hass.async_create_task(entry.async_start_reauth(hass))
+        _LOGGER.warning(
+            "Spotify refresh token expired or revoked for %s, requesting reauthentication",
+            entry.title,
+        )
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="oauth2_token_reauth_required",
