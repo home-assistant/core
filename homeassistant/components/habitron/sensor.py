@@ -416,9 +416,10 @@ class HbtnDescribedSensor(HbtnSensor):
         # description key to keep each entity's unique_id distinct.
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
         # State class comes from the description; text/enum sensors carry None.
+        # Unlike ``options``, which SensorEntity reads off the description on
+        # its own, this needs an explicit assignment: the class-level default
+        # above would otherwise shadow the description's value.
         self._attr_state_class = description.state_class
-        if description.options is not None:
-            self._attr_options = description.options
         if description.initial_value is not None:
             self._attr_native_value = description.initial_value
         if description.translated_name:
