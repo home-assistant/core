@@ -815,7 +815,8 @@ class HomeAssistantHTTP:
                         err,
                     )
         if self._server is not None:
+            # Only close (stop listening); do not await wait_closed() here.
+            # Let runner.cleanup() terminate active connections.
             self._server.close()
-            await self._server.wait_closed()
         if self.runner is not None:
             await self.runner.cleanup()
