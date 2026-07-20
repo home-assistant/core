@@ -1370,6 +1370,32 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return device
         return matches[0]
 
+    @callback
+    def async_get_device_by_identifier(
+        self, identifier: tuple[str, str], config_entry_id: str
+    ) -> DeviceEntry | None:
+        """Get the device with the identifier, owned by the config entry.
+
+        Identifiers are unique within a config entry, so unlike async_get_device
+        the lookup cannot be ambiguous.
+        """
+        return self.devices.get_entry(
+            identifiers={identifier}, config_entry_id=config_entry_id
+        )
+
+    @callback
+    def async_get_device_by_connection(
+        self, connection: tuple[str, str], config_entry_id: str
+    ) -> DeviceEntry | None:
+        """Get the device with the connection, owned by the config entry.
+
+        Connections are unique within a config entry, so unlike async_get_device
+        the lookup cannot be ambiguous.
+        """
+        return self.devices.get_entry(
+            connections={connection}, config_entry_id=config_entry_id
+        )
+
     def _first_device_in_domain(
         self, devices: Iterable[DeviceEntry], domain: str
     ) -> DeviceEntry | None:
@@ -1955,13 +1981,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if pending_move is not UNDEFINED and pending_move != old._pending_move:  # noqa: SLF001
             new_values["pending_move"] = pending_move
 
-        # Identifiers and connections are unique per config entry, so when the device is
-        # moved to another config entry they are validated against the new one
+        # The config entry owning the device after the update. Identifiers and
+        # connections are unique per config entry, so they are validated against the
+        # owning entry, as is the disabled state.
         effective_config_entry_id = (
             target_config_entry_id
             if target_config_entry_id is not UNDEFINED
             else old.config_entry_id
         )
+        is_move = effective_config_entry_id != old.config_entry_id
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
@@ -2009,7 +2037,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # overwrite the index slot of a device that already has the same identity there.
         # A full new_identifiers / new_connections replacement is validated above;
         # merge_* only adds, so the retained old values still need checking here.
-        if effective_config_entry_id != old.config_entry_id:
+        if is_move:
             if new_identifiers is UNDEFINED:
                 self._validate_identifiers(
                     device_id, effective_config_entry_id, old.identifiers, False
@@ -2019,26 +2047,53 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     device_id, effective_config_entry_id, old.connections, False
                 )
 
-        # On a move, reflect the new owning config entry's disabled state (as restoring a
-        # deleted device does) unless disabled_by was passed explicitly: disable an
-        # enabled device moved onto a disabled entry, and clear a CONFIG_ENTRY disable
-        # when moved onto an enabled entry. A USER disable is preserved.
-        if (
-            disabled_by is UNDEFINED
-            and target_config_entry_id is not UNDEFINED
-            and target_config_entry_id != old.config_entry_id
-            and (
-                target_entry := self.hass.config_entries.async_get_entry(
-                    target_config_entry_id
-                )
+        # An explicit disabled_by must be consistent with the disabled state of the
+        # config entry owning the device after the update: a device can't be enabled
+        # when the owning config entry is disabled, and can't be disabled by
+        # CONFIG_ENTRY when the owning config entry is enabled. An inconsistent
+        # disabled_by is ignored; this will raise in HA Core 2027.8.
+        # On a move, reflect the new owning config entry's disabled state (as restoring
+        # a deleted device does) unless a consistent disabled_by was passed explicitly:
+        # disable an enabled device moved onto a disabled entry, and clear a
+        # CONFIG_ENTRY disable when moved onto an enabled entry. A USER disable is
+        # preserved. A new device is reconciled the same way, so a create can't
+        # leave the device's disabled state contradicting the owning entry's.
+        if (disabled_by is not UNDEFINED or is_move or is_new) and (
+            owning_entry := self.hass.config_entries.async_get_entry(
+                effective_config_entry_id
             )
-            is not None
-        ):
-            if target_entry.disabled_by:
-                if old.disabled_by is None:
-                    disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
-            elif old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
-                disabled_by = None
+        ) is not None:
+            if is_move:
+                context = "when moving a device to"
+            elif is_new:
+                context = "when creating a device attached to"
+            else:
+                context = "on a device belonging to"
+            if disabled_by is None and owning_entry.disabled_by:
+                report_usage(
+                    f"sets disabled_by to None {context} the disabled "
+                    f"config entry {effective_config_entry_id}",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8",
+                )
+                disabled_by = UNDEFINED
+            elif (
+                disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
+                and not owning_entry.disabled_by
+            ):
+                report_usage(
+                    f"sets disabled_by to DeviceEntryDisabler.CONFIG_ENTRY {context} "
+                    f"the enabled config entry {effective_config_entry_id}",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2027.8",
+                )
+                disabled_by = UNDEFINED
+            if (is_move or is_new) and disabled_by is UNDEFINED:
+                if owning_entry.disabled_by:
+                    if old.disabled_by is None:
+                        disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
+                elif old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
+                    disabled_by = None
 
         for attr_name, value in (
             ("area_id", area_id),
@@ -2083,7 +2138,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # identity move, so match the target entry's deleted device by the full identity.
         match_identifiers: set[tuple[str, str]] | None
         match_connections: set[tuple[str, str]] | None
-        if effective_config_entry_id != old.config_entry_id:
+        if is_move:
             match_identifiers = new.identifiers
             match_connections = new.connections
         else:
@@ -2165,7 +2220,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             moves the device; on its own it does nothing.
         :param add_config_subentry_id: Deprecated. Combined with remove_config_subentry_id
             it moves the device to another subentry; on its own it does nothing.
-        :param new_config_entry_id: Move the device to this config entry.
+        :param disabled_by: Disable or enable the device. Must be consistent with the
+            disabled state of the config entry owning the device after the update:
+            a device can't be enabled when the owning config entry is disabled, and
+            can't be disabled by CONFIG_ENTRY when the owning config entry is enabled.
+            An inconsistent disabled_by is deprecated and ignored; this will raise in
+            HA Core 2027.8.
+        :param new_config_entry_id: Move the device to this config entry. Unless a
+            disabled_by consistent with the new config entry's disabled state is
+            passed explicitly, the device's disabled state is updated to reflect the
+            new config entry's disabled state.
         :param new_config_subentry_id: Move the device to this subentry.
         :param remove_config_entry_id: Remove the device if it is the device's config
             entry, unless combined with add_config_entry_id to move the device.

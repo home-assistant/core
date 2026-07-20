@@ -1423,6 +1423,7 @@ class EntityRegistry(BaseRegistry):
             )
 
         self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
+        device_id = self._ignore_composite_device_id(platform, device_id)
         _validate_item(
             self.hass,
             domain,
@@ -1746,6 +1747,40 @@ class EntityRegistry(BaseRegistry):
             )
 
     @callback
+    def _ignore_composite_device_id(
+        self, platform: str, device_id: str | None | UndefinedType
+    ) -> str | None | UndefinedType:
+        """Ignore a request to link an entity to a composite device id.
+
+        A pre-migration composite device was split into one device per config
+        entry, and the composite id no longer refers to a real device. Return
+        UNDEFINED to keep the entity's current device link, and ask the user to
+        report an issue.
+        """
+        if not device_id or device_id is UNDEFINED:
+            return device_id
+        device_registry = dr.async_get(self.hass)
+        if device_id in device_registry.devices:
+            return device_id
+        if not device_registry.async_get_devices_for_composite_device_id(device_id):
+            # Not a composite id, let _validate_item reject it
+            return device_id
+        report_issue = async_suggest_report_issue(
+            self.hass, integration_domain=platform
+        )
+        _LOGGER.warning(
+            (
+                "Ignoring request to link entity from integration %s to device %s:"
+                " the device id refers to a composite device which was split into"
+                " one device per config entry, please %s"
+            ),
+            platform,
+            device_id,
+            report_issue,
+        )
+        return UNDEFINED
+
+    @callback
     def _async_update_entity(
         self,
         entity_id: str,
@@ -1781,6 +1816,8 @@ class EntityRegistry(BaseRegistry):
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
+
+        device_id = self._ignore_composite_device_id(old.platform, device_id)
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
@@ -2080,7 +2117,9 @@ class EntityRegistry(BaseRegistry):
             for successor in successors:
                 if successor.config_entry_id == config_entry_id:
                     return successor.id
-            return successors[0].id
+            # No split device matches the entity's config entry; detach the entity
+            # rather than move it to an arbitrary split device it does not belong to.
+            return None
 
         if data is not None:
             for entity in data["entities"]:
