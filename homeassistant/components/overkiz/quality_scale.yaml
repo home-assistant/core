@@ -32,7 +32,7 @@ rules:
   action-exceptions: done
   docs-installation-parameters: done
   integration-owner: done
-  parallel-updates: todo
+  parallel-updates: done
   test-coverage: todo
   docs-configuration-parameters:
     status: exempt
