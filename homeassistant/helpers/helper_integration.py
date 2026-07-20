@@ -135,7 +135,7 @@ def async_remove_helper_devices(
     hass: HomeAssistant,
     *,
     helper_config_entry_id: str,
-    source_device_id: str,
+    source_device_id: str | None,
     sweep_helper_devices: bool = False,
     keep_device_ids: Collection[str] = (),
 ) -> None:
@@ -151,7 +151,9 @@ def async_remove_helper_devices(
     :param helper_config_entry_id: The config entry id of the helper being migrated.
     :param source_device_id: The device the helper should link to. May be the pre-migration
         composite id (as a helper that stored the device id before it was split passes) or a
-        concrete source device.
+        concrete source device. May also be None when no source device is selected: in sweep
+        mode the helper's devices are then removed and its entities left without a device;
+        in targeted mode this is a no-op.
     :param sweep_helper_devices: By default only the helper's single duplicate of
         source_device_id (a split or fork) is removed. When True, every device the
         helper owns except source_device_id and keep_device_ids is removed instead -
@@ -165,10 +167,15 @@ def async_remove_helper_devices(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    source_device = device_registry.async_get(source_device_id)
+    source_device = (
+        device_registry.async_get(source_device_id)
+        if source_device_id is not None
+        else None
+    )
     if source_device is None:
-        # The source device is gone. In sweep mode the helper's devices are still removed,
-        # leaving its entities without a device; targeted mode has no duplicate to match.
+        # No source device (gone, or none selected). In sweep mode the helper's devices are
+        # still removed, leaving its entities without a device; targeted mode has no duplicate
+        # to match.
         if sweep_helper_devices:
             _sweep_helper_devices(
                 device_registry,
