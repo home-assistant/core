@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Iterator
 from functools import lru_cache, partial
+import hashlib
 import logging
 import os
 import pathlib
@@ -9,6 +10,7 @@ import shutil
 from typing import Any, TypedDict, override
 
 from aiohttp import hdrs, web, web_urldispatcher
+from aiohttp.helpers import ETag
 import jinja2
 from propcache.api import cached_property
 import voluptuous as vol
@@ -873,16 +875,24 @@ class IndexView(web_urldispatcher.AbstractResource):
             extra_modules = hass.data[DATA_EXTRA_MODULE_URL].urls
             extra_js_es5 = hass.data[DATA_EXTRA_JS_URL_ES5].urls
 
-        response = web.Response(
-            text=_async_render_index_cached(
-                template,
-                theme_color=MANIFEST_JSON["theme_color"],
-                extra_modules=extra_modules,
-                extra_js_es5=extra_js_es5,
-            ),
-            content_type="text/html",
+        content = _async_render_index_cached(
+            template,
+            theme_color=MANIFEST_JSON["theme_color"],
+            extra_modules=extra_modules,
+            extra_js_es5=extra_js_es5,
         )
-        response.enable_compression()
+        etag = ETag(hashlib.sha256(content.encode()).hexdigest(), is_weak=True)
+
+        if request.if_none_match and any(
+            tag.value in (etag.value, "*") for tag in request.if_none_match
+        ):
+            response = web.Response(status=304)
+        else:
+            response = web.Response(text=content, content_type="text/html")
+            response.enable_compression()
+
+        response.headers[hdrs.CACHE_CONTROL] = "no-cache"
+        response.etag = etag
         return response
 
     @override
