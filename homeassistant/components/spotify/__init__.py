@@ -7,7 +7,11 @@ from spotifyaio import SpotifyClient
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -53,6 +57,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
 
     try:
         await session.async_ensure_token_valid()
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_token_reauth_required",
+        ) from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
