@@ -34,6 +34,11 @@
       "status": {
         "name": "Status"
       }
+    },
+    "sensor": {
+      "device_count": {
+        "name": "Total device count"
+      }
     }
   },
   "exceptions": {
