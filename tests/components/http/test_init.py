@@ -1438,6 +1438,152 @@ async def test_websocket_http_config(
     assert len(restart_calls) == 3
 
 
+async def test_websocket_configure_verifies_new_port(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_create_server: Mock,
+) -> None:
+    """Configuring a new port probes that it can be bound before restarting."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+
+    # One bind for setup, one for the probe of the new config.
+    assert mock_create_server.call_count == 2
+    assert mock_create_server.call_args_list[1].args[0].server_port == 9123
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "bind_error",
+    [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        PermissionError(errno.EACCES, "Permission denied"),
+        socket.gaierror(socket.EAI_NONAME, "Name or service not known"),
+    ],
+    ids=["address-in-use", "permission-denied", "unresolvable-host"],
+)
+async def test_websocket_configure_rejects_unbindable_config(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+    bind_error: OSError,
+) -> None:
+    """A new config whose address cannot be bound is rejected without a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    mock_create_server.side_effect = bind_error
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": {"server_port": 9123}}
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert response["error"]["message"] == (
+        f"Failed to create HTTP server at port 9123: {bind_error}"
+    )
+
+    # The rejected config is not stored and no restart is triggered.
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_rejects_unusable_ssl(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A new config whose SSL certificate cannot be loaded is rejected."""
+    cert_path, key_path = _setup_broken_ssl_pem_files(tmp_path)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": 9123,
+                "ssl_certificate": str(cert_path),
+                "ssl_key": str(key_path),
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert "Could not use SSL certificate" in response["error"]["message"]
+
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_same_port_skips_bind_check(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """No bind probe runs when the new config keeps the currently bound port.
+
+    The running server holds the port until the restart releases it, so a
+    probe would always fail against ourselves.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    # Any probe would fail; success proves the check was skipped.
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    current_port = default_server_port()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": current_port,
+                "cors_allowed_origins": ["https://example.com"],
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == current_port
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
 async def test_pending_config_auto_reverts_to_stable(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
