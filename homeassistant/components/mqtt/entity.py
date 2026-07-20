@@ -1321,8 +1321,8 @@ def ensure_via_device_exists(
     if (
         device_info is None
         or CONF_VIA_DEVICE not in device_info
-        or (device_registry := dr.async_get(hass)).async_get_device_by_identifier(
-            device_info["via_device"], config_entry.entry_id
+        or (device_registry := dr.async_get(hass)).async_get_device(
+            identifiers={device_info["via_device"]}
         )
     ):
         return
