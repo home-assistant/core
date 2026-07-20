@@ -200,10 +200,8 @@ async def async_setup_entry(
                 )
             )
 
-            # RoomIQ sensors
             if len(zone_sensors := zone.get_sensors()) > 1:
                 room_iq_descriptions = (
-                    # Temperature
                     NexiaRoomIQSensorEntityDescription(
                         key="room_iq_temperature",
                         available_fn=lambda s: s.temperature_valid,
@@ -211,7 +209,6 @@ async def async_setup_entry(
                         device_class=SensorDeviceClass.TEMPERATURE,
                         native_unit_of_measurement=unit,
                     ),
-                    # Relative humidity
                     NexiaRoomIQSensorEntityDescription(
                         key="room_iq_humidity",
                         available_fn=lambda s: s.humidity_valid,
@@ -219,7 +216,6 @@ async def async_setup_entry(
                         device_class=SensorDeviceClass.HUMIDITY,
                         native_unit_of_measurement=PERCENTAGE,
                     ),
-                    # Battery level
                     NexiaRoomIQSensorEntityDescription(
                         key="room_iq_battery",
                         available_fn=lambda s: bool(s.battery_valid),
@@ -340,7 +336,11 @@ class NexiaRoomIQSensor(NexiaRoomIQEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return if the state is available."""
-        room_iq_sensor = self._zone.get_sensor_by_id(self._sensor_id)
+        try:
+            room_iq_sensor = self._zone.get_sensor_by_id(self._sensor_id)
+        except KeyError:
+            # RoomIQ sensor no longer present
+            return False
         return super().available and self.entity_description.available_fn(
             room_iq_sensor
         )
