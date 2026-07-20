@@ -65,6 +65,11 @@ class SmartHub:
         self.sensors: list[Sensor] = []
         self.diags: list[Diagnostic] = []
         self.loglvl: list[Sensor] = []
+        # ``Diagnostic``/``Sensor`` default to 0, which for a CPU load or a disk
+        # usage is a plausible reading rather than an obvious placeholder. Until
+        # the first host query has actually answered, the entities must report
+        # ``unknown`` instead of publishing that zero as a measurement.
+        self.host_diags_valid = False
 
     @property
     def smhub_version(self) -> str:
@@ -221,6 +226,7 @@ class SmartHub:
         self._set(self.sensors[1], float(hardware["disk"]["percent"].rstrip("%")))
         self._set(self.loglvl[0], int(software["loglevel"]["console"]))
         self._set(self.loglvl[1], int(software["loglevel"]["file"]))
+        self.host_diags_valid = True
 
     @staticmethod
     def _set(member: Diagnostic | Sensor, value: float) -> None:

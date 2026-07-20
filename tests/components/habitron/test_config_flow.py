@@ -392,6 +392,23 @@ async def test_is_device_already_configured_resolves_hostname(
         assert await flow._is_device_already_configured(MOCK_HOST_HOSTNAME) is True
 
 
+async def test_is_device_already_configured_skips_entry_without_host(
+    hass: HomeAssistant,
+) -> None:
+    """An entry carrying no host is skipped rather than compared."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="existing-id",
+        data={},
+    ).add_to_hass(hass)
+
+    flow = ConfigFlow()
+    flow.hass = hass
+    assert await flow._is_device_already_configured(MOCK_HOST) is False
+
+
 async def test_is_device_already_configured_matches_local_sentinel(
     hass: HomeAssistant,
 ) -> None:

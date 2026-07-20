@@ -803,3 +803,29 @@ async def test_analog_non_deviating_area_not_applied(
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
     assert entity_id is not None
     assert entity_registry.async_get(entity_id).area_id is None
+
+
+async def test_host_readings_unknown_until_first_hub_answer() -> None:
+    """Host readings stay unknown until the host query has actually answered.
+
+    ``Diagnostic``/``Sensor`` default to 0, which reads as a genuine measurement
+    (0 % CPU load, 0 % disk usage) rather than as a missing value, so the
+    entities must report ``None`` until the first successful read.
+    """
+    hub = MagicMock()
+    hub.diags = [MagicMock(value=42.0)]
+    hub.sensors = [MagicMock(value=17.0)]
+
+    hub.host_diags_valid = False
+    for description in (
+        CPU_FREQUENCY_DESCRIPTION,
+        CPU_LOAD_DESCRIPTION,
+        CPU_TEMPERATURE_DESCRIPTION,
+        MEMORY_DESCRIPTION,
+        DISK_DESCRIPTION,
+    ):
+        assert description.value_fn(hub, 0) is None
+
+    hub.host_diags_valid = True
+    assert CPU_LOAD_DESCRIPTION.value_fn(hub, 0) == 42.0
+    assert MEMORY_DESCRIPTION.value_fn(hub, 0) == 17.0

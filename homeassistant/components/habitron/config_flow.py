@@ -110,8 +110,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This mirrors the canonicalisation ``async_step_ssdp`` already performs,
         so the manual step recognises the same hub in the same cases.
         """
-        if not host:
-            return host
         if host == CONF_DEFAULT_HOST:
             return await network.async_get_source_ip(self.hass) or host
         with contextlib.suppress(OSError):
@@ -128,8 +126,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not entries:
             return False
         candidates = {value for value in (host, ip) if value}
-        if not candidates:
-            return False
         canonical = {await self._async_canonical_host(value) for value in candidates}
         for entry in entries:
             entry_host = entry.data.get(KEY_HOST)
@@ -234,7 +230,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # A briefly-offline hub or an unresolved discovery host should be
                 # retryable via the confirmation form, not aborted.
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
         self._set_confirm_only()
