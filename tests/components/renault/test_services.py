@@ -207,7 +207,7 @@ async def test_service_charge_set_immediate(
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_charge_mode",
         return_value=(
-            schemas.KamereonVehicleHvacStartActionDataSchema.loads(
+            schemas.KamereonVehicleChargeModeActionDataSchema.loads(
                 await async_load_fixture(hass, "action.set_charge_mode.json", DOMAIN)
             )
         ),
