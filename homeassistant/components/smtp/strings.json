@@ -164,7 +164,7 @@
     "attachments": {
       "fields": {
         "attachment": {
-          "description": "Select a camera, image entity, or local media source to attach. Camera entities are captured as a snapshot when the email is sent.",
+          "description": "Select a camera, image, TTS, or a local media source to attach. Camera sources are captured as an image snapshot when the email is sent.",
           "name": "Attachment"
         },
         "content_id": {
@@ -172,7 +172,7 @@
           "name": "Content-ID"
         },
         "filename": {
-          "description": "Specify the filename for the attachment. This is required for camera and image entities, and optional for local media sources.",
+          "description": "Specify the filename for the attachment. This is required for camera, image, and TTS media sources, and optional for local media sources.",
           "name": "Filename"
         }
       }

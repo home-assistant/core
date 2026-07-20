@@ -246,10 +246,12 @@ class MailNotifyEntity(NotifyEntity):
             )
 
             attachment: MIMEImage | MIMEApplication
-            if media_type == "image":
-                attachment = MIMEImage(content, _subtype=subtype)
-            else:
-                attachment = MIMEApplication(content)
+
+            attachment = (
+                MIMEImage(content, _subtype=subtype)
+                if media_type == "image"
+                else MIMEApplication(content)
+            )
 
             if not (target_filename := file.get(ATTR_FILENAME, filename)):
                 raise ServiceValidationError(

@@ -70,7 +70,8 @@ def deprecated_notify_action_call(hass: HomeAssistant, service_name: str) -> Non
             "new_action_1": "notify.send_message",
             "new_action_2": "smtp.send_message",
             "example_yaml_1": """
-```action: notify.send_message
+```yaml
+action: notify.send_message
 target:
   entity_id: notify.recipient
 data:
@@ -79,7 +80,7 @@ data:
 ```
 """,
             "example_yaml_2": """
-```
+```yaml
 action: smtp.send_message
 target:
     entity_id: notify.recipient
