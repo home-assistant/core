@@ -17,9 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import discovery
-from homeassistant.helpers.device import (
-    async_remove_stale_devices_links_keep_current_device,
-)
 from homeassistant.helpers.helper_integration import async_remove_helper_devices
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
@@ -94,12 +91,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    # This can be removed in HA Core 2026.7
-    async_remove_stale_devices_links_keep_current_device(
-        hass,
-        entry.entry_id,
-        entry.options.get(CONF_DEVICE_ID),
-    )
+    # Clean up devices this helper created for previously selected source devices;
+    # this can be removed in HA Core 2027.8.
+    if device_id := entry.options.get(CONF_DEVICE_ID):
+        async_remove_helper_devices(
+            hass,
+            helper_config_entry_id=entry.entry_id,
+            source_device_id=device_id,
+            sweep_helper_devices=True,
+        )
 
     for key in (CONF_MAX, CONF_MIN, CONF_STEP):
         if key not in entry.options:
