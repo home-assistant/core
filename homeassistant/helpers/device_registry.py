@@ -1277,7 +1277,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get(self, device_id: str) -> DeviceEntry | None:
+    def async_get(
+        self, device_id: str, *, restore_composite: bool = True
+    ) -> DeviceEntry | None:
         """Get device.
 
         We retrieve the DeviceEntry from the underlying dict to avoid
@@ -1287,11 +1289,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         merged from the split devices is returned, so integration code that resolves a
         device by id (e.g. in a service handler) keeps working. The composite is
         synthesized on demand and never stored, so it stays invisible to enumeration,
-        identifier search and the frontend device list.
+        identifier search and the frontend device list. Pass restore_composite=False
+        to instead return None for a composite device id.
         """
         if (device := self._device_data.get(device_id)) is not None:
             return device
-        if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
+        if restore_composite and (
+            split_devices := self.devices.get_devices_for_composite_device_id(device_id)
+        ):
             return self._restore_composite_device(device_id, split_devices)
         return None
 
@@ -1456,6 +1461,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         empty list for a device id which is not a composite device id.
         """
         return self.devices.get_devices_for_composite_device_id(composite_device_id)
+
+    @callback
+    def async_is_composite_device_id(self, device_id: str) -> bool:
+        """Return True if device_id is a pre-migration composite device id.
+
+        A composite device was split into one device per config entry; the
+        composite device id no longer refers to a registered device.
+        """
+        return device_id not in self.devices and bool(
+            self.devices.get_devices_for_composite_device_id(device_id)
+        )
 
     def _substitute_name_placeholders(
         self,

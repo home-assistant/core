@@ -1760,10 +1760,8 @@ class EntityRegistry(BaseRegistry):
         if not device_id or device_id is UNDEFINED:
             return device_id
         device_registry = dr.async_get(self.hass)
-        if device_id in device_registry.devices:
-            return device_id
-        if not device_registry.async_get_devices_for_composite_device_id(device_id):
-            # Not a composite id, let _validate_item reject it
+        if not device_registry.async_is_composite_device_id(device_id):
+            # A real device or an unknown id; let _validate_item handle it
             return device_id
         report_issue = async_suggest_report_issue(
             self.hass, integration_domain=platform

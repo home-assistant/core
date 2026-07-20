@@ -2946,6 +2946,69 @@ async def test_clear_config_subentry_clears_pending_move_targeting_it(
     assert device.id not in device_registry.devices
 
 
+async def test_async_is_composite_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test asking the registry if a device id is a pre-migration composite id."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    assert device_registry.async_is_composite_device_id(old_id) is True
+    assert device_registry.async_is_composite_device_id(device_1.id) is False
+    assert device_registry.async_is_composite_device_id(device_2.id) is False
+    assert device_registry.async_is_composite_device_id("unknown_id") is False
+
+
+async def test_async_get_restore_composite(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test async_get can be asked to not restore a composite device."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    # A composite device is restored by default, but not when opted out
+    assert device_registry.async_get(old_id) is not None
+    assert device_registry.async_get(old_id, restore_composite=False) is None
+
+    # A real device is returned in both cases
+    assert device_registry.async_get(
+        device_1.id, restore_composite=False
+    ) is device_registry.async_get(device_1.id)
+    assert device_registry.async_get("unknown_id", restore_composite=False) is None
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_async_get_device_composite_reuses_pre_migration_id(
     hass: HomeAssistant, hass_storage: dict[str, Any]
