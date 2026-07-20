@@ -19,7 +19,7 @@ from .entity import ConexaSMGWEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# So far the Conexa 3.0 provides only total power in and out.
+# So far the Conexa 3.0 provides only total energy in and out.
 KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     OBIS_IN: SensorEntityDescription(
         key=OBIS_IN,
@@ -75,7 +75,7 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
 
         self.entity_description = description
         self._key = description.key
-        # As far as I know the Conexa 3.0 returns always Wh but there is the possibility that it returns Joules
+        # As far as I know the Conexa 3.0 returns Wh but there is the possibility that it returns Joules
         if coordinator.data[self._key].unit.upper() == "J":
             self._attr_native_unit_of_measurement = UnitOfEnergy.JOULE
         self._attr_unique_id = (
