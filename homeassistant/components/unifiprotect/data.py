@@ -470,14 +470,12 @@ class ProtectData:
     @callback
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
         registry = dr.async_get(self._hass)
-        device_entry = registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+        device_entry = registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, device.mac), self._entry.entry_id
         )
         if device_entry:
             _LOGGER.debug("Device removed: %s", device.id)
-            registry.async_update_device(
-                device_entry.id, remove_config_entry_id=self._entry.entry_id
-            )
+            registry.async_remove_device(device_entry.id)
 
     @callback
     def _async_update_device(
