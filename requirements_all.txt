@@ -1081,7 +1081,7 @@ gassist-text==0.0.14
 gatus-api==1.0.3
 
 # homeassistant.components.google
-gcal-sync==8.0.0
+gcal-sync==9.1.0
 
 # homeassistant.components.aladdin_connect
 genie-partner-sdk==1.0.11
@@ -1143,7 +1143,7 @@ google-cloud-texttospeech==2.25.1
 google-genai==1.59.0
 
 # homeassistant.components.google_health
-google-health-api==0.5.1
+google-health-api==0.6.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1329,7 +1329,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==13.3.0
+ical==14.0.1
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -2656,7 +2656,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.10.0
+python-duco-connectivity==0.11.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2750,7 +2750,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.30.0
+python-roborock==5.31.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
