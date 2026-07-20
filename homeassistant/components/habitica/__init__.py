@@ -96,8 +96,10 @@ async def async_setup_entry(
                 )
                 party_added_by_this_entry = None
             if party:
-                identifier = {(DOMAIN, f"{config_entry.unique_id}_{party!s}")}
-                if device := device_reg.async_get_device(identifiers=identifier):
+                identifier = (DOMAIN, f"{config_entry.unique_id}_{party!s}")
+                if device := device_reg.async_get_device_by_identifier(
+                    identifier, config_entry.entry_id
+                ):
                     device_reg.async_update_device(
                         device.id, remove_config_entry_id=config_entry.entry_id
                     )

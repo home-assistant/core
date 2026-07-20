@@ -136,8 +136,8 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             device_registry = dr.async_get(self.hass)
             for device_key in removed_keys:
                 del self.devices_by_key[device_key]
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_key)}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_key), self.config_entry.entry_id
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,
