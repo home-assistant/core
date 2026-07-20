@@ -190,7 +190,7 @@
       "description": "Sends an email notification",
       "fields": {
         "attachments": {
-          "description": "Attach images or other files from camera, image, or local media source. When selecting a camera entity, a snapshot of the current view will be captured and attached to the email.",
+          "description": "Attach images or other files from camera, image, TTS, or local media source. When selecting a camera entity, a snapshot of the current view will be captured and attached to the email.",
           "name": "Attachments"
         },
         "html": {
