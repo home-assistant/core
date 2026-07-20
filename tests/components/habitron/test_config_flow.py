@@ -24,7 +24,14 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from .const import MOCK_CONFIG_DATA, MOCK_HOST, MOCK_NAME, MOCK_SERIAL, MOCK_UDN
+from .const import (
+    MOCK_CONFIG_DATA,
+    MOCK_HOST,
+    MOCK_HOST_HOSTNAME,
+    MOCK_NAME,
+    MOCK_SERIAL,
+    MOCK_UDN,
+)
 
 from tests.common import MockConfigEntry
 
@@ -333,6 +340,13 @@ async def test_validate_input_host_not_found_for_dns_failure(
 # ---------- ConfigFlow._is_device_already_configured ----------
 
 
+def _fake_gethostbyname(host: str) -> str:
+    """Stand in for LAN name resolution; unknown names fail as they really do."""
+    if host == MOCK_HOST_HOSTNAME:
+        return MOCK_HOST
+    raise socket.gaierror(f"unknown host {host}")
+
+
 async def test_is_device_already_configured_host_match(hass: HomeAssistant) -> None:
     """A pre-existing entry whose host matches reports as configured."""
 
@@ -345,8 +359,62 @@ async def test_is_device_already_configured_host_match(hass: HomeAssistant) -> N
 
     flow = ConfigFlow()
     flow.hass = hass
-    assert flow._is_device_already_configured(MOCK_HOST) is True
-    assert flow._is_device_already_configured("other-host") is False
+    with patch(
+        "homeassistant.components.habitron.config_flow.socket.gethostbyname",
+        _fake_gethostbyname,
+    ):
+        assert await flow._is_device_already_configured(MOCK_HOST) is True
+        assert await flow._is_device_already_configured("other-host") is False
+
+
+async def test_is_device_already_configured_resolves_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """A host name resolving to a configured IP counts as already configured.
+
+    SSDP stores the IP it discovered the hub at; entering the host name that
+    points at it must not create a second entry for the same hub.
+    """
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="existing-id",
+        data={"habitron_host": MOCK_HOST},
+    ).add_to_hass(hass)
+
+    flow = ConfigFlow()
+    flow.hass = hass
+    with patch(
+        "homeassistant.components.habitron.config_flow.socket.gethostbyname",
+        _fake_gethostbyname,
+    ):
+        assert await flow._is_device_already_configured(MOCK_HOST_HOSTNAME) is True
+
+
+async def test_is_device_already_configured_matches_local_sentinel(
+    hass: HomeAssistant,
+) -> None:
+    """A hub stored as the ``local`` sentinel is matched by its own IP.
+
+    ``local`` means "on Home Assistant's own machine", so entering that machine's
+    address addresses the very same hub.
+    """
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="existing-id",
+        data={"habitron_host": "local"},
+    ).add_to_hass(hass)
+
+    flow = ConfigFlow()
+    flow.hass = hass
+    with patch(
+        "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
+        return_value=MOCK_HOST,
+    ):
+        assert await flow._is_device_already_configured(MOCK_HOST) is True
 
 
 async def test_is_device_already_configured_ip_match(hass: HomeAssistant) -> None:
@@ -361,7 +429,11 @@ async def test_is_device_already_configured_ip_match(hass: HomeAssistant) -> Non
 
     flow = ConfigFlow()
     flow.hass = hass
-    assert flow._is_device_already_configured("hub-x", ip="10.0.0.1") is True
+    with patch(
+        "homeassistant.components.habitron.config_flow.socket.gethostbyname",
+        _fake_gethostbyname,
+    ):
+        assert await flow._is_device_already_configured("hub-x", ip="10.0.0.1") is True
 
 
 # ---------- SSDP with no UDN + discovery fallback ----------

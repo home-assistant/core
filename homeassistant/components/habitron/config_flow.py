@@ -97,12 +97,47 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._udp_devices = []
         return self._udp_devices
 
-    def _is_device_already_configured(self, host: str, ip: str | None = None) -> bool:
+    async def _async_canonical_host(self, host: str) -> str:
+        """Return a comparable form of ``host``.
+
+        The same hub can be entered in more than one way, and comparing the raw
+        strings would miss that, adding a second entry -- and a second
+        connection -- to a hub that is already configured. Canonicalised here:
+        the ``local`` sentinel (a hub on Home Assistant's own machine, stored as
+        the sentinel rather than as that IP) and casing, which is insignificant
+        for host names.
+
+        This mirrors the canonicalisation ``async_step_ssdp`` already performs,
+        so the manual step recognises the same hub in the same cases.
+        """
+        if not host:
+            return host
+        if host == CONF_DEFAULT_HOST:
+            return await network.async_get_source_ip(self.hass) or host
+        with contextlib.suppress(OSError):
+            return await self.hass.async_add_executor_job(socket.gethostbyname, host)
+        return host.casefold()
+
+    async def _is_device_already_configured(
+        self, host: str, ip: str | None = None
+    ) -> bool:
         """Check if a device with this host or IP is already configured."""
-        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-        for entry in existing_entries:
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        # Nothing configured yet: skip the canonicalisation (and its name
+        # lookup) entirely, there is nothing this could collide with.
+        if not entries:
+            return False
+        candidates = {value for value in (host, ip) if value}
+        if not candidates:
+            return False
+        canonical = {await self._async_canonical_host(value) for value in candidates}
+        for entry in entries:
             entry_host = entry.data.get(KEY_HOST)
-            if entry_host == host or (ip and entry_host == ip):
+            if not entry_host:
+                continue
+            if entry_host in candidates:
+                return True
+            if await self._async_canonical_host(entry_host) in canonical:
                 return True
         return False
 
@@ -228,7 +263,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             valid_devices = [
                 d
                 for d in discovered
-                if not self._is_device_already_configured(d.get("ip", ""))
+                if not await self._is_device_already_configured(d.get("ip", ""))
             ]
             if valid_devices:
                 default_host = valid_devices[0].get("ip", CONF_DEFAULT_HOST)
@@ -261,7 +296,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Use the canonicalized host: an own-IP entry is stored as ``local``,
             # so an SSDP entry that was likewise canonicalized is only matched
             # when we compare against ``host_input`` rather than the raw input.
-            if self._is_device_already_configured(host_input, probed_ip):
+            if await self._is_device_already_configured(host_input, probed_ip):
                 return self.async_abort(reason="already_configured")
 
             try:

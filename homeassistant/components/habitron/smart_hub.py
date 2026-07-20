@@ -161,7 +161,7 @@ class SmartHub:
             name=router.name,
             model="Smart Router",
             sw_version=router.version,
-            hw_version=router.serial,
+            serial_number=router.serial,
             via_device=(DOMAIN, self.uid),
         )
         rt_dev = dev_reg.async_get_device(identifiers={(DOMAIN, router.uid)})
