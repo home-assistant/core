@@ -2080,7 +2080,9 @@ class EntityRegistry(BaseRegistry):
             for successor in successors:
                 if successor.config_entry_id == config_entry_id:
                     return successor.id
-            return successors[0].id
+            # No split device matches the entity's config entry; detach the entity
+            # rather than move it to an arbitrary split device it does not belong to.
+            return None
 
         if data is not None:
             for entity in data["entities"]:
