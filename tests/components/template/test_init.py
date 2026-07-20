@@ -550,6 +550,56 @@ async def test_setup_removes_stale_helper_device(
     )
 
 
+async def test_setup_removes_stale_helper_device_without_source_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Setup sweeps leftover helper devices even when no source device is selected.
+
+    After the user removes the device option, a leftover device the entry created for a
+    previously selected source device is still removed on setup and its entity left without
+    a device.
+    """
+    template_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{10}}",
+            "template_type": "sensor",
+        },
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    # A leftover device owned by the template config entry, with a helper entity on it
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=template_config_entry.entry_id,
+        identifiers={("test", "stale")},
+    )
+    stale_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "stale",
+        config_entry=template_config_entry,
+        device_id=stale_device.id,
+    )
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The stale device is removed, its entity left without a device, and the template config
+    # entry is left owning no devices.
+    assert device_registry.async_get(stale_device.id) is None
+    assert entity_registry.async_get(stale_entity.entity_id).device_id is None
+    assert (
+        dr.async_entries_for_config_entry(
+            device_registry, template_config_entry.entry_id
+        )
+        == []
+    )
+
+
 async def test_fail_non_numerical_number_settings(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

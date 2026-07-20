@@ -819,15 +819,24 @@ async def test_async_remove_helper_devices_sweep(
     )
 
 
-async def test_async_remove_helper_devices_sweep_source_device_gone(
+@pytest.mark.parametrize(
+    "source_device_id",
+    [
+        pytest.param("nonexistent_device_id", id="missing_device"),
+        pytest.param(None, id="no_device_selected"),
+    ],
+)
+async def test_async_remove_helper_devices_sweep_no_source(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    source_device_id: str | None,
 ) -> None:
-    """Sweep mode removes the helper's devices even when the source device is gone.
+    """Sweep mode removes the helper's devices when there is no source device.
 
-    With no source device to relink to, the helper's entities are left without a device and
-    its devices are still removed.
+    Whether the source device id points to a removed device or is None because no device is
+    selected, the helper's entities are left without a device and its devices are still
+    removed.
     """
     helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
     helper_config_entry.add_to_hass(hass)
@@ -847,13 +856,52 @@ async def test_async_remove_helper_devices_sweep_source_device_gone(
     async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
-        source_device_id="nonexistent_device_id",
+        source_device_id=source_device_id,
         sweep_helper_devices=True,
     )
 
     # The helper's device is removed and its entity left without a device
     assert device_registry.async_get(stale_fork.id) is None
     assert entity_registry.async_get(entity_on_fork.entity_id).device_id is None
+
+
+async def test_async_remove_helper_devices_none_source_targeted_noop(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Targeted mode is a no-op when no source device is selected.
+
+    Without sweep_helper_devices there is no duplicate to match against a missing source, so
+    the helper's device and its entity's device link are left untouched.
+    """
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+
+    helper_device = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "device")},
+    )
+    entity_on_device = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "1",
+        config_entry=helper_config_entry,
+        device_id=helper_device.id,
+    )
+
+    async_remove_helper_devices(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=None,
+    )
+
+    # Nothing is removed or relinked
+    assert device_registry.async_get(helper_device.id) is not None
+    assert (
+        entity_registry.async_get(entity_on_device.entity_id).device_id
+        == helper_device.id
+    )
 
 
 async def test_async_remove_helper_config_entry_from_source_device_deprecated(
