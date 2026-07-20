@@ -58,7 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        entry.async_start_reauth(hass)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="oauth2_token_reauth_required",
@@ -71,11 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     spotify.authenticate(session.token[CONF_ACCESS_TOKEN])
 
     async def _refresh_token() -> str:
-        try:
-            await session.async_ensure_token_valid()
-        except OAuth2TokenRequestReauthError:
-            entry.async_start_reauth(hass)
-            raise
+        await session.async_ensure_token_valid()
         token = session.token[CONF_ACCESS_TOKEN]
         if TYPE_CHECKING:
             assert isinstance(token, str)
