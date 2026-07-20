@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "database_version": {
+        "default": "mdi:database"
+      },
+      "netsnmp_version": {
+        "default": "mdi:network-outline"
+      },
+      "php_version": {
+        "default": "mdi:language-php"
+      },
+      "python_version": {
+        "default": "mdi:language-python"
+      },
+      "rrdtool_version": {
+        "default": "mdi:database-clock"
+      }
+    }
+  }
+}

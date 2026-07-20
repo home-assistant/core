@@ -38,8 +38,42 @@ SYSTEM_SENSOR_TYPES: tuple[LibrenmsSystemSensorEntityDescription, ...] = (
         key="device_count",
         translation_key="device_count",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: len(data.devices),
+    ),
+    LibrenmsSystemSensorEntityDescription(
+        key="database_version",
+        translation_key="database_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda data: data.system.database_ver,
+    ),
+    LibrenmsSystemSensorEntityDescription(
+        key="netsnmp_version",
+        translation_key="netsnmp_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda data: data.system.netsnmp_ver,
+    ),
+    LibrenmsSystemSensorEntityDescription(
+        key="php_version",
+        translation_key="php_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda data: data.system.php_ver,
+    ),
+    LibrenmsSystemSensorEntityDescription(
+        key="python_version",
+        translation_key="python_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda data: data.system.python_ver,
+    ),
+    LibrenmsSystemSensorEntityDescription(
+        key="rrdtool_version",
+        translation_key="rrdtool_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda data: data.system.rrdtool_ver,
     ),
 )
 

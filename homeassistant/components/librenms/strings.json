@@ -36,9 +36,14 @@
       }
     },
     "sensor": {
+      "database_version": { "name": "Database version" },
       "device_count": {
         "name": "Total device count"
-      }
+      },
+      "netsnmp_version": { "name": "NetSNMP version" },
+      "php_version": { "name": "PHP version" },
+      "python_version": { "name": "Python version" },
+      "rrdtool_version": { "name": "RRDTool version" }
     }
   },
   "exceptions": {
