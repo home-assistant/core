@@ -157,21 +157,27 @@ class TestBeforeConfigureChecker(BaseChecker):
         """Flag config flow classes that create entries without testing."""
         if not self._check_module or self._module_surfaces:
             return
-        if not _creates_entry(node):
-            return
-        ancestors = list(extended_ancestors(node))
-        ancestor_qnames = {a.qname() for a in ancestors}
+        ancestor_qnames: set[str] = set()
+        integration_ancestors: list[nodes.ClassDef] = []
+        for ancestor in extended_ancestors(node):
+            ancestor_qnames.add(ancestor.qname())
+            if is_integration_module(ancestor.root().name):
+                integration_ancestors.append(ancestor)
         if (
             _CONFIG_FLOW_QNAME not in ancestor_qnames
             or _OAUTH_FLOW_QNAME in ancestor_qnames
         ):
             return
-        for ancestor in ancestors:
+        # Entry creation may be inherited from a shared base flow, so
+        # integration-module ancestors count as well.
+        if not _creates_entry(node) and not any(
+            _creates_entry(ancestor) for ancestor in integration_ancestors
+        ):
+            return
+        for ancestor in integration_ancestors:
             ancestor_module = ancestor.root()
-            if (
-                ancestor_module.name != node.root().name
-                and is_integration_module(ancestor_module.name)
-                and self._ancestor_module_surfaces(ancestor_module)
+            if ancestor_module.name != node.root().name and (
+                self._ancestor_module_surfaces(ancestor_module)
             ):
                 return
         self.add_message("home-assistant-missing-test-before-configure", node=node)

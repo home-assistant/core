@@ -285,6 +285,48 @@ class MyConfigFlow(BaseHardwareFlow, domain="test_integration"):
         walk_checker(linter, configure_checker, root_node)
 
 
+def test_before_configure_inherited_entry_creation_fires(
+    linter: UnittestLinter,
+    configure_checker: TestBeforeConfigureChecker,
+    tmp_path: Path,
+) -> None:
+    """Warning when entry creation is inherited and nothing surfaces failures."""
+    astroid.parse(
+        """
+from homeassistant.config_entries import ConfigFlow
+
+class BaseSharedFlow(ConfigFlow):
+    async def async_step_user(self, user_input=None):
+        return self.async_create_entry(title="Test", data={})
+""",
+        "homeassistant.components.shared_base.config_flow",
+    )
+    integration_dir = _make_integration(tmp_path, {"test-before-configure": "done"})
+    root_node = _parse_config_flow(
+        integration_dir,
+        """
+from homeassistant.components.shared_base.config_flow import BaseSharedFlow
+
+class MyConfigFlow(BaseSharedFlow, domain="test_integration"):
+    VERSION = 1
+""",
+    )
+    class_node = root_node.body[-1]
+
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="home-assistant-missing-test-before-configure",
+            node=class_node,
+            line=4,
+            col_offset=0,
+            end_line=4,
+            end_col_offset=18,
+        ),
+    ):
+        walk_checker(linter, configure_checker, root_node)
+
+
 def test_before_configure_non_config_flow_class(
     linter: UnittestLinter,
     configure_checker: TestBeforeConfigureChecker,
