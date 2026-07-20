@@ -380,8 +380,18 @@ async def test_set_fan_mode_on(thermostat, data) -> None:
     data.reset_mock()
     thermostat.set_fan_mode("on")
     data.ecobee.set_fan_mode.assert_has_calls(
-        [mock.call(1, "on", "nextTransition", holdHours=None)]
+        [
+            mock.call(
+                1,
+                "on",
+                "nextTransition",
+                holdHours=None,
+                coolHoldTemp=20.0,
+                heatHoldTemp=40.0,
+            )
+        ]
     )
+    assert thermostat.update_without_throttle is True
 
 
 async def test_set_fan_mode_auto(thermostat, data) -> None:
@@ -389,8 +399,18 @@ async def test_set_fan_mode_auto(thermostat, data) -> None:
     data.reset_mock()
     thermostat.set_fan_mode("auto")
     data.ecobee.set_fan_mode.assert_has_calls(
-        [mock.call(1, "auto", "nextTransition", holdHours=None)]
+        [
+            mock.call(
+                1,
+                "auto",
+                "nextTransition",
+                holdHours=None,
+                coolHoldTemp=20.0,
+                heatHoldTemp=40.0,
+            )
+        ]
     )
+    assert thermostat.update_without_throttle is True
 
 
 async def test_preset_indefinite_away(ecobee_fixture, thermostat) -> None:
