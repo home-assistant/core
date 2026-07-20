@@ -146,8 +146,9 @@ class NetatmoRoomEntity(NetatmoDeviceEntity):
         """Entity created."""
         await super().async_added_to_hass()
         registry = dr.async_get(self.hass)
-        if device := registry.async_get_device(
-            identifiers={(DOMAIN, self.device.entity_id)}
+        if device := registry.async_get_device_by_identifier(
+            (DOMAIN, self.device.entity_id),
+            self.data_handler.config_entry.entry_id,
         ):
             self.data_handler.device_ids[self.device.entity_id] = device.id
 
