@@ -189,7 +189,6 @@ async def async_setup_entry(
                     GoogleHealthDeviceSensor(
                         device_coordinator,
                         entry.entry_id,
-                        entry.title,
                         device,
                         description,
                     )
@@ -246,7 +245,6 @@ class GoogleHealthDeviceSensor(
         self,
         coordinator: GoogleHealthDeviceCoordinator,
         entry_id: str,
-        entry_title: str,
         device: PairedDevice,
         description: GoogleHealthDeviceSensorEntityDescription,
     ) -> None:
@@ -259,7 +257,8 @@ class GoogleHealthDeviceSensor(
         # device_version is the product name (e.g. 'Fitbit Charge 6', 'Pixel Watch 3')
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
-            name=device.device_version or entry_title,
+            name=device.device_version
+            or (device.device_type.title() if device.device_type else "Device"),
             model=device.device_type.title() if device.device_type else None,
             sw_version=device.device_version,
             via_device=(DOMAIN, entry_id),
@@ -279,6 +278,5 @@ class GoogleHealthDeviceSensor(
     @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        if not (device := self.coordinator.data.get(self.device_id)):
-            return None
+        device = self.coordinator.data[self.device_id]
         return self.entity_description.value_fn(device)
