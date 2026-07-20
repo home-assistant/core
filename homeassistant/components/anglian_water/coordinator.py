@@ -27,12 +27,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import VolumeConverter
 
 from .const import CONF_ACCOUNT_NUMBER, DOMAIN
+from .helpers import (
+    async_create_consent_required_issue,
+    async_delete_consent_required_issue,
+)
 
 type AnglianWaterConfigEntry = ConfigEntry[AnglianWaterUpdateCoordinator]
 
@@ -67,17 +70,8 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
         except ConsentRequiredError as err:
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"consent_required_{self.config_entry.data[CONF_ACCOUNT_NUMBER]}",
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="consent_required",
-                translation_placeholders={
-                    CONF_ACCOUNT_NUMBER: self.config_entry.data[CONF_ACCOUNT_NUMBER],
-                },
-                learn_more_url="https://myaccount.anglianwater.co.uk/",
+            async_create_consent_required_issue(
+                self.hass, self.config_entry.data[CONF_ACCOUNT_NUMBER]
             )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -96,10 +90,8 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 retry_after=60.0,
             ) from err
         else:
-            ir.async_delete_issue(
-                self.hass,
-                DOMAIN,
-                f"consent_required_{self.config_entry.data[CONF_ACCOUNT_NUMBER]}",
+            async_delete_consent_required_issue(
+                self.hass, self.config_entry.data[CONF_ACCOUNT_NUMBER]
             )
 
     async def _insert_statistics(self) -> None:

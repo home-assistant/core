@@ -5,6 +5,7 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
+    ExpiredAccessTokenError,
     InvalidGrantError,
     SelfAssertedError,
     SmartMeterUnavailableError,
@@ -22,11 +23,11 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_ACCOUNT_NUMBER, DOMAIN
 from .coordinator import AnglianWaterConfigEntry, AnglianWaterUpdateCoordinator
+from .helpers import async_create_consent_required_issue
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -47,23 +48,12 @@ async def async_setup_entry(
     try:
         await auth.send_refresh_request()
     except ConsentRequiredError as err:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"consent_required_{entry.data[CONF_ACCOUNT_NUMBER]}",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="consent_required",
-            translation_placeholders={
-                CONF_ACCOUNT_NUMBER: entry.data[CONF_ACCOUNT_NUMBER],
-            },
-            learn_more_url="https://myaccount.anglianwater.co.uk/",
-        )
+        async_create_consent_required_issue(hass, entry.data[CONF_ACCOUNT_NUMBER])
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="consent_required",
         ) from err
-    except (InvalidGrantError, SelfAssertedError) as err:
+    except (ExpiredAccessTokenError, InvalidGrantError, SelfAssertedError) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_expired",

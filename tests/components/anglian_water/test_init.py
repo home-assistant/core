@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    InvalidGrantError,
     SelfAssertedError,
     SmartMeterUnavailableError,
 )
@@ -48,6 +49,11 @@ async def test_setup_unload_entry(
             ExpiredAccessTokenError,
             ConfigEntryState.SETUP_ERROR,
             id="expired_access_token",
+        ),
+        pytest.param(
+            InvalidGrantError,
+            ConfigEntryState.SETUP_ERROR,
+            id="invalid_grant",
         ),
         pytest.param(
             SelfAssertedError,
