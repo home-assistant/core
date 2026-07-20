@@ -5547,7 +5547,7 @@ async def test_migration_repoints_entities(
 async def test_migration_repoints_entities_fallbacks(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """An entity not exactly matching a split falls back by config entry, then first split."""
+    """An entity not exactly matching a split falls back by config entry, then detaches."""
     entry_a = MockConfigEntry(
         domain="domain_a",
         subentries_data=[
@@ -5608,8 +5608,8 @@ async def test_migration_repoints_entities_fallbacks(
     assert (
         entity_registry.async_get("sensor.sub").device_id == by_entry[entry_a.entry_id]
     )
-    # No matching config entry falls back to the first split
-    assert entity_registry.async_get("sensor.none").device_id in {d.id for d in splits}
+    # No split matches the config entry, so the entity is detached
+    assert entity_registry.async_get("sensor.none").device_id is None
 
 
 @pytest.mark.parametrize("load_registries", [False])

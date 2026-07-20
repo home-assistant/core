@@ -1081,7 +1081,7 @@ gassist-text==0.0.14
 gatus-api==1.0.3
 
 # homeassistant.components.google
-gcal-sync==8.0.0
+gcal-sync==9.1.0
 
 # homeassistant.components.aladdin_connect
 genie-partner-sdk==1.0.11
@@ -1441,7 +1441,7 @@ knocki==0.4.2
 knx-frontend==2026.6.23.203726
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite,postgres]==0.10.1
+knx-telegram-store[sqlite,postgres]==0.10.2
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -2137,7 +2137,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.4.0
+pydrawise==2026.7.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2656,7 +2656,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.10.0
+python-duco-connectivity==0.11.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2692,7 +2692,7 @@ python-homewizard-energy==10.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.5
+python-izone==1.3.6
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
@@ -2750,7 +2750,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.30.0
+python-roborock==5.31.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
