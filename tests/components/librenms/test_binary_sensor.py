@@ -18,6 +18,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
     mock_librenms: Mock,
     mock_config_entry: MockConfigEntry,
@@ -29,8 +30,7 @@ async def test_sensors(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    dev_reg = dr.async_get(hass)
-    devices = dev_reg.devices.get_devices_for_config_entry_id(
-        mock_config_entry.entry_id
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
     assert devices == snapshot
