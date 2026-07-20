@@ -75,11 +75,11 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Determine the weather condition based on tcc and rain."""
         if rain > 0.2:
             return "rainy"
-        if tcc <= 20:
+        if tcc <= 0.2:
             return "clear-night" if self._is_night(date_time) else "sunny"
-        if tcc <= 50:
+        if tcc <= 0.5:
             return "partlycloudy"
-        if tcc <= 80:
+        if tcc <= 0.8:
             return "cloudy"
         return "fog"
 
