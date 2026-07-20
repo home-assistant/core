@@ -53,7 +53,6 @@ def async_deprecate_yaml_issue(
         )
 
 
-@callback
 def deprecated_notify_action_call(hass: HomeAssistant, service_name: str) -> None:
     """Deprecated action call."""
 
