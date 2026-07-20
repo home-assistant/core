@@ -105,8 +105,9 @@ class DevoloDeviceEntity(Entity):
             self._attr_available = state
         elif message[1] == "del" and self.platform.config_entry:
             device_registry = dr.async_get(self.hass)
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self._device_instance.uid)}
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, self._device_instance.uid),
+                self.platform.config_entry.entry_id,
             )
             if device:
                 device_registry.async_update_device(
