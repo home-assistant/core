@@ -18,5 +18,6 @@ OAUTH_SCOPES = [
     HealthApiScope.PROFILE_READ,
     HealthApiScope.MEASUREMENTS_READ,
     HealthApiScope.SETTINGS_READ,
+    HealthApiScope.SLEEP_READ,
     HealthApiScope.USERINFO_PROFILE,
 ]

@@ -2321,6 +2321,71 @@ async def test_async_get_device_prefers_matching_domain(
     assert device_registry.async_get_device(identifiers={("domain_a", "1")}) is device_a
 
 
+@pytest.mark.parametrize(
+    ("method", "create_kwargs", "key", "miss_key"),
+    [
+        pytest.param(
+            "async_get_device_by_identifier",
+            {"identifiers": {("test", "shared")}},
+            ("test", "shared"),
+            ("test", "other"),
+            id="identifier",
+        ),
+        pytest.param(
+            "async_get_device_by_connection",
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}},
+            (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"),
+            (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ff"),
+            id="connection",
+        ),
+    ],
+)
+async def test_async_get_device_scoped_to_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    method: str,
+    create_kwargs: dict[str, set[tuple[str, str]]],
+    key: tuple[str, str],
+    miss_key: tuple[str, str],
+) -> None:
+    """A single-key lookup scoped to a config entry resolves a shared key uniquely."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, **create_kwargs
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, **create_kwargs
+    )
+    assert device_1.id != device_2.id
+
+    lookup = getattr(device_registry, method)
+    assert lookup(key, entry_1.entry_id) is device_1
+    assert lookup(key, entry_2.entry_id) is device_2
+    assert lookup(miss_key, entry_1.entry_id) is None
+    assert lookup(key, "unknown_entry_id") is None
+
+
+async def test_async_get_device_by_connection_normalizes(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """MAC connection values are normalized before the scoped lookup."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, "12-34-56-ab-cd-ef"), entry.entry_id
+        )
+        is device
+    )
+
+
 async def test_async_remove_device_fans_out_to_migration_composite(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -4324,18 +4389,22 @@ async def test_update_suggested_area(
 
 
 @pytest.mark.parametrize(
-    "device_disabled_by",
+    ("config_entry_disabled_by", "device_disabled_by"),
     [
-        None,
-        dr.DeviceEntryDisabler.CONFIG_ENTRY,
-        dr.DeviceEntryDisabler.INTEGRATION,
-        dr.DeviceEntryDisabler.USER,
+        (None, None),
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            dr.DeviceEntryDisabler.CONFIG_ENTRY,
+        ),
+        (None, dr.DeviceEntryDisabler.INTEGRATION),
+        (None, dr.DeviceEntryDisabler.USER),
     ],
 )
 @pytest.mark.usefixtures("freezer")
 async def test_update_add_config_entry_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
     device_disabled_by: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when adding a config entry.
@@ -4344,7 +4413,7 @@ async def test_update_add_config_entry_disabled_by(
     transient pending move (completed by a subsequent remove of the current owner), so on
     its own it leaves the device - including its disabled_by flag - unchanged.
     """
-    config_entry_1 = MockConfigEntry(title=None)
+    config_entry_1 = MockConfigEntry(title=None, disabled_by=config_entry_disabled_by)
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(title=None)
     config_entry_2.add_to_hass(hass)
@@ -4377,20 +4446,25 @@ async def test_update_add_config_entry_disabled_by(
 
 
 @pytest.mark.parametrize(
-    ("device_disabled_by", "expected_disabled_by"),
+    ("config_entry_disabled_by", "device_disabled_by", "expected_disabled_by"),
     [
         # An enabled device moved onto a disabled entry is disabled by CONFIG_ENTRY
-        (None, dr.DeviceEntryDisabler.CONFIG_ENTRY),
+        (None, None, dr.DeviceEntryDisabler.CONFIG_ENTRY),
         # An existing CONFIG_ENTRY / INTEGRATION / USER disable is preserved
-        (dr.DeviceEntryDisabler.CONFIG_ENTRY, dr.DeviceEntryDisabler.CONFIG_ENTRY),
-        (dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
-        (dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            dr.DeviceEntryDisabler.CONFIG_ENTRY,
+            dr.DeviceEntryDisabler.CONFIG_ENTRY,
+        ),
+        (None, dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
+        (None, dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
     ],
 )
 @pytest.mark.usefixtures("freezer")
 async def test_update_remove_config_entry_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
     device_disabled_by: dr.DeviceEntryDisabler | None,
     expected_disabled_by: dr.DeviceEntryDisabler | None,
 ) -> None:
@@ -4402,7 +4476,7 @@ async def test_update_remove_config_entry_disabled_by(
     disabled entry becomes CONFIG_ENTRY-disabled, while a USER/INTEGRATION disable - or an
     existing CONFIG_ENTRY disable - is kept.
     """
-    config_entry_1 = MockConfigEntry(title=None)
+    config_entry_1 = MockConfigEntry(title=None, disabled_by=config_entry_disabled_by)
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(
         title=None, disabled_by=config_entries.ConfigEntryDisabler.USER
@@ -4491,6 +4565,326 @@ async def test_move_to_enabled_config_entry_clears_config_entry_disable(
     )
     assert moved_user is not None
     assert moved_user.disabled_by is dr.DeviceEntryDisabler.USER
+
+
+async def test_move_with_conflicting_disabled_by_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An explicit disabled_by contradicting the target entry's disabled state.
+
+    The conflicting disabled_by is ignored, the disabled state is updated to
+    reflect the new config entry's disabled state, and a deprecation warning is
+    logged. This will raise in HA Core 2027.8.
+    """
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id, identifiers={("test", "1")}
+    )
+    moved = device_registry.async_update_device(
+        device.id,
+        disabled_by=None,
+        new_config_entry_id=disabled_entry.entry_id,
+    )
+    assert moved is not None
+    assert moved.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    assert (
+        "Detected code that sets disabled_by to None when moving a device to the "
+        f"disabled config entry {disabled_entry.entry_id}. This will stop working "
+        "in Home Assistant 2027.8, please report this issue"
+    ) in caplog.text
+
+    disabled_device = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id,
+        identifiers={("test", "2")},
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+    )
+    moved_disabled = device_registry.async_update_device(
+        disabled_device.id,
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+        new_config_entry_id=enabled_entry.entry_id,
+    )
+    assert moved_disabled is not None
+    assert moved_disabled.disabled_by is None
+    assert (
+        "Detected code that sets disabled_by to DeviceEntryDisabler.CONFIG_ENTRY "
+        f"when moving a device to the enabled config entry {enabled_entry.entry_id}. "
+        "This will stop working in Home Assistant 2027.8, please report this issue"
+    ) in caplog.text
+
+    # The same validation applies when the move is performed by removing the
+    # owning config entry after a pending move was recorded.
+    pending_device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id, identifiers={("test", "3")}
+    )
+    device_registry.async_update_device(
+        pending_device.id, add_config_entry_id=disabled_entry.entry_id
+    )
+    caplog.clear()
+    moved_pending = device_registry.async_update_device(
+        pending_device.id,
+        disabled_by=None,
+        remove_config_entry_id=enabled_entry.entry_id,
+    )
+    assert moved_pending is not None
+    assert moved_pending.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    assert (
+        "Detected code that sets disabled_by to None when moving a device to the "
+        f"disabled config entry {disabled_entry.entry_id}. This will stop working "
+        "in Home Assistant 2027.8, please report this issue"
+    ) in caplog.text
+
+
+async def test_update_conflicting_disabled_by_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An explicit disabled_by contradicting the owning entry's disabled state.
+
+    Without a move, the conflicting disabled_by is ignored and a deprecation
+    warning is logged. This will raise in HA Core 2027.8.
+    """
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id,
+        identifiers={("test", "1")},
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+    )
+    updated = device_registry.async_update_device(device.id, disabled_by=None)
+    assert updated is not None
+    assert updated.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    assert (
+        "Detected code that sets disabled_by to None on a device belonging to the "
+        f"disabled config entry {disabled_entry.entry_id}. This will stop working "
+        "in Home Assistant 2027.8, please report this issue"
+    ) in caplog.text
+
+    enabled_device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id, identifiers={("test", "2")}
+    )
+    updated_enabled = device_registry.async_update_device(
+        enabled_device.id, disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY
+    )
+    assert updated_enabled is not None
+    assert updated_enabled.disabled_by is None
+    assert (
+        "Detected code that sets disabled_by to DeviceEntryDisabler.CONFIG_ENTRY on "
+        f"a device belonging to the enabled config entry {enabled_entry.entry_id}. "
+        "This will stop working in Home Assistant 2027.8, please report this issue"
+    ) in caplog.text
+
+
+async def test_create_with_conflicting_disabled_by_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An explicit disabled_by contradicting the owning entry's disabled state.
+
+    When creating a device, the conflicting disabled_by is ignored, the disabled
+    state is updated to reflect the owning config entry's disabled state, and a
+    deprecation warning is logged. This will raise in HA Core 2027.8.
+    """
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id,
+        identifiers={("test", "1")},
+        disabled_by=None,
+    )
+    assert device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    assert (
+        "Detected code that sets disabled_by to None when creating a device "
+        f"attached to the disabled config entry {disabled_entry.entry_id}. This "
+        "will stop working in Home Assistant 2027.8, please report this issue"
+    ) in caplog.text
+
+    enabled_device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id,
+        identifiers={("test", "2")},
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+    )
+    assert enabled_device.disabled_by is None
+    assert (
+        "Detected code that sets disabled_by to DeviceEntryDisabler.CONFIG_ENTRY "
+        "when creating a device attached to the enabled config entry "
+        f"{enabled_entry.entry_id}. This will stop working in Home Assistant "
+        "2027.8, please report this issue"
+    ) in caplog.text
+
+
+async def test_create_reflects_config_entry_disabled_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A new device without an explicit disabled_by reflects the owning entry's state."""
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id, identifiers={("test", "1")}
+    )
+    assert device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    enabled_device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id, identifiers={("test", "2")}
+    )
+    assert enabled_device.disabled_by is None
+
+    # Restoring a deleted device from a legacy store without a recorded
+    # disabled_by is reconciled the same way
+    device_registry.async_remove_device(device.id)
+    deleted_entry = device_registry.deleted_devices[device.id]
+    device_registry.deleted_devices[device.id] = attr.evolve(
+        deleted_entry, disabled_by=UNDEFINED
+    )
+    restored = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id, identifiers={("test", "1")}
+    )
+    assert restored.id == device.id
+    assert restored.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    assert "Detected code that" not in caplog.text
+
+
+async def test_update_explicit_disabled_by(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An explicit disabled_by consistent with the owning entry's state is applied."""
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    # A USER disable is accepted on a device of a disabled entry, and the device
+    # can be flagged CONFIG_ENTRY again
+    device = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id,
+        identifiers={("test", "1")},
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+    )
+    updated = device_registry.async_update_device(
+        device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    assert updated is not None
+    assert updated.disabled_by is dr.DeviceEntryDisabler.USER
+    updated = device_registry.async_update_device(
+        device.id, disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY
+    )
+    assert updated is not None
+    assert updated.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    # A USER disable and enabling are accepted on a device of an enabled entry
+    enabled_device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id, identifiers={("test", "2")}
+    )
+    updated_enabled = device_registry.async_update_device(
+        enabled_device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    assert updated_enabled is not None
+    assert updated_enabled.disabled_by is dr.DeviceEntryDisabler.USER
+    updated_enabled = device_registry.async_update_device(
+        enabled_device.id, disabled_by=None
+    )
+    assert updated_enabled is not None
+    assert updated_enabled.disabled_by is None
+
+    assert "Detected code that" not in caplog.text
+
+
+async def test_move_with_explicit_disabled_by(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An explicit disabled_by consistent with the target entry's state is applied."""
+    disabled_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    enabled_entry = MockConfigEntry()
+    enabled_entry.add_to_hass(hass)
+
+    # A USER disable is accepted on a move to a disabled entry
+    device = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id, identifiers={("test", "1")}
+    )
+    moved = device_registry.async_update_device(
+        device.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+        new_config_entry_id=disabled_entry.entry_id,
+    )
+    assert moved is not None
+    assert moved.disabled_by is dr.DeviceEntryDisabler.USER
+
+    # A USER disable is accepted on a move to an enabled entry (the
+    # CONFIG_ENTRY to USER rewrite used by migrations)
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id,
+        identifiers={("test", "2")},
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+    )
+    moved_2 = device_registry.async_update_device(
+        device_2.id,
+        disabled_by=dr.DeviceEntryDisabler.USER,
+        new_config_entry_id=enabled_entry.entry_id,
+    )
+    assert moved_2 is not None
+    assert moved_2.disabled_by is dr.DeviceEntryDisabler.USER
+
+    # A CONFIG_ENTRY disable is accepted on a move to a disabled entry
+    device_3 = device_registry.async_get_or_create(
+        config_entry_id=enabled_entry.entry_id,
+        identifiers={("test", "3")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    moved_3 = device_registry.async_update_device(
+        device_3.id,
+        disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
+        new_config_entry_id=disabled_entry.entry_id,
+    )
+    assert moved_3 is not None
+    assert moved_3.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    # No disable is accepted on a move to an enabled entry
+    device_4 = device_registry.async_get_or_create(
+        config_entry_id=disabled_entry.entry_id,
+        identifiers={("test", "4")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    moved_4 = device_registry.async_update_device(
+        device_4.id,
+        disabled_by=None,
+        new_config_entry_id=enabled_entry.entry_id,
+    )
+    assert moved_4 is not None
+    assert moved_4.disabled_by is None
 
 
 async def test_move_to_config_entry_with_colliding_identity_raises(
@@ -5231,7 +5625,9 @@ async def test_restore_device(
     ("device_disabled_by", "expected_disabled_by"),
     [
         (None, None),
-        (dr.DeviceEntryDisabler.CONFIG_ENTRY, dr.DeviceEntryDisabler.CONFIG_ENTRY),
+        # A CONFIG_ENTRY disable contradicts the enabled config entry and is
+        # cleared when the device is restored
+        (dr.DeviceEntryDisabler.CONFIG_ENTRY, None),
         (dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
         (dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
         (UNDEFINED, None),
@@ -5353,7 +5749,7 @@ async def test_restore_migrated_device_disabled_by(
 @pytest.mark.parametrize(
     (
         "config_entry_disabled_by",
-        "device_disabled_by_initial",
+        "device_disabled_by_deleted",
         "device_disabled_by_restored",
     ),
     [
@@ -5409,7 +5805,7 @@ async def test_restore_disabled_by(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
-    device_disabled_by_initial: dr.DeviceEntryDisabler | None,
+    device_disabled_by_deleted: dr.DeviceEntryDisabler | None,
     device_disabled_by_restored: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring a device."""
@@ -5423,7 +5819,6 @@ async def test_restore_disabled_by(
         config_subentry_id=None,
         configuration_url="http://config_url_orig.bla",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        disabled_by=device_disabled_by_initial,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version_orig",
         identifiers={("bridgeid", "0123")},
@@ -5437,8 +5832,6 @@ async def test_restore_disabled_by(
         via_device="via_device_id_orig",
     )
 
-    assert entry.disabled_by == device_disabled_by_initial
-
     assert len(device_registry.devices) == 1
     assert len(device_registry.deleted_devices) == 0
 
@@ -5446,6 +5839,16 @@ async def test_restore_disabled_by(
 
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 1
+
+    # Simulate the disabled_by flag the device had when it was deleted. The
+    # device may have been deleted before the config entry's disabled state
+    # last changed - deleted devices are not updated when a config entry is
+    # enabled or disabled, so the stored flag can contradict the entry's
+    # current disabled state.
+    deleted_entry = device_registry.deleted_devices[entry.id]
+    device_registry.deleted_devices[entry.id] = attr.evolve(
+        deleted_entry, disabled_by=device_disabled_by_deleted
+    )
 
     # This will restore the original device, user customizations of
     # area_id, disabled_by, labels and name_by_user will be restored

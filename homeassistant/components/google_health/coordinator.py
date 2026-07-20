@@ -19,6 +19,7 @@ from google_health_api.model import (
     DistanceRollupValue,
     FloorsRollupValue,
     PairedDevice,
+    Sleep,
     StepsRollupValue,
     TotalCaloriesRollupValue,
     Weight,
@@ -245,3 +246,39 @@ class GoogleHealthDeviceCoordinator(
             for device in page.paired_devices:
                 devices[device.device_id] = device
         return devices
+
+
+@dataclass
+class GoogleHealthSleepData:
+    """Class to hold sleep data."""
+
+    sleep: Sleep | None = None
+
+
+class GoogleHealthSleepCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthSleepData]
+):
+    """Coordinator to fetch sleep data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_sleep",
+            update_interval=BODY_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthSleepData:
+        """Fetch latest sleep session."""
+        sleep_result = await self.api.sleep.list(page_size=DEFAULT_PAGE_SIZE)
+        sleep = sleep_result.data_points[0].data if sleep_result.data_points else None
+        return GoogleHealthSleepData(sleep=sleep)

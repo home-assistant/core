@@ -8,7 +8,7 @@ from typing import Any, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_VALVE
+from aioshelly.const import DEFAULT_HTTPS_PORT, MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -150,7 +150,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def configuration_url(self) -> str:
         """Return the configuration URL for the device."""
-        return f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}"
+        port = get_http_port(self.config_entry.data)
+        scheme = "https" if port == DEFAULT_HTTPS_PORT else "http"
+        return f"{scheme}://{get_host(self.config_entry.data[CONF_HOST])}:{port}"
 
     @cached_property
     def model(self) -> str:
