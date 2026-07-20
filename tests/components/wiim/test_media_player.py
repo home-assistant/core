@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wiim.consts import PlayingStatus
+from wiim.exceptions import WiimRequestException
 from wiim.models import (
     WiimGroupRole,
     WiimGroupSnapshot,
@@ -55,7 +56,7 @@ import homeassistant.components.wiim as wiim_component
 from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
@@ -289,6 +290,37 @@ async def test_control_services_update_state_machine(
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.attributes[state_attr] == state_value
+
+
+@pytest.mark.parametrize(
+    "device_error",
+    [WiimRequestException("request failed"), RuntimeError("command failed")],
+)
+async def test_command_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    device_error: Exception,
+) -> None:
+    """Test command errors raise a translated Home Assistant error."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.async_play.side_effect = device_error
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PLAY,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_placeholders == {
+        "command": "async_media_play",
+        "entity_id": MEDIA_PLAYER_ENTITY_ID,
+    }
 
 
 async def test_repeat_and_shuffle_services_update_state_machine(
@@ -678,6 +710,65 @@ async def test_play_media_services_call_device_commands(
     mock_wiim_device.async_play_queue_with_index.assert_awaited_once_with(2)
 
 
+@pytest.mark.parametrize(
+    ("media_type", "media_id", "translation_key", "translation_placeholders"),
+    [
+        (
+            "wiim_library",
+            "not-a-preset",
+            "invalid_preset_id",
+            {"media_id": "not-a-preset"},
+        ),
+        (
+            MediaType.TRACK,
+            "not-a-track",
+            "invalid_track_id",
+            {"media_id": "not-a-track"},
+        ),
+        (
+            "unsupported",
+            "1",
+            "unsupported_media_type",
+            {"media_type": "unsupported"},
+        ),
+        (
+            MediaType.URL,
+            "http://example.com/song.mp3",
+            "direct_url_playback_unsupported",
+            None,
+        ),
+    ],
+)
+async def test_play_media_validation_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+    media_type: MediaType | str,
+    media_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test play media validation errors are translated."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: media_type,
+                ATTR_MEDIA_CONTENT_ID: media_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+
+
 @pytest.mark.parametrize("media_type", [MediaType.MUSIC, MediaType.URL])
 async def test_play_media_url_service_uses_processed_url(
     hass: HomeAssistant,
@@ -855,13 +946,41 @@ async def test_browse_media_service_includes_media_sources_when_supported(
     ]
 
 
-async def test_browse_media_invalid_path_uses_translation(
+@pytest.mark.parametrize(
+    (
+        "media_content_type",
+        "media_content_id",
+        "translation_key",
+        "translation_placeholders",
+    ),
+    [
+        pytest.param(
+            MediaType.MUSIC,
+            "media-source://media_source/local/song.mp3",
+            "media_sources_unsupported",
+            None,
+            id="media-source-unsupported",
+        ),
+        pytest.param(
+            MediaType.PLAYLIST,
+            "wiim_library/invalid",
+            "invalid_browse_path",
+            {"media_content_id": "wiim_library/invalid"},
+            id="invalid-path",
+        ),
+    ],
+)
+async def test_browse_media_error_uses_translation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: MagicMock,
     mock_wiim_controller: MagicMock,
+    media_content_type: MediaType,
+    media_content_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
 ) -> None:
-    """Test invalid browse paths raise a translated error."""
+    """Test browse media errors are translated."""
     await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(BrowseError) as exc_info:
@@ -870,18 +989,16 @@ async def test_browse_media_invalid_path_uses_translation(
             SERVICE_BROWSE_MEDIA,
             {
                 ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-                ATTR_MEDIA_CONTENT_ID: "wiim_library/invalid",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
             },
             blocking=True,
             return_response=True,
         )
 
     assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "invalid_browse_path"
-    assert exc_info.value.translation_placeholders == {
-        "media_content_id": "wiim_library/invalid"
-    }
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
 
 
 async def test_join_and_unjoin_services_use_resolved_member_udns(
