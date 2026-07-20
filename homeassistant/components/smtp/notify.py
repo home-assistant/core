@@ -83,7 +83,7 @@ from .helpers import (
     _build_text_msg,
     _resolve_media,
 )
-from .issue import async_deprecate_yaml_issue
+from .issue import async_deprecate_yaml_issue, deprecated_notify_action_call
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -356,6 +356,7 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
         Will send plain text normally, with pictures as attachments if images config is
         defined, or will build a multipart HTML if html config is defined.
         """
+
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         msg: MIMEMultipart | MIMEText
@@ -395,6 +396,8 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
 
     def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
         """Send the message."""
+        deprecated_notify_action_call(self.hass, self._service_name)
+
         mail = self.connect()
         for attempt in range(self.tries):
             try:
