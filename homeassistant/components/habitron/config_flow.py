@@ -103,8 +103,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         the sentinel rather than as that IP) and casing, which is insignificant
         for host names.
 
-        This mirrors the canonicalisation ``async_step_ssdp`` already performs,
-        so the manual step recognises the same hub in the same cases.
+        Both the manual and the SSDP step compare through this, so the same hub
+        is recognised whichever way it was first added.
         """
         if host == CONF_DEFAULT_HOST:
             return await network.async_get_source_ip(self.hass) or host
@@ -112,26 +112,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.hass.async_add_executor_job(socket.gethostbyname, host)
         return host.casefold()
 
-    async def _is_device_already_configured(
-        self, host: str, ip: str | None = None
-    ) -> bool:
-        """Check if a device with this host or IP is already configured."""
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        # Nothing configured yet: skip the canonicalisation (and its name
-        # lookup) entirely, there is nothing this could collide with.
-        if not entries:
-            return False
-        candidates = {value for value in (host, ip) if value}
-        canonical = {await self._async_canonical_host(value) for value in candidates}
+    async def _async_matching_entry(
+        self,
+        entries: list[config_entries.ConfigEntry],
+        *hosts: str | None,
+    ) -> config_entries.ConfigEntry | None:
+        """Return the entry already configured for one of ``hosts``, if any.
+
+        Both sides have to be canonicalised: an entry added manually as
+        ``smarthub.local`` and a discovery reporting ``192.168.1.50`` are the
+        same hub, and comparing the raw strings would miss that and offer a
+        duplicate entry -- and a second connection -- for a hub that is
+        already configured.
+        """
+        candidates = {host for host in hosts if host}
+        # Nothing configured (or nothing to compare): skip the canonicalisation
+        # and its name lookups, there is nothing this could collide with.
+        if not entries or not candidates:
+            return None
+        canonical = {await self._async_canonical_host(host) for host in candidates}
         for entry in entries:
             entry_host = entry.data.get(KEY_HOST)
             if not entry_host:
                 continue
             if entry_host in candidates:
-                return True
+                return entry
             if await self._async_canonical_host(entry_host) in canonical:
-                return True
-        return False
+                return entry
+        return None
+
+    async def _is_device_already_configured(
+        self, host: str, ip: str | None = None
+    ) -> bool:
+        """Check if a device with this host or IP is already configured."""
+        return (
+            await self._async_matching_entry(
+                self.hass.config_entries.async_entries(DOMAIN), host, ip
+            )
+            is not None
+        )
 
     @override
     async def async_step_ssdp(
@@ -179,31 +198,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # available, while SSDP yields a stable UDN/serial. Match on the
         # host/IP so we adopt the stable id and abort instead of offering a
         # duplicate of the hub the user already added.
-        candidate_hosts: set[str | None] = {
+        # ``_async_matching_entry`` canonicalises both sides, so this also
+        # matches an entry stored under a host name (or under the ``local``
+        # sentinel, which resolves to Home Assistant's own address) against the
+        # IP the discovery reports.
+        if entry := await self._async_matching_entry(
+            list(self._async_current_entries(include_ignore=False)),
             host_str,
             self._discovered_device.get("ip"),
-        }
-        with contextlib.suppress(OSError):
-            candidate_hosts.add(
-                await self.hass.async_add_executor_job(socket.gethostbyname, host_str)
-            )
-        # An entry configured as the ``local`` sentinel runs on the same machine
-        # as Home Assistant, so its LAN address is one of HA's own source IPs.
-        # Ask HA directly — this matches even when the hub is briefly unreachable
-        # (e.g. rebooting during startup) and the entry is not yet loaded.
-        local_is_candidate = (
-            await network.async_get_source_ip(self.hass) in candidate_hosts
-        )
-        for entry in self._async_current_entries(include_ignore=False):
-            host_conf = entry.data.get(KEY_HOST)
-            if host_conf in candidate_hosts or (
-                host_conf == CONF_DEFAULT_HOST and local_is_candidate
-            ):
-                if entry.unique_id != unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        entry, unique_id=unique_id
-                    )
-                return self.async_abort(reason="already_configured")
+        ):
+            if entry.unique_id != unique_id:
+                self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+            return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {"name": host_str}
         return await self.async_step_discovery_confirm()
