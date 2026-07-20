@@ -1690,9 +1690,16 @@ async def test_stop_completes_with_open_connections(
 
     assert hass.http._server is not None
     port = hass.http._server.sockets[0].getsockname()[1]
-    _reader, writer = await asyncio.open_connection("127.0.0.1", port)
+    reader, writer = await asyncio.open_connection("127.0.0.1", port)
 
     try:
+        # Complete a request/response round trip so the connection is
+        # accepted and tracked by the server (a mere TCP connect may still
+        # sit in the listen backlog), then keep the connection open.
+        writer.write(b"GET / HTTP/1.1\r\nHost: localhost\r\n\r\n")
+        await writer.drain()
+        assert await reader.readline()
+
         await asyncio.wait_for(hass.http.stop(), timeout=15)
     finally:
         writer.close()
