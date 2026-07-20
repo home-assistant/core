@@ -3,15 +3,20 @@
 from unittest.mock import MagicMock
 
 from infrared_protocols.commands import Command
+from pysmlight.const import Events as SmEvents
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 import pytest
 
-from homeassistant.components.infrared import async_send_command
+from homeassistant.components.infrared import (
+    async_send_command,
+    async_subscribe_receiver,
+)
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from . import get_mock_event_function
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
@@ -40,10 +45,13 @@ async def test_infrared_setup_ultima(
     mock_config_entry: MockConfigEntry,
     mock_ultima_client: MagicMock,
 ) -> None:
-    """Test infrared entity is created for Ultima devices."""
+    """Test infrared entities are created for Ultima devices."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("infrared.mock_title_ir_emitter")
+    assert state is not None
+
+    state = hass.states.get("infrared.mock_title_infrared_receiver")
     assert state is not None
 
 
@@ -52,10 +60,13 @@ async def test_infrared_not_created_non_ultima(
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
-    """Test infrared entity is not created for non-Ultima devices."""
+    """Test infrared entities are not created for non-Ultima devices."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("infrared.mock_title_ir_emitter")
+    assert state is None
+
+    state = hass.states.get("infrared.mock_title_infrared_receiver")
     assert state is None
 
 
@@ -146,3 +157,33 @@ async def test_infrared_state_updated_after_send(
 
     state = hass.states.get(entity_id)
     assert state.state == "2025-09-03T22:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-09-03T22:00:00+00:00")
+async def test_infrared_receiver_event(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ultima_client: MagicMock,
+) -> None:
+    """Test infrared receiver receives event and updates state."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "infrared.mock_title_infrared_receiver"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    signals = []
+    async_subscribe_receiver(hass, entity_id, signals.append)
+
+    event_function = get_mock_event_function(mock_ultima_client, SmEvents.IR_CODE)
+    assert event_function is not None
+
+    event_function([9000, 4500, 560, 1690])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "2025-09-03T22:00:00.000+00:00"
+
+    assert len(signals) == 1
+    assert signals[0].timings == [9000, 4500, 560, 1690]

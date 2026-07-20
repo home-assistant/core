@@ -17,12 +17,14 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import StiebelEltronConfigEntry
 from .coordinator import StiebelEltronDataCoordinator
+from .entity import StiebelEltronEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CLIMATE_HK_1 = "climate_hk_1"
 
@@ -79,13 +81,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up STIEBEL ELTRON climate platform."""
 
-    async_add_entities([StiebelEltron(entry.entry_id, entry.runtime_data)])
+    async_add_entities([StiebelEltron(entry.runtime_data)])
 
 
-class StiebelEltron(CoordinatorEntity[StiebelEltronDataCoordinator], ClimateEntity):
+class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     """Representation of a STIEBEL ELTRON heat pump."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_hvac_modes = list(HA_TO_LWZ_HVAC)
     _attr_preset_modes = list(HA_TO_LWZ_PRESET)
@@ -100,14 +101,12 @@ class StiebelEltron(CoordinatorEntity[StiebelEltronDataCoordinator], ClimateEnti
     _attr_min_temp = 10.0
     _attr_max_temp = 30.0
 
-    def __init__(
-        self, unique_id: str, coordinator: StiebelEltronDataCoordinator
-    ) -> None:
+    def __init__(self, coordinator: StiebelEltronDataCoordinator) -> None:
         """Initialize the unit."""
-        super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{unique_id}-{CLIMATE_HK_1}"
-        # Initialize runtime attributes to avoid attribute errors
+        assert coordinator.config_entry is not None
+        super().__init__(
+            coordinator, f"{coordinator.config_entry.entry_id}-{CLIMATE_HK_1}"
+        )
         self._set_attr()
 
     @override

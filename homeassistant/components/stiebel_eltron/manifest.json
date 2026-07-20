@@ -7,5 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pymodbus", "pystiebeleltron"],
+  "quality_scale": "bronze",
   "requirements": ["pystiebeleltron==0.2.5"]
 }

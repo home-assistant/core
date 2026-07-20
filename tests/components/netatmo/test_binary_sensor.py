@@ -67,7 +67,7 @@ async def test_doortag_setup(
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
@@ -179,7 +179,7 @@ async def test_doortag_opening_status_change(
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_tag_post
@@ -306,7 +306,7 @@ async def test_doortag_opening_category(
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_tag_post

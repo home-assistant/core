@@ -1,6 +1,6 @@
 """Tests for calendar platform of Remote Calendar."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pathlib
 import textwrap
 
@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import (
@@ -530,3 +531,59 @@ async def test_event_edge_during_refresh_interval(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("message") == "Event Two"
+
+
+@respx.mock
+@pytest.mark.freeze_time("2026-05-18 06:00:00+00:00")
+async def test_coordinator_refresh_updates_upcoming_event_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a coordinator refresh updates the materialized upcoming event."""
+    original_calendar = textwrap.dedent(
+        """\
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        BEGIN:VEVENT
+        SUMMARY:Wake up
+        DTSTART:20260518T064000
+        DTEND:20260518T065500
+        END:VEVENT
+        END:VCALENDAR
+        """
+    )
+    updated_calendar = textwrap.dedent(
+        """\
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        BEGIN:VEVENT
+        SUMMARY:Wake up
+        DTSTART:20260519T080000
+        DTEND:20260519T081500
+        END:VEVENT
+        END:VCALENDAR
+        """
+    )
+    route = respx.get(CALENDER_URL).mock(
+        side_effect=[
+            Response(status_code=200, text=original_calendar),
+            # We currently update the calendar twice on startup, tracked
+            # in issue #148315
+            Response(status_code=200, text=original_calendar),
+            Response(status_code=200, text=updated_calendar),
+        ]
+    )
+    await setup_integration(hass, config_entry)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes.get("start_time") == "2026-05-18 06:40:00"
+
+    # Advance clock to trigger the next update interval
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes.get("start_time") == "2026-05-19 08:00:00"
+    assert route.call_count == 3

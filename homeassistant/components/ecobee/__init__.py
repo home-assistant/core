@@ -17,10 +17,14 @@ from pyecobee import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.util import Throttle
 
-from .const import _LOGGER, CONF_REFRESH_TOKEN, PLATFORMS
+from .const import _LOGGER, CONF_REFRESH_TOKEN, DOMAIN, PLATFORMS
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
@@ -44,7 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bo
     )
 
     if not await runtime_data.refresh():
-        return False
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_refresh_tokens",
+        )
 
     await runtime_data.update()
 
@@ -112,15 +119,19 @@ class EcobeeData:
             )
         except EcobeeAuthMfaRequiredError as err:
             raise ConfigEntryAuthFailed(
-                "ecobee account requires MFA; reauthentication needed"
+                translation_domain=DOMAIN,
+                translation_key="mfa_reauthentication_needed",
             ) from err
         except EcobeeAuthFailedError as err:
             if self.ecobee.config.get(ECOBEE_USERNAME):
                 raise ConfigEntryAuthFailed(
-                    "ecobee rejected stored credentials"
+                    translation_domain=DOMAIN,
+                    translation_key="credentials_rejected",
                 ) from err
-            _LOGGER.error("Ecobee rejected stored credentials: %s", err)
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="credentials_rejected",
+            ) from err
         except EcobeeAuthUnknownError:
             _LOGGER.exception("Unexpected error refreshing ecobee tokens")
             return False

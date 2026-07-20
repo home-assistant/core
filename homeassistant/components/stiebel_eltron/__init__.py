@@ -45,6 +45,6 @@ async def async_unload_entry(
     entry: StiebelEltronConfigEntry,
 ) -> bool:
     """Unload a config entry."""
-    coordinator = entry.runtime_data
-    await coordinator.close()
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
+        await entry.runtime_data.close()
+    return unload_ok

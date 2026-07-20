@@ -191,7 +191,7 @@ class LLMContext:
     language: str | None
     """Language of the LLM request."""
 
-    assistant: str | None
+    assistant: str
     """Assistant domain that is handling the LLM request."""
 
     device_id: str | None
@@ -1278,11 +1278,6 @@ class GetLiveContextTool(Tool):
         llm_context: LLMContext,
     ) -> JsonObjectType:
         """Get the current state of exposed entities."""
-        if llm_context.assistant is None:
-            # Note this doesn't happen in practice since this tool won't be
-            # exposed if no assistant is configured.
-            return {"success": False, "error": "No assistant configured"}
-
         args = self.parameters(tool_input.tool_args)
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
 

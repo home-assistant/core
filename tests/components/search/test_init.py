@@ -111,6 +111,23 @@ async def test_search(
         wled_segment_2_entity.entity_id, area_id=bedroom_area.id
     )
 
+    # Config entry with a device providing a scene entity
+    esphome_config_entry = MockConfigEntry(domain="esphome")
+    esphome_config_entry.add_to_hass(hass)
+    esphome_device = device_registry.async_get_or_create(
+        config_entry_id=esphome_config_entry.entry_id,
+        name="Node",
+        identifiers={("esphome", "esphome-1")},
+    )
+    esphome_scene_entity = entity_registry.async_get_or_create(
+        "scene",
+        "esphome",
+        "esphome-1-scene",
+        suggested_object_id="esphome scene",
+        config_entry=esphome_config_entry,
+        device_id=esphome_device.id,
+    )
+
     scene_wled_hue_entity = entity_registry.async_get_or_create(
         "scene",
         "homeassistant",
@@ -134,6 +151,23 @@ async def test_search(
         person_paulus_entity.entity_id,
         area_id=bedroom_area.id,
         labels={label_other.label_id},
+    )
+
+    # Device tracker of the person, provided by a config entry with a device
+    mobile_app_config_entry = MockConfigEntry(domain="mobile_app")
+    mobile_app_config_entry.add_to_hass(hass)
+    mobile_app_device = device_registry.async_get_or_create(
+        config_entry_id=mobile_app_config_entry.entry_id,
+        name="Paulus iPhone",
+        identifiers={("mobile_app", "phone-1")},
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        "mobile_app",
+        "phone-1-tracker",
+        suggested_object_id="paulus_iphone",
+        config_entry=mobile_app_config_entry,
+        device_id=mobile_app_device.id,
     )
 
     script_scene_entity = entity_registry.async_get_or_create(
@@ -658,6 +692,18 @@ async def test_search(
         ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.device", "script.hue"},
     }
+    assert search(ItemType.DEVICE, esphome_device.id) == {
+        ItemType.CONFIG_ENTRY: {esphome_config_entry.entry_id},
+        ItemType.ENTITY: {esphome_scene_entity.entity_id},
+        ItemType.INTEGRATION: {"esphome"},
+        ItemType.SCENE: {esphome_scene_entity.entity_id},
+    }
+    assert search(ItemType.CONFIG_ENTRY, esphome_config_entry.entry_id) == {
+        ItemType.DEVICE: {esphome_device.id},
+        ItemType.ENTITY: {esphome_scene_entity.entity_id},
+        ItemType.INTEGRATION: {"esphome"},
+        ItemType.SCENE: {esphome_scene_entity.entity_id},
+    }
 
     assert not search(ItemType.ENTITY, "sensor.unknown")
     assert search(ItemType.ENTITY, wled_segment_1_entity.entity_id) == {
@@ -725,6 +771,9 @@ async def test_search(
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
     assert search(ItemType.ENTITY, "device_tracker.paulus_iphone") == {
+        ItemType.CONFIG_ENTRY: {mobile_app_config_entry.entry_id},
+        ItemType.DEVICE: {mobile_app_device.id},
+        ItemType.INTEGRATION: {"mobile_app"},
         ItemType.PERSON: {person_paulus_entity.entity_id},
     }
     assert search(ItemType.ENTITY, "light.wled_config_entry_source") == {
@@ -819,11 +868,20 @@ async def test_search(
 
     assert not search(ItemType.LABEL, "unknown")
     assert search(ItemType.LABEL, label_christmas.label_id) == {
+        ItemType.AREA: {living_room_area.id},
         ItemType.AUTOMATION: {"automation.label"},
+        ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
+        ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"wled"},
     }
     assert search(ItemType.LABEL, label_energy.label_id) == {
+        ItemType.AREA: {kitchen_area.id},
+        ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
+        ItemType.DEVICE: {hue_device.id},
         ItemType.ENTITY: {hue_segment_1_entity.entity_id},
+        ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"hue"},
     }
     assert search(ItemType.LABEL, label_other.label_id) == {
         ItemType.AREA: {bedroom_area.id},
@@ -832,6 +890,7 @@ async def test_search(
             person_paulus_entity.entity_id,
             script_scene_entity.entity_id,
         },
+        ItemType.FLOOR: {second_floor.floor_id},
         ItemType.PERSON: {person_paulus_entity.entity_id},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.label", script_scene_entity.entity_id},
@@ -840,8 +899,11 @@ async def test_search(
     assert not search(ItemType.PERSON, "person.unknown")
     assert search(ItemType.PERSON, person_paulus_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id},
+        ItemType.CONFIG_ENTRY: {mobile_app_config_entry.entry_id},
+        ItemType.DEVICE: {mobile_app_device.id},
         ItemType.ENTITY: {"device_tracker.paulus_iphone"},
         ItemType.FLOOR: {second_floor.floor_id},
+        ItemType.INTEGRATION: {"mobile_app"},
         ItemType.LABEL: {label_other.label_id},
     }
 

@@ -58,7 +58,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     with pytest.raises(BrowseError) as excinfo:
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/")
     assert str(excinfo.value) == (
-        "Failed to browse media with content id media-source://netatmo/: "
+        "Failed to browse media with content ID media-source://netatmo/: "
         "Invalid media source URI"
     )
     # Test successful listing

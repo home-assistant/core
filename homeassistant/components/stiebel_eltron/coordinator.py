@@ -42,7 +42,6 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
             # the register values), so there is nothing to diff against.
             always_update=True,
         )
-        self._model = model
         self.api_client = LwzStiebelEltronAPI(host=host, port=port)
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -58,27 +57,10 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.debug("Closing connection to %s", self.host)
         await self.api_client.close()
 
-    async def connect(self) -> None:
-        """Connect client."""
-        _LOGGER.debug("Connecting to %s", self.host)
-        await self.api_client.connect()
-
-    @property
-    def is_connected(self) -> bool:
-        """Check modbus client connection status."""
-        if self.api_client is None:
-            return False
-        return self.api_client.is_connected
-
     @property
     def host(self) -> str:
         """Return the host address of the Stiebel Eltron ISG."""
         return self.api_client.host
-
-    @property
-    def model(self) -> str:
-        """Return the controller model name of the Stiebel Eltron ISG."""
-        return self._model.name
 
     @override
     async def _async_update_data(self) -> None:

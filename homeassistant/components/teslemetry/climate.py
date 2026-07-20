@@ -212,7 +212,7 @@ class TeslemetryVehiclePollingClimateEntity(
         value = self.get("climate_state_is_climate_on")
         if value is None:
             self._attr_hvac_mode = None
-        if value:
+        elif value:
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         else:
             self._attr_hvac_mode = HVACMode.OFF
