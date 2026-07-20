@@ -1277,9 +1277,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get(
-        self, device_id: str, *, restore_composite: bool = True
-    ) -> DeviceEntry | None:
+    def async_get(self, device_id: str) -> DeviceEntry | None:
         """Get device.
 
         We retrieve the DeviceEntry from the underlying dict to avoid
@@ -1289,14 +1287,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         merged from the split devices is returned, so integration code that resolves a
         device by id (e.g. in a service handler) keeps working. The composite is
         synthesized on demand and never stored, so it stays invisible to enumeration,
-        identifier search and the frontend device list. Pass restore_composite=False
-        to instead return None for a composite device id.
+        identifier search and the frontend device list.
         """
         if (device := self._device_data.get(device_id)) is not None:
             return device
-        if restore_composite and (
-            split_devices := self.devices.get_devices_for_composite_device_id(device_id)
-        ):
+        if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
             return self._restore_composite_device(device_id, split_devices)
         return None
 
