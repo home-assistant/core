@@ -66,6 +66,14 @@ charge_start:
       selector:
         datetime:
 
+charge_set_immediate:
+  fields:
+    vehicle:
+      required: true
+      selector:
+        device:
+          integration: renault
+
 charge_set_schedules:
   fields:
     vehicle:

@@ -29,6 +29,7 @@ class RenaultService(StrEnum):
     AC_CANCEL = "ac_cancel"
     AC_SET_SCHEDULES = "ac_set_schedules"
     AC_START = "ac_start"
+    CHARGE_SET_IMMEDIATE = "charge_set_immediate"
     CHARGE_SET_SCHEDULES = "charge_set_schedules"
     CHARGE_START = "charge_start"
 
@@ -190,6 +191,35 @@ async def test_service_charge_start_with_date(
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (when,)
+
+
+async def test_service_charge_set_immediate(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that service invokes renault_api with correct data."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+    }
+
+    with patch(
+        "renault_api.renault_vehicle.RenaultVehicle.set_charge_mode",
+        return_value=(
+            schemas.KamereonVehicleHvacStartActionDataSchema.loads(
+                await async_load_fixture(hass, "action.set_charge_mode.json", DOMAIN)
+            )
+        ),
+    ) as mock_action:
+        await hass.services.async_call(
+            DOMAIN,
+            RenaultService.CHARGE_SET_IMMEDIATE,
+            service_data=data,
+            blocking=True,
+        )
+    assert len(mock_action.mock_calls) == 1
+    assert mock_action.mock_calls[0][1] == ("always_charging",)
 
 
 async def test_service_set_charge_schedule(
