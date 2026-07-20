@@ -582,6 +582,23 @@
     }
   },
   "issues": {
+    "composite_device_id": {
+      "fix_flow": {
+        "step": {
+          "select_device": {
+            "data": {
+              "device_id": "[%key:common::config_flow::data::device%]"
+            },
+            "data_description": {
+              "device_id": "The device this template helper should be linked to."
+            },
+            "description": "The {template_type} template helper {name} was linked to a device which has been split into the following devices: {devices}.\n\nSelect the device this helper should be linked to, or leave empty to not link it to a device.",
+            "title": "Select device for {name}"
+          }
+        }
+      },
+      "title": "Device for template helper {name} needs to be selected again"
+    },
     "config_format_actions": {
       "description": "There is an actions option in the template configuration that does not pair with a trigger option.  This will be an configuration validation error in 2026.5.\n\n Please add a trigger to the configuration or remove the actions option from the configuration.\n\n```\n{config}\n```",
       "title": "Template actions option requires a trigger"
