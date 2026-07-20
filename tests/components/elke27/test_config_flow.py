@@ -121,7 +121,7 @@ async def test_link_and_create_entry_wait_ready_false(hass: HomeAssistant) -> No
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_link_and_create_entry_suppresses_disconnect_error(
+async def test_link_and_create_entry_suppresses_library_disconnect_error(
     hass: HomeAssistant,
 ) -> None:
     """Test disconnect cleanup errors do not mask flow errors."""
@@ -129,7 +129,7 @@ async def test_link_and_create_entry_suppresses_disconnect_error(
     client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
     client.async_connect = AsyncMock(return_value=None)
     client.wait_ready = AsyncMock(return_value=False)
-    client.async_disconnect = AsyncMock(side_effect=RuntimeError("boom"))
+    client.async_disconnect = AsyncMock(side_effect=Elke27TimeoutError())
 
     flow = config_flow.Elke27ConfigFlow()
     flow.hass = hass

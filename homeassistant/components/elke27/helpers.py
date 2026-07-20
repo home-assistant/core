@@ -9,19 +9,17 @@ from homeassistant.helpers.device_registry import (
 
 from .const import DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
-from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
 
 
 def device_info_for_entry(
-    hub: Elke27Hub,
     coordinator: Elke27DataUpdateCoordinator,
     entry: Elke27ConfigEntry,
 ) -> DeviceInfo:
     """Build device info for entities tied to a config entry."""
     snapshot = coordinator.data
     panel_info = snapshot.panel
-    panel_name = panel_info.panel_name or hub.panel_name or entry.title
+    panel_name = panel_info.panel_name or coordinator.panel_name or entry.title
     try:
         formatted_mac = format_mac(str(panel_info.mac)) if panel_info.mac else None
     except ValueError:
@@ -48,8 +46,8 @@ def unique_base(entry: Elke27ConfigEntry) -> str:
     client_id = entry.data.get(CONF_CLIENT_ID)
     if client_id:
         return str(client_id)
-    # Real config entries get a unique ID during config flow. This fallback is
-    # kept for defensive construction and older test fixtures without one.
+    # Real entries get a unique ID in the config flow; this fallback only
+    # covers defensively constructed entries (e.g. in tests).
     return entry.entry_id
 
 
