@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_battery-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_battery-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -57,7 +57,7 @@
     'state': '85',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_current-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -99,7 +99,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_current-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
@@ -115,7 +115,7 @@
     'state': '0.5',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_cycles_today-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_cycles_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -154,7 +154,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_cycles_today-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_cycles_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Cycles today',
@@ -168,7 +168,7 @@
     'state': '3',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_energy_consumption-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -210,7 +210,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_energy_consumption-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_energy_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -226,7 +226,7 @@
     'state': '1.5',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_humidity-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -268,7 +268,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_humidity-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
@@ -284,7 +284,7 @@
     'state': '55.0',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_power-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -326,7 +326,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_power-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -342,7 +342,7 @@
     'state': '12.3',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_status-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -386,7 +386,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_status-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -406,7 +406,7 @@
     'state': 'online',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_storage_used-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_storage_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -448,7 +448,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_storage_used-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_storage_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Storage used',
@@ -463,7 +463,7 @@
     'state': '42',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_temperature-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -505,7 +505,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_temperature-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -521,7 +521,7 @@
     'state': '22.5',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_usage_duration-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_usage_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -563,7 +563,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_usage_duration-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_usage_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -579,7 +579,7 @@
     'state': '120',
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_voltage-entry]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -621,7 +621,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[sensor_mock_devices][sensor.device_1_voltage-state]
+# name: test_sensor_entities_snapshot[sensor_mock_devices-platforms0][sensor.device_1_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',

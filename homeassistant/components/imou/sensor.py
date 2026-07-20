@@ -171,6 +171,8 @@ class ImouSensor(ImouEntity, SensorEntity):
         """Initialize the Imou sensor entity."""
         self.entity_description = description
         super().__init__(coordinator, description.key, device)
+        # Let entity_description.translation_key win (including None).
+        del self._attr_translation_key
 
     @property
     def _is_numeric_variant(self) -> bool:

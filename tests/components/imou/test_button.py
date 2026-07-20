@@ -16,7 +16,7 @@ from homeassistant.components.imou.const import (
     PTZ_MOVE_DURATION_MS,
 )
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -26,7 +26,8 @@ from .const import UNKNOWN_BUTTON_KEY, create_online_device
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.usefixtures("init_button_platform_integration")
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON]], indirect=True)
+@pytest.mark.usefixtures("init_integration")
 async def test_button_entities_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -37,6 +38,7 @@ async def test_button_entities_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON]], indirect=True)
 @pytest.mark.parametrize(
     "imou_mock_devices",
     [
@@ -50,7 +52,7 @@ async def test_button_entities_snapshot(
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("init_button_platform_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_setup_ignores_unknown_button_types(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

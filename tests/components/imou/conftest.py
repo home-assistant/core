@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyimouapi.ha_device import ImouHaDevice
 import pytest
 
-from homeassistant.components.imou.const import CONF_APP_ID, DOMAIN
+from homeassistant.components.imou.const import CONF_APP_ID, DOMAIN, PLATFORMS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -80,92 +80,29 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def platforms(request: pytest.FixtureRequest) -> list[Platform]:
+    """Return the platforms to set up (default: the integration's full list)."""
+    return getattr(request, "param", PLATFORMS)
+
+
+@pytest.fixture
+def mock_camera_access_token() -> Generator[None]:
+    """Stabilize camera access tokens for snapshot tests."""
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        yield
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_openapi_client: AsyncMock,
     mock_imou_ha_device_manager: MagicMock,
+    platforms: list[Platform],
 ) -> MagicMock:
     """Set up Imou with mocked library clients; returns the HA device manager mock."""
     mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_imou_ha_device_manager
-
-
-async def _init_integration_with_platforms(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    platforms: list[Platform],
-) -> None:
-    """Set up Imou loading only the requested platforms."""
     with patch("homeassistant.components.imou.PLATFORMS", platforms):
-        mock_config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-
-@pytest.fixture
-async def init_button_platform_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_openapi_client: AsyncMock,
-    mock_imou_ha_device_manager: MagicMock,
-) -> MagicMock:
-    """Set up Imou with only the button platform loaded."""
-    await _init_integration_with_platforms(hass, mock_config_entry, [Platform.BUTTON])
-    return mock_imou_ha_device_manager
-
-
-@pytest.fixture
-async def init_switch_platform_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_openapi_client: AsyncMock,
-    mock_imou_ha_device_manager: MagicMock,
-) -> MagicMock:
-    """Set up Imou with only the switch platform loaded."""
-    await _init_integration_with_platforms(hass, mock_config_entry, [Platform.SWITCH])
-    return mock_imou_ha_device_manager
-
-
-@pytest.fixture
-async def init_camera_platform_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_openapi_client: AsyncMock,
-    mock_imou_ha_device_manager: MagicMock,
-) -> MagicMock:
-    """Set up Imou with only the camera platform loaded."""
-    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
-        await _init_integration_with_platforms(
-            hass, mock_config_entry, [Platform.CAMERA]
-        )
-    return mock_imou_ha_device_manager
-
-
-@pytest.fixture
-async def init_sensor_platform_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_openapi_client: AsyncMock,
-    mock_imou_ha_device_manager: MagicMock,
-) -> MagicMock:
-    """Set up Imou with only the sensor platform loaded."""
-    await _init_integration_with_platforms(hass, mock_config_entry, [Platform.SENSOR])
-    return mock_imou_ha_device_manager
-
-
-@pytest.fixture
-async def init_integration_stable_camera(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_openapi_client: AsyncMock,
-    mock_imou_ha_device_manager: MagicMock,
-) -> MagicMock:
-    """Set up Imou with stable camera access tokens for snapshot tests."""
-    mock_config_entry.add_to_hass(hass)
-    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     return mock_imou_ha_device_manager

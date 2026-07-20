@@ -27,9 +27,7 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
         self._entity_type = entity_type
         self._device_key = imou_device_identifier(device)
         self._attr_unique_id = f"{self._device_key}${entity_type}"
-        # Platforms with entity descriptions supply translation_key there.
-        if not hasattr(self, "entity_description"):
-            self._attr_translation_key = entity_type
+        self._attr_translation_key = entity_type
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_key)},
             name=device.channel_name or device.device_name,

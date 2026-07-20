@@ -16,7 +16,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.imou.const import PARAM_STATE, PARAM_STATUS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,8 +30,9 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [sensor_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_sensor_platform_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor_entities_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -62,24 +63,25 @@ async def test_sensor_entities_snapshot(
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_ignores_unknown_sensor_types(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown sensor keys from the API are not turned into entities."""
-    registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     sensor_entries = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensor_entries) == 2
-    battery_entries = [
-        entry for entry in sensor_entries if entry.unique_id == "d1$battery"
-    ]
-    assert len(battery_entries) == 1
+    assert hass.states.get("sensor.device_1_battery") is not None
 
 
 @pytest.mark.parametrize(
-    ("unique_id", "expected_state"),
+    ("entity_id", "expected_state"),
     [
-        pytest.param("d1$status", "offline", id="status_reports_offline"),
-        pytest.param("d1$battery", STATE_UNAVAILABLE, id="battery_unavailable"),
+        pytest.param("sensor.device_1_status", "offline", id="status_reports_offline"),
+        pytest.param(
+            "sensor.device_1_battery", STATE_UNAVAILABLE, id="battery_unavailable"
+        ),
     ],
 )
 @pytest.mark.parametrize("imou_mock_devices", [sensor_mock_devices], indirect=True)
@@ -87,20 +89,11 @@ async def test_setup_ignores_unknown_sensor_types(
 async def test_sensor_availability_when_device_offline(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
-    unique_id: str,
+    entity_id: str,
     expected_state: str,
 ) -> None:
     """Status stays available offline; other sensors become unavailable."""
-    entry = next(
-        item
-        for item in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if item.unique_id == unique_id
-    )
 
     async def set_device_offline(device: ImouHaDevice) -> None:
         device._sensors[PARAM_STATUS] = {
@@ -115,7 +108,7 @@ async def test_sensor_availability_when_device_offline(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entry.entity_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
 
@@ -130,14 +123,7 @@ async def test_entities_removed_when_device_leaves_account(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Sensor entities are removed when the device is no longer on the account."""
-    battery_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.unique_id == "d1$battery"
-    )
-    assert hass.states.get(battery_entry.entity_id).state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.device_1_battery").state != STATE_UNAVAILABLE
 
     mock_imou_ha_device_manager.async_get_devices.return_value = []
 
@@ -149,25 +135,14 @@ async def test_entities_removed_when_device_leaves_account(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
         == []
     )
-    assert hass.states.get(battery_entry.entity_id) is None
+    assert hass.states.get("sensor.device_1_battery") is None
 
 
 @pytest.mark.parametrize("imou_mock_devices", [sensor_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
-async def test_storage_used_numeric_has_percentage_unit(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
+async def test_storage_used_numeric_has_percentage_unit(hass: HomeAssistant) -> None:
     """Numeric storage used sensors expose a percentage unit."""
-    storage_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.unique_id == "d1$storage_used"
-    )
-    state = hass.states.get(storage_entry.entity_id)
+    state = hass.states.get("sensor.device_1_storage_used")
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == "%"
 
@@ -193,20 +168,9 @@ async def test_storage_used_numeric_has_percentage_unit(
     indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_storage_used_error_codes_are_unknown(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
+async def test_storage_used_error_codes_are_unknown(hass: HomeAssistant) -> None:
     """Storage error codes do not mix into the numeric storage_used state."""
-    storage_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.unique_id == "d1$storage_used"
-    )
-    state = hass.states.get(storage_entry.entity_id)
+    state = hass.states.get("sensor.device_1_storage_used")
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("unit_of_measurement") == "%"

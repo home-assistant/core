@@ -21,6 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -38,20 +39,19 @@ async def _apply_switch_operation(
     device.switches[switch_type][PARAM_STATE] = enable
 
 
-def switch_mock_devices() -> list[ImouHaDevice]:
-    """Return a fresh switch-focused device list for tests."""
-    return [
-        create_online_device(
-            "d1",
-            "Device 1",
-            button_keys=(),
-            switches=DEFAULT_SWITCHES,
-        ),
-    ]
+SWITCH_MOCK_DEVICES = [
+    create_online_device(
+        "d1",
+        "Device 1",
+        button_keys=(),
+        switches=DEFAULT_SWITCHES,
+    ),
+]
 
 
-@pytest.mark.parametrize("imou_mock_devices", [switch_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_switch_platform_integration")
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
+@pytest.mark.usefixtures("init_integration")
 async def test_switch_entities_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -92,7 +92,7 @@ async def test_setup_ignores_unknown_switch_types(
     assert switch_entries[0].translation_key == PARAM_MOTION_DETECT
 
 
-@pytest.mark.parametrize("imou_mock_devices", [switch_mock_devices], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_via_service(
     hass: HomeAssistant,
@@ -125,7 +125,7 @@ async def test_turn_on_via_service(
     assert hass.states.get(motion_entry.entity_id).state == "on"
 
 
-@pytest.mark.parametrize("imou_mock_devices", [switch_mock_devices], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_off_via_service(
     hass: HomeAssistant,
@@ -158,7 +158,7 @@ async def test_turn_off_via_service(
     assert hass.states.get(header_entry.entity_id).state == "off"
 
 
-@pytest.mark.parametrize("imou_mock_devices", [switch_mock_devices], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_service_propagates_api_error(
     hass: HomeAssistant,
@@ -232,7 +232,7 @@ async def test_turn_off_unavailable_offline_device_via_service(
     init_integration.async_switch_operation.assert_not_called()
 
 
-@pytest.mark.parametrize("imou_mock_devices", [switch_mock_devices], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_entities_removed_when_device_leaves_account(
     hass: HomeAssistant,
