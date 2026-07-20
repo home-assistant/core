@@ -98,7 +98,6 @@ async def test_setup_consent_required(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    # Assert issue was created
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
 
