@@ -4,7 +4,6 @@ from datetime import timedelta
 
 DOMAIN = "izone"
 
-DATA_DISCOVERY_SERVICE = "izone_discovery"
 DATA_CONFIG = "izone_config"
 
 TIMEOUT_DISCOVERY = 5

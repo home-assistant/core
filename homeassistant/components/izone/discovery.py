@@ -23,14 +23,9 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    DATA_CONFIG,
-    DATA_DISCOVERY_SERVICE,
-    DISCOVERY_IDLE_SECONDS,
-    DISCOVERY_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DATA_CONFIG, DISCOVERY_IDLE_SECONDS, DISCOVERY_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +38,11 @@ class DiscoveryRuntime:
     unsub_scan: Callable[[], None]
     unsub_stop: Callable[[], None]
     cancel_idle_stop: Callable[[], None] | None = None
+
+
+DATA_DISCOVERY_SERVICE: HassKey[
+    DiscoveryRuntime | asyncio.Future[pizone.DiscoveryService]
+] = HassKey("izone_discovery")
 
 
 def yaml_excluded_uids(hass: HomeAssistant) -> set[str]:
@@ -89,7 +89,7 @@ def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
 def async_schedule_idle_stop(hass: HomeAssistant) -> None:
     """Schedule a delayed shutdown check for the shared discovery service."""
     runtime = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if not isinstance(runtime, DiscoveryRuntime):
+    if runtime is None or isinstance(runtime, asyncio.Future):
         return
 
     if runtime.cancel_idle_stop is not None:
@@ -125,58 +125,21 @@ async def async_ensure_discovery(hass: HomeAssistant) -> pizone.DiscoveryService
     if existing is None:
         future: asyncio.Future[pizone.DiscoveryService] = hass.loop.create_future()
         hass.data[DATA_DISCOVERY_SERVICE] = future
+        _LOGGER.debug("Starting iZone discovery service")
+
+        @callback
+        def _on_endpoint_discovered(
+            endpoint: pizone.ControllerEndpoint,
+        ) -> None:
+            async_note_integration_discovery(hass, endpoint)
+            async_schedule_idle_stop(hass)
+
+        session = aiohttp_client.async_get_clientsession(hass)
         try:
-            _LOGGER.debug("Starting iZone discovery service")
-
-            @callback
-            def _on_endpoint_discovered(
-                endpoint: pizone.ControllerEndpoint,
-            ) -> None:
-                async_note_integration_discovery(hass, endpoint)
-                async_schedule_idle_stop(hass)
-
-            session = aiohttp_client.async_get_clientsession(hass)
             service = await pizone.create_discovery(
                 on_endpoint_discovered=_on_endpoint_discovered,
                 session=session,
             )
-
-            # Stopped while create was in flight — discard the orphaned service.
-            if future.done():
-                await service.close()
-                return await future
-
-            async def _async_scan(_now: datetime | None = None) -> None:
-                try:
-                    await service.scan()
-                except ConnectionError:
-                    _LOGGER.debug("iZone discovery scan skipped; transport not ready")
-
-            unsub_scan = async_track_time_interval(
-                hass, _async_scan, DISCOVERY_SCAN_INTERVAL, cancel_on_shutdown=True
-            )
-
-            async def _async_stop_on_shutdown(_event: Event) -> None:
-                # listen_once removes itself before this runs; avoid a second unsub.
-                if runtime := hass.data.get(DATA_DISCOVERY_SERVICE):
-                    if isinstance(runtime, DiscoveryRuntime):
-                        runtime.unsub_stop = lambda: None
-                await async_stop_discovery(hass)
-
-            unsub_stop = hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, _async_stop_on_shutdown
-            )
-
-            hass.data[DATA_DISCOVERY_SERVICE] = DiscoveryRuntime(
-                service=service,
-                unsub_scan=unsub_scan,
-                unsub_stop=unsub_stop,
-            )
-            future.set_result(service)
-
-            # Initial broadcast — 1.4 create_discovery binds :7005 but does not scan.
-            await _async_scan()
-            async_schedule_idle_stop(hass)
         except BaseException as err:
             if hass.data.get(DATA_DISCOVERY_SERVICE) is future:
                 hass.data.pop(DATA_DISCOVERY_SERVICE, None)
@@ -185,6 +148,43 @@ async def async_ensure_discovery(hass: HomeAssistant) -> pizone.DiscoveryService
                 # Mark retrieved so an un-awaited failure does not log loudly.
                 future.exception()
             raise
+
+        # Stopped while create was in flight — discard the orphaned service.
+        if future.done():
+            await service.close()
+            return await future
+
+        async def _async_scan(_now: datetime | None = None) -> None:
+            try:
+                await service.scan()
+            except ConnectionError:
+                _LOGGER.debug("iZone discovery scan skipped; transport not ready")
+
+        unsub_scan = async_track_time_interval(
+            hass, _async_scan, DISCOVERY_SCAN_INTERVAL, cancel_on_shutdown=True
+        )
+
+        async def _async_stop_on_shutdown(_event: Event) -> None:
+            # listen_once removes itself before this runs; avoid a second unsub.
+            if runtime := hass.data.get(DATA_DISCOVERY_SERVICE):
+                if isinstance(runtime, DiscoveryRuntime):
+                    runtime.unsub_stop = lambda: None
+            await async_stop_discovery(hass)
+
+        unsub_stop = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_stop_on_shutdown
+        )
+
+        hass.data[DATA_DISCOVERY_SERVICE] = DiscoveryRuntime(
+            service=service,
+            unsub_scan=unsub_scan,
+            unsub_stop=unsub_stop,
+        )
+        future.set_result(service)
+
+        # Initial broadcast — 1.4 create_discovery binds :7005 but does not scan.
+        await _async_scan()
+        async_schedule_idle_stop(hass)
     else:
         future = existing
 

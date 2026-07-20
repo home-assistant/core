@@ -10,11 +10,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.izone import discovery as izone_discovery
-from homeassistant.components.izone.const import (
-    DATA_DISCOVERY_SERVICE,
-    DISCOVERY_SCAN_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.izone.const import DISCOVERY_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.izone.discovery import DATA_DISCOVERY_SERVICE
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow

@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     except (OSError, RuntimeError) as err:
         raise ConfigEntryNotReady("iZone discovery service failed to start") from err
 
-    # Heal legacy / hostless entries here (not in migrate) so ConfigEntryNotReady
+    # Heal legacy / host-less entries here (not in migrate) so ConfigEntryNotReady
     # can retry. Upstream pairs migrate→data={} with this setup-time rebind.
     if entry.unique_id == DOMAIN:
         try:
@@ -152,14 +152,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     except pizone.ControllerCommandError as err:
         raise ConfigEntryError(f"iZone controller at {host} rejected setup") from err
 
+    coordinator = IZoneCoordinator(hass, entry, controller)
     try:
-        coordinator = IZoneCoordinator(hass, entry, controller)
         await coordinator.async_config_entry_first_refresh()
-        entry.runtime_data = coordinator
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except BaseException:
         await controller.close()
         raise
+
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

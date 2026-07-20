@@ -1,8 +1,7 @@
 """Fixtures for iZone integration tests."""
 
-from collections.abc import AsyncGenerator, Coroutine, Generator, Iterable
+from collections.abc import AsyncGenerator, Generator, Iterable
 from contextlib import contextmanager
-from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from pizone import Controller, ControllerEndpoint, DiscoveryService, Zone
@@ -154,18 +153,20 @@ def patch_discovered_controllers(
 
 async def async_load_yaml_exclude(hass: HomeAssistant, *uids: str) -> None:
     """Load deprecated YAML exclude config through the integration setup path."""
-
-    def _discard_task(
-        coro: Coroutine[Any, Any, Any], *_args: object, **_kwargs: object
-    ) -> Mock:
-        # Import flow is scheduled by async_setup; tests only need DATA_CONFIG.
-        coro.close()
-        return Mock()
-
-    with patch.object(hass, "async_create_task", side_effect=_discard_task):
+    with (
+        patch(
+            "homeassistant.components.izone.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.async_ensure_discovery",
+            new=AsyncMock(return_value=Mock(spec=DiscoveryService)),
+        ),
+    ):
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_EXCLUDE: list(uids)}}
         )
+        await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -219,16 +220,10 @@ def mock_create_discovery(
     mock_discovery_service: Mock,
 ) -> Generator[AsyncMock]:
     """Patch pizone.create_discovery to return the mock discovery service."""
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.aiohttp_client.async_get_clientsession",
-            return_value=Mock(),
-        ),
-        patch(
-            "homeassistant.components.izone.discovery.pizone.create_discovery",
-            new=AsyncMock(return_value=mock_discovery_service),
-        ) as mock_create,
-    ):
+    with patch(
+        "homeassistant.components.izone.discovery.pizone.create_discovery",
+        new=AsyncMock(return_value=mock_discovery_service),
+    ) as mock_create:
         yield mock_create
 
 
