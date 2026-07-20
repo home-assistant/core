@@ -8,8 +8,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wrong_device": "The host belongs to a different WiiM device."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
     "step": {
