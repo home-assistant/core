@@ -216,8 +216,7 @@ async def on_device_removed(
     if registered_device := registry.async_get_device(
         identifiers={(DOMAIN, base_device_url)}
     ):
-        # The device may be shared with other config entries; only detach this
-        # entry, which deletes the device once no config entries remain.
+        # Detach only this entry; the registry deletes the device once none remain.
         registry.async_update_device(
             registered_device.id,
             remove_config_entry_id=coordinator.config_entry.entry_id,
