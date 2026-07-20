@@ -74,7 +74,8 @@ The PR description must follow this template (from `.github/PULL_REQUEST_TEMPLAT
   for before merging your code.
 
   AI tools are welcome, but contributors are responsible for *fully*
-  understanding the code before submitting a PR.
+  understanding the code before submitting a PR. Please follow our AI policy:
+  https://developers.home-assistant.io/docs/ai_policy
 -->
 
 - [ ] I understand the code I am submitting and can explain how it works.
