@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
-    async_remove_helper_config_entry_from_source_device,
+    async_remove_helper_devices,
 )
 
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN
@@ -89,7 +89,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             if source_device_id := async_get_parent_device_id(
                 hass, options[CONF_ENTITY_ID]
             ):
-                async_remove_helper_config_entry_from_source_device(
+                async_remove_helper_devices(
                     hass,
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
