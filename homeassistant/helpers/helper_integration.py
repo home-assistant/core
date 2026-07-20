@@ -225,20 +225,27 @@ def _composite_source_split_id(
     """Return the source split of a composite device.
 
     This is the split owned by the composite's recorded primary config entry - the rule
-    _restore_composite_device uses - rather than an arbitrary non-helper split. None when
-    source_device_id is not a composite id or no such split exists.
+    _restore_composite_device uses. Devices migrated from before 2024.7 have no recorded
+    primary (primary_config_entry, and thus composite_primary_config_entry, is None), so
+    fall back to a surviving non-helper split, mirroring _restore_composite_device's
+    fallback to the first split. None when source_device_id is not a composite id or the
+    helper owns every split.
     """
-    if not split_devices:
+    non_helper_splits = [
+        device
+        for device in split_devices
+        if device.config_entry_id != helper_config_entry_id
+    ]
+    if not non_helper_splits:
         return None
     primary_config_entry_id = split_devices[0].composite_primary_config_entry
     return next(
         (
             device.id
-            for device in split_devices
+            for device in non_helper_splits
             if device.config_entry_id == primary_config_entry_id
-            and device.config_entry_id != helper_config_entry_id
         ),
-        None,
+        non_helper_splits[0].id,
     )
 
 

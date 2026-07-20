@@ -526,6 +526,16 @@ async def test_async_handle_source_entity_new_entity_id(
     "source_via_composite_id",
     [pytest.param(True, id="composite_id"), pytest.param(False, id="source_split")],
 )
+@pytest.mark.parametrize(
+    "record_composite_primary",
+    [
+        pytest.param(True, id="recorded_primary"),
+        # Devices migrated from before 2024.7 have no primary_config_entry, so their splits
+        # carry composite_primary_config_entry=None; the source split is then found by
+        # falling back to the surviving non-helper split.
+        pytest.param(False, id="no_recorded_primary"),
+    ],
+)
 async def test_async_remove_helper_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -533,6 +543,7 @@ async def test_async_remove_helper_devices(
     helper_identifiers: set[tuple[str, str]],
     helper_has_composite_identifiers: bool,
     source_via_composite_id: bool,
+    record_composite_primary: bool,
 ) -> None:
     """Test migrating a helper off a device it co-owned before the migration split.
 
@@ -548,6 +559,9 @@ async def test_async_remove_helper_devices(
     helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
     helper_config_entry.add_to_hass(hass)
     composite_id = "pre_split_composite_id"
+    composite_primary = (
+        source_config_entry.entry_id if record_composite_primary else None
+    )
 
     source_split = device_registry.async_get_or_create(
         config_entry_id=source_config_entry.entry_id,
@@ -561,12 +575,12 @@ async def test_async_remove_helper_devices(
     device_registry.devices[source_split.id] = attr.evolve(
         source_split,
         composite_device_id=composite_id,
-        composite_primary_config_entry=source_config_entry.entry_id,
+        composite_primary_config_entry=composite_primary,
     )
     device_registry.devices[helper_split.id] = attr.evolve(
         helper_split,
         composite_device_id=composite_id,
-        composite_primary_config_entry=source_config_entry.entry_id,
+        composite_primary_config_entry=composite_primary,
         has_composite_identifiers=helper_has_composite_identifiers,
     )
     # A helper entity on the helper's split, plus one not linked to any device
