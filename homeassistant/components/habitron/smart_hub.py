@@ -217,6 +217,8 @@ class SmartHub:
             return
         hardware = info["hardware"]
         software = info["software"]
+        was_valid = self.host_diags_valid
+        self.host_diags_valid = True
         self._set(
             self.diags[0], float(hardware["cpu"]["frequency current"].rstrip("MHz"))
         )
@@ -226,7 +228,13 @@ class SmartHub:
         self._set(self.sensors[1], float(hardware["disk"]["percent"].rstrip("%")))
         self._set(self.loglvl[0], int(software["loglevel"]["console"]))
         self._set(self.loglvl[1], int(software["loglevel"]["file"]))
-        self.host_diags_valid = True
+        if not was_valid:
+            # First successful read after setup-time failures: ``_set`` only
+            # notifies on a change, so members that happen to match their
+            # placeholder (a log level of 0, an unchanged CPU frequency) would
+            # stay ``unknown`` until some *other* value moves.
+            for member in (*self.diags, *self.sensors, *self.loglvl):
+                member.notify()
 
     @staticmethod
     def _set(member: Diagnostic | Sensor, value: float) -> None:
