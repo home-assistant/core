@@ -86,6 +86,9 @@
     "ac_start": {
       "service": "mdi:hvac"
     },
+    "charge_set_immediate": {
+      "service": "mdi:ev-station"
+    },
     "charge_set_schedules": {
       "service": "mdi:calendar-clock"
     },
