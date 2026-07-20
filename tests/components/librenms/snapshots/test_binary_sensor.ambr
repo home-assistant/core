@@ -1,4 +1,120 @@
 # serializer version: 1
+# name: test_sensors.8
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': 'https://librenms/device/3',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'librenms',
+          '01KXX1E2EMMSCDQ2K4A0C7JA9T_3',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': 'MC2425adw',
+      'model_id': None,
+      'name': 'Drucker',
+      'name_by_user': None,
+      'serial_number': '7529936145YFW',
+      'sw_version': 'CXNZJ.250.038',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': 'https://librenms/device/13',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'librenms',
+          '01KXX1E2EMMSCDQ2K4A0C7JA9T_13',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': 'QEMU Standard PC (i440FX + PIIX, 1996)',
+      'model_id': None,
+      'name': 'homeassistant',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': '6.18.37-haos (Home Assistant OS 18.1)',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': 'https://librenms/device/1',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'librenms',
+          '01KXX1E2EMMSCDQ2K4A0C7JA9T_1',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': 'SFVH_KV01_SFOS',
+      'model_id': None,
+      'name': 'SophosXG',
+      'name_by_user': None,
+      'serial_number': 'C01yyyyyyxxxxxx',
+      'sw_version': '22.0.1 MR-1-Build490',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': 'https://librenms/device/29',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'librenms',
+          '01KXX1E2EMMSCDQ2K4A0C7JA9T_29',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': None,
+      'model_id': None,
+      'name': 'firmware.esphome.io (104.21.87.21)',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
 # name: test_sensors[binary_sensor.drucker_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

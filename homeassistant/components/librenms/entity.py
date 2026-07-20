@@ -26,7 +26,7 @@ class LibrenmsDeviceEntity(CoordinatorEntity[LibrenmsDataUpdateCoordinator]):
 
         identifier = f"{coordinator.config_entry.entry_id}_{dev_info.device_id}"
         sw_version = dev_info.version
-        model = "Ping only"
+        model = None
         configuration_url = (
             f"{coordinator.configuration_url}/device/{dev_info.device_id}"
         )
