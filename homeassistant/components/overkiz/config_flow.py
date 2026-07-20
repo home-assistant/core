@@ -476,13 +476,18 @@ class OverkizConfigFlow(
         if discovery_info.type == "_kizboxdev._tcp.local.":
             self._host = f"{discovery_info.hostname[:-1]}:{discovery_info.port}"
             self._api_type = APIType.LOCAL
+            return await self._process_discovery(
+                gateway_id, updates={CONF_HOST: self._host}
+            )
 
         return await self._process_discovery(gateway_id)
 
-    async def _process_discovery(self, gateway_id: str) -> ConfigFlowResult:
+    async def _process_discovery(
+        self, gateway_id: str, *, updates: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle discovery of a gateway."""
         await self.async_set_unique_id(gateway_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates=updates)
         self.context["title_placeholders"] = {"gateway_id": gateway_id}
 
         return await self.async_step_user()
