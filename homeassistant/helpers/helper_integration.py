@@ -151,10 +151,9 @@ def async_remove_helper_devices(
 
     :param helper_config_entry_id: The config entry id of the helper being migrated.
     :param source_device_id: The device the helper should link its entities to. A concrete
-        device relinks the entities to it. A pre-migration composite id (only the template
-        integration stores a device id and so can pass one) and None have no concrete device
-        to hold the link, so the entities are detached; in targeted mode a composite or None
-        source with no matching duplicate is a no-op.
+        device relinks the entities to it. A pre-migration composite id and None have no
+        concrete device to hold the link, so the entities are detached; in targeted mode
+        a composite or None source with no matching duplicate is a no-op.
     :param sweep_helper_devices: By default only the helper's single duplicate of
         source_device_id (a split or fork) is removed. When True, every device the
         helper owns except source_device_id and keep_device_ids is removed instead -
@@ -194,10 +193,6 @@ def async_remove_helper_devices(
     composite_device_id = (
         source_device.composite_device_id if source_is_concrete else source_device_id
     )
-    # The helper's entities are relinked to the source device when it is concrete. Only the
-    # template integration passes a stored device id, which for a migrated entry is a
-    # pre-migration composite id with no concrete device to hold the link; its entities are
-    # detached rather than relinked to an arbitrarily chosen split.
     target_device_id = source_device_id if source_is_concrete else None
 
     if sweep_helper_devices:
