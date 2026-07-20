@@ -1,7 +1,7 @@
 {
   "domain": "steam_online",
   "name": "Steam",
-  "codeowners": ["@tkdrob"],
+  "codeowners": ["@tr4nt0r", "@tkdrob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/steam_online",
   "integration_type": "service",

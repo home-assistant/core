@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from PyTado.exceptions import TadoException
 from PyTado.http import DeviceActivationStatus
@@ -18,7 +18,6 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
@@ -58,6 +57,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -170,6 +170,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         del self.login_task
         return await self.async_step_user()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -188,6 +189,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: TadoConfigEntry,
     ) -> OptionsFlowHandler:
@@ -220,9 +222,9 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-class CannotConnect(HomeAssistantError):
+class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
 
 
-class TadoRateLimitExceeded(HomeAssistantError):
+class TadoRateLimitExceeded(Exception):
     """Error to indicate Tado API rate limit exceeded."""

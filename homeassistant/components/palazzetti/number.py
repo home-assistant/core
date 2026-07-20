@@ -1,5 +1,7 @@
 """Number platform for Palazzetti settings."""
 
+from typing import override
+
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 from pypalazzetti.fan import FanType
 
@@ -51,10 +53,12 @@ class PalazzettiCombustionPowerEntity(PalazzettiEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-combustion_power"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the setting entity."""
         return self.coordinator.client.power_mode
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the setting."""
         try:
@@ -96,10 +100,12 @@ class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the setting entity."""
         return self.coordinator.client.current_fan_speed(self.fan)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the setting."""
         try:

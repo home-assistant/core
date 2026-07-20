@@ -1,4 +1,4 @@
-"""Constants for the Squeezebox component."""
+"""Constants for the Squeezebox integration."""
 
 CONF_HTTPS = "https"
 DOMAIN = "squeezebox"

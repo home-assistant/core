@@ -1,5 +1,7 @@
 """Application credentials platform for Overkiz (Rexel)."""
 
+from typing import override
+
 from pyoverkiz.const import (
     REXEL_OAUTH_AUTHORIZE_URL,
     REXEL_OAUTH_POLICY,
@@ -31,6 +33,7 @@ class OverkizOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
     """Overkiz (Rexel) OAuth2 implementation with PKCE."""
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url.
 
@@ -40,6 +43,6 @@ class OverkizOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
         otherwise drop it.
         """
         return super().extra_authorize_data | {
-            "scope": REXEL_OAUTH_SCOPE,
+            "scope": f"{REXEL_OAUTH_SCOPE} offline_access",
             "p": REXEL_OAUTH_POLICY,
         }

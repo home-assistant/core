@@ -6,14 +6,6 @@ import logging
 from typing import Any
 
 from homeassistant import config as conf_util
-from homeassistant.components.automation import (
-    DOMAIN as AUTOMATION_DOMAIN,
-    NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-)
-from homeassistant.components.labs import (
-    EventLabsUpdatedData,
-    async_subscribe_preview_feature,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -25,19 +17,21 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import discovery
-from homeassistant.helpers.device import (
-    async_remove_stale_devices_links_keep_current_device,
-)
-from homeassistant.helpers.helper_integration import (
-    async_remove_helper_config_entry_from_source_device,
-)
+from homeassistant.helpers.helper_integration import async_remove_helper_devices
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ADDITIONAL_OPTIONS,
+    CONF_MAX,
+    CONF_MIN,
+    CONF_STEP,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
 
@@ -91,32 +85,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    async def _handle_new_triggers_conditions(
-        _event_data: EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        hass.async_create_task(
-            _reload_config(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-        )
-
-    async_subscribe_preview_feature(
-        hass,
-        AUTOMATION_DOMAIN,
-        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        _handle_new_triggers_conditions,
-    )
-
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    # This can be removed in HA Core 2026.7
-    async_remove_stale_devices_links_keep_current_device(
+    # Clean up devices this helper created for previously selected source devices;
+    # this can be removed in HA Core 2027.8.
+    async_remove_helper_devices(
         hass,
-        entry.entry_id,
-        entry.options.get(CONF_DEVICE_ID),
+        helper_config_entry_id=entry.entry_id,
+        source_device_id=entry.options.get(CONF_DEVICE_ID),
+        sweep_helper_devices=True,
     )
 
     for key in (CONF_MAX, CONF_MIN, CONF_STEP):
@@ -130,18 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
-    )
-
-    async def _handle_entry_reload(_event_data: EventLabsUpdatedData) -> None:
-        hass.config_entries.async_schedule_reload(entry.entry_id)
-
-    entry.async_on_unload(
-        async_subscribe_preview_feature(
-            hass,
-            AUTOMATION_DOMAIN,
-            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-            _handle_entry_reload,
-        )
     )
 
     return True
@@ -167,7 +136,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if config_entry.minor_version < 2:
             # Remove the template config entry from the source device
             if source_device_id := config_entry.options.get(CONF_DEVICE_ID):
-                async_remove_helper_config_entry_from_source_device(
+                async_remove_helper_devices(
                     hass,
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
@@ -175,6 +144,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             hass.config_entries.async_update_entry(
                 config_entry, version=1, minor_version=2
             )
+
+        options = {**config_entry.options}
+        # The "advanced_options" section was renamed to "additional_options"
+        if (additional := options.pop("advanced_options", None)) is not None:
+            options[CONF_ADDITIONAL_OPTIONS] = additional
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, version=2, minor_version=1
+        )
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",

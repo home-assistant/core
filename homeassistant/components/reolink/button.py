@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
 
@@ -172,6 +172,12 @@ BUTTON_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "reboot"),
         method=lambda api, ch: api.reboot(ch),
     ),
+    ReolinkButtonEntityDescription(
+        key="pre_siren",
+        translation_key="pre_siren",
+        supported=lambda api, ch: api.supported(ch, "pre_siren"),
+        method=lambda api, ch: api.baichuan.PreAlarm(ch),
+    ),
 )
 
 HOST_BUTTON_ENTITIES = (
@@ -236,6 +242,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
             self._attr_supported_features = SUPPORT_PTZ_SPEED
 
     @raise_translated_error
+    @override
     async def async_press(self) -> None:
         """Execute the button action."""
         await self.entity_description.method(self._host.api, self._channel)
@@ -263,6 +270,7 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
         super().__init__(reolink_data)
 
     @raise_translated_error
+    @override
     async def async_press(self) -> None:
         """Execute the button action."""
         await self.entity_description.method(self._host.api)

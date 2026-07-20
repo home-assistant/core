@@ -6,6 +6,7 @@ Responsible for polling the device API endpoint and normalizing data for entitie
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiocentriconnect import CentriConnect, Tank
 from aiocentriconnect.exceptions import CentriConnectConnectionError, CentriConnectError
@@ -65,6 +66,7 @@ class CentriConnectCoordinator(DataUpdateCoordinator[Tank]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_setup(self) -> None:
         try:
             tank_data = await self.api_client.async_get_tank_data()
@@ -79,6 +81,7 @@ class CentriConnectCoordinator(DataUpdateCoordinator[Tank]):
             tank_size_unit=tank_data.tank_size_unit,
         )
 
+    @override
     async def _async_update_data(self) -> Tank:
         """Fetch device state."""
         try:

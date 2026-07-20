@@ -7,8 +7,9 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+import voluptuous as vol
 
-from homeassistant.components import automation, input_boolean, labs, script
+from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
@@ -22,7 +23,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ID,
-    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -1682,7 +1682,9 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    # Triggers are armed by a startup job which runs during async_start, before
+    # EVENT_HOMEASSISTANT_STARTED is fired.
+    await hass.async_start()
     await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
 
@@ -1928,6 +1930,187 @@ async def test_automation_with_error_in_script_2(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert "string value is None" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error", "expect_traceback"),
+    [
+        (
+            HomeAssistantError("boom"),
+            "Error while executing automation automation.hello: boom",
+            False,
+        ),
+        (
+            vol.Invalid("not valid"),
+            "Error while executing automation automation.hello: not valid",
+            False,
+        ),
+        (
+            ValueError("unexpected"),
+            "Unexpected error while executing automation automation.hello",
+            True,
+        ),
+    ],
+    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+)
+async def test_automation_with_error_in_action_script(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+    expected_error: str,
+    expect_traceback: bool,
+) -> None:
+    """Test errors raised while running the action script are handled and traced."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "hello",
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.helpers.script.Script.async_run",
+        side_effect=side_effect,
+    ):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 0
+    assert expected_error in caplog.text
+    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # unexpected error is logged with a traceback.
+    assert ("Traceback" in caplog.text) is expect_traceback
+
+    # The error is recorded on the automation trace.
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": "automation", "item_id": "hello"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert len(traces) == 1
+    assert traces[0]["error"] == str(side_effect)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error", "expect_traceback"),
+    [
+        (
+            HomeAssistantError("boom"),
+            "Error while checking conditions of automation automation.hello: boom",
+            False,
+        ),
+        (
+            vol.Invalid("not valid"),
+            "Error while checking conditions of automation automation.hello: not valid",
+            False,
+        ),
+        (
+            ValueError("unexpected"),
+            "Unexpected error while checking conditions of automation automation.hello",
+            True,
+        ),
+    ],
+    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+)
+async def test_automation_with_error_in_condition(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+    expected_error: str,
+    expect_traceback: bool,
+) -> None:
+    """Test errors raised while checking conditions are handled and traced."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "hello",
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "test.entity",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.ConditionsChecker.async_check",
+        side_effect=side_effect,
+    ):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    # The action must not run when the condition check raises.
+    assert len(calls) == 0
+    assert expected_error in caplog.text
+    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # unexpected error is logged with a traceback.
+    assert ("Traceback" in caplog.text) is expect_traceback
+
+    # The error is recorded on the automation trace.
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": "automation", "item_id": "hello"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert len(traces) == 1
+    assert traces[0]["error"] == str(side_effect)
+
+
+async def test_automation_with_error_in_condition_continues_after_recovery(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test the automation still runs once the condition stops raising."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "test.entity",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    hass.states.async_set("test.entity", "on")
+
+    with patch(
+        "homeassistant.helpers.condition.ConditionsChecker.async_check",
+        side_effect=HomeAssistantError("boom"),
+    ):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Without the error, the condition passes and the action runs.
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_automation_restore_last_triggered_with_initial_state(
@@ -2298,6 +2481,7 @@ async def test_extraction_functions(
         "sensor.trigger_state",
         "sensor.trigger_numeric_state",
         "sensor.trigger_event",
+        "light.bla",
         "light.condition_state",
         "light.in_both",
         "light.in_first",
@@ -2346,7 +2530,6 @@ async def test_extraction_functions(
 async def test_extraction_functions_with_trigger_targets(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test extraction functions with targets in triggers.
 
@@ -2367,21 +2550,6 @@ async def test_extraction_functions_with_trigger_targets(
     await async_setup_component(
         hass, "scene", {"scene": {"name": "test", "entities": {}}}
     )
-    await hass.async_block_till_done()
-
-    # Enable the new_triggers_conditions feature flag to allow new-style triggers
-    assert await async_setup_component(hass, "labs", {})
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["success"]
     await hass.async_block_till_done()
 
     assert await async_setup_component(
@@ -2542,7 +2710,6 @@ async def test_extraction_functions_with_trigger_targets(
 async def test_extraction_functions_with_condition_targets(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test extraction functions with targets in conditions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
@@ -2556,21 +2723,6 @@ async def test_extraction_functions_with_condition_targets(
 
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
-    await hass.async_block_till_done()
-
-    # Enable the new_triggers_conditions feature flag to allow new-style conditions
-    assert await async_setup_component(hass, "labs", {})
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["success"]
     await hass.async_block_till_done()
 
     assert await async_setup_component(
@@ -4036,95 +4188,6 @@ async def test_valid_configuration(
         },
     )
     await hass.async_block_till_done()
-
-
-async def test_reload_when_labs_flag_changes(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    calls: list[ServiceCall],
-    hass_admin_user: MockUser,
-    hass_read_only_user: MockUser,
-) -> None:
-    """Test automations are reloaded when labs flag changes."""
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "alias": "hello",
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {
-                    "action": "test.automation",
-                    "data_template": {"event": "{{ trigger.event.event_type }}"},
-                },
-            }
-        },
-    )
-    assert await async_setup_component(hass, labs.DOMAIN, {})
-    assert hass.states.get("automation.hello") is not None
-    assert hass.states.get("automation.bye") is None
-    listeners = hass.bus.async_listeners()
-    assert listeners.get("test_event") == 1
-    assert listeners.get("test_event2") is None
-
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert calls[0].data.get("event") == "test_event"
-
-    test_reload_event = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
-
-    # Check we reload whenever the labs flag is set, even if it's already enabled
-    for enabled in (True, True, False, False):
-        test_reload_event.clear()
-        calls.clear()
-
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            autospec=True,
-            return_value={
-                automation.DOMAIN: {
-                    "alias": "bye",
-                    "trigger": {"platform": "event", "event_type": "test_event2"},
-                    "action": {
-                        "action": "test.automation",
-                        "data_template": {"event": "{{ trigger.event.event_type }}"},
-                    },
-                }
-            },
-        ):
-            await ws_client.send_json_auto_id(
-                {
-                    "type": "labs/update",
-                    "domain": "automation",
-                    "preview_feature": "new_triggers_conditions",
-                    "enabled": enabled,
-                }
-            )
-
-            msg = await ws_client.receive_json()
-            assert msg["success"]
-            await hass.async_block_till_done()
-
-        assert len(test_reload_event) == 1
-
-        assert hass.states.get("automation.hello") is None
-        assert hass.states.get("automation.bye") is not None
-        listeners = hass.bus.async_listeners()
-        assert listeners.get("test_event") is None
-        assert listeners.get("test_event2") == 1
-
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-        assert len(calls) == 0
-
-        hass.bus.async_fire("test_event2")
-        await hass.async_block_till_done()
-        assert len(calls) == 1
-        assert calls[-1].data.get("event") == "test_event2"
 
 
 async def test_remove_automation_unloads_condition_and_script(
