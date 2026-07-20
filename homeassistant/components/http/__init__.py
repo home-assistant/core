@@ -816,10 +816,7 @@ class HomeAssistantHTTP:
                     )
         if self._server is not None:
             # Only close (stop listening); do not await wait_closed() here.
-            # Since Python 3.12.1 it waits for all client connections to
-            # terminate, but those are only torn down by runner.cleanup()
-            # below, so waiting first hangs shutdown until clients (e.g.
-            # open websockets) disconnect on their own.
+            # Let runner.cleanup() terminate active connections.
             self._server.close()
         if self.runner is not None:
             await self.runner.cleanup()
