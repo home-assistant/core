@@ -5,6 +5,7 @@ from typing import override
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, PARAM_STATE, PARAM_STATUS, imou_device_identifier
@@ -19,15 +20,15 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: ImouDataUpdateCoordinator,
-        entity_type: str,
+        description: EntityDescription,
         device: ImouHaDevice,
     ) -> None:
         """Initialize the Imou entity."""
         super().__init__(coordinator)
-        self._entity_type = entity_type
+        self.entity_description = description
+        self._entity_type = description.key
         self._device_key = imou_device_identifier(device)
-        self._attr_unique_id = f"{self._device_key}${entity_type}"
-        self._attr_translation_key = entity_type
+        self._attr_unique_id = f"{self._device_key}${description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_key)},
             name=device.channel_name or device.device_name,

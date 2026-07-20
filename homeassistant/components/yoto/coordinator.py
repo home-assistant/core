@@ -161,9 +161,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
             )
             if player_id is not None and player_id not in self.client.players:
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     async def _async_load_library(self) -> None:
         """Load the card library and groups; failures only affect browsing."""
