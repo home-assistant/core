@@ -136,6 +136,28 @@ async def test_timer_cancelled_trigger(
     assert service_calls[0].data["status"] == "cancelled"
 
 
+async def test_timer_updated_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the timer_updated trigger fires when a timer is paused."""
+    await _setup_automation(hass, "timer_updated")
+    timer_id = await _start_timer(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        "pause_timer",
+        {"timer_id": timer_id},
+        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["timer_id"] == timer_id
+    assert service_calls[0].data["status"] == "paused"
+
+
 async def test_trigger_options_supported(hass: HomeAssistant) -> None:
     """Test the timer list triggers do not advertise behavior or duration."""
     for trigger_type in (
