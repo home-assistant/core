@@ -222,6 +222,16 @@ async def test_room_iq_sensors(
     assert state.attributes["friendly_name"] == "Upstairs RoomIQ humidity"
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
 
+    # Verify RoomIQ sensor no longer present
+    entity = hass.data["sensor"].get_entity("sensor.upstairs_upstairs_roomiq_humidity")
+    assert entity is not None
+    entity._zone.get_sensor_by_id.side_effect = KeyError
+    entity.async_write_ha_state()
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "unavailable"
+
     state = hass.states.get("sensor.upstairs_upstairs_roomiq_battery")
     assert state is not None
     assert state.state == "93"
