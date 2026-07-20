@@ -63,7 +63,11 @@ class FreeboxHomeEntity(Entity):
         # Propagate Freebox device label changes to the device registry so
         # the entity stays in sync when users rename it on the Freebox app.
         device_registry = dr.async_get(self.hass)
-        if device := device_registry.async_get_device(identifiers={(DOMAIN, self._id)}):
+        if self.platform.config_entry and (
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, self._id), self.platform.config_entry.entry_id
+            )
+        ):
             new_name = self._node["label"].strip()
             if device.name != new_name:
                 device_registry.async_update_device(device.id, name=new_name)

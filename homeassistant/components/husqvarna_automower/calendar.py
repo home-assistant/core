@@ -58,8 +58,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
     def device_name(self) -> str:
         """Return the prefix for the event summary."""
         device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, self.mower_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.mower_id), self.coordinator.config_entry.entry_id
         )
         if TYPE_CHECKING:
             assert device_entry is not None
