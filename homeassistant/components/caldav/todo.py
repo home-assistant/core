@@ -61,6 +61,16 @@ async def async_setup_entry(
     )
 
 
+def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
+    """Fetch and parse todo items."""
+    results = calendar.search(todo=True, include_completed=True)
+    return [
+        todo_item
+        for resource in results
+        if (todo_item := _todo_item(resource)) is not None
+    ]
+
+
 def _get_vtodo(
     resource: caldav.CalendarObjectResource,
 ) -> icalendar.cal.Component | None:
@@ -92,16 +102,6 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
         due=due,
         description=get_attr_str(vtodo, "description"),
     )
-
-
-def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
-    """Fetch and parse todo items."""
-    results = calendar.search(todo=True, include_completed=True)
-    return [
-        todo_item
-        for resource in results
-        if (todo_item := _todo_item(resource)) is not None
-    ]
 
 
 class WebDavTodoListEntity(TodoListEntity):
