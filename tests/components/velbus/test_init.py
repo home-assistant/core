@@ -295,15 +295,31 @@ async def test_remove_config_entry_device_detaches_subdevices(
     )
 
 
-_PROPERTY_KEY_MAP = {"select": "SelectedProgram", "LightSensor": "LightValue"}
+# velbus-aio maps both the spec key and the display name to the class name, because
+# Property.get_name() returned the spec key before velbus-aio 2026.4.1 and the display
+# name from that release onwards; both forms exist as original_name in the wild.
+_PROPERTY_KEY_MAP = {
+    "selected_program": "SelectedProgram",
+    "Selected program": "SelectedProgram",
+    "light_value": "LightValue",
+    "Light value": "LightValue",
+}
 
 
+@pytest.mark.parametrize(
+    "original_name",
+    [
+        pytest.param("selected_program", id="spec_key"),
+        pytest.param("Selected program", id="display_name"),
+    ],
+)
 async def test_migrate_property_unique_ids_rename(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     controller: MagicMock,
+    original_name: str,
 ) -> None:
     """Test that a property entity with an outdated unique_id gets renamed."""
     device = device_registry.async_get_or_create(
@@ -317,7 +333,7 @@ async def test_migrate_property_unique_ids_rename(
         "test_serial-0-program_select",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="select",
+        original_name=original_name,
     )
 
     with patch(
@@ -354,7 +370,7 @@ async def test_migrate_property_unique_ids_remove_stale(
         "test_serial-SelectedProgram",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="select",
+        original_name="selected_program",
     )
     # The stale entity with an old unique_id also exists
     entity_registry.async_get_or_create(
@@ -363,7 +379,7 @@ async def test_migrate_property_unique_ids_remove_stale(
         "test_serial-0-program_select",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="select",
+        original_name="selected_program",
     )
 
     with patch(
@@ -399,7 +415,7 @@ async def test_migrate_property_unique_ids_already_correct(
         "test_serial-SelectedProgram",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="select",
+        original_name="selected_program",
     )
 
     with patch(
@@ -433,7 +449,7 @@ async def test_migrate_property_unique_ids_serial_from_unique_id(
         "test_serial-0",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="LightSensor",
+        original_name="light_value",
     )
 
     with patch(
@@ -535,7 +551,7 @@ async def test_migrate_property_unique_ids_rename_select_legacy_channel(
         "test_serial-5-program_select",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="select",
+        original_name="selected_program",
     )
 
     with patch(
@@ -571,7 +587,7 @@ async def test_migrate_property_unique_ids_rename_sensor(
         "test_serial-0",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="LightSensor",
+        original_name="light_value",
     )
 
     with patch(
@@ -606,7 +622,7 @@ async def test_migrate_property_unique_ids_skips_colliding_channel(
         "test_serial-3",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="LightSensor",
+        original_name="light_value",
     )
 
     with patch(
