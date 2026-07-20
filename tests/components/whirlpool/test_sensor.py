@@ -1,6 +1,7 @@
 """Test the Whirlpool Sensor domain."""
 
 from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -175,7 +176,7 @@ async def test_washer_dryer_time_sensor_no_restore(
 @pytest.mark.freeze_time("2022-11-30 00:00:00")
 async def test_oven_kitchen_timer_sensor(
     hass: HomeAssistant,
-    mock_oven_single_cavity_api,
+    mock_oven_single_cavity_api: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the oven kitchen timer end time sensor."""
