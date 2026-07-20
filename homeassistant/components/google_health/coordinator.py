@@ -289,10 +289,7 @@ class GoogleHealthNutritionCoordinator(
             self.api.nutrition_log.today(self.hass.config.time_zone),
         )
 
-        hydration = hydration_rollup.data if hydration_rollup else None
-        nutrition = nutrition_rollup.data if nutrition_rollup else None
-
         return GoogleHealthNutritionData(
-            hydration=hydration,
-            nutrition=nutrition,
+            hydration=hydration_rollup.data if hydration_rollup else None,
+            nutrition=nutrition_rollup.data if nutrition_rollup else None,
         )
