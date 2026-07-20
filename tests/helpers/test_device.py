@@ -168,8 +168,8 @@ async def test_remove_stale_devices_links_deprecated_noop(
     A device belongs to a single config entry, so a helper no longer adds its config
     entry to another device and there is no stale config entry link to remove. The
     helpers leave the devices and entities untouched and only report the deprecated
-    usage; helpers set entity.device_entry and migrate with async_remove_helper_device
-    instead.
+    usage; helpers set entity.device_entry and clean up devices with
+    async_remove_helper_devices instead.
     """
     helper_config_entry = MockConfigEntry(domain="helper_integration")
     helper_config_entry.add_to_hass(hass)
