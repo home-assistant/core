@@ -65,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
             "Spotify refresh token expired or revoked for %s, requesting reauthentication",
             entry.title,
         )
-        await entry.async_start_reauth(hass)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="oauth2_token_reauth_required",
