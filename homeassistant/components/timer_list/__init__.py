@@ -34,9 +34,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_CREATED_AT,
     ATTR_DURATION,
+    ATTR_FINISHED_AT,
+    ATTR_FINISHES_AT,
+    ATTR_REMAINING,
     ATTR_STATUS,
     ATTR_TIMER_ID,
+    ATTR_TIMERS,
     DATA_COMPONENT,
     DOMAIN,
     TimerListEntityFeature,
@@ -104,11 +109,11 @@ def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
         ATTR_TIMER_ID: item.timer_id,
         ATTR_NAME: item.name,
         ATTR_STATUS: item.status.value,
-        "duration": item.duration.total_seconds(),
-        "created_at": item.created_at.isoformat(),
-        "finishes_at": item.finishes_at.isoformat() if item.finishes_at else None,
-        "finished_at": item.finished_at.isoformat() if item.finished_at else None,
-        "remaining": item.remaining_at(now).total_seconds(),
+        ATTR_DURATION: item.duration.total_seconds(),
+        ATTR_CREATED_AT: item.created_at.isoformat(),
+        ATTR_FINISHES_AT: item.finishes_at.isoformat() if item.finishes_at else None,
+        ATTR_FINISHED_AT: item.finished_at.isoformat() if item.finished_at else None,
+        ATTR_REMAINING: item.remaining_at(now).total_seconds(),
     }
 
 
@@ -332,7 +337,7 @@ async def _async_get_timers(
     now = dt_util.utcnow()
     statuses: list[TimerStatus] | None = call.data.get(ATTR_STATUS)
     return {
-        "timers": [
+        ATTR_TIMERS: [
             timer_to_dict(timer, now)
             for timer in entity.timers
             if not statuses or timer.status in statuses
@@ -383,7 +388,7 @@ async def websocket_handle_subscribe(
             msg["id"],
             {
                 "type": "timers",
-                "timers": [timer_to_dict(timer, now) for timer in entity.timers],
+                ATTR_TIMERS: [timer_to_dict(timer, now) for timer in entity.timers],
             },
         )
     )
@@ -412,5 +417,5 @@ async def websocket_handle_list(
     now = dt_util.utcnow()
     connection.send_result(
         msg["id"],
-        {"timers": [timer_to_dict(timer, now) for timer in entity.timers]},
+        {ATTR_TIMERS: [timer_to_dict(timer, now) for timer in entity.timers]},
     )
