@@ -17,12 +17,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityB01Q10, RoborockCoordinatedEntityV1
+from .entity import (
+    RoborockCoordinatedEntityB01Q7,
+    RoborockCoordinatedEntityB01Q10,
+    RoborockCoordinatedEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +61,8 @@ async def async_setup_entry(
                     coordinator.properties_api.home.home_map_info or {}
                 ).values()
             )
+        elif isinstance(coordinator, RoborockB01Q7UpdateCoordinator):
+            entities.append(RoborockMapQ7(coordinator))
         elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
             entities.append(RoborockMapQ10(coordinator))
         async_add_entities(entities)
@@ -180,6 +187,49 @@ class RoborockMapQ10(RoborockCoordinatedEntityB01Q10, ImageEntity):
         self._cached_map = image_content
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
+
+    @override
+    async def async_image(self) -> bytes | None:
+        """Get the cached image."""
+        return self._cached_map
+
+
+class RoborockMapQ7(RoborockCoordinatedEntityB01Q7, ImageEntity):
+    """A class to let you visualize the current map of a Q7 device."""
+
+    _attr_content_type = "image/png"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "map"
+
+    def __init__(self, coordinator: RoborockB01Q7UpdateCoordinator) -> None:
+        """Initialize the Roborock Q7 map."""
+        RoborockCoordinatedEntityB01Q7.__init__(
+            self, f"map_{coordinator.duid_slug}", coordinator
+        )
+        ImageEntity.__init__(self, coordinator.hass)
+        self._map_content_trait = coordinator.api.map_content
+        self._cached_map: bytes | None = None
+        self._attr_image_last_updated = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass, pick up any pre-loaded map image."""
+        await super().async_added_to_hass()
+        image_content = self._map_content_trait.image_content
+        if image_content is not None:
+            self._cached_map = image_content
+            self._attr_image_last_updated = dt_util.utcnow()
+            self.async_write_ha_state()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        image_content = self._map_content_trait.image_content
+        if image_content is not None and image_content != self._cached_map:
+            self._cached_map = image_content
+            self._attr_image_last_updated = dt_util.utcnow()
+        super()._handle_coordinator_update()
 
     @override
     async def async_image(self) -> bytes | None:
