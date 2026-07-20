@@ -57,9 +57,8 @@ async def validate_input(
     try:
         await tailscale.devices()
     finally:
-        # Using OAuth schedules a task to refresh the access token before it
-        # expires; closing cancels it. The session is owned by Home Assistant
-        # and is left open.
+        # Using OAuth schedules a task that expires the access token; closing
+        # cancels it. The session is owned by Home Assistant and left open.
         await tailscale.close()
 
 

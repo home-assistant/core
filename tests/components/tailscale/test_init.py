@@ -113,11 +113,7 @@ async def test_oauth_access_token_is_requested(
     mock_config_entry_oauth: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test the OAuth client credentials are exchanged for an access token.
-
-    This exercises the actual library instead of mocking it, so the OAuth grant
-    itself is covered rather than only the wiring leading up to it.
-    """
+    """Test the OAuth client credentials are exchanged for an access token."""
     aioclient_mock.post(
         "https://api.tailscale.com/api/v2/oauth/token",
         json={"access_token": "tskey-api-TEMPORARY", "expires_in": 3600},
@@ -133,19 +129,15 @@ async def test_oauth_access_token_is_requested(
 
     assert mock_config_entry_oauth.state is ConfigEntryState.LOADED
 
-    # The client credentials are sent to the token endpoint...
     token_request = aioclient_mock.mock_calls[0]
     assert token_request[2] == {
         "client_id": "tskey-client-MOCK",
         "client_secret": "tskey-client-MOCK-SECRET",
     }
 
-    # ...and the returned access token is used to authorize the devices call.
     devices_request = aioclient_mock.mock_calls[1]
     assert devices_request[3]["Authorization"] == "Bearer tskey-api-TEMPORARY"
 
-    # Unloading has to cancel the scheduled token refresh; a lingering task
-    # would be caught by the verify_cleanup fixture.
     assert await hass.config_entries.async_unload(mock_config_entry_oauth.entry_id)
     await hass.async_block_till_done()
 
@@ -155,19 +147,11 @@ async def test_oauth_client_closed_when_setup_fails(
     mock_config_entry_oauth: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test the OAuth refresh task is cancelled when setup fails.
-
-    async_unload_entry is not called for a failed setup, so cleanup has to be
-    registered with async_on_unload before the first refresh. Otherwise every
-    setup retry leaves another refresh task alive until the token expires; a
-    lingering task is caught by the verify_cleanup fixture.
-    """
+    """Test the token-expiration task is cancelled when setup fails."""
     aioclient_mock.post(
         "https://api.tailscale.com/api/v2/oauth/token",
         json={"access_token": "tskey-api-TEMPORARY", "expires_in": 3600},
     )
-    # The token is issued -- scheduling the refresh task -- and the devices
-    # call then fails, so setup does not complete.
     aioclient_mock.get(
         "https://api.tailscale.com/api/v2/tailnet/homeassistant.github/devices?fields=all",
         status=500,

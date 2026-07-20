@@ -12,11 +12,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TailscaleConfigEntry) ->
     """Set up Tailscale from a config entry."""
     coordinator = TailscaleDataUpdateCoordinator(hass, entry)
 
-    # Cancels the OAuth access token refresh task, when one is scheduled.
-    # Registered before the first refresh: async_unload_entry is not called
-    # when setup fails, but on_unload callbacks are, so a failing setup (and
-    # each subsequent retry) would otherwise leave a task alive until the
-    # token expires.
+    # Registered before the first refresh: a failed setup does not call
+    # async_unload_entry, but does run on_unload callbacks.
     entry.async_on_unload(coordinator.tailscale.close)
 
     await coordinator.async_config_entry_first_refresh()

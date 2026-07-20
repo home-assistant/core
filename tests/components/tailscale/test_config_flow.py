@@ -94,7 +94,7 @@ async def test_full_flow_with_error(
     mock_setup_entry: AsyncMock,
     menu_option: str,
     user_input: dict[str, str],
-    side_effect: Exception,
+    side_effect: type[Exception],
     reason: str,
 ) -> None:
     """Test the user flow recovering from an error entering credentials."""
@@ -212,7 +212,7 @@ async def test_reauth_with_error(
     mock_config_entry: MockConfigEntry,
     mock_tailscale_config_flow: MagicMock,
     mock_setup_entry: AsyncMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
     reason: str,
 ) -> None:
     """Test the reauth flow recovering from an error."""
@@ -245,11 +245,11 @@ async def test_reauth_with_error(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_migrates_to_oauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_tailscale_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test an API access token entry can be migrated to an OAuth client."""
     mock_config_entry.add_to_hass(hass)
@@ -266,7 +266,6 @@ async def test_reconfigure_flow_migrates_to_oauth(
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reconfigure_successful"
 
-    # The API access token must not be left behind in the entry.
     assert mock_config_entry.data == {
         CONF_TAILNET: "homeassistant.github",
         **OAUTH_INPUT,
@@ -287,7 +286,7 @@ async def test_reconfigure_with_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_tailscale_config_flow: MagicMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
     reason: str,
 ) -> None:
     """Test the reconfigure flow recovering from an error."""
@@ -305,17 +304,16 @@ async def test_reconfigure_with_error(
     assert result.get("step_id") == "reconfigure"
     assert result.get("errors") == {"base": reason}
 
-    # The original credentials must be left untouched on failure.
     assert mock_config_entry.data == {
         CONF_TAILNET: "homeassistant.github",
         CONF_API_KEY: "tskey-MOCK",
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_oauth_flow_closes_client(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test validating OAuth credentials does not leave the client open.
 
