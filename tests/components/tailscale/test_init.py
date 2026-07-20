@@ -148,3 +148,33 @@ async def test_oauth_access_token_is_requested(
     # would be caught by the verify_cleanup fixture.
     assert await hass.config_entries.async_unload(mock_config_entry_oauth.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_oauth_client_closed_when_setup_fails(
+    hass: HomeAssistant,
+    mock_config_entry_oauth: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the OAuth refresh task is cancelled when setup fails.
+
+    async_unload_entry is not called for a failed setup, so cleanup has to be
+    registered with async_on_unload before the first refresh. Otherwise every
+    setup retry leaves another refresh task alive until the token expires; a
+    lingering task is caught by the verify_cleanup fixture.
+    """
+    aioclient_mock.post(
+        "https://api.tailscale.com/api/v2/oauth/token",
+        json={"access_token": "tskey-api-TEMPORARY", "expires_in": 3600},
+    )
+    # The token is issued -- scheduling the refresh task -- and the devices
+    # call then fails, so setup does not complete.
+    aioclient_mock.get(
+        "https://api.tailscale.com/api/v2/tailnet/homeassistant.github/devices?fields=all",
+        status=500,
+    )
+
+    mock_config_entry_oauth.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_oauth.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_oauth.state is ConfigEntryState.SETUP_RETRY
