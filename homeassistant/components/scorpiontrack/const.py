@@ -12,4 +12,4 @@ CONF_SHARE_TOKEN = "share_token"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
 
-PLATFORMS: tuple[Platform, ...] = (Platform.DEVICE_TRACKER,)
+PLATFORMS: tuple[Platform, ...] = (Platform.DEVICE_TRACKER, Platform.SENSOR)
