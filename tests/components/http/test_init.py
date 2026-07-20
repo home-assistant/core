@@ -1033,6 +1033,75 @@ async def test_yaml_migration_matches_stable_no_pending(
     assert issue is not None
 
 
+@pytest.mark.parametrize(
+    ("yaml_extra", "expected_stable_proxies", "expected_pending"),
+    [
+        pytest.param(
+            {},
+            ["127.0.0.0/8", "10.11.12.0/24"],
+            None,
+            id="only-lost-masks-repairs-stable",
+        ),
+        pytest.param(
+            {"server_port": 8765},
+            ["127.0.0.0/32", "10.11.12.0/32"],
+            {
+                "server_port": 8765,
+                "cors_allowed_origins": ["https://example.com"],
+                "use_x_forwarded_for": True,
+                "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
+                "ip_ban_enabled": False,
+                "login_attempts_threshold": -1,
+                "ssl_profile": "modern",
+                "use_x_frame_options": True,
+            },
+            id="other-change-creates-pending",
+        ),
+    ],
+)
+async def test_yaml_migration_stable_lost_trusted_proxy_masks(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    yaml_extra: dict[str, Any],
+    expected_stable_proxies: list[str],
+    expected_pending: dict[str, Any] | None,
+) -> None:
+    """Test YAML migration against a stable config with lost trusted proxy masks.
+
+    Releases up to 2026.7.1 stored trusted proxies without the network mask,
+    which the v1->v2 store migration turned into host networks. If the YAML
+    config only differs from stable by those lost masks, the masks must be
+    restored in stable instead of staging the unchanged YAML as pending.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "server_port": 9123,
+            "cors_allowed_origins": ["https://example.com"],
+            "use_x_forwarded_for": True,
+            "trusted_proxies": ["127.0.0.0/32", "10.11.12.0/32"],
+            "ip_ban_enabled": False,
+        },
+        yaml_migration_done=False,
+    )
+
+    yaml_conf = {
+        "server_port": 9123,
+        "cors_allowed_origins": ["https://example.com"],
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
+        "ip_ban_enabled": False,
+        **yaml_extra,
+    }
+    assert await async_setup_component(hass, DOMAIN, {"http": yaml_conf})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    stored = hass_storage[DOMAIN]["data"]
+    assert stored["yaml_migration_done"] is True
+    assert stored["pending"] == expected_pending
+    assert stored["stable"]["trusted_proxies"] == expected_stable_proxies
+
+
 async def test_yaml_migration_differs_from_stable_creates_pending(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
