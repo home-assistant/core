@@ -522,9 +522,11 @@ def update_device_fw_info(
     assert entry.unique_id
 
     dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)},
-        connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
+    if device := (
+        dev_reg.async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
+        or dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
+        )
     ):
         if device.sw_version == shellydevice.firmware_version:
             return
