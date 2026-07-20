@@ -256,6 +256,9 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         super().__init__(device)
         self._webrtc_sessions: dict[str, WebRtcStream] = {}
         self._refresh_unsub: dict[str, Callable[[], None]] = {}
+        # The placeholder returned by async_camera_image is a PNG, not the
+        # camera platform's default image/jpeg.
+        self.content_type = "image/png"
 
     async def _async_refresh_stream(self, session_id: str) -> datetime.datetime | None:
         """Refresh stream to extend expiration time."""
