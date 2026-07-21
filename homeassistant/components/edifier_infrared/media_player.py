@@ -5,7 +5,8 @@ from typing import override
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
 from infrared_protocols.codes.edifier.r1280t import EdifierR1280TCode
-from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
+from infrared_protocols.codes.edifier.r1700bt_pre_2017 import EdifierR1700BTPre2017Code
+from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 from infrared_protocols.codes.edifier.s360db import EdifierS360DBCode
 from infrared_protocols.codes.edifier.s3000pro import EdifierS3000ProCode
@@ -35,18 +36,25 @@ COMMAND_SET_COMMANDS: dict[
         tuple[EdifierCode | tuple[EdifierCode, ...], ...],
     ],
 ] = {
-    EdifierCommandSet.R1700BT: {
-        MediaPlayerEntityFeature.TURN_ON: (EdifierR1700BTCode.POWER,),
-        MediaPlayerEntityFeature.TURN_OFF: (EdifierR1700BTCode.POWER,),
+    EdifierCommandSet.R1700BT_PRE_2017: {
         MediaPlayerEntityFeature.VOLUME_STEP: (
-            (EdifierR1700BTCode.VOLUME_UP,),
-            (EdifierR1700BTCode.VOLUME_DOWN,),
+            (EdifierR1700BTPre2017Code.VOLUME_UP,),
+            (EdifierR1700BTPre2017Code.VOLUME_DOWN,),
         ),
-        MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierR1700BTCode.MUTE,),
-        MediaPlayerEntityFeature.PLAY: (EdifierR1700BTCode.PLAY_PAUSE,),
-        MediaPlayerEntityFeature.PAUSE: (EdifierR1700BTCode.PLAY_PAUSE,),
-        MediaPlayerEntityFeature.NEXT_TRACK: (EdifierR1700BTCode.FORWARD,),
-        MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierR1700BTCode.BACK,),
+        MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierR1700BTPre2017Code.MUTE,),
+    },
+    EdifierCommandSet.R1700BTS: {
+        MediaPlayerEntityFeature.TURN_ON: (EdifierR1700BTsCode.POWER,),
+        MediaPlayerEntityFeature.TURN_OFF: (EdifierR1700BTsCode.POWER,),
+        MediaPlayerEntityFeature.VOLUME_STEP: (
+            (EdifierR1700BTsCode.VOLUME_UP,),
+            (EdifierR1700BTsCode.VOLUME_DOWN,),
+        ),
+        MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierR1700BTsCode.MUTE,),
+        MediaPlayerEntityFeature.PLAY: (EdifierR1700BTsCode.PLAY_PAUSE,),
+        MediaPlayerEntityFeature.PAUSE: (EdifierR1700BTsCode.PLAY_PAUSE,),
+        MediaPlayerEntityFeature.NEXT_TRACK: (EdifierR1700BTsCode.FORWARD,),
+        MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierR1700BTsCode.BACK,),
     },
     EdifierCommandSet.R1280DB: {
         MediaPlayerEntityFeature.TURN_ON: (EdifierR1280DBCode.POWER,),
