@@ -76,6 +76,8 @@ async def _fetch_with_retries[T](fn: Callable[[], Awaitable[T]]) -> T:
         except PyTewkeInvalidResponseError, Exception:
             # Non-transient or unexpected error — fail immediately.
             raise
+
+    assert last_err is not None
     raise last_err
 
 
