@@ -55,7 +55,7 @@
           "migration_strategy_recommended": "This is the quickest option to migrate to a new adapter."
         },
         "menu_options": {
-          "migration_strategy_advanced": "Advanced migration",
+          "migration_strategy_advanced": "Migrate manually",
           "migration_strategy_recommended": "Migrate automatically (recommended)"
         },
         "title": "Migrate to a new adapter"
@@ -74,7 +74,7 @@
           "setup_strategy_recommended": "This is the quickest option to create a new network and get started."
         },
         "menu_options": {
-          "setup_strategy_advanced": "Advanced setup",
+          "setup_strategy_advanced": "Set up manually",
           "setup_strategy_recommended": "Set up automatically (recommended)"
         },
         "title": "Set up Zigbee"
@@ -406,6 +406,9 @@
       },
       "reset_alarm": {
         "name": "Reset alarm"
+      },
+      "reset_energy": {
+        "name": "Reset energy"
       },
       "reset_frost_lock": {
         "name": "Frost lock reset"
@@ -1387,6 +1390,12 @@
       "status_indication": {
         "name": "Status indication"
       },
+      "switch_action_l1": {
+        "name": "Switch action L1"
+      },
+      "switch_action_l2": {
+        "name": "Switch action L2"
+      },
       "switch_actions": {
         "name": "Switch actions"
       },
@@ -1398,6 +1407,12 @@
       },
       "switch_type": {
         "name": "Switch type"
+      },
+      "switch_type_l1": {
+        "name": "Switch type L1"
+      },
+      "switch_type_l2": {
+        "name": "Switch type L2"
       },
       "temperature_display_mode": {
         "name": "Temperature display mode"

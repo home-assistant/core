@@ -6,11 +6,13 @@ These APIs are the only documented way to interact with the bluetooth integratio
 import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
+from contextlib import ExitStack
 from typing import TYPE_CHECKING, cast
 
 from bleak import BleakScanner
 from habluetooth import (
     BaseHaScanner,
+    BluetoothReachabilityIntent,
     BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBleakScannerWrapper,
@@ -24,7 +26,12 @@ from homeassistant.helpers.singleton import singleton
 from .const import DATA_MANAGER
 from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCallback
+from .models import (
+    BluetoothCallback,
+    BluetoothCallbackReplay,
+    BluetoothChange,
+    ProcessAdvertisementCallback,
+)
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -109,6 +116,14 @@ def async_ble_device_from_address(
 
 
 @hass_callback
+def async_address_reachability_diagnostics(
+    hass: HomeAssistant, address: str, intent: BluetoothReachabilityIntent
+) -> str:
+    """Return a human readable explanation of why an address may be unreachable."""
+    return _get_manager(hass).async_address_reachability_diagnostics(address, intent)
+
+
+@hass_callback
 def async_scanner_devices_by_address(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> list[BluetoothScannerDevice]:
@@ -133,6 +148,7 @@ def async_register_callback(
     *,
     scan_interval: float | None = None,
     scan_duration: float | None = None,
+    replay: BluetoothCallbackReplay = BluetoothCallbackReplay.OLDEST_FIRST,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
@@ -145,10 +161,13 @@ def async_register_callback(
     values. Without an address in the matcher the active-scan request
     is skipped; the callback itself still fires normally.
 
+    ``replay`` controls which cached advertisements are replayed to the
+    callback on registration; defaults to OLDEST_FIRST.
+
     Returns a callback that can be used to cancel the registration.
     """
     return _get_manager(hass).async_register_callback(
-        callback, match_dict, mode, scan_interval, scan_duration
+        callback, match_dict, mode, scan_interval, scan_duration, replay
     )
 
 
@@ -169,15 +188,20 @@ async def async_process_advertisements(
         if not done.done() and callback(service_info):
             done.set_result(service_info)
 
-    unload = _get_manager(hass).async_register_callback(
-        _async_discovered_device, match_dict, mode, scan_duration=timeout
-    )
+    manager = _get_manager(hass)
 
-    try:
+    with ExitStack() as stack:
+        unload = manager.async_register_callback(
+            _async_discovered_device, match_dict, mode
+        )
+        stack.callback(unload)
+
+        if mode is BluetoothScanningMode.ACTIVE:
+            task = hass.async_create_task(manager.async_request_active_scan(timeout))
+            stack.callback(task.cancel)
+
         async with asyncio.timeout(timeout):
             return await done
-    finally:
-        unload()
 
 
 @hass_callback

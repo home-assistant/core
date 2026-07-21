@@ -2,12 +2,13 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import avea
 from bleak.exc import BleakError
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -66,6 +67,15 @@ def _is_avea_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
     return AVEA_SERVICE_UUID in discovery_info.service_uuids
 
 
+def _discovery_label(discovery_info: BluetoothServiceInfoBleak) -> str:
+    """Return a label for a discovered Avea bulb."""
+    if (
+        name := _normalize_name(discovery_info.name)
+    ) and name != discovery_info.address:
+        return f"{name} ({discovery_info.address})"
+    return discovery_info.address
+
+
 class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Avea."""
 
@@ -74,6 +84,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -120,6 +131,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -150,6 +162,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
+            await bluetooth.async_request_active_scan(self.hass)
             current_addresses = self._async_current_ids(include_ignore=False)
             for discovery in async_discovered_service_info(self.hass):
                 if (
@@ -165,11 +178,10 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovery_info:
             disc = self._discovery_info
-            label = f"{disc.name or disc.address} ({disc.address})"
             data_schema = vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS, default=disc.address): vol.In(
-                        {disc.address: label}
+                        {disc.address: _discovery_label(disc)}
                     )
                 }
             )
@@ -178,10 +190,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
                         {
-                            service_info.address: (
-                                f"{service_info.name or service_info.address}"
-                                f" ({service_info.address})"
-                            )
+                            service_info.address: _discovery_label(service_info)
                             for service_info in self._discovered_devices.values()
                         }
                     ),

@@ -1,9 +1,10 @@
 """Sensors for National Weather Service (NWS)."""
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import override
+
+from pynws import SimpleNWS
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,9 +12,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     DEGREE,
     PERCENTAGE,
     UnitOfLength,
@@ -35,8 +35,8 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import NWSConfigEntry, NWSData, base_unique_id, device_info
-from .const import ATTRIBUTION, CONF_STATION
+from . import NWSConfigEntry, NWSData, device_info, get_base_unique_id
+from .const import ATTRIBUTION
 
 PARALLEL_UPDATES = 0
 
@@ -154,15 +154,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NWS weather platform."""
     nws_data = entry.runtime_data
-    station = entry.data[CONF_STATION]
 
     async_add_entities(
         NWSSensor(
             hass=hass,
-            entry_data=entry.data,
+            entry=entry,
             nws_data=nws_data,
             description=description,
-            station=station,
         )
         for description in SENSOR_TYPES
     )
@@ -178,27 +176,33 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: Mapping[str, Any],
+        entry: ConfigEntry,
         nws_data: NWSData,
         description: NWSSensorEntityDescription,
-        station: str,
     ) -> None:
         """Initialise the platform with a data instance."""
         super().__init__(nws_data.coordinator_observation)
-        self._nws = nws_data.api
-        latitude = entry_data[CONF_LATITUDE]
-        longitude = entry_data[CONF_LONGITUDE]
+        self._nws_data = nws_data
         self.entity_description = description
 
-        self._attr_name = f"{station} {description.name}"
         if hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
-        self._attr_device_info = device_info(latitude, longitude)
-        self._attr_unique_id = (
-            f"{base_unique_id(latitude, longitude)}_{description.key}"
-        )
+        self._attr_device_info = device_info(entry, nws_data)
+        self._attr_unique_id = f"{get_base_unique_id(entry)}_{description.key}"
 
     @property
+    def _nws(self) -> SimpleNWS:
+        """Return the current SimpleNWS API instance."""
+        return self._nws_data.api
+
+    @property
+    @override
+    def name(self) -> str:
+        """Return the sensor name with current station."""
+        return f"{self._nws.station} {self.entity_description.name}"
+
+    @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return the state."""
         if (

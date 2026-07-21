@@ -1,6 +1,6 @@
 """Repairs flow for Shelly."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
@@ -132,6 +132,9 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
 
     device = entry.runtime_data.rpc.device
 
+    if not device.initialized:
+        return
+
     if (
         (ws_config := device.config.get("ws"))
         and ws_config["enable"]
@@ -168,6 +171,9 @@ def async_manage_open_wifi_ap_issue(
         assert entry.runtime_data.rpc is not None
 
     device = entry.runtime_data.rpc.device
+
+    if not device.initialized:
+        return
 
     # Check if WiFi AP is enabled and is open (no password)
     if (
@@ -283,6 +289,7 @@ class ShellyRpcRepairsFlow(RepairsFlow):
 class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
     """Handler for Firmware Update flow."""
 
+    @override
     async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_update_firmware()
@@ -304,6 +311,7 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
 class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
     """Handler for Disable Outbound WebSocket flow."""
 
+    @override
     async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_disable_outbound_websocket()

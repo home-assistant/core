@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from math import ceil
+from typing import override
 
 from motionblindsble.const import (
     MotionBlindType,
@@ -124,6 +125,7 @@ class MotionblindsBLESensorEntity[_T](MotionblindsBLEEntity, SensorEntity):
         )
         self._attr_native_value = entity_description.initial_value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Log sensor entity information."""
         _LOGGER.debug(
@@ -158,6 +160,7 @@ class BatterySensor(MotionblindsBLEEntity, SensorEntity):
         )
         super().__init__(device, entry, entity_description)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
         await super().async_added_to_hass()
