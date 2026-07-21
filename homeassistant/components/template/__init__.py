@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         helper_config_entry_id=entry.entry_id,
         source_device_id=entry.options.get(CONF_DEVICE_ID),
-        sweep_helper_devices=True,
+        remove_all_devices=True,
     )
 
     for key in (CONF_MAX, CONF_MIN, CONF_STEP):
