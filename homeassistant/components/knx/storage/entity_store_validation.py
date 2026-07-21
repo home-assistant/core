@@ -1,18 +1,21 @@
 """KNX entity store validation."""
 
-from typing import Literal, TypedDict
+from collections.abc import Callable
+from typing import Any, Literal, TypedDict
 
-import voluptuous as vol
-
-from homeassistant.helpers.typing import VolSchemaType
+import probatio as prb
 
 from .entity_store_schema import ENTITY_STORE_DATA_SCHEMA
 
 
 class _ErrorDescription(TypedDict):
-    path: list[str] | None
-    error_message: str
-    error_class: str
+    code: str | None
+    message: str
+    path: list[str]
+    secret: bool
+    context: dict[str, Any]
+    translation_key: str | None
+    placeholders: dict[str, Any]
 
 
 class EntityStoreValidationError(TypedDict):
@@ -30,37 +33,30 @@ class EntityStoreValidationSuccess(TypedDict):
     entity_id: str | None
 
 
-def parse_invalid(exc: vol.Invalid) -> _ErrorDescription:
-    """Parse a vol.Invalid exception."""
-    return _ErrorDescription(
-        path=[str(path) for path in exc.path],  # exc.path: str | vol.Required
-        error_message=exc.msg,
-        error_class=type(exc).__name__,
-    )
+def parse_invalid(exc: prb.Invalid) -> _ErrorDescription:
+    """Parse a probatio.Invalid exception."""
+    description = exc.as_dict()
+    description["path"] = [str(path) for path in description["path"]]
+    return description  # type: ignore[return-value]
 
 
-def validate_config_store_data(schema: VolSchemaType, entity_data: dict) -> dict:
+def validate_config_store_data(
+    schema: Callable[[dict], dict], entity_data: dict
+) -> dict:
     """Validate data for config store.
 
     Return validated data or raise EntityStoreValidationException.
     """
     try:
         # return so defaults are applied
-        return schema(entity_data)  # type: ignore[no-any-return]
-    except vol.MultipleInvalid as exc:
+        return schema(entity_data)
+    except prb.Invalid as exc:
+        errors = exc.errors if isinstance(exc, prb.MultipleInvalid) else [exc]
         raise EntityStoreValidationException(
             validation_error={
                 "success": False,
                 "error_base": str(exc),
-                "errors": [parse_invalid(invalid) for invalid in exc.errors],
-            }
-        ) from exc
-    except vol.Invalid as exc:
-        raise EntityStoreValidationException(
-            validation_error={
-                "success": False,
-                "error_base": str(exc),
-                "errors": [parse_invalid(exc)],
+                "errors": [parse_invalid(invalid) for invalid in errors],
             }
         ) from exc
 

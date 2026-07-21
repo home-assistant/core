@@ -2,7 +2,7 @@
 
 from typing import Any, TypedDict
 
-import voluptuous as vol
+import probatio as prb
 from xknx import XKNX
 
 from ..expose import KnxExposeTime, create_time_server_exposures
@@ -18,15 +18,15 @@ class KNXTimeServerStoreModel(TypedDict, total=False):
     datetime: dict[str, Any] | None
 
 
-TIME_SERVER_CONFIG_SCHEMA = vol.Schema(
+TIME_SERVER_CONFIG_SCHEMA = prb.Schema(
     {
-        vol.Optional("time"): GASelector(
+        prb.Optional("time"): GASelector(
             state=False, passive=False, valid_dpt="10.001"
         ),
-        vol.Optional("date"): GASelector(
+        prb.Optional("date"): GASelector(
             state=False, passive=False, valid_dpt="11.001"
         ),
-        vol.Optional("datetime"): GASelector(
+        prb.Optional("datetime"): GASelector(
             state=False, passive=False, valid_dpt="19.001"
         ),
     }
