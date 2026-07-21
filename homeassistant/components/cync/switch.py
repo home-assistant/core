@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from pycync import CyncPlug
+from pycync.devices import CyncPlug
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -68,5 +68,5 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
 
     @property
     def _device(self) -> CyncPlug:
-        """Fetch the reference to the backing Cync device for this plug."""
+        """Fetch the reference to the backing Cync plug for this entity."""
         return self.coordinator.data[self._cync_device_id]
