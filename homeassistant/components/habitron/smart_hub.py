@@ -211,12 +211,17 @@ class SmartHub:
         and keep the last values; the next tick refreshes them. Genuine
         connectivity loss still surfaces through the bus refresh that follows.
         """
+        if not self.diags:
+            # Only Raspberry-Pi-based hubs expose host diagnostics; on any other
+            # platform there is nothing to fill, so skip the query entirely
+            # instead of fetching and discarding it every tick.
+            return
         try:
             info = await self.comm.get_smhub_update()
         except HabitronError as err:
             _LOGGER.debug("SmartHub diagnostics update skipped: %s", err)
             return
-        if not info or not self.diags:
+        if not info:
             return
         hardware = info["hardware"]
         software = info["software"]

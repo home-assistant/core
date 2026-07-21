@@ -328,9 +328,6 @@ async def test_user_flow_exception_mapping(
     assert result["errors"] == {"base": expected}
 
 
-# ---------- unit tests for the helper layer ----------
-
-
 async def test_validate_input_local_loopback_rewrites_host(
     hass: HomeAssistant,
     mock_habitron_client: MagicMock,
@@ -445,9 +442,6 @@ async def test_validate_input_connection_failure_is_cannot_connect(
         )
 
 
-# ---------- ConfigFlow._is_device_already_configured ----------
-
-
 def _fake_gethostbyname(host: str) -> str:
     """Stand in for LAN name resolution; unknown names fail as they really do."""
     if host == MOCK_HOST_HOSTNAME:
@@ -559,9 +553,6 @@ async def test_is_device_already_configured_ip_match(hass: HomeAssistant) -> Non
         _fake_gethostbyname,
     ):
         assert await flow._is_device_already_configured("hub-x", ip="10.0.0.1") is True
-
-
-# ---------- SSDP with no UDN + discovery fallback ----------
 
 
 async def test_ssdp_discovery_falls_back_to_discovery_serial(
@@ -727,9 +718,6 @@ async def test_ssdp_discovery_confirm_host_error_retries(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-# ---------- user flow exception mapping ----------
-
-
 async def test_user_flow_host_not_found_via_validate_input(
     hass: HomeAssistant,
     setup_homeassistant: None,
@@ -784,9 +772,6 @@ async def test_user_flow_unexpected_exception_maps_to_unknown(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
-
-
-# ---------- user step pre-fill from discovery ----------
 
 
 async def test_user_step_prefills_host_from_discovery(

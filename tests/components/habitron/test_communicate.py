@@ -20,11 +20,6 @@ def _make_comm(host: str = "192.168.1.50") -> HbtnComm:
     return comm
 
 
-# ---------------------------------------------------------------------------
-# init / helpers / properties
-# ---------------------------------------------------------------------------
-
-
 def test_init_with_valid_ipv4_uses_host_directly() -> None:
     """A valid IPv4 in config is stored as the active host."""
     comm = _make_comm("10.0.0.5")
@@ -63,11 +58,6 @@ def test_router_property_returns_own_router() -> None:
     assert comm.router is other
 
 
-# ---------------------------------------------------------------------------
-# async_system_update -> async_refresh_system
-# ---------------------------------------------------------------------------
-
-
 async def test_async_system_update_suspended_returns_crc() -> None:
     """While suspended no refresh happens and the cached CRC is returned."""
     comm = _make_comm()
@@ -91,11 +81,6 @@ async def test_async_system_update_refreshes_and_returns_new_crc() -> None:
         assert await comm.async_system_update() == 99
         refresh.assert_awaited()
         assert comm.crc == 99
-
-
-# ---------------------------------------------------------------------------
-# get_smhub_info
-# ---------------------------------------------------------------------------
 
 
 async def test_get_smhub_info_populates_fields() -> None:
@@ -134,11 +119,6 @@ async def test_get_smhub_info_external_hub_has_none_slug() -> None:
     assert comm.is_addon is False
 
 
-# ---------------------------------------------------------------------------
-# async_setup
-# ---------------------------------------------------------------------------
-
-
 async def test_async_setup_resolves_host_and_connects() -> None:
     """async_setup resolves a hostname and connects a fresh client.
 
@@ -172,11 +152,6 @@ async def test_async_setup_resolves_host_and_connects() -> None:
     assert isinstance(comm._host, str)
     assert comm.hbtn_version == "3.0.2"
     client.connect.assert_awaited()
-
-
-# ---------------------------------------------------------------------------
-# connection guard / host resolution / reconfigure / info errors
-# ---------------------------------------------------------------------------
 
 
 def test_client_property_raises_when_not_connected() -> None:
