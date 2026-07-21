@@ -225,7 +225,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host_str,
             self._discovered_device.get("ip"),
         ):
-            if entry.unique_id != unique_id:
+            # Adopt the discovered id only when it is a stable one (UDN/serial).
+            # With no stable id this run, ``unique_id`` is the host-based
+            # fallback; overwriting an existing stable id with it would leave the
+            # entry unmatched after a DHCP change, letting the same hub be
+            # offered as a duplicate.
+            if unique_id not in {entry.unique_id, f"habitron_{host_str}"}:
                 self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
             return self.async_abort(reason="already_configured")
 

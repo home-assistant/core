@@ -804,6 +804,30 @@ async def test_analog_non_deviating_area_not_applied(
     assert entity_registry.async_get(entity_id).area_id is None
 
 
+async def test_analog_input_created_for_module_type_beyond_hardcoded_set(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Any module the library gave analog inputs gets its analog sensors.
+
+    The platform iterates the ``analogins`` the library populated instead of an
+    enumerated set of type codes, so a controller variant beyond the ones that
+    used to be hard-coded still yields its analog input.
+    """
+    coordinator = _analog_coordinator(ain_area=0)
+    coordinator.smart_hub.router.modules[0].typ = b"\x01\x05"
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = coordinator
+
+    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
+        is not None
+    )
+
+
 async def test_host_readings_unknown_until_first_hub_answer() -> None:
     """Host readings stay unknown until the host query has actually answered.
 
