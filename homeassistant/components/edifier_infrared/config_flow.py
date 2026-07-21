@@ -25,7 +25,7 @@ from .const import CONF_COMMAND_SET, CONF_INFRARED_ENTITY_ID, DOMAIN
 class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Edifier IR."""
 
-    VERSION = 1
+    VERSION = 2
     MINOR_VERSION = 1
 
     @override
