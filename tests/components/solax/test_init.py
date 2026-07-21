@@ -2,16 +2,24 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from solax.inverter import InverterError, InverterResponse
 from solax.inverters import X1MiniV34
 
+from homeassistant.components.solax import SCAN_INTERVAL
 from homeassistant.components.solax.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def __mock_get_data() -> InverterResponse:
@@ -76,8 +84,10 @@ async def test_setup_entry_success(
     assert mock_discover.call_args.kwargs.get("inverters") == expected_inverters
 
 
-async def test_coordinator_update_failure(hass: HomeAssistant) -> None:
-    """Test an InverterError during a refresh is converted to UpdateFailed."""
+async def test_coordinator_update_failure(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test an InverterError during a refresh marks the entities unavailable."""
     entry_data = {
         CONF_IP_ADDRESS: "192.168.1.87",
         CONF_PORT: 80,
@@ -104,12 +114,22 @@ async def test_coordinator_update_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    coordinator = entry.runtime_data.coordinator
+
+    # making sure the base state is actually healthy before the test run.
+    assert (
+        hass.states.get("sensor.solax_abcdefghij_network_voltage").state
+        != STATE_UNAVAILABLE
+    )
 
     with patch("solax.RealTimeAPI.get_data", side_effect=InverterError):
-        await coordinator.async_refresh()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    assert coordinator.last_update_success is False
+    assert (
+        hass.states.get("sensor.solax_abcdefghij_network_voltage").state
+        == STATE_UNAVAILABLE
+    )
 
 
 async def test_setup_entry_not_ready(hass: HomeAssistant) -> None:
