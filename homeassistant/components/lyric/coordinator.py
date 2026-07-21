@@ -67,13 +67,12 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
                 await self.lyric.get_locations()
                 await asyncio.gather(
                     *(
-                        self.lyric.get_thermostat_rooms(
+                        self._get_thermostat_rooms(
                             location.location_id, device.device_id
                         )
                         for location in self.lyric.locations
                         for device in location.devices
                         if device.device_class == "Thermostat"
-                        and device.device_id.startswith("LCC")
                     )
                 )
 
@@ -87,3 +86,20 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
         return self.lyric
+
+    async def _get_thermostat_rooms(self, location_id: str, device_id: str) -> None:
+        """Fetch room/priority data for a single thermostat.
+
+        Not all thermostat models support this endpoint; Honeywell returns
+        a 400 (GetPriorityFailed) for those. That's expected and shouldn't
+        fail the whole coordinator update, so it's handled per-device
+        instead of relying on device ID heuristics to predict support.
+        """
+        try:
+            await self.lyric.get_thermostat_rooms(location_id, device_id)
+        except ClientResponseError as exception:
+            if exception.status != HTTPStatus.BAD_REQUEST:
+                raise
+            _LOGGER.debug(
+                "Device %s does not support room priority data", device_id
+            )
