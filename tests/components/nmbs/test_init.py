@@ -27,12 +27,7 @@ async def test_setup_entry_api_unavailable(
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the entry is retried when the station list cannot be fetched.
-
-    A transient API failure while fetching the shared station list should raise
-    ConfigEntryNotReady (state SETUP_RETRY) so Home Assistant retries with
-    backoff, instead of hard-failing the integration until the next restart.
-    """
+    """Test the entry is retried when the station list cannot be fetched."""
     mock_nmbs_client.get_stations.return_value = None
     mock_config_entry.add_to_hass(hass)
 
