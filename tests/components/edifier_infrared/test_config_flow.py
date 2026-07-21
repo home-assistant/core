@@ -22,6 +22,7 @@ from tests.components.infrared import EMITTER_ENTITY_ID
     ("model", "expected_command_set"),
     [
         (EdifierModel.R1700BT_PRE_2017, EdifierCommandSet.R1700BT_PRE_2017),
+        (EdifierModel.R1700BT_2017, EdifierCommandSet.R1700BT_2017),
         (EdifierModel.R1700BTS, EdifierCommandSet.R1700BTS),
         (EdifierModel.R1280DB, EdifierCommandSet.R1280DB),
         (EdifierModel.R1280T, EdifierCommandSet.R1280T),

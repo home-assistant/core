@@ -5,6 +5,7 @@ from typing import override
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
+from infrared_protocols.codes.edifier.r1700bt_2017 import EdifierR1700BT2017Code
 from infrared_protocols.codes.edifier.r1700bt_pre_2017 import EdifierR1700BTPre2017Code
 from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
@@ -45,6 +46,18 @@ COMMAND_SET_BUTTONS: dict[
             key="line",
             translation_key="line",
             command_code=EdifierR1700BTPre2017Code.LINE,
+        ),
+    ),
+    EdifierCommandSet.R1700BT_2017: (
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierR1700BT2017Code.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line",
+            translation_key="line",
+            command_code=EdifierR1700BT2017Code.LINE,
         ),
     ),
     EdifierCommandSet.R1700BTS: (

@@ -5,6 +5,7 @@ from typing import override
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
 from infrared_protocols.codes.edifier.r1280t import EdifierR1280TCode
+from infrared_protocols.codes.edifier.r1700bt_2017 import EdifierR1700BT2017Code
 from infrared_protocols.codes.edifier.r1700bt_pre_2017 import EdifierR1700BTPre2017Code
 from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
@@ -42,6 +43,15 @@ COMMAND_SET_COMMANDS: dict[
             (EdifierR1700BTPre2017Code.VOLUME_DOWN,),
         ),
         MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierR1700BTPre2017Code.MUTE,),
+    },
+    EdifierCommandSet.R1700BT_2017: {
+        MediaPlayerEntityFeature.TURN_ON: (EdifierR1700BT2017Code.POWER,),
+        MediaPlayerEntityFeature.TURN_OFF: (EdifierR1700BT2017Code.POWER,),
+        MediaPlayerEntityFeature.VOLUME_STEP: (
+            (EdifierR1700BT2017Code.VOLUME_UP,),
+            (EdifierR1700BT2017Code.VOLUME_DOWN,),
+        ),
+        MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierR1700BT2017Code.MUTE,),
     },
     EdifierCommandSet.R1700BTS: {
         MediaPlayerEntityFeature.TURN_ON: (EdifierR1700BTsCode.POWER,),
