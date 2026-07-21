@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import RECEIVER_ID, setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -106,4 +106,7 @@ async def test_send_command_failed(
     remote_mock.assert_called_once_with("dash", "0")
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "send_command_failed"
-    assert err.value.translation_placeholders == {"command": "dash", "device": "0"}
+    assert err.value.translation_placeholders == {
+        "command": "dash",
+        "device": RECEIVER_ID,
+    }
