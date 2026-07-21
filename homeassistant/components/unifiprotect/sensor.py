@@ -718,8 +718,8 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    # Public API: key fob sensors. Only available when the public bootstrap has
-    # been primed (requires API key + supported NVR firmware).
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
     api = data.api
     if api.has_public_bootstrap:
         async_add_entities(

@@ -401,10 +401,9 @@ class ProtectDeviceSmartDetectEventEntity(
             self.async_write_ha_state()
 
 
-# The fob does not advertise its buttons (``feature_flags.buttons`` is empty), so
-# the entity declares the whole vocabulary. Built from ``EventButtonType`` (the
-# enum matched below against ``metadata.button``) so the declared types cannot
-# drift from what is matched; ``.name.lower()`` yields a valid HA translation key.
+# Real hardware reports an empty ``feature_flags.buttons``, so the whole
+# vocabulary is declared. Sourced from the enum matched against
+# ``metadata.button`` below so the two cannot drift apart.
 _FOB_EVENT_TYPES: list[str] = [
     button.name.lower()
     for button in EventButtonType
@@ -529,8 +528,8 @@ async def async_setup_entry(
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(_async_event_entities(data))
 
-    # Public API: key fob button-press event entities. Only available when the
-    # public bootstrap has been primed (requires API key + supported firmware).
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
     api = data.api
     if api.has_public_bootstrap:
         async_add_entities(
