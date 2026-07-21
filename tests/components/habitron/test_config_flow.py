@@ -800,15 +800,24 @@ async def test_user_step_prefills_host_from_discovery(
     assert default == "10.0.0.99"
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        HabitronError("scan blew up"),
+        # A missing route/interface surfaces as OSError from the own-IP lookup.
+        OSError("network is unreachable"),
+    ],
+)
 async def test_user_step_survives_discovery_failure(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
+    error: Exception,
 ) -> None:
     """A discovery error is swallowed so the manual host form is still shown."""
     with patch(
         "homeassistant.components.habitron.config_flow.discover_smarthubs",
-        new=AsyncMock(side_effect=HabitronError("scan blew up")),
+        new=AsyncMock(side_effect=error),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

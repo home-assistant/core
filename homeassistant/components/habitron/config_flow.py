@@ -103,7 +103,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._udp_devices is None:
             try:
                 self._udp_devices = await discover_smarthubs()
-            except HabitronError as err:
+            except (HabitronError, OSError) as err:
+                # A missing route/interface surfaces as OSError from the own-IP
+                # lookup; either way discovery is best-effort, so fall back to
+                # the empty list and let the user enter the host manually.
                 _LOGGER.debug("SmartHub discovery failed: %s", err)
                 self._udp_devices = []
         return self._udp_devices
