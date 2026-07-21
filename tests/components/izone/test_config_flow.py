@@ -2,8 +2,10 @@
 
 from collections.abc import Generator
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+import pizone
 import pytest
 
 from homeassistant import config_entries
@@ -29,6 +31,24 @@ def _make_homekit_info(md: str, host: str | None = None) -> SimpleNamespace:
     return SimpleNamespace(properties={"md": md}, host=host)
 
 
+def _user_search_input() -> dict[str, str]:
+    """Return user-step input that triggers broadcast discovery."""
+    return {config_flow.CONF_SETUP_METHOD: config_flow.SETUP_METHOD_SEARCH}
+
+
+def _user_manual_host_input(host: str) -> dict[str, str]:
+    """Return user-step input for manual host entry."""
+    return {
+        config_flow.CONF_SETUP_METHOD: config_flow.SETUP_METHOD_MANUAL_HOST,
+        CONF_HOST: host,
+    }
+
+
+async def _configure_user_search(hass: HomeAssistant, flow_id: str) -> dict[str, Any]:
+    """Submit the user step choosing broadcast discovery."""
+    return await hass.config_entries.flow.async_configure(flow_id, _user_search_input())
+
+
 @pytest.fixture(autouse=True)
 def mock_izone_timeouts() -> Generator[None]:
     """Mock iZone idle-stop delay to speed up tests."""
@@ -50,7 +70,11 @@ async def test_user_discovery_success(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
         assert result["step_id"] == "confirm"
+        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert progress[0]["context"].get("confirm_only") is True
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -72,6 +96,8 @@ async def test_user_discovery_default_selects_first_and_queues_other(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
         assert result["step_id"] == "select_controller"
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -111,7 +137,11 @@ async def test_broadcast_skips_already_configured_controller(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
         assert result["step_id"] == "confirm"
+        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert progress[0]["context"].get("confirm_only") is True
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -135,7 +165,11 @@ async def test_user_discovery_skips_yaml_excluded_controllers(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
         assert result["step_id"] == "confirm"
+        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert progress[0]["context"].get("confirm_only") is True
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -159,6 +193,8 @@ async def test_broadcast_multiple_unconfigured_shows_choice(
         )
 
         assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
         assert result["step_id"] == "select_controller"
         schema_keys = list(result["data_schema"].schema.keys())
         assert len(schema_keys) == 1
@@ -199,6 +235,9 @@ async def test_select_controller_aborts_when_choices_missing(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["step_id"] == "select_controller"
 
     # Public configure cannot clear flow-local discovery state; poke the in-progress
     # instance so the empty-choices abort path is exercised.
@@ -222,6 +261,9 @@ async def test_select_controller_aborts_when_uid_not_in_choices(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["step_id"] == "select_controller"
 
     # Schema validation rejects unknown UIDs; call the step directly with a UID that
     # is not in the discovered set to cover the step's own abort.
@@ -246,6 +288,9 @@ async def test_select_controller_creates_selected_uid_and_queues_others(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["step_id"] == "select_controller"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -285,20 +330,18 @@ async def test_broadcast_aborts_when_all_discovered_are_configured(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_aborts_when_all_discovered_are_ignored(
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_flow_offers_ignored_controller_for_setup(
     hass: HomeAssistant,
 ) -> None:
-    """User flow aborts when every discovered controller has been explicitly ignored.
-
-    _async_get_unconfigured_controllers uses include_ignore=True so controllers
-    whose entries carry SOURCE_IGNORE are not re-offered as configurable, respecting
-    the user's earlier choice to dismiss them.
-    """
+    """Ignored controllers appear in the user picker and can be set up again."""
     ignored_controller = create_mock_controller("000000001", "192.0.2.1")
     MockConfigEntry(
         domain=DOMAIN,
@@ -311,9 +354,32 @@ async def test_user_flow_aborts_when_all_discovered_are_ignored(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["step_id"] == "confirm_ignored"
+        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert progress[0]["context"].get("confirm_only") is True
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "000000001"
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_confirm_uses_confirm_only(hass: HomeAssistant) -> None:
+    """Confirm step is confirm-only so closing the dialog dismisses silently."""
+    controller = create_mock_controller("000000001", "192.0.2.1")
+    with patch_discovered_controllers(controller):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await _configure_user_search(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert progress[0]["context"].get("confirm_only") is True
 
 
 async def test_import_aborts_when_another_izone_flow_in_progress(
@@ -326,7 +392,7 @@ async def test_import_aborts_when_another_izone_flow_in_progress(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert user_flow["type"] is FlowResultType.FORM
-    assert user_flow["step_id"] == "confirm"
+    assert user_flow["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -382,6 +448,8 @@ async def test_user_flow_aborts_when_discovery_bind_fails(hass: HomeAssistant) -
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_failed"
@@ -505,6 +573,8 @@ async def test_homekit_aborts_while_user_confirm_is_open(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert user_flow["type"] is FlowResultType.FORM
+        assert user_flow["step_id"] == "user"
+        user_flow = await _configure_user_search(hass, user_flow["flow_id"])
         assert user_flow["step_id"] == "confirm"
 
         result = await hass.config_entries.flow.async_init(
@@ -517,10 +587,10 @@ async def test_homekit_aborts_while_user_confirm_is_open(
     assert result["reason"] == "already_in_progress"
 
 
-async def test_user_broadcast_aborts_when_homekit_flow_in_progress(
+async def test_user_flow_continues_when_homekit_flow_in_progress(
     hass: HomeAssistant,
 ) -> None:
-    """Test user broadcast discovery aborts when a HomeKit flow is already active."""
+    """Manual user setup is allowed while a discovered-device flow is open."""
     controller = create_mock_controller("000000001", "192.0.2.3")
     with patch_discovered_controllers(controller):
         homekit_flow = await hass.config_entries.flow.async_init(
@@ -536,10 +606,97 @@ async def test_user_broadcast_aborts_when_homekit_flow_in_progress(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        result = user_flow
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_in_progress"
+    assert user_flow["type"] is FlowResultType.FORM
+    assert user_flow["step_id"] == "user"
+
+
+async def test_user_flow_continues_when_integration_discovery_in_progress(
+    hass: HomeAssistant,
+) -> None:
+    """Manual user setup is allowed while an integration discovery confirm is open."""
+    controller = create_mock_controller("000000001", "192.0.2.1")
+    with patch_discovered_controllers(controller):
+        discovery_flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+                "unique_id": "000000001",
+            },
+            data={CONF_HOST: "192.0.2.1"},
+        )
+        assert discovery_flow["step_id"] == "confirm"
+
+        user_flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert user_flow["type"] is FlowResultType.FORM
+    assert user_flow["step_id"] == "user"
+
+
+async def test_new_user_flow_replaces_stale_user_flow(
+    hass: HomeAssistant,
+) -> None:
+    """A fresh user flow replaces an earlier one left open (e.g. after refresh)."""
+    with patch(
+        "homeassistant.components.izone.discovery.discovery_service_active",
+        return_value=False,
+    ):
+        first = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert first["step_id"] == "user"
+
+        second = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert second["type"] is FlowResultType.FORM
+    assert second["step_id"] == "user"
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
+    assert (
+        hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]["flow_id"]
+        == second["flow_id"]
+    )
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_new_user_flow_replaces_stale_confirm_after_ignore(
+    hass: HomeAssistant,
+) -> None:
+    """Re-setup after ignore works when an earlier confirm flow was left open."""
+    ignored_controller = create_mock_controller("000000001", "192.0.2.1")
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ignored_controller.device_uid,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+    ).add_to_hass(hass)
+
+    with patch_discovered_controllers(ignored_controller):
+        stale = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        stale = await _configure_user_search(hass, stale["flow_id"])
+        assert stale["step_id"] == "confirm_ignored"
+
+        replacement = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert replacement["step_id"] == "user"
+
+        replacement = await _configure_user_search(hass, replacement["flow_id"])
+        assert replacement["step_id"] == "confirm_ignored"
+        result = await hass.config_entries.flow.async_configure(
+            replacement["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "000000001"
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 0
 
 
 async def test_homekit_aborts_when_uid_already_configured(
@@ -692,15 +849,213 @@ async def test_homekit_aborts_when_discovery_bind_fails(hass: HomeAssistant) -> 
     assert result["reason"] == "discovery_failed"
 
 
-async def test_user_flow_aborts_when_no_controllers_found(hass: HomeAssistant) -> None:
-    """User flow aborts when broadcast discovery returns no controllers."""
+async def test_user_flow_returns_to_form_when_no_controllers_found(
+    hass: HomeAssistant,
+) -> None:
+    """User flow loops back to the setup form when broadcast discovery finds nothing."""
     with patch_discovered_controllers([]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_devices_found"}
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_manual_host_success(hass: HomeAssistant) -> None:
+    """Manual host entry probes the bridge and continues to confirm."""
+    controller = create_mock_controller("000000001", "192.0.2.55")
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=AsyncMock(return_value=endpoint_from_controller(controller)),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.discovery_service_active",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["step_id"] == "user"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("192.0.2.55")
+        )
+        assert result["step_id"] == "confirm"
+        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert progress[0]["context"].get("confirm_only") is True
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "192.0.2.55"}
+
+
+async def test_user_blank_host_submits_search(hass: HomeAssistant) -> None:
+    """Leaving the host blank triggers broadcast discovery."""
+    controller = create_mock_controller("000000001", "192.0.2.1")
+    with (
+        patch_discovered_controllers(controller),
+        patch(
+            "homeassistant.components.izone.discovery.discovery_service_active",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                config_flow.CONF_SETUP_METHOD: config_flow.SETUP_METHOD_SEARCH,
+                CONF_HOST: "",
+            },
+        )
+
+    assert result["step_id"] == "confirm"
+
+
+async def test_user_manual_host_required_when_enter_host_selected(
+    hass: HomeAssistant,
+) -> None:
+    """Enter host without an address shows a field error."""
+    with patch(
+        "homeassistant.components.izone.discovery.discovery_service_active",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("")
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_HOST: "required"}
+
+
+async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
+    """Unreachable manual host returns to the user form with an error."""
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.discovery_service_active",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("192.0.2.99")
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_manual_host_already_configured_aborts(hass: HomeAssistant) -> None:
+    """Re-entering a host for an existing controller aborts before probing."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000025841",
+        data={CONF_HOST: "10.0.0.90"},
+        version=2,
+    ).add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+        ) as mock_discover_by_host,
+        patch(
+            "homeassistant.components.izone.discovery.discovery_service_active",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "10.0.0.90"}
+        )
+
+    mock_discover_by_host.assert_not_called()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_manual_host_claimed_controller_aborts(hass: HomeAssistant) -> None:
+    """Claim-cache collision aborts when HA has no matching host entry yet."""
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=AsyncMock(
+                side_effect=pizone.ControllerAlreadyClaimedError(
+                    "Controller 000025841 already created"
+                )
+            ),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.discovery_service_active",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "10.0.0.90"}
+        )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_host_only_when_discovery_active(hass: HomeAssistant) -> None:
+    """When discovery is already active, the user step asks for a host only."""
+    with patch(
+        "homeassistant.components.izone.discovery.discovery_service_active",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["step_id"] == "user"
+    assert config_flow.CONF_SETUP_METHOD not in result["data_schema"].schema
+
+
+async def test_user_manual_host_unpaired_aborts(hass: HomeAssistant) -> None:
+    """Unpaired bridge placeholder aborts manual host setup."""
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_by_host",
+            new=AsyncMock(side_effect=pizone.UnpairedBridgeError("unpaired")),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.discovery_service_active",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("192.0.2.111")
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unpaired_bridge"
 
 
 async def test_homekit_without_model_aborts(
@@ -893,8 +1248,10 @@ async def test_runtime_integration_discovery_skips_during_user_select_controller
         user_flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert user_flow["type"] is FlowResultType.FORM
-    assert user_flow["step_id"] == "select_controller"
+        assert user_flow["type"] is FlowResultType.FORM
+        assert user_flow["step_id"] == "user"
+        user_flow = await _configure_user_search(hass, user_flow["flow_id"])
+        assert user_flow["step_id"] == "select_controller"
 
     new_ctrl = create_mock_controller("000000002", "192.0.2.2")
 
@@ -920,6 +1277,8 @@ async def test_runtime_integration_discovery_skips_during_user_confirm(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
         assert result["step_id"] == "confirm"
 
     izone_discovery.async_note_integration_discovery(
@@ -976,12 +1335,15 @@ async def test_confirm_asserts_when_controller_data_is_missing(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["step_id"] == "confirm"
 
     # Corrupt flow-local state that the public path always sets before confirm.
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     flow._discovered_controller_ip = None
     with pytest.raises(AssertionError):
-        await flow.async_step_confirm()
+        await flow.async_step_confirm({})
 
 
 async def test_confirm_asserts_when_unique_id_is_not_string(
@@ -994,6 +1356,9 @@ async def test_confirm_asserts_when_unique_id_is_not_string(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["step_id"] == "user"
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["step_id"] == "confirm"
 
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     flow.context["unique_id"] = None

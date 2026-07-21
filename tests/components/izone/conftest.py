@@ -211,6 +211,9 @@ def mock_discovery_service(mock_controller: Mock) -> Mock:
     service.discover_by_uid = AsyncMock(
         return_value=endpoint_from_controller(mock_controller)
     )
+    service.discover_by_host = AsyncMock(
+        return_value=endpoint_from_controller(mock_controller)
+    )
     service.create_controller = AsyncMock(return_value=mock_controller)
     return service
 
