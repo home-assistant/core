@@ -40,6 +40,9 @@
     "binary_sensor": {
       "room_motion": {
         "name": "Room motion"
+      },
+      "vacation_hold": {
+        "name": "Vacation hold"
       }
     },
     "select": {

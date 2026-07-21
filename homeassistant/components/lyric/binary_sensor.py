@@ -17,7 +17,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
-from .entity import LyricAccessoryEntity
+from .entity import LyricAccessoryEntity, LyricDeviceEntity
+
+
+@dataclass(frozen=True, kw_only=True)
+class LyricBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Honeywell Lyric binary sensor entities."""
+
+    value_fn: Callable[[LyricDevice], bool]
+    suitable_fn: Callable[[LyricDevice], bool]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -27,6 +35,15 @@ class LyricBinarySensorAccessoryEntityDescription(BinarySensorEntityDescription)
     value_fn: Callable[[LyricRoom, LyricAccessory], bool]
     suitable_fn: Callable[[LyricRoom, LyricAccessory], bool]
 
+
+DEVICE_BINARY_SENSORS: list[LyricBinarySensorEntityDescription] = [
+    LyricBinarySensorEntityDescription(
+        key="vacation_hold",
+        translation_key="vacation_hold",
+        value_fn=lambda device: device.vacation_hold.enabled,
+        suitable_fn=lambda device: True,
+    ),
+]
 
 ACCESSORY_BINARY_SENSORS: list[LyricBinarySensorAccessoryEntityDescription] = [
     LyricBinarySensorAccessoryEntityDescription(
@@ -48,6 +65,19 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
+        LyricBinarySensor(
+            coordinator,
+            device_binary_sensor,
+            location,
+            device,
+        )
+        for location in coordinator.data.locations
+        for device in location.devices
+        for device_binary_sensor in DEVICE_BINARY_SENSORS
+        if device_binary_sensor.suitable_fn(device)
+    )
+
+    async_add_entities(
         LyricAccessoryBinarySensor(
             coordinator, binary_sensor, location, device, room, accessory
         )
@@ -58,6 +88,34 @@ async def async_setup_entry(
         for binary_sensor in ACCESSORY_BINARY_SENSORS
         if binary_sensor.suitable_fn(room, accessory)
     )
+
+
+class LyricBinarySensor(LyricDeviceEntity, BinarySensorEntity):
+    """Define a Honeywell Lyric binary sensor."""
+
+    entity_description: LyricBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: LyricDataUpdateCoordinator,
+        description: LyricBinarySensorEntityDescription,
+        location: LyricLocation,
+        device: LyricDevice,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator,
+            location,
+            device,
+            f"{device.mac_id}_{description.key}",
+        )
+        self.entity_description = description
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if the condition is met."""
+        return self.entity_description.value_fn(self.device)
 
 
 class LyricAccessoryBinarySensor(LyricAccessoryEntity, BinarySensorEntity):
