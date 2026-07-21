@@ -12,9 +12,9 @@ from homeassistant.components.homeassistant import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from . import async_verify_can_bind
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
 from .const import ATTR_CONFIG, CONF_SERVER_PORT
+from .server import async_verify_can_bind
 
 ERR_BIND_FAILED: Final = "bind_failed"
 
