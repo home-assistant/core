@@ -182,6 +182,8 @@
 # name: test_devices[XT-CM100]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
