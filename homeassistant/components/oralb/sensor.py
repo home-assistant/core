@@ -1,5 +1,6 @@
 """Support for OralB sensors."""
 
+from datetime import datetime
 from typing import override
 
 from oralb_ble import OralBSensor, SensorUpdate
@@ -22,9 +23,10 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+from homeassistant.util import dt as dt_util
 
 from . import OralBConfigEntry
 from .device import device_key_to_bluetooth_entity_key
@@ -33,7 +35,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     OralBSensor.TIME: SensorEntityDescription(
         key=OralBSensor.TIME,
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
@@ -143,6 +145,34 @@ class OralBBluetoothSensorEntity(
     SensorEntity,
 ):
     """Representation of a OralB sensor."""
+
+    _previous_native_value: int | None = None
+    _attr_last_reset: datetime | None = None
+
+    @callback
+    @override
+    def _handle_processor_update(
+        self,
+        new_data: PassiveBluetoothDataUpdate | None,
+    ) -> None:
+        """Handle updated data from the processor.
+
+        The brushing duration is a per-session counter that restarts at the
+        start of each session. For its ``TOTAL`` statistic we mark the session
+        boundary by setting ``last_reset`` whenever the counter decreases, so
+        the lifetime sum keeps accumulating even when the reset-to-zero frame
+        is missed between advertisements.
+        """
+        if self.entity_description.state_class is SensorStateClass.TOTAL:
+            value = self.processor.entity_data.get(self.entity_key)
+            if isinstance(value, int):
+                if (
+                    self._previous_native_value is not None
+                    and value < self._previous_native_value
+                ):
+                    self._attr_last_reset = dt_util.utcnow()
+                self._previous_native_value = value
+        super()._handle_processor_update(new_data)
 
     @property
     @override
