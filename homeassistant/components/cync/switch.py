@@ -25,6 +25,13 @@ async def async_setup_entry(
     entities_to_add = []
 
     for home in cync.get_homes():
+        global_plugs = [
+            CyncSwitchEntity(device, coordinator)
+            for device in home.global_devices
+            if isinstance(device, CyncPlug)
+        ]
+        entities_to_add.extend(global_plugs)
+
         for room in home.rooms:
             room_plugs = [
                 CyncSwitchEntity(device, coordinator, room.name)

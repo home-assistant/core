@@ -86,5 +86,20 @@
       "devices": []
     }
   ],
-  "global_devices": []
+  "global_devices": [
+    {
+      "name": "Porch Plug",
+      "is_online": true,
+      "wifi_connected": true,
+      "device_id": 1301,
+      "mesh_device_id": 10005,
+      "home_id": 1000,
+      "device_type_id": 64,
+      "device_type": "PLUG",
+      "mac_address": "AABBCC334455",
+      "product_id": "product456",
+      "authorize_code": "ijkl_code",
+      "is_on": true
+    }
+  ]
 }
