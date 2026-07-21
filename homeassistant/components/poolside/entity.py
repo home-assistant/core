@@ -16,27 +16,57 @@ from .const import (
     UNKNOWN_POWER_STATE,
     StatusState,
 )
-from .models import PoolsideControl
+from .models import PoolsideControl, PoolsideGroup
 
 
-class PoolsideEntity(Entity):
-    """Base class for entities backed by a single Poolside control."""
+class PoolsideGroupEntity(Entity):
+    """Base class for entities attached to a control group's device."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, client: PoolsideClient, control: PoolsideControl) -> None:
-        """Set up the entity for a given control."""
+    def __init__(self, client: PoolsideClient, group: PoolsideGroup) -> None:
+        """Set up the entity on the group's device."""
         self._client = client
-        self._control = control
-        self._attr_unique_id = f"{client.controller_uuid}_{control.uuid}"
-        group = control.group
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, group.uuid)},
             name=group.name,
             manufacturer="Poolside",
             model=group.body_of_water_type or group.kind,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the controller connection is up."""
+        return self._client.available
+
+    def _status_keys(self) -> set[str]:
+        """Return the status keys whose pushes should refresh this entity."""
+        return set()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to status pushes for this entity and connection changes."""
+        for key in self._status_keys():
+            self.async_on_remove(
+                self._client.subscribe_status(key, self.async_write_ha_state)
+            )
+        self.async_on_remove(
+            self._client.subscribe_connection(
+                lambda _connected: self.async_write_ha_state()
+            )
+        )
+
+
+class PoolsideEntity(PoolsideGroupEntity):
+    """Base class for entities backed by a single Poolside control."""
+
+    def __init__(self, client: PoolsideClient, control: PoolsideControl) -> None:
+        """Set up the entity for a given control."""
+        super().__init__(client, control.group)
+        self._control = control
+        self._attr_unique_id = f"{client.controller_uuid}_{control.uuid}"
         self._attr_name = control.name
 
     @property
@@ -44,7 +74,7 @@ class PoolsideEntity(Entity):
     def available(self) -> bool:
         """Return True if connected and the control isn't disabled or winterized."""
         return (
-            self._client.available
+            super().available
             and not self._control.winterized
             and self._power_state() != StatusState.DISABLED
         )
@@ -129,19 +159,10 @@ class PoolsideEntity(Entity):
             ) from err
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to status pushes for this control and connection changes."""
-        keys = {
+    def _status_keys(self) -> set[str]:
+        """Return every key this control's state may arrive under."""
+        return {
             self._control.status_key,
             self._control.uuid,
             *self._control.member_uuids,
         }
-        for key in keys:
-            self.async_on_remove(
-                self._client.subscribe_status(key, self.async_write_ha_state)
-            )
-        self.async_on_remove(
-            self._client.subscribe_connection(
-                lambda _connected: self.async_write_ha_state()
-            )
-        )

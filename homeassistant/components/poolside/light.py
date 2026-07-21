@@ -1,5 +1,6 @@
 """Light platform for Poolside LIGHT controls."""
 
+import json
 from typing import Any, override
 
 from homeassistant.components.light import (
@@ -15,10 +16,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import PoolsideConfigEntry
 from .client import PoolsideClient
 from .const import (
+    AVAILABLE_COLORS_FIELD,
+    AVAILABLE_SHOWS_FIELD,
     BRIGHTNESS_FIELD,
+    BRIGHTNESS_INCREMENTS_FIELD,
     DEFAULT_COLOR_FIELD,
     LIGHT_NAME_FIELD,
+    LOGGER,
     SPEED_FIELD,
+    SUPPORTS_BRIGHTNESS_FIELD,
     SUPPORTS_COLORS_FIELD,
     TWINKLE_FIELD,
     ControlType,
@@ -50,19 +56,22 @@ class PoolsideLight(PoolsideEntity, LightEntity):
     """A LIGHT control.
 
     There is no RGB here: colored lights are driven by `LightName`, an opaque
-    named color/light-show string from the site's installed palette, exposed
-    as an HA effect. The controller can't tell us the full palette over this
-    channel, only a `DefaultColor` - so the effect list is necessarily just
-    that seeded with whatever LightName we've observed being set, not a
-    complete catalog.
+    named color or light-show string, exposed as an HA effect. The full
+    catalog of choices is the union of two controller-pushed lists -
+    `AvailableShows` (multi-color patterns like "Party Mode") and
+    `AvailableColors` (static colors like "Blue") - since both are valid
+    values to write back as `LightName`.
+
+    Dimming is governed by two controller-pushed capabilities:
+    `SupportsBrightness` (false means the light is plain on/off, though it
+    may still take color selection) and `BrightnessIncrements`, the exact
+    Brightness percent levels the hardware accepts (e.g. only quarters) -
+    requested brightness is snapped to the nearest allowed level.
 
     Writes are full-state, not deltas: every write repeats Brightness, Speed,
     and Twinkle (and LightName, if colored), since any field left out is
     processed as 0 by the controller.
     """
-
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-    _attr_color_mode = ColorMode.BRIGHTNESS
 
     def __init__(self, client: PoolsideClient, control: PoolsideControl) -> None:
         """Set up the light, enabling the effect list if it supports color shows."""
@@ -71,6 +80,49 @@ class PoolsideLight(PoolsideEntity, LightEntity):
         self._default_color = control.capability(DEFAULT_COLOR_FIELD)
         if self._supports_color:
             self._attr_supported_features = LightEntityFeature.EFFECT
+
+    def _confirmed_json(self, field: str) -> Any:
+        """Return a confirmed status value that arrives JSON-encoded in a string.
+
+        Unlike most status values, the light capability fields arrive as JSON
+        documents encoded inside the string value (e.g. '["Party Mode"]' or
+        'false'), not as native JSON.
+        """
+        raw = self._confirmed(field)
+        if not isinstance(raw, str):
+            return None
+        try:
+            return json.loads(raw)
+        except ValueError:
+            LOGGER.warning("%s: unparsable %s: %r", self._control.name, field, raw)
+            return None
+
+    def _supports_brightness(self) -> bool:
+        """Return whether the light is dimmable, assuming yes until told otherwise."""
+        return self._confirmed_json(SUPPORTS_BRIGHTNESS_FIELD) is not False
+
+    def _brightness_increments(self) -> list[int]:
+        """Return the Brightness percent levels the hardware accepts, if constrained."""
+        value = self._confirmed_json(BRIGHTNESS_INCREMENTS_FIELD)
+        if not isinstance(value, list):
+            return []
+        return [level for level in value if isinstance(level, int) and 0 < level <= 100]
+
+    @property
+    @override
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Return brightness support, falling back to plain on/off."""
+        if self._supports_brightness():
+            return {ColorMode.BRIGHTNESS}
+        return {ColorMode.ONOFF}
+
+    @property
+    @override
+    def color_mode(self) -> ColorMode:
+        """Return the light's current color mode."""
+        if self._supports_brightness():
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     @property
     @override
@@ -85,21 +137,30 @@ class PoolsideLight(PoolsideEntity, LightEntity):
     @override
     def brightness(self) -> int | None:
         """Return the light's brightness, converted from the device's 0-100 scale."""
+        if not self._supports_brightness():
+            return None
         value = self._desired(BRIGHTNESS_FIELD)
         if value is None:
             return None
         return round(float(value) / 100 * 255)
 
+    def _catalog(self, field: str) -> set[str]:
+        """Return one of the controller's named-show/color catalog lists."""
+        value = self._confirmed_json(field)
+        if not isinstance(value, list):
+            return set()
+        return {item for item in value if isinstance(item, str)}
+
     @property
     @override
     def effect_list(self) -> list[str] | None:
-        """Return the known named colors/light shows for this light."""
+        """Return the controller's catalog of named shows and static colors."""
         if not self._supports_color:
             return None
-        effects = {self._default_color} if self._default_color else set()
-        if current := self._desired(LIGHT_NAME_FIELD):
-            effects.add(current)
-        return sorted(effects)
+        catalog = self._catalog(AVAILABLE_SHOWS_FIELD) | self._catalog(
+            AVAILABLE_COLORS_FIELD
+        )
+        return sorted(catalog) or None
 
     @property
     @override
@@ -119,7 +180,9 @@ class PoolsideLight(PoolsideEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, writing its complete state (brightness/speed/twinkle/color)."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
+        if not self._supports_brightness():
+            brightness_percent = 100
+        elif brightness is not None:
             brightness_percent = max(
                 _MIN_BRIGHTNESS_PERCENT, round(brightness / 255 * 100)
             )
@@ -128,6 +191,10 @@ class PoolsideLight(PoolsideEntity, LightEntity):
                 max(_MIN_BRIGHTNESS_PERCENT, round(self.brightness / 255 * 100))
                 if self.brightness
                 else 100
+            )
+        if increments := self._brightness_increments():
+            brightness_percent = min(
+                increments, key=lambda level: abs(level - brightness_percent)
             )
 
         fields: dict[str, Any] = {

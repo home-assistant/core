@@ -25,7 +25,13 @@ from .const import (
 )
 from .models import PoolsideControl
 
-PLATFORMS = [Platform.CLIMATE, Platform.FAN, Platform.LIGHT, Platform.SWITCH]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 @dataclass

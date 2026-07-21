@@ -139,3 +139,14 @@ BRIGHTNESS_FIELD = "Brightness"
 LIGHT_NAME_FIELD = "LightName"
 SPEED_FIELD = "Speed"
 TWINKLE_FIELD = "Twinkle"
+
+# LIGHT control capabilities pushed by Device.setStatus keyed by the
+# control's own UUID, each as a JSON document encoded inside the string
+# value rather than as native JSON: the full catalog of named light shows
+# and static colors it can be set to via LightName, whether it is dimmable
+# at all, and which Brightness percent levels it accepts (empty when not
+# dimmable or unconstrained).
+AVAILABLE_SHOWS_FIELD = "AvailableShows"
+AVAILABLE_COLORS_FIELD = "AvailableColors"
+SUPPORTS_BRIGHTNESS_FIELD = "SupportsBrightness"
+BRIGHTNESS_INCREMENTS_FIELD = "BrightnessIncrements"
