@@ -111,7 +111,7 @@ async def test_setup_registers_hub_device(
         ),
         patch(
             "homeassistant.components.habitron.communicate.get_host_ip",
-            return_value=MOCK_HOST,
+            new=AsyncMock(return_value=MOCK_HOST),
         ),
         patch(
             "homeassistant.components.habitron.smart_hub.async_build_system",

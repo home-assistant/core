@@ -157,11 +157,14 @@ class HbtnComm:
         """
         if not self._host:
             if self._host_conf == "local":
+                # get_own_ip is a plain blocking socket call, so it runs in the
+                # executor. get_host_ip resolves the name itself with async DNS,
+                # so it must be awaited directly -- handing it to the executor
+                # would only build the coroutine and assign that, unrun, to
+                # self._host.
                 self._host = await self._hass.async_add_executor_job(get_own_ip)
             else:
-                self._host = await self._hass.async_add_executor_job(
-                    get_host_ip, self._host_conf
-                )
+                self._host = await get_host_ip(self._host_conf)
         self._network_ip = await network.async_get_source_ip(
             self._hass, target_ip=self._host
         )

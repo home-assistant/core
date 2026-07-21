@@ -71,7 +71,7 @@ def mock_habitron_client() -> Generator[MagicMock]:
         ),
         patch(
             "homeassistant.components.habitron.communicate.get_host_ip",
-            return_value=MOCK_HOST,
+            new=AsyncMock(return_value=MOCK_HOST),
         ),
         patch(
             "homeassistant.components.habitron.communicate.HabitronClient",
