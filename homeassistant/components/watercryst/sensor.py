@@ -80,7 +80,7 @@ STATE_SENSORS = [
     ),
 ]
 
-LEAKAGE_PROTECTION = [
+LEAKAGE_PROTECTION_SENSORS = [
     SensorEntityDescription(
         key="water_protection.pause_leakage_protection_until_utc",
         translation_key="pause_leakage_protection_until_utc",
@@ -121,6 +121,11 @@ async def async_setup_entry(
         WatercrystEventSensorEntity(config_entry, description)
         for description in EVENT_SENSORS
     )
+    if config_entry.runtime_data.has_leakage_protection_system:
+        async_add_entities(
+            WatercrystStateSensorEntity(config_entry, description)
+            for description in LEAKAGE_PROTECTION_SENSORS
+        )
 
 
 class WatercrystSensorEntity[_T: DataUpdateCoordinator[Any]](
