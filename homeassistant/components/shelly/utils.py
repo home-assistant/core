@@ -523,8 +523,7 @@ def update_device_fw_info(
 
     dev_reg = dr.async_get(hass)
     if device := (
-        dev_reg.async_get_device_by_identifier((DOMAIN, entry.entry_id), entry.entry_id)
-        or dev_reg.async_get_device_by_connection(
+        dev_reg.async_get_device_by_connection(
             (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
         )
     ):
