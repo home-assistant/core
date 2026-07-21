@@ -69,18 +69,20 @@ async def async_setup_entry(
         MonzoSensor(
             coordinator,
             entity_description,
-            index,
+            account_id,
             account["name"],
             lambda x: x.accounts,
         )
         for entity_description in ACCOUNT_SENSORS
-        for index, account in enumerate(coordinator.data.accounts)
+        for account_id, account in coordinator.data.accounts.items()
     ]
 
     pots = [
-        MonzoSensor(coordinator, entity_description, index, MODEL_POT, lambda x: x.pots)
+        MonzoSensor(
+            coordinator, entity_description, pot_id, MODEL_POT, lambda x: x.pots
+        )
         for entity_description in POT_SENSORS
-        for index, _pot in enumerate(coordinator.data.pots)
+        for pot_id in coordinator.data.pots
     ]
 
     async_add_entities(accounts + pots)
@@ -95,14 +97,14 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         self,
         coordinator: MonzoCoordinator,
         entity_description: MonzoSensorEntityDescription,
-        index: int,
+        resource_id: str,
         device_model: str,
-        data_accessor: Callable[[MonzoData], list[dict[str, Any]]],
+        data_accessor: Callable[[MonzoData], dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, index, device_model, data_accessor)
+        super().__init__(coordinator, resource_id, device_model, data_accessor)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{self.data['id']}_{entity_description.key}"
+        self._attr_unique_id = f"{resource_id}_{entity_description.key}"
 
     @property
     @override

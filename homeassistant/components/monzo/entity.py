@@ -1,7 +1,7 @@
 """Base entity for Monzo."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,13 +19,13 @@ class MonzoBaseEntity(CoordinatorEntity[MonzoCoordinator]):
     def __init__(
         self,
         coordinator: MonzoCoordinator,
-        index: int,
+        resource_id: str,
         device_model: str,
-        data_accessor: Callable[[MonzoData], list[dict[str, Any]]],
+        data_accessor: Callable[[MonzoData], dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
-        self.index = index
+        self._resource_id = resource_id
         self._data_accessor = data_accessor
 
         self._attr_device_info = DeviceInfo(
@@ -39,4 +39,12 @@ class MonzoBaseEntity(CoordinatorEntity[MonzoCoordinator]):
     @property
     def data(self) -> dict[str, Any]:
         """Shortcut to access coordinator data for the entity."""
-        return self._data_accessor(self.coordinator.data)[self.index]
+        return self._data_accessor(self.coordinator.data)[self._resource_id]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return super().available and self._resource_id in self._data_accessor(
+            self.coordinator.data
+        )
