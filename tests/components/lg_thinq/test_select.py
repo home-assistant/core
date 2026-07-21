@@ -20,11 +20,7 @@ async def test_washtower_dryer_operation_select(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a WashTower dryer gets an operation select entity.
-
-    The WashTower dryer profile exposes a writable dryerOperationMode,
-    so an operation select must be created for it.
-    """
+    """Test that a WashTower dryer gets an operation select entity."""
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 
