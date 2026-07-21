@@ -22,7 +22,7 @@
         "already_configured_device": "Device is already configured",
         "already_configured_location": "Location is already configured",
         "already_configured_service": "Service is already configured",
-        "already_in_progress": "Configuration flow is already in progress",
+        "already_in_progress": "Setup is already in progress. Finish the existing setup before starting again.",
         "cloud_not_connected": "Not connected to Home Assistant Cloud.",
         "no_compatible_radio_frequency_transmitters": "No radio frequency transmitter supports {frequency} {modulation} transmissions. Please add a compatible transmitter first.",
         "no_devices_found": "No devices found on the network",
