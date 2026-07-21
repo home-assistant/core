@@ -51,6 +51,7 @@ from .const import (
     CONF_TRANSITION,
     DATA_CUSTOM_EFFECTS_KEY,
     DATA_UPDATED,
+    DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
 )
@@ -605,9 +606,15 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Set the music mode on or off."""
         try:
             await self._async_set_music_mode(music_mode)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AssertionError as ex:
-            _LOGGER.error("Unable to turn on music mode, consider disabling it: %s", ex)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_music_mode_failed",
+                translation_placeholders={
+                    "name": self.device.name,
+                    "error": str(ex) or type(ex).__name__,
+                },
+            ) from ex
 
     @_async_cmd
     async def _async_set_music_mode(self, music_mode) -> None:
