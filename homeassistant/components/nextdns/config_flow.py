@@ -251,13 +251,13 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
                 subentry.unique_id == profile_id
                 for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PROFILE)
             ):
-                errors["base"] = "already_configured"
-            else:
-                return self.async_create_entry(
-                    title=self.nextdns.get_profile_name(profile_id),
-                    data={CONF_PROFILE_ID: profile_id},
-                    unique_id=profile_id,
-                )
+                return self.async_abort(reason="already_configured")
+
+            return self.async_create_entry(
+                title=self.nextdns.get_profile_name(profile_id),
+                data={CONF_PROFILE_ID: profile_id},
+                unique_id=profile_id,
+            )
 
         # Filter out already configured profiles
         configured_profiles = {

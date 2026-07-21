@@ -412,9 +412,9 @@ async def test_subentry_flow_already_configured(
         {CONF_PROFILE_ID: "abc34"},
     )
 
-    # The form should be shown again with an error, and only "Third Profile" available
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "already_configured"
+    # Abort flow when a profile is already configured between form display and submit
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_subentry_flow_all_profiles_configured(
