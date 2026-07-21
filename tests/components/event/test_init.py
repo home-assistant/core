@@ -429,10 +429,5 @@ async def test_doorbell_missing_ring_event_type(
     ],
 )
 def test_button_event_type_values(member: ButtonEventType, value: str) -> None:
-    """Guard the standard button event type strings (architecture#1377) against typos.
-
-    Consuming integrations import these members directly, so an accidental
-    rename here would silently break their event_types without any other
-    test catching it.
-    """
+    """Test the standard button event type values."""
     assert member == value
