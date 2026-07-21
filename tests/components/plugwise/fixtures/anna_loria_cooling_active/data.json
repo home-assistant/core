@@ -61,15 +61,18 @@
       "heating_state": false
     },
     "dev_class": "heater_central",
-    "dhw_modes": ["off", "auto", "boost", "eco", "comfort"],
+    "dhw_mode": "auto",
+    "dhw_modes": ["auto", "boost", "comfort", "eco", "off"],
     "location": "674b657c138a41a291d315d7471deb06",
     "max_dhw_temperature": {
+      "current": 52.9,
       "lower_bound": 35.0,
       "resolution": 0.01,
       "setpoint": 53.0,
       "upper_bound": 60.0
     },
     "maximum_boiler_temperature": {
+      "current": 25.3,
       "lower_bound": 25.0,
       "resolution": 0.01,
       "setpoint": 40.0,
@@ -78,7 +81,6 @@
     "model": "Generic heater/cooler",
     "model_id": "173",
     "name": "OpenTherm",
-    "select_dhw_mode": "auto",
     "sensors": {
       "dhw_temperature": 52.9,
       "intended_boiler_temperature": 0.0,
