@@ -222,16 +222,6 @@ async def test_room_iq_sensors(
     assert state.attributes["friendly_name"] == "Upstairs RoomIQ humidity"
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
 
-    # Verify RoomIQ sensor no longer present
-    entity = hass.data["sensor"].get_entity("sensor.upstairs_upstairs_roomiq_humidity")
-    assert entity is not None
-    entity._zone.get_sensor_by_id.side_effect = KeyError
-    entity.async_write_ha_state()
-
-    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
-    assert state is not None
-    assert state.state == "unavailable"
-
     state = hass.states.get("sensor.upstairs_upstairs_roomiq_battery")
     assert state is not None
     assert state.state == "93"
@@ -251,3 +241,23 @@ async def test_room_iq_sensors(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert patch_nexia_home.any_room_iq_monitors() is False
+
+
+async def test_room_iq_sensor_no_longer_present(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, entity_registry: EntityRegistry
+) -> None:
+    """Test RoomIQ sensor no longer present."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000004).get_zone_by_id(500)
+    zone.get_sensor_by_id.side_effect = KeyError
+
+    config_entry = await setup_integration(hass, patch_nexia_home)
+    entry = entity_registry.async_get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert entry is not None
+    assert entry.disabled_by is not None
+    entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "unavailable"
