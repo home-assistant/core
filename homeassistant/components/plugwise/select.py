@@ -105,23 +105,20 @@ async def async_setup_entry(
 
     @callback
     def _add_entities() -> None:
-        """Add Entities."""
+        """Add entities."""
         if not coordinator.new_devices:
             return
 
-        entities: list[PlugwiseSelectEntity] = []
-        for device_id in coordinator.new_devices:
-            device = coordinator.data[device_id]
-            for description in SELECT_TYPES:
-                if device.get(description.key):
-                    if (description.key not in ("dhw_mode", "select_dhw_mode")) or (
-                        len(device[description.options_key]) > 2
-                    ):
-                        entities.append(
-                            PlugwiseSelectEntity(coordinator, device_id, description)
-                        )
-
-        async_add_entities(entities)
+        async_add_entities(
+            PlugwiseSelectEntity(coordinator, device_id, description)
+            for device_id in coordinator.new_devices
+            for description in SELECT_TYPES
+            if (device := coordinator.data[device_id]).get(description.key)
+            and (
+                description.key not in (DHW_MODE, SELECT_DHW_MODE)
+                or len(device[description.options_key]) > 2
+            )
+        )
 
     _add_entities()
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
