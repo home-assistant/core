@@ -2494,6 +2494,48 @@ async def test_async_remove_device_fans_out_to_migration_composite(
     assert device_2.id not in device_registry.devices
 
 
+async def test_async_remove_device_detaches_child_of_composite(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Removing a composite detaches children linked to the composite id itself."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    child_entry = MockConfigEntry(domain="test")
+    child_entry.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+    # A child links to the composite id itself, not to either split
+    child = device_registry.async_get_or_create(
+        config_entry_id=child_entry.entry_id,
+        identifiers={("test", "child")},
+        via_device_id=old_id,
+    )
+    assert child.via_device_id == old_id
+
+    device_registry.async_remove_device(old_id)
+
+    # The splits are gone; the child survives with its dangling link detached
+    assert device_1.id not in device_registry.devices
+    assert device_2.id not in device_registry.devices
+    child = device_registry.async_get(child.id)
+    assert child is not None
+    assert child.via_device_id is None
+
+
 async def test_async_update_device_fans_out_to_migration_composite(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
