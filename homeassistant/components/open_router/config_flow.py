@@ -450,12 +450,18 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
                 SelectOptionDict(value=v, label=v)
                 for v in model_voices
             ]
+            default_voice = self.options.get(
+                CONF_TTS_VOICE, model_voices[0]
+            )
         else:
             voices = [
                 SelectOptionDict(value=v, label=v.title())
                 for v in ("alloy", "ash", "ballad", "coral", "echo", "fable",
                           "nova", "onyx", "sage", "shimmer", "verse", "marin", "cedar")
             ]
+            default_voice = self.options.get(
+                CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE
+            )
 
         return self.async_show_form(
             step_id="voice",
@@ -463,9 +469,7 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
                 {
                     vol.Required(
                         CONF_TTS_VOICE,
-                        default=self.options.get(
-                            CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE
-                        ),
+                        default=default_voice,
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=voices,
