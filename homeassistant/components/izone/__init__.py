@@ -152,12 +152,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     except pizone.ControllerCommandError as err:
         raise ConfigEntryError(f"iZone controller at {host} rejected setup") from err
 
+    entry.async_on_unload(controller.close)
+
     coordinator = IZoneCoordinator(hass, entry, controller)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except BaseException:
-        await controller.close()
-        raise
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

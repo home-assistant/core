@@ -392,13 +392,13 @@ async def test_setup_first_refresh_failure_closes_controller(
     mock_controller.close.assert_awaited()
 
 
-async def test_setup_platform_failure_propagates(
+async def test_setup_platform_failure_closes_controller(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
 ) -> None:
-    """A failure during platform forward leaves setup in error."""
+    """A failure during platform forward still releases the controller claim."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -408,7 +408,7 @@ async def test_setup_platform_failure_propagates(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_controller.close.assert_not_awaited()
+    mock_controller.close.assert_awaited()
 
 
 async def test_setup_cancelled_closes_controller(
