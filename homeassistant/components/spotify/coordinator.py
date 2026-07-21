@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-009"  # Increment for each deployment
+BUILD_ID = "20260721-010"  # Increment for each deployment
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
@@ -106,9 +106,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 BUILD_ID,
                 self.config_entry.title,
             )
-            self.hass.async_create_task(
-                self.config_entry.async_start_reauth(self.hass)
-            )
+            self.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
@@ -140,9 +138,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 BUILD_ID,
                 self.config_entry.title,
             )
-            self.hass.async_create_task(
-                self.config_entry.async_start_reauth(self.hass)
-            )
+            self.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
@@ -239,9 +235,7 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
                 BUILD_ID,
                 self.config_entry.title,
             )
-            self.hass.async_create_task(
-                self.config_entry.async_start_reauth(self.hass)
-            )
+            self.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
