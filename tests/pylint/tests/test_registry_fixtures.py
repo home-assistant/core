@@ -3,26 +3,56 @@
 from pathlib import Path
 
 import astroid
-from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
+from astroid import nodes
+from pylint.testutils import MessageTest, UnittestLinter
 from pylint_home_assistant.checkers.tests.registry_fixtures import (
     RegistryFixturesChecker,
 )
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
+
+
+@pytest.fixture(name="registry_fixtures_checker")
+def registry_fixtures_checker_fixture(
+    linter: UnittestLinter,
+) -> RegistryFixturesChecker:
+    """Fixture to provide a registry fixtures checker."""
+    return RegistryFixturesChecker(linter)
+
+
+def _find_async_get_call(root_node: nodes.Module) -> nodes.Call:
+    """Find the first ``<alias>.async_get(...)`` call node."""
+    for call in root_node.nodes_of_class(nodes.Call):
+        func = call.func
+        if isinstance(func, nodes.Attribute) and func.attrname == "async_get":
+            return call
+    raise AssertionError("no async_get call found")
+
+
+def _expect_registry_fixture(node: nodes.Call, helper: str) -> MessageTest:
+    """Build the expected MessageTest for a registry fixture violation."""
+    return MessageTest(
+        msg_id="home-assistant-tests-registry-fixtures",
+        node=node,
+        args=(helper, helper),
+        line=node.lineno,
+        col_offset=node.col_offset,
+        end_line=node.end_lineno,
+        end_col_offset=node.end_col_offset,
+    )
 
 
 @pytest.mark.parametrize(
-    ("helper", "alias", "fixture_name"),
+    ("helper", "alias"),
     [
-        ("area_registry", "ar", "area_registry"),
-        ("category_registry", "cr", "category_registry"),
-        ("device_registry", "dr", "device_registry"),
-        ("entity_registry", "er", "entity_registry"),
-        ("floor_registry", "fr", "floor_registry"),
-        ("issue_registry", "ir", "issue_registry"),
-        ("label_registry", "lr", "label_registry"),
+        ("area_registry", "ar"),
+        ("category_registry", "cr"),
+        ("device_registry", "dr"),
+        ("entity_registry", "er"),
+        ("floor_registry", "fr"),
+        ("issue_registry", "ir"),
+        ("label_registry", "lr"),
     ],
 )
 def test_aliased_import_in_test_function_flagged(
@@ -30,7 +60,6 @@ def test_aliased_import_in_test_function_flagged(
     registry_fixtures_checker: RegistryFixturesChecker,
     helper: str,
     alias: str,
-    fixture_name: str,
 ) -> None:
     """Aliased registry import called inside a test function is flagged."""
     root_node = astroid.parse(
@@ -43,38 +72,44 @@ async def test_something(hass) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registry_fixtures_checker)
-    walker.walk(root_node)
+    call_node = _find_async_get_call(root_node)
 
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert messages[0].msg_id == "home-assistant-tests-registry-fixtures"
-    assert messages[0].args == (fixture_name, helper)
+    with assert_adds_messages(linter, _expect_registry_fixture(call_node, helper)):
+        walk_checker(linter, registry_fixtures_checker, root_node)
 
 
+@pytest.mark.parametrize(
+    "helper",
+    [
+        "area_registry",
+        "category_registry",
+        "device_registry",
+        "entity_registry",
+        "floor_registry",
+        "issue_registry",
+        "label_registry",
+    ],
+)
 def test_non_aliased_import_in_test_function_flagged(
     linter: UnittestLinter,
     registry_fixtures_checker: RegistryFixturesChecker,
+    helper: str,
 ) -> None:
     """Non-aliased registry import called inside a test is flagged."""
     root_node = astroid.parse(
-        """
-from homeassistant.helpers import entity_registry
+        f"""
+from homeassistant.helpers import {helper}
 
 
 async def test_something(hass) -> None:
-    registry = entity_registry.async_get(hass)
+    registry = {helper}.async_get(hass)
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registry_fixtures_checker)
-    walker.walk(root_node)
+    call_node = _find_async_get_call(root_node)
 
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert messages[0].args == ("entity_registry", "entity_registry")
+    with assert_adds_messages(linter, _expect_registry_fixture(call_node, helper)):
+        walk_checker(linter, registry_fixtures_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -104,13 +139,12 @@ def my_helper(hass):
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(registry_fixtures_checker)
-    walker.walk(root_node)
+    call_node = _find_async_get_call(root_node)
 
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert messages[0].args == ("device_registry", "device_registry")
+    with assert_adds_messages(
+        linter, _expect_registry_fixture(call_node, "device_registry")
+    ):
+        walk_checker(linter, registry_fixtures_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -201,11 +235,9 @@ def test_no_warning(
 ) -> None:
     """Cases that should not produce a warning."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(registry_fixtures_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, registry_fixtures_checker, root_node)
 
 
 def test_conftest_file_exempt(
@@ -231,8 +263,5 @@ def entity_registry(hass):
     )
     root_node.file = str(conftest_path)
 
-    walker = ASTWalker(linter)
-    walker.add_checker(registry_fixtures_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, registry_fixtures_checker, root_node)
