@@ -100,18 +100,23 @@ async def test_oauth_token_expiration_triggers_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that expired/revoked refresh token raises ConfigEntryAuthFailed."""
+    """Test that expired/revoked refresh token triggers reauth."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.spotify.OAuth2Session.async_ensure_token_valid",
-        side_effect=OAuth2TokenRequestReauthError(
-            request_info=MagicMock(), status=400, domain=DOMAIN
+    with (
+        patch(
+            "homeassistant.components.spotify.OAuth2Session.async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestReauthError(
+                request_info=MagicMock(), status=400, domain=DOMAIN
+            ),
         ),
+        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+    # Should have scheduled reauth via async_create_task
+    mock_reauth.assert_called_once_with(hass)
     # Setup should fail
     assert result is False
     # Should mark entry as failed

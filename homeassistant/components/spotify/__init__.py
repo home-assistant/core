@@ -35,7 +35,7 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-008"  # Increment for each deployment
+BUILD_ID = "20260721-009"  # Increment for each deployment
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -67,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
             BUILD_ID,
             entry.title,
         )
+        hass.async_create_task(entry.async_start_reauth(hass))
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="oauth2_token_reauth_required",
