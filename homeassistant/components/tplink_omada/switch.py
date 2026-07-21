@@ -56,7 +56,7 @@ async def async_setup_entry(
         omada_client = controller.omada_client
         switch = await omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
-        await coordinator.async_config_entry_first_refresh()
+        await coordinator.async_request_refresh()
 
         entities: list[Entity] = []
         entities.extend(
