@@ -307,7 +307,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:12:4b:00:14:4d:00:07-02-fdef-air_quality_ppb',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload0-expected0][sensor.bosch_air_quality_sensor_ppb-state]
@@ -315,7 +315,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BOSCH Air quality sensor PPB',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bosch_air_quality_sensor_ppb',
@@ -411,7 +411,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:12:4b:00:14:4d:00:07-02-fdef-air_quality_ppb',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload1-expected1][sensor.bosch_air_quality_sensor_ppb-state]
@@ -419,7 +419,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BOSCH Air quality sensor PPB',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bosch_air_quality_sensor_ppb',
@@ -519,7 +519,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0405-humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload11-expected11][sensor.mi_temperature_1-state]
@@ -529,7 +529,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mi temperature 1',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mi_temperature_1',
@@ -575,7 +575,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0405-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload11-expected11][sensor.mi_temperature_1_battery-state]
@@ -585,7 +585,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mi temperature 1 Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mi_temperature_1_battery',
@@ -634,7 +634,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a4:c1:38:fe:86:8f:07:a3-01-0408-moisture',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload12-expected12][sensor.soil_sensor-state]
@@ -643,7 +643,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soil Sensor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.soil_sensor',
@@ -689,7 +689,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a4:c1:38:fe:86:8f:07:a3-01-0408-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload12-expected12][sensor.soil_sensor_battery-state]
@@ -699,7 +699,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soil Sensor Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.soil_sensor_battery',
@@ -803,7 +803,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:17:88:01:03:28:8c:9b-02-0400-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload13-expected13][sensor.motion_sensor_4_battery-state]
@@ -815,7 +815,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion sensor 4 Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.motion_sensor_4_battery',
@@ -861,7 +861,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-042a-particulate_matter_pm2_5',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload14-expected14][sensor.starkvind_airpurifier_pm25-state]
@@ -870,7 +870,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STARKVIND AirPurifier PM25',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.starkvind_airpurifier_pm25',
@@ -1036,7 +1036,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0403-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload16-expected16][sensor.mi_temperature_1_battery-state]
@@ -1046,7 +1046,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mi temperature 1 Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mi_temperature_1_battery',
@@ -1151,7 +1151,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0402-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload17-expected17][sensor.mi_temperature_1_battery-state]
@@ -1161,7 +1161,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mi temperature 1 Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mi_temperature_1_battery',
@@ -1258,7 +1258,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'cc:cc:cc:ff:fe:38:4d:b3-01-000a-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload18-expected18][sensor.etrv_sejour_battery-state]
@@ -1268,7 +1268,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'eTRV Séjour Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.etrv_sejour_battery',
@@ -1314,7 +1314,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:b5:d1:80-01-0500-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload19-expected19][sensor.alarm_10_battery-state]
@@ -1325,7 +1325,7 @@
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'temperature': 26.0,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.alarm_10_battery',
@@ -1429,7 +1429,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_ch2o-state]
@@ -1438,7 +1438,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 CH2O',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -1484,7 +1484,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_co2-state]
@@ -1493,7 +1493,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 CO2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_co2',
@@ -1539,7 +1539,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_pm25-state]
@@ -1548,7 +1548,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 PM25',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -1594,7 +1594,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_ppb',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_ppb-state]
@@ -1602,7 +1602,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 PPB',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ppb',
@@ -1648,7 +1648,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:17:88:01:02:0e:32:a3-02-fc00-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload20-expected20][sensor.dimmer_switch_3_battery-state]
@@ -1659,7 +1659,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer switch 3 Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dimmer_switch_3_battery',
@@ -1763,7 +1763,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_ch2o-state]
@@ -1772,7 +1772,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 CH2O',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -1818,7 +1818,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_co2-state]
@@ -1827,7 +1827,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 CO2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_co2',
@@ -1873,7 +1873,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_pm25-state]
@@ -1882,7 +1882,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 PM25',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -1928,7 +1928,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_ppb',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_ppb-state]
@@ -1936,7 +1936,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 PPB',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ppb',
@@ -1982,7 +1982,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_ch2o-state]
@@ -1991,7 +1991,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 CH2O',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -2037,7 +2037,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_co2-state]
@@ -2046,7 +2046,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 CO2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_co2',
@@ -2092,7 +2092,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_pm25-state]
@@ -2101,7 +2101,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 PM25',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -2147,7 +2147,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_ppb',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_ppb-state]
@@ -2155,7 +2155,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirQuality 1 PPB',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ppb',
@@ -2201,7 +2201,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:0d:6f:ff:fe:01:23:45-01-0001-battery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload5-expected5][sensor.fyrtur_block_out_roller_blind_battery-state]
@@ -2211,7 +2211,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FYRTUR block-out roller blind Battery',
       'on': True,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fyrtur_block_out_roller_blind_battery',
@@ -2257,7 +2257,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-040d-carbon_dioxide',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload6-expected6][sensor.carbondioxide_35-state]
@@ -2266,7 +2266,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CarbonDioxide 35',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.carbondioxide_35',
@@ -2425,7 +2425,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-042b-formaldehyde',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload9-expected9][sensor.formaldehyde_34-state]
@@ -2434,7 +2434,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Formaldehyde 34',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.formaldehyde_34',

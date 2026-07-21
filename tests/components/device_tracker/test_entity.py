@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from typing import Any
 
+import attr
 import pytest
 
 from homeassistant.components.device_tracker import (
@@ -1609,6 +1610,96 @@ async def test_register_mac_ignored(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_scanner_entity_attaches_to_split_of_composite_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a scanner entity attaches to its config entry's split device."""
+    mac = TEST_MAC_ADDRESS
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    own_split = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={(TEST_DOMAIN, "own")},
+    )
+    other_split = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={("other", "x")},
+    )
+    # Simulate a migration split: both devices share the pre-migration composite id
+    device_registry.devices[own_split.id] = attr.evolve(
+        own_split, composite_device_id=old_id
+    )
+    device_registry.devices[other_split.id] = attr.evolve(
+        other_split, composite_device_id=old_id
+    )
+    # async_get_device now resolves the shared MAC to the synthesized composite
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry.devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # Attached to its own split, not the un-assignable composite id
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id == own_split.id
+
+
+async def test_scanner_entity_composite_device_without_own_split(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A composite with no split owned by the scanner's config entry attaches nothing.
+
+    The composite id is not a real device and can't be assigned to an entity, so with no
+    split to resolve to the entity is added without a device instead of raising.
+    """
+    mac = TEST_MAC_ADDRESS
+    other_entry_1 = MockConfigEntry(domain="other_1")
+    other_entry_1.add_to_hass(hass)
+    other_entry_2 = MockConfigEntry(domain="other_2")
+    other_entry_2.add_to_hass(hass)
+    old_id = "composite00000000000000000000000"
+    # Both splits belong to other config entries, none to the scanner's
+    for entry, identifier in ((other_entry_1, "one"), (other_entry_2, "two")):
+        split = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={("other", identifier)},
+        )
+        device_registry.devices[split.id] = attr.evolve(
+            split, composite_device_id=old_id
+        )
+    composite = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert composite is not None
+    assert composite.id == old_id
+    assert old_id not in device_registry.devices
+
+    scanner_entity = MockScannerEntity(mac_address=mac, unique_id=f"{mac}_scanner")
+    scanner_entity.entity_id = "device_tracker.composite_scanner"
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    # Added without a device rather than raising on the un-assignable composite id
+    entity_entry = entity_registry.async_get("device_tracker.composite_scanner")
+    assert entity_entry is not None
+    assert entity_entry.device_id is None
 
 
 async def test_connected_device_registered(

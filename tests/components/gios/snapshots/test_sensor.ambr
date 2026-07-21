@@ -107,7 +107,7 @@
     'supported_features': 0,
     'translation_key': 'c6h6',
     'unique_id': '123-c6h6',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_benzene-state]
@@ -116,7 +116,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Benzene',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_benzene',
@@ -165,7 +165,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-co',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_carbon_monoxide-state]
@@ -175,7 +175,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Carbon monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -224,7 +224,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-no2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_nitrogen_dioxide-state]
@@ -234,7 +234,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
@@ -352,7 +352,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-no',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_nitrogen_monoxide-state]
@@ -362,7 +362,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_monoxide',
@@ -411,7 +411,7 @@
     'supported_features': 0,
     'translation_key': 'nox',
     'unique_id': '123-nox',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_nitrogen_oxides-state]
@@ -420,7 +420,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen oxides',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_oxides',
@@ -469,7 +469,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-o3',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_ozone-state]
@@ -479,7 +479,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ozone',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Ozone',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
@@ -597,7 +597,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-pm10',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_pm10-state]
@@ -607,7 +607,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -725,7 +725,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-pm25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_pm2_5-state]
@@ -735,7 +735,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -853,7 +853,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-so2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.home_sulphur_dioxide-state]
@@ -863,7 +863,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sulphur_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Sulphur dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',

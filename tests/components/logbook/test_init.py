@@ -42,6 +42,7 @@ from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -345,6 +346,7 @@ def create_state_changed_event_from_old_new(
         state=new_state and new_state.get("state"),
         entity_id=entity_id,
         icon=None,
+        attributes=None,
         context_only=False,
         data=None,
         context=None,
@@ -1858,6 +1860,46 @@ async def test_icon_and_state(
 
 
 @pytest.mark.usefixtures("recorder_mock")
+async def test_state_attributes_in_logbook(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test state attributes are exposed in the logbook like the history.
+
+    The recorded subset is surfaced, so attributes the recorder excludes
+    (such as supported_features) must not appear.
+    """
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    hass.states.async_set("event.doorbell", STATE_UNKNOWN, {"event_type": None})
+    hass.states.async_set(
+        "event.doorbell",
+        "2024-01-01T00:00:00.000+00:00",
+        {"event_type": "ring", "supported_features": 1},
+    )
+    hass.states.async_set(
+        "event.doorbell", "2024-01-01T00:01:00.000+00:00", {"event_type": "motion"}
+    )
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+    response_json = await _async_fetch_logbook(client)
+
+    entries = [e for e in response_json if e.get("entity_id") == "event.doorbell"]
+    assert len(entries) == 2
+    assert entries[0]["attributes"] == {"event_type": "ring"}
+    assert entries[1]["attributes"] == {"event_type": "motion"}
+
+
+@pytest.mark.usefixtures("recorder_mock")
 async def test_fire_logbook_entries(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -3335,6 +3377,7 @@ async def test_parent_user_attribution_does_not_use_origin_event_fallback(
         state=STATE_ON,
         entity_id="switch.heater",
         icon=None,
+        attributes=None,
         context_only=False,
         data={},
         context=child_context,

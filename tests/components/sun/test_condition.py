@@ -1,6 +1,6 @@
 """The tests for sun conditions."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from freezegun import freeze_time
 import pytest
@@ -11,6 +11,7 @@ from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import trace
 from homeassistant.helpers.condition import async_validate_condition_config
+from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -83,16 +84,6 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
         hass_ws_client, automation_id
     )
     assert condition_trace["result"] == expected
-
-
-async def assert_automation_condition_trace_error(
-    hass_ws_client, automation_id, expected
-):
-    """Test the error of automation condition."""
-    condition_trace = await _get_automation_condition_trace(
-        hass_ws_client, automation_id
-    )
-    assert condition_trace["error"] == expected
 
 
 async def test_if_action_before_sunrise_no_offset(
@@ -1299,10 +1290,9 @@ async def test_if_action_no_sun_event_in_polar_regions(
     """Test a sun condition where the requested event never occurs.
 
     During midnight sun and polar night the sun neither rises nor sets, so
-    ``get_astral_event_date`` returns None for both events. This documents the
-    legacy condition crashing on the missing event (it passes None to
-    ``dt_util.as_local``); the crash fix and the matching "no sunrise/sunset
-    today" results are a follow-up.
+    ``get_astral_event_date`` returns None for the requested event. The
+    condition cannot be satisfied and reports "no sunrise today" / "no sunset
+    today" instead of raising.
     """
     latitude, longitude, time_zone = location
     await hass.config.async_set_time_zone(time_zone)
@@ -1328,10 +1318,10 @@ async def test_if_action_no_sun_event_in_polar_regions(
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(service_calls) == 0
-    await assert_automation_condition_trace_error(
+    await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        "'NoneType' object has no attribute 'tzinfo'",
+        {"result": False, "message": f"no {event} today"},
     )
 
 
@@ -1468,6 +1458,45 @@ async def test_sun_state_condition_takes_no_options(
         await async_validate_condition_config(
             hass, {"condition": condition_key, "options": {"unknown": True}}
         )
+
+
+async def test_is_set_agrees_with_sunset_trigger_time(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test is_set flips at the exact calculated sunset time."""
+    latitude, longitude, time_zone = _SAN_DIEGO
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+
+    ref = datetime(2015, 9, 15, 12, tzinfo=dt_util.UTC)
+    with freeze_time(ref):
+        sunset = get_astral_event_next(hass, SUN_EVENT_SUNSET, ref)
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": "sun.is_set"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # One second before sunset: is_set should be false
+    with freeze_time(sunset - timedelta(seconds=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # One second after sunset: is_set should be true
+    with freeze_time(sunset + timedelta(seconds=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(service_calls) == 1
 
 
 @pytest.mark.parametrize(
