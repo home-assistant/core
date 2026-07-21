@@ -140,7 +140,7 @@ async def test_form_raise_error(
 
 
 async def test_form_device_offline(
-    hass: HomeAssistant, mock_api_client: AsyncMock
+    hass: HomeAssistant, mock_api_client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test with an offline device."""
 
@@ -165,9 +165,30 @@ async def test_form_device_offline(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "device_offline"}
 
+    mock_api_client.get_state.return_value.online = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "2025001395300149",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Schulungsgerät"
+    assert result["data"] == {
+        CONF_BSN: "2025001395300149",
+        CONF_API_KEY: "<api-key>",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.usefixtures("mock_api_client")
-async def test_form_wrong_device_serial(hass: HomeAssistant) -> None:
+async def test_form_wrong_device_serial(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test with an incorrect device serial."""
 
     result = await hass.config_entries.flow.async_init(
@@ -188,3 +209,20 @@ async def test_form_wrong_device_serial(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "wrong_device_serial"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "2025001395300149",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Schulungsgerät"
+    assert result["data"] == {
+        CONF_BSN: "2025001395300149",
+        CONF_API_KEY: "<api-key>",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

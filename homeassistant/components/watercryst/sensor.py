@@ -75,9 +75,6 @@ STATE_SENSORS = [
     SensorEntityDescription(
         key="mode.id", translation_key="mode_id", icon="mdi:circle-double"
     ),
-    SensorEntityDescription(
-        key="ml_state", translation_key="ml_state", icon="mdi:pipe-leak"
-    ),
 ]
 
 LEAKAGE_PROTECTION_SENSORS = [
@@ -86,6 +83,9 @@ LEAKAGE_PROTECTION_SENSORS = [
         translation_key="pause_leakage_protection_until_utc",
         icon="mdi:pause-circle-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="ml_state", translation_key="ml_state", icon="mdi:pipe-leak"
     ),
 ]
 
@@ -199,4 +199,6 @@ class WatercrystEventSensorEntity(WatercrystStateSensorEntity):
         """Provide all event properties as extra state attributes."""
         if not self.coordinator.data:
             return None
-        return self.coordinator.data.event.model_dump()
+        if not self.coordinator.data.event:
+            return None
+        return self.coordinator.data.event.model_dump(by_alias=False)
