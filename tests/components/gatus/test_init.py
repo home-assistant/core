@@ -57,8 +57,16 @@ async def test_remove_stale_device_runtime(
     await setup_integration(hass, mock_config_entry)
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(
-        identifiers={("gatus", f"{mock_config_entry.entry_id}_backend_service")}
+    device = next(
+        (
+            dev
+            for dev in dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            )
+            if ("gatus", f"{mock_config_entry.entry_id}_backend_service")
+            in dev.identifiers
+        ),
+        None,
     )
     assert device is not None
 
@@ -67,8 +75,16 @@ async def test_remove_stale_device_runtime(
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
 
-    device = device_registry.async_get_device(
-        identifiers={("gatus", f"{mock_config_entry.entry_id}_backend_service")}
+    device = next(
+        (
+            dev
+            for dev in dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            )
+            if ("gatus", f"{mock_config_entry.entry_id}_backend_service")
+            in dev.identifiers
+        ),
+        None,
     )
     assert device is None
 
@@ -93,7 +109,15 @@ async def test_remove_stale_device_on_startup(
 
     assert device_registry.async_get(stale_device.id) is None
 
-    active_device = device_registry.async_get_device(
-        identifiers={("gatus", f"{mock_config_entry.entry_id}_backend_service")}
+    active_device = next(
+        (
+            dev
+            for dev in dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            )
+            if ("gatus", f"{mock_config_entry.entry_id}_backend_service")
+            in dev.identifiers
+        ),
+        None,
     )
     assert active_device is not None

@@ -61,11 +61,15 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
         stale_keys = self._known_endpoint_keys - current_keys
         if stale_keys:
             device_registry = dr.async_get(self.hass)
-            for key in stale_keys:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{self._entry_id}_{key}")}
-                )
-                if device is not None:
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self._entry_id
+            ):
+                if any(
+                    identifier[0] == DOMAIN
+                    and identifier[1].startswith(f"{self._entry_id}_")
+                    and identifier[1].removeprefix(f"{self._entry_id}_") in stale_keys
+                    for identifier in device.identifiers
+                ):
                     device_registry.async_update_device(
                         device.id,
                         remove_config_entry_id=self._entry_id,
