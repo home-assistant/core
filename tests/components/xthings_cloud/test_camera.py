@@ -9,8 +9,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
 
-from homeassistant.components.camera import WebRTCAnswer, WebRTCError, async_get_image
-from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera import (
+    WebRTCAnswer,
+    WebRTCError,
+    async_get_image,
+    get_camera_from_entity_id,
+)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
