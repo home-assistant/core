@@ -68,6 +68,71 @@ async def test_state_update(
     assert hass.states.get("sensor.theater_ac_office_granit_temperature").state == "20"
 
 
+@pytest.mark.parametrize("device_fixture", ["da_wm_wm_01011"])
+async def test_appliance_values_clear_on_idle_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale appliance values clear when the machine becomes idle."""
+    await setup_integration(hass, mock_config_entry)
+
+    completion_time = "sensor.machine_a_laver_completion_time"
+    remaining_time = "sensor.machine_a_laver_washer_remaining_time"
+    progress = "sensor.machine_a_laver_washing_progress"
+    assert hass.states.get(completion_time).state == "2025-04-25T10:34:12+00:00"
+    assert hass.states.get(remaining_time).state == "100"
+    assert hass.states.get(progress).state == "40"
+
+    await trigger_update(
+        hass,
+        devices,
+        "b854ca5f-dc54-140d-6349-758b4d973c41",
+        Capability.WASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "stop",
+    )
+
+    assert hass.states.get(completion_time).state == STATE_UNKNOWN
+    assert hass.states.get(remaining_time).state == "0"
+    assert hass.states.get(progress).state == "0"
+
+    await trigger_update(
+        hass,
+        devices,
+        "b854ca5f-dc54-140d-6349-758b4d973c41",
+        Capability.WASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        None,
+    )
+    await trigger_update(
+        hass,
+        devices,
+        "b854ca5f-dc54-140d-6349-758b4d973c41",
+        Capability.WASHER_OPERATING_STATE,
+        Attribute.WASHER_JOB_STATE,
+        "none",
+    )
+
+    assert hass.states.get(completion_time).state == STATE_UNKNOWN
+    assert hass.states.get(remaining_time).state == "0"
+    assert hass.states.get(progress).state == "0"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_wd_01011"])
+async def test_idle_appliance_values(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale appliance values are cleared during setup while idle."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.trockner_completion_time").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.trockner_dryer_remaining_time").state == "0"
+    assert hass.states.get("sensor.trockner_drying_progress").state == "0"
+
+
 @pytest.mark.parametrize(
     (
         "device_fixture",

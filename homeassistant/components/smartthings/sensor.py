@@ -203,10 +203,33 @@ DRYER_CYCLES = [
 
 APPLIANCE_IDLE_OPERATING_STATES = {"ready", "stop"}
 APPLIANCE_IDLE_JOB_STATES = {"finish", "finished", "none"}
+APPLIANCE_IDLE_VALUE_ATTRIBUTES = {
+    Attribute.COMPLETION_TIME,
+    Attribute.PROGRESS,
+    Attribute.REMAINING_TIME,
+}
+APPLIANCE_IDLE_STATE_ATTRIBUTES = {
+    Capability.WASHER_OPERATING_STATE: (
+        Attribute.MACHINE_STATE,
+        Attribute.WASHER_JOB_STATE,
+    ),
+    Capability.DRYER_OPERATING_STATE: (
+        Attribute.MACHINE_STATE,
+        Attribute.DRYER_JOB_STATE,
+    ),
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: (
+        Attribute.OPERATING_STATE,
+        Attribute.WASHER_JOB_STATE,
+    ),
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: (
+        Attribute.OPERATING_STATE,
+        Attribute.DRYER_JOB_STATE,
+    ),
+}
 SAMSUNG_CE_IDLE_VALUE_ATTRIBUTES = {Attribute.PROGRESS, Attribute.REMAINING_TIME}
-SAMSUNG_CE_IDLE_JOB_ATTRIBUTES = {
-    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: Attribute.WASHER_JOB_STATE,
-    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: Attribute.DRYER_JOB_STATE,
+SAMSUNG_CE_APPLIANCE_STATE_CAPABILITIES = {
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: Capability.WASHER_OPERATING_STATE,
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: Capability.DRYER_OPERATING_STATE,
 }
 
 
@@ -1575,6 +1598,18 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     ) -> None:
         """Init the class."""
         capabilities_to_subscribe = {capability}
+        self._idle_state_capability = capability
+        if (
+            attribute in SAMSUNG_CE_IDLE_VALUE_ATTRIBUTES
+            and (
+                idle_state_capability := SAMSUNG_CE_APPLIANCE_STATE_CAPABILITIES.get(
+                    capability
+                )
+            )
+            and idle_state_capability in device.status[component]
+        ):
+            capabilities_to_subscribe.add(idle_state_capability)
+            self._idle_state_capability = idle_state_capability
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
         super().__init__(client, device, capabilities_to_subscribe, component=component)
@@ -1605,9 +1640,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         value = self.entity_description.value_fn(res)
         if (
             value is not None
-            and self._attribute in SAMSUNG_CE_IDLE_VALUE_ATTRIBUTES
-            and self._is_idle_samsung_ce_appliance()
+            and self._attribute in APPLIANCE_IDLE_VALUE_ATTRIBUTES
+            and self._is_idle_appliance()
         ):
+            if self._attribute == Attribute.COMPLETION_TIME:
+                return None
             value = 0
         if self.entity_description.presentation_fn:
             value = self.entity_description.presentation_fn(
@@ -1615,25 +1652,29 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             )
         return value
 
-    def _is_idle_samsung_ce_appliance(self) -> bool:
-        """Return if a Samsung CE appliance value is stale while idle."""
+    def _is_idle_appliance(self) -> bool:
+        """Return if an appliance value is stale while idle."""
         if (
-            job_state_attribute := SAMSUNG_CE_IDLE_JOB_ATTRIBUTES.get(
-                self.capability
+            state_attributes := APPLIANCE_IDLE_STATE_ATTRIBUTES.get(
+                self._idle_state_capability
             )
         ) is None:
             return False
 
-        operating_state = self.get_attribute_value(
-            self.capability, Attribute.OPERATING_STATE
-        )
-        if operating_state is not None:
-            return str(operating_state).lower() in APPLIANCE_IDLE_OPERATING_STATES
+        capability_status = self._internal_state.get(self._idle_state_capability)
+        if capability_status is None:
+            return False
 
-        job_state = self.get_attribute_value(self.capability, job_state_attribute)
+        state_attribute, job_state_attribute = state_attributes
+        if (
+            state_status := capability_status.get(state_attribute)
+        ) is not None and state_status.value is not None:
+            return str(state_status.value).lower() in APPLIANCE_IDLE_OPERATING_STATES
+
         return (
-            str(job_state).lower() in APPLIANCE_IDLE_JOB_STATES
-            if job_state is not None
+            str(job_status.value).lower() in APPLIANCE_IDLE_JOB_STATES
+            if (job_status := capability_status.get(job_state_attribute)) is not None
+            and job_status.value is not None
             else False
         )
 
