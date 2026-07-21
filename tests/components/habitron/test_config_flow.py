@@ -201,6 +201,44 @@ async def test_ssdp_discovery_serial_fallback(
     assert entry.unique_id == MOCK_SERIAL
 
 
+async def test_ssdp_keeps_stable_id_when_discovery_yields_only_host_fallback(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A stable id is preserved when this discovery produces only the fallback.
+
+    With no UDN/serial this run, ``unique_id`` is ``habitron_<host>``.
+    Overwriting an existing stable id with it would leave the entry unmatched
+    after a DHCP change, offering the same hub as a duplicate.
+    """
+    stable_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_CONFIG_DATA, KEY_HOST: MOCK_HOST},
+    )
+    stable_entry.add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn="dummy::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={},  # no UDN, no serial -> unique_id falls back to habitron_<host>
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The stable serial id must be kept, not downgraded to the host fallback.
+    assert stable_entry.unique_id == MOCK_SERIAL
+
+
 async def test_ssdp_legacy_unique_id_migrated(
     hass: HomeAssistant,
     setup_homeassistant: None,

@@ -140,27 +140,29 @@ async def async_setup_entry(  # noqa: C901
 
     # --- Module Iteration ---
     for hbt_module in hbtn_rt.modules:
-        if hbt_module.typ in [b"\x01\x03", b"\x01\x04", b"\x0b\x1f"]:
-            for ain in hbt_module.analogins:
-                if ain.type == 3:
-                    # ain.area == 0 means "the module's own area"; only a value
-                    # that differs from the module's area is a real deviation
-                    # the entity should carry into the registry.
-                    deviating_area = (
-                        area_ids.get(ain.area)
-                        if ain.area not in (0, hbt_module.area)
-                        else None
+        # The library only populates ``analogins`` for modules that have analog
+        # inputs, so iterate it directly instead of hard-coding module types --
+        # ``type == 3`` marks a real (enabled) analog input.
+        for ain in hbt_module.analogins:
+            if ain.type == 3:
+                # ain.area == 0 means "the module's own area"; only a value
+                # that differs from the module's area is a real deviation
+                # the entity should carry into the registry.
+                deviating_area = (
+                    area_ids.get(ain.area)
+                    if ain.area not in (0, hbt_module.area)
+                    else None
+                )
+                new_devices.append(
+                    HbtnDescribedSensor(
+                        hbt_module,
+                        ain,
+                        hbtn_cord,
+                        len(new_devices),
+                        ANALOG_DESCRIPTION,
+                        initial_area_id=deviating_area,
                     )
-                    new_devices.append(
-                        HbtnDescribedSensor(
-                            hbt_module,
-                            ain,
-                            hbtn_cord,
-                            len(new_devices),
-                            ANALOG_DESCRIPTION,
-                            initial_area_id=deviating_area,
-                        )
-                    )
+                )
         for mod_sensor in hbt_module.sensors:
             if mod_sensor.name[0:11] == "Temperature":
                 # The external probe is disabled by default; the two descriptions
