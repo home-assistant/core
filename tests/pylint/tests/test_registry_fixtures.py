@@ -148,6 +148,56 @@ def my_helper(hass):
 
 
 @pytest.mark.parametrize(
+    ("code", "helper"),
+    [
+        pytest.param(
+            """
+from homeassistant.helpers import entity_registry as er
+
+
+async def test_something(hass) -> None:
+    def _helper():
+        return er.async_get(hass)
+
+    _helper()
+""",
+            "entity_registry",
+            id="nested_helper_in_test",
+        ),
+        pytest.param(
+            """
+import pytest
+from homeassistant.helpers import entity_registry as er
+
+
+@pytest.fixture
+def storage_setup(hass):
+    async def _storage(items=None):
+        entity_registry = er.async_get(hass)
+        return entity_registry
+
+    return _storage
+""",
+            "entity_registry",
+            id="nested_helper_in_fixture",
+        ),
+    ],
+)
+def test_nested_helper_flagged(
+    linter: UnittestLinter,
+    registry_fixtures_checker: RegistryFixturesChecker,
+    code: str,
+    helper: str,
+) -> None:
+    """Calls in nested helpers inside tests/fixtures are flagged."""
+    root_node = astroid.parse(code, "tests.components.test_integration.test_init")
+    call_node = _find_async_get_call(root_node)
+
+    with assert_adds_messages(linter, _expect_registry_fixture(call_node, helper)):
+        walk_checker(linter, registry_fixtures_checker, root_node)
+
+
+@pytest.mark.parametrize(
     ("code", "module_name"),
     [
         pytest.param(

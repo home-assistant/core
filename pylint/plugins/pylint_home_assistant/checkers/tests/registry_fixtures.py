@@ -75,16 +75,21 @@ def _binds_to_import(name_node: nodes.Name) -> bool:
     return all(isinstance(assignment, nodes.ImportFrom) for assignment in assignments)
 
 
-def _enclosing_function(
-    node: nodes.NodeNG,
-) -> nodes.FunctionDef | nodes.AsyncFunctionDef | None:
-    """Return the nearest enclosing function definition, or None."""
+def _in_test_or_fixture(node: nodes.NodeNG) -> bool:
+    """Return True when *node* executes inside a test or pytest fixture.
+
+    Walks the full ancestor chain so calls in nested helpers/callbacks
+    defined inside a ``test_*`` function or a ``@pytest.fixture`` function
+    are recognized, not just those in the nearest enclosing function.
+    """
     parent = node.parent
     while parent is not None and not isinstance(parent, nodes.Module):
-        if isinstance(parent, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
-            return parent
+        if isinstance(parent, (nodes.FunctionDef, nodes.AsyncFunctionDef)) and (
+            parent.name.startswith("test_") or _is_pytest_fixture(parent)
+        ):
+            return True
         parent = parent.parent
-    return None
+    return False
 
 
 def _is_pytest_fixture(
@@ -168,11 +173,7 @@ class RegistryFixturesChecker(BaseChecker):
         if not _binds_to_import(func.expr):
             return
 
-        enclosing = _enclosing_function(node)
-        if enclosing is None:
-            return
-
-        if enclosing.name.startswith("test_") or _is_pytest_fixture(enclosing):
+        if _in_test_or_fixture(node):
             self.add_message(
                 "home-assistant-tests-registry-fixtures",
                 node=node,
