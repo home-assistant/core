@@ -44,9 +44,7 @@ async def test_cameras(
     with patch("homeassistant.components.camera._RND.getrandbits", return_value=1):
         await setup_camera_integration(hass, mock_config_entry)
 
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_config_entry.entry_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_camera_unavailable_when_offline(
