@@ -1,5 +1,6 @@
 """Tests for Roborock vacuums."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, call
 
@@ -45,11 +46,12 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, set_trait_attributes
 from .mock_data import STATUS
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
@@ -582,8 +584,7 @@ async def test_segments_changed_issue(
         },
     )
 
-    coordinator = setup_entry.runtime_data.v1[0]
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
     await hass.async_block_till_done()
 
     issue_id = f"segments_changed_{entity_entry.id}"
@@ -591,6 +592,37 @@ async def test_segments_changed_issue(
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
+
+
+async def test_segments_changed_issue_no_map_info(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test no repair issue is created when map info is not loaded/empty."""
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_99", "name": "Old room", "group": "Downstairs"},
+            ],
+        },
+    )
+
+    # Map info not loaded
+    fake_vacuum.v1_properties.home.home_map_info = None
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    issue_id = f"segments_changed_{entity_entry.id}"
+    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)
+    assert issue is None
 
 
 @pytest.fixture(name="q7_vacuum_api", autouse=False)

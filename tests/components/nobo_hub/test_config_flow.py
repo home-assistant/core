@@ -1,8 +1,8 @@
 """Test the Nobø Ecohub config flow."""
 
-import errno
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+from pynobo import PynoboConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -407,7 +407,10 @@ async def test_configure_invalid_ip_address(
     ("connect_outcome", "expected_error"),
     [
         ({"return_value": False}, "cannot_connect"),
-        ({"side_effect": ConnectionRefusedError(61, "")}, "cannot_connect_ip"),
+        (
+            {"side_effect": PynoboConnectionError("Failed to connect")},
+            "cannot_connect_ip",
+        ),
     ],
     ids=["serial_mismatch", "tcp_failure"],
 )
@@ -420,10 +423,10 @@ async def test_configure_cannot_connect(
     """Connect failures map to distinct error keys; retry recovers.
 
     pynobo's async_connect_hub returns False on a successful TCP connect
-    followed by a handshake REJECT (serial mismatch) and raises OSError
-    on TCP-level failure (wrong IP / hub offline). We surface these as
-    cannot_connect ("check serial number") and cannot_connect_ip
-    ("check IP address") respectively.
+    followed by a handshake REJECT (serial mismatch) and raises
+    PynoboConnectionError on TCP-level failure (wrong IP / hub offline).
+    We surface these as cannot_connect ("check serial number") and
+    cannot_connect_ip ("check IP address") respectively.
     """
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
@@ -818,7 +821,7 @@ async def test_reconfigure_flow_changes_ip(
     [
         (
             "192.168.1.200",
-            {"side_effect": ConnectionRefusedError(errno.ECONNREFUSED, "")},
+            {"side_effect": PynoboConnectionError("Failed to connect")},
             "cannot_connect_ip",
             1,
         ),
