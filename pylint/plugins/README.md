@@ -131,7 +131,9 @@ Every check has a code following the
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
+| `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
 
 
 ## `home_assistant_logger` checker
@@ -830,6 +832,27 @@ supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
 
 
+## `home_assistant_test_before_configure` checker
+
+Quality-scale-gated checker for the
+[`test-before-configure`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-configure)
+Bronze rule. Fires only when the integration claims the rule as `done`.
+
+### `W7433`: `home-assistant-missing-test-before-configure`
+
+The config flow creates entries but shows no evidence of surfacing
+connection failures to the user: no `errors=` keyword passed to a call
+(with a non-empty literal or dynamic value) and no abort inside an
+`except` handler. A failure can only be surfaced if it was detected
+first, so this single footprint covers the whole test-before-configure
+chain. Evidence is searched in `config_flow.py` and in the defining
+modules of inherited flow classes from other integrations. OAuth flows
+(`AbstractOAuth2FlowHandler`) are skipped; the token exchange is the
+connection test. Integrations that rely on auto-discovery without
+user-provided connection data should mark the rule `exempt`, per the
+rule's exceptions.
+
+
 ## `home_assistant_unnecessary_format_mac` checker
 
 Detects redundant `format_mac()` calls inside `CONNECTION_NETWORK_MAC`
@@ -849,3 +872,17 @@ Tuples used for direct comparison against `device.connections` (e.g.
 the `in` operator, set intersection) are not flagged because those
 comparisons bypass the device registry normalization and genuinely
 need `format_mac()` to match the stored normalized format.
+
+
+## `home_assistant_serial_port_selector_usb_dependency` checker
+
+Detects config flows using `SerialPortSelector` whose `manifest.json` does
+not declare `usb` as a hard dependency.
+
+### `W7430`: `home-assistant-serial-port-selector-usb-dependency`
+
+`SerialPortSelector` populates its port list via the `usb/list_serial_ports`
+websocket command, which is only registered when the `usb` integration is set
+up. The selector therefore requires `usb` as a hard dependency
+(`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
+does not force `usb` to be set up.

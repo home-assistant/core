@@ -6,6 +6,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import (
+    SELECT_DHW_MODE,
+    SELECT_GATEWAY_MODE,
     SELECT_REGULATION_MODE,
     SELECT_SCHEDULE,
     SELECT_ZONE_PROFILE,
@@ -97,8 +99,25 @@ async def test_adam_select_regulation_mode(
     assert mock_smile_adam_heat_cool.set_select.call_count == 1
     mock_smile_adam_heat_cool.set_select.assert_called_with(
         SELECT_REGULATION_MODE,
-        "bc93488efab249e5bc54fd7e175a6f91",
+        "da224107914542988a88561b4452b0f6",
         "heating",
+        "on",
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.adam_gateway_mode",
+            ATTR_OPTION: "vacation",
+        },
+        blocking=True,
+    )
+    assert mock_smile_adam_heat_cool.set_select.call_count == 2
+    mock_smile_adam_heat_cool.set_select.assert_called_with(
+        SELECT_GATEWAY_MODE,
+        "da224107914542988a88561b4452b0f6",
+        "vacation",
         "on",
     )
 
@@ -155,3 +174,42 @@ async def test_anna_select_unavailable_schedule_mode(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_loria_cooling_active"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.parametrize("platforms", [(SELECT_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_anna_entities_with_dhw_mode_select(
+    hass: HomeAssistant,
+    mock_smile_anna: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Anna select snapshot with multiple dhw_modes."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+async def test_anna_select_dhw_mode(
+    hass: HomeAssistant,
+    mock_smile_anna_loria: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing the dhw_mode select."""
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
+            ATTR_OPTION: "boost",
+        },
+        blocking=True,
+    )
+    assert mock_smile_anna_loria.set_select.call_count == 1
+    mock_smile_anna_loria.set_select.assert_called_with(
+        SELECT_DHW_MODE,
+        "bfb5ee0a88e14e5f97bfa725a760cc49",
+        "boost",
+        "on",
+    )

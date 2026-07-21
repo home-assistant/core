@@ -48,6 +48,9 @@ ENTITY_MATCH_ANY: Final = "any"
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
 
+# Default radius of the Home Zone (in meters)
+DEFAULT_RADIUS: Final = 100
+
 # Max characters for data stored in the recorder (changes to these limits would require
 # a database migration)
 MAX_LENGTH_EVENT_EVENT_TYPE: Final = 64
@@ -471,6 +474,8 @@ class EntityStateAttribute(StrEnum):
     ENTITY_PICTURE = "entity_picture"
     FRIENDLY_NAME = "friendly_name"
     ICON = "icon"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
     RESTORED = "restored"
     SUPPORTED_FEATURES = "supported_features"
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
@@ -828,6 +833,13 @@ class UnitOfBloodGlucoseConcentration(StrEnum):
 
     MILLIGRAMS_PER_DECILITER = "mg/dL"
     MILLIMOLE_PER_LITER = "mmol/L"
+
+
+class UnitOfRadiationConcentration(StrEnum):
+    """Radiation concentration units."""
+
+    BECQUEREL_PER_CUBIC_METER = "Bq/m³"
+    PICOCURIES_PER_LITER = "pCi/L"
 
 
 # Speed units

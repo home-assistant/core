@@ -30,7 +30,11 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      This integration only proxies commands through an existing infrared
+      entity, so there is no connection to test in the config flow.
   test-before-setup:
     status: exempt
     comment: |

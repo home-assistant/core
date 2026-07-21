@@ -44,6 +44,10 @@ async def test_async_setup_entry_connection_failed(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "host": mock_config_entry.data["host"],
+    }
 
 
 @pytest.mark.usefixtures("init_integration")
