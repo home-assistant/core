@@ -17,7 +17,6 @@ async def test_migrate_unique_ids(
     """Test that entity and device registry IDs are migrated from device_id to mesh_device_id format."""
     mock_config_entry.add_to_hass(hass)
 
-    # Pre-populate registries with old-format identifiers (home_id-device_id)
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "1000-1101")},
@@ -38,10 +37,7 @@ async def test_migrate_unique_ids(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Entity unique IDs should use the new mesh_device_id format
     assert entity_registry.async_get(old_light_entry.entity_id).unique_id == "1000-1"
     assert entity_registry.async_get(old_switch_entry.entity_id).unique_id == "1000-4"
-
-    # Device registry identifier should also be updated
     migrated_device = device_registry.async_get(old_device_entry.id)
     assert (DOMAIN, "1000-1") in migrated_device.identifiers
