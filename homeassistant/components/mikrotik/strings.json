@@ -31,6 +31,11 @@
     }
   },
   "entity": {
+    "button": {
+      "shutdown": {
+        "name": "Shutdown"
+      }
+    },
     "sensor": {
       "cpu_load": {
         "name": "CPU usage"

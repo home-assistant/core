@@ -27,6 +27,8 @@ IS_CAPSMAN: Final = "is_capsman"
 IS_WIFI: Final = "is_wifi"
 IS_WIFIWAVE2: Final = "is_wifiwave2"
 IS_WIRELESS: Final = "is_wireless"
+REBOOT: Final = "reboot"
+SHUTDOWN: Final = "shutdown"
 SYSTEM: Final = "system"
 WIFI: Final = "wifi"
 WIFIWAVE2: Final = "wifiwave2"
@@ -44,6 +46,8 @@ MIKROTIK_SERVICES: Final = {
     IS_WIFI: "/interface/wifi/print",
     IS_WIFIWAVE2: "/interface/wifiwave2/print",
     IS_WIRELESS: "/interface/wireless/print",
+    REBOOT: "/system/reboot",
+    SHUTDOWN: "/system/shutdown",
     SYSTEM: "/system/resource/print",
     WIFI: "/interface/wifi/registration-table/print",
     WIFIWAVE2: "/interface/wifiwave2/registration-table/print",
