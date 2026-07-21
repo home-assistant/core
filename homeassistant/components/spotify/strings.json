@@ -42,7 +42,7 @@
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "oauth2_token_reauth_required": {
-      "message": "[%key:common::exceptions::oauth2_token_reauth_required::message%]"
+      "message": "[%key:component::homeassistant::exceptions::oauth2_helper_reauth_required::message%]"
     }
   },
   "issues": {
