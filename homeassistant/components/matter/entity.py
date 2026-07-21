@@ -319,10 +319,7 @@ class MatterEntity(Entity):
         """Handle FeatureMap attribute updates."""
         if data is None:
             return
-        # ATTRIBUTE_UPDATED delivers `data` as the new attribute value only (see
-        # MatterClient._handle_event_message), not a (node_id, path, value)
-        # tuple. The FeatureMap value is a bare int.
-        new_value = data
+new_value = data
         # handle edge case where a Feature is removed from a cluster
         if (
             self._entity_info.discovery_schema.featuremap_contains is not None
