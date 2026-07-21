@@ -1754,12 +1754,12 @@ def async_removed_from_device(
 ) -> bool:
     """Check if the passed event indicates MQTT was removed from a device."""
     if event.data["action"] == "update":
-        if "config_entries" not in event.data["changes"]:
+        if "config_entry_id" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
         if (
             device_entry := device_registry.async_get(mqtt_device_id)
-        ) and config_entry_id in device_entry.config_entries:
+        ) and config_entry_id == device_entry.config_entry_id:
             # Not removed from device
             return False
 
