@@ -57,6 +57,12 @@ def mock_habitron_client() -> Generator[MagicMock]:
             "homeassistant.components.habitron.config_flow.test_connection",
             new=AsyncMock(return_value=(True, MOCK_NAME)),
         ) as mock_test,
+        # ``validate_input`` resolves the host first (to tell an unresolvable
+        # name apart from a connection failure); stub it so tests don't hit DNS.
+        patch(
+            "homeassistant.components.habitron.config_flow.get_host_ip",
+            new=AsyncMock(return_value=MOCK_HOST),
+        ),
         patch(
             "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
             new=AsyncMock(return_value="192.168.1.10"),

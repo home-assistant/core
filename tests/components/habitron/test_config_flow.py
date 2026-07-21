@@ -3,7 +3,7 @@
 import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import HabitronError, HabitronTimeoutError
+from habitron_client import HabitronConnectionError, HabitronError, HabitronTimeoutError
 import pytest
 
 from homeassistant import config_entries
@@ -391,7 +391,12 @@ async def test_validate_input_accepts_short_hostname(
 async def test_validate_input_host_not_found_for_dns_failure(
     hass: HomeAssistant,
 ) -> None:
-    """A socket.gaierror surfaces as ``HostNotFound``."""
+    """An unresolvable host surfaces as ``HostNotFound``, not ``CannotConnect``.
+
+    ``get_host_ip`` wraps a ``socket.gaierror`` into ``HabitronConnectionError``,
+    so resolving the name explicitly is the only place the DNS failure can be
+    told apart from a plain connection failure.
+    """
 
     with (
         patch(
@@ -399,10 +404,40 @@ async def test_validate_input_host_not_found_for_dns_failure(
             new=AsyncMock(return_value="10.0.0.5"),
         ),
         patch(
-            "homeassistant.components.habitron.config_flow.test_connection",
-            side_effect=socket.gaierror("dns fail"),
+            "homeassistant.components.habitron.config_flow.get_host_ip",
+            new=AsyncMock(side_effect=HabitronConnectionError("cannot resolve")),
         ),
         pytest.raises(HostNotFound),
+    ):
+        await validate_input(
+            hass,
+            {KEY_HOST: MOCK_HOST, "websock_token": ""},
+        )
+
+
+async def test_validate_input_connection_failure_is_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """A resolvable host that fails the probe is ``CannotConnect``, not host_not_found.
+
+    ``test_connection`` wraps the failure into ``HabitronError``; the earlier
+    name resolution succeeded, so this must not be mistaken for a bad name.
+    """
+
+    with (
+        patch(
+            "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
+            new=AsyncMock(return_value="10.0.0.5"),
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow.get_host_ip",
+            new=AsyncMock(return_value=MOCK_HOST),
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow.test_connection",
+            new=AsyncMock(side_effect=HabitronError("hub unreachable")),
+        ),
+        pytest.raises(CannotConnect),
     ):
         await validate_input(
             hass,

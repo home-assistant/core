@@ -6,7 +6,13 @@ import socket
 from typing import Any, override
 from urllib.parse import urlparse
 
-from habitron_client import HabitronError, discover_smarthubs, test_connection
+from habitron_client import (
+    HabitronConnectionError,
+    HabitronError,
+    discover_smarthubs,
+    get_host_ip,
+    test_connection,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -47,19 +53,24 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         # Resolve the sentinel to our own IP for the probe.
         host_to_test = own_ip
 
-    # Connection test
+    # Resolve the name first so an unresolvable host maps to ``host_not_found``
+    # ("try an IP") rather than a generic connection error. ``get_host_ip``
+    # raises ``HabitronConnectionError`` only for a DNS failure; ``test_connection``
+    # resolves internally too and wraps *every* failure (DNS included) into a
+    # ``HabitronError``, so without resolving here a bad name would only ever
+    # surface as ``cannot_connect``.
     try:
-        # test_connection has been async since habitron_client 1.0.0.
-        result, host_name = await test_connection(host_to_test)
-    except socket.gaierror as exc:
+        await get_host_ip(host_to_test)
+    except HabitronConnectionError as exc:
         raise HostNotFound from exc
-    except ConnectionRefusedError as exc:
-        raise CannotConnect from exc
+
+    # Connection test. ``test_connection`` wraps expected connection failures
+    # into ``HabitronError``; anything else (e.g. a response-processing bug)
+    # propagates so the caller's ``unknown`` path surfaces the real fault
+    # instead of hiding it as a network error.
+    try:
+        result, host_name = await test_connection(host_to_test)
     except (OSError, TimeoutError, HabitronError) as exc:
-        # Genuinely-expected connection failures. ``test_connection`` wraps DNS
-        # and socket problems into ``HabitronError``; anything else (e.g. a
-        # response-processing bug) propagates so the caller's ``unknown`` path
-        # surfaces the real fault instead of hiding it as a network error.
         raise CannotConnect from exc
 
     if not result:
