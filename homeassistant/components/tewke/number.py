@@ -4,7 +4,7 @@ Exposes the energy override as a settable number entity (watts).
 Setting a value activates the override; setting it to 0 clears it.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.const import UnitOfPower
@@ -55,6 +55,7 @@ class TewkeEnergyOverrideNumber(TewkeEntity, NumberEntity):
         self._attr_unique_id = f"{hardware_id}_energy_override"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current override value in watts, or None when inactive."""
         energy_override = self.coordinator.data.get("energy_override")
@@ -62,6 +63,7 @@ class TewkeEnergyOverrideNumber(TewkeEntity, NumberEntity):
             return None
         return energy_override.override
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set or clear the energy override.
 

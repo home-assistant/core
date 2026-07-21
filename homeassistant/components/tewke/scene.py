@@ -9,7 +9,7 @@ Scene brightness is write-only on the Tewke API; the last commanded value is
 held locally for optimistic rendering.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pytewke.error import (
     PyTewkeCoapError,
@@ -59,6 +59,7 @@ class TewkeSceneEntity(TewkeEntity):
         return self.coordinator.data["scenes"].get(self._scene_id)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Sync scene name from coordinator data before writing state."""
         scene = self._scene
@@ -67,6 +68,7 @@ class TewkeSceneEntity(TewkeEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the scene is available, False otherwise."""
         if not super().available:
@@ -141,6 +143,7 @@ class TewkeSceneLight(TewkeSceneEntity, LightEntity):
         super().__init__(coordinator, scene, enabled_default=enabled_default)
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
+    @override
     async def async_turn_on(self, **kwargs: object) -> None:
         """Activate the scene, optionally at a specific brightness."""
         raw = kwargs.get(ATTR_BRIGHTNESS)
@@ -148,6 +151,7 @@ class TewkeSceneLight(TewkeSceneEntity, LightEntity):
         tewke_brightness = _ha_to_tewke_brightness(ha_brightness)
         await self._async_set_scene(state=True, brightness=tewke_brightness)
 
+    @override
     async def async_turn_off(self, **_kwargs: object) -> None:
         """Deactivate the scene."""
         await self._async_set_scene(state=False)

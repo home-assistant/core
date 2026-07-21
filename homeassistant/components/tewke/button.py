@@ -3,10 +3,10 @@
 Exposes a restart (reboot) button for the Tewke Tap Panel.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 
 from .entity import TewkeEntity
 
@@ -44,6 +44,7 @@ class TewkeRestartButton(TewkeEntity, ButtonEntity):
         hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_restart"
 
+    @override
     async def async_press(self) -> None:
         """Send a restart command to the Tap Panel."""
         tap = self.coordinator.config_entry.runtime_data.tap

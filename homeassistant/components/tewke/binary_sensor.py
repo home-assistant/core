@@ -5,7 +5,7 @@ observation (local_push). Both are disabled by default as diagnostic values.
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -90,6 +90,7 @@ class TewkeBinarySensor(TewkeEntity, BinarySensorEntity):
         self._attr_unique_id = f"{hardware_id}_sensor_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the sensor state."""
         sensors: SensorData | None = self.coordinator.data.get("sensors")
@@ -113,6 +114,7 @@ class TewkeScreenBinarySensor(TewkeEntity, BinarySensorEntity):
         self._attr_unique_id = f"{hardware_id}_screen_on"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True when the panel screen is on."""
         config: ConfigData | None = self.coordinator.data.get("config")

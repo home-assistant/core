@@ -1,6 +1,6 @@
 """Config flow for the Tewke integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import pytewke
 
@@ -30,6 +30,7 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
     _scenes: dict[str, Scene]
     _tap: pytewke.Tap | None = None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

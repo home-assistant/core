@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 from pytewke.error import (
     PyTewkeCoapError,
@@ -224,6 +224,7 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
             )
             return await async_setup_observe(self, self.hass, self.config_entry)
 
+    @override
     async def _async_update_data(self) -> TewkeCoordinatorData:
         """Fetch current state for all resources, retrying on transient errors.
 

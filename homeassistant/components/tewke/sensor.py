@@ -7,7 +7,7 @@ Disabled-by-default sensors are raw/diagnostic values.
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -202,6 +202,7 @@ class TewkeSensor(TewkeEntity, SensorEntity):
         self._attr_unique_id = f"{hardware_id}_sensor_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the sensor reading."""
         sensors: SensorData | None = self.coordinator.data.get("sensors")
@@ -275,6 +276,7 @@ class TewkeRadarSensor(TewkeEntity, SensorEntity):
         self._attr_unique_id = f"{hardware_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the sensor reading."""
         radar: RadarData | None = self.coordinator.data.get("radar")
@@ -332,6 +334,7 @@ class TewkeEnergySensor(TewkeEntity, SensorEntity):
         self._attr_unique_id = f"{hardware_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the power reading in watts."""
         energy: EnergyData | None = self.coordinator.data.get("energy")

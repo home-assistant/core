@@ -9,7 +9,7 @@ Dimmable targets expose "ColorMode.BRIGHTNESS"; non-dimmable ones expose
 (0-100) and the HA scale (0-255).
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pytewke.error import (
     PyTewkeCoapError,
@@ -62,6 +62,7 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         return self.coordinator.data["targets"].get(self._target_index)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Sync target name from coordinator data before writing state."""
         target = self._target
@@ -70,6 +71,7 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the target is available, False otherwise."""
         if not super().available:
@@ -78,12 +80,14 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         return self._target_index in self.coordinator.data.get("targets", {})
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True when the output is on."""
         target = self._target
         return target.is_on if target is not None else None
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the current brightness (0-255)."""
         target = self._target
@@ -91,6 +95,7 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
             return None
         return _tewke_to_ha_brightness(target.brightness)
 
+    @override
     async def async_turn_on(self, **kwargs: object) -> None:
         """Turn on the output, optionally at a specific brightness."""
         target = self._target
@@ -130,6 +135,7 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         ) as e:
             LOGGER.error("Error activating Tewke target %s: %s", self._target_index, e)
 
+    @override
     async def async_turn_off(self, **_kwargs: object) -> None:
         """Turn off the output."""
         try:
