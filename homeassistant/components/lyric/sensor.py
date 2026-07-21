@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -131,6 +131,13 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda room, _: room.room_avg_humidity,
+        suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
+    ),
+    LyricSensorAccessoryEntityDescription(
+        key="accessory_status",
+        translation_key="accessory_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda _, accessory: accessory.status,
         suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
     ),
 ]
