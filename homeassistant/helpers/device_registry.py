@@ -2460,6 +2460,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         ) is not None:
             for underlying_id in underlying_ids:
                 self.async_remove_device(underlying_id)
+            # The recursive removals above only detached children linked to the individual
+            # splits; detach any child still linked to the composite id itself.
+            for other_device in list(self.devices.values()):
+                if other_device.via_device_id == device_id:
+                    self._async_update_device(other_device.id, via_device_id=None)
             return
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         device = self.devices.pop(device_id)
