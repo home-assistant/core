@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from gatus_api import GatusClientError
 import pytest
 
@@ -12,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_gatus_client")
@@ -52,6 +53,7 @@ async def test_remove_stale_device_runtime(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gatus_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a device is removed at runtime when it is no longer returned by the Gatus API."""
     await setup_integration(hass, mock_config_entry)
@@ -72,8 +74,9 @@ async def test_remove_stale_device_runtime(
 
     mock_gatus_client.get_endpoints_statuses.return_value = []
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     device = next(
         (
