@@ -71,18 +71,10 @@ async def test_sensors_added_when_key_appears_in_later_packet(
     mock_listener: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensors are added when their key first appears in a later packet.
-
-    The device emits two packet types: a frequent partial packet with only
-    instantaneous values, and a less frequent full packet that also carries
-    the energy totals and gas reading. Entities for the full-packet keys must
-    be created once that packet arrives, even though the first packet lacked
-    them.
-    """
+    """Test sensors are added when their key first appears in a later packet."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # First packet: only the instantaneous keys are present.
     trigger_callback(mock_listener, device_data=PARTIAL_DEVICE_DATA)
     await hass.async_block_till_done()
 
@@ -92,7 +84,6 @@ async def test_sensors_added_when_key_appears_in_later_packet(
     assert hass.states.get("sensor.earn_e_p1_meter_energy_imported_tariff_1") is None
     assert hass.states.get("sensor.earn_e_p1_meter_gas_consumed") is None
 
-    # Full packet: energy totals and gas reading now present.
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
