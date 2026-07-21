@@ -56,6 +56,10 @@ SLOW_ADD_MIN_TIMEOUT = 500
 
 MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY = 10000
 
+# Protocol integrations act as bridges for entire networks and legitimately
+# create large numbers of entities, so they are exempt from the entity limit.
+ENTITY_LIMIT_EXEMPT_DOMAINS = {"hue", "matter", "mqtt", "zha", "zwave_js"}
+
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM: HassKey[dict[str, list[EntityPlatform]]] = HassKey(
     "entity_platform"
@@ -968,6 +972,7 @@ class EntityPlatform:
                 disabled_by is None
                 and not registered_entity_id
                 and self.config_entry is not None
+                and self.config_entry.domain not in ENTITY_LIMIT_EXEMPT_DOMAINS
                 and entity_registry.entities.get_enabled_count_for_config_entry_id(
                     self.config_entry.entry_id
                 )

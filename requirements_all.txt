@@ -1100,7 +1100,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==7.1.0
+gios==7.1.1
 
 # homeassistant.components.glances
 glances-api==0.10.0
@@ -1183,7 +1183,7 @@ growattServer==2.1.0
 gspread==5.5.0
 
 # homeassistant.components.guntamatic
-guntamatic==1.9.0
+guntamatic==1.9.2
 
 # homeassistant.components.profiler
 guppy3==3.1.7
@@ -1263,7 +1263,7 @@ hole==0.9.2
 holidays==0.100
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260624.5
+home-assistant-frontend==20260624.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.24
@@ -2429,7 +2429,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.0.4
+pyoverkiz[nexity]==2.1.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2718,7 +2718,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.25.0
+python-roborock==5.31.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2733,7 +2733,7 @@ python-snoo==0.8.3
 python-songpal==0.16.2
 
 # homeassistant.components.swisscom
-python-swisscom-internet-box==0.1.1
+python-swisscom-internet-box==0.2.0
 
 # homeassistant.components.tado
 python-tado==0.18.16
@@ -3444,7 +3444,7 @@ zeversolar==0.3.2
 zha-quirks==2.1.1
 
 # homeassistant.components.zha
-zha==2.0.0
+zha==2.0.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
