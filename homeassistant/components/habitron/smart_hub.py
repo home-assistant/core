@@ -115,9 +115,12 @@ class SmartHub:
             manufacturer="Habitron GmbH",
             suggested_area="House",
             name=self._name,
-            model=self._name,
+            # ``_type`` is the hardware platform (e.g. "Raspberry Pi 5"), i.e.
+            # the model. ``_name`` is the user-renameable entry title, so it is
+            # not stable model metadata; there is no separate hardware revision
+            # to report as ``hw_version``.
+            model=self._type,
             sw_version=self._version,
-            hw_version=self._type,
         )
 
         # 3. Hub diagnostics (depends on the platform type).
