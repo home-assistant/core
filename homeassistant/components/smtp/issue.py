@@ -88,7 +88,7 @@ data:
   message: Hello World
   html: <html><body>Hello World<br><img src="cid:snapshot"></body></html>
   attachments:
-    - attachment:
+    - media_source:
         media_content_id: media-source://camera/camera.demo_camera
         media_content_type: application/vnd.apple.mpegurl
       filename: snapshot.jpg
