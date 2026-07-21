@@ -106,3 +106,4 @@ async def test_send_command_failed(
     remote_mock.assert_called_once_with("dash", "0")
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "send_command_failed"
+    assert err.value.translation_placeholders == {"command": "dash", "device": "0"}
