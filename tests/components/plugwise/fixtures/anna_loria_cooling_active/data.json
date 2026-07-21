@@ -62,7 +62,7 @@
     },
     "dev_class": "heater_central",
     "dhw_mode": "auto",
-    "dhw_modes": ["auto", "boost", "comfort", "eco", "off"],
+    "dhw_modes": ["off", "auto", "boost", "eco", "comfort"],
     "location": "674b657c138a41a291d315d7471deb06",
     "max_dhw_temperature": {
       "current": 52.9,
