@@ -130,6 +130,9 @@ async def test_setup_registers_hub_device(
     assert device is not None
     assert device.manufacturer == "Habitron GmbH"
     assert device.sw_version == "9.9.9"
+    # The hardware platform is the model; there is no separate hw revision.
+    assert device.model == "Other"
+    assert device.hw_version is None
     assert device.configuration_url == expected_conf_url
 
 

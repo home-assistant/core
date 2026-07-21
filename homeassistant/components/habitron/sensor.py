@@ -367,7 +367,6 @@ class HbtnSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Any, int], Any]
     subscribe_fn: Callable[[Any, int], Any] | None = None
-    options: list[str] | None = None
     diag_check: bool = False
     translated_name: bool = False
     initial_value: Any = None

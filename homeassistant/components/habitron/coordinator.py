@@ -148,6 +148,7 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
                 DOMAIN,
                 issue_id,
                 is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
+                severity=ir.IssueSeverity.ERROR,
                 translation_key="router_system_error",
+                translation_placeholders={"name": self.smart_hub.smhub_name},
             )

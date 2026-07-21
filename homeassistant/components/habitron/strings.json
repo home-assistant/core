@@ -111,8 +111,8 @@
   },
   "issues": {
     "router_system_error": {
-      "description": "The router reported a system error. Please check the router and its communication lines; the issue clears automatically once the router responds again.",
-      "title": "Router system error"
+      "description": "The router on {name} reported a system error. Please check the router and its communication lines; the issue clears automatically once the router responds again.",
+      "title": "Router system error on {name}"
     }
   }
 }
