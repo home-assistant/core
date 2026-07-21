@@ -1112,7 +1112,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==7.1.0
+gios==7.1.1
 
 # homeassistant.components.glances
 glances-api==0.10.0
@@ -1374,7 +1374,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==7.5.0
+infrared-protocols==8.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1587,6 +1587,9 @@ micloud==0.5
 
 # homeassistant.components.microbees
 microBeesPy==0.3.5
+
+# homeassistant.components.midea_lan
+midea-local==6.10.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -3431,7 +3434,7 @@ yalexs-ble==3.3.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.2.7
+yalexs==9.2.10
 
 # homeassistant.components.yeelight
 yeelight==0.7.16

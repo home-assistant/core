@@ -526,16 +526,6 @@ async def test_async_handle_source_entity_new_entity_id(
     "source_via_composite_id",
     [pytest.param(True, id="composite_id"), pytest.param(False, id="source_split")],
 )
-@pytest.mark.parametrize(
-    "record_composite_primary",
-    [
-        pytest.param(True, id="recorded_primary"),
-        # Devices migrated from before 2024.7 have no primary_config_entry, so their splits
-        # carry composite_primary_config_entry=None; the source split is then found by
-        # falling back to the surviving non-helper split.
-        pytest.param(False, id="no_recorded_primary"),
-    ],
-)
 async def test_async_remove_helper_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -543,7 +533,6 @@ async def test_async_remove_helper_devices(
     helper_identifiers: set[tuple[str, str]],
     helper_has_composite_identifiers: bool,
     source_via_composite_id: bool,
-    record_composite_primary: bool,
 ) -> None:
     """Test migrating a helper off a device it co-owned before the migration split.
 
@@ -551,17 +540,14 @@ async def test_async_remove_helper_devices(
     the pre-migration id as their composite id. The helper's split is found via that id -
     both while it still carries the identifiers copied at the split and once the helper has
     re-registered and pruned them to its own - and whether the caller passes the composite
-    id or the concrete source split. Its entities move onto the source split; its split is
-    removed.
+    id or the concrete source split. Its split is removed; its entities move onto the source
+    split when a concrete device is passed, or are detached when only the composite id is.
     """
     source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
     source_config_entry.add_to_hass(hass)
     helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
     helper_config_entry.add_to_hass(hass)
     composite_id = "pre_split_composite_id"
-    composite_primary = (
-        source_config_entry.entry_id if record_composite_primary else None
-    )
 
     source_split = device_registry.async_get_or_create(
         config_entry_id=source_config_entry.entry_id,
@@ -571,16 +557,14 @@ async def test_async_remove_helper_devices(
         config_entry_id=helper_config_entry.entry_id,
         identifiers=helper_identifiers,
     )
-    # Both are splits of the same pre-migration device, sharing its id and primary owner
+    # Both are splits of the same pre-migration device, sharing its id
     device_registry.devices[source_split.id] = attr.evolve(
         source_split,
         composite_device_id=composite_id,
-        composite_primary_config_entry=composite_primary,
     )
     device_registry.devices[helper_split.id] = attr.evolve(
         helper_split,
         composite_device_id=composite_id,
-        composite_primary_config_entry=composite_primary,
         has_composite_identifiers=helper_has_composite_identifiers,
     )
     # A helper entity on the helper's split, plus one not linked to any device
@@ -601,76 +585,17 @@ async def test_async_remove_helper_devices(
         source_device_id=composite_id if source_via_composite_id else source_split.id,
     )
 
-    # The helper's entity moved onto the source split; its own split was removed
+    # The helper's split was removed. Its entity moved onto the source split when a concrete
+    # source was passed; with only the composite id there is no concrete device, so it detaches.
+    expected_device_id = None if source_via_composite_id else source_split.id
     assert (
         entity_registry.async_get(helper_entity_entry.entity_id).device_id
-        == source_split.id
+        == expected_device_id
     )
     assert (
         entity_registry.async_get(extra_helper_entity_entry.entity_id).device_id is None
     )
     assert device_registry.async_get(helper_split.id) is None
-    assert device_registry.async_get(source_split.id) is not None
-
-
-async def test_async_remove_helper_devices_multiple_co_owners(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """With more than two co-owners, the helper's entities go to the primary's split.
-
-    A pre-migration device can be co-owned by more than two config entries. The source
-    split is identified by the composite's recorded primary owner, not by split order, so
-    the helper's entities are not relinked onto an unrelated integration's split.
-    """
-    source_config_entry = MockConfigEntry(domain=SOURCE_DOMAIN)
-    source_config_entry.add_to_hass(hass)
-    other_config_entry = MockConfigEntry(domain="other")
-    other_config_entry.add_to_hass(hass)
-    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
-    helper_config_entry.add_to_hass(hass)
-    composite_id = "pre_split_composite_id"
-
-    # other_split is indexed before source_split, so a split-order heuristic would wrongly
-    # pick it as the source; the recorded primary (source) must win instead.
-    other_split = device_registry.async_get_or_create(
-        config_entry_id=other_config_entry.entry_id, identifiers={("other", "1")}
-    )
-    source_split = device_registry.async_get_or_create(
-        config_entry_id=source_config_entry.entry_id, identifiers={(SOURCE_DOMAIN, "1")}
-    )
-    helper_split = device_registry.async_get_or_create(
-        config_entry_id=helper_config_entry.entry_id, identifiers={(HELPER_DOMAIN, "1")}
-    )
-    for split in (other_split, source_split, helper_split):
-        device_registry.devices[split.id] = attr.evolve(
-            split,
-            composite_device_id=composite_id,
-            composite_primary_config_entry=source_config_entry.entry_id,
-        )
-    helper_entity_entry = entity_registry.async_get_or_create(
-        "sensor",
-        HELPER_DOMAIN,
-        "1",
-        config_entry=helper_config_entry,
-        device_id=helper_split.id,
-    )
-
-    async_remove_helper_devices(
-        hass,
-        helper_config_entry_id=helper_config_entry.entry_id,
-        source_device_id=composite_id,
-    )
-
-    # Relinked to the primary owner's (source) split, not the unrelated other split, which
-    # is left untouched
-    assert (
-        entity_registry.async_get(helper_entity_entry.entity_id).device_id
-        == source_split.id
-    )
-    assert device_registry.async_get(helper_split.id) is None
-    assert device_registry.async_get(other_split.id) is not None
     assert device_registry.async_get(source_split.id) is not None
 
 
@@ -833,15 +758,24 @@ async def test_async_remove_helper_devices_sweep(
     )
 
 
-async def test_async_remove_helper_devices_sweep_source_device_gone(
+@pytest.mark.parametrize(
+    "source_device_id",
+    [
+        pytest.param("nonexistent_device_id", id="missing_device"),
+        pytest.param(None, id="no_device_selected"),
+    ],
+)
+async def test_async_remove_helper_devices_sweep_no_source(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    source_device_id: str | None,
 ) -> None:
-    """Sweep mode removes the helper's devices even when the source device is gone.
+    """Sweep mode removes the helper's devices when there is no source device.
 
-    With no source device to relink to, the helper's entities are left without a device and
-    its devices are still removed.
+    Whether the source device id points to a removed device or is None because no device is
+    selected, the helper's entities are left without a device and its devices are still
+    removed.
     """
     helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
     helper_config_entry.add_to_hass(hass)
@@ -861,13 +795,52 @@ async def test_async_remove_helper_devices_sweep_source_device_gone(
     async_remove_helper_devices(
         hass,
         helper_config_entry_id=helper_config_entry.entry_id,
-        source_device_id="nonexistent_device_id",
+        source_device_id=source_device_id,
         sweep_helper_devices=True,
     )
 
     # The helper's device is removed and its entity left without a device
     assert device_registry.async_get(stale_fork.id) is None
     assert entity_registry.async_get(entity_on_fork.entity_id).device_id is None
+
+
+async def test_async_remove_helper_devices_none_source_targeted_noop(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Targeted mode is a no-op when no source device is selected.
+
+    Without sweep_helper_devices there is no duplicate to match against a missing source, so
+    the helper's device and its entity's device link are left untouched.
+    """
+    helper_config_entry = MockConfigEntry(domain=HELPER_DOMAIN)
+    helper_config_entry.add_to_hass(hass)
+
+    helper_device = device_registry.async_get_or_create(
+        config_entry_id=helper_config_entry.entry_id,
+        identifiers={(HELPER_DOMAIN, "device")},
+    )
+    entity_on_device = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        "1",
+        config_entry=helper_config_entry,
+        device_id=helper_device.id,
+    )
+
+    async_remove_helper_devices(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=None,
+    )
+
+    # Nothing is removed or relinked
+    assert device_registry.async_get(helper_device.id) is not None
+    assert (
+        entity_registry.async_get(entity_on_device.entity_id).device_id
+        == helper_device.id
+    )
 
 
 async def test_async_remove_helper_config_entry_from_source_device_deprecated(
