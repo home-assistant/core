@@ -2,15 +2,21 @@
 
 from unittest.mock import patch
 
-from solax.inverter import InverterResponse
+from freezegun.api import FrozenDateTimeFactory
+from solax.inverter import InverterError, InverterResponse
 from solax.inverters import X1MiniV34
 
-from homeassistant.components.solax.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
+from homeassistant.components.solax import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def __mock_get_data() -> InverterResponse:
@@ -23,12 +29,12 @@ def __mock_get_data() -> InverterResponse:
     )
 
 
-async def test_device_info_model(
+async def test_coordinator_update_failure(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the device registry entry has the discovered inverter model set."""
+    """Test an InverterError during a refresh marks the entities unavailable."""
     mock_config_entry.add_to_hass(hass)
 
     inverter = next(
@@ -48,6 +54,20 @@ async def test_device_info_model(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "ABCDEFGHIJ")})
-    assert device is not None
-    assert device.model == "x1_mini_v34"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # making sure the base state is actually healthy before the test run.
+    assert (
+        hass.states.get("sensor.solax_abcdefghij_network_voltage").state
+        != STATE_UNAVAILABLE
+    )
+
+    with patch("solax.RealTimeAPI.get_data", side_effect=InverterError):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.solax_abcdefghij_network_voltage").state
+        == STATE_UNAVAILABLE
+    )
