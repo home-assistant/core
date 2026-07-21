@@ -96,6 +96,19 @@ async def async_setup_entry(  # noqa: C901
     # module's area (see below).
     area_ids = {a.nmbr: area_reg.async_get_or_create(a.name).id for a in hbtn_rt.areas}
 
+    # Snapshot the entities already registered for this entry. The deviating
+    # analog-input area is stamped only at first creation, never on a reload:
+    # a user may later move the entity or clear its area to inherit the device
+    # area, and clearing it reads as ``area_id is None`` -- indistinguishable
+    # from a fresh entity -- so the "already registered" check is what protects
+    # that choice.
+    known_unique_ids = {
+        registered.unique_id
+        for registered in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    }
+
     new_devices: list[SensorEntity] = []
     for smhub_sensor in smhub.sensors:
         if smhub_sensor.name == "Memory usage":
@@ -145,12 +158,15 @@ async def async_setup_entry(  # noqa: C901
         # ``type == 3`` marks a real (enabled) analog input.
         for ain in hbt_module.analogins:
             if ain.type == 3:
-                # ain.area == 0 means "the module's own area"; only a value
-                # that differs from the module's area is a real deviation
-                # the entity should carry into the registry.
+                # ain.area == 0 means "the module's own area"; only a value that
+                # differs is a real deviation, and only stamp it on first
+                # creation (unique_id not yet registered) so a later user area
+                # choice survives reloads.
+                analog_uid = f"Mod_{hbt_module.uid}_snsr{ain.nmbr}_{ANALOG_DESCRIPTION.key}"
                 deviating_area = (
                     area_ids.get(ain.area)
                     if ain.area not in (0, hbt_module.area)
+                    and analog_uid not in known_unique_ids
                     else None
                 )
                 new_devices.append(
@@ -418,16 +434,15 @@ class HbtnDescribedSensor(HbtnSensor):
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
-        # Apply the deviating area now the entity is registered. Only when it
-        # has no area of its own yet (``area_id is None``): that covers a fresh
-        # entity and one whose area was never touched, while never clobbering a
-        # move the user made. ``async_add_entities`` registers asynchronously,
-        # so this cannot run at platform-setup time.
+        # Apply the deviating area now the entity is registered.
+        # ``_initial_area_id`` is only set for a first-time creation (the setup
+        # snapshot gate), so this never overrides a later user choice.
+        # ``async_add_entities`` registers asynchronously, so this cannot run at
+        # platform-setup time.
         if self._initial_area_id is not None and (entry := self.registry_entry):
-            if entry.area_id is None:
-                er.async_get(self.hass).async_update_entity(
-                    entry.entity_id, area_id=self._initial_area_id
-                )
+            er.async_get(self.hass).async_update_entity(
+                entry.entity_id, area_id=self._initial_area_id
+            )
         if (subscribe_fn := self.entity_description.subscribe_fn) is not None:
             # Push subscription: keep HA state in sync whenever the member changes.
             subscribe_fn(self._module, self._sensor_idx).add_listener(

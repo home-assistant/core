@@ -767,23 +767,49 @@ async def test_analog_deviating_area_applied_when_unset(
     assert entity_registry.async_get(entity.entity_id).area_id == kitchen.id
 
 
-async def test_analog_deviating_area_not_overwritten_when_user_set(
+async def test_analog_deviating_area_stamped_only_on_first_create(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """A user-chosen area is preserved, not reset to the deviating area."""
-    kitchen = area_registry.async_get_or_create("Kitchen")
-    bedroom = area_registry.async_get_or_create("Bedroom")
-    entity = _analog_entity_with_area(hass, entity_registry, kitchen.id)
-    # The user moved it before this run.
-    entity.registry_entry = entity_registry.async_update_entity(
-        entity.entity_id, area_id=bedroom.id
+    """A brand-new analog input carries its deviating area into the entity."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
+
+    captured: list[HbtnDescribedSensor] = []
+    await async_setup_entry(hass, entry, captured.extend)  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+
+    analog = next(e for e in captured if e.unique_id == _ANALOG_UNIQUE_ID)
+    kitchen = area_registry.async_get_area_by_name("Kitchen")
+    assert kitchen is not None
+    assert analog._initial_area_id == kitchen.id
+
+
+async def test_analog_deviating_area_not_restamped_on_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """On reload the deviating area is not re-applied.
+
+    ``area_id is None`` after a reload can mean the user cleared the entity's
+    area to inherit the device area; re-stamping the deviating area would
+    silently overwrite that choice, so an already-registered entity carries no
+    ``initial_area_id``.
+    """
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
+    # Pre-register as if from a prior run.
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, _ANALOG_UNIQUE_ID, config_entry=entry
     )
 
-    await _run_added_to_hass(entity)
+    captured: list[HbtnDescribedSensor] = []
+    await async_setup_entry(hass, entry, captured.extend)  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
 
-    assert entity_registry.async_get(entity.entity_id).area_id == bedroom.id
+    analog = next(e for e in captured if e.unique_id == _ANALOG_UNIQUE_ID)
+    assert analog._initial_area_id is None
 
 
 @pytest.mark.parametrize("ain_area", [0, 1])
