@@ -234,6 +234,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._key_pem: bytes | None = None
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
+        self._discovered_host: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -267,6 +268,12 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if isinstance(energy_data.api, EnergySiteRouter)
             else energy_data.api,
         )
+
+        try:
+            self._discovered_host = await self._energy_site.find_gateway_address() or ""
+        except TeslaFleetError as err:
+            LOGGER.debug("Gateway address discovery failed: %s", err)
+            self._discovered_host = ""
 
         path = self.hass.config.path(POWERWALL_KEY_FILE)
         keyholder = Teslemetry(
@@ -417,7 +424,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             step_id="credentials",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=DEFAULT_GATEWAY_HOST): str,
+                    vol.Required(
+                        CONF_HOST,
+                        default=self._discovered_host or DEFAULT_GATEWAY_HOST,
+                    ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
