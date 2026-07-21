@@ -106,10 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
                 for device_id in device_ids:
                     if coordinator := data.coordinators.pop(device_id, None):
                         await coordinator.async_shutdown()
-                device_registry.async_update_device(
-                    device_id=device_entry.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
+                device_registry.async_remove_device(device_entry.id)
 
         # Add new devices
         new_coordinators: list[LiebherrCoordinator] = []
