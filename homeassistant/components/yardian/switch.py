@@ -74,9 +74,8 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
             kwargs.get("duration", DEFAULT_WATERING_DURATION),
         )
 
-        # Optimistically update state so HA immediately knows it is on
         self.coordinator.data.active_zones.add(self._zone_id)
-        self.async_write_ha_state()
+        self.coordinator.async_set_updated_data(self.coordinator.data)
 
         await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
@@ -86,9 +85,8 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
         """Turn the switch off."""
         await self.coordinator.controller.stop_zone(self._zone_id)
 
-        # Optimistically update state so HA immediately knows it is off
         self.coordinator.data.active_zones.discard(self._zone_id)
-        self.async_write_ha_state()
+        self.coordinator.async_set_updated_data(self.coordinator.data)
 
         await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
