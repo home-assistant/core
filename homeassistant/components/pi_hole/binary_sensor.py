@@ -41,7 +41,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole binary sensor."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME, entry.title)
     hole_data = entry.runtime_data
 
     binary_sensors = [

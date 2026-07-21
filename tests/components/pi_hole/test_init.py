@@ -234,6 +234,21 @@ async def test_setup_name_config(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.custom_ads_blocked").name == "Custom Ads blocked"
 
 
+async def test_setup_name_from_entry_title(hass: HomeAssistant) -> None:
+    """Tests component setup with the name taken from the config entry title."""
+    mocked_hole = _create_mocked_hole(api_version=6)
+    config = {**CONFIG_DATA_DEFAULTS}
+    config.pop(CONF_NAME)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, title="My Hole", data=config)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_hole_ads_blocked").name == "My Hole Ads blocked"
+
+
 async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()

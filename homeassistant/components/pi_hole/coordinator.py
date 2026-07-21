@@ -42,15 +42,16 @@ class PiHoleUpdateCoordinator(DataUpdateCoordinator[None]):
         config_entry: PiHoleConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
+        name = config_entry.data.get(CONF_NAME, config_entry.title)
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=config_entry.data[CONF_NAME],
+            name=name,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
         self._api = api
-        self._name = config_entry.data[CONF_NAME]
+        self._name = name
         self._host = config_entry.data[CONF_HOST]
 
     @override
