@@ -492,7 +492,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     hass.config.recovery_mode = True
 
     with patch(
-        "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
+        "homeassistant.components.http.server.get_url", side_effect=NoURLAvailableError
     ) as mock_get_url:
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_start()
@@ -525,7 +525,8 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     hass.config.recovery_mode = True
 
     with patch(
-        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+        "homeassistant.components.http.server.x509.CertificateBuilder",
+        side_effect=OSError,
     ) as mock_builder:
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_start()
@@ -566,7 +567,8 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     hass.config.recovery_mode = True
 
     with patch(
-        "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
+        "homeassistant.components.http.server.x509.CertificateBuilder",
+        side_effect=OSError,
     ) as mock_builder:
         assert await async_setup_component(hass, DOMAIN, {}) is False
         await hass.async_start()
@@ -639,7 +641,7 @@ async def test_create_server_passes_configuration(hass: HomeAssistant) -> None:
 
 async def test_cors_defaults(hass: HomeAssistant) -> None:
     """Test the CORS default settings."""
-    with patch("homeassistant.components.http.setup_cors") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_cors") as mock_setup:
         assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_setup.mock_calls) == 1
