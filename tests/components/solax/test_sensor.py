@@ -24,23 +24,19 @@ def __mock_get_data() -> InverterResponse:
 
 
 async def test_device_info_model(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the device registry entry has the discovered inverter model set."""
-    entry_data = {
-        CONF_IP_ADDRESS: "192.168.1.87",
-        CONF_PORT: 80,
-        CONF_PASSWORD: "password",
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="ABCDEFGHIJ")
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     inverter = next(
         iter(
             X1MiniV34.build_all_variants(
-                entry_data[CONF_IP_ADDRESS],
-                entry_data[CONF_PORT],
-                entry_data[CONF_PASSWORD],
+                mock_config_entry.data[CONF_IP_ADDRESS],
+                mock_config_entry.data[CONF_PORT],
+                mock_config_entry.data[CONF_PASSWORD],
             )
         )
     )
@@ -49,7 +45,7 @@ async def test_device_info_model(
         patch("homeassistant.components.solax.discover", return_value=inverter),
         patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "ABCDEFGHIJ")})
