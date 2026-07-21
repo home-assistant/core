@@ -100,6 +100,4 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         except ClientResponseError as exception:
             if exception.status != HTTPStatus.BAD_REQUEST:
                 raise
-            _LOGGER.debug(
-                "Device %s does not support room priority data", device_id
-            )
+            _LOGGER.debug("Device %s does not support room priority data", device_id)
