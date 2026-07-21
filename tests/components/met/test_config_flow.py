@@ -7,8 +7,13 @@ from unittest.mock import ANY, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.components.met.const import (
+    CONF_TRACK_HOME,
+    DEFAULT_NAME,
+    DOMAIN,
+    HOME_LOCATION_NAME,
+)
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
@@ -56,7 +61,6 @@ async def test_flow_with_home_location(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     default_data = result["data_schema"]({})
-    assert default_data["name"] == HOME_LOCATION_NAME
     assert default_data["latitude"] == 1
     assert default_data["longitude"] == 2
     assert default_data["elevation"] == 3
@@ -65,7 +69,6 @@ async def test_flow_with_home_location(hass: HomeAssistant) -> None:
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     test_data = {
-        "name": "home",
         CONF_LONGITUDE: 0,
         CONF_LATITUDE: 0,
         CONF_ELEVATION: 0,
@@ -76,7 +79,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "home"
+    assert result["title"] == f"{DEFAULT_NAME} (0, 0)"
     assert result["data"] == test_data
 
 
@@ -88,12 +91,13 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """
     first_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"name": "home", CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_ELEVATION: 0},
+        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_ELEVATION: 0},
     )
     first_entry.add_to_hass(hass)
+    home_entry = MockConfigEntry(domain=DOMAIN, data={CONF_TRACK_HOME: True})
+    home_entry.add_to_hass(hass)
 
     test_data = {
-        "name": "home",
         CONF_LONGITUDE: 0,
         CONF_LATITUDE: 0,
         CONF_ELEVATION: 0,
@@ -104,7 +108,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["name"] == "already_configured"
+    assert result["errors"]["base"] == "already_configured"
 
 
 async def test_onboarding_step(hass: HomeAssistant) -> None:
@@ -142,16 +146,35 @@ async def test_onboarding_step_abort_no_home(
 
 
 @pytest.mark.disable_autouse_fixture
-async def test_options_flow(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("track_home", "initial_title", "expected_title"),
+    [
+        pytest.param(
+            False, None, f"{DEFAULT_NAME} (12, 23)", id="generated_title_updated"
+        ),
+        pytest.param(
+            False, "Custom location", "Custom location", id="custom_title_kept"
+        ),
+        pytest.param(False, "", f"{DEFAULT_NAME} (12, 23)", id="empty_title_updated"),
+        pytest.param(
+            True, None, f"{DEFAULT_NAME} (12, 23)", id="track_home_title_updated"
+        ),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant,
+    track_home: bool,
+    initial_title: str | None,
+    expected_title: str,
+) -> None:
     """Test show options form."""
     update_data = {
-        CONF_NAME: "test",
         CONF_LATITUDE: 12,
         CONF_LONGITUDE: 23,
         CONF_ELEVATION: 456,
     }
 
-    entry = await init_integration(hass)
+    entry = await init_integration(hass, track_home=track_home, title=initial_title)
     await hass.async_block_till_done()
 
     # Test show Options form
@@ -168,8 +191,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Mock Title"
+    assert result["title"] == expected_title
     assert result["data"] == update_data
+    assert entry.title == expected_title
+    assert entry.data == update_data
     weatherdatamock.assert_called_with(
         {"lat": "12", "lon": "23", "msl": "456"}, ANY, api_url=ANY
     )

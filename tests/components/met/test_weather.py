@@ -135,8 +135,8 @@ async def test_remove_hourly_entity(
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
+        data={"latitude": 10, "longitude": 20, "elevation": 0},
     )
     await hass.async_block_till_done()
-    assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
-    assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]
+    assert hass.states.async_entity_ids("weather") == ["weather.met_no_10_20"]
+    assert list(entity_registry.entities.keys()) == ["weather.met_no_10_20"]
