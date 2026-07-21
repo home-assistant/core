@@ -592,7 +592,7 @@
             "data_description": {
               "device_id": "The device this template helper should be linked to."
             },
-            "description": "The {template_type} template helper {name} was linked to a device which has been split into the following devices: {devices}.\n\nSelect the device this helper should be linked to, or leave empty to not link it to a device.",
+            "description": "The template helper {name} was linked to a device which has been split into multiple devices.\n\nSelect the device this helper should be linked to, or leave empty to not link it to a device.",
             "title": "Select device for {name}"
           }
         }

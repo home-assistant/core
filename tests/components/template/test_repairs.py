@@ -159,11 +159,7 @@ async def test_composite_device_id_repair_flow(
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "select_device"
-    assert result["description_placeholders"] == {
-        "name": "My template",
-        "template_type": "sensor",
-        "devices": "Split device 1, Split device 2",
-    }
+    assert result["description_placeholders"] == {"name": "My template"}
     assert result["data_schema"] == EXPECTED_DATA_SCHEMA
 
     user_input = {CONF_DEVICE_ID: picked_device_id} if pick_device else {}
