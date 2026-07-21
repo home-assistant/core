@@ -402,15 +402,26 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
             for model in self.models.values()
         ]
 
+        # Default to the first available model. The recommended model may
+        # not be in the list (e.g. openai/gpt-4o-mini-tts is not returned
+        # by the speech output_modalities filter).
+        stored_default = self.options.get(CONF_MODEL)
+        if stored_default and any(
+            m["value"] == stored_default for m in tts_models
+        ):
+            default_model = stored_default
+        elif tts_models:
+            default_model = tts_models[0]["value"]
+        else:
+            default_model = RECOMMENDED_TTS_MODEL
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_MODEL,
-                        default=self.options.get(
-                            CONF_MODEL, RECOMMENDED_TTS_MODEL
-                        ),
+                        default=default_model,
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=tts_models,
@@ -550,15 +561,25 @@ class SttFlowHandler(OpenRouterSubentryFlowHandler):
             for model in self.models.values()
         ]
 
+        # Default to the first available model if the stored/recommended
+        # one is not in the list.
+        stored_default = self.options.get(CONF_MODEL)
+        if stored_default and any(
+            m["value"] == stored_default for m in stt_models
+        ):
+            default_model = stored_default
+        elif stt_models:
+            default_model = stt_models[0]["value"]
+        else:
+            default_model = RECOMMENDED_STT_MODEL
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_MODEL,
-                        default=self.options.get(
-                            CONF_MODEL, RECOMMENDED_STT_MODEL
-                        ),
+                        default=default_model,
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=stt_models,
