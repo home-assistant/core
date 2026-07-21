@@ -136,11 +136,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
+            hass,
+            config,
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
                 order=call.data.get(ATTR_ORDER),
-            )
+            ),
         )
 
     hass.services.async_register(
@@ -178,7 +180,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             time = 0
 
         await handle_vehicle_command(
-            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
+            hass,
+            config,
+            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time),
         )
 
     hass.services.async_register(
@@ -238,6 +242,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             end_off_peak_time = 0
 
         await handle_vehicle_command(
+            hass,
+            config,
             vehicle.api.set_scheduled_departure(
                 enable,
                 preconditioning_enabled,
@@ -246,7 +252,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 off_peak_charging_enabled,
                 off_peak_charging_weekdays_only,
                 end_off_peak_time,
-            )
+            ),
         )
 
     hass.services.async_register(
@@ -274,7 +280,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
-            vehicle.api.set_valet_mode(call.data["enable"], call.data["pin"])
+            hass,
+            config,
+            vehicle.api.set_valet_mode(call.data["enable"], call.data["pin"]),
         )
 
     hass.services.async_register(
@@ -299,11 +307,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         enable = call.data["enable"]
         if enable is True:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_activate(call.data["pin"])
+                hass, config, vehicle.api.speed_limit_activate(call.data["pin"])
             )
         elif enable is False:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_deactivate(call.data["pin"])
+                hass, config, vehicle.api.speed_limit_deactivate(call.data["pin"])
             )
 
     hass.services.async_register(
@@ -330,7 +338,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         if "tariff_content_v2" in tou_settings:
             tou_settings = tou_settings["tariff_content_v2"]
 
-        resp = await handle_command(site.api.time_of_use_settings(tou_settings))
+        resp = await handle_command(
+            hass, config, site.api.time_of_use_settings(tou_settings)
+        )
         if "error" in resp:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -392,6 +402,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         name = call.data.get(ATTR_NAME)
 
         await handle_vehicle_command(
+            hass,
+            config,
             vehicle.api.add_charge_schedule(
                 days_of_week=days_of_week,
                 enabled=enabled,
@@ -402,7 +414,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 one_time=one_time,
                 id=schedule_id,
                 name=name,
-            )
+            ),
         )
 
     hass.services.async_register(
@@ -437,9 +449,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schedule_id = call.data[ATTR_ID]
 
         await handle_vehicle_command(
+            hass,
+            config,
             vehicle.api.remove_charge_schedule(
                 id=schedule_id,
-            )
+            ),
         )
 
     hass.services.async_register(
@@ -487,6 +501,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         name = call.data.get(ATTR_NAME)
 
         await handle_vehicle_command(
+            hass,
+            config,
             vehicle.api.add_precondition_schedule(
                 days_of_week=days_of_week,
                 enabled=enabled,
@@ -496,7 +512,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 id=schedule_id,
                 one_time=one_time,
                 name=name,
-            )
+            ),
         )
 
     hass.services.async_register(
@@ -530,9 +546,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schedule_id = call.data[ATTR_ID]
 
         await handle_vehicle_command(
+            hass,
+            config,
             vehicle.api.remove_precondition_schedule(
                 id=schedule_id,
-            )
+            ),
         )
 
     hass.services.async_register(
