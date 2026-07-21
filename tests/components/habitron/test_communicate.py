@@ -260,12 +260,20 @@ async def test_get_smhub_info_external_hub_has_none_slug() -> None:
 
 
 async def test_async_setup_resolves_host_and_connects() -> None:
-    """async_setup resolves the host and connects a fresh client."""
+    """async_setup resolves a hostname and connects a fresh client.
+
+    ``get_host_ip`` does its own async DNS, so it has to be awaited directly.
+    Handing it to the executor would assign the *coroutine* to ``_host`` (never
+    resolving it), so assert the stored host is the resolved string.
+    """
     comm = _make_comm("my-hub.local")
     comm._client = None
-    comm._hass.async_add_executor_job = AsyncMock(return_value="10.0.0.9")
     client = AsyncMock(spec=HabitronClient)
     with (
+        patch(
+            "homeassistant.components.habitron.communicate.get_host_ip",
+            new=AsyncMock(return_value="10.0.0.9"),
+        ),
         patch(
             "homeassistant.components.habitron.communicate.network.async_get_source_ip",
             new=AsyncMock(return_value="10.0.0.1"),
@@ -281,6 +289,7 @@ async def test_async_setup_resolves_host_and_connects() -> None:
     ):
         await comm.async_setup()
     assert comm._host == "10.0.0.9"
+    assert isinstance(comm._host, str)
     assert comm.hbtn_version == "3.0.2"
     client.connect.assert_awaited()
 
