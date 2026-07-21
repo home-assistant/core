@@ -203,7 +203,8 @@ DRYER_CYCLES = [
 
 APPLIANCE_IDLE_OPERATING_STATES = {"ready", "stop"}
 APPLIANCE_IDLE_JOB_STATES = {"finish", "finished", "none"}
-SAMSUNG_CE_PROGRESS_JOB_ATTRIBUTES = {
+SAMSUNG_CE_IDLE_VALUE_ATTRIBUTES = {Attribute.PROGRESS, Attribute.REMAINING_TIME}
+SAMSUNG_CE_IDLE_JOB_ATTRIBUTES = {
     Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: Attribute.WASHER_JOB_STATE,
     Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: Attribute.DRYER_JOB_STATE,
 }
@@ -1604,8 +1605,8 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         value = self.entity_description.value_fn(res)
         if (
             value is not None
-            and self._attribute == Attribute.PROGRESS
-            and self._is_idle_appliance_progress()
+            and self._attribute in SAMSUNG_CE_IDLE_VALUE_ATTRIBUTES
+            and self._is_idle_samsung_ce_appliance()
         ):
             value = 0
         if self.entity_description.presentation_fn:
@@ -1614,10 +1615,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             )
         return value
 
-    def _is_idle_appliance_progress(self) -> bool:
-        """Return if a Samsung CE appliance progress value is stale while idle."""
+    def _is_idle_samsung_ce_appliance(self) -> bool:
+        """Return if a Samsung CE appliance value is stale while idle."""
         if (
-            job_state_attribute := SAMSUNG_CE_PROGRESS_JOB_ATTRIBUTES.get(
+            job_state_attribute := SAMSUNG_CE_IDLE_JOB_ATTRIBUTES.get(
                 self.capability
             )
         ) is None:

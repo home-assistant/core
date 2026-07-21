@@ -16026,7 +16026,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '75',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_drying_progress-entry]
@@ -16722,7 +16722,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '188',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_drying_progress-entry]
@@ -17428,7 +17428,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '270',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_drying_progress-entry]
@@ -18568,7 +18568,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '45',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_washing_progress-entry]
@@ -20363,7 +20363,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '57',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wm_100001][sensor.washer_1_washing_progress-entry]
