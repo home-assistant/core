@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
+from mashumaro.exceptions import MissingField
 from spotifyaio import (
     ContextType,
     Device,
@@ -149,6 +150,22 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             ) from err
         except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
+        except MissingField as err:
+            if (
+                "PlaybackState" in str(err)
+                and 'Field "context"' in str(err)
+                and "missing" in str(err)
+            ):
+                _LOGGER.debug(
+                    "Spotify playback payload is missing context; "
+                    "continuing without playback data"
+                )
+                return SpotifyCoordinatorData(
+                    current_playback=None,
+                    position_updated_at=None,
+                    playlist=None,
+                )
+            raise UpdateFailed("Unexpected playback data from Spotify API") from err
         if not current:
             return SpotifyCoordinatorData(
                 current_playback=None,

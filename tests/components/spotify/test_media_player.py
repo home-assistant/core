@@ -1,6 +1,7 @@
 """Tests for the Spotify media player platform."""
 
 from datetime import timedelta
+import json
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -260,6 +261,28 @@ async def test_idle(
     assert (
         state.attributes["supported_features"] == MediaPlayerEntityFeature.SELECT_SOURCE
     )
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_missing_context_in_playback_payload(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test missing context in playback payload does not break updates."""
+    payload = json.loads(await async_load_fixture(hass, "playback.json", DOMAIN))
+    payload.pop("context", None)
+
+    def _raise_missing_context() -> PlaybackState:
+        return PlaybackState.from_json(json.dumps(payload))
+
+    mock_spotify.return_value.get_playback.side_effect = _raise_missing_context
+
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.state == MediaPlayerState.IDLE
+    assert "media_title" not in state.attributes
 
 
 @pytest.mark.usefixtures("setup_credentials")
