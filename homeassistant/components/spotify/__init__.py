@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 import aiohttp
 from spotifyaio import SpotifyClient
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -36,7 +35,7 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-007"  # Increment for each deployment
+BUILD_ID = "20260721-008"  # Increment for each deployment
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -64,14 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
         _LOGGER.warning(
-            "[%s] Spotify refresh token expired or revoked for %s, requesting reauthentication",
+            "[%s] Spotify refresh token expired or revoked for %s",
             BUILD_ID,
             entry.title,
-        )
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data={},
         )
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,

@@ -17,7 +17,7 @@ from spotifyaio import (
     UserProfile,
 )
 
-from homeassistant.config_entries import ConfigEntry, SOURCE_REAUTH
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-007"  # Increment for each deployment
+BUILD_ID = "20260721-008"  # Increment for each deployment
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
@@ -106,11 +106,6 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 BUILD_ID,
                 self.config_entry.title,
             )
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH, "entry_id": self.config_entry.entry_id},
-                data={},
-            )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_token_reauth_required",
@@ -141,11 +136,6 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 "[%s] Spotify token expired in _async_update_data for %s",
                 BUILD_ID,
                 self.config_entry.title,
-            )
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH, "entry_id": self.config_entry.entry_id},
-                data={},
             )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -242,11 +232,6 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
                 "[%s] Spotify token expired in device coordinator for %s",
                 BUILD_ID,
                 self.config_entry.title,
-            )
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH, "entry_id": self.config_entry.entry_id},
-                data={},
             )
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
