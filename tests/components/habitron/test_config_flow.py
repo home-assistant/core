@@ -1,5 +1,6 @@
 """Tests for the Habitron config flow."""
 
+from ipaddress import IPv4Address
 import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -568,10 +569,40 @@ async def test_is_device_already_configured_matches_local_sentinel(
     flow = ConfigFlow()
     flow.hass = hass
     with patch(
-        "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
-        return_value=MOCK_HOST,
+        "homeassistant.components.habitron.config_flow.network."
+        "async_get_enabled_source_ips",
+        new=AsyncMock(return_value=[IPv4Address(MOCK_HOST)]),
     ):
         assert await flow._is_device_already_configured(MOCK_HOST) is True
+
+
+async def test_local_sentinel_matches_any_local_ip_multi_homed(
+    hass: HomeAssistant,
+) -> None:
+    """A hub stored as ``local`` matches *any* of HA's local addresses.
+
+    A SmartCenter add-on host with both LAN and WLAN active exposes several
+    local IPs; entering the hub via a non-primary one must still resolve to the
+    same ``local`` entry, not create a duplicate.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id="existing-id",
+        data={"habitron_host": "local"},
+    ).add_to_hass(hass)
+
+    flow = ConfigFlow()
+    flow.hass = hass
+    with patch(
+        "homeassistant.components.habitron.config_flow.network."
+        "async_get_enabled_source_ips",
+        new=AsyncMock(
+            return_value=[IPv4Address("192.168.1.50"), IPv4Address("10.0.0.9")]
+        ),
+    ):
+        # The WLAN address, not the primary LAN one.
+        assert await flow._is_device_already_configured("10.0.0.9") is True
 
 
 async def test_is_device_already_configured_ip_match(hass: HomeAssistant) -> None:

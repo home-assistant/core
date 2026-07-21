@@ -1,6 +1,7 @@
 """Pytest fixtures for the Habitron integration."""
 
 from collections.abc import Generator
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -66,6 +67,11 @@ def mock_habitron_client() -> Generator[MagicMock]:
         patch(
             "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
             new=AsyncMock(return_value="192.168.1.10"),
+        ),
+        patch(
+            "homeassistant.components.habitron.config_flow.network."
+            "async_get_enabled_source_ips",
+            new=AsyncMock(return_value=[IPv4Address("192.168.1.10")]),
         ),
         patch(
             "homeassistant.components.habitron.config_flow.discover_smarthubs",
