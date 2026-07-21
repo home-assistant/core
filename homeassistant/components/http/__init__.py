@@ -231,6 +231,52 @@ async def _async_fallback_config(
     return _DEFAULT_CONFIG
 
 
+def _make_server(
+    hass: HomeAssistant,
+    conf: ConfData,
+    supervisor_unix_socket_path: Path | None = None,
+) -> HomeAssistantHTTP:
+    """Create a server instance for the given config."""
+    return HomeAssistantHTTP(
+        hass,
+        server_host=conf.get(CONF_SERVER_HOST, _DEFAULT_BIND),
+        server_port=conf[CONF_SERVER_PORT],
+        ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
+        ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),
+        ssl_key=conf.get(CONF_SSL_KEY),
+        # The loaded config stores trusted proxies as strings
+        # (JSON-serializable); the forwarded middleware needs
+        # IPv4Network/IPv6Network objects.
+        trusted_proxies=[
+            ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
+        ],
+        ssl_profile=conf[CONF_SSL_PROFILE],
+        supervisor_unix_socket_path=supervisor_unix_socket_path,
+    )
+
+
+async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:
+    """Verify a server for ``conf`` can be created and its address bound.
+
+    Used to validate a new user-supplied config before it is stored and
+    applied via a restart; the sockets are released right away. Best effort:
+    the address can still be taken by another process before the restart, so
+    the setup fallback chain remains the safety net.
+
+    Raises ``HomeAssistantError`` if the SSL configuration is unusable or the
+    configured address cannot be bound.
+    """
+    server = _make_server(hass, conf)
+    try:
+        await server.async_bind()
+    except OSError as err:
+        raise HomeAssistantError(
+            f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
+        ) from err
+    finally:
+        await server.stop()
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
     # Late import to ensure isal is updated before
@@ -262,25 +308,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 socket_env,
             )
 
-    def _make_server(conf: ConfData) -> HomeAssistantHTTP:
-        return HomeAssistantHTTP(
-            hass,
-            server_host=conf.get(CONF_SERVER_HOST, _DEFAULT_BIND),
-            server_port=conf[CONF_SERVER_PORT],
-            ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
-            ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),
-            ssl_key=conf.get(CONF_SSL_KEY),
-            # The loaded config stores trusted proxies as strings
-            # (JSON-serializable); the forwarded middleware needs
-            # IPv4Network/IPv6Network objects.
-            trusted_proxies=[
-                ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
-            ],
-            ssl_profile=conf[CONF_SSL_PROFILE],
-            supervisor_unix_socket_path=supervisor_unix_socket_path,
-        )
-
-    server = _make_server(conf)
+    server = _make_server(hass, conf, supervisor_unix_socket_path)
     trial_reverted = False
     while True:
         try:
@@ -289,7 +317,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             store = await async_get_and_load_store(hass)
             trial_reverted = store.revert_deadline is not None
             conf = await _async_fallback_config(hass, store, conf, err)
-            server = _make_server(conf)
+            server = _make_server(hass, conf, supervisor_unix_socket_path)
             continue
         if trial_reverted:
             _LOGGER.warning(
