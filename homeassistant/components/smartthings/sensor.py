@@ -5,7 +5,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast, override
 
-from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
+from pysmartthings import (
+    Attribute,
+    Capability,
+    ComponentStatus,
+    DeviceEvent,
+    SmartThings,
+    Status,
+)
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -1629,6 +1636,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             self._attr_translation_key = (
                 self.entity_description.component_translation_key.get(component)
             )
+        self._last_completion_time: datetime | None = None
+        if (
+            self._attribute == Attribute.COMPLETION_TIME
+            and (idle_status := self._get_idle_appliance_status()) is not None
+        ):
+            self._last_completion_time = idle_status[1].timestamp
 
     @property
     @override
@@ -1639,44 +1652,96 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             return options_map.get(res)
         value = self.entity_description.value_fn(res)
         if (
-            value is not None
-            and self._attribute in APPLIANCE_IDLE_VALUE_ATTRIBUTES
-            and self._is_idle_appliance()
+            self._attribute in APPLIANCE_IDLE_VALUE_ATTRIBUTES
+            and (idle_status := self._get_idle_appliance_status()) is not None
         ):
             if self._attribute == Attribute.COMPLETION_TIME:
-                return None
-            value = 0
+                return self._last_completion_time or idle_status[1].timestamp
+            if value is not None:
+                value = 0
         if self.entity_description.presentation_fn:
             value = self.entity_description.presentation_fn(
                 self.device.device.presentation_id, value
             )
         return value
 
-    def _is_idle_appliance(self) -> bool:
-        """Return if an appliance value is stale while idle."""
+    def _get_idle_appliance_status(self) -> tuple[Attribute, Status] | None:
+        """Return the status that indicates the appliance is idle."""
         if (
             state_attributes := APPLIANCE_IDLE_STATE_ATTRIBUTES.get(
                 self._idle_state_capability
             )
         ) is None:
-            return False
+            return None
 
         capability_status = self._internal_state.get(self._idle_state_capability)
         if capability_status is None:
-            return False
+            return None
 
         state_attribute, job_state_attribute = state_attributes
         if (
             state_status := capability_status.get(state_attribute)
         ) is not None and state_status.value is not None:
-            return str(state_status.value).lower() in APPLIANCE_IDLE_OPERATING_STATES
+            return (
+                (state_attribute, state_status)
+                if str(state_status.value).lower() in APPLIANCE_IDLE_OPERATING_STATES
+                else None
+            )
 
-        return (
-            str(job_status.value).lower() in APPLIANCE_IDLE_JOB_STATES
-            if (job_status := capability_status.get(job_state_attribute)) is not None
+        if (
+            (job_status := capability_status.get(job_state_attribute)) is not None
             and job_status.value is not None
-            else False
-        )
+            and str(job_status.value).lower() in APPLIANCE_IDLE_JOB_STATES
+        ):
+            return job_state_attribute, job_status
+        return None
+
+    @override
+    def _update_handler(self, event: DeviceEvent) -> None:
+        """Update the sensor from a live event."""
+        if self._attribute != Attribute.COMPLETION_TIME:
+            super()._update_handler(event)
+            return
+        status = self._internal_state[event.capability][event.attribute]
+        status.value = event.value
+        status.data = event.data
+        status.timestamp = dt_util.utcnow()
+        self._update_completion_time(event, status)
+        self._handle_update()
+
+    def _update_completion_time(self, event: DeviceEvent, status: Status) -> None:
+        """Store the actual completion time from an idle state event."""
+        if (
+            event.capability != self._idle_state_capability
+            or (
+                state_attributes := APPLIANCE_IDLE_STATE_ATTRIBUTES.get(
+                    self._idle_state_capability
+                )
+            )
+            is None
+            or event.value is None
+        ):
+            return
+
+        state_attribute, job_state_attribute = state_attributes
+        value = str(event.value).lower()
+        if event.attribute == state_attribute:
+            if value in APPLIANCE_IDLE_OPERATING_STATES:
+                self._last_completion_time = (
+                    self._last_completion_time or status.timestamp
+                )
+            else:
+                self._last_completion_time = None
+        elif event.attribute == job_state_attribute:
+            state_status = self._internal_state[self._idle_state_capability].get(
+                state_attribute
+            )
+            if value in APPLIANCE_IDLE_JOB_STATES:
+                self._last_completion_time = (
+                    self._last_completion_time or status.timestamp
+                )
+            elif state_status is None or state_status.value is None:
+                self._last_completion_time = None
 
     @property
     @override

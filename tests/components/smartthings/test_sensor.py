@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import Attribute, Capability
 from pysmartthings.models import HealthStatus
 import pytest
@@ -73,8 +74,9 @@ async def test_appliance_values_clear_on_idle_update(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test stale appliance values clear when the machine becomes idle."""
+    """Test appliance values update when the machine becomes idle."""
     await setup_integration(hass, mock_config_entry)
 
     completion_time = "sensor.machine_a_laver_completion_time"
@@ -84,6 +86,7 @@ async def test_appliance_values_clear_on_idle_update(
     assert hass.states.get(remaining_time).state == "100"
     assert hass.states.get(progress).state == "40"
 
+    freezer.move_to("2025-04-25T10:20:00Z")
     await trigger_update(
         hass,
         devices,
@@ -93,9 +96,21 @@ async def test_appliance_values_clear_on_idle_update(
         "stop",
     )
 
-    assert hass.states.get(completion_time).state == STATE_UNKNOWN
+    assert hass.states.get(completion_time).state == "2025-04-25T10:20:00+00:00"
     assert hass.states.get(remaining_time).state == "0"
     assert hass.states.get(progress).state == "0"
+
+    freezer.move_to("2025-04-26T08:00:00Z")
+    await trigger_update(
+        hass,
+        devices,
+        "b854ca5f-dc54-140d-6349-758b4d973c41",
+        Capability.WASHER_OPERATING_STATE,
+        Attribute.COMPLETION_TIME,
+        "2025-04-26T10:34:12Z",
+    )
+
+    assert hass.states.get(completion_time).state == "2025-04-25T10:20:00+00:00"
 
     await trigger_update(
         hass,
@@ -114,9 +129,30 @@ async def test_appliance_values_clear_on_idle_update(
         "none",
     )
 
-    assert hass.states.get(completion_time).state == STATE_UNKNOWN
+    assert hass.states.get(completion_time).state == "2025-04-25T10:20:00+00:00"
     assert hass.states.get(remaining_time).state == "0"
     assert hass.states.get(progress).state == "0"
+
+    await trigger_update(
+        hass,
+        devices,
+        "b854ca5f-dc54-140d-6349-758b4d973c41",
+        Capability.WASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "run",
+    )
+    assert hass.states.get(completion_time).state == "2025-04-26T10:34:12+00:00"
+
+    freezer.move_to("2025-04-26T10:00:00Z")
+    await trigger_update(
+        hass,
+        devices,
+        "b854ca5f-dc54-140d-6349-758b4d973c41",
+        Capability.WASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "stop",
+    )
+    assert hass.states.get(completion_time).state == "2025-04-26T10:00:00+00:00"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_01011"])
@@ -125,10 +161,13 @@ async def test_idle_appliance_values(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test stale appliance values are cleared during setup while idle."""
+    """Test appliance values during setup while idle."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.trockner_completion_time").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("sensor.trockner_completion_time").state
+        == "2025-10-16T09:03:25+00:00"
+    )
     assert hass.states.get("sensor.trockner_dryer_remaining_time").state == "0"
     assert hass.states.get("sensor.trockner_drying_progress").state == "0"
 
