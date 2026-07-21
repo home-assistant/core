@@ -114,9 +114,7 @@ async def async_setup_entry(
             device = coordinator.data[device_id]
             for description in SELECT_TYPES:
                 if device.get(description.key):
-                    if (
-                        description.key not in ("dhw_mode", "select_dhw_mode")
-                    ) or (
+                    if (description.key not in ("dhw_mode", "select_dhw_mode")) or (
                         len(device[description.options_key]) > 2
                     ):
                         entities.append(

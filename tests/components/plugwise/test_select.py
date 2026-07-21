@@ -6,7 +6,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import (
-    DHW_MODE,
     SELECT_DHW_MODE,
     SELECT_GATEWAY_MODE,
     SELECT_REGULATION_MODE,
