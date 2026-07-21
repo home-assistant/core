@@ -1411,9 +1411,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def async_get_devices(
         self,
+        *,
         identifiers: set[tuple[str, str]] | None = None,
         connections: set[tuple[str, str]] | None = None,
-        *,
         config_entry_id: str | None = None,
     ) -> list[DeviceEntry]:
         """Get all devices matching any of the identifiers or connections.
