@@ -48,6 +48,12 @@ _FALLBACK_VOICES = [
     Voice("cedar", "Cedar"),
 ]
 
+
+def _build_voice_list(voice_ids: list[str]) -> list[Voice]:
+    """Build a list of Voice objects from voice ID strings."""
+    return [Voice(v, v) for v in voice_ids]
+
+
 _SUPPORTED_FORMATS = ["mp3", "pcm", "opus", "aac", "flac", "wav"]
 
 
