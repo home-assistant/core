@@ -149,6 +149,7 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
             model_data["id"]: SimpleNamespace(
                 id=model_data["id"],
                 name=model_data.get("name", model_data["id"]),
+                supported_voices=model_data.get("supported_voices"),
             )
             for model_data in data.get("data", [])
         }
@@ -380,6 +381,12 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
 
         if user_input is not None:
             self.options[CONF_MODEL] = user_input[CONF_MODEL]
+            selected_model = self.models.get(user_input[CONF_MODEL])
+            self.options["supported_voices"] = (
+                selected_model.supported_voices
+                if selected_model is not None
+                else None
+            )
             return await self.async_step_voice()
 
         try:
@@ -436,11 +443,19 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
                 data=self.options,
             )
 
-        voices = [
-            SelectOptionDict(value=v, label=v.title())
-            for v in ("alloy", "ash", "ballad", "coral", "echo", "fable",
-                      "nova", "onyx", "sage", "shimmer", "verse", "marin", "cedar")
-        ]
+        voices: list[SelectOptionDict]
+        model_voices = self.options.get("supported_voices")
+        if model_voices:
+            voices = [
+                SelectOptionDict(value=v, label=v)
+                for v in model_voices
+            ]
+        else:
+            voices = [
+                SelectOptionDict(value=v, label=v.title())
+                for v in ("alloy", "ash", "ballad", "coral", "echo", "fable",
+                          "nova", "onyx", "sage", "shimmer", "verse", "marin", "cedar")
+            ]
 
         return self.async_show_form(
             step_id="voice",

@@ -29,9 +29,9 @@ from .entity import OpenRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Known TTS models and their voices. Updated as new models become available.
-# Some providers/models may not expose voices via the API, so we maintain a
-# fallback list.
+# Some providers/models may not expose voices via the API (indicated by
+# supported_voices: None), so we maintain a standard OpenAI-compatible
+# fallback list for those.
 _FALLBACK_VOICES = [
     Voice("alloy", "Alloy"),
     Voice("ash", "Ash"),
@@ -96,16 +96,22 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
     @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
+        voice_ids = self.subentry.data.get("supported_voices")
+        if voice_ids:
+            return _build_voice_list(voice_ids)
         return _FALLBACK_VOICES
 
     @cached_property
     @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
+        voice_ids = self.subentry.data.get("supported_voices")
+        default_voice = (
+            voice_ids[0] if voice_ids
+            else self.subentry.data.get(CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE)
+        )
         return {
-            ATTR_VOICE: self.subentry.data.get(
-                CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE
-            ),
+            ATTR_VOICE: default_voice,
             ATTR_PREFERRED_FORMAT: "mp3",
         }
 
