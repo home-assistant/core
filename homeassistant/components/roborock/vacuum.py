@@ -182,13 +182,16 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         what was available when the area mapping was last configured.
         """
         super()._handle_coordinator_update()
+        # Avoid creating false-alarm issues if home map info is not yet loaded
+        if self._home_trait.home_map_info is None:
+            return
         last_seen = self.last_seen_segments
         if last_seen is None:
             # No area mapping has been configured yet; nothing to check.
             return
         current_ids = {
             f"{map_flag}_{room.segment_id}"
-            for map_flag, map_info in (self._home_trait.home_map_info or {}).items()
+            for map_flag, map_info in self._home_trait.home_map_info.items()
             for room in map_info.rooms
         }
         if current_ids != {seg.id for seg in last_seen}:
@@ -562,6 +565,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -696,6 +700,30 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                 translation_key="command_failed",
                 translation_placeholders={
                     "command": "set_fan_speed",
+                },
+            ) from err
+
+    @override
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        return [
+            Segment(id=str(room.id), name=room.name)
+            for room in self.coordinator.api.map.rooms
+        ]
+
+    @override
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments."""
+        try:
+            await self.coordinator.api.vacuum.clean_segments(
+                [int(seg_id) for seg_id in segment_ids]
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "clean_segments",
                 },
             ) from err
 

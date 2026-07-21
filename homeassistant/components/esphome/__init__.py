@@ -2,7 +2,7 @@
 
 import logging
 
-from aioesphomeapi import APIClient, APIConnectionError
+from aioesphomeapi import APIConnectionError
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -11,13 +11,7 @@ from homeassistant.components.usb import (
     USBDevice,
     async_register_serial_port_scanner,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    __version__ as ha_version,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import async_delete_issue
@@ -29,14 +23,17 @@ from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
-from .manager import DEVICE_CONFLICT_ISSUE_FORMAT, ESPHomeManager, cleanup_instance
+from .manager import (
+    DEVICE_CONFLICT_ISSUE_FORMAT,
+    ESPHomeManager,
+    async_create_api_client,
+    cleanup_instance,
+)
 from .websocket_api import async_setup as async_setup_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-CLIENT_INFO = f"Home Assistant {ha_version}"
 
 
 @callback
@@ -90,20 +87,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Set up the esphome component."""
     host: str = entry.data[CONF_HOST]
-    port: int = entry.data[CONF_PORT]
     password: str | None = entry.data[CONF_PASSWORD]
-    noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
-    cli = APIClient(
-        host,
-        port,
-        password,
-        client_info=CLIENT_INFO,
-        zeroconf_instance=zeroconf_instance,
-        noise_psk=noise_psk,
-        timezone=hass.config.time_zone,
+    cli = async_create_api_client(
+        hass, entry, zeroconf_instance, noise_psk=entry.data.get(CONF_NOISE_PSK)
     )
 
     domain_data = DomainData.get(hass)
@@ -159,21 +148,10 @@ async def _async_clear_dynamic_encryption_key(
     if await storage.async_get_key(entry.unique_id) is None:
         return
 
-    host: str = entry.data[CONF_HOST]
-    port: int = entry.data[CONF_PORT]
-    password: str | None = entry.data[CONF_PASSWORD]
-    noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
-
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
-    cli = APIClient(
-        host,
-        port,
-        password,
-        client_info=CLIENT_INFO,
-        zeroconf_instance=zeroconf_instance,
-        noise_psk=noise_psk,
-        timezone=hass.config.time_zone,
+    cli = async_create_api_client(
+        hass, entry, zeroconf_instance, noise_psk=entry.data.get(CONF_NOISE_PSK)
     )
 
     try:

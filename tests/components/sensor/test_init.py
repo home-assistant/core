@@ -33,8 +33,6 @@ from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVER
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
@@ -55,6 +53,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
@@ -1076,15 +1075,15 @@ async def test_custom_unit(
         # Power factor
         (
             None,
-            PERCENTAGE,
-            PERCENTAGE,
+            UnitOfRatio.PERCENTAGE,
+            UnitOfRatio.PERCENTAGE,
             1.0,
             1.0,
             100.0,
             SensorDeviceClass.POWER_FACTOR,
         ),
         (
-            PERCENTAGE,
+            UnitOfRatio.PERCENTAGE,
             None,
             None,
             100,
@@ -2601,7 +2600,7 @@ async def test_device_classes_with_invalid_state_class(
         ("custom", None, None, None, False),
         (SensorDeviceClass.POWER, None, "V", None, True),
         (None, SensorStateClass.MEASUREMENT, None, None, True),
-        (None, None, PERCENTAGE, None, True),
+        (None, None, UnitOfRatio.PERCENTAGE, None, True),
         (None, None, None, None, False),
     ],
 )
@@ -3088,9 +3087,9 @@ async def test_suggested_unit_guard_invalid_unit(
         ),
         (
             SensorDeviceClass.CO2,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfRatio.PARTS_PER_MILLION,
             10,
-            CONCENTRATION_PARTS_PER_MILLION,
+            UnitOfRatio.PARTS_PER_MILLION,
             10,
         ),
     ],

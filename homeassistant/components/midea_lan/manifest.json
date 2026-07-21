@@ -1,0 +1,12 @@
+{
+  "domain": "midea_lan",
+  "name": "Midea LAN",
+  "codeowners": ["@chemelli74", "@rokam", "@wuwentao"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/midea_lan",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["midealocal"],
+  "quality_scale": "bronze",
+  "requirements": ["midea-local==6.10.0"]
+}
