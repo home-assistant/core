@@ -1808,18 +1808,16 @@ def test_all_obis_references_exists() -> None:
             assert hasattr(obis_references, sensor.obis_reference)
 
 
-# Entity ids of the sensors used by the averaging tests below.
 POWER_ENTITY_ID = "sensor.electricity_meter_power_consumption"
 ENERGY_ENTITY_ID = "sensor.electricity_meter_energy_consumption_tarif_1"
 CURRENT_ENTITY_ID = "sensor.electricity_meter_current_phase_l1"
 VOLTAGE_ENTITY_ID = "sensor.electricity_meter_voltage_phase_l1"
 
-# Update interval (seconds) used by the averaging tests.
 UPDATE_INTERVAL = 30
 
 
 def _create_power_and_energy_telegram(power: str, energy: str) -> Telegram:
-    """Create a telegram with a power and an energy readings."""
+    """Create a telegram with power and energy readings."""
     telegram = Telegram()
     telegram.add(
         CURRENT_ELECTRICITY_USAGE,
