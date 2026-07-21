@@ -80,8 +80,8 @@ class YoLinkHomeMessageListener(MessageListener):
             and msg_data.get("event") is not None
         ):
             device_registry = dr.async_get(self._hass)
-            device_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, device_coordinator.device.device_id)}
+            device_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_coordinator.device.device_id), self._entry.entry_id
             )
             if device_entry is None:
                 return
@@ -169,9 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
                 identifier[0] == DOMAIN
                 and device_coordinators.get(identifier[1]) is None
             ):
-                device_registry.async_update_device(
-                    device_entry.id, remove_config_entry_id=entry.entry_id
-                )
+                device_registry.async_remove_device(device_entry.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

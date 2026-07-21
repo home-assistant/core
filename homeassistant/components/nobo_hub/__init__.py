@@ -2,7 +2,7 @@
 
 import logging
 
-from pynobo import nobo
+from pynobo import PynoboConnectionError, nobo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
 
     try:
         hub = await _connect(stored_ip)
-    except OSError as err:
+    except PynoboConnectionError as err:
         # Stored IP may be stale - try UDP rediscovery to pick up a new
         # DHCP lease (or a hub that's been moved).
         discovered = await nobo.async_discover_hubs(serial=serial)
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
         new_ip, _ = next(iter(discovered))
         try:
             hub = await _connect(new_ip)
-        except OSError as rediscover_err:
+        except PynoboConnectionError as rediscover_err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -137,9 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
             device_registry, entry.entry_id
         ):
             if device.identifiers.isdisjoint(expected_identifiers):
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     _cleanup_devices(hub)
     hub.register_callback(_cleanup_devices)
