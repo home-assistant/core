@@ -37,6 +37,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "room_motion": {
+        "name": "Room motion"
+      }
+    },
     "select": {
       "room_priority": {
         "name": "Room priority",
