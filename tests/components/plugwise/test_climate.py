@@ -242,7 +242,9 @@ async def test_adam_restore_state_climate(
         )
         # Verify set_schedule_state was called with the restored schedule
         mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-            "f871b8c4d63549319221e294e4f88074", "Badkamer", STATE_ON,
+            "f871b8c4d63549319221e294e4f88074",
+            "Badkamer",
+            STATE_ON,
         )
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 1
 
@@ -336,7 +338,9 @@ async def test_adam_off_regulation_mode_change(
         blocking=True,
     )
     mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-        "f871b8c4d63549319221e294e4f88074", "Badkamer", STATE_OFF,
+        "f871b8c4d63549319221e294e4f88074",
+        "Badkamer",
+        STATE_OFF,
     )
 
 

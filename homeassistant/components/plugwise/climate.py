@@ -301,7 +301,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             if hvac_mode == HVACMode.AUTO:
                 _check_for_schedule(schedule_is_active, self._last_active_schedule)
                 await self._api.set_schedule_state(
-                    self._location, desired_schedule, STATE_ON,
+                    self._location,
+                    desired_schedule,
+                    STATE_ON,
                 )
                 await self._api.set_regulation_mode(self._previous_action_mode)
                 return
@@ -309,7 +311,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             # Transition to manual mode
             if schedule_is_active:
                 await self._api.set_schedule_state(
-                    self._location, current_schedule, STATE_OFF,
+                    self._location,
+                    current_schedule,
+                    STATE_OFF,
                 )
                 self._last_active_schedule = current_schedule
             regulation = self._regulation_mode_for_hvac(hvac_mode)
@@ -319,7 +323,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         # Common - transition from auto = schedule off
         if self.hvac_mode == HVACMode.AUTO:
             await self._api.set_schedule_state(
-                self._location, current_schedule, STATE_OFF,
+                self._location,
+                current_schedule,
+                STATE_OFF,
             )
             self._last_active_schedule = current_schedule
             return
