@@ -14,7 +14,7 @@ from homeassistant.components.open_router.const import (
     CONF_WEB_SEARCH,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -420,6 +420,189 @@ async def test_model_subentry_unknown_error(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.parametrize("subentry_type", ["tts", "stt"])
+@pytest.mark.usefixtures("mock_open_router_client", "mock_openai_client")
+async def test_model_subentry_no_models(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    subentry_type: str,
+) -> None:
+    """Test the model form falls back to the recommended model when none are returned."""
+    await setup_integration(hass, mock_config_entry)
+
+    aioclient_mock.get(MODELS_URL, json={"data": []})
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    recommended = {
+        "tts": "openai/gpt-4o-mini-tts-2025-12-15",
+        "stt": "openai/whisper-large-v3",
+    }[subentry_type]
+    model_key = next(k for k in result["data_schema"].schema if k == CONF_MODEL)
+    assert model_key.default() == recommended
+
+
+@pytest.mark.usefixtures("mock_open_router_client", "mock_openai_client")
+async def test_create_tts_service_fallback_voices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test creating a TTS service for a model that exposes no voices."""
+    await setup_integration(hass, mock_config_entry)
+
+    aioclient_mock.get(
+        f"{MODELS_URL}?output_modalities=speech",
+        json={"data": [{"id": "some/other-tts", "name": "Other TTS"}]},
+    )
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "some/other-tts"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "voice"
+    voice_options = result["data_schema"].schema["tts_voice"].config["options"]
+    assert {"value": "alloy", "label": "Alloy"} in voice_options
+    assert {"value": "cedar", "label": "Cedar"} in voice_options
+    voice_key = next(k for k in result["data_schema"].schema if k == CONF_TTS_VOICE)
+    assert voice_key.default() == "alloy"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_TTS_VOICE: "shimmer", CONF_TTS_SPEED: 1.0},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_MODEL: "some/other-tts",
+        "supported_voices": None,
+        CONF_TTS_VOICE: "shimmer",
+        CONF_TTS_SPEED: 1.0,
+    }
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_reconfigure_tts_service(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfiguring a TTS service, including the voice step."""
+    entry = MockConfigEntry(
+        title="OpenRouter",
+        domain=DOMAIN,
+        data={CONF_API_KEY: "bla"},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_MODEL: "openai/gpt-4o-mini-tts",
+                    "supported_voices": ["alloy", "echo"],
+                    CONF_TTS_VOICE: "alloy",
+                    CONF_TTS_SPEED: 1.0,
+                },
+                subentry_id="TTSSUB",
+                subentry_type="tts",
+                title="GPT-4o mini TTS",
+                unique_id=None,
+            ),
+        ],
+    )
+    await setup_integration(hass, entry)
+
+    aioclient_mock.get(
+        f"{MODELS_URL}?output_modalities=speech",
+        json={
+            "data": [
+                {
+                    "id": "openai/gpt-4o-mini-tts",
+                    "name": "GPT-4o mini TTS",
+                    "supported_voices": ["alloy", "echo"],
+                }
+            ]
+        },
+    )
+
+    result = await entry.start_subentry_reconfigure_flow(hass, "TTSSUB")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    # The stored model is offered as the default on reconfigure.
+    model_key = next(k for k in result["data_schema"].schema if k == CONF_MODEL)
+    assert model_key.default() == "openai/gpt-4o-mini-tts"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "openai/gpt-4o-mini-tts"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "voice"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_TTS_VOICE: "echo", CONF_TTS_SPEED: 1.5},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = entry.subentries["TTSSUB"]
+    assert subentry.data[CONF_TTS_VOICE] == "echo"
+    assert subentry.data[CONF_TTS_SPEED] == 1.5
+
+
+@pytest.mark.usefixtures("mock_openai_client")
+async def test_reconfigure_stt_service(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfiguring an STT service."""
+    entry = MockConfigEntry(
+        title="OpenRouter",
+        domain=DOMAIN,
+        data={CONF_API_KEY: "bla"},
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_MODEL: "openai/whisper-large-v3"},
+                subentry_id="STTSUB",
+                subentry_type="stt",
+                title="Whisper Large v3",
+                unique_id=None,
+            ),
+        ],
+    )
+    await setup_integration(hass, entry)
+
+    aioclient_mock.get(
+        f"{MODELS_URL}?output_modalities=transcription",
+        json={
+            "data": [
+                {"id": "openai/whisper-large-v3", "name": "Whisper Large v3"},
+                {"id": "some/other-stt", "name": "Other STT"},
+            ]
+        },
+    )
+
+    result = await entry.start_subentry_reconfigure_flow(hass, "STTSUB")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "some/other-stt"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = entry.subentries["STTSUB"]
+    assert subentry.data[CONF_MODEL] == "some/other-stt"
+
+
 async def test_reconfigure_conversation_agent(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
@@ -484,7 +667,7 @@ async def test_reconfigure_ai_task(
 
 @pytest.mark.parametrize(
     "subentry_type",
-    ["conversation", "ai_task_data"],
+    ["conversation", "ai_task_data", "tts", "stt"],
 )
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,
@@ -493,7 +676,7 @@ async def test_reconfigure_entry_not_loaded(
     mock_config_entry: MockConfigEntry,
     subentry_type: str,
 ) -> None:
-    """Test reconfiguring an AI task."""
+    """Test starting a subentry flow while the entry is not loaded aborts."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.subentries.async_init(
