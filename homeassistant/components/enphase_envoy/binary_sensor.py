@@ -353,7 +353,6 @@ class EnvoyACBBinarySensorEntity(EnvoyBaseBinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the state of the ACB battery binary_sensor."""
         acb_inventory = self.data.acb_inventory
-        assert acb_inventory is not None
-        if self._serial_number not in acb_inventory:
+        if not acb_inventory or self._serial_number not in acb_inventory:
             return None
         return self.entity_description.value_fn(acb_inventory[self._serial_number])

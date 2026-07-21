@@ -91,6 +91,12 @@ class EnvoyACBButtonEntity(EnvoyBaseEntity, ButtonEntity):
             via_device=(DOMAIN, self.envoy_serial_num),
         )
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the ACB sleep/wake controls are available."""
+        return super().available and bool(self.data.acb_inventory)
+
     @exception_handler
     @override
     async def async_press(self) -> None:

@@ -2,25 +2,27 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 SLEEP = "button.acb_1234_sleep"
 WAKE = "button.acb_1234_wake"
@@ -183,3 +185,27 @@ async def test_button_value_error(
             {ATTR_ENTITY_ID: SLEEP},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
+async def test_button_no_inventory(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the ACB controls become unavailable when the inventory disappears."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, config_entry)
+
+    assert (state := hass.states.get(SLEEP))
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_envoy.data.acb_inventory = None
+    mock_envoy.data.raw = {"changed": True}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(SLEEP))
+    assert state.state == STATE_UNAVAILABLE

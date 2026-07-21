@@ -908,7 +908,7 @@ ACB_INVENTORY_SENSORS = (
         value_fn=attrgetter("charge_status"),
     ),
     EnvoyACBInventorySensorEntityDescription(
-        key=LAST_REPORTED_KEY,
+        key="acb_battery_last_reported",
         translation_key=LAST_REPORTED_KEY,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1556,8 +1556,7 @@ class EnvoyACBInventoryEntity(EnvoySensorBaseEntity):
     def native_value(self) -> int | str | datetime.datetime | None:
         """Return the state of the per-device ACB battery sensors."""
         acb_inventory = self.data.acb_inventory
-        assert acb_inventory is not None
-        if self._serial_number not in acb_inventory:
+        if not acb_inventory or self._serial_number not in acb_inventory:
             return None
         return self.entity_description.value_fn(acb_inventory[self._serial_number])
 
@@ -1583,10 +1582,11 @@ class EnvoyACBAggregateSleepStateEntity(EnvoySensorBaseEntity):
 
     @property
     @override
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the aggregate sleep state across all ACB batteries."""
         acb_inventory = self.data.acb_inventory
-        assert acb_inventory is not None
+        if not acb_inventory:
+            return None
         return aggregate_acb_sleep_state(acb_inventory.values())
 
 

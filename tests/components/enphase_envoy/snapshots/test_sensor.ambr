@@ -3505,7 +3505,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
-    'unique_id': '121000000001_last_reported',
+    'unique_id': '121000000001_acb_battery_last_reported',
     'unit_of_measurement': None,
   })
 # ---
@@ -3905,7 +3905,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
-    'unique_id': '122000000002_last_reported',
+    'unique_id': '122000000002_acb_battery_last_reported',
     'unit_of_measurement': None,
   })
 # ---
