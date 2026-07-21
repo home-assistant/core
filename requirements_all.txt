@@ -1616,7 +1616,7 @@ momonga==0.3.0
 monarchmoneycommunity==1.5.1
 
 # homeassistant.components.monzo
-monzopy==1.5.1
+monzopy==1.6.0
 
 # homeassistant.components.mopeka
 mopeka-iot-ble==0.8.0
