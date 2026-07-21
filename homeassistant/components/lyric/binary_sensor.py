@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -41,6 +42,13 @@ DEVICE_BINARY_SENSORS: list[LyricBinarySensorEntityDescription] = [
         key="vacation_hold",
         translation_key="vacation_hold",
         value_fn=lambda device: device.vacation_hold.enabled,
+        suitable_fn=lambda device: True,
+    ),
+    LyricBinarySensorEntityDescription(
+        key="device_pairing_enabled",
+        translation_key="device_pairing_enabled",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.settings.device_pairing_enabled,
         suitable_fn=lambda device: True,
     ),
 ]
