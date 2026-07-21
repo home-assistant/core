@@ -35,7 +35,7 @@ class PlugwiseSelectEntityDescription(SelectEntityDescription):
 
     key: SelectType
     options_key: SelectOptionsType
-    set_value_fn: Callable[[Smile, str, str, str, int | str], Awaitable[None]]
+    set_value_fn: Callable[[Smile, str, str, str, int | str | None], Awaitable[None]]
 
 
 SELECT_TYPES = (
@@ -171,13 +171,13 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         The location ID is required for the thermostat schedule and zone_profile selects.
         STATE_ON is required for the thermostat schedule select.
         """
-        select_options_count: int | str = len(self.options)
+        options_count_or_state: int | str | None = len(self.options)
         if self.entity_description.key != DHW_MODE:
-            select_options_count = STATE_ON
+            options_count_or_state = STATE_ON
         await self.entity_description.set_value_fn(
             self.coordinator.api,
             self.entity_description.key,
             self._device_or_location,
             option,
-            select_options_count,
+            options_count_or_state,
         )
