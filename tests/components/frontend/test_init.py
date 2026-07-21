@@ -626,7 +626,7 @@ async def test_extra_js(
     async def get_response():
         resp = await mock_http_client_with_extra_js.get("")
         assert resp.status == 200
-        assert "cache-control" not in resp.headers
+        assert resp.headers["cache-control"] == "no-cache"
 
         return await resp.text()
 
