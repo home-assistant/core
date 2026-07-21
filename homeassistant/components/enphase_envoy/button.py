@@ -9,6 +9,7 @@ from pyenphase.const import SupportedFeatures
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -97,7 +98,21 @@ class EnvoyACBButtonEntity(EnvoyBaseEntity, ButtonEntity):
         acb_inventory = self.data.acb_inventory
         assert acb_inventory is not None
         low, high = self.coordinator.acb_sleep_soc()
-        await self.entity_description.press_fn(
-            self.envoy, list(acb_inventory), low, high
-        )
+        try:
+            await self.entity_description.press_fn(
+                self.envoy, list(acb_inventory), low, high
+            )
+        except ValueError as err:
+            # pyenphase raises ValueError for validation failures and Envoy
+            # HTTP 400 responses, which exception_handler does not cover.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_error",
+                translation_placeholders={
+                    "host": self.coordinator.envoy.host,
+                    "args": err.args[0] if err.args else str(err),
+                    "action": "async_press",
+                    "entity": self.entity_id,
+                },
+            ) from err
         await self.coordinator.async_request_refresh()

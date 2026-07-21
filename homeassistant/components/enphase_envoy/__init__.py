@@ -107,4 +107,10 @@ async def async_remove_config_entry_device(
         if envoy_data.enpower:
             if str(envoy_data.enpower.serial_number) in dev_ids:
                 return False
+        if envoy_data.acb_inventory:
+            if f"{envoy_serial_num}_acb" in dev_ids:
+                return False
+            for acb_serial in envoy_data.acb_inventory:
+                if str(acb_serial) in dev_ids:
+                    return False
     return True

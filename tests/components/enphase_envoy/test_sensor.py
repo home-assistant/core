@@ -1526,3 +1526,29 @@ def test_aggregate_acb_sleep_state(
     """Test the aggregate ACB sleep state summarizes multiple batteries."""
     acbs = [_build_acb(enabled, flag) for enabled, flag in batteries]
     assert aggregate_acb_sleep_state(acbs) == expected
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_acb_battery_removed_from_inventory(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test ACB sensor becomes unknown when its serial leaves the inventory."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    entity_id = "sensor.ac_battery_121000000001_state_of_charge"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "98"
+
+    mock_envoy.data.acb_inventory.pop("121000000001")
+    mock_envoy.data.raw = {"changed": True}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN

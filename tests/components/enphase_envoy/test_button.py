@@ -163,3 +163,23 @@ async def test_button_error(
             {ATTR_ENTITY_ID: SLEEP},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
+async def test_button_value_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test button press surfaces pyenphase ValueError as HomeAssistantError."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, config_entry)
+
+    mock_envoy.set_acb_sleep.side_effect = ValueError("invalid soc")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: SLEEP},
+            blocking=True,
+        )

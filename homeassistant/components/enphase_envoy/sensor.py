@@ -1557,6 +1557,8 @@ class EnvoyACBInventoryEntity(EnvoySensorBaseEntity):
         """Return the state of the per-device ACB battery sensors."""
         acb_inventory = self.data.acb_inventory
         assert acb_inventory is not None
+        if self._serial_number not in acb_inventory:
+            return None
         return self.entity_description.value_fn(acb_inventory[self._serial_number])
 
 
