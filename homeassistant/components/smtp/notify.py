@@ -3,8 +3,10 @@
 import asyncio
 from contextlib import suppress
 from email.mime.application import MIMEApplication
+from email.mime.audio import MIMEAudio
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
+from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 import email.utils
 import logging
@@ -242,17 +244,19 @@ class MailNotifyEntity(NotifyEntity):
         for file, (content, mime_type, filename) in zip(
             attachments, resolved, strict=True
         ):
-            media_type, _, subtype = (
+            main_type, _, subtype = (
                 mime_type.partition("/")
                 if mime_type is not None
                 else (None, None, None)
             )
 
-            attachment: MIMEImage | MIMEApplication
+            attachment: MIMENonMultipart
 
             attachment = (
                 MIMEImage(content, _subtype=subtype)
-                if media_type == "image"
+                if main_type == "image"
+                else MIMEAudio(content, _subtype=subtype)
+                if main_type == "audio"
                 else MIMEApplication(content)
             )
 

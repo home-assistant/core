@@ -5,6 +5,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import logging
+import mimetypes
 import os
 from pathlib import Path
 import smtplib
@@ -212,8 +213,8 @@ async def _resolve_media(
         return img.content, img.content_type, None
 
     if media_content_id.startswith("media-source://tts/"):
-        _, audio = await tts.async_get_media_source_audio(hass, media_content_id)
-        return audio, None, None
+        ext, audio = await tts.async_get_media_source_audio(hass, media_content_id)
+        return audio, mimetypes.types_map.get("." + ext), None
 
     media = await async_resolve_media(hass, media_source["media_content_id"], None)
 

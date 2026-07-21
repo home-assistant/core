@@ -256,7 +256,7 @@
   --===============1234567890123456789==--
   
   --===============1234567890123456789==.0
-  Content-Type: application/octet-stream
+  Content-Type: audio/mpeg
   MIME-Version: 1.0
   Content-Transfer-Encoding: base64
   Content-Disposition: attachment; filename="helloworld.mp3"
