@@ -5622,6 +5622,110 @@ async def test_restore_device(
 
 
 @pytest.mark.parametrize(
+    ("stored_connections", "stored_identifiers", "new_connections", "new_identifiers"),
+    [
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa")},
+            {("bridgeid", "0123")},
+            {
+                (dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa"),
+                (dr.CONNECTION_NETWORK_MAC, "bb:bb:bb:bb:bb:bb"),
+            },
+            {("bridgeid", "0123"), ("bridgeid", "4567")},
+            id="broader_reregistration",
+        ),
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa")},
+            {("bridgeid", "0123")},
+            {(dr.CONNECTION_NETWORK_MAC, "bb:bb:bb:bb:bb:bb")},
+            {("bridgeid", "0123")},
+            id="disjoint_connection_matched_on_identifier",
+        ),
+    ],
+)
+async def test_restore_device_reflects_reregistered_identity(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    stored_connections: set[tuple[str, str]],
+    stored_identifiers: set[tuple[str, str]],
+    new_connections: set[tuple[str, str]],
+    new_identifiers: set[tuple[str, str]],
+) -> None:
+    """A restored device keeps the connections and identifiers it is re-registered with.
+
+    The restored device must reflect the identity the integration reports on
+    re-registration, not its intersection with the stored (deleted) identity, so a
+    device that now reports a broader (or shifted) set is restored with all of it.
+    """
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections=stored_connections,
+        identifiers=stored_identifiers,
+    )
+    device_registry.async_remove_device(entry.id)
+    assert len(device_registry.deleted_devices) == 1
+
+    restored = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections=new_connections,
+        identifiers=new_identifiers,
+    )
+
+    assert restored.id == entry.id
+    assert restored.connections == new_connections
+    assert restored.identifiers == new_identifiers
+
+
+@pytest.mark.parametrize(
+    ("new_connections", "new_identifiers"),
+    [
+        pytest.param(
+            {
+                (dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa"),
+                (dr.CONNECTION_NETWORK_MAC, "bb:bb:bb:bb:bb:bb"),
+            },
+            {("bridgeid", "0123"), ("bridgeid", "4567")},
+            id="broader_reregistration",
+        ),
+        pytest.param(
+            {(dr.CONNECTION_NETWORK_MAC, "cc:cc:cc:cc:cc:cc")},
+            {("bridgeid", "9999")},
+            id="disjoint_reregistration",
+        ),
+    ],
+)
+async def test_deleted_device_to_device_entry_uses_reregistered_identity(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    new_connections: set[tuple[str, str]],
+    new_identifiers: set[tuple[str, str]],
+) -> None:
+    """DeletedDeviceEntry.to_device_entry keeps the passed connections and identifiers.
+
+    Regression guard: it must not intersect them with the stored ones, which would drop
+    (or, for a disjoint re-registration, entirely empty) the device's identity.
+    """
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:aa:aa:aa:aa:aa")},
+        identifiers={("bridgeid", "0123")},
+    )
+    device_registry.async_remove_device(entry.id)
+    deleted_device = device_registry.deleted_devices[entry.id]
+
+    restored = deleted_device.to_device_entry(
+        mock_config_entry,
+        None,
+        new_connections,
+        new_identifiers,
+        None,
+    )
+
+    assert restored.connections == new_connections
+    assert restored.identifiers == new_identifiers
+
+
+@pytest.mark.parametrize(
     ("device_disabled_by", "expected_disabled_by"),
     [
         (None, None),

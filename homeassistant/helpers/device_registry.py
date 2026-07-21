@@ -682,10 +682,10 @@ class DeletedDeviceEntry:
             config_entry_id=config_entry.entry_id,
             config_subentry_id=config_subentry_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
-            connections=self.connections & connections,  # type: ignore[arg-type]
+            connections=connections,  # type: ignore[arg-type]
             created_at=self.created_at,
             disabled_by=disabled_by,
-            identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
+            identifiers=identifiers,  # type: ignore[arg-type]
             id=self.id,
             labels=self.labels,  # type: ignore[arg-type]
             name_by_user=self.name_by_user,
