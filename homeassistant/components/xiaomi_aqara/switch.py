@@ -1,7 +1,7 @@
 """Support for Xiaomi Aqara binary sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
@@ -157,6 +157,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         if self._data_key == "status":
@@ -164,6 +165,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         return "mdi:power-socket"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._supports_power_consumption:
@@ -175,18 +177,21 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
             }
         return self._attr_extra_state_attributes
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: "on"}):
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._write_to_hub(self._sid, **{self._data_key: "off"}):
             self._attr_is_on = False
             self.schedule_update_ha_state()
 
+    @override
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if IN_USE in data:

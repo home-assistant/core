@@ -822,7 +822,7 @@ async def test_get_image_http_error(
     resp = await client.get(attrs["entity_picture"])
     content = await resp.read()
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert f"Error retrieving proxied image from {url}" in caplog.text
     assert content == b""
 

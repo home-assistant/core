@@ -1,65 +1,69 @@
 """BleBox devices setup tests."""
 
-import logging
-
 import blebox_uniapi
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import mock_config, patch_product_identify, setup_product_mock
+from .conftest import (
+    async_setup_config_entry,
+    patch_product_identify,
+    setup_product_mock,
+)
+
+from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (blebox_uniapi.error.ConnectionError, ConfigEntryState.SETUP_RETRY),
+        (blebox_uniapi.error.HttpError, ConfigEntryState.SETUP_RETRY),
+        (blebox_uniapi.error.UnsupportedBoxVersion, ConfigEntryState.SETUP_ERROR),
+        (blebox_uniapi.error.UnsupportedBoxResponse, ConfigEntryState.SETUP_ERROR),
+        (blebox_uniapi.error.UnauthorizedRequest, ConfigEntryState.SETUP_ERROR),
+        (blebox_uniapi.error.Error, ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_setup_failure(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    exception: type[Exception],
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test that setup failure is handled and logged."""
-
-    patch_product_identify(None, side_effect=blebox_uniapi.error.ClientError)
-
-    entry = mock_config()
-    entry.add_to_hass(hass)
-
-    caplog.set_level(logging.ERROR)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    """Test that setup failures map to the correct config entry state."""
+    patch_product_identify(None, side_effect=exception)
+    await async_setup_config_entry(hass, config_entry)
+    assert config_entry.state is expected_state
 
 
-async def test_setup_failure_on_connection(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_setup_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test that setup failure is handled and logged."""
+    """Test that UnauthorizedRequest during setup triggers a reauth flow."""
+    patch_product_identify(None, side_effect=blebox_uniapi.error.UnauthorizedRequest)
+    await async_setup_config_entry(hass, config_entry)
 
-    patch_product_identify(None, side_effect=blebox_uniapi.error.ConnectionError)
-
-    entry = mock_config()
-    entry.add_to_hass(hass)
-
-    caplog.set_level(logging.ERROR)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        f["handler"] == "blebox" and f["context"]["source"] == "reauth" for f in flows
+    )
 
 
-async def test_unload_config_entry(hass: HomeAssistant) -> None:
+async def test_unload_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test that unloading works properly."""
     setup_product_mock("switches", [])
 
-    entry = mock_config()
-    entry.add_to_hass(hass)
+    await async_setup_config_entry(hass, config_entry)
+    assert hasattr(config_entry, "runtime_data")
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hasattr(entry, "runtime_data")
+    assert not hasattr(config_entry, "runtime_data")
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert not hasattr(entry, "runtime_data")
-
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

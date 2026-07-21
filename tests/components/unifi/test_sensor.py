@@ -23,6 +23,7 @@ from homeassistant.components.unifi.const import (
     CONF_DETECTION_TIME,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
@@ -35,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
@@ -577,6 +578,34 @@ async def test_wired_client_speed_sensor(
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_WIRED_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wired_client_speed_sensor_not_created_when_untracked(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Verify untracked wired clients create neither a link speed sensor nor a device."""
+    assert entity_registry.async_get("sensor.wired_client_link_speed") is None
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -1681,6 +1710,47 @@ async def test_wan_monitor_latency_with_no_uptime(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Verify that wan latency sensors is not created if there is no data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
+    assert latency_entry is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                # A cellular/5G WAN reports uptime stats without a "monitors" key.
+                "uptime_stats": {
+                    "WAN": {
+                        "availability": 100.0,
+                        "latency_average": 39,
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_without_monitors_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify setup succeeds when a WAN's uptime stats omit the 'monitors' key."""
 
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2

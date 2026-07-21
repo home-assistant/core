@@ -1,6 +1,7 @@
 """Select entities for the Motionblinds Bluetooth integration."""
 
 import logging
+from typing import override
 
 from motionblindsble.const import MotionBlindType, MotionSpeedLevel
 from motionblindsble.device import MotionDevice
@@ -57,6 +58,7 @@ class SpeedSelect(MotionblindsBLEEntity, SelectEntity):
         )
         self._attr_current_option = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
         _LOGGER.debug(
@@ -71,6 +73,7 @@ class SpeedSelect(MotionblindsBLEEntity, SelectEntity):
         self._attr_current_option = str(speed_level.value) if speed_level else None
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected speed sensor value."""
         speed_level = MotionSpeedLevel(int(option))

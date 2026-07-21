@@ -2,10 +2,11 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from sense_energy import (
     ASyncSenseable,
+    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -65,6 +66,7 @@ class SenseTrendCoordinator(SenseCoordinator):
         """Initialize."""
         super().__init__(hass, config_entry, gateway, "Trends", TREND_UPDATE_RATE)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the trend data."""
         try:
@@ -88,11 +90,14 @@ class SenseRealtimeCoordinator(SenseCoordinator):
         """Initialize."""
         super().__init__(hass, config_entry, gateway, "Realtime", ACTIVE_UPDATE_RATE)
 
+    @override
     async def _async_update_data(self) -> None:
         """Retrieve latest state."""
         try:
             await self._gateway.update_realtime()
         except SENSE_TIMEOUT_EXCEPTIONS as ex:
-            _LOGGER.error("Timeout retrieving data: %s", ex)
+            raise UpdateFailed(f"Timeout retrieving realtime data: {ex}") from ex
         except SENSE_WEBSOCKET_EXCEPTIONS as ex:
-            _LOGGER.error("Failed to update data: %s", ex)
+            raise UpdateFailed(f"Failed to update realtime data: {ex}") from ex
+        except SenseAPIException as ex:
+            raise UpdateFailed(f"API error retrieving realtime data: {ex}") from ex

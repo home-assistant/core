@@ -1,7 +1,7 @@
 """Support for OSO Energy water heaters."""
 
 import datetime as dt
-from typing import Any
+from typing import Any, override
 
 from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData
@@ -15,7 +15,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,10 +45,6 @@ SERVICE_GET_PROFILE = "get_profile"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_V40MIN = "set_v40_min"
 SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
-# pylint: disable-next=home-assistant-duplicate-const
-SERVICE_TURN_OFF = "turn_off"
-# pylint: disable-next=home-assistant-duplicate-const
-SERVICE_TURN_ON = "turn_on"
 
 
 async def async_setup_entry(
@@ -195,11 +191,13 @@ class OSOEnergyWaterHeater(
         self._attr_unique_id = entity_data.device_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return self.entity_data.available
 
     @property
+    @override
     def current_operation(self) -> str:
         """Return current operation."""
         status = self.entity_data.current_operation
@@ -216,56 +214,68 @@ class OSOEnergyWaterHeater(
         return CURRENT_OPERATION_MAP["default"].get(heater_mode, STATE_ELECTRIC)
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature of the heater."""
         return self.entity_data.current_temperature
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return if the heater is in away mode."""
         return self.entity_data.isInPowerSave
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature
 
     @property
+    @override
     def target_temperature_high(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature_high
 
     @property
+    @override
     def target_temperature_low(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature_low
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.entity_data.min_temperature
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.entity_data.max_temperature
 
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn on away mode."""
         await self.osoenergy.hotwater.enable_holiday_mode(self.entity_data)
 
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn off away mode."""
         await self.osoenergy.hotwater.disable_holiday_mode(self.entity_data)
 
+    @override
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on hotwater."""
         await self.osoenergy.hotwater.turn_on(self.entity_data, True)
 
+    @override
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off hotwater."""
         await self.osoenergy.hotwater.turn_off(self.entity_data, True)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = int(kwargs.get("temperature", self.target_temperature))

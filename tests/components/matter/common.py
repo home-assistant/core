@@ -10,6 +10,7 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -56,6 +57,7 @@ FIXTURES = [
     "mock_dimmable_plugin_unit",
     "mock_door_lock",
     "mock_door_lock_with_unbolt",
+    "mock_doorbell",
     "mock_extractor_hood",
     "mock_fan",
     "mock_flow_sensor",
@@ -78,6 +80,7 @@ FIXTURES = [
     "mock_pressure_sensor",
     "mock_pump",
     "mock_room_airconditioner",
+    "mock_soil_sensor",
     "mock_solar_inverter",
     "mock_speaker",
     "mock_switch_unit",
@@ -136,7 +139,7 @@ async def _setup_integration_with_nodes(
 
     client.get_node.side_effect = _get_node
     config_entry = MockConfigEntry(
-        domain="matter", data={"url": "http://mock-matter-server-url"}
+        domain=DOMAIN, data={"url": "http://mock-matter-server-url"}
     )
     config_entry.add_to_hass(hass)
 

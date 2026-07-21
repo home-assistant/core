@@ -39,9 +39,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_garage_ceiling_light_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Garage Ceiling Light Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Ceiling Light Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_garage_ceiling_light_identify',
@@ -91,8 +91,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_garage_ceiling_light_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garage Ceiling Light Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Ceiling Light Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_garage_ceiling_light_start_identify',
@@ -142,8 +142,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_garage_ceiling_light_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garage Ceiling Light Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Ceiling Light Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_garage_ceiling_light_stop_identify',
@@ -193,9 +193,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_garden_radiator_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Garden Radiator Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_garden_radiator_identify',
@@ -245,8 +245,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_garden_radiator_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Radiator Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_garden_radiator_start_identify',
@@ -296,8 +296,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_garden_radiator_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Radiator Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_garden_radiator_stop_identify',
@@ -347,9 +347,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_hallway_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Hallway Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_hallway_shutter_identify',
@@ -399,8 +399,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_hallway_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_hallway_shutter_my_position',
@@ -450,8 +450,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_hallway_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_hallway_shutter_start_identify',
@@ -501,11 +501,164 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_hallway_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_hallway_shutter_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_air_inlet_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.maple_residence_living_room_air_inlet_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10001-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_air_inlet_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Inlet Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.maple_residence_living_room_air_inlet_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_air_outlet_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.maple_residence_living_room_air_outlet_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10002-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_air_outlet_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Outlet Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.maple_residence_living_room_air_outlet_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_air_transfer_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.maple_residence_living_room_air_transfer_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10003-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_air_transfer_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Transfer Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.maple_residence_living_room_air_transfer_start_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -552,9 +705,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_radiator_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Living Room Radiator Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_living_room_radiator_identify',
@@ -604,8 +757,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_radiator_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Radiator Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_living_room_radiator_start_identify',
@@ -655,8 +808,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_radiator_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Radiator Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_living_room_radiator_stop_identify',
@@ -706,8 +859,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_living_room_smoke_detector_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Smoke Detector Test',
-      'icon': 'mdi:smoke-detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector Test',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:smoke-detector',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_living_room_smoke_detector_test',
@@ -757,9 +910,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_nursery_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Nursery Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_nursery_shutter_identify',
@@ -809,8 +962,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_nursery_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_nursery_shutter_my_position',
@@ -860,8 +1013,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_nursery_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_nursery_shutter_start_identify',
@@ -911,8 +1064,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_nursery_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_nursery_shutter_stop_identify',
@@ -962,9 +1115,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_office_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Office Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_office_shutter_identify',
@@ -1014,8 +1167,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_office_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_office_shutter_my_position',
@@ -1065,8 +1218,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_office_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_office_shutter_start_identify',
@@ -1116,8 +1269,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_office_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_office_shutter_stop_identify',
@@ -1167,9 +1320,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_study_ceiling_light_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Study Ceiling Light Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Ceiling Light Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_study_ceiling_light_identify',
@@ -1219,8 +1372,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_study_ceiling_light_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study Ceiling Light Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Ceiling Light Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_study_ceiling_light_start_identify',
@@ -1270,8 +1423,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_study_ceiling_light_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study Ceiling Light Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Ceiling Light Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_study_ceiling_light_stop_identify',
@@ -1321,9 +1474,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_study_radiator_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Study Radiator Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_study_radiator_identify',
@@ -1373,8 +1526,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_study_radiator_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study Radiator Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_study_radiator_start_identify',
@@ -1424,8 +1577,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_study_radiator_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study Radiator Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_study_radiator_stop_identify',
@@ -1475,9 +1628,9 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_terrace_ceiling_light_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Terrace Ceiling Light Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Ceiling Light Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_terrace_ceiling_light_identify',
@@ -1527,8 +1680,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_terrace_ceiling_light_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Terrace Ceiling Light Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Ceiling Light Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_terrace_ceiling_light_start_identify',
@@ -1578,8 +1731,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_terrace_ceiling_light_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Terrace Ceiling Light Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Ceiling Light Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_terrace_ceiling_light_stop_identify',
@@ -1629,8 +1782,8 @@
 # name: test_button_entities_snapshot[cloud_nexity_rail_din_europe.json][button.maple_residence_terrace_radiator_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Terrace Radiator Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Radiator Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.maple_residence_terrace_radiator_start_identify',
@@ -1680,9 +1833,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.dining_room_studio_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Studio Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.dining_room_studio_shutter_identify',
@@ -1732,8 +1885,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.dining_room_studio_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Studio Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.dining_room_studio_shutter_my_position',
@@ -1783,8 +1936,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.dining_room_studio_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Studio Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.dining_room_studio_shutter_start_identify',
@@ -1834,8 +1987,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.dining_room_studio_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Studio Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.dining_room_studio_shutter_stop_identify',
@@ -1885,9 +2038,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_dining_room_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Dining Room Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_dining_room_shutter_identify',
@@ -1937,8 +2090,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_dining_room_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dining Room Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_dining_room_shutter_my_position',
@@ -1988,8 +2141,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_dining_room_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dining Room Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_dining_room_shutter_start_identify',
@@ -2039,8 +2192,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_dining_room_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dining Room Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_dining_room_shutter_stop_identify',
@@ -2090,9 +2243,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_guest_room_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Guest Room Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_guest_room_shutter_identify',
@@ -2142,8 +2295,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_guest_room_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Guest Room Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_guest_room_shutter_my_position',
@@ -2193,8 +2346,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_guest_room_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Guest Room Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_guest_room_shutter_start_identify',
@@ -2244,8 +2397,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.garage_guest_room_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Guest Room Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.garage_guest_room_shutter_stop_identify',
@@ -2295,9 +2448,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.guest_bedroom_kids_room_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Kids Room Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kids Room Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.guest_bedroom_kids_room_shutter_identify',
@@ -2347,8 +2500,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.guest_bedroom_kids_room_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kids Room Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kids Room Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.guest_bedroom_kids_room_shutter_my_position',
@@ -2398,8 +2551,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.guest_bedroom_kids_room_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kids Room Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kids Room Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.guest_bedroom_kids_room_shutter_start_identify',
@@ -2449,8 +2602,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.guest_bedroom_kids_room_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kids Room Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kids Room Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.guest_bedroom_kids_room_shutter_stop_identify',
@@ -2500,9 +2653,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.home_library_garden_light_switch_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Garden Light Switch Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light Switch Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.home_library_garden_light_switch_identify',
@@ -2552,8 +2705,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.home_library_garden_light_switch_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light Switch Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light Switch Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.home_library_garden_light_switch_start_identify',
@@ -2603,8 +2756,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.home_library_garden_light_switch_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light Switch Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light Switch Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.home_library_garden_light_switch_stop_identify',
@@ -2654,9 +2807,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_kitchen_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Kitchen Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_kitchen_shutter_identify',
@@ -2706,8 +2859,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_kitchen_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_kitchen_shutter_my_position',
@@ -2757,8 +2910,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_kitchen_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_kitchen_shutter_start_identify',
@@ -2808,8 +2961,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_kitchen_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_kitchen_shutter_stop_identify',
@@ -2859,9 +3012,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_office_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Office Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_office_shutter_identify',
@@ -2911,8 +3064,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_office_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_office_shutter_my_position',
@@ -2962,8 +3115,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_office_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_office_shutter_start_identify',
@@ -3013,8 +3166,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_office_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_office_shutter_stop_identify',
@@ -3064,9 +3217,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_patio_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Patio Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_patio_shutter_identify',
@@ -3116,8 +3269,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_patio_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_patio_shutter_my_position',
@@ -3167,8 +3320,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_patio_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_patio_shutter_start_identify',
@@ -3218,8 +3371,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.kids_room_patio_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.kids_room_patio_shutter_stop_identify',
@@ -3269,9 +3422,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_bedroom_window_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Bedroom Window Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Window Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_bedroom_window_identify',
@@ -3321,8 +3474,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_bedroom_window_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Window Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Window Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_bedroom_window_start_identify',
@@ -3372,11 +3525,113 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_bedroom_window_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Window Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Window Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_bedroom_window_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_bioclimatic_pergola_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.living_room_bioclimatic_pergola_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-1234-6233/10943109-goToAlias',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_bioclimatic_pergola_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bioclimatic Pergola My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.living_room_bioclimatic_pergola_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_bioclimatic_pergola_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.living_room_bioclimatic_pergola_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-1234-6233/10943109-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_bioclimatic_pergola_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bioclimatic Pergola Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.living_room_bioclimatic_pergola_start_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3423,9 +3678,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_cyclic_garage_door_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Cyclic Garage Door Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cyclic Garage Door Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_cyclic_garage_door_identify',
@@ -3475,8 +3730,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_cyclic_garage_door_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cyclic Garage Door Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cyclic Garage Door Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_cyclic_garage_door_start_identify',
@@ -3526,8 +3781,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_cyclic_garage_door_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cyclic Garage Door Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cyclic Garage Door Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_cyclic_garage_door_stop_identify',
@@ -3577,11 +3832,165 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_cyclic_garage_door_toggle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cyclic Garage Door Toggle',
-      'icon': 'mdi:sync',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cyclic Garage Door Toggle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sync',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_cyclic_garage_door_toggle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_front_door_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.living_room_front_door_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/30-startIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_front_door_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.living_room_front_door_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_front_door_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.living_room_front_door_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/30-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_front_door_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.living_room_front_door_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_front_door_stop_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.living_room_front_door_stop_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Stop identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/30-stopIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_front_door_stop_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.living_room_front_door_stop_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3628,8 +4037,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garage_door_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garage Door Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_garage_door_start_identify',
@@ -3679,9 +4088,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garden_gate_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Garden Gate Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Gate Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_garden_gate_identify',
@@ -3731,8 +4140,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garden_gate_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Gate Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Gate Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_garden_gate_start_identify',
@@ -3782,8 +4191,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_garden_gate_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Gate Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Gate Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_garden_gate_stop_identify',
@@ -3833,9 +4242,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_main_garage_door_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Main Garage Door Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Garage Door Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_main_garage_door_identify',
@@ -3885,8 +4294,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_main_garage_door_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Garage Door Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Garage Door Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_main_garage_door_start_identify',
@@ -3936,8 +4345,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_main_garage_door_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Garage Door Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Garage Door Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_main_garage_door_stop_identify',
@@ -3987,8 +4396,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_ogp_garage_door_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OGP Garage Door Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OGP Garage Door Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_ogp_garage_door_start_identify',
@@ -4038,8 +4447,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_ogp_gate_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OGP Gate Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OGP Gate Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_ogp_gate_start_identify',
@@ -4089,9 +4498,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_rts_garage_door_4t_toggle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'RTS Garage Door 4T Toggle',
-      'icon': 'mdi:sync',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RTS Garage Door 4T Toggle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sync',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_rts_garage_door_4t_toggle',
@@ -4141,9 +4550,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_rts_gate_toggle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'RTS Gate Toggle',
-      'icon': 'mdi:sync',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RTS Gate Toggle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sync',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_rts_gate_toggle',
@@ -4193,9 +4602,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_side_garage_door_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Side Garage Door Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Side Garage Door Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_side_garage_door_identify',
@@ -4245,8 +4654,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_side_garage_door_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Side Garage Door Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Side Garage Door Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_side_garage_door_start_identify',
@@ -4296,8 +4705,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_side_garage_door_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Side Garage Door Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Side Garage Door Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_side_garage_door_stop_identify',
@@ -4347,8 +4756,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_sliding_gate_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sliding Gate Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sliding Gate Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_sliding_gate_start_identify',
@@ -4398,9 +4807,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_swinging_gate_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Swinging Gate Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Swinging Gate Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_swinging_gate_identify',
@@ -4450,8 +4859,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_swinging_gate_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Swinging Gate Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Swinging Gate Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_swinging_gate_start_identify',
@@ -4501,8 +4910,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_swinging_gate_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Swinging Gate Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Swinging Gate Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_swinging_gate_stop_identify',
@@ -4552,8 +4961,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.living_room_swinging_gate_toggle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Swinging Gate Toggle',
-      'icon': 'mdi:sync',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Swinging Gate Toggle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sync',
     }),
     'context': <ANY>,
     'entity_id': 'button.living_room_swinging_gate_toggle',
@@ -4603,9 +5012,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_blinds_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Bedroom Blinds Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_blinds_identify',
@@ -4655,8 +5064,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_blinds_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Blinds My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_blinds_my_position',
@@ -4706,8 +5115,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_blinds_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Blinds Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_blinds_start_identify',
@@ -4757,8 +5166,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_blinds_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Blinds Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Blinds Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_blinds_stop_identify',
@@ -4808,8 +5217,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Venetian Blind My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_my_position',
@@ -4859,8 +5268,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_bedroom_venetian_blind_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Venetian Blind Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Venetian Blind Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_bedroom_venetian_blind_start_identify',
@@ -4910,9 +5319,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_patio_light_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Patio Light Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Light Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_patio_light_identify',
@@ -4962,8 +5371,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_patio_light_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Light Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Light Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_patio_light_start_identify',
@@ -5013,8 +5422,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.main_bedroom_patio_light_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Light Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Light Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.main_bedroom_patio_light_stop_identify',
@@ -5064,9 +5473,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.music_room_pool_pump_on_off_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Pool Pump On&Off Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Pump On&Off Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.music_room_pool_pump_on_off_identify',
@@ -5116,8 +5525,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.music_room_pool_pump_on_off_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Pump On&Off Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Pump On&Off Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.music_room_pool_pump_on_off_start_identify',
@@ -5167,8 +5576,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.music_room_pool_pump_on_off_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Pump On&Off Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Pump On&Off Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.music_room_pool_pump_on_off_stop_identify',
@@ -5218,9 +5627,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.office_garden_house_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Garden House Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden House Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.office_garden_house_shutter_identify',
@@ -5270,8 +5679,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.office_garden_house_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden House Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden House Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.office_garden_house_shutter_my_position',
@@ -5321,8 +5730,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.office_garden_house_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden House Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden House Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.office_garden_house_shutter_start_identify',
@@ -5372,11 +5781,165 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.office_garden_house_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden House Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden House Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.office_garden_house_shutter_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.pool_house_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16580352-startIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool House Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pool_house_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.pool_house_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16580352-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool House Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pool_house_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_stop_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.pool_house_stop_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Stop identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16580352-stopIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_stop_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool House Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pool_house_stop_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5423,9 +5986,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.reading_nook_living_room_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Living Room Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.reading_nook_living_room_shutter_identify',
@@ -5475,8 +6038,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.reading_nook_living_room_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.reading_nook_living_room_shutter_my_position',
@@ -5526,8 +6089,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.reading_nook_living_room_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.reading_nook_living_room_shutter_start_identify',
@@ -5577,11 +6140,167 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.reading_nook_living_room_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.reading_nook_living_room_shutter_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_bip-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.willow_house_external_siren_bip',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bip',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-ring',
+    'original_name': 'Bip',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rtds://1234-1234-6233/4065441-bip',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_bip-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'External Siren Bip',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bell-ring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.willow_house_external_siren_bip',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_fast_bip_sequence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.willow_house_external_siren_fast_bip_sequence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fast bip sequence',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-ring',
+    'original_name': 'Fast bip sequence',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rtds://1234-1234-6233/4065441-fastBipSequence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_fast_bip_sequence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'External Siren Fast bip sequence',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bell-ring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.willow_house_external_siren_fast_bip_sequence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_ring-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.willow_house_external_siren_ring',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ring',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-ring',
+    'original_name': 'Ring',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rtds://1234-1234-6233/4065441-ring',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_ring-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'External Siren Ring',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:bell-ring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.willow_house_external_siren_ring',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5628,9 +6347,9 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_protexiom_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Protexiom Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Protexiom Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.willow_house_protexiom_identify',
@@ -5680,8 +6399,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_protexiom_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Protexiom Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Protexiom Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.willow_house_protexiom_start_identify',
@@ -5731,8 +6450,8 @@
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_protexiom_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Protexiom Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Protexiom Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.willow_house_protexiom_stop_identify',
@@ -5782,9 +6501,9 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.back_door_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Back Door Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.back_door_shutter_identify',
@@ -5834,8 +6553,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.back_door_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Back Door Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.back_door_shutter_my_position',
@@ -5885,8 +6604,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.back_door_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Back Door Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.back_door_shutter_start_identify',
@@ -5936,8 +6655,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.back_door_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Back Door Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.back_door_shutter_stop_identify',
@@ -5987,9 +6706,9 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.front_door_shutter_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Front Door Shutter Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Shutter Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.front_door_shutter_identify',
@@ -6039,8 +6758,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.front_door_shutter_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Shutter My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Shutter My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.front_door_shutter_my_position',
@@ -6090,8 +6809,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.front_door_shutter_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Shutter Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Shutter Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.front_door_shutter_start_identify',
@@ -6141,8 +6860,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.front_door_shutter_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Shutter Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Shutter Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.front_door_shutter_stop_identify',
@@ -6192,9 +6911,9 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.roof_window_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Roof Window Identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.roof_window_identify',
@@ -6244,8 +6963,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.roof_window_my_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roof Window My position',
-      'icon': 'mdi:star',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
     }),
     'context': <ANY>,
     'entity_id': 'button.roof_window_my_position',
@@ -6295,8 +7014,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.roof_window_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roof Window Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.roof_window_start_identify',
@@ -6346,8 +7065,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.roof_window_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roof Window Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roof Window Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.roof_window_stop_identify',
@@ -6397,8 +7116,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.zigbee_plug_start_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zigbee Plug Start identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zigbee Plug Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.zigbee_plug_start_identify',
@@ -6448,8 +7167,8 @@
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.zigbee_plug_stop_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zigbee Plug Stop identify',
-      'icon': 'mdi:human-greeting-variant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zigbee Plug Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
     }),
     'context': <ANY>,
     'entity_id': 'button.zigbee_plug_stop_identify',

@@ -1,7 +1,7 @@
 """Support for Qwikswitch Binary Sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyqwikswitch.qwikswitch import SENSORS
 
@@ -52,6 +52,7 @@ class QSBinarySensor(QSEntity, BinarySensorEntity):
         self._attr_unique_id = f"qs{self.qsid}:{self.channel}"
 
     @callback
+    @override
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
         val = self._decode(packet, channel=self.channel)

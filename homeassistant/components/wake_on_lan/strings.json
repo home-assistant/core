@@ -8,12 +8,14 @@
         "data": {
           "broadcast_address": "Broadcast address",
           "broadcast_port": "Broadcast port",
-          "mac": "MAC address"
+          "mac": "MAC address",
+          "secureon_password": "SecureOn password"
         },
         "data_description": {
           "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
           "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
-          "mac": "MAC address of the device to wake up."
+          "mac": "MAC address of the device to wake up.",
+          "secureon_password": "The SecureOn password in 6 bytes hexadecimal format to append to the magic packet."
         }
       }
     }
@@ -26,11 +28,13 @@
       "init": {
         "data": {
           "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data::broadcast_address%]",
-          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]"
+          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]",
+          "secureon_password": "[%key:component::wake_on_lan::config::step::user::data::secureon_password%]"
         },
         "data_description": {
           "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_address%]",
-          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]"
+          "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]",
+          "secureon_password": "[%key:component::wake_on_lan::config::step::user::data_description::secureon_password%]"
         }
       }
     }
@@ -50,6 +54,10 @@
         "mac": {
           "description": "[%key:component::wake_on_lan::config::step::user::data_description::mac%]",
           "name": "[%key:component::wake_on_lan::config::step::user::data::mac%]"
+        },
+        "secureon_password": {
+          "description": "[%key:component::wake_on_lan::config::step::user::data_description::secureon_password%]",
+          "name": "[%key:component::wake_on_lan::config::step::user::data::secureon_password%]"
         }
       },
       "name": "Send magic packet"

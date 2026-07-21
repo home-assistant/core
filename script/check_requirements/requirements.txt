@@ -1,2 +1,3 @@
+PyGithub==2.9.1
 requests==2.34.2
 unidiff==0.7.5

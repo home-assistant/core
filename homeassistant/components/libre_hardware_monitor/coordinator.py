@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from librehardwaremonitor_api import (
     LibreHardwareMonitorClient,
@@ -68,6 +69,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         }
         self._is_deprecated_version: bool | None = None
 
+    @override
     async def _async_update_data(self) -> LibreHardwareMonitorData:
         try:
             lhm_data = await self._api.get_data()
@@ -94,6 +96,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
 
         return lhm_data
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -127,8 +130,8 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             )
             device_registry = dr.async_get(self.hass)
             for device_id in orphaned_devices:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{self._entry_id}_{device_id}")}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{self._entry_id}_{device_id}"), self._entry_id
                 ):
                     _LOGGER.debug(
                         "Removing device: %s", self._previous_devices[device_id]

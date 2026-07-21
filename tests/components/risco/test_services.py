@@ -50,7 +50,7 @@ async def test_set_time_service_with_no_time(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )
 
-        mock_set_time.assert_called_once_with(datetime.now())
+        mock_set_time.assert_called_once_with(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
 
 
 async def test_set_time_service_with_invalid_entry(

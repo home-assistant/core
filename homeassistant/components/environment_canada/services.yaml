@@ -1,3 +1,11 @@
+get_alerts:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: environment_canada
+
 get_forecasts:
   target:
     entity:
@@ -12,10 +20,11 @@ set_radar_type:
   fields:
     radar_type:
       required: true
-      example: Snow
+      example: Rain
       selector:
         select:
           options:
             - "Auto"
             - "Rain"
             - "Snow"
+            - "Precipitation type"

@@ -119,7 +119,7 @@ async def test_restore_number_save_state(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "text", {"text": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"text": {"platform": "test"}})
     await hass.async_block_till_done()
 
     # Trigger saving state
@@ -163,7 +163,7 @@ async def test_restore_number_restore_state(
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
-    assert await async_setup_component(hass, "text", {"text": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"text": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert hass.states.get(entity0.entity_id)

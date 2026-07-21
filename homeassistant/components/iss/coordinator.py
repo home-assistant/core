@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 import pyiss
 import requests
@@ -51,6 +52,7 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
             current_location=self.iss.current_location(),
         )
 
+    @override
     async def _async_update_data(self) -> IssData:
         """Fetch data from the ISS API, tolerating transient failures."""
         try:

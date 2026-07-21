@@ -2,6 +2,14 @@
 # name: test_model_list
   list([
     dict({
+      'label': 'Claude Fable 5',
+      'value': 'claude-fable-5',
+    }),
+    dict({
+      'label': 'Claude Opus 4.8',
+      'value': 'claude-opus-4-8',
+    }),
+    dict({
       'label': 'Claude Opus 4.7',
       'value': 'claude-opus-4-7',
     }),

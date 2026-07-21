@@ -4,7 +4,7 @@ import asyncio
 from base64 import b64encode
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import voluptuous as vol
@@ -99,6 +99,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         self.vehicles = 0
 
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the entity."""
         confidence = 0.0
@@ -112,6 +113,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return plate
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
@@ -175,6 +177,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         else:
             self._attr_name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
 
+    @override
     async def async_process_image(self, image: bytes) -> None:
         """Process image.
 

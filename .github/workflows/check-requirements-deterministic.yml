@@ -8,15 +8,12 @@ name: Check requirements (deterministic)
 
 # yamllint disable-line rule:truthy
 on:
-  # Auto-trigger on PRs that touch tracked requirement files is disabled
-  # for now while we iterate — testing the workflow_run handoff to the
-  # agentic stage is hard with an auto-trigger. Re-enable once the chain
-  # has been validated end-to-end.
-  # pull_request:
-  #   types: [opened, synchronize, reopened]
-  #   paths:
-  #     - "**/requirements*.txt"
-  #     - "homeassistant/package_constraints.txt"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "requirements*.txt"
+      - "**/requirements*.txt"
+      - "homeassistant/package_constraints.txt"
   workflow_dispatch:
     inputs:
       pull_request_number:
@@ -40,29 +37,35 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
       - name: Install script dependencies
         run: pip install -r script/check_requirements/requirements.txt
-      - name: Collect PR diff
+      - name: Collect PR diff and head SHA
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
         run: |
           mkdir -p deterministic
           gh pr diff "${PR_NUMBER}" > deterministic/pr.diff
+          HEAD_SHA=$(gh pr view "${PR_NUMBER}" --json headRefOid --jq '.headRefOid')
+          echo "head_sha=${HEAD_SHA}" >> "${GITHUB_OUTPUT}"
       - name: Run deterministic checks
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
           python -m script.check_requirements \
             --pr-number "${PR_NUMBER}" \
+            --head-sha "${HEAD_SHA}" \
             --diff deterministic/pr.diff \
             --output deterministic/results.json
       - name: Upload deterministic-results artifact
