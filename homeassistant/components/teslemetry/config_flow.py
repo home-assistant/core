@@ -11,6 +11,7 @@ from aiopowerwall import (
     DEFAULT_GATEWAY_HOST,
     PowerwallAuthenticationError,
     PowerwallClient,
+    PowerwallEnergySite,
     PowerwallError,
 )
 from tesla_fleet_api.const import (
@@ -125,6 +126,25 @@ def _din_matches(expected: str, actual: str) -> bool:
     case or whitespace skew would be worse than not comparing at all.
     """
     return expected.strip().casefold() == actual.strip().casefold()
+
+
+def _authorized_client_from_local(entry: dict[str, Any]) -> AuthorizedClient:
+    """Build an ``AuthorizedClient`` from a local ``list_authorized_clients`` entry.
+
+    aiopowerwall normalizes ``public_key``/``state`` to the same keys the
+    cloud envelope uses, with ``state`` already the enum member's name (for
+    example ``"VERIFIED"``) rather than an int. An unrecognized name is kept
+    verbatim rather than dropped, matching the cloud accessor's handling of
+    an unrecognized state.
+    """
+    state = entry["state"]
+    try:
+        typed_state: AuthorizedClientState | str = AuthorizedClientState[state]
+    except KeyError:
+        typed_state = state
+    return AuthorizedClient(
+        public_key=entry["public_key"], state=typed_state, raw=entry
+    )
 
 
 class OAuth2FlowHandler(
@@ -271,6 +291,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     def __init__(self) -> None:
         """Initialize the energy site subentry flow."""
         self._energy_site: TeslemetryEnergySite | None = None
+        self._local_energy_site: PowerwallEnergySite | None = None
         self._key_pem: bytes | None = None
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
@@ -303,12 +324,12 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        self._energy_site = cast(
-            TeslemetryEnergySite,
-            energy_data.api.secondary
-            if isinstance(energy_data.api, EnergySiteRouter)
-            else energy_data.api,
-        )
+        if isinstance(energy_data.api, EnergySiteRouter):
+            self._energy_site = cast(TeslemetryEnergySite, energy_data.api.secondary)
+            self._local_energy_site = cast(PowerwallEnergySite, energy_data.api.primary)
+        else:
+            self._energy_site = cast(TeslemetryEnergySite, energy_data.api)
+            self._local_energy_site = None
         self._gateway_id = energy_data.gateway_id
 
         try:
@@ -408,31 +429,42 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     async def _find_authorized_client(self) -> AuthorizedClient | None:
         """Return our RSA key's authorized-client entry on the gateway, or None.
 
-        Parsing lives in the library's typed ``find_authorized_clients`` accessor
-        (envelope unwrap, null-body handling, ``state`` typing). ``None`` is
-        returned only when the gateway answers successfully but our key is not
-        among the authorized clients (an explicitly empty list authoritatively
-        means "not registered").
+        Reads the gateway directly over the LAN when the site is already
+        paired for local control - the authoritative source for whether a key
+        can make signed local requests, and the one that works whether or not
+        Teslemetry's cloud proxy is behaving. Only queries the cloud when
+        there is no local key to read from yet (the site is not paired).
+        ``None`` is returned only when the gateway answers successfully but
+        our key is not among the authorized clients (an explicitly empty list
+        authoritatively means "not registered").
 
-        A 502 (gateway unreachable) raises ``PowerwallUnreachableError``; any
-        other lookup failure raises ``PowerwallLookupError``. Neither is
-        collapsed into ``None`` so the caller never mistakes a failed lookup for
-        an absent key and re-registers it.
+        A 502 from the cloud path raises ``PowerwallUnreachableError``; any
+        other lookup failure (cloud or local) raises ``PowerwallLookupError``.
+        Neither is collapsed into ``None`` so the caller never mistakes a
+        failed lookup for an absent key and re-registers it.
         """
         assert self._energy_site is not None
-        try:
-            result = await self._energy_site.find_authorized_clients()
-        except (ClientError, TeslaFleetError) as err:
-            if _is_gateway_unreachable(err):
-                raise PowerwallUnreachableError from err
-            LOGGER.debug("find_authorized_clients failed: %s", err)
-            raise PowerwallLookupError from err
+        if self._local_energy_site is not None:
+            try:
+                payload = await self._local_energy_site.list_authorized_clients()
+            except PowerwallError as err:
+                LOGGER.debug("local list_authorized_clients failed: %s", err)
+                raise PowerwallLookupError from err
+            clients = [
+                _authorized_client_from_local(entry)
+                for entry in payload["response"]["clients"]
+            ]
+        else:
+            try:
+                result = await self._energy_site.find_authorized_clients()
+            except (ClientError, TeslaFleetError) as err:
+                if _is_gateway_unreachable(err):
+                    raise PowerwallUnreachableError from err
+                LOGGER.debug("find_authorized_clients failed: %s", err)
+                raise PowerwallLookupError from err
+            clients = result.clients
         return next(
-            (
-                client
-                for client in result.clients
-                if client.public_key == self._public_key_b64
-            ),
+            (client for client in clients if client.public_key == self._public_key_b64),
             None,
         )
 

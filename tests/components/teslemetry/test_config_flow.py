@@ -27,7 +27,10 @@ from tesla_fleet_api.teslemetry.energysite import (
 )
 from yarl import URL
 
-from homeassistant.components.teslemetry.config_flow import _is_gateway_unreachable
+from homeassistant.components.teslemetry.config_flow import (
+    _authorized_client_from_local,
+    _is_gateway_unreachable,
+)
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -608,6 +611,23 @@ async def test_migrate_error_from_future(
 def test_is_gateway_unreachable(error: Exception, expected: bool) -> None:
     """A bare TeslaFleetError has no status set and must not raise AttributeError."""
     assert _is_gateway_unreachable(error) is expected
+
+
+@pytest.mark.parametrize(
+    ("state", "expected"),
+    [
+        pytest.param("VERIFIED", AuthorizedClientState.VERIFIED, id="verified"),
+        pytest.param("PENDING", AuthorizedClientState.PENDING, id="pending"),
+        pytest.param("SOME_FUTURE_STATE", "SOME_FUTURE_STATE", id="unrecognized"),
+    ],
+)
+def test_authorized_client_from_local(
+    state: str, expected: AuthorizedClientState | str
+) -> None:
+    """An unrecognized local state is kept verbatim rather than dropped."""
+    client = _authorized_client_from_local({"public_key": "abc", "state": state})
+    assert client.public_key == "abc"
+    assert client.state == expected
 
 
 POWERWALL_502_ERRORS = [
