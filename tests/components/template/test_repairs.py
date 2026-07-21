@@ -182,7 +182,7 @@ async def test_composite_device_id_repair_flow_ambiguity_not_resolved(
     split_devices: tuple[dr.DeviceEntry, dr.DeviceEntry],
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the form is shown again if the submitted device is not a real device."""
+    """Test the form is shown again if the submitted device is a composite device."""
     device_1 = split_devices[0]
     entry = await _setup_template_entry(hass, COMPOSITE_ID)
     issue_id = f"composite_device_id_{entry.entry_id}"
@@ -193,6 +193,7 @@ async def test_composite_device_id_repair_flow_ambiguity_not_resolved(
 
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
     assert result["type"] == FlowResultType.FORM
+    assert not result["errors"]
 
     # Submitting the suggested composite device id does not resolve the ambiguity
     result = await process_repair_fix_flow(
@@ -201,6 +202,7 @@ async def test_composite_device_id_repair_flow_ambiguity_not_resolved(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "select_device"
     assert result["data_schema"] == EXPECTED_DATA_SCHEMA
+    assert result["errors"] == {CONF_DEVICE_ID: "invalid_device"}
     assert entry.options[CONF_DEVICE_ID] == COMPOSITE_ID
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
@@ -212,6 +214,30 @@ async def test_composite_device_id_repair_flow_ambiguity_not_resolved(
 
     assert entry.options[CONF_DEVICE_ID] == device_1.id
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.usefixtures("split_devices")
+async def test_composite_device_id_repair_flow_entry_removed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the flow aborts if the config entry is removed while the flow is open."""
+    entry = await _setup_template_entry(hass, COMPOSITE_ID)
+    issue_id = f"composite_device_id_{entry.entry_id}"
+
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    assert result["type"] == FlowResultType.FORM
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await process_repair_fix_flow(client, result["flow_id"], json={})
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "entry_removed"
 
 
 @pytest.mark.usefixtures("split_devices")

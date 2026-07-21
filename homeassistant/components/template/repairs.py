@@ -30,24 +30,27 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the device selection step."""
+        entry = self.hass.config_entries.async_get_entry(self._entry.entry_id)
+        if entry is None:
+            return self.async_abort(reason="entry_removed")
+
         device_registry = dr.async_get(self.hass)
+        errors: dict[str, str] = {}
         if user_input is not None:
             device_id = user_input.get(CONF_DEVICE_ID)
-            # Ask again if the selection did not resolve the ambiguity, e.g. the
-            # suggested composite device id was submitted unchanged
             if device_id is None or not device_registry.async_is_composite_device_id(
                 device_id
             ):
-                options = {**self._entry.options}
+                options = {**entry.options}
                 if device_id:
                     options[CONF_DEVICE_ID] = device_id
                 else:
                     options.pop(CONF_DEVICE_ID, None)
-                self.hass.config_entries.async_update_entry(
-                    self._entry, options=options
-                )
-                await self.hass.config_entries.async_reload(self._entry.entry_id)
+                self.hass.config_entries.async_update_entry(entry, options=options)
+                await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_create_entry(data={})
+            # The suggested composite device id was submitted unchanged
+            errors[CONF_DEVICE_ID] = "invalid_device"
 
         return self.async_show_form(
             step_id="select_device",
@@ -56,12 +59,13 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
                     vol.Optional(
                         CONF_DEVICE_ID,
                         description={
-                            "suggested_value": self._entry.options[CONF_DEVICE_ID]
+                            "suggested_value": entry.options.get(CONF_DEVICE_ID)
                         },
                     ): DeviceSelector(),
                 }
             ),
-            description_placeholders={"name": self._entry.title},
+            description_placeholders={"name": entry.title},
+            errors=errors,
         )
 
 

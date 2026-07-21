@@ -584,6 +584,12 @@
   "issues": {
     "composite_device_id": {
       "fix_flow": {
+        "abort": {
+          "entry_removed": "The template helper has been removed"
+        },
+        "error": {
+          "invalid_device": "The selected device no longer exists"
+        },
         "step": {
           "select_device": {
             "data": {
@@ -592,7 +598,7 @@
             "data_description": {
               "device_id": "The device this template helper should be linked to."
             },
-            "description": "The template helper {name} was linked to a device which has been split into multiple devices.\n\nSelect the device this helper should be linked to, or leave empty to not link it to a device.",
+            "description": "The template helper {name} was linked to a device which has been split into multiple devices. Until a device is selected, the helper is not linked to any device.\n\nSelect the device this helper should be linked to, or leave empty to not link it to a device.",
             "title": "Select device for {name}"
           }
         }
