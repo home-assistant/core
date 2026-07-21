@@ -319,7 +319,7 @@ class MatterEntity(Entity):
         """Handle FeatureMap attribute updates."""
         if data is None:
             return
-new_value = data
+        new_value = data
         # handle edge case where a Feature is removed from a cluster
         if (
             self._entity_info.discovery_schema.featuremap_contains is not None

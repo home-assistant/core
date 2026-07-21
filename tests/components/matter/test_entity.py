@@ -579,25 +579,13 @@ async def test_featuremap_update_with_scalar_value(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
-    """Test a FeatureMap ATTRIBUTE_UPDATED whose data is the bare new value.
-
-    python-matter-server delivers ATTRIBUTE_UPDATED to subscribers with ``data``
-    set to the new attribute value only (see MatterClient._handle_event_message),
-    not a ``(node_id, path, value)`` tuple. A FeatureMap value is a bare int, so
-    the handler must not subscript it. Regression test for a crash where the
-    handler did ``data[2]`` and raised ``TypeError: 'int' object is not
-    subscriptable`` every time a FeatureMap update was reported (e.g. whenever a
-    Matter bridge re-announced), which tore down the Matter client in a loop.
-    """
+    """Test a FeatureMap ATTRIBUTE_UPDATED with a bare int value does not crash."""
     await setup_integration_with_node_fixture(hass, "mock_door_lock", matter_client)
 
     state = hass.states.get("lock.mock_door_lock")
     assert state is not None
     previous_state = state.state
 
-    # Fire a FeatureMap update the way the real client does: ``data`` is the bare
-    # new FeatureMap value (all bits set here so the feature-removal branch is not
-    # taken). This must not raise.
     await trigger_subscription_callback(
         hass,
         matter_client,
