@@ -40,18 +40,23 @@ KEY_TOKEN = "websock_token"
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    own_ip = await network.async_get_source_ip(hass)
     host_input = data[KEY_HOST]
 
-    # If the entered IP matches our own IP, store the 'local' sentinel.
-    if host_input == own_ip:
+    # The hub runs on this machine when the entered address is *any* of HA's own
+    # local addresses -- not just the route-selected one. A multi-homed host, or
+    # a SmartCenter reachable over both LAN and WLAN, has several; match them all
+    # so the same hub is not stored once as a remote address and once as
+    # ``local``. Typing ``local`` explicitly still works (it is not an IP, so it
+    # falls through to the sentinel branch below).
+    own_ips = {str(ip) for ip in await network.async_get_enabled_source_ips(hass)}
+    if host_input in own_ips:
         host_input = "local"
         data[KEY_HOST] = "local"
 
     host_to_test = host_input
     if host_to_test == "local":
-        # Resolve the sentinel to our own IP for the probe.
-        host_to_test = own_ip
+        # Resolve the sentinel to a concrete local IP for the probe.
+        host_to_test = await network.async_get_source_ip(hass)
 
     # Resolve the name first so an unresolvable host maps to ``host_not_found``
     # ("try an IP") rather than a generic connection error. ``get_host_ip``
@@ -124,8 +129,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Both the manual and the SSDP step compare through this, so the same hub
         is recognised whichever way it was first added.
         """
-        if host == CONF_DEFAULT_HOST:
-            return await network.async_get_source_ip(self.hass) or host
+        # Any of HA's own local addresses is the same machine as the ``local``
+        # sentinel: a multi-homed host, or a SmartCenter reachable over both LAN
+        # and WLAN, exposes several. Collapse them all to the sentinel so an
+        # entry stored under one local address still matches another.
+        own_ips = {
+            str(ip) for ip in await network.async_get_enabled_source_ips(self.hass)
+        }
+        if host == CONF_DEFAULT_HOST or host in own_ips:
+            return CONF_DEFAULT_HOST
         with contextlib.suppress(OSError):
             return await self.hass.async_add_executor_job(socket.gethostbyname, host)
         return host.casefold()
