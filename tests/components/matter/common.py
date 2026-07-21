@@ -214,6 +214,16 @@ async def trigger_subscription_callback(
     data: Any = None,
 ) -> None:
     """Trigger a subscription callback."""
+    # For ATTRIBUTE_UPDATED, callers pass the raw (node_id, attribute_path,
+    # value) tuple, but the real client delivers only the new value to
+    # subscribers. Unwrap it so callbacks receive the same payload as in
+    # production.
+    if (
+        event == EventType.ATTRIBUTE_UPDATED
+        and isinstance(data, tuple)
+        and len(data) == 3
+    ):
+        data = data[2]
     # trigger callback on all subscribers
     for sub in client.subscribe_events.call_args_list:
         callback = sub.kwargs["callback"]
