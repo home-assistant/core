@@ -9,12 +9,14 @@ from homeassistant.components.lyric.coordinator import LyricDataUpdateCoordinato
 from homeassistant.core import HomeAssistant
 
 
-def _lyric_exception(status: int) -> LyricException:
+def _lyric_exception(
+    status: int, code: str | None = "GetPriorityFailed"
+) -> LyricException:
     """Build a LyricException matching aiolyric's actual payload shape."""
     return LyricException(
         {
             "request": {"method": "GET", "url": "https://example.com"},
-            "response": {"message": "GetPriorityFailed"},
+            "response": {"code": code} if code else {},
             "status": status,
         }
     )
@@ -34,15 +36,7 @@ def coordinator(hass: HomeAssistant) -> LyricDataUpdateCoordinator:
 async def test_get_thermostat_rooms_ignores_unsupported_device(
     coordinator: LyricDataUpdateCoordinator,
 ) -> None:
-    """A 400 GetPriorityFailed for one device shouldn't fail the update.
-
-    Devices that don't support the room priority endpoint (e.g. older
-    thermostats) return a 400 here; that's expected and must not be
-    conflated with devices that do support it but got skipped by a
-    device ID heuristic. aiolyric raises this as a plain LyricException,
-    not ClientResponseError, with the HTTP status embedded in the
-    exception's payload rather than a status attribute.
-    """
+    """A GetPriorityFailed 400 for one device shouldn't fail the update."""
     coordinator.lyric.get_thermostat_rooms.side_effect = _lyric_exception(400)
 
     await coordinator._get_thermostat_rooms("location1", "device1")
@@ -57,6 +51,23 @@ async def test_get_thermostat_rooms_reraises_other_errors(
 ) -> None:
     """Non-400 errors should still propagate to fail the update."""
     coordinator.lyric.get_thermostat_rooms.side_effect = _lyric_exception(500)
+
+    with pytest.raises(LyricException):
+        await coordinator._get_thermostat_rooms("location1", "device1")
+
+
+async def test_get_thermostat_rooms_reraises_different_400_reason(
+    coordinator: LyricDataUpdateCoordinator,
+) -> None:
+    """A 400 for a reason other than GetPriorityFailed should propagate.
+
+    Guards against broadly suppressing every 400 as "unsupported device",
+    which would also hide unrelated bad-request errors (e.g. a bug in our
+    own request, or a new/different failure from Honeywell).
+    """
+    coordinator.lyric.get_thermostat_rooms.side_effect = _lyric_exception(
+        400, code="SomeOtherError"
+    )
 
     with pytest.raises(LyricException):
         await coordinator._get_thermostat_rooms("location1", "device1")
@@ -92,14 +103,7 @@ async def test_get_thermostat_rooms_success(
 async def test_run_update_skips_unsupported_device(
     coordinator: LyricDataUpdateCoordinator,
 ) -> None:
-    """One unsupported thermostat shouldn't fail the whole coordinator update.
-
-    Regression test for the original bug: previously, any thermostat
-    that didn't support the priority endpoint made the entire refresh
-    fail with UpdateFailed, since aiolyric's LyricException (not
-    ClientResponseError) went uncaught by _get_thermostat_rooms and
-    propagated to the outer handler.
-    """
+    """One unsupported thermostat shouldn't fail the whole coordinator update."""
     supported = MagicMock(device_class="Thermostat", device_id="device-ok")
     unsupported = MagicMock(device_class="Thermostat", device_id="device-400")
     location = MagicMock(location_id="location1", devices=[supported, unsupported])
