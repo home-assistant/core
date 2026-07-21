@@ -38,9 +38,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: Pairing uses discovery and does not require user-supplied setup parameters.
+  docs-configuration-parameters: done
   docs-installation-parameters:
     status: exempt
     comment: Pairing uses discovery and does not require user-supplied setup parameters.

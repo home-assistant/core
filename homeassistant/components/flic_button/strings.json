@@ -23,7 +23,7 @@
         "title": "Pair with Flic device"
       },
       "user": {
-        "title": "Pair with Flic device"
+        "title": "[%key:component::flic_button::config::step::pair::title%]"
       }
     }
   },
