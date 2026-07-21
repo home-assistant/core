@@ -429,7 +429,11 @@ class HTTPConfigStore:
             # If the YAML config matches stable apart from those lost masks,
             # the user changed nothing: restore the masks in stable instead of
             # staging the YAML as pending.
-            self._stable = validated_config
+            self._stable = ConfData(
+                **validated_config,
+                created_at=self._stable[CONF_CREATED_AT],
+                error=None,
+            )
         self._pending = None
         if validated_config != _strip_meta(self._stable):
             self._pending = ConfData(
@@ -452,7 +456,7 @@ class HTTPConfigStore:
         """
         if (proxies := config.get(CONF_TRUSTED_PROXIES)) is None:
             return False
-        return self._stable == {
+        return _strip_meta(self._stable) == {
             **config,
             CONF_TRUSTED_PROXIES: [
                 _ip_network_str(ip_network(proxy).network_address) for proxy in proxies

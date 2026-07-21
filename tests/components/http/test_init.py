@@ -1090,6 +1090,7 @@ async def test_yaml_migration_matches_stable_no_pending(
         ),
     ],
 )
+@pytest.mark.usefixtures("freezer")
 async def test_yaml_migration_stable_lost_trusted_proxy_masks(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1129,8 +1130,13 @@ async def test_yaml_migration_stable_lost_trusted_proxy_masks(
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["yaml_migration_done"] is True
-    assert stored["pending"] == expected_pending
+    assert stored["pending"] == (
+        _stored_config(expected_pending, created_at=dt_util.utcnow().isoformat())
+        if expected_pending is not None
+        else None
+    )
     assert stored["stable"]["trusted_proxies"] == expected_stable_proxies
+    assert stored["stable"]["created_at"] == STABLE_CREATED_AT
 
 
 @pytest.mark.usefixtures("freezer")
