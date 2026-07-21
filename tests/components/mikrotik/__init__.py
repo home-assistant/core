@@ -38,10 +38,10 @@ def _build_command_responses(
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IDENTITY]: [
             {"name": "Mikrotik"}
         ],
-        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INFO]: [
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ROUTERBOARD]: [
             {
                 "model": TEST_MODEL,
-                "current-firmware": TEST_FIRMWARE,
+                "installed-version": TEST_FIRMWARE,
                 "serial-number": TEST_SERIAL_NUMBER,
             }
         ],
@@ -56,7 +56,7 @@ def _build_command_responses(
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIFIWAVE2]: wifiwave2_data,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]: ARP_DATA,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.HEALTH]: health_data,
-        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.SYSTEM]: system_data,
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.RESOURCE]: system_data,
     }
 
 
