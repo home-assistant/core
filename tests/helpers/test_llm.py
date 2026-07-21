@@ -985,6 +985,10 @@ async def test_selector_serializer(
     api = await llm.async_get_api(hass, "assist", llm_context)
     selector_serializer = api.custom_serializer
 
+    assert selector_serializer(cv.string) == {"type": "string"}
+    assert selector_serializer(cv.boolean) == {"type": "boolean"}
+    assert selector_serializer(intent.non_empty_string) == {"type": "string"}
+
     assert selector_serializer(selector.ActionSelector()) == {"type": "string"}
     assert selector_serializer(selector.AddonSelector()) == {"type": "string"}
     assert selector_serializer(selector.AreaSelector()) == {"type": "string"}
