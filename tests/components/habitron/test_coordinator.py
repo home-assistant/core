@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.habitron.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.habitron.coordinator import HbtnCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -99,6 +100,34 @@ async def test_async_setup_delegates_to_smart_hub(hass: HomeAssistant) -> None:
     coord.smart_hub.async_setup = AsyncMock()
     await coord._async_setup()
     coord.smart_hub.async_setup.assert_awaited()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_key"),
+    [
+        (TimeoutError("silent"), "connect_timeout"),
+        (HabitronTimeoutError("silent"), "connect_timeout"),
+        (ConnectionRefusedError("refused"), "connect_refused"),
+        (OSError("dns down"), "connect_error"),
+        (HabitronConnectionError("protocol glitch"), "connect_error"),
+    ],
+)
+async def test_async_setup_translates_connection_errors(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    expected_key: str,
+) -> None:
+    """A setup-phase client failure becomes a *translated* ConfigEntryNotReady.
+
+    Without translating here the coordinator's first refresh would log the raw
+    error as unexpected and surface a generic, untranslated ConfigEntryNotReady.
+    """
+    comm = _make_comm(hass)
+    coord = HbtnCoordinator(hass, MagicMock(), comm)
+    coord.smart_hub.async_setup = AsyncMock(side_effect=side_effect)
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        await coord._async_setup()
+    assert exc_info.value.translation_key == expected_key
 
 
 async def test_coordinator_network_error_raises_update_failed(

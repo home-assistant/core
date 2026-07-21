@@ -8,6 +8,7 @@ from habitron_client import HabitronError, HabitronTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -62,8 +63,34 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
 
         Runs once before the first ``_async_update_data``: opens the client,
         builds the bus model and registers the hub/bus devices.
+
+        Expected connection failures are translated to ``ConfigEntryNotReady``
+        here: ``DataUpdateCoordinator`` otherwise logs a raw library error from
+        setup as *unexpected* on every retry and replaces it with a generic,
+        untranslated ``ConfigEntryNotReady``.
         """
-        await self.smart_hub.async_setup()
+        try:
+            await self.smart_hub.async_setup()
+        except (TimeoutError, HabitronTimeoutError) as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connect_timeout",
+            ) from err
+        except ConnectionRefusedError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connect_refused",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except (OSError, ConnectionError, HabitronError) as err:
+            # The library raises its own HabitronError subclasses (protocol /
+            # connection errors) rather than OSError for a flaky or rebooting
+            # hub. Treat them as transient so HA retries the entry.
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connect_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @override
     async def _async_update_data(self) -> int:
