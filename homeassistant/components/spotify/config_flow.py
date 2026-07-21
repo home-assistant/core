@@ -58,7 +58,7 @@ class SpotifyFlowHandler(
             **data,
             CONF_NAME: name,
             "id": current_user.user_id,
-            "auth_implementation": DOMAIN,
+            "auth_implementation": data["auth_implementation"],
         }
 
         if self.source == SOURCE_REAUTH:

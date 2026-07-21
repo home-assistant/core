@@ -40,9 +40,6 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
-    "oauth2_token_reauth_required": {
-      "message": "The Spotify refresh token has expired or been revoked. Please re-authenticate your Spotify account."
     }
   },
   "issues": {

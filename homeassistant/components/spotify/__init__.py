@@ -1,19 +1,13 @@
 """The spotify integration."""
 
-import logging
 from typing import TYPE_CHECKING
 
 import aiohttp
 from spotifyaio import SpotifyClient
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -34,9 +28,6 @@ from .util import (
     resolve_spotify_media_type,
     spotify_uri_from_media_browser_url,
 )
-
-_LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-013"  # Increment for each deployment
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -62,20 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
 
     try:
         await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        _LOGGER.warning(
-            "[%s] Spotify refresh token expired or revoked for %s, initiating reauth",
-            BUILD_ID,
-            entry.title,
-        )
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-        )
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_token_reauth_required",
-        ) from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
