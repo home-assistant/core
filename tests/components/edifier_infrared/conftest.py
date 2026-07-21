@@ -28,13 +28,14 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
-        title="Edifier R1700BT via Test IR emitter",
+        title="Edifier R1700BTs via Test IR emitter",
         data={
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
-            CONF_MODEL: EdifierModel.R1700BT.value,
-            CONF_COMMAND_SET: EdifierCommandSet.R1700BT.value,
+            CONF_MODEL: EdifierModel.R1700BTS.value,
+            CONF_COMMAND_SET: EdifierCommandSet.R1700BTS.value,
         },
-        unique_id=f"r1700bt_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
+        unique_id=f"r1700bts_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
+        version=2,
     )
 
 
@@ -53,7 +54,12 @@ def mock_edifier_code_to_command() -> Generator[None]:
     """
     with (
         patch(
-            "infrared_protocols.codes.edifier.r1700bt.EdifierR1700BTCode.to_command",
+            "infrared_protocols.codes.edifier.r1700bt_pre_2017.EdifierR1700BTPre2017Code.to_command",
+            autospec=True,
+            side_effect=lambda self: self,
+        ),
+        patch(
+            "infrared_protocols.codes.edifier.r1700bts.EdifierR1700BTsCode.to_command",
             autospec=True,
             side_effect=lambda self: self,
         ),
