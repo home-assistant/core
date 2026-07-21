@@ -19,7 +19,11 @@ from spotifyaio import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -95,6 +99,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         """Set up the coordinator."""
         try:
             self.current_user = await self.client.get_current_user()
+        except OAuth2TokenRequestReauthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="oauth2_token_reauth_required",
+            ) from err
         except SpotifyForbiddenError as err:
             async_create_issue(
                 self.hass,
@@ -116,6 +125,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         self.update_interval = UPDATE_INTERVAL
         try:
             current = await self.client.get_playback()
+        except OAuth2TokenRequestReauthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="oauth2_token_reauth_required",
+            ) from err
         except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
         if not current:
@@ -147,6 +161,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                     # playback state update
                     try:
                         self._playlist = await self.client.get_playlist(context.uri)
+                    except OAuth2TokenRequestReauthError as err:
+                        raise ConfigEntryAuthFailed(
+                            translation_domain=DOMAIN,
+                            translation_key="oauth2_token_reauth_required",
+                        ) from err
                     except SpotifyNotFoundError:
                         _LOGGER.debug(
                             "Spotify playlist '%s' not found. "
@@ -202,5 +221,10 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
     async def _async_update_data(self) -> list[Device]:
         try:
             return await self._client.get_devices()
+        except OAuth2TokenRequestReauthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="oauth2_token_reauth_required",
+            ) from err
         except SpotifyConnectionError as err:
             raise UpdateFailed from err

@@ -53,12 +53,20 @@ class SpotifyFlowHandler(
 
         await self.async_set_unique_id(current_user.user_id)
 
+        # Store user ID and auth implementation for reauth flow
+        entry_data = {
+            **data,
+            CONF_NAME: name,
+            "id": current_user.user_id,
+            "auth_implementation": data["auth_implementation"],
+        }
+
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), title=name, data=data
+                self._get_reauth_entry(), title=name, data=entry_data
             )
-        return self.async_create_entry(title=name, data={**data, CONF_NAME: name})
+        return self.async_create_entry(title=name, data=entry_data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -74,7 +82,7 @@ class SpotifyFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": reauth_entry.data["id"]},
+                description_placeholders={"account": reauth_entry.title},
                 errors={},
             )
 

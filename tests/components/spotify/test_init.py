@@ -6,8 +6,9 @@ import pytest
 from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -16,6 +17,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+def _oauth_token_reauth_error() -> OAuth2TokenRequestReauthError:
+    """Create a token reauth error for tests."""
+    return OAuth2TokenRequestReauthError(domain=DOMAIN, request_info=MagicMock())
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -92,3 +98,38 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    "method",
+    [
+        "get_current_user",
+        "get_playback",
+        "get_devices",
+    ],
+)
+async def test_oauth_token_expiration_triggers_reauth(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+) -> None:
+    """Test that token reauth failures trigger a config-entry reauth flow."""
+    getattr(mock_spotify.return_value, method).side_effect = _oauth_token_reauth_error()
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
+
+
