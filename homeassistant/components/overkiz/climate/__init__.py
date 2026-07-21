@@ -88,6 +88,9 @@ WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY = {
 }
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,

@@ -144,7 +144,9 @@ async def _async_migrate_unique_ids(
             return None
         sensor_id = unique_id.split("_")[1]
         new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
-        if dev_entry := dev_reg.async_get_device(identifiers={(DOMAIN, unique_id)}):
+        if dev_entry := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, unique_id), entry.entry_id
+        ):
             dev_reg.async_update_device(
                 dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
             )
