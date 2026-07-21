@@ -216,13 +216,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Add to or update device registry connections as needed
         device_registry = dr.async_get(self.hass)
-        envoy_device = device_registry.async_get_device(
-            identifiers={
-                (
-                    DOMAIN,
-                    self.envoy_serial_number,
-                )
-            }
+        envoy_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.envoy_serial_number), self.config_entry.entry_id
         )
         if envoy_device is None:
             _LOGGER.error(
