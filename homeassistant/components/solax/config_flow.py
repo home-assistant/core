@@ -41,7 +41,7 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         super().__init__()
         self._connection_data: dict[str, Any] = {}
-        self._discovered_inverters: dict[str, Inverter] = {}
+        self._potential_types: dict[str, Inverter] = {}
 
     def _select_model_schema(self) -> vol.Schema:
         """Return the schema listing only the discovered inverters."""
@@ -49,7 +49,7 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_MODEL): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=sorted(self._discovered_inverters),
+                        options=sorted(self._potential_types),
                         mode=selector.SelectSelectorMode.DROPDOWN,
                     )
                 )
@@ -96,27 +96,27 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         try:
-            discovered = await discover(
+            potentials = await discover(
                 user_input[CONF_IP_ADDRESS],
                 user_input[CONF_PORT],
                 user_input[CONF_PASSWORD],
                 return_when=asyncio.ALL_COMPLETED,
             )
-            self._discovered_inverters = {
-                model_name_for_inverter(inverter): inverter for inverter in discovered
-            }
         except ConnectionError, DiscoveryError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            self._potential_types = {
+                model_name_for_inverter(inverter): inverter for inverter in potentials
+            }
             self._connection_data = user_input
 
-            if len(self._discovered_inverters) > 1:
+            if len(self._potential_types) > 1:
                 return await self.async_step_select_model()
 
-            model, inverter = next(iter(self._discovered_inverters.items()))
+            model, inverter = next(iter(self._potential_types.items()))
             return await self._async_finalize(
                 model, inverter, step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
@@ -133,7 +133,7 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
             model = user_input[CONF_MODEL]
             return await self._async_finalize(
                 model,
-                self._discovered_inverters[model],
+                self._potential_types[model],
                 step_id="select_model",
                 data_schema=self._select_model_schema(),
             )
