@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from httpx import HTTPStatusError
+from httpx import HTTPStatusError, RequestError
 from pyocat import AsyncApiClient, AsyncAuth
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +17,7 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
+    format_mac,
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -74,8 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
                 raise ConfigEntryAuthFailed("Invalid authentication") from err
             case 403:
                 raise ConfigEntryError("API disabled") from err
+            case status if status == 429 or status >= 500:
+                raise ConfigEntryNotReady("Temporary API error") from err
             case _:
                 raise ConfigEntryError("Unexpected error") from err
+    except RequestError as err:
+        raise ConfigEntryNotReady("Temporary API error") from err
 
     connections: set[tuple[str, str]] = set()
 
@@ -83,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         connections.add((CONNECTION_NETWORK_MAC, info.system_mac_address))
 
     if info.ble_mac_address:
-        connections.add((CONNECTION_BLUETOOTH, info.ble_mac_address))
+        connections.add((CONNECTION_BLUETOOTH, format_mac(info.ble_mac_address)))
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, bsn)},
@@ -93,8 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         model_id=info.device_type_number,
         name=info.name,
         serial_number=bsn,
-        sw_version=info.fw_version,
-        hw_version=info.hw_version,
+        sw_version=info.current_firmware_version,
+        hw_version=info.current_hardware_version,
         configuration_url=f"https://app.watercryst.com/devices/{bsn}",
     )
 

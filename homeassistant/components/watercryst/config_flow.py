@@ -103,7 +103,8 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_BSN])
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=info.name, data=user_input)
+                title = info.name or user_input[CONF_BSN]
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=_STEP_USER_DATA_SCHEMA, errors=errors

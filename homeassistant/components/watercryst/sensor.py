@@ -4,7 +4,6 @@ from operator import attrgetter
 from typing import Any, override
 
 from homeassistant.components.sensor import (
-    HomeAssistant,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -49,6 +49,7 @@ MEASUREMENT_SENSORS = [
         key="flow_rate",
         translation_key="flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         suggested_display_precision=2,
     ),
@@ -77,6 +78,9 @@ STATE_SENSORS = [
     SensorEntityDescription(
         key="ml_state", translation_key="ml_state", icon="mdi:pipe-leak"
     ),
+]
+
+LEAKAGE_PROTECTION = [
     SensorEntityDescription(
         key="water_protection.pause_leakage_protection_until_utc",
         translation_key="pause_leakage_protection_until_utc",
@@ -141,7 +145,10 @@ class WatercrystSensorEntity[_T: DataUpdateCoordinator[Any]](
         if self.coordinator.data is None:
             return None
         getter = attrgetter(self.entity_description.key)
-        return getter(self.coordinator.data)
+        try:
+            return getter(self.coordinator.data)
+        except AttributeError:
+            return None
 
 
 class WatercrystMeasurementSensorEntity(
@@ -184,21 +191,7 @@ class WatercrystEventSensorEntity(WatercrystStateSensorEntity):
     @override
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Provide all event properties as extra state attributes.
-
-        Attributes:
-        -----------
-        event_id : int
-            Identifies the type of the event.
-        category : Literal['error', 'warning', 'info']
-            The event category.
-        title : str
-            Event summary.
-        description : str
-            Detailed description.
-        timestamp : datetime
-            UTC date time of the event.
-        """
+        """Provide all event properties as extra state attributes."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.event.model_dump()

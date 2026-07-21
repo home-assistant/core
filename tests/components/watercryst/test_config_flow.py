@@ -6,10 +6,6 @@ from httpx import HTTPStatusError, Request, Response
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.watercryst.config_flow import (
-    DeviceOffline,
-    WrongDeviceSerial,
-)
 from homeassistant.components.watercryst.const import CONF_BSN, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -80,8 +76,6 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (DeviceOffline, "device_offline"),
-        (WrongDeviceSerial, "wrong_device_serial"),
         (
             HTTPStatusError(
                 message="",
@@ -168,7 +162,7 @@ async def test_form_device_offline(
 
 @pytest.mark.usefixtures("mock_api_client")
 async def test_form_wrong_device_serial(hass: HomeAssistant) -> None:
-    """Test with a disabled API endpoint."""
+    """Test with an incorrect device serial."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

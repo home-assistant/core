@@ -1,6 +1,6 @@
 """BIOCAT device data update coordinators."""
 
-from asyncio import timeout
+from asyncio import CancelledError, timeout
 from datetime import timedelta
 import logging
 from typing import override
@@ -40,9 +40,10 @@ class MeasurementsUpdateCoordinator(DataUpdateCoordinator[MeasurementResponse]):
         try:
             async with timeout(10):
                 return await self._client.get_measurements()
+        except CancelledError:
+            raise
         except Exception as err:
-            _LOGGER.exception("Failed to update measurements")
-            raise UpdateFailed(retry_after=60) from err
+            raise UpdateFailed("Failed to update measurements", retry_after=60) from err
 
 
 class StateUpdateCoordinator(DataUpdateCoordinator[StateResponse]):
@@ -69,7 +70,10 @@ class StateUpdateCoordinator(DataUpdateCoordinator[StateResponse]):
     async def _async_update_data(self):
         try:
             async with timeout(10):
-                return await self._client.get_state(locale=self.hass.config.language)
+                lang = self.hass.config.language.split("-")[0]
+                locale = lang if lang in {"cs", "da", "de", "en", "es"} else "en"
+                return await self._client.get_state(locale=locale)
+        except CancelledError:
+            raise
         except Exception as err:
-            _LOGGER.exception("Failed to update state")
-            raise UpdateFailed(retry_after=60) from err
+            raise UpdateFailed("Failed to update state", retry_after=60) from err
