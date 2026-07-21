@@ -16081,7 +16081,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_energy-entry]
@@ -16777,7 +16777,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_energy-entry]
@@ -17483,7 +17483,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_energy-entry]
@@ -18623,7 +18623,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_completion_time-entry]

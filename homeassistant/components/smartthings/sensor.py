@@ -201,6 +201,13 @@ DRYER_CYCLES = [
     "4c",
 ]
 
+APPLIANCE_IDLE_OPERATING_STATES = {"ready", "stop"}
+APPLIANCE_IDLE_JOB_STATES = {"finish", "finished", "none"}
+SAMSUNG_CE_PROGRESS_JOB_ATTRIBUTES = {
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: Attribute.WASHER_JOB_STATE,
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: Attribute.DRYER_JOB_STATE,
+}
+
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     """Return the power attributes."""
@@ -1595,11 +1602,39 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if options_map := self.entity_description.options_map:
             return options_map.get(res)
         value = self.entity_description.value_fn(res)
+        if (
+            value is not None
+            and self._attribute == Attribute.PROGRESS
+            and self._is_idle_appliance_progress()
+        ):
+            value = 0
         if self.entity_description.presentation_fn:
             value = self.entity_description.presentation_fn(
                 self.device.device.presentation_id, value
             )
         return value
+
+    def _is_idle_appliance_progress(self) -> bool:
+        """Return if a Samsung CE appliance progress value is stale while idle."""
+        if (
+            job_state_attribute := SAMSUNG_CE_PROGRESS_JOB_ATTRIBUTES.get(
+                self.capability
+            )
+        ) is None:
+            return False
+
+        operating_state = self.get_attribute_value(
+            self.capability, Attribute.OPERATING_STATE
+        )
+        if operating_state is not None:
+            return str(operating_state).lower() in APPLIANCE_IDLE_OPERATING_STATES
+
+        job_state = self.get_attribute_value(self.capability, job_state_attribute)
+        return (
+            str(job_state).lower() in APPLIANCE_IDLE_JOB_STATES
+            if job_state is not None
+            else False
+        )
 
     @property
     @override
