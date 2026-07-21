@@ -90,20 +90,11 @@ async def async_setup_entry(  # noqa: C901
     smhub = hbtn_cord.smart_hub
     hbtn_rt = smhub.router
 
-    registry = er.async_get(hass)
     area_reg = ar.async_get(hass)
     # Map each bus area number to its HA area-registry id (creating the area on
     # first sight). Used to place analog inputs whose area deviates from their
     # module's area (see below).
     area_ids = {a.nmbr: area_reg.async_get_or_create(a.name).id for a in hbtn_rt.areas}
-
-    # Analog inputs may be assigned an area that deviates from their module's
-    # area. HA has no per-entity ``suggested_area``, so the only way to honour
-    # this is the entity registry. We apply the hub's area once, when the entity
-    # is first created, and never on a reload -- overwriting on every reload
-    # would clobber a user's manual area move. Collected here, applied after the
-    # entities are added.
-    pending_areas: list[tuple[str, str]] = []
 
     new_devices: list[SensorEntity] = []
     for smhub_sensor in smhub.sensors:
@@ -152,22 +143,24 @@ async def async_setup_entry(  # noqa: C901
         if hbt_module.typ in [b"\x01\x03", b"\x01\x04", b"\x0b\x1f"]:
             for ain in hbt_module.analogins:
                 if ain.type == 3:
-                    analog = HbtnDescribedSensor(
-                        hbt_module,
-                        ain,
-                        hbtn_cord,
-                        len(new_devices),
-                        ANALOG_DESCRIPTION,
-                    )
-                    new_devices.append(analog)
                     # ain.area == 0 means "the module's own area"; only a value
-                    # that differs from the module's area is a real deviation.
-                    if (
-                        ain.area not in (0, hbt_module.area)
-                        and ain.area in area_ids
-                        and (unique_id := analog.unique_id) is not None
-                    ):
-                        pending_areas.append((unique_id, area_ids[ain.area]))
+                    # that differs from the module's area is a real deviation
+                    # the entity should carry into the registry.
+                    deviating_area = (
+                        area_ids.get(ain.area)
+                        if ain.area not in (0, hbt_module.area)
+                        else None
+                    )
+                    new_devices.append(
+                        HbtnDescribedSensor(
+                            hbt_module,
+                            ain,
+                            hbtn_cord,
+                            len(new_devices),
+                            ANALOG_DESCRIPTION,
+                            initial_area_id=deviating_area,
+                        )
+                    )
         for mod_sensor in hbt_module.sensors:
             if mod_sensor.name[0:11] == "Temperature":
                 # The external probe is disabled by default; the two descriptions
@@ -310,21 +303,7 @@ async def async_setup_entry(  # noqa: C901
         )
 
     if new_devices:
-        # Snapshot the unique_ids already registered for this entry *before*
-        # adding: entries present here existed on a prior run (a reload), so
-        # their area must be left untouched.
-        existing = {
-            e.unique_id
-            for e in er.async_entries_for_config_entry(registry, entry.entry_id)
-        }
         async_add_entities(new_devices)
-        for unique_id, area_id in pending_areas:
-            if unique_id in existing:
-                # Already existed -> respect the current (possibly user-set) area.
-                continue
-            entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-            if entity_id is not None:
-                registry.async_update_entity(entity_id, area_id=area_id)
 
 
 class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
@@ -406,10 +385,15 @@ class HbtnDescribedSensor(HbtnSensor):
         coord: Any,
         idx: int,
         description: HbtnSensorEntityDescription,
+        initial_area_id: str | None = None,
     ) -> None:
         """Initialize the described sensor."""
         super().__init__(module, sensor, coord, idx)
         self.entity_description = description
+        # An area that deviates from the module's own, applied once the entity
+        # is registered (see ``async_added_to_hass``). HA has no per-entity
+        # ``suggested_area``, so it has to go through the entity registry.
+        self._initial_area_id = initial_area_id
         # The base unique_id is ``Mod_{uid}_snsr{nmbr}``. Described sensors are
         # built against the same device with independently numbered streams, so
         # timeout/current/voltage/… would all collide on ``snsr0``. Append the
@@ -433,6 +417,16 @@ class HbtnDescribedSensor(HbtnSensor):
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
+        # Apply the deviating area now the entity is registered. Only when it
+        # has no area of its own yet (``area_id is None``): that covers a fresh
+        # entity and one whose area was never touched, while never clobbering a
+        # move the user made. ``async_add_entities`` registers asynchronously,
+        # so this cannot run at platform-setup time.
+        if self._initial_area_id is not None and (entry := self.registry_entry):
+            if entry.area_id is None:
+                er.async_get(self.hass).async_update_entity(
+                    entry.entity_id, area_id=self._initial_area_id
+                )
         if (subscribe_fn := self.entity_description.subscribe_fn) is not None:
             # Push subscription: keep HA state in sync whenever the member changes.
             subscribe_fn(self._module, self._sensor_idx).add_listener(
@@ -548,6 +542,7 @@ CURRENT_DESCRIPTION = HbtnSensorEntityDescription(
     native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda module, idx: module.chan_currents[idx].value,
+    subscribe_fn=lambda module, idx: module.chan_currents[idx],
     diag_check=True,
 )
 VOLTAGE_DESCRIPTION = HbtnSensorEntityDescription(
@@ -556,6 +551,7 @@ VOLTAGE_DESCRIPTION = HbtnSensorEntityDescription(
     native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda module, idx: module.voltages[idx].value,
+    subscribe_fn=lambda module, idx: module.voltages[idx],
     diag_check=True,
 )
 TIMEOUT_DESCRIPTION = HbtnSensorEntityDescription(
@@ -564,6 +560,7 @@ TIMEOUT_DESCRIPTION = HbtnSensorEntityDescription(
     native_unit_of_measurement="",
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda module, idx: module.chan_timeouts[idx].value,
+    subscribe_fn=lambda module, idx: module.chan_timeouts[idx],
     diag_check=True,
 )
 EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(

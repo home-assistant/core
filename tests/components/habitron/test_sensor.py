@@ -397,6 +397,12 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
         (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
         (EKEY_USER_NAME_DESCRIPTION, "sensors", "Identifier"),
         (EKEY_FINGER_NAME_DESCRIPTION, "sensors", "Finger"),
+        # Router telemetry pushes via subscribe_fn: the library refreshes it on
+        # every poll independently of the compact-status CRC, so a coordinator
+        # that only fires on a CRC change would otherwise leave these stale.
+        (CURRENT_DESCRIPTION, "chan_currents", "Current 1"),
+        (VOLTAGE_DESCRIPTION, "voltages", "Voltage 1"),
+        (TIMEOUT_DESCRIPTION, "chan_timeouts", "Timeout 1"),
         # Hub host-diagnostic sensors also push via subscribe_fn so they stay
         # fresh even though the coordinator uses always_update=False.
         (MEMORY_DESCRIPTION, "sensors", "Memory usage"),
@@ -746,45 +752,72 @@ def _registering_add(
     return _add
 
 
-async def test_analog_deviating_area_applied_on_first_create(
+def _analog_entity_with_area(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    area_registry: ar.AreaRegistry,
-) -> None:
-    """A newly-created analog input adopts the hub's deviating area."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
+    area_id: str,
+) -> HbtnDescribedSensor:
+    """Build a registered analog sensor carrying a deviating ``area_id``.
 
-    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
-
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
-    assert entity_id is not None
-    kitchen = area_registry.async_get_area_by_name("Kitchen")
-    assert kitchen is not None
-    assert entity_registry.async_get(entity_id).area_id == kitchen.id
-
-
-async def test_analog_deviating_area_not_overwritten_on_reload(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    area_registry: ar.AreaRegistry,
-) -> None:
-    """On reload the user's area is preserved, not reset to the hub area."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
-
-    # Pre-seed as if from a prior run, with a user-chosen area.
-    bedroom = area_registry.async_get_or_create("Bedroom")
-    existing = entity_registry.async_get_or_create(
-        "sensor", DOMAIN, _ANALOG_UNIQUE_ID, config_entry=entry
+    ``async_add_entities`` registers asynchronously, so the deviating area is
+    applied from the entity's own ``async_added_to_hass`` (after registration),
+    not at platform-setup time -- which is what these tests drive directly.
+    """
+    mod = _make_module()
+    mod.analogins[0] = _make_value(1.0)
+    sensor_desc = _make_sensor_descriptor(name="AIn 1", type_=3)
+    coord = MagicMock(spec=DataUpdateCoordinator)
+    entity = HbtnDescribedSensor(
+        mod, sensor_desc, coord, 0, ANALOG_DESCRIPTION, initial_area_id=area_id
     )
-    entity_registry.async_update_entity(existing.entity_id, area_id=bedroom.id)
+    reg_entry = entity_registry.async_get_or_create("sensor", DOMAIN, entity.unique_id)
+    entity.hass = hass
+    entity.entity_id = reg_entry.entity_id
+    entity.registry_entry = reg_entry
+    entity.async_write_ha_state = MagicMock()
+    return entity
 
-    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
 
-    assert entity_registry.async_get(existing.entity_id).area_id == bedroom.id
+async def _run_added_to_hass(entity: HbtnDescribedSensor) -> None:
+    with patch(
+        "homeassistant.helpers.update_coordinator."
+        "CoordinatorEntity.async_added_to_hass",
+        new=AsyncMock(),
+    ):
+        await entity.async_added_to_hass()
+
+
+async def test_analog_deviating_area_applied_when_unset(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """An analog input with no area of its own adopts its deviating area."""
+    kitchen = area_registry.async_get_or_create("Kitchen")
+    entity = _analog_entity_with_area(hass, entity_registry, kitchen.id)
+
+    await _run_added_to_hass(entity)
+
+    assert entity_registry.async_get(entity.entity_id).area_id == kitchen.id
+
+
+async def test_analog_deviating_area_not_overwritten_when_user_set(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """A user-chosen area is preserved, not reset to the deviating area."""
+    kitchen = area_registry.async_get_or_create("Kitchen")
+    bedroom = area_registry.async_get_or_create("Bedroom")
+    entity = _analog_entity_with_area(hass, entity_registry, kitchen.id)
+    # The user moved it before this run.
+    entity.registry_entry = entity_registry.async_update_entity(
+        entity.entity_id, area_id=bedroom.id
+    )
+
+    await _run_added_to_hass(entity)
+
+    assert entity_registry.async_get(entity.entity_id).area_id == bedroom.id
 
 
 @pytest.mark.parametrize("ain_area", [0, 1])
