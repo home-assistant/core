@@ -90,6 +90,7 @@ class NetioDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Netio.OUTPUT]])
             name=self.device.DeviceName,
             manufacturer="NETIO products",
             model=agent.get("Model"),
+            serial_number=self.device.SerialNumber,
             sw_version=agent.get("Version"),
             configuration_url=device_base_url(self.config_entry.data),
         )

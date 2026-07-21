@@ -14,6 +14,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -42,10 +44,14 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("service", "action_name"),
+    ("service", "entity_id", "output_id", "action_name", "expected_state"),
     [
-        pytest.param(SERVICE_TURN_ON, "ON", id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, "OFF", id="turn_off"),
+        pytest.param(
+            SERVICE_TURN_OFF, ENTITY_OUTPUT_1, 1, "OFF", STATE_OFF, id="turn_off"
+        ),
+        pytest.param(
+            SERVICE_TURN_ON, "switch.powercable_fridge", 2, "ON", STATE_ON, id="turn_on"
+        ),
     ],
 )
 async def test_switch_turn_on_off(
@@ -53,22 +59,34 @@ async def test_switch_turn_on_off(
     mock_netio: MagicMock,
     mock_config_entry: MockConfigEntry,
     service: str,
+    entity_id: str,
+    output_id: int,
     action_name: str,
+    expected_state: str,
 ) -> None:
-    """Test turning a switch output on and off."""
+    """Test turning a switch output on and off updates the entity state."""
     await setup_integration(hass, mock_config_entry)
     device = mock_netio.return_value
+
+    # Let the device report the new output state on the post-action refresh
+    new_state = int(expected_state == STATE_ON)
+    device.get_outputs.return_value = [
+        output._replace(State=new_state) if output_id == output.ID else output
+        for output in device.get_outputs.return_value
+    ]
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_OUTPUT_1},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     device.set_output.assert_called_once_with(
-        1, getattr(mock_netio.ACTION, action_name)
+        output_id, getattr(mock_netio.ACTION, action_name)
     )
+    assert hass.states.get(entity_id).state == expected_state
 
 
 async def test_switch_action_error(
