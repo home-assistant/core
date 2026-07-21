@@ -163,7 +163,8 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             profile_ids = [
-                subentry.data[CONF_PROFILE_ID] for subentry in entry.subentries.values()
+                subentry.data[CONF_PROFILE_ID]
+                for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PROFILE)
             ]
             errors = await async_validate_new_api_key(
                 self.hass, user_input, profile_ids
@@ -192,7 +193,8 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             profile_ids = [
-                subentry.data[CONF_PROFILE_ID] for subentry in entry.subentries.values()
+                subentry.data[CONF_PROFILE_ID]
+                for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PROFILE)
             ]
             errors = await async_validate_new_api_key(
                 self.hass, user_input, profile_ids
@@ -247,7 +249,7 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
 
             if any(
                 subentry.unique_id == profile_id
-                for subentry in entry.subentries.values()
+                for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PROFILE)
             ):
                 errors["base"] = "already_configured"
             else:
@@ -259,7 +261,8 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
 
         # Filter out already configured profiles
         configured_profiles = {
-            subentry.data[CONF_PROFILE_ID] for subentry in entry.subentries.values()
+            subentry.data[CONF_PROFILE_ID]
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PROFILE)
         }
         available_profiles = [
             profile
