@@ -85,23 +85,19 @@ async def test_setup_entry_success(
 
 
 async def test_coordinator_update_failure(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an InverterError during a refresh marks the entities unavailable."""
-    entry_data = {
-        CONF_IP_ADDRESS: "192.168.1.87",
-        CONF_PORT: 80,
-        CONF_PASSWORD: "password",
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="ABCDEFGHIJ")
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     inverter = next(
         iter(
             X1MiniV34.build_all_variants(
-                entry_data[CONF_IP_ADDRESS],
-                entry_data[CONF_PORT],
-                entry_data[CONF_PASSWORD],
+                mock_config_entry.data[CONF_IP_ADDRESS],
+                mock_config_entry.data[CONF_PORT],
+                mock_config_entry.data[CONF_PASSWORD],
             )
         )
     )
@@ -110,10 +106,10 @@ async def test_coordinator_update_failure(
         patch("homeassistant.components.solax.discover", return_value=inverter),
         patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # making sure the base state is actually healthy before the test run.
     assert (
@@ -132,20 +128,14 @@ async def test_coordinator_update_failure(
     )
 
 
-async def test_setup_entry_not_ready(hass: HomeAssistant) -> None:
+async def test_setup_entry_not_ready(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test ConfigEntryNotReady is raised when discovery fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_IP_ADDRESS: "192.168.1.87",
-            CONF_PORT: 80,
-            CONF_PASSWORD: "password",
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.solax.discover", side_effect=ConnectionError):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
