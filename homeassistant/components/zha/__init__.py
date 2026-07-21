@@ -169,9 +169,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         connect=False, device_resolver=DEVICE_REGISTRY.resolve
     ) as app:
         for dev in app.devices.values():
-            dev_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, str(dev.ieee))},
-                connections={(dr.CONNECTION_ZIGBEE, str(dev.ieee))},
+            dev_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, str(dev.ieee)), config_entry.entry_id
             )
 
             if dev_entry is None:

@@ -194,13 +194,12 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
                     if did == removed_device[0]:
                         device_name = dn
                         break
-                if device := device_registry.async_get_device(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"{self.config_entry.entry_id}_{slugify(device_name)}",
-                        )
-                    }
+                if device := device_registry.async_get_device_by_identifier(
+                    (
+                        DOMAIN,
+                        f"{self.config_entry.entry_id}_{slugify(device_name)}",
+                    ),
+                    self.config_entry.entry_id,
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,

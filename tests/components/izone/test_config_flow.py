@@ -61,7 +61,7 @@ async def test_user_discovery_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_HOST: "192.0.2.55"}
     assert result["result"].unique_id == "000000001"
 
 
@@ -82,7 +82,7 @@ async def test_user_discovery_default_selects_first_and_queues_other(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_HOST: "192.0.2.1"}
     assert result["result"].unique_id == "000000001"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -120,7 +120,7 @@ async def test_broadcast_skips_already_configured_controller(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_HOST: "192.0.2.2"}
     assert result["result"].unique_id == "000000002"
 
 
@@ -143,7 +143,7 @@ async def test_user_discovery_skips_yaml_excluded_controllers(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_HOST: "192.0.2.2"}
     assert result["result"].unique_id == "000000002"
 
 
@@ -172,7 +172,7 @@ async def test_broadcast_multiple_unconfigured_shows_choice(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_HOST: "192.0.2.2"}
     assert result["result"].unique_id == "000000001"
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -251,6 +251,7 @@ async def test_select_controller_creates_selected_uid_and_queues_others(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
+    assert result["data"] == {CONF_HOST: "192.0.2.1"}
     assert result["result"].unique_id == "000000002"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -331,7 +332,7 @@ async def test_reuses_existing_discovery_service(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_HOST: "192.0.2.2"}
     assert result["result"].unique_id == "000000002"
     mock_pizone_discovery.assert_not_called()
 
@@ -427,7 +428,7 @@ async def test_homekit_confirm_uses_discovered_host(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000001"
-    assert result["data"] == {}
+    assert result["data"] == {CONF_HOST: "192.0.2.3"}
     assert result["result"].unique_id == "000000001"
 
 
@@ -882,6 +883,7 @@ async def test_integration_discovery_confirm_creates_entry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "iZone 000000002"
+    assert result["data"] == {CONF_HOST: "192.0.2.2"}
     assert result["result"].unique_id == "000000002"
 
 
@@ -1230,12 +1232,12 @@ def test_async_fan_out_skips_uids_already_in_progress() -> None:
 async def test_async_migrate_entry_clears_legacy_data(
     hass: HomeAssistant,
 ) -> None:
-    """v1→v2 migration clears legacy entry data; UID and title binding is deferred.
+    """v1→v2 migration clears legacy entry data; UID/host binding is deferred to setup.
 
     ConfigEntryNotReady retry semantics only work inside async_setup_entry — raising
     from async_migrate_entry permanently lands the entry in MIGRATION_ERROR with no
     retry path.  All network-dependent work is therefore intentionally deferred to
-    async_setup_entry.
+    async_setup_entry, which also persists CONF_HOST when the UID is resolved.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1258,7 +1260,7 @@ async def test_async_migrate_entry_clears_legacy_data(
         await hass.async_block_till_done()
 
     assert entry.version == 2
-    assert entry.data == {}
+    assert entry.data == {CONF_HOST: "192.0.2.1"}
     assert entry.unique_id == "000000001"
     assert entry.title == "iZone 000000001"
 
@@ -1377,6 +1379,7 @@ async def test_setup_entry_resolves_legacy_uid_and_updates_title(
 
     assert entry.unique_id == "000000001"
     assert entry.title == expected_title
+    assert entry.data == {CONF_HOST: "192.0.2.2"}
 
 
 @pytest.mark.parametrize(
@@ -1502,7 +1505,7 @@ async def test_setup_entry_picks_eligible_controller_after_filtering_for_legacy_
         await hass.async_block_till_done()
 
     assert entry.unique_id == "000000002"
-    assert entry.data == {}
+    assert entry.data == {CONF_HOST: "192.0.2.2"}
 
 
 @pytest.mark.parametrize(

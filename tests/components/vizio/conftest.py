@@ -25,6 +25,8 @@ from .const import (
     PAIR_CHALLENGE,
     UNIQUE_ID,
     VERSION,
+    MockCompletePairingResponse,
+    MockStartPairingResponse,
     audio_setting,
 )
 
