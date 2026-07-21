@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-011"  # Increment for each deployment
+BUILD_ID = "20260721-012"  # Increment for each deployment
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
@@ -105,7 +105,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 "[%s] Spotify token expired in _async_setup, initiating reauth",
                 BUILD_ID,
             )
-            self.hass.config_entries.flow.async_init(
+            await self.hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_REAUTH, "entry_id": self.config_entry.entry_id},
             )
@@ -139,7 +139,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 "[%s] Spotify token expired in _async_update_data, initiating reauth",
                 BUILD_ID,
             )
-            self.hass.config_entries.flow.async_init(
+            await self.hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_REAUTH, "entry_id": self.config_entry.entry_id},
             )
@@ -238,7 +238,7 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
                 "[%s] Spotify token expired in device coordinator, initiating reauth",
                 BUILD_ID,
             )
-            self.hass.config_entries.flow.async_init(
+            await self.hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_REAUTH, "entry_id": self.config_entry.entry_id},
             )

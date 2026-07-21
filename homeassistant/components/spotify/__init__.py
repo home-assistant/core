@@ -36,7 +36,7 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-BUILD_ID = "20260721-011"  # Increment for each deployment
+BUILD_ID = "20260721-012"  # Increment for each deployment
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
             BUILD_ID,
             entry.title,
         )
-        hass.config_entries.flow.async_init(
+        await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
         )
