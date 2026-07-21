@@ -1,7 +1,6 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 
 from abc import abstractmethod
-import asyncio
 import logging
 import math
 from typing import Any, override
@@ -28,12 +27,10 @@ from miio.integrations.fan.dmaker.fan_miot import FanStatusMiot
 from miio.integrations.fan.zhimi.zhimi_miot import (
     OperationModeFanZA5 as FanZA5OperationMode,
 )
-import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICE, CONF_MODEL
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_DEVICE, CONF_MODEL
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.percentage import (
@@ -43,7 +40,7 @@ from homeassistant.util.percentage import (
 
 from .const import (
     CONF_FLOW_TYPE,
-    DOMAIN,
+    FAN_DATA_KEY as DATA_KEY,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
@@ -89,15 +86,11 @@ from .const import (
     MODELS_FAN_MIIO,
     MODELS_FAN_MIOT,
     MODELS_PURIFIER_MIOT,
-    SERVICE_RESET_FILTER,
-    SERVICE_SET_EXTRA_FEATURES,
 )
 from .entity import XiaomiCoordinatedMiioEntity
-from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_KEY = "fan.xiaomi_miio"
 
 ATTR_MODE_NATURE = "nature"
 ATTR_MODE_NORMAL = "normal"
@@ -108,7 +101,6 @@ ATTR_FAN_LEVEL = "fan_level"
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_SLEEP_LEARN_COUNT = "sleep_mode_learn_count"
 ATTR_EXTRA_FEATURES = "extra_features"
-ATTR_FEATURES = "features"
 ATTR_TURBO_MODE_SUPPORTED = "turbo_mode_supported"
 ATTR_SLEEP_MODE = "sleep_mode"
 ATTR_USE_TIME = "use_time"
@@ -181,20 +173,6 @@ PRESET_MODES_AIRPURIFIER_V3 = [
 PRESET_MODES_AIRFRESH = ["Auto", "Interval"]
 PRESET_MODES_AIRFRESH_A1 = ["Auto", "Sleep", "Favorite"]
 
-AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FEATURES): cv.positive_int}
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_RESET_FILTER: ServiceMethodDetails(method="async_reset_filter"),
-    SERVICE_SET_EXTRA_FEATURES: ServiceMethodDetails(
-        method="async_set_extra_features",
-        schema=SERVICE_SCHEMA_EXTRA_FEATURES,
-    ),
-}
-
 FAN_DIRECTIONS_MAP = {
     "forward": "right",
     "reverse": "left",
@@ -258,40 +236,6 @@ async def async_setup_entry(
     hass.data[DATA_KEY][unique_id] = entity
 
     entities.append(entity)
-
-    async def async_service_handler(service: ServiceCall) -> None:
-        """Map services to methods on XiaomiAirPurifier."""
-        method = SERVICE_TO_METHOD[service.service]
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-        if entity_ids := service.data.get(ATTR_ENTITY_ID):
-            filtered_entities = [
-                entity
-                for entity in hass.data[DATA_KEY].values()
-                if entity.entity_id in entity_ids
-            ]
-        else:
-            filtered_entities = hass.data[DATA_KEY].values()
-
-        update_tasks = []
-
-        for entity in filtered_entities:
-            entity_method = getattr(entity, method.method, None)
-            if not entity_method:
-                continue
-            await entity_method(**params)
-            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    for air_purifier_service, method in SERVICE_TO_METHOD.items():
-        schema = method.schema or AIRPURIFIER_SERVICE_SCHEMA
-        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-        hass.services.async_register(
-            DOMAIN, air_purifier_service, async_service_handler, schema=schema
-        )
 
     async_add_entities(entities)
 

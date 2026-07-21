@@ -45,7 +45,7 @@
 # name: test_selects[select.ohme_home_pro_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Charge mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Charge mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'smart_charge',
         'max_charge',
@@ -105,7 +105,7 @@
 # name: test_selects[select.ohme_home_pro_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Vehicle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Vehicle',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Nissan Leaf',
         'Tesla Model 3',

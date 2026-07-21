@@ -11,6 +11,7 @@ ATTR_SENDER_NAME: Final = "sender_name"
 CONF_ENCRYPTION: Final = "encryption"
 CONF_SERVER: Final = "server"
 CONF_SENDER_NAME: Final = "sender_name"
+SECTION_OPTIONS: Final = "options"
 
 DEFAULT_HOST: Final = "localhost"
 DEFAULT_PORT: Final = 587

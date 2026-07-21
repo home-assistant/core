@@ -56,7 +56,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Comet Blue aa:bb:cc:dd:ee:ff',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
@@ -72,7 +72,7 @@
         'away',
         'none',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
     }),

@@ -2,8 +2,8 @@
 # name: test_devices[{('tesla_fleet', '123456')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': None,
     'name': 'Energy Site',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '123456',
     'sw_version': None,
     'via_device_id': None,
@@ -33,8 +32,8 @@
 # name: test_devices[{('tesla_fleet', 'LRWXF7EK4KC700000')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -55,7 +54,6 @@
     'model_id': None,
     'name': 'Test',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'LRWXF7EK4KC700000',
     'sw_version': None,
     'via_device_id': None,
@@ -64,8 +62,8 @@
 # name: test_devices[{('tesla_fleet', 'abd-123')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -86,7 +84,6 @@
     'model_id': None,
     'name': 'Wall Connector',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '123',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -95,8 +92,8 @@
 # name: test_devices[{('tesla_fleet', 'bcd-234')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -117,7 +114,6 @@
     'model_id': None,
     'name': 'Wall Connector',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '234',
     'sw_version': None,
     'via_device_id': <ANY>,

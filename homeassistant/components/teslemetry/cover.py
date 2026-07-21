@@ -3,6 +3,7 @@
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import Signal
@@ -43,7 +44,7 @@ async def async_setup_entry(
         chain(
             (
                 TeslemetryVehiclePollingWindowEntity(vehicle, entry.runtime_data.scopes)
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingWindowEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
             ),
@@ -51,7 +52,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingChargePortEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.44.25"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingChargePortEntity(
                     vehicle, entry.runtime_data.scopes
                 )
@@ -61,7 +62,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingFrontTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingFrontTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
@@ -71,7 +72,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingRearTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.26"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
                 else TeslemetryStreamingRearTrunkEntity(
                     vehicle, entry.runtime_data.scopes
                 )
@@ -282,7 +283,8 @@ class TeslemetryVehiclePollingChargePortEntity(
     @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        self._attr_is_closed = not self._value
+        value = self._value
+        self._attr_is_closed = None if value is None else not value
 
 
 class TeslemetryStreamingChargePortEntity(
@@ -355,7 +357,8 @@ class TeslemetryVehiclePollingFrontTrunkEntity(
     @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        self._attr_is_closed = self._value == CLOSED
+        value = self._value
+        self._attr_is_closed = None if value is None else value == CLOSED
 
 
 class TeslemetryStreamingFrontTrunkEntity(
@@ -429,7 +432,8 @@ class TeslemetryVehiclePollingRearTrunkEntity(
     @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        self._attr_is_closed = self._value == CLOSED
+        value = self._value
+        self._attr_is_closed = None if value is None else value == CLOSED
 
 
 class TeslemetryStreamingRearTrunkEntity(

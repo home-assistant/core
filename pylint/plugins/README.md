@@ -111,6 +111,7 @@ Every check has a code following the
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
 | `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
 | `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
+| `W7427` | [`home-assistant-entity-unique-id-redundant-platform`](#w7427-home-assistant-entity-unique-id-redundant-platform) | Entity unique ID includes the entity platform name (e.g. `sensor`, `light`) as a delimited string-literal segment |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
@@ -130,7 +131,9 @@ Every check has a code following the
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
+| `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
 
 
 ## `home_assistant_logger` checker
@@ -564,24 +567,26 @@ serial, MAC, etc.) or declaring the integration as
 
 Hosts format-related checks on the value an entity uses for its unique
 ID (`_attr_unique_id` assignments and `unique_id` property/method
-returns). Unlike the gated `entity-unique-id` quality-scale checks,
-these checks are **not** gated on `quality_scale.yaml` claims, and they
-fire on every class inheriting from `Entity` anywhere inside an
-integration (including shared bases in `entity.py` and mixins/abstract
-bases subclassed by other classes in the same module). Once an
-integration ships with malformed unique_ids, the IDs cannot be changed
-without an entity-registry migration, so the antipatterns must be
-caught before they ship.
+returns). Migrating unique_ids after an integration has shipped risks
+disrupting existing users, so the antipatterns must be caught before
+they ship. Unlike the gated `entity-unique-id` quality-scale checks,
+these checks are **not** gated on `quality_scale.yaml` claims. Both
+checks inspect every class inheriting from `Entity` in their
+respective scopes (including shared bases and mixins/abstract bases
+subclassed by other classes in the same module); see the per-rule
+sections below for the module scope.
 
 ### `W7425`: `home-assistant-entity-unique-id-redundant-domain`
 
 The entity registry already keys uniqueness on `(domain, platform,
 unique_id)` where `platform` is the integration's name (as declared
-by the `"domain"` field in `manifest.json`). Any prefix in the
-unique_id that repeats the integration's name duplicates information
-already present in the registry key.
+by the `"domain"` field in `manifest.json`). Any occurrence of the
+integration's name in the unique_id duplicates information already
+present in the registry key.
 
-The rule fires when the value used for the entity's unique id either:
+The rule fires in every integration module (entity-platform modules,
+`entity.py`, `__init__.py`, ...) when the value used for the entity's
+unique id either:
 
 - references the `DOMAIN` name at any depth (e.g.
   `f"{DOMAIN}_{entry.entry_id}"`), or
@@ -599,6 +604,31 @@ Three locations are scanned: class-body `_attr_unique_id` assignments,
 `return` values inside a `unique_id` property/method override.
 Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
 scanned.
+
+### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
+
+In `(domain, platform, unique_id)` the `domain` field is the entity
+platform (e.g. `sensor`, `light`, `binary_sensor` — derived from the
+module the entity lives in), so embedding that name as a delimited
+segment of the unique id duplicates information already in the
+registry key.
+
+The rule fires when the value used for the entity's unique id
+contains the current module's platform name as a delimited segment of
+any string literal. The same boundary rules as `W7425` apply: a
+segment is considered delimited when bordered by a non-alphanumeric
+character (`_`, `-`, `.`, `:`, space, ...) or a string boundary, so
+unrelated substrings like `"highlight-..."` or `"light2"` don't match
+`light`.
+
+Scope is narrower than `W7425`: only files whose integration
+sub-module path keys off a known entity platform name are checked.
+Both single-file platform modules (`sensor.py`, `light.py`, ...) and
+platform packages (`sensor/__init__.py`, `sensor/helpers.py`, ...)
+are in scope. `entity.py`, `__init__.py` at the integration root, and
+other helper sub-modules are out of scope because the platform
+context is ambiguous there. The three in-class scan locations are
+the same as for `W7425`.
 
 
 ## `home_assistant_entity_description_defaults` checker
@@ -802,6 +832,27 @@ supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
 
 
+## `home_assistant_test_before_configure` checker
+
+Quality-scale-gated checker for the
+[`test-before-configure`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-configure)
+Bronze rule. Fires only when the integration claims the rule as `done`.
+
+### `W7433`: `home-assistant-missing-test-before-configure`
+
+The config flow creates entries but shows no evidence of surfacing
+connection failures to the user: no `errors=` keyword passed to a call
+(with a non-empty literal or dynamic value) and no abort inside an
+`except` handler. A failure can only be surfaced if it was detected
+first, so this single footprint covers the whole test-before-configure
+chain. Evidence is searched in `config_flow.py` and in the defining
+modules of inherited flow classes from other integrations. OAuth flows
+(`AbstractOAuth2FlowHandler`) are skipped; the token exchange is the
+connection test. Integrations that rely on auto-discovery without
+user-provided connection data should mark the rule `exempt`, per the
+rule's exceptions.
+
+
 ## `home_assistant_unnecessary_format_mac` checker
 
 Detects redundant `format_mac()` calls inside `CONNECTION_NETWORK_MAC`
@@ -821,3 +872,17 @@ Tuples used for direct comparison against `device.connections` (e.g.
 the `in` operator, set intersection) are not flagged because those
 comparisons bypass the device registry normalization and genuinely
 need `format_mac()` to match the stored normalized format.
+
+
+## `home_assistant_serial_port_selector_usb_dependency` checker
+
+Detects config flows using `SerialPortSelector` whose `manifest.json` does
+not declare `usb` as a hard dependency.
+
+### `W7430`: `home-assistant-serial-port-selector-usb-dependency`
+
+`SerialPortSelector` populates its port list via the `usb/list_serial_ports`
+websocket command, which is only registered when the `usb` integration is set
+up. The selector therefore requires `usb` as a hard dependency
+(`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
+does not force `usb` to be set up.

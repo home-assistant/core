@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_entities_snapshot[button.device_1_mute-entry]
+# name: test_button_entities_snapshot[platforms0][button.device_1_mute-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,10 +36,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[button.device_1_mute-state]
+# name: test_button_entities_snapshot[platforms0][button.device_1_mute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1 Mute',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Mute',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1_mute',
@@ -49,7 +49,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[button.device_1_ptz_up-entry]
+# name: test_button_entities_snapshot[platforms0][button.device_1_ptz_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -86,10 +86,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[button.device_1_ptz_up-state]
+# name: test_button_entities_snapshot[platforms0][button.device_1_ptz_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1 PTZ up',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 PTZ up',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1_ptz_up',
@@ -99,7 +99,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_entities_snapshot[button.device_1_restart-entry]
+# name: test_button_entities_snapshot[platforms0][button.device_1_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -136,11 +136,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_entities_snapshot[button.device_1_restart-state]
+# name: test_button_entities_snapshot[platforms0][button.device_1_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Device 1 Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.device_1_restart',

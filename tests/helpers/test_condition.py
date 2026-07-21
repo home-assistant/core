@@ -2134,10 +2134,43 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "entity_id": ["sensor.temperature_9", "sensor.temperature_10"],
                     "below": 110,
                 },
+                {
+                    "condition": "zone",
+                    "options": {
+                        "entity_id": [
+                            "device_tracker.paulus",
+                            "device_tracker.anne_therese",
+                        ],
+                        "zone": ["zone.home"],
+                    },
+                },
+                {
+                    "condition": "zone.in_zone",
+                    "target": {"entity_id": "person.paulus"},
+                    "options": {"zone": "zone.work", "behavior": "any"},
+                },
+                {
+                    "condition": "zone.occupancy_is_detected",
+                    "options": {"zone": "zone.school"},
+                },
+                {
+                    "condition": "time",
+                    "after": "input_datetime.start",
+                    "before": "sensor.end",
+                },
+                {
+                    "condition": "time",
+                    "after": "08:00:00",
+                },
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {
+        "device_tracker.anne_therese",
+        "device_tracker.paulus",
+        "input_datetime.start",
+        "person.paulus",
+        "sensor.end",
         "sensor.temperature",
         "sensor.temperature_2",
         "sensor.temperature_3",
@@ -2148,6 +2181,29 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
         "sensor.temperature_8",
         "sensor.temperature_9",
         "sensor.temperature_10",
+        "zone.home",
+        "zone.school",
+        "zone.work",
+    }
+
+
+async def test_extract_entities_zone_condition_validated(hass: HomeAssistant) -> None:
+    """Test extracting entities from a validated legacy zone condition.
+
+    Validation moves the top level entity_id and zone fields into options.
+    """
+    assert await async_setup_component(hass, "zone", {})
+    config = await condition.async_validate_condition_config(
+        hass,
+        {
+            "condition": "zone",
+            "entity_id": "device_tracker.paulus",
+            "zone": "zone.home",
+        },
+    )
+    assert condition.async_extract_entities(config) == {
+        "device_tracker.paulus",
+        "zone.home",
     }
 
 
@@ -2741,6 +2797,18 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     )
 
 
+_MODERN_SUN_CONDITIONS = (
+    "sun.elevation",
+    "sun.is_ascending",
+    "sun.is_descending",
+    "sun.is_evening_twilight",
+    "sun.is_morning_twilight",
+    "sun.is_night",
+    "sun.is_set",
+    "sun.is_up",
+)
+
+
 @pytest.mark.parametrize(
     "sun_condition_descriptions",
     [
@@ -2883,7 +2951,9 @@ async def test_async_get_all_descriptions(
                 },
                 "before_offset": {"selector": {"time": {}}},
             }
-        }
+        },
+        # The modern sun conditions have no entry in the mocked conditions.yaml.
+        **dict.fromkeys(_MODERN_SUN_CONDITIONS),
     }
     assert descriptions == expected_descriptions
 
@@ -3023,7 +3093,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await condition.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_CONDITIONS)}
 
     assert expected_message in caplog.text
 
@@ -3056,7 +3126,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await condition.async_get_all_descriptions(hass)
 
-    assert descriptions == {"sun": None}
+    assert descriptions == {"sun": None, **dict.fromkeys(_MODERN_SUN_CONDITIONS)}
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
@@ -3119,7 +3189,7 @@ async def test_subscribe_conditions(
 
     assert await async_setup_component(hass, "sun", {})
 
-    assert condition_events == [{"sun"}]
+    assert condition_events == [{"sun", *_MODERN_SUN_CONDITIONS}]
     assert "Error while notifying condition platform listener" in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()

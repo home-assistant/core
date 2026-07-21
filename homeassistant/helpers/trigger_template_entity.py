@@ -18,16 +18,14 @@ from homeassistant.components.sensor.helpers import (  # pylint: disable=home-as
     async_parse_date_datetime,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -48,9 +46,9 @@ CONF_ATTRIBUTES = "attributes"
 CONF_PICTURE = "picture"
 
 CONF_TO_ATTRIBUTE = {
-    CONF_ICON: ATTR_ICON,
-    CONF_NAME: ATTR_FRIENDLY_NAME,
-    CONF_PICTURE: ATTR_ENTITY_PICTURE,
+    CONF_ICON: EntityStateAttribute.ICON,
+    CONF_NAME: EntityStateAttribute.FRIENDLY_NAME,
+    CONF_PICTURE: EntityStateAttribute.ENTITY_PICTURE,
 }
 
 TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
@@ -245,21 +243,6 @@ class TriggerBaseEntity(Entity):
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
         self._unique_id = unique_id
-
-    def restore_attributes(self, last_state: State) -> None:
-        """Restore attributes."""
-        for conf_key, attr in CONF_TO_ATTRIBUTE.items():
-            if conf_key not in self._config or attr not in last_state.attributes:
-                continue
-            self._rendered[conf_key] = last_state.attributes[attr]
-
-        if CONF_ATTRIBUTES in self._config:
-            extra_state_attributes = {}
-            for attr in self._config[CONF_ATTRIBUTES]:
-                if attr not in last_state.attributes:
-                    continue
-                extra_state_attributes[attr] = last_state.attributes[attr]
-            self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
     def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
         """Render template variables."""
