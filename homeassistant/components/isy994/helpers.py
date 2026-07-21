@@ -364,15 +364,11 @@ def _categorize_nodes(
                     continue
                 isy_data.aux_properties[Platform.SENSOR].append((node, control))
 
-        if sensor_identifier in path or sensor_identifier in node.name:
-            # User has specified to treat this as a sensor. First we need to
-            # determine if it should be a binary_sensor.
-            if _is_sensor_a_binary_sensor(isy_data, node):
-                continue
-            isy_data.nodes[Platform.SENSOR].append(node)
-            continue
-
         # Add matching parallel platforms without changing primary classification.
+        # Must run before the sensor_identifier override below, since a
+        # SwitchLinc/KeypadLinc forced into Platform.SENSOR by name/path should
+        # still get its event entity -- the two platforms are additive, not
+        # mutually exclusive.
         for parallel_platform in NODE_PARALLEL_PLATFORMS:
             if _check_for_node_def(isy_data, node, single_platform=parallel_platform):
                 continue
@@ -381,6 +377,14 @@ def _categorize_nodes(
             ):
                 continue
             _check_for_zwave_cat(isy_data, node, single_platform=parallel_platform)
+
+        if sensor_identifier in path or sensor_identifier in node.name:
+            # User has specified to treat this as a sensor. First we need to
+            # determine if it should be a binary_sensor.
+            if _is_sensor_a_binary_sensor(isy_data, node):
+                continue
+            isy_data.nodes[Platform.SENSOR].append(node)
+            continue
 
         # We have a bunch of different methods for determining the device type,
         # each of which works with different ISY firmware versions or device

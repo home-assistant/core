@@ -265,3 +265,28 @@ async def test_legacy_insteon_type_fallback(
 
     entity_ids = hass.states.async_entity_ids("event")
     assert (len(entity_ids) == 1) is expect_event_entity
+
+
+async def test_event_entity_created_despite_sensor_string_override(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+    mock_node: Callable[..., Any],
+) -> None:
+    """A node forced into Platform.SENSOR by the sensor_string option still gets its event entity.
+
+    Platform.EVENT is a parallel classification, not exclusive with the
+    user's sensor_string override -- a SwitchLinc/KeypadLinc whose name
+    happens to contain the (default "sensor") override string must still be
+    matched against NODE_PARALLEL_PLATFORMS.
+    """
+    mock_config_entry.add_to_hass(hass)
+    node = mock_node(
+        mock_isy, "11 11 11 1", "Garage sensor Switch", "DimmerLampSwitch_ADV"
+    )
+    mock_isy.nodes.__iter__.return_value = [("Garage sensor Switch", node)]
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("event")) == 1
