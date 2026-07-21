@@ -1083,19 +1083,31 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         self,
         identifiers: AbstractSet[tuple[str, str]] | None = None,
         connections: AbstractSet[tuple[str, str]] | None = None,
+        *,
+        config_entry_id: str | None = None,
     ) -> list[_EntryTypeT]:
-        """Get all entries matching identifiers or connections, across config entries."""
+        """Get all entries matching identifiers or connections.
+
+        Matches across all config entries, or only within one if config_entry_id
+        is given.
+        """
         entries: dict[str, _EntryTypeT] = {}
         if identifiers:
             for identifier in identifiers:
                 if (by_config_entry := self._identifiers.get(identifier)) is not None:
-                    for entry in by_config_entry.values():
-                        entries[entry.id] = entry
+                    if config_entry_id is None:
+                        for entry in by_config_entry.values():
+                            entries[entry.id] = entry
+                    elif (scoped := by_config_entry.get(config_entry_id)) is not None:
+                        entries[scoped.id] = scoped
         if connections:
             for connection in _normalize_connections(connections):
                 if (by_config_entry := self._connections.get(connection)) is not None:
-                    for entry in by_config_entry.values():
-                        entries[entry.id] = entry
+                    if config_entry_id is None:
+                        for entry in by_config_entry.values():
+                            entries[entry.id] = entry
+                    elif (scoped := by_config_entry.get(config_entry_id)) is not None:
+                        entries[scoped.id] = scoped
         return list(entries.values())
 
 
@@ -1396,6 +1408,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             connections={connection}, config_entry_id=config_entry_id
         )
 
+    @callback
+    def async_get_devices(
+        self,
+        *,
+        identifiers: set[tuple[str, str]] | None = None,
+        connections: set[tuple[str, str]] | None = None,
+        config_entry_id: str | None = None,
+    ) -> list[DeviceEntry]:
+        """Get all devices matching any of the identifiers or connections.
+
+        If config_entry_id is given, only devices owned by that config entry are
+        returned.
+        """
+        return self.devices.get_entries(
+            identifiers, connections, config_entry_id=config_entry_id
+        )
+
     def _first_device_in_domain(
         self, devices: Iterable[DeviceEntry], domain: str
     ) -> DeviceEntry | None:
@@ -1456,6 +1485,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         empty list for a device id which is not a composite device id.
         """
         return self.devices.get_devices_for_composite_device_id(composite_device_id)
+
+    @callback
+    def async_is_composite_device_id(self, device_id: str) -> bool:
+        """Return True if device_id is a pre-migration composite device id.
+
+        A composite device was split into one device per config entry; the
+        composite device id no longer refers to a registered device.
+        """
+        return device_id not in self.devices and bool(
+            self.devices.get_devices_for_composite_device_id(device_id)
+        )
 
     def _substitute_name_placeholders(
         self,

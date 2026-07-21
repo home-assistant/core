@@ -2386,6 +2386,85 @@ async def test_async_get_device_by_connection_normalizes(
     )
 
 
+@pytest.mark.parametrize(
+    ("create_kwargs", "lookup_kwargs", "miss_kwargs"),
+    [
+        pytest.param(
+            {"identifiers": {("test", "shared")}},
+            {"identifiers": {("test", "shared")}},
+            {"identifiers": {("test", "other")}},
+            id="identifier",
+        ),
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")}},
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12-34-56-AB-CD-EF")}},
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ff")}},
+            id="connection",
+        ),
+    ],
+)
+async def test_async_get_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    create_kwargs: dict[str, set[tuple[str, str]]],
+    lookup_kwargs: dict[str, set[tuple[str, str]]],
+    miss_kwargs: dict[str, set[tuple[str, str]]],
+) -> None:
+    """A plural lookup returns all devices sharing the key across config entries."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, **create_kwargs
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, **create_kwargs
+    )
+    assert device_1.id != device_2.id
+
+    assert {
+        device.id for device in device_registry.async_get_devices(**lookup_kwargs)
+    } == {
+        device_1.id,
+        device_2.id,
+    }
+    assert device_registry.async_get_devices(**miss_kwargs) == []
+    assert [
+        device.id
+        for device in device_registry.async_get_devices(
+            **lookup_kwargs, config_entry_id=entry_1.entry_id
+        )
+    ] == [device_1.id]
+    assert (
+        device_registry.async_get_devices(**lookup_kwargs, config_entry_id="unknown")
+        == []
+    )
+
+
+async def test_async_get_devices_multiple_keys(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A plural lookup with several keys returns the union of matches, deduplicated."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "1")},
+        connections={mac},
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "2")}
+    )
+
+    devices = device_registry.async_get_devices(
+        identifiers={("test", "1"), ("test", "2")}, connections={mac}
+    )
+    assert {device.id for device in devices} == {device_1.id, device_2.id}
+    assert len(devices) == 2
+
+
 async def test_async_remove_device_fans_out_to_migration_composite(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -2944,6 +3023,35 @@ async def test_clear_config_subentry_clears_pending_move_targeting_it(
     )
     assert result is None
     assert device.id not in device_registry.devices
+
+
+async def test_async_is_composite_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test asking the registry if a device id is a pre-migration composite id."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    assert device_registry.async_is_composite_device_id(old_id) is True
+    assert device_registry.async_is_composite_device_id(device_1.id) is False
+    assert device_registry.async_is_composite_device_id(device_2.id) is False
+    assert device_registry.async_is_composite_device_id("unknown_id") is False
 
 
 @pytest.mark.parametrize("load_registries", [False])
