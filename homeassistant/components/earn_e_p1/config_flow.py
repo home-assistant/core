@@ -52,12 +52,18 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate a host and wait for a packet containing its serial.
 
         Uses the shared listener if available, otherwise creates a temporary one.
-        Returns the device if serial is found, None on timeout.
+        Returns the device if serial is found, None on timeout or missing serial.
         """
         listener: EarnEP1Listener | None = self.hass.data.get(DOMAIN)
         if listener is not None:
-            return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
-        return await validate(host, timeout=VALIDATION_TIMEOUT)
+            device = await listener.validate(host, timeout=VALIDATION_TIMEOUT)
+        else:
+            device = await validate(host, timeout=VALIDATION_TIMEOUT)
+        # validate() may resolve on a partial packet with no serial; treat a
+        # missing serial as a validation failure so callers never persist it.
+        if device is not None and device.serial is None:
+            return None
+        return device
 
     @override
     async def async_step_dhcp(

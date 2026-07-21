@@ -403,10 +403,11 @@ async def test_dhcp_discovery_updates_ip_by_serial(
     ("validate_mock", "reason"),
     [
         ({"return_value": None}, "cannot_connect"),
+        ({"return_value": _mock_device(serial=None)}, "cannot_connect"),
         ({"side_effect": OSError("no socket")}, "cannot_connect"),
         ({"side_effect": RuntimeError("boom")}, "unknown"),
     ],
-    ids=["timeout", "oserror", "unexpected_error"],
+    ids=["timeout", "no_serial", "oserror", "unexpected_error"],
 )
 async def test_dhcp_discovery_validate_failures(
     hass: HomeAssistant, validate_mock: dict[str, Any], reason: str
