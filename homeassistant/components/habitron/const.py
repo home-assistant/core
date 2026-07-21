@@ -13,8 +13,8 @@ DOMAIN = "habitron"  # internal name of the integration, matches the directory
 CONF_DEFAULT_HOST = "local"  # default host string of SmartCenter, uses own ip
 
 # Heartbeat interval used by the coordinator. Not user-configurable per
-# Home Assistant integration guidelines — the bus protocol itself is
-# CRC-deduplicated and state changes arrive on a separate push channel,
-# so a fixed value is the right shape.
+# Home Assistant integration guidelines — each poll is CRC-deduplicated and the
+# parser fires per-member listeners only on an actual change, so a fixed
+# interval is the right shape.
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 RESTART_ALL = 0xFF

@@ -75,11 +75,6 @@ def _make_value(value: float) -> MagicMock:
     return s
 
 
-# ---------------------------------------------------------------------------
-# Entity description metadata
-# ---------------------------------------------------------------------------
-
-
 def test_humidity_description_attributes() -> None:
     """Humidity description carries device class + unit + value_fn."""
     assert HUMIDITY_DESCRIPTION.device_class is SensorDeviceClass.HUMIDITY
@@ -198,11 +193,6 @@ def test_categorical_descriptions_have_no_state_class(
 ) -> None:
     """Categorical/identifier sensors carry no MEASUREMENT state class."""
     assert description.state_class is None
-
-
-# ---------------------------------------------------------------------------
-# HbtnDescribedSensor behaviour
-# ---------------------------------------------------------------------------
 
 
 def test_described_sensor_marks_diagnostic_entity_when_flagged() -> None:
@@ -343,11 +333,6 @@ def test_temperature_ext_description_disabled_by_default() -> None:
     assert TEMP_DESCRIPTION.entity_registry_enabled_default is True
 
 
-# ---------------------------------------------------------------------------
-# LogicSensor
-# ---------------------------------------------------------------------------
-
-
 def test_logic_sensor_unique_id_name_and_update() -> None:
     """LogicSensor reads from module.logic[idx] and templates its name."""
     mod = _make_module()
@@ -382,11 +367,6 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
     assert entity.unique_id == "Mod_MOD-1_logic1"
     entity._handle_coordinator_update()
     assert entity._attr_native_value == 7
-
-
-# ---------------------------------------------------------------------------
-# Push subscriptions (subscribe_fn)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -496,11 +476,6 @@ async def test_logic_sensor_push_add_and_remove_listener() -> None:
     mod.logic[0].remove_listener.assert_called()
 
 
-# ---------------------------------------------------------------------------
-# eKey value functions (value_fn)
-# ---------------------------------------------------------------------------
-
-
 def _ekey_module() -> MagicMock:
     """Build a stub module exposing one eKey sensor at nmbr 0."""
     mod = MagicMock()
@@ -544,11 +519,6 @@ def test_ekey_finger_value_fn_named_finger() -> None:
     result = EKEY_FINGER_NAME_DESCRIPTION.value_fn(mod, 0)
     assert result == "left_pinky"
     assert result in EKEY_FINGER_NAME_DESCRIPTION.options
-
-
-# ---------------------------------------------------------------------------
-# async_setup_entry
-# ---------------------------------------------------------------------------
 
 
 async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> None:
@@ -700,10 +670,6 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
         "voltage",
     }
 
-
-# ---------------------------------------------------------------------------
-# Per-entity area assignment for analog inputs
-# ---------------------------------------------------------------------------
 
 _ANALOG_UNIQUE_ID = "Mod_MOD-1_snsr0_analog"
 
