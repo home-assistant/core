@@ -223,12 +223,12 @@ async def test_setup_without_api_version(hass: HomeAssistant) -> None:
 
 
 async def test_setup_name_config(hass: HomeAssistant) -> None:
-    """Tests component setup with a custom name."""
+    """Tests entities are named from the title and a stored legacy name is ignored."""
     mocked_hole = _create_mocked_hole(api_version=6)
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
         title="Custom",
-        data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"},
+        data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Stored legacy name"},
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
