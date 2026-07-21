@@ -1951,7 +1951,6 @@ async def test_power_readings_are_averaged_over_the_update_interval(
         hass, connection_factory, time_between_update=UPDATE_INTERVAL
     )
 
-    # First telegram creates the entities and sets the initial value.
     telegram_callback(_create_power_and_energy_telegram("1.0", "100.0"))
     await hass.async_block_till_done()
     assert hass.states.get(POWER_ENTITY_ID).state == "1.0"
@@ -2098,7 +2097,7 @@ async def test_averaged_power_value_is_rounded_to_default_precision(
     assert hass.states.get(POWER_ENTITY_ID).state == "1.667"
 
 
-async def test_non_power_readings_are_not_averaged(
+async def test_energy_readings_are_not_averaged(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
