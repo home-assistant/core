@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
+from mashumaro.exceptions import MissingField
 from spotifyaio import (
     ContextType,
     Device,
@@ -116,6 +117,8 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         self.update_interval = UPDATE_INTERVAL
         try:
             current = await self.client.get_playback()
+        except MissingField as err:
+            raise UpdateFailed("Error parsing Spotify playback response") from err
         except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
         if not current:
@@ -202,5 +205,7 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
     async def _async_update_data(self) -> list[Device]:
         try:
             return await self._client.get_devices()
+        except MissingField as err:
+            raise UpdateFailed("Error parsing Spotify devices response") from err
         except SpotifyConnectionError as err:
             raise UpdateFailed from err
