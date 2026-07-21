@@ -161,12 +161,10 @@ async def test_room_iq_sensors(
 
     config_entry = await setup_integration(hass, patch_nexia_home)
 
-    # Verify disabled by default
     assert patch_nexia_home.any_room_iq_monitors() is False
     state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
     assert state is None
 
-    # Enable all disabled entities
     for entry in entity_registry.entities.values():
         if entry.disabled_by is not None:
             entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
@@ -176,14 +174,12 @@ async def test_room_iq_sensors(
     state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
     assert state is not None
 
-    # Verify embedded RoomIQ sensor shows thermostat's model and firmware version
     entry = entity_registry.async_get(state.entity_id)
     device = device_registry.async_get(entry.device_id)
     assert device is not None
     assert device.model == "XL1050"
     assert device.sw_version == "5.9.1"
 
-    # Verify states
     assert state.state == "25.0"
     assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
     assert state.attributes["friendly_name"] == "Zone3 RoomIQ temperature"
@@ -202,14 +198,12 @@ async def test_room_iq_sensors(
     state = hass.states.get("sensor.upstairs_upstairs_roomiq_temperature")
     assert state is not None
 
-    # Verify online RoomIQ sensor shows no model nor firmware version
     entry = entity_registry.async_get(state.entity_id)
     device = device_registry.async_get(entry.device_id)
     assert device is not None
     assert device.model is None
     assert device.sw_version is None
 
-    # Verify states
     assert state.state == "22.5"
     assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
     assert state.attributes["friendly_name"] == "Upstairs RoomIQ temperature"
@@ -233,10 +227,8 @@ async def test_room_iq_sensors(
     assert state is not None
     assert state.state == "unavailable"
 
-    # Verify sensors are registered
     assert patch_nexia_home.any_room_iq_monitors() is True
 
-    # Unload should trigger registration removal
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
