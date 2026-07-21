@@ -10,6 +10,7 @@ from homeassistant.components.monzo.application_credentials import (
 )
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -64,9 +65,15 @@ async def test_full_flow(
             "user_id": "600",
         },
     )
-    with patch(
-        "homeassistant.components.monzo.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with (
+        patch(
+            "homeassistant.components.monzo.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.monzo.config_flow.async_generate_id",
+            return_value="generated-webhook-id",
+        ),
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         assert len(mock_setup.mock_calls) == 0
@@ -88,6 +95,7 @@ async def test_full_flow(
     assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
+    assert result["result"].data[CONF_WEBHOOK_ID] == "generated-webhook-id"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
