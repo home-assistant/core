@@ -3,8 +3,9 @@
 import logging
 from typing import Any, override
 
+from types import SimpleNamespace
+
 from python_open_router import (
-    Model,
     OpenRouterClient,
     OpenRouterError,
     SupportedParameter,
@@ -35,9 +36,15 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_PROMPT,
+    CONF_TTS_SPEED,
+    CONF_TTS_VOICE,
     CONF_WEB_SEARCH,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_STT_MODEL,
+    RECOMMENDED_TTS_MODEL,
+    RECOMMENDED_TTS_SPEED,
+    RECOMMENDED_TTS_VOICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +66,8 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             "conversation": ConversationFlowHandler,
             "ai_task_data": AITaskDataFlowHandler,
+            "stt": SttFlowHandler,
+            "tts": TtsFlowHandler,
         }
 
     @override
@@ -95,12 +104,15 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
+
+
 class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for OpenRouter."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
-        self.models: dict[str, Model] = {}
+        self.models: dict[str, Any] = {}
 
     async def _get_models(self) -> None:
         """Fetch models from OpenRouter."""
@@ -110,6 +122,36 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         )
         models = await client.get_models()
         self.models = {model.id: model for model in models}
+
+    async def _get_models_by_modality(
+        self, output_modalities: str
+    ) -> None:
+        """Fetch models from OpenRouter filtered by output modality.
+
+        Uses the OpenRouter API's output_modalities query parameter:
+        - "speech" for TTS models
+        - "transcription" for STT models
+
+        Models are stored as SimpleNamespace objects with id and name attributes.
+        """
+        entry = self._get_entry()
+        session = async_get_clientsession(self.hass)
+        url = (
+            f"{OPENROUTER_API_BASE}/models?output_modalities={output_modalities}"
+        )
+        headers = {
+            "Authorization": f"Bearer {entry.data[CONF_API_KEY]}",
+        }
+        async with session.get(url, headers=headers) as response:
+            response.raise_for_status()
+            data = await response.json()
+        self.models = {
+            model_data["id"]: SimpleNamespace(
+                id=model_data["id"],
+                name=model_data.get("name", model_data["id"]),
+            )
+            for model_data in data.get("data", [])
+        }
 
 
 class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
@@ -295,6 +337,214 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
+                        ),
+                    ),
+                }
+            ),
+        )
+
+
+class TtsFlowHandler(OpenRouterSubentryFlowHandler):
+    """Handle TTS subentry flow."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == SOURCE_USER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create a TTS service."""
+        self.options = {}
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a TTS service."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage TTS model selection."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            self.options[CONF_MODEL] = user_input[CONF_MODEL]
+            return await self.async_step_voice()
+
+        try:
+            await self._get_models_by_modality("speech")
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        tts_models = [
+            SelectOptionDict(value=model.id, label=model.name)
+            for model in self.models.values()
+        ]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL,
+                        default=self.options.get(
+                            CONF_MODEL, RECOMMENDED_TTS_MODEL
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=tts_models,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
+                        ),
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_voice(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage TTS voice and speed selection."""
+        if user_input is not None:
+            self.options.update(user_input)
+            model_name = self.models.get(
+                self.options[CONF_MODEL],
+            )
+            title = model_name.name if model_name else self.options[CONF_MODEL]
+            if self._is_new:
+                return self.async_create_entry(
+                    title=title,
+                    data=self.options,
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=self.options,
+            )
+
+        voices = [
+            SelectOptionDict(value=v, label=v.title())
+            for v in ("alloy", "ash", "ballad", "coral", "echo", "fable",
+                      "nova", "onyx", "sage", "shimmer", "verse", "marin", "cedar")
+        ]
+
+        return self.async_show_form(
+            step_id="voice",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_TTS_VOICE,
+                        default=self.options.get(
+                            CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=voices,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_TTS_SPEED,
+                        default=self.options.get(
+                            CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
+                        ),
+                    ): vol.Coerce(float),
+                }
+            ),
+        )
+
+
+class SttFlowHandler(OpenRouterSubentryFlowHandler):
+    """Handle STT subentry flow."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == SOURCE_USER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create an STT service."""
+        self.options = {}
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of an STT service."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage STT model selection."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            model_name = self.models.get(
+                user_input[CONF_MODEL],
+            )
+            title = model_name.name if model_name else user_input[CONF_MODEL]
+            if self._is_new:
+                return self.async_create_entry(
+                    title=title,
+                    data=user_input,
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+            )
+
+        try:
+            await self._get_models_by_modality("transcription")
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        stt_models = [
+            SelectOptionDict(value=model.id, label=model.name)
+            for model in self.models.values()
+        ]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL,
+                        default=self.options.get(
+                            CONF_MODEL, RECOMMENDED_STT_MODEL
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=stt_models,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
                         ),
                     ),
                 }

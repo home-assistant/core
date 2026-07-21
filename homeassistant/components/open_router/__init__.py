@@ -10,7 +10,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_WEB_SEARCH, LOGGER
 
-PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
+PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION, Platform.STT, Platform.TTS]
 
 type OpenRouterConfigEntry = ConfigEntry[AsyncOpenAI]
 
