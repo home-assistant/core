@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Connect to your Poolside controller.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Poolside controller.",
+          "port": "The port the controller's Home Assistant websocket server listens on."
+        }
+      },
+      "pair": {
+        "title": "Approve this connection",
+        "description": "On your Poolside controller or in the Poolside app, approve the pairing request from “{fingerprint}”. Confirm the code shown there matches: {fingerprint}"
+      },
+      "reauth_confirm": {
+        "description": "Home Assistant needs to be re-approved on your Poolside controller. Continue to start pairing again."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up {name} ({host})?"
+      }
+    },
+    "progress": {
+      "pair": "Waiting for approval on the Poolside controller..."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "pair_rejected": "The pairing request was rejected on the controller.",
+      "pair_timeout": "Nobody approved the pairing request in time. Please try again.",
+      "pair_busy": "Another pairing request is already pending on the controller. Please try again in a few minutes.",
+      "pair_failed": "The controller rejected the pairing request."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}

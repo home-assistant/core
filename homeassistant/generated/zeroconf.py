@@ -874,6 +874,11 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
+    "_poolside._tcp.local.": [
+        {
+            "domain": "poolside",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
