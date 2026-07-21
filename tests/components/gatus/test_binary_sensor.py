@@ -214,11 +214,8 @@ async def test_binary_sensor_readded_endpoint(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # If the entity is still registered (prior to #176754 being merged), remove it.
-    # Once stale devices is merged, this will already be gone automatically.
     entity_registry = er.async_get(hass)
-    if entity_registry.async_get("binary_sensor.core_backend_service") is not None:
-        entity_registry.async_remove("binary_sensor.core_backend_service")
+    entity_registry.async_remove("binary_sensor.core_backend_service")
     assert hass.states.get("binary_sensor.core_backend_service") is None
 
     mock_gatus_client.get_endpoints_statuses.return_value = [
