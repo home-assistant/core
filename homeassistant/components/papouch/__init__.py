@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .APIClient import PapouchApiClient
 from .coordinator import PapouchDataUpdateCoordinator
-from .devices import PapouchDevice, Quido
+from .devices import TH2E, PapouchDevice, Quido
 
 DOMAIN = "papouch"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -61,6 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
 async def create_device(api_client: PapouchApiClient) -> PapouchDevice | None:
     """Function that creates proper device instance."""
 
@@ -68,10 +73,10 @@ async def create_device(api_client: PapouchApiClient) -> PapouchDevice | None:
     device = ET.fromstring(info).find("heartbeat").attrib.get("device")
 
     if "Quido" in device:
-        device = device.split()
-        number_inputs = device[2].split("/")[0]
-        number_outputs = device[2].split("/")[1]
+        # settings are being fetched now, because ctor isn't async
         settings = await api_client.fetch_settings()
-        return Quido(api_client, settings, int(number_inputs), int(number_outputs))
-
-    return None
+        return Quido(api_client, settings)
+    elif "TH2E" in device:
+        return TH2E(api_client)
+    else:
+        return None

@@ -1,5 +1,7 @@
 """Select platform for the Papouch integration."""
 
+from typing import Any
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -14,36 +16,44 @@ async def async_setup_entry(
     entry: PapouchConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
+    """Set up the Papouch select platform."""
     coordinator = entry.runtime_data
     device = coordinator.device
 
     entities = []
 
     for select_data in device.get_supported_selects():
-        entities.append(  # noqa: PERF401
-            PapouchCounterSelect(coordinator, entry, select_data["item_id"])
-        )
+        entities.append(PapouchSelectEntity(coordinator, entry, select_data))
 
     async_add_entities(entities)
 
 
-class PapouchCounterSelect(PapouchEntity, SelectEntity):
+class PapouchSelectEntity(PapouchEntity, SelectEntity):
+    """Representation of a unified Papouch select entity."""
+
     def __init__(
         self,
         coordinator: PapouchDataUpdateCoordinator,
         entry: PapouchConfigEntry,
-        item_id: str,
+        select_data: dict[str, Any],
     ) -> None:
+        """Initialize the select entity."""
         super().__init__(coordinator, entry)
-        self.item_id = item_id
-        self._attr_unique_id = f"{entry.entry_id}_select_{item_id}"
-        self._attr_name = f"Counter {item_id} Mode"
-        self._attr_options = coordinator.device.COUNTER_MODES
+        self.item_id = select_data["item_id"]
+        self.category = select_data["category"]
+
+        self._attr_unique_id = f"{entry.entry_id}_{self.category}_{self.item_id}"
+        self._attr_name = select_data["name"]
+        self._attr_options = select_data["options"]
 
     @property
     def current_option(self) -> str | None:
-        return self.coordinator.device.get_counter_mode(self.item_id)
+        """Return the currently selected option."""
+        return self.coordinator.device.get_select_option(self.category, self.item_id)
 
     async def async_select_option(self, option: str) -> None:
-        await self.coordinator.device.set_counter_mode(self.item_id, option)
+        """Change the selected option on the device."""
+        await self.coordinator.device.set_select_option(
+            self.category, self.item_id, option
+        )
         self.async_write_ha_state()

@@ -67,7 +67,7 @@ class PapouchApiClient:
 
     def _check_response(self, raw_xml):
         """Supposingly every device will use same response status."""
-        root = ET.fromstring(raw_xml)
+        root = defused_ET.fromstring(raw_xml)
 
         result_tag = root.find("result")
 

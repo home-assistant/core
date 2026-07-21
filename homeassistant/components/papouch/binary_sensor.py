@@ -1,10 +1,13 @@
 """Binary sensor platform for the Papouch integration."""
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PapouchConfigEntry
+from .coordinator import PapouchDataUpdateCoordinator
 from .entity import PapouchEntity
 
 
@@ -18,23 +21,33 @@ async def async_setup_entry(
     device = coordinator.device
 
     entities = [
-        PapouchBinarySensor(coordinator, entry, sensor_data["item_id"])
+        PapouchBinarySensor(coordinator, entry, sensor_data)
         for sensor_data in device.get_supported_binary_sensors()
     ]
     async_add_entities(entities)
 
 
 class PapouchBinarySensor(PapouchEntity, BinarySensorEntity):
-    """Representation of a digital input as a binary sensor."""
+    """Representation of a generic Papouch binary sensor."""
 
-    def __init__(self, coordinator, entry, item_id) -> None:
-        """Constructor for binary sensor."""
+    def __init__(
+        self,
+        coordinator: PapouchDataUpdateCoordinator,
+        entry: PapouchConfigEntry,
+        sensor_data: dict[str, Any],
+    ) -> None:
+        """Initialize the binary sensor."""
         super().__init__(coordinator, entry)
-        self.item_id = item_id
-        self._attr_unique_id = f"{entry.entry_id}_din_{item_id}"
-        self._attr_name = f"Input {item_id}"
+        self.item_id = sensor_data["item_id"]
+        self.data_key = sensor_data["type"]
+
+        self._attr_unique_id = f"{entry.entry_id}_{self.data_key}_{self.item_id}"
+        self._attr_name = sensor_data["name"]
+
+        if "device_class" in sensor_data:
+            self._attr_device_class = sensor_data["device_class"]
 
     @property
     def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self.coordinator.data.get("din", {}).get(self.item_id) == 1
+        """Return True if the binary sensor is on."""
+        return self.coordinator.data.get(self.data_key, {}).get(self.item_id) == 1

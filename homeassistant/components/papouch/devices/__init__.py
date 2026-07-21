@@ -1,10 +1,7 @@
 """This file is used as a hub for imports (and disabling linter errors)."""
-# TODO: don't forget to add other devices here
 
 from .base import PapouchDevice
 from .quido import Quido
+from .th2e import TH2E
 
-__all__ = [
-    "PapouchDevice",
-    "Quido",
-]
+__all__ = ["TH2E", "PapouchDevice", "Quido"]

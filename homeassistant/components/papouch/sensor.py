@@ -1,6 +1,8 @@
 """Sensor platform for the Papouch integration."""
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -18,58 +20,38 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     device = coordinator.device
 
-    entities = []
-
-    for sensor_data in device.get_supported_sensors():
-        if sensor_data["type"] == "temp":
-            entities.append(
-                PapouchTemperatureSensor(coordinator, entry, sensor_data["item_id"])
-            )
-        elif sensor_data["type"] == "counter":
-            entities.append(
-                PapouchCounterSensor(coordinator, entry, sensor_data["item_id"])
-            )
+    entities = [
+        PapouchSensor(coordinator, entry, sensor_data)
+        for sensor_data in device.get_supported_sensors()
+    ]
 
     async_add_entities(entities)
 
 
-class PapouchTemperatureSensor(PapouchEntity, SensorEntity):
-    """Representation of a temperature sensor."""
+class PapouchSensor(PapouchEntity, SensorEntity):
+    """Representation of a generic Papouch sensor."""
 
     def __init__(
         self,
         coordinator: PapouchDataUpdateCoordinator,
         entry: PapouchConfigEntry,
-        item_id: str,
+        sensor_data: dict[str, Any],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self.item_id = item_id
-        self._attr_unique_id = f"{entry.entry_id}_temp_{item_id}"
-        self._attr_name = f"Temperature {item_id}"
+        self.item_id = sensor_data["item_id"]
+        self.data_key = sensor_data["type"]
+        self._attr_unique_id = f"{entry.entry_id}_{self.data_key}_{self.item_id}"
+        self._attr_name = sensor_data["name"]
+
+        if "device_class" in sensor_data:
+            self._attr_device_class = sensor_data["device_class"]
+        if "state_class" in sensor_data:
+            self._attr_state_class = sensor_data["state_class"]
+        if "unit" in sensor_data:
+            self._attr_native_unit_of_measurement = sensor_data["unit"]
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        # TODO: solve this problem
-        return self.coordinator.data.get("temp", {}).get(self.item_id)
-
-
-class PapouchCounterSensor(PapouchEntity, SensorEntity):
-    """Representation of a pulse counter."""
-
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_device_class = None
-    _attr_native_unit_of_measurement = "pulses"
-
-    def __init__(self, coordinator, entry, item_id) -> None:
-        """Constructor of the counter sensor UI."""
-        super().__init__(coordinator, entry)
-        self.item_id = item_id
-        self._attr_unique_id = f"{entry.entry_id}_din_cnt_{item_id}"
-        self._attr_name = f"Input {item_id} Count"
-
-    @property
-    def native_value(self) -> int:
-        """Return the pulse count."""
-        return self.coordinator.data.get("din_cnt", {}).get(self.item_id, 0)
+        return self.coordinator.data.get(self.data_key, {}).get(self.item_id)
