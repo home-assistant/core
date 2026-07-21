@@ -29,5 +29,5 @@ class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=HASSIO_USER_NAME,
             data=data,
-            options=DEFAULT_UPDATE_OPTIONS,
+            options=dict(DEFAULT_UPDATE_OPTIONS),
         )
