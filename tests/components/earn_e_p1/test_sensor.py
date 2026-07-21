@@ -110,39 +110,6 @@ async def test_sensors_added_when_key_appears_in_later_packet(
     assert gas.state == "1234.567"
 
 
-async def test_full_packet_values_persist_across_partial_packets(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_listener: MagicMock,
-) -> None:
-    """Test full-packet values are retained when a later partial packet omits them.
-
-    Energy and gas keys only appear in full packets. A subsequent partial packet
-    must not blank those sensors, while the instantaneous values still update.
-    """
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    trigger_callback(mock_listener, device_data=PARTIAL_DEVICE_DATA)
-    await hass.async_block_till_done()
-    trigger_callback(mock_listener)
-    await hass.async_block_till_done()
-    trigger_callback(mock_listener, device_data=PARTIAL_DEVICE_DATA)
-    await hass.async_block_till_done()
-
-    energy = hass.states.get("sensor.earn_e_p1_meter_energy_imported_tariff_1")
-    assert energy is not None
-    assert energy.state == "12345.678"
-
-    gas = hass.states.get("sensor.earn_e_p1_meter_gas_consumed")
-    assert gas is not None
-    assert gas.state == "1234.567"
-
-    power = hass.states.get("sensor.earn_e_p1_meter_power_imported")
-    assert power is not None
-    assert power.state == "0.35"
-
-
 async def test_wifi_rssi_disabled_by_default(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

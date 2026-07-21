@@ -119,20 +119,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up EARN-E P1 sensor entities."""
     coordinator = entry.runtime_data
-    added_keys: set[str] = set()
+    added = False
 
     @callback
     def _async_add_sensors() -> None:
-        if coordinator.data is None:
+        nonlocal added
+        if added or coordinator.data is None:
             return
-        new_entities = [
+        added = True
+        async_add_entities(
             EarnEP1Sensor(coordinator, description)
             for description in SENSOR_DESCRIPTIONS
-            if description.key in coordinator.data and description.key not in added_keys
-        ]
-        if new_entities:
-            added_keys.update(entity.entity_description.key for entity in new_entities)
-            async_add_entities(new_entities)
+            if description.key in coordinator.data
+        )
 
     entry.async_on_unload(coordinator.async_add_listener(_async_add_sensors))
     _async_add_sensors()
