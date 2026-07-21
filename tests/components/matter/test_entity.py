@@ -267,7 +267,7 @@ async def test_bridged_entity_becomes_unavailable_on_reachable_false(
         hass,
         matter_client,
         event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _REACHABLE_ATTR_PATH, False),
+        data=False,
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -303,7 +303,7 @@ async def test_bridged_entity_recovers_when_reachable_true(
         hass,
         matter_client,
         event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _REACHABLE_ATTR_PATH, True),
+        data=True,
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -485,7 +485,7 @@ async def test_composed_entity_state_updates_when_parent_reachable_changes(
         hass,
         matter_client,
         event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, True),
+        data=True,
     )
 
     state = hass.states.get(_COMPOSED_ENTITY_ID)
@@ -498,7 +498,7 @@ async def test_composed_entity_state_updates_when_parent_reachable_changes(
         hass,
         matter_client,
         event=EventType.ATTRIBUTE_UPDATED,
-        data=(matter_node.node_id, _COMPOSED_PARENT_REACHABLE_ATTR_PATH, False),
+        data=False,
     )
 
     state = hass.states.get(_COMPOSED_ENTITY_ID)

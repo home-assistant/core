@@ -57,9 +57,7 @@ async def test_occupancy_sensor(
     assert state.state == "on"
 
     set_node_attribute(matter_node, 1, 1030, 0, 0)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/1030/0", 0)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=0)
 
     state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
     assert state
@@ -87,9 +85,7 @@ async def test_boolean_state_sensors(
     # invert the value
     cur_attr_value = matter_node.get_attribute_value(1, 69, 0)
     set_node_attribute(matter_node, 1, 69, 0, not cur_attr_value)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/69/0", not cur_attr_value)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=not cur_attr_value)
 
     state = hass.states.get(entity_id)
     assert state
@@ -110,9 +106,7 @@ async def test_battery_sensor(
     assert state.state == "off"
 
     set_node_attribute(matter_node, 1, 47, 14, 1)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/47/14", 1)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=1)
 
     state = hass.states.get(entity_id)
     assert state
@@ -133,9 +127,7 @@ async def test_actuator_sensor(
     assert state.state == "on"
 
     set_node_attribute(matter_node, 1, 257, 2, False)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/257/2", False)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=False)
 
     state = hass.states.get(entity_id)
     assert state
@@ -166,9 +158,7 @@ async def test_optional_sensor_from_featuremap(
     assert state.state == "off"
     # now test the reverse, by removing the feature from the feature map
     set_node_attribute(matter_node, 1, 257, 65532, 0)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/257/65532", 0)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=0)
     state = hass.states.get(entity_id)
     assert state is None
 
@@ -187,9 +177,7 @@ async def test_evse_sensor(
     assert state.state == "on"
     # switch to PluggedInDemand state
     set_node_attribute(matter_node, 1, 153, 0, 2)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/153/0", 2)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=2)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"
@@ -201,9 +189,7 @@ async def test_evse_sensor(
     assert state.state == "on"
     # switch to NotPluggedIn state
     set_node_attribute(matter_node, 1, 153, 0, 0)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/153/0", 0)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=0)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"
@@ -215,9 +201,7 @@ async def test_evse_sensor(
     assert state.state == "on"
     # switch to Disabled state
     set_node_attribute(matter_node, 1, 153, 1, 0)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/153/1", 0)
-    )
+    await trigger_subscription_callback(hass, matter_client, data=0)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"
