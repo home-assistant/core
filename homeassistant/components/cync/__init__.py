@@ -6,7 +6,7 @@ from pycync.exceptions import AuthFailedError, CyncError
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import get_default_context
 
@@ -15,6 +15,7 @@ from .const import (
     CONF_EXPIRES_AT,
     CONF_REFRESH_TOKEN,
     CONF_USER_ID,
+    DOMAIN,
 )
 from .coordinator import CyncConfigEntry, CyncCoordinator
 
@@ -50,6 +51,18 @@ def _migrate_unique_ids(
                 entity_entry.entity_id,
                 new_unique_id=new_unique_id,
             )
+
+    device_registry = dr.async_get(hass)
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        for domain, identifier in device_entry.identifiers:
+            if domain == DOMAIN and (new_identifier := id_map.get(identifier)):
+                device_registry.async_update_device(
+                    device_entry.id,
+                    new_identifiers={(DOMAIN, new_identifier)},
+                )
+                break
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
