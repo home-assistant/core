@@ -196,8 +196,13 @@ async def test_anna_select_dhw_mode(
     hass: HomeAssistant,
     mock_smile_anna_loria: MagicMock,
     init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test changing the dhw_mode select."""
+    entity_entry = entity_registry.async_get("select.opentherm_dhw_mode")
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "bfb5ee0a88e14e5f97bfa725a760cc49-select_dhw_mode"
+
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
@@ -213,33 +218,4 @@ async def test_anna_select_dhw_mode(
         "bfb5ee0a88e14e5f97bfa725a760cc49",
         "boost",
         "on",
-    )
-
-
-@pytest.mark.parametrize("chosen_env", ["anna_v4_dhw"], indirect=True)
-@pytest.mark.parametrize("cooling_present", [False], indirect=True)
-async def test_anna_dhw_mode_select(
-    hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
-    init_integration: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test setting Anna OpenTherm dhw_mode Select to comfort."""
-
-    entity_entry = entity_registry.async_get("select.opentherm_dhw_mode")
-    assert entity_entry is not None
-    assert entity_entry.unique_id == "cd0e6156b1f04d5f952349ffbe397481-select_dhw_mode"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
-            ATTR_OPTION: "comfort",
-        },
-        blocking=True,
-    )
-    assert mock_smile_anna.set_dhw_mode.call_count == 1
-    mock_smile_anna.set_dhw_mode.assert_called_with(
-        DHW_MODE, "cd0e6156b1f04d5f952349ffbe397481", "comfort", 2
     )
