@@ -94,10 +94,19 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         a 400 (GetPriorityFailed) for those. That's expected and shouldn't
         fail the whole coordinator update, so it's handled per-device
         instead of relying on device ID heuristics to predict support.
+
+        aiolyric raises a plain LyricException (not ClientResponseError) for
+        non-200 responses, carrying the HTTP status in
+        exception.args[0]["status"]. LyricAuthenticationException is a
+        LyricException subclass and must still propagate so the caller's
+        token-refresh retry logic runs.
         """
         try:
             await self.lyric.get_thermostat_rooms(location_id, device_id)
-        except ClientResponseError as exception:
-            if exception.status != HTTPStatus.BAD_REQUEST:
+        except LyricAuthenticationException:
+            raise
+        except LyricException as exception:
+            status = exception.args[0]["status"] if exception.args else None
+            if status != HTTPStatus.BAD_REQUEST:
                 raise
             _LOGGER.debug("Device %s does not support room priority data", device_id)
