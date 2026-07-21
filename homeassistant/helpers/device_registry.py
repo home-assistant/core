@@ -1457,6 +1457,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         return self.devices.get_devices_for_composite_device_id(composite_device_id)
 
+    @callback
+    def async_is_composite_device_id(self, device_id: str) -> bool:
+        """Return True if device_id is a pre-migration composite device id.
+
+        A composite device was split into one device per config entry; the
+        composite device id no longer refers to a registered device.
+        """
+        return device_id not in self.devices and bool(
+            self.devices.get_devices_for_composite_device_id(device_id)
+        )
+
     def _substitute_name_placeholders(
         self,
         domain: str,
