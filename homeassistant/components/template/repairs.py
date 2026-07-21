@@ -22,6 +22,8 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the first step of the fix flow."""
+        # The flow manager passes {"issue_id": ...} as user_input to this step;
+        # delegate so the form step can tell rendering from an (empty) submission
         return await self.async_step_select_device()
 
     async def async_step_select_device(
@@ -33,7 +35,9 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
             device_id = user_input.get(CONF_DEVICE_ID)
             # Ask again if the selection did not resolve the ambiguity, e.g. the
             # suggested composite device id was submitted unchanged
-            if not device_id or device_id in device_registry.devices:
+            if device_id is None or not device_registry.async_is_composite_device_id(
+                device_id
+            ):
                 options = {**self._entry.options}
                 if device_id:
                     options[CONF_DEVICE_ID] = device_id
@@ -45,31 +49,19 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
                 await self.hass.config_entries.async_reload(self._entry.entry_id)
                 return self.async_create_entry(data={})
 
-        old_device_id = self._entry.options[CONF_DEVICE_ID]
-        split_devices = device_registry.async_get_devices_for_composite_device_id(
-            old_device_id
-        )
-        devices = ", ".join(
-            sorted(
-                device.name_by_user or device.name or device.id
-                for device in split_devices
-            )
-        )
         return self.async_show_form(
             step_id="select_device",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_DEVICE_ID,
-                        description={"suggested_value": old_device_id},
+                        description={
+                            "suggested_value": self._entry.options[CONF_DEVICE_ID]
+                        },
                     ): DeviceSelector(),
                 }
             ),
-            description_placeholders={
-                "name": self._entry.title,
-                "template_type": self._entry.options["template_type"],
-                "devices": devices,
-            },
+            description_placeholders={"name": self._entry.title},
         )
 
 
