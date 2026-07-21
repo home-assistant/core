@@ -12,6 +12,9 @@ from pylint_home_assistant.checkers.config_flow.no_polling import (
 from pylint_home_assistant.checkers.config_flow.serial_port_usb_dependency import (
     HassEnforceSerialPortSelectorUsbChecker,
 )
+from pylint_home_assistant.checkers.config_flow.step_id_not_match_metod import (
+    HassEnforceConfigEntryStepIdMatchMethodChecker,
+)
 from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (
     HassEnforceConfigEntryUniqueIdNoIpChecker,
 )
@@ -126,6 +129,16 @@ def enforce_config_flow_no_polling_checker_fixture(
 ) -> BaseChecker:
     """Fixture to provide a config_flow_no_polling checker."""
     checker = HassEnforceConfigFlowNoPollingChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="step_id_match_method_checker")
+def step_id_match_method_checker(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a step_id_match_method checker."""
+    checker = HassEnforceConfigEntryStepIdMatchMethodChecker(linter)
     checker.module = "homeassistant.components.pylint_test"
     return checker
 
