@@ -63,8 +63,7 @@ async def test_setup_raises_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert mock_config_entry.error_reason_translation_key == translation_key
     assert mock_config_entry.error_reason_translation_placeholders == {
-        "host": "192.168.1.100",
-        "error": str(exc),
+        "host": "192.168.1.100"
     }
 
 

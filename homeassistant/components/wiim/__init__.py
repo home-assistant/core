@@ -68,13 +68,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="http_api_request_failed",
-            translation_placeholders={"host": host, "error": str(err)},
+            translation_placeholders={"host": host},
         ) from err
     except WiimDeviceException as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_setup_failed",
-            translation_placeholders={"host": host, "error": str(err)},
+            translation_placeholders={"host": host},
         ) from err
 
     await controller.add_device(wiim_device)

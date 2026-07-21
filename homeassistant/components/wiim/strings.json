@@ -30,13 +30,13 @@
       "message": "{command} failed for {entity_id}"
     },
     "device_setup_failed": {
-      "message": "Device setup failed for {host}: {error}"
+      "message": "Device setup failed for {host}"
     },
     "direct_url_playback_unsupported": {
       "message": "Direct URL playback is not supported on this device."
     },
     "http_api_request_failed": {
-      "message": "HTTP API request failed for {host}: {error}"
+      "message": "HTTP API request failed for {host}"
     },
     "invalid_browse_path": {
       "message": "Invalid browse path: {media_content_id}"

@@ -101,7 +101,7 @@ def media_player_exception_wrap[
                 translation_key="command_failed",
                 translation_placeholders={
                     "command": func.__name__,
-                    "entity_id": self.entity_id or self.unique_id or "unknown",
+                    "entity_id": self.entity_id or self._device.name,
                 },
             ) from err
         except RuntimeError as err:
@@ -110,7 +110,7 @@ def media_player_exception_wrap[
                 translation_key="command_failed",
                 translation_placeholders={
                     "command": func.__name__,
-                    "entity_id": self.entity_id or self.unique_id or "unknown",
+                    "entity_id": self.entity_id or self._device.name,
                 },
             ) from err
 
