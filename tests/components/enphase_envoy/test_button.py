@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 SLEEP = "button.acb_1234_sleep"
 WAKE = "button.acb_1234_wake"
-ALL_SERIALS = ["122217001670", "122217005321"]
+ALL_SERIALS = ["121000000001", "122000000002"]
 
 
 @pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
@@ -84,7 +84,7 @@ async def test_button_sleep(
     # Default SOC band is derived from the battery configured with sleep thresholds
     mock_envoy.set_acb_sleep.assert_awaited_once_with(
         [
-            {"serial_num": serial, "sleep_min_soc": 10, "sleep_max_soc": 15}
+            {"serial_num": serial, "sleep_min_soc": 25, "sleep_max_soc": 30}
             for serial in ALL_SERIALS
         ]
     )

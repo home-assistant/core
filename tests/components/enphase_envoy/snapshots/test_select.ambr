@@ -91,7 +91,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10-15',
+    'state': '25-30',
   })
 # ---
 # name: test_select[envoy_acb_batt][select.envoy_1234_storage_mode-entry]

@@ -47,6 +47,7 @@
         "state": {
           "charging": "mdi:battery-charging",
           "discharging": "mdi:battery-arrow-down",
+          "idle": "mdi:battery",
           "unknown": "mdi:battery-unknown"
         }
       },

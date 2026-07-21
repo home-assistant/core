@@ -1,12 +1,16 @@
 """Test Enphase Envoy select."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from pyenphase.exceptions import EnvoyError
+from pyenphase.models.acb import ACBChargeStatus, EnvoyACB
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.enphase_envoy.const import (
+    DEFAULT_ACB_SLEEP_SOC_BAND,
+    Platform,
+)
 from homeassistant.components.enphase_envoy.select import (
     RELAY_ACTION_MAP,
     RELAY_MODE_MAP,
@@ -43,6 +47,37 @@ async def test_select(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
+async def test_acb_sleep_soc_band_default(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the ACB sleep SOC band falls back to the default when unconfigured."""
+    await setup_integration(hass, config_entry)
+    coordinator = config_entry.runtime_data
+
+    unconfigured = EnvoyACB(
+        serial_num="1",
+        part_num="800-00930-r03",
+        sleep_enabled=False,
+        charge_status=ACBChargeStatus.IDLE,
+        device_status=[],
+        percent_full=50,
+        max_cell_temp=20,
+        communicating=True,
+        operating=True,
+        producing=False,
+        sleep_min_soc=None,
+        sleep_max_soc=None,
+        last_report_date=None,
+        last_report_watts=None,
+        max_report_watts=None,
+    )
+    mock_envoy.data = Mock(acb_inventory={"1": unconfigured})
+    assert coordinator.acb_sleep_soc_band == DEFAULT_ACB_SLEEP_SOC_BAND
 
 
 @pytest.mark.parametrize(

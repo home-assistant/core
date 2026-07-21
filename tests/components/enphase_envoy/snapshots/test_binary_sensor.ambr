@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217001670_communicating-entry]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_121000000001_communicating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.ac_battery_122217001670_communicating',
+    'entity_id': 'binary_sensor.ac_battery_121000000001_communicating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -32,25 +32,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'communicating',
-    'unique_id': '122217001670_communicating',
+    'unique_id': '121000000001_communicating',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217001670_communicating-state]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_121000000001_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122217001670 Communicating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 121000000001 Communicating',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ac_battery_122217001670_communicating',
+    'entity_id': 'binary_sensor.ac_battery_121000000001_communicating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217001670_operating-entry]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_121000000001_operating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.ac_battery_122217001670_operating',
+    'entity_id': 'binary_sensor.ac_battery_121000000001_operating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -83,24 +83,24 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating',
-    'unique_id': '122217001670_operating',
+    'unique_id': '121000000001_operating',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217001670_operating-state]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_121000000001_operating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122217001670 Operating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 121000000001 Operating',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ac_battery_122217001670_operating',
+    'entity_id': 'binary_sensor.ac_battery_121000000001_operating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217001670_producing-entry]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_121000000001_producing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -114,7 +114,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.ac_battery_122217001670_producing',
+    'entity_id': 'binary_sensor.ac_battery_121000000001_producing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -133,24 +133,24 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'producing',
-    'unique_id': '122217001670_producing',
+    'unique_id': '121000000001_producing',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217001670_producing-state]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_121000000001_producing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122217001670 Producing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 121000000001 Producing',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ac_battery_122217001670_producing',
+    'entity_id': 'binary_sensor.ac_battery_121000000001_producing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217005321_communicating-entry]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122000000002_communicating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -164,7 +164,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.ac_battery_122217005321_communicating',
+    'entity_id': 'binary_sensor.ac_battery_122000000002_communicating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -183,25 +183,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'communicating',
-    'unique_id': '122217005321_communicating',
+    'unique_id': '122000000002_communicating',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217005321_communicating-state]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122000000002_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122217005321 Communicating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122000000002 Communicating',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ac_battery_122217005321_communicating',
+    'entity_id': 'binary_sensor.ac_battery_122000000002_communicating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217005321_operating-entry]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122000000002_operating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -215,7 +215,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.ac_battery_122217005321_operating',
+    'entity_id': 'binary_sensor.ac_battery_122000000002_operating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -234,24 +234,24 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating',
-    'unique_id': '122217005321_operating',
+    'unique_id': '122000000002_operating',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217005321_operating-state]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122000000002_operating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122217005321 Operating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122000000002 Operating',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ac_battery_122217005321_operating',
+    'entity_id': 'binary_sensor.ac_battery_122000000002_operating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217005321_producing-entry]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122000000002_producing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -265,7 +265,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.ac_battery_122217005321_producing',
+    'entity_id': 'binary_sensor.ac_battery_122000000002_producing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -284,21 +284,21 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'producing',
-    'unique_id': '122217005321_producing',
+    'unique_id': '122000000002_producing',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122217005321_producing-state]
+# name: test_binary_sensor[envoy_acb_batt][binary_sensor.ac_battery_122000000002_producing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122217005321 Producing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Battery 122000000002 Producing',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ac_battery_122217005321_producing',
+    'entity_id': 'binary_sensor.ac_battery_122000000002_producing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[envoy_acb_batt][binary_sensor.encharge_123456_communicating-entry]
