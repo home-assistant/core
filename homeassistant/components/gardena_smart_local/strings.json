@@ -1,0 +1,79 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Gateway is already configured",
+      "already_in_progress": "It seems the gateway has been autodetected, click \"Add\" on discovered integration instead",
+      "reconfigure_successful": "GARDENA smart Gateway settings updated"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the gateway",
+      "invalid_auth": "Invalid password",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your GARDENA smart Gateway",
+          "password": "First block of the gateway ID printed on the back of the device (e.g. `0824b95b` from `0824b95b-996c-48f7-83dc-…`)."
+        },
+        "description": "Do you want to set up the GARDENA smart Gateway **{name}**?",
+        "title": "GARDENA smart Gateway found"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your GARDENA smart Gateway",
+          "password": "First block of the gateway ID printed on the back of the device (e.g. `0824b95b` from `0824b95b-996c-48f7-83dc-…`)."
+        },
+        "title": "Update GARDENA smart Gateway settings"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your GARDENA smart Gateway",
+          "password": "First block of the gateway ID printed on the back of the device (e.g. `0824b95b` from `0824b95b-996c-48f7-83dc-…`)."
+        },
+        "title": "Connect to GARDENA smart Gateway"
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "abort": {
+        "no_devices_found": "No includable devices found. Make sure your device is in inclusion mode and try again."
+      },
+      "entry_type": "Device",
+      "error": {
+        "inclusion_failed": "Failed to include the device. Please try again."
+      },
+      "initiate_flow": {
+        "user": "Include a device"
+      },
+      "step": {
+        "select": {
+          "data": {
+            "device": "Device"
+          },
+          "title": "Select a device to include"
+        },
+        "user": {
+          "description": "Put your device into inclusion mode (refer to your device's manual if unsure how), then click **Next**.\n\n**Note:** Devices included here are paired locally with the gateway and will not show up in the GARDENA app. If you wish to continue to use the app, include the device through the GARDENA app instead.",
+          "title": "Include a GARDENA device"
+        }
+      }
+    }
+  }
+}

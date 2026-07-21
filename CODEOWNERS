@@ -623,6 +623,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gardena_bluetooth/ @elupus
 /tests/components/gardena_bluetooth/ @elupus
+/homeassistant/components/gardena_smart_local/ @cloudless-garden
 /homeassistant/components/gate/ @home-assistant/core
 /tests/components/gate/ @home-assistant/core
 /homeassistant/components/gatus/ @TN-1
