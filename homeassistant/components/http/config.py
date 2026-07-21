@@ -380,9 +380,32 @@ class HTTPConfigStore:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
         validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
+        if self._stable_differs_only_by_lost_proxy_masks(validated_config):
+            # Releases up to 2026.7.1 dropped the network mask when storing
+            # trusted proxies, and the v1->v2 store migration turned those
+            # into host networks (e.g. 10.0.0.0/24 -> 10.0.0.0 -> 10.0.0.0/32).
+            # If the YAML config matches stable apart from those lost masks,
+            # the user changed nothing: restore the masks in stable instead of
+            # staging the YAML as pending.
+            self._stable = validated_config
         self._pending = None if validated_config == self._stable else validated_config
         self._yaml_migration_done = True
         await self._async_persist()
+
+    def _stable_differs_only_by_lost_proxy_masks(self, config: ConfData) -> bool:
+        """Return True if stable equals ``config`` with the trusted proxy masks lost.
+
+        "Lost" means each proxy was reduced to the host network of its network
+        address, the shape the old storage bug produced.
+        """
+        if (proxies := config.get(CONF_TRUSTED_PROXIES)) is None:
+            return False
+        return self._stable == {
+            **config,
+            CONF_TRUSTED_PROXIES: [
+                _ip_network_str(ip_network(proxy).network_address) for proxy in proxies
+            ],
+        }
 
     async def _async_persist(self) -> None:
         """Write the current state to disk (or remove the file if empty)."""
