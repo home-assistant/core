@@ -38,17 +38,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     client = AsyncApiClient(auth=auth)
 
     try:
-        # Fetch device related information like the model ID,
-        # firmware version and user specified device name.
         info = await client.get_device_info()
 
-        # BIOCAT serial entered by the user must match the
-        # serial associated with the given API key.
         if info.biocat_serial != bsn:
             raise WrongDeviceSerial
 
-        # Fetch the current device state to check if the
-        # device is online.
         state = await client.get_state()
 
         if not state.online:
