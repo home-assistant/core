@@ -225,6 +225,29 @@ async def test_something(hass) -> None:
             "tests.components.test_integration.test_init",
             id="local_import_not_tracked",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers import entity_registry
+
+
+async def test_something(hass, entity_registry) -> None:
+    entry = entity_registry.async_get("sensor.test")
+""",
+            "tests.components.test_integration.test_init",
+            id="fixture_parameter_shadows_import",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers import entity_registry
+
+
+async def test_something(hass) -> None:
+    entity_registry = get_registry()
+    entry = entity_registry.async_get("sensor.test")
+""",
+            "tests.components.test_integration.test_init",
+            id="local_assignment_shadows_import",
+        ),
     ],
 )
 def test_no_warning(

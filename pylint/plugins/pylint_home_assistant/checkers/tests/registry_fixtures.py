@@ -58,6 +58,23 @@ def _build_alias_map(module: nodes.Module) -> dict[str, str]:
     return alias_map
 
 
+def _binds_to_import(name_node: nodes.Name) -> bool:
+    """Return True when *name_node* resolves to a module-level import.
+
+    Uses Astroid scope lookup to find the binding for the name at the call
+    site. Returns True only when every binding is an ``ImportFrom`` (i.e.
+    the name was not shadowed by a parameter, assignment, or other local
+    definition such as a fixture instance).
+    """
+    try:
+        _, assignments = name_node.lookup(name_node.name)
+    except Exception:  # noqa: BLE001 - defensive: lookup can raise on odd ASTs
+        return False
+    if not assignments:
+        return False
+    return all(isinstance(assignment, nodes.ImportFrom) for assignment in assignments)
+
+
 def _enclosing_function(
     node: nodes.NodeNG,
 ) -> nodes.FunctionDef | nodes.AsyncFunctionDef | None:
@@ -141,6 +158,14 @@ class RegistryFixturesChecker(BaseChecker):
 
         helper = self._alias_map.get(func.expr.name)
         if helper is None:
+            return
+
+        # The alias map only records the module-level spelling. A parameter
+        # or local (e.g. the ``entity_registry`` fixture instance) can shadow
+        # a non-aliased import, so confirm the name still binds to the
+        # recorded ``from homeassistant.helpers import ...`` statement before
+        # flagging.
+        if not _binds_to_import(func.expr):
             return
 
         enclosing = _enclosing_function(node)
