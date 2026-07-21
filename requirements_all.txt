@@ -1588,6 +1588,9 @@ micloud==0.5
 # homeassistant.components.microbees
 microBeesPy==0.3.5
 
+# homeassistant.components.midea_lan
+midea-local==6.10.0
+
 # homeassistant.components.mill
 mill-local==0.5.0
 
@@ -3431,7 +3434,7 @@ yalexs-ble==3.3.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.2.7
+yalexs==9.2.10
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
