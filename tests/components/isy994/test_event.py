@@ -12,11 +12,13 @@ from pyisy.constants import (
     CMD_OFF_FAST,
     CMD_ON,
     CMD_ON_FAST,
+    ES_SYNCING,
 )
 from pyisy.helpers import NodeProperty
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.isy994.event import _sub_button_name
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -77,9 +79,12 @@ async def test_event_entity_snapshot(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for entry in er.async_entries_for_config_entry(
+    entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
-    ):
+    )
+    assert any(entry.disabled_by is not None for entry in entries)
+
+    for entry in entries:
         if entry.disabled_by:
             entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
 
@@ -90,15 +95,36 @@ async def test_event_entity_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("control", "expected_event_type"),
+    ("parent_name", "node_name", "expected"),
     [
-        (CMD_ON, "on"),
-        (CMD_OFF, "off"),
-        (CMD_ON_FAST, "fast_on"),
-        (CMD_OFF_FAST, "fast_off"),
-        (CMD_FADE_UP, "fade_up"),
-        (CMD_FADE_DOWN, "fade_down"),
-        (CMD_FADE_STOP, "fade_stop"),
+        ("Hallway Keypad", "Hallway Keypad B", "B"),
+        ("Hall", "Hallway B", "Hallway B"),  # prefix with no separator: unchanged
+    ],
+)
+def test_sub_button_name_requires_separator(
+    parent_name: str, node_name: str, expected: str
+) -> None:
+    """A parent name that is a bare prefix (no separator) must not be stripped.
+
+    "Hall" is a prefix of "Hallway B" with no separator between them, so the
+    sub-button label must stay "Hallway B" rather than being corrupted to
+    "way B".
+    """
+    node = MagicMock()
+    node.parent_node.name = parent_name
+    node.name = node_name
+    assert _sub_button_name(node) == expected
+
+
+@pytest.mark.parametrize(
+    ("control", "expected_event_type", "expected_direction", "expected_count"),
+    [
+        (CMD_ON, "press_end", "up", None),
+        (CMD_OFF, "press_end", "down", None),
+        (CMD_ON_FAST, "multi_press_end", "up", 2),
+        (CMD_OFF_FAST, "multi_press_end", "down", 2),
+        (CMD_FADE_UP, "long_press_start", "up", None),
+        (CMD_FADE_DOWN, "long_press_start", "down", None),
     ],
 )
 async def test_control_event_triggers_entity(
@@ -108,8 +134,10 @@ async def test_control_event_triggers_entity(
     mock_node: Callable[..., Any],
     control: str,
     expected_event_type: str,
+    expected_direction: str,
+    expected_count: int | None,
 ) -> None:
-    """Control events from pyisy translate into event entity event_type updates."""
+    """Control events from pyisy translate into the standard button event types."""
     mock_config_entry.add_to_hass(hass)
     node = mock_node(mock_isy, "11 11 11 1", "Test Switch", "DimmerLampSwitch_ADV")
     mock_isy.nodes.__iter__.return_value = [("Test Switch", node)]
@@ -121,11 +149,68 @@ async def test_control_event_triggers_entity(
     handler(MagicMock(spec=NodeProperty, control=control))
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids(Platform.EVENT)
+    entity_ids = hass.states.async_entity_ids("event")
     assert len(entity_ids) == 1
     state = hass.states.get(entity_ids[0])
     assert state is not None
     assert state.attributes["event_type"] == expected_event_type
+    assert state.attributes.get("direction") == expected_direction
+    assert state.attributes.get("multi_press_count") == expected_count
+
+
+async def test_fade_stop_reports_direction_of_last_fade(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+    mock_node: Callable[..., Any],
+) -> None:
+    """CMD_FADE_STOP's direction tracks whichever fade most recently started."""
+    mock_config_entry.add_to_hass(hass)
+    node = mock_node(mock_isy, "11 11 11 1", "Test Switch", "DimmerLampSwitch_ADV")
+    mock_isy.nodes.__iter__.return_value = [("Test Switch", node)]
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    handler = node.control_events.subscribe.call_args.args[0]
+    handler(MagicMock(spec=NodeProperty, control=CMD_FADE_DOWN))
+    handler(MagicMock(spec=NodeProperty, control=CMD_FADE_STOP))
+    await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids("event")
+    state = hass.states.get(entity_ids[0])
+    assert state is not None
+    assert state.attributes["event_type"] == "long_press_end"
+    assert state.attributes.get("direction") == "down"
+
+
+async def test_control_event_suppressed_while_websocket_syncing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+    mock_node: Callable[..., Any],
+) -> None:
+    """Control events are dropped while the websocket replays status on connect.
+
+    Without this guard, PyISY's post-connect status replay fires stale
+    button events on every startup, config-entry reload, and reconnect.
+    """
+    mock_config_entry.add_to_hass(hass)
+    node = mock_node(mock_isy, "11 11 11 1", "Test Switch", "DimmerLampSwitch_ADV")
+    mock_isy.nodes.__iter__.return_value = [("Test Switch", node)]
+    mock_isy.websocket.status = ES_SYNCING
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    handler = node.control_events.subscribe.call_args.args[0]
+    handler(MagicMock(spec=NodeProperty, control=CMD_ON))
+    await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids("event")
+    state = hass.states.get(entity_ids[0])
+    assert state is not None
+    assert state.attributes.get("event_type") is None
 
 
 async def test_unsupported_control_is_ignored(
@@ -146,8 +231,37 @@ async def test_unsupported_control_is_ignored(
     handler(MagicMock(spec=NodeProperty, control="ST"))
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids(Platform.EVENT)
+    entity_ids = hass.states.async_entity_ids("event")
     assert len(entity_ids) == 1
     state = hass.states.get(entity_ids[0])
     assert state is not None
     assert state.attributes.get("event_type") is None
+
+
+@pytest.mark.parametrize(
+    ("node_type", "expect_event_entity"),
+    [
+        ("1.14.1", True),  # SwitchLinc prefix from FILTER_INSTEON_TYPE
+        ("2.44.1", True),  # KeypadLinc dimmer prefix from FILTER_INSTEON_TYPE
+        ("3.32.1", True),  # BallastLinc prefix from FILTER_INSTEON_TYPE
+        ("1.20.1", False),  # Not in FILTER_INSTEON_TYPE
+    ],
+)
+async def test_legacy_insteon_type_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isy: MagicMock,
+    mock_node: Callable[..., Any],
+    node_type: str,
+    expect_event_entity: bool,
+) -> None:
+    """Pre-5.0-firmware nodes with no node_def_id fall back to type-prefix matching."""
+    mock_config_entry.add_to_hass(hass)
+    node = mock_node(mock_isy, "11 11 11 1", "Legacy Switch", None, node_type=node_type)
+    mock_isy.nodes.__iter__.return_value = [("Legacy Switch", node)]
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids("event")
+    assert (len(entity_ids) == 1) is expect_event_entity

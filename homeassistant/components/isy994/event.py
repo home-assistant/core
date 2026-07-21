@@ -1,14 +1,11 @@
 """Event entities for ISY Insteon load and keypad-button nodes.
 
 Each entity represents a physical button on the device and emits one of the
-``event_types`` below when its corresponding control event arrives from the
-ISY. KeypadLinc sub-button entities are disabled by default to avoid
-registering large numbers of unused entities for users who don't need them.
+standard button event types (architecture#1377) when its corresponding
+control event arrives from the ISY.
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, NamedTuple, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -19,6 +16,7 @@ from pyisy.constants import (
     CMD_OFF_FAST,
     CMD_ON,
     CMD_ON_FAST,
+    ES_CONNECTED,
     NC_NODE_ENABLED,
     TAG_ADDRESS,
 )
@@ -42,21 +40,54 @@ if TYPE_CHECKING:
 
 EVENT_BUTTON_UNIQUE_ID_SUFFIX = "_button"
 
-CONTROL_TO_EVENT_TYPE: Final[dict[str, str]] = {
-    CMD_ON: "on",
-    CMD_OFF: "off",
-    CMD_ON_FAST: "fast_on",
-    CMD_OFF_FAST: "fast_off",
-    CMD_FADE_UP: "fade_up",
-    CMD_FADE_DOWN: "fade_down",
-    CMD_FADE_STOP: "fade_stop",
+ATTR_DIRECTION = "direction"
+ATTR_MULTI_PRESS_COUNT = "multi_press_count"
+
+DIRECTION_UP = "up"
+DIRECTION_DOWN = "down"
+
+# No shared `ButtonEventType` constant exists in homeassistant.components.event
+# yet (only `DoorbellEventType` does, as precedent) -- these are local literals
+# matching architecture#1377's approved strings verbatim. Replace with the
+# shared enum once a core PR adds it.
+EVENT_TYPE_PRESS_END = "press_end"
+EVENT_TYPE_MULTI_PRESS_END = "multi_press_end"
+EVENT_TYPE_LONG_PRESS_START = "long_press_start"
+EVENT_TYPE_LONG_PRESS_END = "long_press_end"
+
+
+class _ControlEvent(NamedTuple):
+    """Standard event type + direction/count for one ISY control command."""
+
+    event_type: str
+    direction: str
+    multi_press_count: int | None = None
+
+
+# Maps to the architecture#1377 standard button event types. `direction`
+# distinguishes the two paddle positions of a single physical button rather
+# than splitting into two entities. CMD_FADE_STOP
+# (long-press end) isn't listed here: its direction is whichever fade most
+# recently started, tracked in `ISYButtonEvent._last_fade_direction`.
+CONTROL_TO_EVENT: Final[dict[str, _ControlEvent]] = {
+    CMD_ON: _ControlEvent(EVENT_TYPE_PRESS_END, DIRECTION_UP),
+    CMD_OFF: _ControlEvent(EVENT_TYPE_PRESS_END, DIRECTION_DOWN),
+    CMD_ON_FAST: _ControlEvent(EVENT_TYPE_MULTI_PRESS_END, DIRECTION_UP, 2),
+    CMD_OFF_FAST: _ControlEvent(EVENT_TYPE_MULTI_PRESS_END, DIRECTION_DOWN, 2),
+    CMD_FADE_UP: _ControlEvent(EVENT_TYPE_LONG_PRESS_START, DIRECTION_UP),
+    CMD_FADE_DOWN: _ControlEvent(EVENT_TYPE_LONG_PRESS_START, DIRECTION_DOWN),
 }
 
 BUTTON_DESCRIPTION: Final[EventEntityDescription] = EventEntityDescription(
     key="button",
     translation_key="button",
     device_class=EventDeviceClass.BUTTON,
-    event_types=list(CONTROL_TO_EVENT_TYPE.values()),
+    event_types=[
+        EVENT_TYPE_PRESS_END,
+        EVENT_TYPE_MULTI_PRESS_END,
+        EVENT_TYPE_LONG_PRESS_START,
+        EVENT_TYPE_LONG_PRESS_END,
+    ],
 )
 
 
@@ -73,7 +104,9 @@ def _sub_button_name(node: Node) -> str:
     """
     parent_name: str = node.parent_node.name
     name: str = node.name
-    if name.startswith(parent_name):
+    if name.startswith(parent_name) and (
+        len(name) == len(parent_name) or name[len(parent_name)] in " -_:."
+    ):
         return name[len(parent_name) :].lstrip(" -_:.") or name
     return name
 
@@ -104,6 +137,7 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         self._attr_unique_id = (
             f"{node.isy.uuid}_{node.address}{EVENT_BUTTON_UNIQUE_ID_SUFFIX}"
         )
+        self._last_fade_direction: str | None = None
         if node.parent_node is None:
             self._attr_name = None
         else:
@@ -113,7 +147,8 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
             # these and most users only automate a few.
             self._attr_entity_registry_enabled_default = False
 
-    # pylint: disable-next=hass-missing-super-call
+    @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to control events and node enabled/disabled changes only.
 
@@ -125,6 +160,7 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
             self._control_handler = self._node.control_events.subscribe(
                 self.async_on_control
             )
+            self.async_on_remove(self._control_handler.unsubscribe)
         self._change_handler = self._node.isy.nodes.status_events.subscribe(
             self._async_on_availability_change,
             event_filter={
@@ -133,6 +169,7 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
             },
             key=self.unique_id,
         )
+        self.async_on_remove(self._change_handler.unsubscribe)
 
     @callback
     def _async_on_availability_change(self, event: NodeChangedEvent, key: str) -> None:
@@ -140,14 +177,36 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def async_on_control(self, event: NodeProperty) -> None:
         """Trigger the entity, bypassing the base class's bus.fire.
 
         The load entity for the same node still fires `isy994_control` via
         the base class, so we don't fire it here to avoid double-emission.
+        Suppressed while the websocket isn't fully connected -- PyISY
+        replays the current status of every node on (re)connect before
+        settling, and without this guard that replay fires stale button
+        events on every startup, config-entry reload, and reconnect.
         """
-        event_type = CONTROL_TO_EVENT_TYPE.get(event.control)
-        if event_type is None:
+        websocket = self._node.isy.websocket
+        if websocket is not None and websocket.status != ES_CONNECTED:
             return
-        self._trigger_event(event_type)
+        if event.control == CMD_FADE_STOP:
+            self._trigger_event(
+                EVENT_TYPE_LONG_PRESS_END,
+                {ATTR_DIRECTION: self._last_fade_direction},
+            )
+            self.async_write_ha_state()
+            return
+        control_event = CONTROL_TO_EVENT.get(event.control)
+        if control_event is None:
+            return
+        if control_event.event_type == EVENT_TYPE_LONG_PRESS_START:
+            self._last_fade_direction = control_event.direction
+        event_attributes: dict[str, str | int] = {
+            ATTR_DIRECTION: control_event.direction
+        }
+        if control_event.multi_press_count is not None:
+            event_attributes[ATTR_MULTI_PRESS_COUNT] = control_event.multi_press_count
+        self._trigger_event(control_event.event_type, event_attributes)
         self.async_write_ha_state()

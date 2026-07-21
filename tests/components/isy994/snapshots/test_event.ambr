@@ -6,14 +6,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -49,18 +46,15 @@
 # name: test_event_entity_snapshot[event.garage_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
-      'friendly_name': 'Garage Relay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Relay',
     }),
     'context': <ANY>,
     'entity_id': 'event.garage_relay',
@@ -77,14 +71,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -120,18 +111,15 @@
 # name: test_event_entity_snapshot[event.hallway_keypad-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
-      'friendly_name': 'Hallway Keypad',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Keypad',
     }),
     'context': <ANY>,
     'entity_id': 'event.hallway_keypad',
@@ -148,14 +136,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -191,18 +176,15 @@
 # name: test_event_entity_snapshot[event.hallway_keypad_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
-      'friendly_name': 'Hallway Keypad B',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Keypad B',
     }),
     'context': <ANY>,
     'entity_id': 'event.hallway_keypad_b',
@@ -219,14 +201,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -262,18 +241,15 @@
 # name: test_event_entity_snapshot[event.living_room_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'on',
-        'off',
-        'fast_on',
-        'fast_off',
-        'fade_up',
-        'fade_down',
-        'fade_stop',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'press_end',
+        'multi_press_end',
+        'long_press_start',
+        'long_press_end',
       ]),
-      'friendly_name': 'Living Room Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Switch',
     }),
     'context': <ANY>,
     'entity_id': 'event.living_room_switch',
