@@ -112,9 +112,9 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         voice_ids = self.subentry.data.get("supported_voices")
-        default_voice = (
-            voice_ids[0] if voice_ids
-            else self.subentry.data.get(CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE)
+        default_voice = self.subentry.data.get(
+            CONF_TTS_VOICE,
+            voice_ids[0] if voice_ids else RECOMMENDED_TTS_VOICE,
         )
         return {
             ATTR_VOICE: default_voice,
