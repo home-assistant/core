@@ -27,6 +27,9 @@ HueBLE==2.2.2
 # homeassistant.components.mastodon
 Mastodon.py==2.2.1
 
+# homeassistant.components.netio
+Netio==1.0.6
+
 # homeassistant.components.playstation_network
 PSNAWP==3.0.3
 
