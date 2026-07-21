@@ -457,3 +457,24 @@ async def test_dhcp_discovery_updates_ip_by_mac(hass: HomeAssistant) -> None:
     assert entry.data[CONF_MAC] == MOCK_MAC
     assert entry.title == f"EARN-E P1 ({new_ip})"
     mock_validate.assert_not_called()
+
+
+async def test_dhcp_discovery_aborts_for_ignored_entry(hass: HomeAssistant) -> None:
+    """Test DHCP discovery does not re-offer a device the user ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id=MOCK_SERIAL,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

@@ -100,6 +100,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     reason="already_configured",
                     reload_even_if_entry_is_unchanged=False,
                 )
+        self._abort_if_unique_id_configured()
 
         self._discovered_device = device
         self._discovered_mac = raw_mac
