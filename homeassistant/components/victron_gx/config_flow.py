@@ -179,6 +179,10 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery."""
+        mqtt_on_lan = str(discovery_info.upnp.get("X_MqttOnLan", "")).strip()
+        if mqtt_on_lan != "1":
+            return self.async_abort(reason="mqtt_on_lan_disabled")
+
         self.hostname = str(urlparse(discovery_info.ssdp_location).hostname)
         self.serial = discovery_info.upnp["serialNumber"]
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]

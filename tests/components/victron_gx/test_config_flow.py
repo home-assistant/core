@@ -251,6 +251,38 @@ async def test_ssdp_flow_success(
     }
 
 
+@pytest.mark.parametrize("mqtt_on_lan", ["0", "", "unexpected"])
+async def test_ssdp_discovery_mqtt_on_lan_disabled(
+    hass: HomeAssistant,
+    mock_victron_hub: MagicMock,
+    mqtt_on_lan: str,
+) -> None:
+    """Test SSDP discovery aborts when MQTT on LAN is not enabled."""
+    discovery_info = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="upnp:rootdevice",
+        ssdp_location="http://192.168.1.100:80/",
+        upnp={
+            "serialNumber": MOCK_SERIAL,
+            "X_VrmPortalId": MOCK_INSTALLATION_ID,
+            "modelName": MOCK_MODEL,
+            "friendlyName": MOCK_FRIENDLY_NAME,
+            "X_MqttOnLan": mqtt_on_lan,
+            "manufacturer": "Victron Energy",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_on_lan_disabled"
+    mock_victron_hub.return_value.connect.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
