@@ -29,6 +29,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
+REQUEST_TIMEOUT = 10
 
 type NetioConfigEntry = ConfigEntry[NetioDataUpdateCoordinator]
 
@@ -45,6 +46,7 @@ def create_device(data: Mapping[str, Any]) -> Netio:
         f"{device_base_url(data)}/netio.json",
         auth_rw=(data[CONF_USERNAME], data[CONF_PASSWORD]),
         verify=data[CONF_VERIFY_SSL],
+        timeout=REQUEST_TIMEOUT,
     )
 
 
