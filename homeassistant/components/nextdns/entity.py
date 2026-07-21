@@ -28,12 +28,7 @@ class NextDnsEntity[CoordinatorDataT: NextDnsData](
         self._attr_device_info = DeviceInfo(
             configuration_url=f"https://my.nextdns.io/{coordinator.profile_id}/setup",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    coordinator.profile_id,
-                )
-            },
+            identifiers={(DOMAIN, coordinator.profile_id)},
             manufacturer="NextDNS Inc.",
             name=subentry.title,
         )
