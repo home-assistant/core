@@ -266,7 +266,8 @@ class PoolsideConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await client.async_connect()
             with contextlib.suppress(PoolsideConnectionError, PoolsideCommandError):
-                site_name, _controls = await client.async_get_control_layout()
+                site, _controls = await client.async_get_control_layout()
+                site_name = site.name
         except PoolsideAuthError, PoolsideConnectionError:
             return self.async_show_form(
                 step_id="user",

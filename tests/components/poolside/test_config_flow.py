@@ -24,7 +24,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import TEST_CONTROLLER_UUID, TEST_HOST, TEST_PORT, TEST_SITE_NAME
+from .conftest import (
+    TEST_CONTROLLER_UUID,
+    TEST_HOST,
+    TEST_PORT,
+    TEST_SITE,
+    TEST_SITE_NAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -75,7 +81,7 @@ def mock_finish_client() -> Generator[MagicMock]:
         mock_class.return_value.async_connect = AsyncMock()
         mock_class.return_value.async_disconnect = AsyncMock()
         mock_class.return_value.async_get_control_layout = AsyncMock(
-            return_value=(TEST_SITE_NAME, [])
+            return_value=(TEST_SITE, [])
         )
         yield mock_class
 

@@ -110,6 +110,11 @@ CONTROL_MODES_SUPPORTED_FIELD = "ControlModesSupported"
 # Body-of-water status items (Device.setStatus, keyed by BodyOfWaterUUID)
 CURRENT_TEMPERATURE_FIELD = "Temperature"
 
+# Site-level status item (Device.setStatus, keyed by the site UUID from
+# Site.getControlLayout). Changes whenever the attendant's site configuration
+# is edited - a signal to re-fetch the control layout and reload the entry.
+LAST_TIME_SITE_WAS_LOADED_FIELD = "LastTimeSiteWasLoaded"
+
 # On/off IS pushed via Device.setStatus after all (observed live, keyed by
 # the control's own UUID) - just under different field names than the
 # Status write field: PowerState (what was requested) and ActualPowerState

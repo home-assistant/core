@@ -18,6 +18,20 @@ from .const import (
 
 
 @dataclass
+class PoolsideSite:
+    """The site itself, as rendered from Site.getControlLayout.
+
+    `uuid` is the key its `LastTimeSiteWasLoaded` status arrives under - it
+    changes whenever the attendant edits the site's configuration, which is
+    the integration's signal to re-fetch the layout and reload. Older
+    controller firmware may not report a site UUID at all.
+    """
+
+    uuid: str | None
+    name: str
+
+
+@dataclass
 class PoolsideGroup:
     """A control group from Site.getControlLayout (a body of water or landscape area)."""
 
@@ -103,8 +117,10 @@ class PoolsideControl:
         return len(self.speed_increments) > 1
 
 
-def parse_control_layout(data: dict[str, Any]) -> tuple[str, list[PoolsideControl]]:
-    """Parse a Site.getControlLayout response into (site name, renderable controls).
+def parse_control_layout(
+    data: dict[str, Any],
+) -> tuple[PoolsideSite, list[PoolsideControl]]:
+    """Parse a Site.getControlLayout response into (site, renderable controls).
 
     Controls that are members of a combined control (`CombinedControlUUID` set)
     are skipped; the combined control itself (which lists `MemberControlUUIDs`)
@@ -113,6 +129,8 @@ def parse_control_layout(data: dict[str, Any]) -> tuple[str, list[PoolsideContro
     first member.
     """
     site_name = data.get("SiteName") or "Poolside"
+    site_uuid = data.get("SiteUUID") or data.get("UUID") or data.get("uuid")
+    site = PoolsideSite(uuid=site_uuid, name=site_name)
     controls: list[PoolsideControl] = []
     for group_data in data.get("Groups", []):
         group = _parse_group(group_data)
@@ -145,7 +163,7 @@ def parse_control_layout(data: dict[str, Any]) -> tuple[str, list[PoolsideContro
                 control.member_uuids,
             )
             controls.append(control)
-    return site_name, controls
+    return site, controls
 
 
 def _parse_group(data: dict[str, Any]) -> PoolsideGroup:

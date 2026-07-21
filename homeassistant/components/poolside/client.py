@@ -17,7 +17,7 @@ from .const import (
     RECONNECT_MAX_DELAY,
     # STATUS_REFRESH_INTERVAL,  # periodic re-sync disabled for now, see below
 )
-from .models import PoolsideControl, parse_control_layout
+from .models import PoolsideControl, PoolsideSite, parse_control_layout
 from .noise_transport import NoiseSession, NoiseTransportError
 
 
@@ -324,7 +324,9 @@ class PoolsideClient:
 
         return await future
 
-    async def async_get_control_layout(self) -> tuple[str, list[PoolsideControl]]:
+    async def async_get_control_layout(
+        self,
+    ) -> tuple[PoolsideSite, list[PoolsideControl]]:
         """Fetch controls pre-wrapped into their groups from Site.getControlLayout."""
         result = await self.async_send_request("Site.getControlLayout", {})
         return parse_control_layout(result)

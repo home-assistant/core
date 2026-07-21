@@ -16,7 +16,11 @@ from homeassistant.components.poolside.const import (
     ControlType,
     GroupKind,
 )
-from homeassistant.components.poolside.models import PoolsideControl, PoolsideGroup
+from homeassistant.components.poolside.models import (
+    PoolsideControl,
+    PoolsideGroup,
+    PoolsideSite,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -29,6 +33,8 @@ TEST_CONTROLLER_UUID = "11111111-1111-1111-1111-111111111111"
 TEST_CLIENT_PRIVATE_KEY = b64encode(b"\x01" * 32).decode()
 TEST_CONTROLLER_PUBLIC_KEY = b64encode(b"\x02" * 32).decode()
 TEST_SITE_NAME = "Test Residence"
+TEST_SITE_UUID = "site-1"
+TEST_SITE = PoolsideSite(uuid=TEST_SITE_UUID, name=TEST_SITE_NAME)
 
 TEST_BODY_OF_WATER_UUID = "body-pool"
 
@@ -84,7 +90,7 @@ class FakePoolsideClient:
         self._auth_failure_callback: Callable[[], None] | None = None
         self.async_connect = AsyncMock()
         self.async_disconnect = AsyncMock()
-        self.async_get_control_layout = AsyncMock(return_value=(TEST_SITE_NAME, []))
+        self.async_get_control_layout = AsyncMock(return_value=(TEST_SITE, []))
         self.async_set_desired_state = AsyncMock()
 
     def set_auth_failure_callback(self, callback: Callable[[], None]) -> None:
@@ -159,7 +165,7 @@ def controls() -> list[PoolsideControl]:
 def fake_client(controls: list[PoolsideControl]) -> FakePoolsideClient:
     """Return a fresh fake Poolside client pre-loaded with `controls`."""
     client = FakePoolsideClient()
-    client.async_get_control_layout.return_value = (TEST_SITE_NAME, controls)
+    client.async_get_control_layout.return_value = (TEST_SITE, controls)
     return client
 
 

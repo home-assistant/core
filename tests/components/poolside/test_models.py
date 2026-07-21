@@ -5,6 +5,7 @@ from homeassistant.components.poolside.models import parse_control_layout
 
 LAYOUT = {
     "SiteName": "Smith Residence",
+    "SiteUUID": "site-smith",
     "Groups": [
         {
             "UUID": "group-pool",
@@ -85,13 +86,27 @@ LAYOUT = {
 
 def test_parse_control_layout_site_name() -> None:
     """The site name is read from the top-level SiteName field."""
-    site_name, _controls = parse_control_layout(LAYOUT)
-    assert site_name == "Smith Residence"
+    site, _controls = parse_control_layout(LAYOUT)
+    assert site.name == "Smith Residence"
+
+
+def test_parse_control_layout_site_uuid() -> None:
+    """The site UUID is read from the top-level SiteUUID field."""
+    site, _controls = parse_control_layout(LAYOUT)
+    assert site.uuid == "site-smith"
+
+
+def test_parse_control_layout_site_uuid_missing() -> None:
+    """Older firmware without a site UUID yields a site with uuid=None."""
+    layout = {**LAYOUT}
+    del layout["SiteUUID"]
+    site, _controls = parse_control_layout(layout)
+    assert site.uuid is None
 
 
 def test_parse_control_layout_flattens_groups() -> None:
     """Controls from every group are flattened into a single list."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     uuids = {control.uuid for control in controls}
     assert "landscape-light" in uuids
     assert "heater-1" in uuids
@@ -99,7 +114,7 @@ def test_parse_control_layout_flattens_groups() -> None:
 
 def test_parse_control_layout_skips_combined_members() -> None:
     """Combined control members are skipped; the combined control itself is kept."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     uuids = {control.uuid for control in controls}
     assert "combined-1" in uuids
     assert "light-a" not in uuids
@@ -108,7 +123,7 @@ def test_parse_control_layout_skips_combined_members() -> None:
 
 def test_parse_control_layout_group_kind_and_body_of_water_type() -> None:
     """Each control's group carries its Kind and, for a body of water, its type."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     by_uuid = {control.uuid: control for control in controls}
 
     pool_group = by_uuid["heater-1"].group
@@ -122,7 +137,7 @@ def test_parse_control_layout_group_kind_and_body_of_water_type() -> None:
 
 def test_control_type_parsed_from_control_type_field() -> None:
     """ControlType values map onto the ControlType enum."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     by_uuid = {control.uuid: control for control in controls}
     assert by_uuid["heater-1"].control_type is ControlType.TEMPERATURE
     assert by_uuid["light-1"].control_type is ControlType.LIGHT
@@ -131,7 +146,7 @@ def test_control_type_parsed_from_control_type_field() -> None:
 
 def test_control_set_point_bounds() -> None:
     """MinSetPoint/MaxSetPoint surface as float properties."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     heater = next(c for c in controls if c.uuid == "heater-1")
     assert heater.min_set_point == 40
     assert heater.max_set_point == 104
@@ -158,7 +173,7 @@ def test_control_set_point_bounds_tolerate_string_values() -> None:
             }
         ],
     }
-    _site_name, controls = parse_control_layout(layout)
+    _site, controls = parse_control_layout(layout)
     heater = controls[0]
     assert heater.min_set_point == 40.0
     assert heater.max_set_point == 104.0
@@ -166,7 +181,7 @@ def test_control_set_point_bounds_tolerate_string_values() -> None:
 
 def test_control_speed_increments_and_variable_speed() -> None:
     """A control's speed increments determine whether it's variable-speed."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     by_uuid = {control.uuid: control for control in controls}
 
     variable_speed = by_uuid["filter-1"]
@@ -180,7 +195,7 @@ def test_control_speed_increments_and_variable_speed() -> None:
 
 def test_control_winterized() -> None:
     """Winterized controls are flagged so entities can go unavailable."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     by_uuid = {control.uuid: control for control in controls}
     assert by_uuid["winter-pump"].winterized
     assert not by_uuid["heater-1"].winterized
@@ -188,14 +203,14 @@ def test_control_winterized() -> None:
 
 def test_unrecognized_control_type_maps_to_unknown() -> None:
     """A ControlType this integration doesn't classify falls back to UNKNOWN."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     by_uuid = {control.uuid: control for control in controls}
     assert by_uuid["fire-feature-1"].control_type is ControlType.UNKNOWN
 
 
 def test_status_key_for_temperature_is_body_of_water_uuid() -> None:
     """TEMPERATURE has no ControlItemUUID; status is keyed by the body instead."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     heater = next(c for c in controls if c.uuid == "heater-1")
     assert heater.status_key == "bow-pool"
 
@@ -206,21 +221,21 @@ def test_status_key_ignores_control_item_uuid() -> None:
     ControlItemUUID identifies the underlying PoolDevice - separate physical
     hardware, not the control - so it must not be used for status routing.
     """
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     filter_control = next(c for c in controls if c.uuid == "filter-1")
     assert filter_control.status_key == "filter-1"
 
 
 def test_status_key_falls_back_to_own_uuid() -> None:
     """A non-TEMPERATURE control (with or without a ControlItemUUID) uses its own UUID."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     light = next(c for c in controls if c.uuid == "light-1")
     assert light.status_key == "light-1"
 
 
 def test_combined_control_inherits_capability_from_first_member() -> None:
     """A combined control's missing layout capabilities come from its first member."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     combined = next(c for c in controls if c.uuid == "combined-1")
     assert combined.capability("SupportsColors") is True
     assert combined.capability("DefaultColor") == "Ocean Blue"
@@ -230,7 +245,7 @@ def test_combined_control_inherits_capability_from_first_member() -> None:
 
 def test_combined_control_exposes_member_uuids() -> None:
     """A combined control's member UUIDs are available for status routing."""
-    _site_name, controls = parse_control_layout(LAYOUT)
+    _site, controls = parse_control_layout(LAYOUT)
     combined = next(c for c in controls if c.uuid == "combined-1")
     assert combined.member_uuids == ["light-a", "light-b"]
 
