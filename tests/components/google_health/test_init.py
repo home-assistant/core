@@ -37,6 +37,8 @@ async def test_setup_and_unload(
     assert hass.states.get("sensor.google_health_distance") is not None
     assert hass.states.get("sensor.google_health_weight") is not None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
+    assert hass.states.get("sensor.google_health_time_asleep") is not None
+    assert hass.states.get("sensor.google_health_time_awake") is not None
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -149,6 +151,30 @@ async def test_setup_missing_measurements_scope(
     assert hass.states.get("sensor.google_health_active_calories") is not None
     assert hass.states.get("sensor.google_health_total_calories") is not None
     assert hass.states.get("sensor.google_health_floors") is not None
+
+
+@pytest.mark.usefixtures("mock_google_health_client")
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        [
+            "https://www.googleapis.com/auth/googlehealth.profile.readonly",
+            "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+            "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+        ]
+    ],
+)
+async def test_setup_missing_sleep_scope(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test setup succeeds but sleep sensor is not added if sleep scope is missing."""
+    assert await integration_setup()
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    assert hass.states.get("sensor.google_health_time_asleep") is None
+    assert hass.states.get("sensor.google_health_time_awake") is None
 
 
 async def test_setup_oauth_implementation_unavailable(

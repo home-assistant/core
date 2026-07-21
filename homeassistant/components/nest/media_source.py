@@ -55,6 +55,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .device_info import NestDeviceInfo, async_nest_devices_by_device_id
 from .events import EVENT_NAME_MAP, MEDIA_SOURCE_EVENT_TITLE_MAP
+from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +81,7 @@ ORPHANED_MEDIA_AGE_CUTOFF = datetime.timedelta(days=7)
 
 
 async def async_get_media_event_store(
-    hass: HomeAssistant, subscriber: GoogleNestSubscriber
+    hass: HomeAssistant, config_entry: NestConfigEntry, subscriber: GoogleNestSubscriber
 ) -> EventMediaStore:
     """Create the disk backed EventMediaStore."""
     media_path = pathlib.Path(hass.config.cache_path(DOMAIN, MEDIA_CACHE_PATH))
@@ -89,7 +90,7 @@ async def async_get_media_event_store(
         _prepare_media_cache_dir, media_path, legacy_media_path
     )
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    return NestEventMediaStore(hass, subscriber, store, str(media_path))
+    return NestEventMediaStore(hass, config_entry, subscriber, store, str(media_path))
 
 
 def _prepare_media_cache_dir(
@@ -138,12 +139,14 @@ class NestEventMediaStore(EventMediaStore):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: NestConfigEntry,
         subscriber: GoogleNestSubscriber,
         store: Store[dict[str, Any]],
         media_path: str,
     ) -> None:
         """Initialize NestEventMediaStore."""
         self._hass = hass
+        self._config_entry = config_entry
         self._subscriber = subscriber
         self._store = store
         self._media_path = media_path
@@ -284,8 +287,8 @@ class NestEventMediaStore(EventMediaStore):
         device_manager = await self._subscriber.async_get_device_manager()
         devices = {}
         for device in device_manager.devices.values():
-            if device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, device.name)}
+            if device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, device.name), self._config_entry.entry_id
             ):
                 devices[device.name] = device_entry.id
         return devices

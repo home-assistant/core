@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_BUTTON
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoModuleEntity
+from .entity import NetatmoReachabilityEntity
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCoverPreferredPositionButton(NetatmoModuleEntity, ButtonEntity):
+class NetatmoCoverPreferredPositionButton(NetatmoReachabilityEntity, ButtonEntity):
     """Representation of a Netatmo cover preferred position button device."""
 
     _attr_configuration_url = CONF_URL_CONTROL
@@ -69,7 +69,7 @@ class NetatmoCoverPreferredPositionButton(NetatmoModuleEntity, ButtonEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        # No state to update for button
+        self.async_write_ha_state()
 
     @override
     async def async_press(self) -> None:

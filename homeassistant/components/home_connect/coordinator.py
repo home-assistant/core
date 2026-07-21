@@ -364,8 +364,8 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 self.call_all_event_listeners()
 
             case EventType.DEPAIRED:
-                device = self.device_registry.async_get_device(
-                    identifiers={(DOMAIN, self.data.info.ha_id)}
+                device = self.device_registry.async_get_device_by_identifier(
+                    (DOMAIN, self.data.info.ha_id), self._config_entry.entry_id
                 )
                 if device:
                     self.device_registry.async_update_device(
