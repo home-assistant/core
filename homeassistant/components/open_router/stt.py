@@ -47,25 +47,72 @@ async def async_setup_entry(
 class OpenRouterSTTEntity(SpeechToTextEntity, OpenRouterEntity):
     """OpenRouter STT entity."""
 
-    _attr_has_entity_name = False
-    _attr_translation_key = "openrouter_stt"
-
-    def __init__(self, entry: OpenRouterConfigEntry, subentry) -> None:
-        """Initialize the entity."""
-        super().__init__(entry, subentry)
-        self._attr_name = subentry.title
+    _attr_name = None
 
     @property
     @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
+        # BCP-47 codes so the assist pipeline's regional language (e.g. "en-US")
+        # matches; the region is stripped before the transcription request.
         return [
-            "af", "ar", "hy", "az", "be", "bs", "bg", "ca", "zh", "hr",
-            "cs", "da", "nl", "en", "et", "fi", "fr", "gl", "de", "el",
-            "he", "hi", "hu", "is", "id", "it", "ja", "kn", "kk", "ko",
-            "lv", "lt", "mk", "ms", "mr", "mi", "ne", "no", "fa", "pl",
-            "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv", "tl",
-            "ta", "th", "tr", "uk", "ur", "vi", "cy",
+            "af-ZA",
+            "ar-SA",
+            "hy-AM",
+            "az-AZ",
+            "be-BY",
+            "bs-BA",
+            "bg-BG",
+            "ca-ES",
+            "zh-CN",
+            "hr-HR",
+            "cs-CZ",
+            "da-DK",
+            "nl-NL",
+            "en-US",
+            "et-EE",
+            "fi-FI",
+            "fr-FR",
+            "gl-ES",
+            "de-DE",
+            "el-GR",
+            "he-IL",
+            "hi-IN",
+            "hu-HU",
+            "is-IS",
+            "id-ID",
+            "it-IT",
+            "ja-JP",
+            "kn-IN",
+            "kk-KZ",
+            "ko-KR",
+            "lv-LV",
+            "lt-LT",
+            "mk-MK",
+            "ms-MY",
+            "mr-IN",
+            "mi-NZ",
+            "ne-NP",
+            "no-NO",
+            "fa-IR",
+            "pl-PL",
+            "pt-PT",
+            "ro-RO",
+            "ru-RU",
+            "sr-RS",
+            "sk-SK",
+            "sl-SI",
+            "es-ES",
+            "sw-KE",
+            "sv-SE",
+            "fil-PH",
+            "ta-IN",
+            "th-TH",
+            "tr-TR",
+            "uk-UA",
+            "ur-PK",
+            "vi-VN",
+            "cy-GB",
         ]
 
     @property

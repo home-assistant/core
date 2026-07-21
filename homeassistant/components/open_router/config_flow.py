@@ -1,15 +1,11 @@
 """Config flow for OpenRouter integration."""
 
 import logging
+from types import SimpleNamespace
 from typing import Any, override
 
-from types import SimpleNamespace
-
-from python_open_router import (
-    OpenRouterClient,
-    OpenRouterError,
-    SupportedParameter,
-)
+from aiohttp import ClientError
+from python_open_router import OpenRouterClient, OpenRouterError, SupportedParameter
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -40,6 +36,7 @@ from .const import (
     CONF_TTS_VOICE,
     CONF_WEB_SEARCH,
     DOMAIN,
+    FALLBACK_TTS_VOICES,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_TTS_MODEL,
@@ -123,9 +120,7 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         models = await client.get_models()
         self.models = {model.id: model for model in models}
 
-    async def _get_models_by_modality(
-        self, output_modalities: str
-    ) -> None:
+    async def _get_models_by_modality(self, output_modalities: str) -> None:
         """Fetch models from OpenRouter filtered by output modality.
 
         Uses the OpenRouter API's output_modalities query parameter:
@@ -133,18 +128,23 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         - "transcription" for STT models
 
         Models are stored as SimpleNamespace objects with id and name attributes.
+
+        The python_open_router client does not expose the output_modalities
+        filter, so the request is made directly; connection and HTTP errors are
+        re-raised as OpenRouterError to match the client's contract.
         """
         entry = self._get_entry()
         session = async_get_clientsession(self.hass)
-        url = (
-            f"{OPENROUTER_API_BASE}/models?output_modalities={output_modalities}"
-        )
+        url = f"{OPENROUTER_API_BASE}/models?output_modalities={output_modalities}"
         headers = {
             "Authorization": f"Bearer {entry.data[CONF_API_KEY]}",
         }
-        async with session.get(url, headers=headers) as response:
-            response.raise_for_status()
-            data = await response.json()
+        try:
+            async with session.get(url, headers=headers) as response:
+                response.raise_for_status()
+                data = await response.json()
+        except ClientError as err:
+            raise OpenRouterError("Error communicating with OpenRouter") from err
         self.models = {
             model_data["id"]: SimpleNamespace(
                 id=model_data["id"],
@@ -345,8 +345,11 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
         )
 
 
-class TtsFlowHandler(OpenRouterSubentryFlowHandler):
-    """Handle TTS subentry flow."""
+class _ModelSubentryFlowHandler(OpenRouterSubentryFlowHandler):
+    """Shared model-selection subentry flow for the TTS and STT services."""
+
+    output_modality: str
+    recommended_model: str
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -361,17 +364,74 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to create a TTS service."""
+        """User flow to create a service."""
         self.options = {}
         return await self.async_step_init(user_input)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Handle reconfiguration of a TTS service."""
+        """Handle reconfiguration of a service."""
         self.options = self._get_reconfigure_subentry().data.copy()
         return await self.async_step_init(user_input)
 
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle the model-selection step, implemented per service."""
+        raise NotImplementedError
+
+    async def _async_model_selection_form(self) -> SubentryFlowResult:
+        """Show the model-selection form for the configured output modality."""
+        try:
+            await self._get_models_by_modality(self.output_modality)
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        models = [
+            SelectOptionDict(value=model.id, label=model.name)
+            for model in self.models.values()
+        ]
+
+        # Default to the first available model; the recommended model may not
+        # be returned by the output_modalities filter.
+        stored_default = self.options.get(CONF_MODEL)
+        if stored_default and any(m["value"] == stored_default for m in models):
+            default_model = stored_default
+        elif models:
+            default_model = models[0]["value"]
+        else:
+            default_model = self.recommended_model
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL,
+                        default=default_model,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=models,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
+                        ),
+                    ),
+                }
+            ),
+        )
+
+
+class TtsFlowHandler(_ModelSubentryFlowHandler):
+    """Handle TTS subentry flow."""
+
+    output_modality = "speech"
+    recommended_model = RECOMMENDED_TTS_MODEL
+
+    @override
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -383,55 +443,11 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
             self.options[CONF_MODEL] = user_input[CONF_MODEL]
             selected_model = self.models.get(user_input[CONF_MODEL])
             self.options["supported_voices"] = (
-                selected_model.supported_voices
-                if selected_model is not None
-                else None
+                selected_model.supported_voices if selected_model is not None else None
             )
             return await self.async_step_voice()
 
-        try:
-            await self._get_models_by_modality("speech")
-        except OpenRouterError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        tts_models = [
-            SelectOptionDict(value=model.id, label=model.name)
-            for model in self.models.values()
-        ]
-
-        # Default to the first available model. The recommended model may
-        # not be in the list (e.g. openai/gpt-4o-mini-tts is not returned
-        # by the speech output_modalities filter).
-        stored_default = self.options.get(CONF_MODEL)
-        if stored_default and any(
-            m["value"] == stored_default for m in tts_models
-        ):
-            default_model = stored_default
-        elif tts_models:
-            default_model = tts_models[0]["value"]
-        else:
-            default_model = RECOMMENDED_TTS_MODEL
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MODEL,
-                        default=default_model,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=tts_models,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            sort=True,
-                        ),
-                    ),
-                }
-            ),
-        )
+        return await self._async_model_selection_form()
 
     async def async_step_voice(
         self, user_input: dict[str, Any] | None = None
@@ -457,22 +473,13 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
         voices: list[SelectOptionDict]
         model_voices = self.options.get("supported_voices")
         if model_voices:
-            voices = [
-                SelectOptionDict(value=v, label=v)
-                for v in model_voices
-            ]
-            default_voice = self.options.get(
-                CONF_TTS_VOICE, model_voices[0]
-            )
+            voices = [SelectOptionDict(value=v, label=v) for v in model_voices]
+            default_voice = self.options.get(CONF_TTS_VOICE, model_voices[0])
         else:
             voices = [
-                SelectOptionDict(value=v, label=v.title())
-                for v in ("alloy", "ash", "ballad", "coral", "echo", "fable",
-                          "nova", "onyx", "sage", "shimmer", "verse", "marin", "cedar")
+                SelectOptionDict(value=v, label=v.title()) for v in FALLBACK_TTS_VOICES
             ]
-            default_voice = self.options.get(
-                CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE
-            )
+            default_voice = self.options.get(CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE)
 
         return self.async_show_form(
             step_id="voice",
@@ -489,42 +496,20 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
                     ),
                     vol.Optional(
                         CONF_TTS_SPEED,
-                        default=self.options.get(
-                            CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
-                        ),
+                        default=self.options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
                     ): vol.Coerce(float),
                 }
             ),
         )
 
 
-class SttFlowHandler(OpenRouterSubentryFlowHandler):
+class SttFlowHandler(_ModelSubentryFlowHandler):
     """Handle STT subentry flow."""
 
-    def __init__(self) -> None:
-        """Initialize the subentry flow."""
-        super().__init__()
-        self.options: dict[str, Any] = {}
+    output_modality = "transcription"
+    recommended_model = RECOMMENDED_STT_MODEL
 
-    @property
-    def _is_new(self) -> bool:
-        """Return if this is a new subentry."""
-        return self.source == SOURCE_USER
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """User flow to create an STT service."""
-        self.options = {}
-        return await self.async_step_init(user_input)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Handle reconfiguration of an STT service."""
-        self.options = self._get_reconfigure_subentry().data.copy()
-        return await self.async_step_init(user_input)
-
+    @override
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -533,60 +518,14 @@ class SttFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            model_name = self.models.get(
-                user_input[CONF_MODEL],
-            )
+            model_name = self.models.get(user_input[CONF_MODEL])
             title = model_name.name if model_name else user_input[CONF_MODEL]
             if self._is_new:
-                return self.async_create_entry(
-                    title=title,
-                    data=user_input,
-                )
+                return self.async_create_entry(title=title, data=user_input)
             return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,
             )
 
-        try:
-            await self._get_models_by_modality("transcription")
-        except OpenRouterError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        stt_models = [
-            SelectOptionDict(value=model.id, label=model.name)
-            for model in self.models.values()
-        ]
-
-        # Default to the first available model if the stored/recommended
-        # one is not in the list.
-        stored_default = self.options.get(CONF_MODEL)
-        if stored_default and any(
-            m["value"] == stored_default for m in stt_models
-        ):
-            default_model = stored_default
-        elif stt_models:
-            default_model = stt_models[0]["value"]
-        else:
-            default_model = RECOMMENDED_STT_MODEL
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MODEL,
-                        default=default_model,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=stt_models,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            sort=True,
-                        ),
-                    ),
-                }
-            ),
-        )
+        return await self._async_model_selection_form()

@@ -118,27 +118,15 @@
         },
         "voice": {
           "data": {
-            "tts_voice": "Voice",
-            "tts_speed": "Speed"
+            "tts_speed": "Speed",
+            "tts_voice": "Voice"
           },
           "data_description": {
-            "tts_voice": "The voice to use for speech synthesis. Available voices depend on the model.",
-            "tts_speed": "Speed of the generated speech. Not all models support this setting."
+            "tts_speed": "Speed of the generated speech. Not all models support this setting.",
+            "tts_voice": "The voice to use for speech synthesis. Available voices depend on the model."
           },
           "description": "Configure voice and speech options"
         }
-      }
-    }
-  },
-  "entity": {
-    "stt": {
-      "openrouter_stt": {
-        "name": "OpenRouter"
-      }
-    },
-    "tts": {
-      "openrouter_tts": {
-        "name": "OpenRouter"
       }
     }
   }

@@ -22,6 +22,7 @@ from . import OpenRouterConfigEntry
 from .const import (
     CONF_TTS_SPEED,
     CONF_TTS_VOICE,
+    FALLBACK_TTS_VOICES,
     RECOMMENDED_TTS_SPEED,
     RECOMMENDED_TTS_VOICE,
 )
@@ -29,30 +30,9 @@ from .entity import OpenRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Some providers/models may not expose voices via the API (indicated by
-# supported_voices: None), so we maintain a standard OpenAI-compatible
-# fallback list for those.
-_FALLBACK_VOICES = [
-    Voice("alloy", "Alloy"),
-    Voice("ash", "Ash"),
-    Voice("ballad", "Ballad"),
-    Voice("coral", "Coral"),
-    Voice("echo", "Echo"),
-    Voice("fable", "Fable"),
-    Voice("nova", "Nova"),
-    Voice("onyx", "Onyx"),
-    Voice("sage", "Sage"),
-    Voice("shimmer", "Shimmer"),
-    Voice("verse", "Verse"),
-    Voice("marin", "Marin"),
-    Voice("cedar", "Cedar"),
-]
-
-
-def _build_voice_list(voice_ids: list[str]) -> list[Voice]:
-    """Build a list of Voice objects from voice ID strings."""
-    return [Voice(v, v) for v in voice_ids]
-
+# Voices offered when a model does not expose its own voices via the API
+# (supported_voices is None).
+_FALLBACK_VOICES = [Voice(v, v.title()) for v in FALLBACK_TTS_VOICES]
 
 _SUPPORTED_FORMATS = ["mp3", "pcm", "opus", "aac", "flac", "wav"]
 
@@ -78,25 +58,67 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
 
     _attr_supported_options = [ATTR_VOICE, ATTR_PREFERRED_FORMAT]
     _attr_supported_languages = [
-        "af-ZA", "ar-SA", "hy-AM", "az-AZ", "be-BY", "bs-BA", "bg-BG",
-        "ca-ES", "zh-CN", "hr-HR", "cs-CZ", "da-DK", "nl-NL", "en-US",
-        "et-EE", "fi-FI", "fr-FR", "gl-ES", "de-DE", "el-GR", "he-IL",
-        "hi-IN", "hu-HU", "is-IS", "id-ID", "it-IT", "ja-JP", "kn-IN",
-        "kk-KZ", "ko-KR", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "mr-IN",
-        "mi-NZ", "ne-NP", "no-NO", "fa-IR", "pl-PL", "pt-PT", "ro-RO",
-        "ru-RU", "sr-RS", "sk-SK", "sl-SI", "es-ES", "sw-KE", "sv-SE",
-        "fil-PH", "ta-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "vi-VN",
+        "af-ZA",
+        "ar-SA",
+        "hy-AM",
+        "az-AZ",
+        "be-BY",
+        "bs-BA",
+        "bg-BG",
+        "ca-ES",
+        "zh-CN",
+        "hr-HR",
+        "cs-CZ",
+        "da-DK",
+        "nl-NL",
+        "en-US",
+        "et-EE",
+        "fi-FI",
+        "fr-FR",
+        "gl-ES",
+        "de-DE",
+        "el-GR",
+        "he-IL",
+        "hi-IN",
+        "hu-HU",
+        "is-IS",
+        "id-ID",
+        "it-IT",
+        "ja-JP",
+        "kn-IN",
+        "kk-KZ",
+        "ko-KR",
+        "lv-LV",
+        "lt-LT",
+        "mk-MK",
+        "ms-MY",
+        "mr-IN",
+        "mi-NZ",
+        "ne-NP",
+        "no-NO",
+        "fa-IR",
+        "pl-PL",
+        "pt-PT",
+        "ro-RO",
+        "ru-RU",
+        "sr-RS",
+        "sk-SK",
+        "sl-SI",
+        "es-ES",
+        "sw-KE",
+        "sv-SE",
+        "fil-PH",
+        "ta-IN",
+        "th-TH",
+        "tr-TR",
+        "uk-UA",
+        "ur-PK",
+        "vi-VN",
         "cy-GB",
     ]
     _attr_default_language = "en-US"
 
-    _attr_has_entity_name = False
-    _attr_translation_key = "openrouter_tts"
-
-    def __init__(self, entry: OpenRouterConfigEntry, subentry) -> None:
-        """Initialize the entity."""
-        super().__init__(entry, subentry)
-        self._attr_name = subentry.title
+    _attr_name = None
 
     @callback
     @override
@@ -104,7 +126,7 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
         """Return a list of supported voices for a language."""
         voice_ids = self.subentry.data.get("supported_voices")
         if voice_ids:
-            return _build_voice_list(voice_ids)
+            return [Voice(v, v) for v in voice_ids]
         return _FALLBACK_VOICES
 
     @cached_property

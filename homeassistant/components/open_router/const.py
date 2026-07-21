@@ -19,6 +19,24 @@ RECOMMENDED_TTS_VOICE = "alloy"
 RECOMMENDED_STT_MODEL = "openai/whisper-large-v3"
 RECOMMENDED_WEB_SEARCH = False
 
+# OpenAI-compatible voices offered when a model does not expose its own
+# voices via the API (supported_voices is None).
+FALLBACK_TTS_VOICES = (
+    "alloy",
+    "ash",
+    "ballad",
+    "coral",
+    "echo",
+    "fable",
+    "nova",
+    "onyx",
+    "sage",
+    "shimmer",
+    "verse",
+    "marin",
+    "cedar",
+)
+
 DEFAULT_STT_NAME = "OpenRouter STT"
 DEFAULT_TTS_NAME = "OpenRouter TTS"
 
