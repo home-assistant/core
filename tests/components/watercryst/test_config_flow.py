@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from httpx import HTTPStatusError, Request, Response
+from httpx import HTTPStatusError, Request, RequestError, Response
 import pytest
 
 from homeassistant import config_entries
@@ -47,7 +47,6 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test duplicate entry handling."""
 
-    # Add a preexisting identical config entry to hass.
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="2025001395300149",
@@ -98,7 +97,14 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
                 request=Request(method="GET", url="v1/state"),
                 response=Response(status_code=500),
             ),
-            "unknown",
+            "cannot_connect",
+        ),
+        (
+            RequestError(
+                message="",
+                request=Request(method="GET", url="v1/state"),
+            ),
+            "cannot_connect",
         ),
         (Exception, "unknown"),
     ],

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from httpx import HTTPStatusError
+from httpx import HTTPStatusError, RequestError
 from pyocat import AsyncApiClient, AsyncAuth
 import voluptuous as vol
 
@@ -55,7 +55,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
             case 403:
                 raise ApiDisabled from err
             case _:
-                raise UnknownError from err
+                raise
+    except RequestError:
+        raise
 
     return info
 
@@ -87,9 +89,10 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except WrongDeviceSerial:
                 errors["base"] = "wrong_device_serial"
-            except UnknownError:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            except HTTPStatusError:
+                errors["base"] = "cannot_connect"
+            except RequestError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -115,10 +118,6 @@ class DeviceOffline(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class UnknownError(HomeAssistantError):
-    """Error to indicate any other unknown error response."""
 
 
 class WrongDeviceSerial(HomeAssistantError):

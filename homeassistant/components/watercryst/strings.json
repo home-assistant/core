@@ -5,6 +5,7 @@
     },
     "error": {
       "api_disabled": "API endpoint disabled",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "device_offline": "The device is offline",
       "invalid_auth": "Invalid authentication",
       "unknown": "[%key:common::config_flow::error::unknown%]",
