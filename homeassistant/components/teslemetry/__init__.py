@@ -266,9 +266,13 @@ def _ensure_subentry(
     """Return the subentry id for unique_id, creating or updating it as needed."""
     for subentry in entry.subentries.values():
         if subentry.subentry_type == subentry_type and subentry.unique_id == unique_id:
-            if subentry.title != title or dict(subentry.data) != data:
+            # Merge over the existing data so keys added by a pairing flow (a
+            # paired gateway host/password or Bluetooth address) are preserved
+            # across reloads.
+            merged = {**subentry.data, **data}
+            if subentry.title != title or dict(subentry.data) != merged:
                 hass.config_entries.async_update_subentry(
-                    entry, subentry, title=title, data=data
+                    entry, subentry, title=title, data=merged
                 )
             return subentry.subentry_id
 

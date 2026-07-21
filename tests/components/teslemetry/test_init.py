@@ -255,6 +255,27 @@ async def test_subentry_title_updates_when_renamed(hass: HomeAssistant) -> None:
     assert entry.subentries[vehicle_subentry].title == "Renamed"
 
 
+async def test_subentry_reload_preserves_pairing_data(hass: HomeAssistant) -> None:
+    """Test a reload merges in refreshed data instead of dropping pairing keys.
+
+    A pairing flow may store extra keys (e.g. a paired host/address) on a
+    subentry that setup does not itself produce; setup must not wipe those
+    keys out on the next reload.
+    """
+    entry = await setup_platform(hass)
+    vehicle_subentry_id = _subentry_id(entry, "vehicle", VEHICLE_VIN)
+    hass.config_entries.async_update_subentry(
+        entry,
+        entry.subentries[vehicle_subentry_id],
+        data={**entry.subentries[vehicle_subentry_id].data, "paired_address": "AA:BB"},
+    )
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.subentries[vehicle_subentry_id].data["paired_address"] == "AA:BB"
+
+
 @pytest.mark.parametrize(("side_effect", "state"), VEHICLE_ERRORS)
 async def test_vehicle_refresh_error(
     hass: HomeAssistant,
