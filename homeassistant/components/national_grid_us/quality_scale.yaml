@@ -52,10 +52,10 @@ rules:
   diagnostics: todo
   discovery:
     status: exempt
-    comment: The integration is a cloud service and does not support discovery.
+    comment: The integration is for a cloud service, and does not have a discoverable local device.
   discovery-update-info:
     status: exempt
-    comment: The integration is a cloud service and does not support discovery.
+    comment: The integration is for a cloud service, and does not have a discoverable local device.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
