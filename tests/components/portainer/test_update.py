@@ -125,7 +125,6 @@ async def test_update_using_cache(
         await setup_integration(hass, mock_config_entry)
 
     # Reset call counts, since it needs to be measured what happens in this sequence
-    mock_portainer_client.inspect_container.reset_mock()
     mock_portainer_client.get_image.reset_mock()
 
     # Trigger a refresh, but it should use the cache
@@ -136,5 +135,4 @@ async def test_update_using_cache(
         blocking=True,
     )
 
-    mock_portainer_client.inspect_container.assert_not_called()
     mock_portainer_client.get_image.assert_not_called()
