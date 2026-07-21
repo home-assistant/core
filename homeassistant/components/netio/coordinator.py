@@ -109,7 +109,7 @@ class NetioDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Netio.OUTPUT]])
         return {output.ID: output for output in outputs}
 
     async def async_set_output(self, output_id: int, state: bool) -> None:
-        """Set the state of an output and refresh."""
+        """Set the state of an output."""
         action = Netio.ACTION.ON if state else Netio.ACTION.OFF
         try:
             await self.hass.async_add_executor_job(
@@ -119,4 +119,11 @@ class NetioDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Netio.OUTPUT]])
             raise HomeAssistantError(
                 f"Error setting output {output_id}: {err}"
             ) from err
-        await self.async_request_refresh()
+
+        # The device applies output actions asynchronously, so polling right
+        # away would still report the old state. Update the data
+        # optimistically instead and let the next poll reconcile.
+        if (output := self.data.get(output_id)) is not None:
+            self.async_set_updated_data(
+                {**self.data, output_id: output._replace(State=int(state))}
+            )

@@ -68,25 +68,43 @@ async def test_switch_turn_on_off(
     await setup_integration(hass, mock_config_entry)
     device = mock_netio.return_value
 
-    # Let the device report the new output state on the post-action refresh
-    new_state = int(expected_state == STATE_ON)
-    device.get_outputs.return_value = [
-        output._replace(State=new_state) if output_id == output.ID else output
-        for output in device.get_outputs.return_value
-    ]
-
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     device.set_output.assert_called_once_with(
         output_id, getattr(mock_netio.ACTION, action_name)
     )
+    # The state updates optimistically without waiting for the next poll
     assert hass.states.get(entity_id).state == expected_state
+
+
+async def test_switch_optimistic_state_reconciled(
+    hass: HomeAssistant,
+    mock_netio: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the next poll corrects the optimistic state if the device disagrees."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_OUTPUT_1},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_OUTPUT_1).state == STATE_OFF
+
+    # The device still reports the output as on at the next poll
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_OUTPUT_1).state == STATE_ON
 
 
 async def test_switch_action_error(
