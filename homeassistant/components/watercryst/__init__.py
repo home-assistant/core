@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         identifiers={(DOMAIN, bsn)},
         connections=connections,
         manufacturer="WATERCryst",
-        model=f"{info.line} {info.series}",
+        model=" ".join(part for part in (info.line, info.series) if part) or None,
         model_id=info.device_type_number,
         name=info.name,
         serial_number=bsn,
