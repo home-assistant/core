@@ -18,8 +18,8 @@ async def async_get_config_entry_diagnostics(
     device_registry = dr.async_get(hass)
     device = cast(
         dr.DeviceEntry,
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.data[CONF_GATEWAY_ID]), entry.entry_id
         ),
     )
 

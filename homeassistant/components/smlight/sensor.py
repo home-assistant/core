@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import UPTIME_DEVIATION
+from .const import UPTIME_DEVIATION, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -159,7 +159,8 @@ async def async_setup_entry(
 
     entities.extend(
         SmInfoSensorEntity(coordinator, RADIO_INFO, idx)
-        for idx, _ in enumerate(coordinator.data.info.radios)
+        for idx, radio in enumerate(coordinator.data.info.radios)
+        if radio.zb_type not in ZWAVE_TYPES
     )
 
     if coordinator.data.sensors.zb_temp2 is not None:

@@ -100,9 +100,6 @@ def _button_event(
     *,
     event_id: str = "evt-1",
     button: EventButtonType | None = EventButtonType.ARM,
-    event_type: EventType = EventType.SENSOR_BUTTON_PRESSED,
-    device_id: str | None = None,
-    device_mac: str | None = None,
     now: datetime | None = None,
 ) -> ProtectEvent:
     """Build a button-press ``ProtectEvent`` matching a real USL-FOB capture.
@@ -114,10 +111,10 @@ def _button_event(
     when = now or datetime(2026, 1, 1)
     return ProtectEvent(
         id=event_id,
-        type=event_type,
+        type=EventType.SENSOR_BUTTON_PRESSED,
         channel=ProtectEventChannel.SENSOR,
-        device_id=fob.id if device_id is None else device_id,
-        device_mac=fob.mac if device_mac is None else device_mac,
+        device_id=fob.id,
+        device_mac=fob.mac,
         start=when,
         end=when,
         metadata=None if button is None else PublicEventMetadata(button=button),

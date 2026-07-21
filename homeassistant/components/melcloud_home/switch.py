@@ -5,11 +5,6 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome
-from aiomelcloudhome.exceptions import (
-    MelCloudHomeAuthenticationError,
-    MelCloudHomeConnectionError,
-    MelCloudHomeTimeoutError,
-)
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -18,10 +13,9 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .common import async_setup_unit_entities, perform_action, unit_ids
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
@@ -29,144 +23,83 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class ATASwitchEntityDescription(SwitchEntityDescription):
-    """Class to hold MELCloud Home ATA switch description."""
+class MelCloudHomeSwitchEntityDescription[_UnitT: ATAUnit | ATWUnit](
+    SwitchEntityDescription
+):
+    """Class to hold MELCloud Home switch description."""
 
-    available_fn: Callable[[ATAUnit], bool]
-    is_on_fn: Callable[[ATAUnit], bool | None]
-    turn_on_fn: Callable[[MELCloudHome, ATAUnit], Coroutine[Any, Any, None]]
-    turn_off_fn: Callable[[MELCloudHome, ATAUnit], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True, kw_only=True)
-class ATWSwitchEntityDescription(SwitchEntityDescription):
-    """Class to hold MELCloud Home ATW switch description."""
-
-    available_fn: Callable[[ATWUnit], bool]
-    is_on_fn: Callable[[ATWUnit], bool | None]
-    turn_on_fn: Callable[[MELCloudHome, ATWUnit], Coroutine[Any, Any, None]]
-    turn_off_fn: Callable[[MELCloudHome, ATWUnit], Coroutine[Any, Any, None]]
+    available_fn: Callable[[_UnitT], bool]
+    is_on_fn: Callable[[_UnitT], bool | None]
+    turn_on_fn: Callable[[MELCloudHome, _UnitT], Coroutine[Any, Any, None]]
+    turn_off_fn: Callable[[MELCloudHome, _UnitT], Coroutine[Any, Any, None]]
 
 
-ATA_SWITCHES: tuple[ATASwitchEntityDescription, ...] = (
-    ATASwitchEntityDescription(
-        key="frost_protection",
-        translation_key="frost_protection",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-        available_fn=lambda unit: unit.frost_protection is not None,
-        is_on_fn=lambda unit: (
-            unit.frost_protection.enabled if unit.frost_protection else None
+def _switch_descriptions[_UnitT: ATAUnit | ATWUnit](
+    unit_type: type[_UnitT],
+) -> tuple[MelCloudHomeSwitchEntityDescription[_UnitT], ...]:
+    """Return the switch descriptions for a unit type."""
+    return (
+        MelCloudHomeSwitchEntityDescription(
+            key="frost_protection",
+            translation_key="frost_protection",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+            available_fn=lambda unit: unit.frost_protection is not None,
+            is_on_fn=lambda unit: (
+                unit.frost_protection.enabled if unit.frost_protection else None
+            ),
+            turn_on_fn=lambda client, unit: client.set_frost_protection(
+                enabled=True,
+                min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
+                max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
+                **unit_ids(unit),
+            ),
+            turn_off_fn=lambda client, unit: client.set_frost_protection(
+                enabled=False,
+                min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
+                max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
+                **unit_ids(unit),
+            ),
         ),
-        turn_on_fn=lambda client, unit: client.set_frost_protection(
-            enabled=True,
-            min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
-            max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
-            ata_unit_ids=[unit.id],
+        MelCloudHomeSwitchEntityDescription(
+            key="overheat_protection",
+            translation_key="overheat_protection",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+            available_fn=lambda unit: unit.overheat_protection is not None,
+            is_on_fn=lambda unit: (
+                unit.overheat_protection.enabled if unit.overheat_protection else None
+            ),
+            turn_on_fn=lambda client, unit: client.set_overheat_protection(
+                enabled=True,
+                min_temp=unit.overheat_protection.min
+                if unit.overheat_protection
+                else 0.0,
+                max_temp=unit.overheat_protection.max
+                if unit.overheat_protection
+                else 0.0,
+                **unit_ids(unit),
+            ),
+            turn_off_fn=lambda client, unit: client.set_overheat_protection(
+                enabled=False,
+                min_temp=unit.overheat_protection.min
+                if unit.overheat_protection
+                else 0.0,
+                max_temp=unit.overheat_protection.max
+                if unit.overheat_protection
+                else 0.0,
+                **unit_ids(unit),
+            ),
         ),
-        turn_off_fn=lambda client, unit: client.set_frost_protection(
-            enabled=False,
-            min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
-            max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
-            ata_unit_ids=[unit.id],
-        ),
-    ),
-    ATASwitchEntityDescription(
-        key="overheat_protection",
-        translation_key="overheat_protection",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-        available_fn=lambda unit: unit.overheat_protection is not None,
-        is_on_fn=lambda unit: (
-            unit.overheat_protection.enabled if unit.overheat_protection else None
-        ),
-        turn_on_fn=lambda client, unit: client.set_overheat_protection(
-            enabled=True,
-            min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
-            max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
-            ata_unit_ids=[unit.id],
-        ),
-        turn_off_fn=lambda client, unit: client.set_overheat_protection(
-            enabled=False,
-            min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
-            max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
-            ata_unit_ids=[unit.id],
-        ),
-    ),
+    )
+
+
+ATA_SWITCHES: tuple[MelCloudHomeSwitchEntityDescription[ATAUnit], ...] = (
+    _switch_descriptions(ATAUnit)
 )
-
-ATW_SWITCHES: tuple[ATWSwitchEntityDescription, ...] = (
-    ATWSwitchEntityDescription(
-        key="frost_protection",
-        translation_key="frost_protection",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-        available_fn=lambda unit: unit.frost_protection is not None,
-        is_on_fn=lambda unit: (
-            unit.frost_protection.enabled if unit.frost_protection else None
-        ),
-        turn_on_fn=lambda client, unit: client.set_frost_protection(
-            enabled=True,
-            min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
-            max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
-            atw_unit_ids=[unit.id],
-        ),
-        turn_off_fn=lambda client, unit: client.set_frost_protection(
-            enabled=False,
-            min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
-            max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
-            atw_unit_ids=[unit.id],
-        ),
-    ),
-    ATWSwitchEntityDescription(
-        key="overheat_protection",
-        translation_key="overheat_protection",
-        device_class=SwitchDeviceClass.SWITCH,
-        entity_category=EntityCategory.CONFIG,
-        available_fn=lambda unit: unit.overheat_protection is not None,
-        is_on_fn=lambda unit: (
-            unit.overheat_protection.enabled if unit.overheat_protection else None
-        ),
-        turn_on_fn=lambda client, unit: client.set_overheat_protection(
-            enabled=True,
-            min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
-            max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
-            atw_unit_ids=[unit.id],
-        ),
-        turn_off_fn=lambda client, unit: client.set_overheat_protection(
-            enabled=False,
-            min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
-            max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
-            atw_unit_ids=[unit.id],
-        ),
-    ),
+ATW_SWITCHES: tuple[MelCloudHomeSwitchEntityDescription[ATWUnit], ...] = (
+    _switch_descriptions(ATWUnit)
 )
-
-
-async def _perform_action(
-    coordinator: MelCloudHomeCoordinator,
-    coroutine: Coroutine[Any, Any, None],
-) -> None:
-    """Perform a MELCloud Home action with error handling and coordinator refresh."""
-    try:
-        await coroutine
-    except MelCloudHomeAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-        ) from err
-    except MelCloudHomeConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except MelCloudHomeTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect",
-        ) from err
-    else:
-        await coordinator.async_request_refresh()
 
 
 async def async_setup_entry(
@@ -175,38 +108,32 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home switches."""
-    coordinator = entry.runtime_data
 
-    def _async_add_new_ata_units(units: list[ATAUnit]) -> None:
-        async_add_entities(
-            ATASwitch(coordinator, entity_description, unit)
+    async_setup_unit_entities(
+        entry.runtime_data,
+        async_add_entities,
+        lambda units: (
+            ATASwitch(entry.runtime_data, entity_description, unit)
             for entity_description in ATA_SWITCHES
             for unit in units
-        )
-
-    def _async_add_new_atw_units(units: list[ATWUnit]) -> None:
-        async_add_entities(
-            ATWSwitch(coordinator, entity_description, unit)
+        ),
+        lambda units: (
+            ATWSwitch(entry.runtime_data, entity_description, unit)
             for entity_description in ATW_SWITCHES
             for unit in units
-        )
-
-    coordinator.new_ata_callbacks.append(_async_add_new_ata_units)
-    coordinator.new_atw_callbacks.append(_async_add_new_atw_units)
-
-    _async_add_new_ata_units(list(coordinator.ata_units.values()))
-    _async_add_new_atw_units(list(coordinator.atw_units.values()))
+        ),
+    )
 
 
 class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
     """Representation of a MELCloud Home ATA switch."""
 
-    entity_description: ATASwitchEntityDescription
+    entity_description: MelCloudHomeSwitchEntityDescription[ATAUnit]
 
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
-        entity_description: ATASwitchEntityDescription,
+        entity_description: MelCloudHomeSwitchEntityDescription[ATAUnit],
         unit: ATAUnit,
     ) -> None:
         """Initialize the entity."""
@@ -229,7 +156,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
         )
@@ -237,7 +164,7 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),
         )
@@ -246,12 +173,12 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
 class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
     """Representation of a MELCloud Home ATW switch."""
 
-    entity_description: ATWSwitchEntityDescription
+    entity_description: MelCloudHomeSwitchEntityDescription[ATWUnit]
 
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
-        entity_description: ATWSwitchEntityDescription,
+        entity_description: MelCloudHomeSwitchEntityDescription[ATWUnit],
         unit: ATWUnit,
     ) -> None:
         """Initialize the entity."""
@@ -274,7 +201,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_on_fn(self.coordinator.client, self.unit),
         )
@@ -282,7 +209,7 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the protection."""
-        await _perform_action(
+        await perform_action(
             self.coordinator,
             self.entity_description.turn_off_fn(self.coordinator.client, self.unit),
         )

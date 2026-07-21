@@ -92,7 +92,7 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_public_event(
-                self.device.mac, EventType.RING, self._async_ring_event
+                self.device.id, EventType.RING, self._async_ring_event
             )
         )
 
@@ -388,7 +388,7 @@ class ProtectDeviceSmartDetectEventEntity(
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_public_event(
-                self.device.mac, EventType.SMART_DETECT, self._async_smart_detect_event
+                self.device.id, EventType.SMART_DETECT, self._async_smart_detect_event
             )
         )
 
@@ -400,10 +400,6 @@ class ProtectDeviceSmartDetectEventEntity(
             self._trigger_event(event_types[0], {ATTR_EVENT_ID: event.id})
             self.async_write_ha_state()
 
-
-# A fob button press arrives as a ``sensorButtonPressed`` event whose ``device``
-# is the fob and whose ``metadata.button`` is the pressed button.
-_FOB_BUTTON_EVENT_TYPES = (EventType.SENSOR_BUTTON_PRESSED,)
 
 # The fob does not advertise its buttons (``feature_flags.buttons`` is empty), so
 # the entity declares the whole vocabulary. Built from ``EventButtonType`` (the
@@ -436,12 +432,13 @@ class ProtectFobButtonEventEntity(ProtectFobEntity, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to public key-fob button-press events."""
         await super().async_added_to_hass()
-        for event_type in _FOB_BUTTON_EVENT_TYPES:
-            self.async_on_remove(
-                self.data.async_subscribe_public_event(
-                    self._fob_mac, event_type, self._async_button_event
-                )
+        # A press arrives as a ``sensorButtonPressed`` event whose ``device`` is
+        # the fob and whose ``metadata.button`` is the pressed button.
+        self.async_on_remove(
+            self.data.async_subscribe_public_event(
+                self._fob_id, EventType.SENSOR_BUTTON_PRESSED, self._async_button_event
             )
+        )
 
     @callback
     def _async_button_event(self, event: ProtectEvent) -> None:
