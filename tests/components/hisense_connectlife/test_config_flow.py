@@ -320,9 +320,8 @@ async def test_options_flow_no_coordinator(mock_config_entry, mock_hass) -> None
 
     result = await handler.async_step_init({"refresh_devices": True})
 
-    # When coordinator is None, it will fail but still create entry
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["refresh_devices"] is True
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_coordinator"}
 
 
 @pytest.mark.asyncio
@@ -468,9 +467,8 @@ async def test_options_flow_refresh_token_no_coordinator_error(
 
     result = await handler.async_step_init({"refresh_token": True})
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["refresh_token"] is True
-    # Code always creates entry even with errors
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_coordinator"}
 
 
 @pytest.mark.asyncio
@@ -480,13 +478,7 @@ async def test_options_flow_refresh_devices_exception(
     """Test options flow refresh devices with exception."""
     mock_config_entry.runtime_data = mock_coordinator
 
-    # Mock async_get_devices to raise exception
-    async def mock_get_devices():
-        raise Exception("Test exception")  # noqa: TRY002
-
-    type(mock_coordinator.api_client).async_get_devices = property(
-        lambda self: mock_get_devices()
-    )
+    mock_coordinator.async_refresh_all_devices.side_effect = Exception("Test exception")
     mock_hass.config_entries.async_get_known_entry = MagicMock(
         return_value=mock_config_entry
     )

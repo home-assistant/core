@@ -115,7 +115,7 @@ async def entity(hass: HomeAssistant, mock_coordinator, mock_device):
     return entity
 
 
-async def test_climate_initialization(entity) -> None:
+async def test_climate_initialization(entity: HisenseClimate) -> None:
     """Test climate entity initialization."""
     assert entity.unique_id == f"{DEVICE_ID}_climate"
     assert entity.name == "Test AC"

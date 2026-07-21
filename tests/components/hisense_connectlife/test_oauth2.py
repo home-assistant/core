@@ -71,7 +71,9 @@ def oauth_impl(hass: HomeAssistant):
     return HisenseOAuth2Implementation(hass)
 
 
-async def test_token_request_with_expires(oauth_impl) -> None:
+async def test_token_request_with_expires(
+    oauth_impl: HisenseOAuth2Implementation,
+) -> None:
     """Test token request with expires_in → auto add expires_at."""
     test_data = {"grant_type": "authorization_code", "code": "test_code"}
 
@@ -112,7 +114,9 @@ async def test_token_request_with_expires(oauth_impl) -> None:
     assert "redirect_uri" in kwargs["data"]
 
 
-async def test_token_request_no_expires(oauth_impl) -> None:
+async def test_token_request_no_expires(
+    oauth_impl: HisenseOAuth2Implementation,
+) -> None:
     """Test token request without expires_in."""
     test_data = {"grant_type": "refresh_token", "refresh_token": "test"}
 
@@ -132,13 +136,13 @@ async def test_token_request_no_expires(oauth_impl) -> None:
         ),
     ):
         mock_session = MagicMock()
-        mock_session.post = AsyncMock(return_value=mock_resp)
+        mock_session.post.return_value.__aenter__.return_value = mock_resp
         mock_acs.return_value = mock_session
 
         result = await oauth_impl._token_request(test_data)
 
     assert "expires_at" not in result
-    mock_session.post.assert_awaited_once()
+    mock_session.post.assert_called_once()
     _, kwargs = mock_session.post.call_args
     assert kwargs["data"]["grant_type"] == "refresh_token"
     assert kwargs["data"]["refresh_token"] == "test"

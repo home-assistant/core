@@ -59,10 +59,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                         new_token = await implementation.async_refresh_token(token_data)
 
                         if new_token:
-                            _LOGGER.debug(
-                                "Token after refresh: ...%s",
-                                new_token.get("access_token", "")[-10:],
-                            )
+                            _LOGGER.debug("Received refreshed token")
                             # Update token in coordinator
                             coordinator.api_client.oauth_session.token = new_token
                             # Force update config entry data
@@ -167,7 +164,6 @@ class OAuth2FlowHandler(
 
         # User has submitted the form, start OAuth
         self._flow_impl = HisenseOAuth2Implementation(self.hass)
-        self.flow_impl = self._flow_impl
 
         try:
             url = await self._flow_impl.async_generate_authorize_url(self.flow_id)

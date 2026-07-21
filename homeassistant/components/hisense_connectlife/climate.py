@@ -30,7 +30,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 
 from .const import (
@@ -67,7 +67,7 @@ HA_FAN_CONST_TO_STR = {v: k for k, v in HA_FAN_STR_TO_CONST.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hisense AC climate platform."""
     coordinator: HisenseACPluginDataUpdateCoordinator | None = getattr(
@@ -148,7 +148,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_swing_mode = SWING_OFF
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_id)},
+            identifiers={(DOMAIN, device.device_id or device.puid)},
             name=device.name,
             manufacturer="Hisense",
             model=f"{device.type_name} ({device.feature_name})",
@@ -351,7 +351,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self._device is not None and self._device.is_online
+        return super().available and self._device is not None and self._device.is_online
 
     @property
     def current_temperature(self) -> float | None:
@@ -477,10 +477,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             return SWING_VERTICAL
         if (not vertical_swing or vertical_swing == "0") and horizontal_swing == "1":
             return SWING_HORIZONTAL
-        # elif vertical_swing == "1" and horizontal_swing == "1":
-        #     return SWING_BOTH
-
-        # Default to off if we can't determine the mode
         return SWING_OFF
 
     @property
@@ -727,8 +723,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                 puid=device_id,
                 properties={StatusKey.POWER: "1"},
             )
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Failed to turn on: %s", err)
+        except Exception as err:
+            raise UpdateFailed(f"Failed to turn on: {err}") from err
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
@@ -752,7 +748,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         device = self._coordinator.get_device(device_id)
         if not device:
             _LOGGER.warning("Device %s not found during sensor update", device_id)
-            return
         # Only handle coordinator update after timeout
         if time.time() - self._last_command_time >= self.wait_time:
             super()._handle_coordinator_update()

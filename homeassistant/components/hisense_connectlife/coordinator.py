@@ -64,6 +64,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             await self._async_update_data()
         except (TimeoutError, ClientError) as error:
             _LOGGER.error("Error setting up coordinator: %s", error)
+            await self.api_client.async_cleanup()
             return False
 
         return True
@@ -125,7 +126,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.warning("No devices found during refresh")
 
         except (TimeoutError, ClientError) as error:
-            _LOGGER.error("Error refreshing devices: %s", error)
+            raise UpdateFailed(f"Error refreshing devices: {error}") from error
 
     async def async_control_device(
         self, puid: str, properties: dict[str, Any]
