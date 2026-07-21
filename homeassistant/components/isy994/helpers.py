@@ -364,11 +364,8 @@ def _categorize_nodes(
                     continue
                 isy_data.aux_properties[Platform.SENSOR].append((node, control))
 
-        # Add matching parallel platforms without changing primary classification.
-        # Must run before the sensor_identifier override below, since a
-        # SwitchLinc/KeypadLinc forced into Platform.SENSOR by name/path should
-        # still get its event entity -- the two platforms are additive, not
-        # mutually exclusive.
+        # Must run before the sensor_identifier override below -- Platform.EVENT
+        # is additive, not exclusive with a name/path-forced Platform.SENSOR.
         for parallel_platform in NODE_PARALLEL_PLATFORMS:
             if _check_for_node_def(isy_data, node, single_platform=parallel_platform):
                 continue
