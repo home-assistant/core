@@ -6,7 +6,7 @@ from typing import Any, override
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -119,7 +119,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole sensor."""
-    name = entry.data.get(CONF_NAME, entry.title)
+    name = entry.title
     hole_data = entry.runtime_data
     sensors = [
         PiHoleSensor(

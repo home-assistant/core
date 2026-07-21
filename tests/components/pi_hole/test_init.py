@@ -94,6 +94,7 @@ async def test_setup_with_defaults_v5(hass: HomeAssistant) -> None:
     mocked_hole = _create_mocked_hole(api_version=5)
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
+        title="Pi-Hole",
         data={**CONFIG_DATA_DEFAULTS, CONF_API_VERSION: 5, CONF_STATISTICS_ONLY: True},
     )
     entry.add_to_hass(hass)
@@ -147,7 +148,9 @@ async def test_setup_with_defaults_v6(hass: HomeAssistant) -> None:
         api_version=6, has_data=True, incorrect_app_password=False
     )
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
+        domain=pi_hole.DOMAIN,
+        title="Pi-Hole",
+        data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True},
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -223,7 +226,9 @@ async def test_setup_name_config(hass: HomeAssistant) -> None:
     """Tests component setup with a custom name."""
     mocked_hole = _create_mocked_hole(api_version=6)
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"}
+        domain=pi_hole.DOMAIN,
+        title="Custom",
+        data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"},
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -253,7 +258,9 @@ async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONFIG_DATA, CONF_API_VERSION: 5}
+        domain=pi_hole.DOMAIN,
+        title="Pi-Hole",
+        data={**CONFIG_DATA, CONF_API_VERSION: 5},
     )
     entry.add_to_hass(hass)
 
