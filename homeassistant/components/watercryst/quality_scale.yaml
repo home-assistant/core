@@ -1,15 +1,23 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: No custom actions are defined.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
-  docs-conditions: done
-  docs-triggers: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not define custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
