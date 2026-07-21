@@ -705,8 +705,7 @@ async def test_status(
             (
                 {
                     mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
-                        mqttvacuum.DEFAULT_SERVICES
-                        | vacuum.VacuumEntityFeature.BATTERY,
+                        mqttvacuum.DEFAULT_SERVICES,
                         SERVICE_TO_STRING,
                     )
                 },
