@@ -6,6 +6,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiopowerwall import (
+    DEFAULT_GATEWAY_HOST,
     PowerwallAuthenticationError,
     PowerwallConnectionError,
     PowerwallError,
@@ -23,7 +24,11 @@ from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
-from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigSubentry,
+    ConfigSubentryData,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -74,6 +79,21 @@ def _entry_with_powerwall() -> MockConfigEntry:
             )
         ],
     )
+
+
+@pytest.fixture(autouse=True)
+def mock_gateway_discovery() -> Generator[AsyncMock]:
+    """Default gateway-address discovery to no result.
+
+    Keeps every existing subentry test path deterministic now that
+    ``async_step_reconfigure`` calls ``find_gateway_address``. Tests exercising
+    discovery itself override this per-test.
+    """
+    with patch(
+        "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+        new=AsyncMock(return_value=None),
+    ) as mock_find:
+        yield mock_find
 
 
 @pytest.fixture
@@ -538,6 +558,90 @@ async def test_subentry_credentials_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+def _credentials_host_default(result: SubentryFlowResult) -> str:
+    """Return the CONF_HOST field's schema default from a credentials form result."""
+    for key in result["data_schema"].schema:
+        if key == CONF_HOST:
+            return key.default()
+    raise AssertionError("CONF_HOST field not found in credentials schema")
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_subentry_credentials_prefills_discovered_host(
+    hass: HomeAssistant,
+) -> None:
+    """A discovered gateway address pre-fills the credentials CONF_HOST default."""
+    entry = await _setup_energy_site_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    discovered_host = "192.168.1.138"
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            new=AsyncMock(return_value=discovered_host),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
+            new=AsyncMock(return_value=_verified_clients_response()),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert _credentials_host_default(result) == discovered_host
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_subentry_credentials_discovery_fleet_error_falls_back(
+    hass: HomeAssistant,
+) -> None:
+    """A TeslaFleetError during discovery falls back to the default host, no abort."""
+    entry = await _setup_energy_site_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            new=AsyncMock(side_effect=TeslaFleetError()),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
+            new=AsyncMock(return_value=_verified_clients_response()),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert _credentials_host_default(result) == DEFAULT_GATEWAY_HOST
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_subentry_credentials_discovery_none_falls_back(
+    hass: HomeAssistant,
+) -> None:
+    """A None discovery result falls back to the default host, no abort."""
+    entry = await _setup_energy_site_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
+            new=AsyncMock(return_value=_verified_clients_response()),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert _credentials_host_default(result) == DEFAULT_GATEWAY_HOST
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
