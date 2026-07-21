@@ -16,9 +16,8 @@ def mock_config_entry():
 
 @pytest.fixture(autouse=True)
 def mock_api() -> Generator[MagicMock]:
-    """Mock api."""
-    with (
-        patch("librouteros.create_transport"),
-        patch("librouteros.Api.readResponse") as mock_api,
-    ):
-        yield mock_api
+    """Mock the librouteros API instance returned by librouteros.connect."""
+    api_instance = MagicMock()
+
+    with patch("librouteros.connect", return_value=api_instance):
+        yield api_instance
