@@ -231,7 +231,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 )
             except KVS_EXCEPTIONS as err:
                 LOGGER.warning("Failed to send ICE candidate: %s", err)
-                await self.async_close_webrtc_session(session_id)
         else:
             candidates = self._pending_candidates.setdefault(session_id, [])
             candidates.append(candidate)

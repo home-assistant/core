@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import WebRTCAnswer, WebRTCError, async_get_image
+from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -20,9 +21,12 @@ from . import get_device_by_id, setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-def _get_camera_entity(hass: HomeAssistant, entity_id: str):
-    """Helper to retrieve a camera entity from hass data."""
-    return hass.data[Platform.CAMERA].get_entity(entity_id)
+async def setup_camera_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up the integration with only the camera platform."""
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
 
 
 async def test_cameras(
@@ -33,15 +37,12 @@ async def test_cameras(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test camera entities are created correctly."""
-    with (
-        patch("homeassistant.components.camera._RND.getrandbits", return_value=1),
-        patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]),
-    ):
-        await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.camera._RND.getrandbits", return_value=1):
+        await setup_camera_integration(hass, mock_config_entry)
 
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry.entry_id
+    )
 
 
 async def test_camera_unavailable_when_offline(
@@ -51,8 +52,7 @@ async def test_camera_unavailable_when_offline(
 ) -> None:
     """Test camera shows unavailable when device is offline."""
     get_device_by_id(mock_api_client, "dev_camera_001")["online"] = False
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
     state = hass.states.get("camera.front_door_camera")
     assert state is not None
@@ -66,8 +66,7 @@ async def test_camera_image(
 ) -> None:
     """Test camera image fetching."""
     mock_api_client.async_get_snapshot.return_value = b"image_data"
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
     state = hass.states.get("camera.front_door_camera")
     assert state is not None
@@ -86,8 +85,7 @@ async def test_camera_image_fetch_error_returns_no_image(
 ) -> None:
     """Test camera image fetch errors return no image."""
     mock_api_client.async_get_snapshot.return_value = b"image_data"
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
     image = await async_get_image(hass, "camera.front_door_camera")
     assert image.content == b"image_data"
@@ -114,8 +112,7 @@ async def test_updating_state_updates_snapshot_url(
 ) -> None:
     """Test updating state uses the new snapshot URL on the next image request."""
     mock_api_client.async_get_snapshot.return_value = b"new_image_data"
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
     assert mock_websocket.call_args is not None
 
@@ -152,10 +149,9 @@ async def test_webrtc_offer(
             "SessionToken": "test",
         },
     }
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    camera_entity = get_camera_from_entity_id(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
     with patch(
@@ -212,10 +208,9 @@ async def test_webrtc_candidate_caching_and_flush(
             "SessionToken": "test",
         },
     }
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    camera_entity = get_camera_from_entity_id(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
     session_id = "mock_session_id"
@@ -262,7 +257,11 @@ async def test_webrtc_candidate_caching_and_flush(
         await camera_entity.async_on_webrtc_candidate(session_id, candidate)
 
         await hass.async_block_till_done()
-        mock_kvs_client.async_close.assert_called_once()
+        mock_kvs_client.async_close.assert_not_called()
+
+        mock_kvs_client.async_send_ice_candidate.side_effect = None
+        await camera_entity.async_on_webrtc_candidate(session_id, candidate)
+        assert mock_kvs_client.async_send_ice_candidate.call_count == 4
 
 
 async def test_webrtc_session_cleanup(
@@ -280,10 +279,9 @@ async def test_webrtc_session_cleanup(
             "SessionToken": "test",
         },
     }
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    camera_entity = get_camera_from_entity_id(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
     session_id = "mock_session_id"
@@ -358,10 +356,9 @@ async def test_webrtc_offer_closed_while_fetching_credentials(
 
     mock_api_client.async_get_camera_webrtc.side_effect = mock_get_camera_webrtc
 
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    camera_entity = get_camera_from_entity_id(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
     session_id = "mock_session_id"
@@ -402,10 +399,9 @@ async def test_webrtc_session_cleanup_on_entity_removal(
             "SessionToken": "test",
         },
     }
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    camera_entity = get_camera_from_entity_id(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
     with patch(
@@ -436,10 +432,9 @@ async def test_webrtc_offer_kvs_error(
         "region": "us-east-1",
         "channel_arn": None,
     }
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    camera_entity = get_camera_from_entity_id(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
     mock_send_message = MagicMock()
@@ -470,10 +465,9 @@ async def test_webrtc_offer_unexpected_error(
     mock_api_client.async_get_camera_webrtc.side_effect = XthingsCloudApiError(
         "KVS failed"
     )
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_camera_integration(hass, mock_config_entry)
 
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    camera_entity = get_camera_from_entity_id(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
     mock_send_message = MagicMock()
