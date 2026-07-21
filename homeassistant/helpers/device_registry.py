@@ -1701,6 +1701,26 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if device_info_type == "primary" and (not name or name is UNDEFINED):
                 name = config_entry.title
 
+        elif (
+            config_subentry_id is not UNDEFINED
+            and device.config_subentry_id != config_subentry_id
+        ):
+            # A device belongs to a single config subentry. Re-registering an existing
+            # device under a different subentry of the same config entry silently moves it
+            # (e.g. entities from several subentries sharing one device_info identity),
+            # rather than being an explicit move via
+            # async_update_device(new_config_subentry_id=...). This is deprecated; for now
+            # warn and fall through to the move below, but it will raise in HA Core 2027.8.
+            report_usage(
+                "assigns an existing device to a different config subentry, by calling "
+                "`async_get_or_create` or by adding entities from several subentries that "
+                "share a device; this silently moves the device. A device belongs to one "
+                "subentry - keep a shared device in a single subentry, or move it with "
+                "`async_update_device`",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2027.8.0",
+            )
+
         if default_manufacturer is not UNDEFINED and device.manufacturer is None:
             validated_fields["manufacturer"] = default_manufacturer
 
@@ -1767,9 +1787,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             is_new=is_new,
             name=name,
             has_composite_identifiers=has_composite_identifiers,
-            # Move the device if the integration re-registers it under a different
-            # subentry; UNDEFINED leaves the subentry unchanged. Also validates an
-            # explicitly provided subentry for new devices.
+            # Validates the subentry and, for a new device, sets it. For an existing device
+            # a differing subentry moves it (deprecated, warned above); UNDEFINED or a
+            # matching subentry leaves it unchanged.
             new_config_subentry_id=config_subentry_id,
             suggested_area=suggested_area,
             via_device_id=via_device_id,
