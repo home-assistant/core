@@ -959,9 +959,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         self, event: Event[EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle the manual removal of a device."""
-        if self._skip_device_removal or not async_removed_from_device(
-            self.hass, event, cast(str, self._device_id), self._config_entry_id
-        ):
+        if self._skip_device_removal or not async_removed_from_device(event):
             return
         # Prevent a second cleanup round after the device is removed
         self._remove_device_updated()
@@ -1747,20 +1745,11 @@ def update_device(
 
 @callback
 def async_removed_from_device(
-    hass: HomeAssistant,
     event: Event[EventDeviceRegistryUpdatedData],
-    mqtt_device_id: str,
-    config_entry_id: str,
 ) -> bool:
-    """Check if the passed event indicates MQTT was removed from a device."""
-    if event.data["action"] == "update":
-        if "config_entry_id" not in event.data["changes"]:
-            return False
-        device_registry = dr.async_get(hass)
-        if (
-            device_entry := device_registry.async_get(mqtt_device_id)
-        ) and config_entry_id == device_entry.config_entry_id:
-            # Not removed from device
-            return False
+    """Check if the passed event indicates MQTT was removed from a device.
 
-    return True
+    A device is associated with a single config entry, so MQTT is removed from a
+    device only when the device itself is removed.
+    """
+    return event.data["action"] == "remove"

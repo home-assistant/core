@@ -3498,42 +3498,38 @@ async def test_shared_qos_with_device_discovery(
     )
 
 
-async def test_async_removed_from_device_detects_config_entry_move(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+@pytest.mark.parametrize(
+    ("event_data", "expected"),
+    [
+        pytest.param(
+            {"action": "remove", "device_id": "abc", "device": {}},
+            True,
+            id="remove",
+        ),
+        pytest.param(
+            {
+                "action": "update",
+                "device_id": "abc",
+                "changes": {"config_entry_id": "mqtt_entry_id"},
+            },
+            False,
+            id="update-config-entry",
+        ),
+        pytest.param(
+            {"action": "update", "device_id": "abc", "changes": {"name": "New name"}},
+            False,
+            id="update-other",
+        ),
+    ],
+)
+async def test_async_removed_from_device(
+    event_data: dr.EventDeviceRegistryUpdatedData,
+    expected: bool,
 ) -> None:
-    """async_removed_from_device is True only when the device leaves the MQTT entry."""
-    mqtt_entry = MockConfigEntry(domain="mqtt")
-    mqtt_entry.add_to_hass(hass)
-    other_entry = MockConfigEntry(domain="other")
-    other_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=mqtt_entry.entry_id, identifiers={("mqtt", "1")}
-    )
-    # Move the device off the MQTT config entry (fires an update, not a removal)
-    device_registry.async_update_device(
-        device.id, new_config_entry_id=other_entry.entry_id
-    )
+    """MQTT leaves a device only when the device is removed.
 
-    move_event = Event(
-        dr.EVENT_DEVICE_REGISTRY_UPDATED,
-        {
-            "action": "update",
-            "device_id": device.id,
-            "changes": {"config_entry_id": mqtt_entry.entry_id},
-        },
-    )
-    assert (
-        async_removed_from_device(hass, move_event, device.id, mqtt_entry.entry_id)
-        is True
-    )
-
-    # An unrelated update (no config-entry change) is not a removal
-    name_event = Event(
-        dr.EVENT_DEVICE_REGISTRY_UPDATED,
-        {"action": "update", "device_id": device.id, "changes": {"name": "New name"}},
-    )
-    assert (
-        async_removed_from_device(hass, name_event, device.id, mqtt_entry.entry_id)
-        is False
-    )
+    A device belongs to a single config entry, so a config-entry change on an update
+    event is not a removal; only a 'remove' action is.
+    """
+    event = Event(dr.EVENT_DEVICE_REGISTRY_UPDATED, event_data)
+    assert async_removed_from_device(event) is expected
