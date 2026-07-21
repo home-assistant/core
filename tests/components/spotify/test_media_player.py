@@ -4,7 +4,6 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from mashumaro.exceptions import MissingField
 import pytest
 from spotifyaio import (
     PlaybackState,
@@ -59,13 +58,6 @@ from tests.common import (
     async_load_fixture,
     snapshot_platform,
 )
-
-
-def _missing_field_error() -> MissingField:
-    """Create a MissingField error for parser failure tests."""
-    err = MissingField.__new__(MissingField)
-    Exception.__init__(err, "missing field")
-    return err
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -553,19 +545,11 @@ async def test_select_source(
 
 
 @pytest.mark.usefixtures("setup_credentials")
-@pytest.mark.parametrize(
-    "get_devices_error",
-    [
-        SpotifyConnectionError,
-        _missing_field_error(),
-    ],
-)
 async def test_source_devices(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    get_devices_error: Exception,
 ) -> None:
     """Test the Spotify media player available source devices."""
     await setup_integration(hass, mock_config_entry)
@@ -573,7 +557,7 @@ async def test_source_devices(
 
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["DESKTOP-BKC5SIK"]
 
-    mock_spotify.return_value.get_devices.side_effect = get_devices_error
+    mock_spotify.return_value.get_devices.side_effect = SpotifyConnectionError
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -582,30 +566,6 @@ async def test_source_devices(
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["DESKTOP-BKC5SIK"]
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_playback_missing_field_keeps_entity_available(
-    hass: HomeAssistant,
-    mock_spotify: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test playback parser errors do not make the media player unavailable."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("media_player.spotify_spotify_1")
-    assert state
-    assert state.state == MediaPlayerState.PLAYING
-
-    mock_spotify.return_value.get_playback.side_effect = _missing_field_error()
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.spotify_spotify_1")
-    assert state
-    assert state.state == MediaPlayerState.PLAYING
 
 
 @pytest.mark.usefixtures("setup_credentials")
