@@ -6,7 +6,7 @@ from typing import Any, override
 
 from solax import RealTimeAPI, discover
 from solax.discovery import DiscoveryError
-from solax.inverter import Inverter
+from solax.inverter import Inverter, InverterError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -64,6 +64,9 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             response = await RealTimeAPI(inverter).get_data()
         except ConnectionError, DiscoveryError:
+            errors["base"] = "cannot_connect"
+        except InverterError as err:
+            _LOGGER.debug("Inverter communication error: %s", err)
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
