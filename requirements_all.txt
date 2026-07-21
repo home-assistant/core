@@ -260,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.6.0
+aioesphomeapi==45.6.1
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1081,7 +1081,7 @@ gassist-text==0.0.14
 gatus-api==1.0.3
 
 # homeassistant.components.google
-gcal-sync==8.0.0
+gcal-sync==9.1.0
 
 # homeassistant.components.aladdin_connect
 genie-partner-sdk==1.0.11
@@ -1143,7 +1143,7 @@ google-cloud-texttospeech==2.25.1
 google-genai==1.59.0
 
 # homeassistant.components.google_health
-google-health-api==0.5.1
+google-health-api==0.6.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1230,6 +1230,9 @@ habluetooth==6.26.5
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
 
+# homeassistant.components.harbor
+harbor-python==1.2.1
+
 # homeassistant.components.cloud
 hass-nabucasa==2.2.0
 
@@ -1278,7 +1281,7 @@ hole==0.9.2
 holidays==0.100
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260624.5
+home-assistant-frontend==20260624.6
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.24
@@ -1326,7 +1329,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==13.3.0
+ical==14.0.1
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1438,7 +1441,7 @@ knocki==0.4.2
 knx-frontend==2026.6.23.203726
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite,postgres]==0.10.1
+knx-telegram-store[sqlite,postgres]==0.10.2
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -1584,6 +1587,9 @@ micloud==0.5
 
 # homeassistant.components.microbees
 microBeesPy==0.3.5
+
+# homeassistant.components.midea_lan
+midea-local==6.10.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2022,7 +2028,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.3.1
+pyairnow==1.4.0
 
 # homeassistant.components.airobot
 pyairobotrest==0.4.0
@@ -2134,7 +2140,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.4.0
+pydrawise==2026.7.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2149,7 +2155,7 @@ pyebox==1.1.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.2.2
+pyeconet==0.2.4
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.4.0
@@ -2482,7 +2488,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.38
+pyportainer==1.0.42
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2542,7 +2548,7 @@ pysaj==0.0.16
 pysaunum==0.7.0
 
 # homeassistant.components.schlage
-pyschlage==2025.9.0
+pyschlage==2026.7.0
 
 # homeassistant.components.scorpiontrack
 pyscorpiontrack==0.1.1
@@ -2653,7 +2659,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.4
 
 # homeassistant.components.duco
-python-duco-connectivity==0.9.0
+python-duco-connectivity==0.11.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.4.1
@@ -2689,7 +2695,7 @@ python-homewizard-energy==10.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.4
+python-izone==1.3.6
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
@@ -2747,7 +2753,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.30.0
+python-roborock==5.31.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3300,7 +3306,7 @@ vegehub==0.1.26
 vehicle==3.0.0
 
 # homeassistant.components.velbus
-velbus-aio==2026.4.1
+velbus-aio==2026.7.2
 
 # homeassistant.components.venstar
 venstarcolortouch==0.22
@@ -3373,7 +3379,7 @@ webmin-xmlrpc==0.0.2
 weheat==2026.4.8
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==1.0.3
+whirlpool-sixth-sense==1.3.1
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -3428,7 +3434,7 @@ yalexs-ble==3.3.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.2.7
+yalexs==9.2.10
 
 # homeassistant.components.yeelight
 yeelight==0.7.16

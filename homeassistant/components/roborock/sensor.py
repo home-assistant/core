@@ -19,6 +19,7 @@ from roborock.data import (
     ZeoState,
 )
 from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
+from roborock.data.v1.v1_containers import StatusField, StatusV2
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -259,9 +260,9 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.ENUM,
         options=RoborockDockErrorCode.keys(),
         is_dock_entity=True,
-        # Only available with more than just the basic dock. Dust collection
-        # mode is a proxy for any more complex dock type (e.g. Auto-empty).
-        support_fn=lambda api: api.dust_collection_mode is not None,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.DOCK_ERROR_STATUS
+        ),
     ),
     RoborockSensorDescription(
         key="mop_clean_remaining",
