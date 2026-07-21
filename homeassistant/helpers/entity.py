@@ -1620,6 +1620,8 @@ class Entity(
 
         if device_id := registry_entry.device_id:
             self.device_entry = dr.async_get(self.hass).async_get(device_id)
+        else:
+            self.device_entry = None
 
         if registry_entry.disabled:
             await self.async_remove()
