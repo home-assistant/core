@@ -37,6 +37,7 @@ from home_assistant_intents import (
 import yaml
 
 from homeassistant.components.homeassistant.exposed_entities import (
+    async_get_should_expose,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -878,7 +879,7 @@ class DefaultAgent(ConversationEntity):
         entity_registry = er.async_get(self.hass)
 
         for state in self.hass.states.async_all():
-            entity_exposed = async_should_expose(self.hass, DOMAIN, state.entity_id)
+            entity_exposed = async_get_should_expose(self.hass, DOMAIN, state.entity_id)
             if exposed and (not entity_exposed):
                 # Required exposed, entity is not
                 continue

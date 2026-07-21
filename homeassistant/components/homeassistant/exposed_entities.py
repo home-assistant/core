@@ -3,6 +3,7 @@
 from collections.abc import Callable, Mapping
 import dataclasses
 from itertools import chain
+import logging
 from typing import Any, TypedDict
 
 import voluptuous as vol
@@ -14,10 +15,13 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_ent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
 
@@ -122,6 +126,42 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
+        async_at_started(self._hass, self._async_prune_legacy_entities)
+
+    @callback
+    def _async_prune_legacy_entities(self, hass: HomeAssistant) -> None:
+        """Remove auto-created settings for legacy entities that no longer exist.
+
+        Legacy entities (without a unique_id) are stored by entity_id and are
+        never cleaned up when the entity disappears. Transient entities such as
+        geo_location get a record auto-created every time one appears and can
+        accumulate indefinitely.
+
+        Only drop records for entities that no longer exist (neither a current
+        state nor in the entity registry) and that are not exposed to any
+        assistant, so an explicit "expose this entity" setting is never lost.
+        """
+        entity_registry = er.async_get(self._hass)
+        stale_entity_ids = [
+            entity_id
+            for entity_id, exposed_entity in self.entities.items()
+            if self._hass.states.get(entity_id) is None
+            and entity_id not in entity_registry.entities
+            and not any(
+                settings.get("should_expose")
+                for settings in exposed_entity.assistants.values()
+            )
+        ]
+        if not stale_entity_ids:
+            return
+
+        for entity_id in stale_entity_ids:
+            del self.entities[entity_id]
+
+        _LOGGER.debug(
+            "Pruned %s stale legacy exposed entity setting(s)", len(stale_entity_ids)
+        )
+        self._async_schedule_save()
 
     @callback
     def async_listen_entity_updates(
@@ -253,10 +293,9 @@ class ExposedEntities:
                 should_expose = registry_entry.options[assistant]["should_expose"]
                 return should_expose
 
-        if self.async_get_expose_new_entities(assistant):
-            should_expose = self._is_default_exposed(entity_id, registry_entry)
-        else:
-            should_expose = False
+        should_expose = self._async_compute_default_should_expose(
+            assistant, entity_id, registry_entry
+        )
 
         assistant_options: ReadOnlyDict[str, Any] | dict[str, Any]
         assistant_options = registry_entry.options.get(assistant, {})
@@ -266,6 +305,27 @@ class ExposedEntities:
         )
 
         return should_expose
+
+    @callback
+    def async_get_should_expose(self, assistant: str, entity_id: str) -> bool:
+        """Return True if an entity should be exposed, without persisting defaults."""
+        should_expose: bool
+
+        entity_registry = er.async_get(self._hass)
+        if registry_entry := entity_registry.async_get(entity_id):
+            options: Mapping[str, Any] = registry_entry.options.get(assistant, {})
+            if "should_expose" in options:
+                should_expose = options["should_expose"]
+                return should_expose
+            return self._async_compute_default_should_expose(
+                assistant, entity_id, registry_entry
+            )
+        if (
+            exposed_entity := self.entities.get(entity_id)
+        ) and "should_expose" in exposed_entity.assistants.get(assistant, {}):
+            should_expose = exposed_entity.assistants[assistant]["should_expose"]
+            return should_expose
+        return self._async_compute_default_should_expose(assistant, entity_id, None)
 
     def _async_should_expose_legacy_entity(
         self, assistant: str, entity_id: str
@@ -280,10 +340,9 @@ class ExposedEntities:
                 should_expose = exposed_entity.assistants[assistant]["should_expose"]
                 return should_expose
 
-        if self.async_get_expose_new_entities(assistant):
-            should_expose = self._is_default_exposed(entity_id, None)
-        else:
-            should_expose = False
+        should_expose = self._async_compute_default_should_expose(
+            assistant, entity_id, None
+        )
 
         if exposed_entity:
             new_exposed_entity = self._update_exposed_entity(
@@ -297,6 +356,15 @@ class ExposedEntities:
         self._async_schedule_save()
 
         return should_expose
+
+    @callback
+    def _async_compute_default_should_expose(
+        self, assistant: str, entity_id: str, registry_entry: er.RegistryEntry | None
+    ) -> bool:
+        """Compute default exposure for an entity without persisting it."""
+        if self.async_get_expose_new_entities(assistant):
+            return self._is_default_exposed(entity_id, registry_entry)
+        return False
 
     def _is_default_exposed(
         self, entity_id: str, registry_entry: er.RegistryEntry | None
@@ -516,6 +584,15 @@ def async_should_expose(hass: HomeAssistant, assistant: str, entity_id: str) -> 
     """Return True if an entity should be exposed to an assistant."""
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     return exposed_entities.async_should_expose(assistant, entity_id)
+
+
+@callback
+def async_get_should_expose(
+    hass: HomeAssistant, assistant: str, entity_id: str
+) -> bool:
+    """Return True if an entity should be exposed, without persisting defaults."""
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    return exposed_entities.async_get_should_expose(assistant, entity_id)
 
 
 @callback
