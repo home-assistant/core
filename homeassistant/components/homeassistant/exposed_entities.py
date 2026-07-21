@@ -65,6 +65,10 @@ DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
 }
 
+# Domains that can be exposed by default via their device class, so a stored
+# "should_expose: False" for one may be a user opt-out rather than noise.
+DEVICE_CLASS_EXPOSED_DOMAINS = {"binary_sensor", "sensor"}
+
 DEFAULT_EXPOSED_ASSISTANT = {
     "conversation": True,
 }
@@ -138,8 +142,8 @@ class ExposedEntities:
         accumulate indefinitely.
 
         Only drop records for entities that no longer exist (neither a current
-        state nor in the entity registry) and that are not exposed to any
-        assistant, so an explicit "expose this entity" setting is never lost.
+        state nor in the entity registry) and that carry no user intent, so an
+        explicit exposure choice is never lost.
         """
         entity_registry = er.async_get(self._hass)
         stale_entity_ids = [
@@ -147,10 +151,7 @@ class ExposedEntities:
             for entity_id, exposed_entity in self.entities.items()
             if self._hass.states.get(entity_id) is None
             and entity_id not in entity_registry.entities
-            and not any(
-                settings.get("should_expose")
-                for settings in exposed_entity.assistants.values()
-            )
+            and not self._legacy_entity_has_user_intent(entity_id, exposed_entity)
         ]
         if not stale_entity_ids:
             return
@@ -162,6 +163,29 @@ class ExposedEntities:
             "Pruned %s stale legacy exposed entity setting(s)", len(stale_entity_ids)
         )
         self._async_schedule_save()
+
+    @callback
+    def _legacy_entity_has_user_intent(
+        self, entity_id: str, exposed_entity: ExposedEntity
+    ) -> bool:
+        """Return True if a legacy record holds an exposure choice worth keeping."""
+        if any(
+            settings.get("should_expose")
+            for settings in exposed_entity.assistants.values()
+        ):
+            # Explicitly exposed to at least one assistant
+            return True
+
+        # A stored "should_expose: False" is indistinguishable from an
+        # auto-created default. It is only meaningful as an opt-out if the
+        # entity could be exposed by default, which depends on its domain (and,
+        # for sensors, a device class we cannot know while it is absent). Keep
+        # the record when the domain can be default-exposed to avoid silently
+        # reversing an opt-out if the entity returns.
+        domain = split_entity_id(entity_id)[0]
+        return (
+            domain in DEFAULT_EXPOSED_DOMAINS or domain in DEVICE_CLASS_EXPOSED_DOMAINS
+        )
 
     @callback
     def async_listen_entity_updates(
