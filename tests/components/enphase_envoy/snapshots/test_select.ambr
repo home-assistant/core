@@ -1,4 +1,160 @@
 # serializer version: 1
+# name: test_select[envoy_acb_batt][select.acb_1234_battery_sleep_soc_target-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '0-5',
+        '5-10',
+        '10-15',
+        '15-20',
+        '20-25',
+        '25-30',
+        '30-35',
+        '35-40',
+        '40-45',
+        '45-50',
+        '50-55',
+        '55-60',
+        '60-65',
+        '65-70',
+        '70-75',
+        '75-80',
+        '80-85',
+        '85-90',
+        '90-95',
+        '95-100',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.acb_1234_battery_sleep_soc_target',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery sleep SOC target',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery sleep SOC target',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'acb_sleep_soc',
+    'unique_id': '1234_acb_sleep_soc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[envoy_acb_batt][select.acb_1234_battery_sleep_soc_target-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ACB 1234 Battery sleep SOC target',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '0-5',
+        '5-10',
+        '10-15',
+        '15-20',
+        '20-25',
+        '25-30',
+        '30-35',
+        '35-40',
+        '40-45',
+        '45-50',
+        '50-55',
+        '55-60',
+        '60-65',
+        '65-70',
+        '70-75',
+        '75-80',
+        '80-85',
+        '85-90',
+        '90-95',
+        '95-100',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.acb_1234_battery_sleep_soc_target',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10-15',
+  })
+# ---
+# name: test_select[envoy_acb_batt][select.envoy_1234_storage_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'backup',
+        'self_consumption',
+        'savings',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.envoy_1234_storage_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Storage mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Storage mode',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_mode',
+    'unique_id': '1234_storage_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[envoy_acb_batt][select.envoy_1234_storage_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy 1234 Storage mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'backup',
+        'self_consumption',
+        'savings',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.envoy_1234_storage_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_consumption',
+  })
+# ---
 # name: test_select[envoy_eu_batt][select.envoy_1234_storage_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

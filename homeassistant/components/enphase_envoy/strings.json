@@ -74,6 +74,20 @@
       },
       "grid_status": {
         "name": "Grid status"
+      },
+      "operating": {
+        "name": "Operating"
+      },
+      "producing": {
+        "name": "Producing"
+      }
+    },
+    "button": {
+      "acb_sleep": {
+        "name": "Sleep"
+      },
+      "acb_wake": {
+        "name": "Wake"
       }
     },
     "number": {
@@ -88,6 +102,31 @@
       }
     },
     "select": {
+      "acb_sleep_soc": {
+        "name": "Battery sleep SOC target",
+        "state": {
+          "0-5": "0 - 5%",
+          "5-10": "5 - 10%",
+          "10-15": "10 - 15%",
+          "15-20": "15 - 20%",
+          "20-25": "20 - 25%",
+          "25-30": "25 - 30%",
+          "30-35": "30 - 35%",
+          "35-40": "35 - 40%",
+          "40-45": "40 - 45%",
+          "45-50": "45 - 50%",
+          "50-55": "50 - 55%",
+          "55-60": "55 - 60%",
+          "60-65": "60 - 65%",
+          "65-70": "65 - 70%",
+          "70-75": "70 - 75%",
+          "75-80": "75 - 80%",
+          "80-85": "80 - 85%",
+          "85-90": "85 - 90%",
+          "90-95": "90 - 95%",
+          "95-100": "95 - 100%"
+        }
+      },
       "relay_generator_action": {
         "name": "Generator action",
         "state": {
@@ -138,8 +177,42 @@
       "ac_voltage": {
         "name": "AC voltage"
       },
+      "acb_aggregate_sleep_state": {
+        "name": "Sleep state",
+        "state": {
+          "asleep": "Asleep",
+          "awake": "Awake",
+          "going_to_sleep": "Going to sleep",
+          "mixed": "Mixed",
+          "waking": "Waking"
+        }
+      },
       "acb_available_energy": {
         "name": "Available ACB battery energy"
+      },
+      "acb_battery_charge_status": {
+        "name": "Charge status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "idle": "[%key:common::state::idle%]",
+          "unknown": "Unknown"
+        }
+      },
+      "acb_battery_sleep_soc_target": {
+        "name": "Sleep SOC target"
+      },
+      "acb_battery_sleep_state": {
+        "name": "Sleep state",
+        "state": {
+          "asleep": "Asleep",
+          "awake": "Awake",
+          "going_to_sleep": "Going to sleep",
+          "waking": "Waking"
+        }
+      },
+      "acb_battery_soc": {
+        "name": "State of charge"
       },
       "acb_battery_state": {
         "name": "Battery state",

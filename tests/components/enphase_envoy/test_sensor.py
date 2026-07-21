@@ -7,12 +7,14 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyenphase.const import PHASENAMES, PhaseNames
+from pyenphase.models.acb import ACBChargeStatus, EnvoyACB
 from pyenphase.models.meters import CtType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
+from homeassistant.components.enphase_envoy.sensor import aggregate_acb_sleep_state
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -1475,3 +1477,52 @@ async def test_no_state_class_warnings(
     #
     # assert "which is impossible considering" not in caplog.text
     assert "create a bug report at" not in caplog.text
+
+
+def _build_acb(sleep_enabled: bool, sleep_flag: bool) -> EnvoyACB:
+    """Build an EnvoyACB with a chosen sleep_enabled and sleep-mode flag."""
+    device_status = ["envoy.cond_flags.pcu_ctrl.sleep-mode"] if sleep_flag else []
+    return EnvoyACB(
+        serial_num="1",
+        part_num="800-00930-r03",
+        sleep_enabled=sleep_enabled,
+        charge_status=ACBChargeStatus.IDLE,
+        device_status=device_status,
+        percent_full=50,
+        max_cell_temp=20,
+        communicating=True,
+        operating=True,
+        producing=False,
+        sleep_min_soc=None,
+        sleep_max_soc=None,
+        last_report_date=None,
+        last_report_watts=None,
+        max_report_watts=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("batteries", "expected"),
+    [
+        ([(False, False), (False, False)], "awake"),
+        ([(True, True), (True, True)], "asleep"),
+        ([(True, False), (False, False)], "going_to_sleep"),
+        ([(False, True), (True, True)], "waking"),
+        ([(True, True), (False, False)], "mixed"),
+        ([(True, False), (False, True)], "going_to_sleep"),
+    ],
+    ids=[
+        "all_awake",
+        "all_asleep",
+        "going_to_sleep_wins",
+        "waking_wins",
+        "mixed_steady",
+        "transition_priority",
+    ],
+)
+def test_aggregate_acb_sleep_state(
+    batteries: list[tuple[bool, bool]], expected: str
+) -> None:
+    """Test the aggregate ACB sleep state summarizes multiple batteries."""
+    acbs = [_build_acb(enabled, flag) for enabled, flag in batteries]
+    assert aggregate_acb_sleep_state(acbs) == expected

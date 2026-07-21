@@ -6,9 +6,67 @@
         "state": {
           "off": "mdi:transmission-tower-off"
         }
+      },
+      "operating": {
+        "default": "mdi:cog",
+        "state": {
+          "off": "mdi:cog-off"
+        }
+      },
+      "producing": {
+        "default": "mdi:flash",
+        "state": {
+          "off": "mdi:flash-off"
+        }
+      }
+    },
+    "button": {
+      "acb_sleep": {
+        "default": "mdi:sleep"
+      },
+      "acb_wake": {
+        "default": "mdi:sleep-off"
+      }
+    },
+    "select": {
+      "acb_sleep_soc": {
+        "default": "mdi:battery-clock"
       }
     },
     "sensor": {
+      "acb_aggregate_sleep_state": {
+        "default": "mdi:sleep",
+        "state": {
+          "awake": "mdi:sleep-off",
+          "mixed": "mdi:dots-horizontal",
+          "waking": "mdi:sleep-off"
+        }
+      },
+      "acb_battery_charge_status": {
+        "default": "mdi:battery",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down",
+          "unknown": "mdi:battery-unknown"
+        }
+      },
+      "acb_battery_sleep_soc_target": {
+        "default": "mdi:battery-clock-outline"
+      },
+      "acb_battery_sleep_state": {
+        "default": "mdi:sleep",
+        "state": {
+          "awake": "mdi:sleep-off",
+          "waking": "mdi:sleep-off"
+        }
+      },
+      "acb_battery_state": {
+        "default": "mdi:battery",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down"
+        }
+      },
       "admin_state": {
         "default": "mdi:transmission-tower",
         "state": {

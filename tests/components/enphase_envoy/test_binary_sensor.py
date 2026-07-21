@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 @pytest.mark.parametrize(
     ("mock_envoy"),
-    ["envoy_eu_batt", "envoy_metered_batt_relay"],
+    ["envoy_eu_batt", "envoy_metered_batt_relay", "envoy_acb_batt"],
     indirect=["mock_envoy"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

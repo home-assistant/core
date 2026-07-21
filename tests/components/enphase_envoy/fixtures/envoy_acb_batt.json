@@ -3,7 +3,7 @@
   "firmware": "7.6.358",
   "part_number": "800-00654-r08",
   "envoy_model": "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT",
-  "supported_features": 1759,
+  "supported_features": 5855,
   "phase_mode": "three",
   "phase_count": 3,
   "active_phase_count": 0,
@@ -60,6 +60,45 @@
       "state_of_charge": 25,
       "state": "discharging",
       "batteries": 3
+    },
+    "acb_inventory": {
+      "122217001670": {
+        "serial_num": "122217001670",
+        "part_num": "800-00930-r03",
+        "sleep_enabled": false,
+        "charge_status": "discharging",
+        "device_status": ["envoy.global.ok"],
+        "percent_full": 25,
+        "max_cell_temp": 22,
+        "communicating": true,
+        "operating": true,
+        "producing": true,
+        "sleep_min_soc": null,
+        "sleep_max_soc": null,
+        "last_report_date": 1731943992,
+        "last_report_watts": null,
+        "max_report_watts": null
+      },
+      "122217005321": {
+        "serial_num": "122217005321",
+        "part_num": "800-00930-r03",
+        "sleep_enabled": true,
+        "charge_status": "idle",
+        "device_status": [
+          "envoy.global.ok",
+          "envoy.cond_flags.pcu_ctrl.sleep-mode"
+        ],
+        "percent_full": 15,
+        "max_cell_temp": 16,
+        "communicating": true,
+        "operating": true,
+        "producing": false,
+        "sleep_min_soc": 10,
+        "sleep_max_soc": 15,
+        "last_report_date": null,
+        "last_report_watts": null,
+        "max_report_watts": null
+      }
     },
     "battery_aggregate": {
       "available_energy": 2820,
