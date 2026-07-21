@@ -61,6 +61,9 @@
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
+      "priority_status": {
+        "name": "Priority status"
+      },
       "room_humidity": {
         "name": "Room humidity"
       },

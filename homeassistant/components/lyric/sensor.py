@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -189,6 +189,14 @@ async def async_setup_entry(
         if accessory_sensor.suitable_fn(room, accessory)
     )
 
+    async_add_entities(
+        LyricPriorityStatusSensor(coordinator, location, device)
+        for location in coordinator.data.locations
+        for device in location.devices
+        if device.device_class == "Thermostat"
+        and coordinator.data.rooms_dict.get(device.mac_id)
+    )
+
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Define a Honeywell Lyric sensor."""
@@ -258,3 +266,33 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.room, self.accessory)
+
+
+class LyricPriorityStatusSensor(LyricDeviceEntity, SensorEntity):
+    """Define a Honeywell Lyric room priority hold status sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "priority_status"
+
+    def __init__(
+        self,
+        coordinator: LyricDataUpdateCoordinator,
+        location: LyricLocation,
+        device: LyricDevice,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator,
+            location,
+            device,
+            f"{device.mac_id}_priority_status",
+        )
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state."""
+        priority = self.coordinator.data.priorities_dict.get(self._mac_id)
+        if priority is None:
+            return None
+        return priority.status
