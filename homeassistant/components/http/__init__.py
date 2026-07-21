@@ -88,6 +88,7 @@ from .const import (  # noqa: F401
     NO_LOGIN_ATTEMPT_THRESHOLD,
     SSL_INTERMEDIATE,
     SSL_MODERN,
+    is_supervisor_unix_socket_request,
 )
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
@@ -344,6 +345,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_when_setup_or_start(hass, "frontend", start_server)
 
     if server.supervisor_unix_socket_path is not None:
+        # Let Supervisor pull its connection parameters over the socket instead
+        # of relying on the hassio integration having pushed them first.
+        server.register_view(HassioHTTPConfigView)
 
         async def start_supervisor_unix_socket(*_: Any) -> None:
             """Start the Unix socket after the Supervisor user is available."""
@@ -397,6 +401,40 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
 
     return True
+
+
+class HassioHTTPConfigView(HomeAssistantView):
+    """Expose the HTTP server configuration to Supervisor.
+
+    Only reachable over the Supervisor Unix socket. It lets Supervisor pull
+    its connection parameters (port, SSL) directly rather than depending on the
+    hassio integration having pushed them via the options API first, which is
+    racy during startup.
+    """
+
+    url = "/api/core/http_config"
+    name = "api:core:http_config"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the HTTP server configuration."""
+        if not is_supervisor_unix_socket_request(request):
+            raise web.HTTPNotFound
+        server: HomeAssistantHTTP = request.app[KEY_HASS].http
+        # server_host unset or the all-interfaces default means Supervisor can
+        # reach Core on the container IP; a specific bind is opaque to it, so it
+        # must skip probes that assume that address.
+        default_bind = server.server_host is None or set(server.server_host) == set(
+            _DEFAULT_BIND
+        )
+        return self.json(
+            {
+                "port": server.server_port,
+                "ssl": server.ssl_certificate is not None,
+                "ssl_peer_certificate": server.ssl_peer_certificate is not None,
+                "custom_server_host": not default_bind,
+            }
+        )
 
 
 class HomeAssistantRequest(web.Request):

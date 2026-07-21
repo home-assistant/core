@@ -947,6 +947,59 @@ async def test_unix_socket_rejected_relative_path(
     assert "path must be absolute" in caplog.text
 
 
+async def test_supervisor_http_config_view(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    tmp_path: Path,
+) -> None:
+    """Test the HTTP config view is registered and served over the socket only."""
+    await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=["system-admin"]
+    )
+    socket_path = tmp_path / "core.sock"
+    loop = asyncio.get_running_loop()
+    with (
+        patch.dict(
+            os.environ, {"SUPERVISOR_CORE_API_SOCKET": str(socket_path)}, clear=False
+        ),
+        patch(
+            "homeassistant.components.http.web_runner.HomeAssistantUnixSite"
+            "._create_unix_socket",
+            return_value=Mock(),
+        ),
+        patch.object(loop, "create_unix_server", return_value=Mock()),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    # Hidden from ordinary (non-socket) requests.
+    resp = await client.get("/api/core/http_config")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    with patch(
+        "homeassistant.components.http.is_supervisor_unix_socket_request",
+        return_value=True,
+    ):
+        # Served over the Supervisor Unix socket with the live server config.
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.json() == {
+            "port": 8123,
+            "ssl": False,
+            "ssl_peer_certificate": False,
+            "custom_server_host": False,
+        }
+
+        # A specific bind is opaque to Supervisor, so it is flagged.
+        hass.http.server_host = ["1.2.3.4"]
+        resp = await client.get("/api/core/http_config")
+        assert resp.status == HTTPStatus.OK
+        assert (await resp.json())["custom_server_host"] is True
+
+
 async def test_yaml_migration_to_storage(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
