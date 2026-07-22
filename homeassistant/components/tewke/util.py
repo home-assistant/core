@@ -213,6 +213,9 @@ async def async_setup_observe(
         coordinator.async_set_updated_data({**coordinator.data, "config": config_data})
         device_registry = dr.async_get(hass)
         device_id = tap.wall_dock_id
+        if device_id is None:
+            return
+
         device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
 
         if device:
