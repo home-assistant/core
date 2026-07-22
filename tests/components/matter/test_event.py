@@ -27,6 +27,7 @@ async def trigger_switch_event(
     event_id: int,
     data: dict[str, Any] | None = None,
     endpoint_id: int = 1,
+    cluster_id: int = 59,
 ) -> None:
     """Trigger a Switch cluster event on the given node."""
     await trigger_subscription_callback(
@@ -36,7 +37,7 @@ async def trigger_switch_event(
         MatterNodeEvent(
             node_id=node.node_id,
             endpoint_id=endpoint_id,
-            cluster_id=59,
+            cluster_id=cluster_id,
             event_id=event_id,
             event_number=0,
             priority=1,
@@ -240,6 +241,14 @@ async def test_action_switch_node(
     ]
     # a ShortRelease event from the device should be ignored
     await trigger_switch_event(hass, matter_client, matter_node, 3)
+    state = hass.states.get("event.mock_action_switch_button")
+    assert state.state == "unknown"
+    # an unknown event id from the device should be ignored
+    await trigger_switch_event(hass, matter_client, matter_node, 7)
+    state = hass.states.get("event.mock_action_switch_button")
+    assert state.state == "unknown"
+    # an event from another cluster should be ignored
+    await trigger_switch_event(hass, matter_client, matter_node, 1, cluster_id=8)
     state = hass.states.get("event.mock_action_switch_button")
     assert state.state == "unknown"
     # trigger firing a MultiPressComplete event from the device

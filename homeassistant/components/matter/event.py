@@ -94,7 +94,10 @@ class MatterEventEntityBase(MatterEntity, EventEntity):
         data: MatterNodeEvent,
     ) -> None:
         """Call on NodeEvent."""
-        if data.endpoint_id != self._endpoint.endpoint_id:
+        if (
+            data.endpoint_id != self._endpoint.endpoint_id
+            or data.cluster_id != clusters.Switch.id
+        ):
             return
         self._handle_switch_event(data)
 
@@ -149,11 +152,11 @@ class MatterButtonEventEntity(MatterEventEntityBase):
         event_data = dict(data.data or {})
         if data.event_id == clusters.Switch.Events.MultiPressOngoing.event_id:
             event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
-                "currentNumberOfPressesCounted", 1
+                "currentNumberOfPressesCounted", 2
             )
         elif data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
-            # NOTE: a count of 0 means the multi-press sequence was aborted
-            # because the number of presses exceeded MultiPressMax
+            # NOTE: a count of 0 means the multi-press sequence was aborted,
+            # e.g. because the number of presses exceeded MultiPressMax
             event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
                 "totalNumberOfPressesCounted", 1
             )
