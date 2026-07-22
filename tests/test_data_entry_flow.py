@@ -1624,6 +1624,39 @@ async def test_hidden_field_reads_as_absent_to_other_conditions(
     assert "extra" in err.value.schema_errors
 
 
+async def test_hidden_fields_resolved_in_schema_order(
+    manager: MockFlowManager,
+) -> None:
+    """Test a hidden field drops before a later field's condition is evaluated."""
+    schema = vol.Schema(
+        {
+            # Always hidden but defaulted; must read as absent to "extra" below it.
+            data_entry_flow.Optional(
+                "token",
+                default="from_default",
+                visible=False,
+            ): str,
+            data_entry_flow.Required(
+                "extra",
+                visible={"field": "token", "operator": "not_exists"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "token" is hidden and drops out, so "extra" sees it as absent and stays required
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {})
+    assert "extra" in err.value.schema_errors
+
+
 async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> None:
     """Test nested hidden fields are stripped for an omitted defaulted section."""
     schema = vol.Schema(
