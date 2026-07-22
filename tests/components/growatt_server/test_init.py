@@ -283,13 +283,13 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
     assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
 
 
-async def test_classic_api_coordinator_service_unavailable_retries(
+async def test_classic_api_coordinator_login_failed_retries(
     hass: HomeAssistant,
     mock_growatt_classic_api,
     mock_config_entry_classic: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test 507 service unavailable during coordinator update triggers retry."""
+    """Test 507 login failed during coordinator update triggers retry."""
     mock_growatt_classic_api.device_list.return_value = [
         {"deviceSn": "TLX123456", "deviceType": "tlx"}
     ]
@@ -307,7 +307,7 @@ async def test_classic_api_coordinator_service_unavailable_retries(
     await setup_integration(hass, mock_config_entry_classic)
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
 
-    # Service temporarily unavailable between updates
+    # Login failed between updates
     mock_growatt_classic_api.login.return_value = {
         "success": False,
         "msg": LOGIN_FAILED,
@@ -342,12 +342,12 @@ async def test_classic_api_coordinator_service_unavailable_retries(
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
 
 
-async def test_classic_api_login_service_unavailable(
+async def test_classic_api_login_failed(
     hass: HomeAssistant,
     mock_growatt_classic_api,
     mock_config_entry_classic: MockConfigEntry,
 ) -> None:
-    """Test Classic API setup with 507 service unavailable error."""
+    """Test Classic API setup with 507 login failed error."""
     mock_growatt_classic_api.login.return_value = {
         "success": False,
         "msg": LOGIN_FAILED,

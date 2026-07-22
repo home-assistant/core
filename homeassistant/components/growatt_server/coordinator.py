@@ -289,7 +289,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     combined["lastdataupdate"] = parsed.replace(
                         tzinfo=dt_util.get_default_time_zone()
                     )
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     _LOGGER.debug(
                         "Could not parse SPH time field for %s: %r",
                         self.device_id,
@@ -346,13 +346,13 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.hass.async_add_executor_job(self._sync_update_data)
         except ConfigEntryNotReady as err:
-            # Check if this is a 507 error (service unavailable)
+            # Check if this is a 507 error (login failed)
             if "507" in str(err):
                 # Use UpdateFailed with retry_after for 4-hour scheduled retry
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="login_failed",
-                    translation_placeholders={"message": "Service temporarily unavailable"},
+                    translation_placeholders={"message": "Login failed"},
                     retry_after=LOGIN_FAILED_RETRY_INTERVAL.total_seconds(),
                 ) from err
             raise
