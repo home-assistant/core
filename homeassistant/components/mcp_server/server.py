@@ -31,6 +31,7 @@ SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
 SNAPSHOT_RESOURCE_URL = AnyUrl(SNAPSHOT_RESOURCE_URI)
 SNAPSHOT_RESOURCE_MIME_TYPE = "text/plain"
 LIVE_CONTEXT_TOOL_NAME = "GetLiveContext"
+TARGET_ARGUMENTS = ("name", "area", "floor")
 
 
 def _has_live_context_tool(llm_api: llm.APIInstance) -> bool:
@@ -51,6 +52,33 @@ def _format_tool(
             "properties": input_schema["properties"],
         },
     )
+
+
+def _normalize_hass_target_arguments(
+    tool_name: str, arguments: dict[str, Any]
+) -> dict[str, Any]:
+    """Remove empty target arguments from Home Assistant intent tool calls."""
+    if not tool_name.rsplit("__", 1)[-1].startswith("Hass"):
+        return arguments
+
+    target_arguments = {
+        key: arguments[key] for key in TARGET_ARGUMENTS if key in arguments
+    }
+    empty_target_arguments = {
+        key
+        for key, value in target_arguments.items()
+        if isinstance(value, str) and not value.strip()
+    }
+    if not empty_target_arguments or not any(
+        isinstance(value, str) and value.strip() for value in target_arguments.values()
+    ):
+        return arguments
+
+    return {
+        key: value
+        for key, value in arguments.items()
+        if key not in empty_target_arguments
+    }
 
 
 async def create_server(
@@ -150,9 +178,12 @@ async def create_server(
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
     @server.call_tool()  # type: ignore[untyped-decorator]
-    async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
+    async def call_tool(
+        name: str, arguments: dict[str, Any]
+    ) -> Sequence[types.TextContent]:
         """Handle calling tools."""
         llm_api = await get_api_instance()
+        arguments = _normalize_hass_target_arguments(name, arguments)
         tool_input = llm.ToolInput(tool_name=name, tool_args=arguments)
         _LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
 

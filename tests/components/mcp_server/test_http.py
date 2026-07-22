@@ -25,6 +25,7 @@ from homeassistant.components.mcp_server.http import (
     SSE_API,
     STREAMABLE_API,
 )
+from homeassistant.components.mcp_server.server import _normalize_hass_target_arguments
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_LLM_HASS_API,
@@ -391,16 +392,63 @@ async def test_mcp_tools_list(
     assert tool.inputSchema
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
-    assert properties.get("name") == {"type": "string"}
+    for field in ("name", "area", "floor"):
+        assert properties.get(field) == {"type": "string"}
+    assert "required" not in tool.inputSchema
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "expected"),
+    [
+        pytest.param(
+            "HassTurnOn",
+            {"name": "kitchen light"},
+            id="hass-tool",
+        ),
+        pytest.param(
+            "assist__HassTurnOn",
+            {"name": "kitchen light"},
+            id="namespaced-hass-tool",
+        ),
+        pytest.param(
+            "GetLiveContext",
+            {"name": "kitchen light", "area": ""},
+            id="non-hass-tool",
+        ),
+    ],
+)
+def test_normalize_hass_target_arguments(
+    tool_name: str, expected: dict[str, str]
+) -> None:
+    """Test empty targets are only removed from Home Assistant intent tools."""
+    arguments = {"name": "kitchen light", "area": ""}
+
+    assert _normalize_hass_target_arguments(tool_name, arguments) == expected
+    assert arguments == {"name": "kitchen light", "area": ""}
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        pytest.param({"name": "kitchen light"}, id="omitted-empty-targets"),
+        pytest.param(
+            {"name": "kitchen light", "area": ""},
+            id="mixed-valid-empty-string-target",
+        ),
+        pytest.param(
+            {"name": "kitchen light", "floor": " \t "},
+            id="mixed-valid-whitespace-target",
+        ),
+    ],
+)
 async def test_mcp_tool_call(
     hass: HomeAssistant,
     setup_integration: None,
     mcp_url: str,
     mcp_client: Any,
     hass_supervisor_access_token: str,
+    arguments: dict[str, str],
 ) -> None:
     """Test the tool call endpoint."""
 
@@ -411,7 +459,7 @@ async def test_mcp_tool_call(
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
             name="HassTurnOn",
-            arguments={"name": "kitchen light"},
+            arguments=arguments,
         )
 
     assert not result.isError
@@ -426,6 +474,35 @@ async def test_mcp_tool_call(
     state = hass.states.get("light.kitchen")
     assert state
     assert state.state == STATE_ON
+
+
+async def test_mcp_tool_call_rejects_all_empty_targets(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test all empty target arguments are left for strict validation."""
+
+    state = hass.states.get("light.kitchen")
+    assert state
+    assert state.state == STATE_OFF
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="HassTurnOn",
+            arguments={"name": "", "area": " \t "},
+        )
+
+    assert result.isError
+    assert len(result.content) == 1
+    assert result.content[0].type == "text"
+    assert "Error calling tool" in result.content[0].text
+
+    state = hass.states.get("light.kitchen")
+    assert state
+    assert state.state == STATE_OFF
 
 
 async def test_mcp_tool_call_failed(
