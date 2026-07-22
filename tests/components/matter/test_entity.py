@@ -263,7 +263,13 @@ async def test_bridged_entity_becomes_unavailable_on_reachable_false(
 
     # Simulate the bridge reporting the endpoint as unreachable.
     await set_node_attribute_and_notify(
-        hass, matter_client, matter_node, 29, 57, 17, False
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=29,
+        cluster_id=57,
+        attribute_id=17,
+        value=False,
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -295,7 +301,13 @@ async def test_bridged_entity_recovers_when_reachable_true(
 
     # Simulate the bridge reporting the endpoint as reachable again.
     await set_node_attribute_and_notify(
-        hass, matter_client, matter_node, 29, 57, 17, True
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=29,
+        cluster_id=57,
+        attribute_id=17,
+        value=True,
     )
 
     state = hass.states.get(_BRIDGE_ENTITY_ID)
@@ -473,7 +485,13 @@ async def test_composed_entity_state_updates_when_parent_reachable_changes(
 
     # Simulate the parent endpoint reporting as reachable again.
     await set_node_attribute_and_notify(
-        hass, matter_client, matter_node, 42, 57, 17, True
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=42,
+        cluster_id=57,
+        attribute_id=17,
+        value=True,
     )
 
     state = hass.states.get(_COMPOSED_ENTITY_ID)
@@ -482,7 +500,13 @@ async def test_composed_entity_state_updates_when_parent_reachable_changes(
 
     # Simulate the parent endpoint reporting as unreachable again.
     await set_node_attribute_and_notify(
-        hass, matter_client, matter_node, 42, 57, 17, False
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=42,
+        cluster_id=57,
+        attribute_id=17,
+        value=False,
     )
 
     state = hass.states.get(_COMPOSED_ENTITY_ID)

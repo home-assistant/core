@@ -57,7 +57,15 @@ async def test_occupancy_sensor(
     assert state
     assert state.state == "on"
 
-    await set_node_attribute_and_notify(hass, matter_client, matter_node, 1, 1030, 0, 0)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=1030,
+        attribute_id=0,
+        value=0,
+    )
 
     state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
     assert state
@@ -85,7 +93,13 @@ async def test_boolean_state_sensors(
     # invert the value
     cur_attr_value = matter_node.get_attribute_value(1, 69, 0)
     await set_node_attribute_and_notify(
-        hass, matter_client, matter_node, 1, 69, 0, not cur_attr_value
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=69,
+        attribute_id=0,
+        value=not cur_attr_value,
     )
 
     state = hass.states.get(entity_id)
@@ -106,7 +120,15 @@ async def test_battery_sensor(
     assert state
     assert state.state == "off"
 
-    await set_node_attribute_and_notify(hass, matter_client, matter_node, 1, 47, 14, 1)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=47,
+        attribute_id=14,
+        value=1,
+    )
 
     state = hass.states.get(entity_id)
     assert state
@@ -127,7 +149,13 @@ async def test_actuator_sensor(
     assert state.state == "on"
 
     await set_node_attribute_and_notify(
-        hass, matter_client, matter_node, 1, 257, 2, False
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=257,
+        attribute_id=2,
+        value=False,
     )
 
     state = hass.states.get(entity_id)
@@ -159,7 +187,13 @@ async def test_optional_sensor_from_featuremap(
     assert state.state == "off"
     # now test the reverse, by removing the feature from the feature map
     await set_node_attribute_and_notify(
-        hass, matter_client, matter_node, 1, 257, 65532, 0
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=257,
+        attribute_id=65532,
+        value=0,
     )
     state = hass.states.get(entity_id)
     assert state is None
@@ -178,7 +212,15 @@ async def test_evse_sensor(
     assert state
     assert state.state == "on"
     # switch to PluggedInDemand state
-    await set_node_attribute_and_notify(hass, matter_client, matter_node, 1, 153, 0, 2)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=153,
+        attribute_id=0,
+        value=2,
+    )
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"
@@ -189,7 +231,15 @@ async def test_evse_sensor(
     assert state
     assert state.state == "on"
     # switch to NotPluggedIn state
-    await set_node_attribute_and_notify(hass, matter_client, matter_node, 1, 153, 0, 0)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=153,
+        attribute_id=0,
+        value=0,
+    )
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"
@@ -200,7 +250,15 @@ async def test_evse_sensor(
     assert state
     assert state.state == "on"
     # switch to Disabled state
-    await set_node_attribute_and_notify(hass, matter_client, matter_node, 1, 153, 1, 0)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=153,
+        attribute_id=1,
+        value=0,
+    )
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"

@@ -241,6 +241,7 @@ async def set_node_attribute_and_notify(
     hass: HomeAssistant,
     client: MagicMock,
     node: MatterNode,
+    *,
     endpoint: int,
     cluster_id: int,
     attribute_id: int,
