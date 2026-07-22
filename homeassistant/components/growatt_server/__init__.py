@@ -254,7 +254,10 @@ async def _create_api_and_login(
 
 
 def _login_classic_api(
-    api: growattServer.GrowattApi, username: str, password: str, config_entry: GrowattConfigEntry
+    api: growattServer.GrowattApi,
+    username: str,
+    password: str,
+    config_entry: GrowattConfigEntry,
 ) -> dict:
     """Log in to Classic API and return user info."""
     try:
