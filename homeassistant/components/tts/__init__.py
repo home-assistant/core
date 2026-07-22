@@ -802,9 +802,11 @@ class SpeechManager:
         language = language or engine_instance.default_language
         if language is None or engine_instance.supported_languages is None:
             raise HomeAssistantError(f"Language '{language}' not supported")
-        matched_languages = language_util.matches(
-            language, engine_instance.supported_languages
-        )
+matched_languages = language_util.matches(
+    language,
+    engine_instance.supported_languages,
+    country=self.hass.config.country,
+)
         if not matched_languages:
             raise HomeAssistantError(f"Language '{language}' not supported")
         language = matched_languages[0]

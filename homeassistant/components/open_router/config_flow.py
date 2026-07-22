@@ -434,12 +434,18 @@ class TtsFlowHandler(_ModelSubentryFlowHandler):
         model_voices = self.options.get("supported_voices")
         if model_voices:
             voices = [SelectOptionDict(value=v, label=v) for v in model_voices]
-            default_voice = self.options.get(CONF_TTS_VOICE, model_voices[0])
+stored_voice = self.options.get(CONF_TTS_VOICE)
+default_voice = stored_voice if stored_voice in model_voices else model_voices[0]
         else:
             voices = [
                 SelectOptionDict(value=v, label=v.title()) for v in FALLBACK_TTS_VOICES
             ]
-            default_voice = self.options.get(CONF_TTS_VOICE, RECOMMENDED_TTS_VOICE)
+stored_voice = self.options.get(CONF_TTS_VOICE)
+default_voice = (
+    stored_voice
+    if stored_voice in FALLBACK_TTS_VOICES
+    else RECOMMENDED_TTS_VOICE
+)
 
         return self.async_show_form(
             step_id="voice",
@@ -457,7 +463,7 @@ class TtsFlowHandler(_ModelSubentryFlowHandler):
                     vol.Optional(
                         CONF_TTS_SPEED,
                         default=self.options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
-                    ): vol.Coerce(float),
+): vol.All(vol.Coerce(float), vol.Range(min=0.25, max=4.0)),
                 }
             ),
         )
