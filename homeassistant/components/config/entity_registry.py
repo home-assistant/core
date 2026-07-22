@@ -30,6 +30,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_remove_entity)
     websocket_api.async_register_command(hass, websocket_update_entity)
+    websocket_api.async_register_command(hass, websocket_get_settings)
+    websocket_api.async_register_command(hass, websocket_update_settings)
     return True
 
 
@@ -362,3 +364,49 @@ def websocket_get_automatic_entity_ids(
     connection.send_message(
         websocket_api.result_message(msg["id"], automatic_entity_ids)
     )
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "config/entity_registry/settings/get"}
+)
+@callback
+def websocket_get_settings(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get entity registry settings command."""
+    registry = er.async_get(hass)
+    connection.send_result(
+        msg["id"], {"entity_id_parts": registry.settings.entity_id_parts}
+    )
+
+
+@require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/settings/update",
+        vol.Optional("entity_id_parts"): vol.Any(
+            None,
+            vol.All(
+                [vol.Coerce(er.EntityNamePart)],
+                vol.Unique(),
+                vol.Contains(er.EntityNamePart.ENTITY),
+                vol.Contains(er.EntityNamePart.DEVICE),
+            ),
+        ),
+    }
+)
+@callback
+def websocket_update_settings(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle update entity registry settings command."""
+    registry = er.async_get(hass)
+    changes: dict[str, Any] = {}
+    if "entity_id_parts" in msg:
+        changes["entity_id_parts"] = msg["entity_id_parts"]
+    settings = registry.async_update_settings(**changes)
+    connection.send_result(msg["id"], {"entity_id_parts": settings.entity_id_parts})

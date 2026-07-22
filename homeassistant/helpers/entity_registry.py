@@ -9,7 +9,9 @@ timer.
 """
 
 from collections import defaultdict
-from collections.abc import Callable, Hashable, KeysView, Mapping
+from collections.abc import Callable, Hashable, KeysView, Mapping, Sequence
+import dataclasses
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 import logging
@@ -45,7 +47,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from . import area_registry as ar, device_registry as dr, storage
+from . import area_registry as ar, device_registry as dr, floor_registry as fr, storage
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -72,7 +74,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 22
+STORAGE_VERSION_MINOR = 23
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -133,6 +135,22 @@ class RegistryEntryHider(StrEnum):
 
     INTEGRATION = "integration"
     USER = "user"
+
+
+class EntityNamePart(StrEnum):
+    """Parts a generated full entity name can be composed of."""
+
+    AREA = "area"
+    DEVICE = "device"
+    ENTITY = "entity"
+    FLOOR = "floor"
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class EntityRegistrySettings:
+    """Global entity registry settings."""
+
+    entity_id_parts: tuple[EntityNamePart, ...] | None = None
 
 
 class _EventEntityRegistryUpdatedData_CreateRemove(TypedDict):
@@ -475,7 +493,7 @@ def async_get_unprefixed_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
 def _async_get_full_entity_name(
     hass: HomeAssistant,
     *,
-    area_id: str | None | UndefinedType = UNDEFINED,
+    area_id: str | None,
     device_id: str | None,
     fallback: str,
     has_entity_name: bool,
@@ -483,6 +501,7 @@ def _async_get_full_entity_name(
     original_name: str | None,
     original_name_unprefixed: str | None | UndefinedType = UNDEFINED,
     overridden_name: str | None = None,
+    parts: Sequence[EntityNamePart],
     unprefix_name: bool = False,
     use_legacy_naming: bool = False,
 ) -> str:
@@ -506,12 +525,20 @@ def _async_get_full_entity_name(
                 area_id = device.area_id
 
         area_name: str | None = None
+        floor_name: str | None = None
         if (
-            area_id is not UNDEFINED
+            (EntityNamePart.AREA in parts or EntityNamePart.FLOOR in parts)
             and area_id is not None
             and (area := ar.async_get(hass).async_get_area(area_id)) is not None
         ):
             area_name = area.name
+            if (
+                EntityNamePart.FLOOR in parts
+                and area.floor_id is not None
+                and (floor := fr.async_get(hass).async_get_floor(area.floor_id))
+                is not None
+            ):
+                floor_name = floor.name
 
         entity_name = name
         if entity_name is None:
@@ -532,8 +559,14 @@ def _async_get_full_entity_name(
             if unprefixed_name is not None:
                 entity_name = unprefixed_name
 
+        part_names = {
+            EntityNamePart.AREA: area_name,
+            EntityNamePart.DEVICE: device_name,
+            EntityNamePart.ENTITY: entity_name,
+            EntityNamePart.FLOOR: floor_name,
+        }
         full_name = " ".join(
-            part for part in (area_name, device_name, entity_name) if part
+            part_name for part in parts if (part_name := part_names[part])
         )
 
     else:
@@ -559,12 +592,14 @@ def async_get_full_entity_name(
 
     return _async_get_full_entity_name(
         hass,
+        area_id=entry.area_id,
         device_id=entry.device_id,
         fallback="",
         has_entity_name=entry.has_entity_name,
         name=entry.name,
         original_name=original_name,
         original_name_unprefixed=original_name_unprefixed,
+        parts=(EntityNamePart.DEVICE, EntityNamePart.ENTITY),
         use_legacy_naming=True,
     )
 
@@ -739,7 +774,7 @@ class DeletedRegistryEntry:
         )
 
 
-class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
+class EntityRegistryStore(storage.Store[dict[str, Any]]):
     """Store entity registry data."""
 
     @override
@@ -747,7 +782,7 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         self,
         old_major_version: int,
         old_minor_version: int,
-        old_data: dict[str, list[dict[str, Any]]],
+        old_data: dict[str, Any],
     ) -> dict:
         """Migrate to the new version."""
         data = old_data
@@ -914,6 +949,10 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
 
                 for entity in data["deleted_entities"]:
                     entity["aliases_v2"] = [None, *entity["aliases"]]
+
+            if old_minor_version < 23:
+                # Version 1.23 adds settings
+                data["settings"] = {"entity_id_parts": None}
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1157,6 +1196,7 @@ class EntityRegistry(BaseRegistry):
 
     deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry]
     entities: EntityRegistryItems
+    settings: EntityRegistrySettings
     _entities_data: dict[str, RegistryEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -1316,6 +1356,9 @@ class EntityRegistry(BaseRegistry):
         Entity ID conflicts are checked against registered and currently
         existing entities, as well as provided `reserved_entity_ids`.
         """
+        parts = self.settings.entity_id_parts
+        if parts is None:
+            parts = (EntityNamePart.AREA, EntityNamePart.DEVICE, EntityNamePart.ENTITY)
         object_id = _async_get_full_entity_name(
             self.hass,
             area_id=area_id,
@@ -1325,6 +1368,7 @@ class EntityRegistry(BaseRegistry):
             name=name,
             original_name=object_id_base,
             overridden_name=suggested_object_id,
+            parts=parts,
             unprefix_name=True,
         )
         return self.async_get_available_entity_id(
@@ -2066,6 +2110,32 @@ class EntityRegistry(BaseRegistry):
             new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
+    @callback
+    def async_update_settings(
+        self,
+        *,
+        entity_id_parts: list[EntityNamePart] | None | UndefinedType = UNDEFINED,
+    ) -> EntityRegistrySettings:
+        """Update entity registry settings."""
+        self.hass.verify_event_loop_thread("entity_registry.async_update_settings")
+
+        old = self.settings
+        new = old
+        if entity_id_parts is not UNDEFINED:
+            new = dataclasses.replace(
+                new,
+                entity_id_parts=None
+                if entity_id_parts is None
+                else tuple(entity_id_parts),
+            )
+
+        if new == old:
+            return old
+
+        self.settings = new
+        self.async_schedule_save()
+        return new
+
     @override
     async def _async_load(self) -> None:
         """Load the entity registry."""
@@ -2082,6 +2152,7 @@ class EntityRegistry(BaseRegistry):
         data = await self._store.async_load()
         entities = EntityRegistryItems(self.hass)
         deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry] = {}
+        settings = EntityRegistrySettings()
 
         # Move entities to the correct device when a pre-migration composite device was
         # split into one device per config entry. This can be removed 12 months after
@@ -2266,8 +2337,14 @@ class EntityRegistry(BaseRegistry):
                     unique_id=entity["unique_id"],
                 )
 
-        self.deleted_entities = deleted_entities
+            if (parts_data := data["settings"]["entity_id_parts"]) is not None:
+                settings = EntityRegistrySettings(
+                    entity_id_parts=tuple(EntityNamePart(part) for part in parts_data)
+                )
+
         self.entities = entities
+        self.deleted_entities = deleted_entities
+        self.settings = settings
         self._entities_data = entities.data
 
         # Persist entities moved off a split pre-migration composite device
@@ -2287,6 +2364,7 @@ class EntityRegistry(BaseRegistry):
                 entry.as_storage_fragment
                 for entry in list(self.deleted_entities.values())
             ],
+            "settings": {"entity_id_parts": self.settings.entity_id_parts},
         }
 
     @callback
