@@ -1,5 +1,9 @@
 """Test service helpers."""
 
+import asyncio
+from collections.abc import Mapping
+from typing import Any
+
 import pytest
 
 from homeassistant.components.group import Group
@@ -14,7 +18,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -106,13 +110,30 @@ def registries_mock(hass: HomeAssistant) -> None:
         },
     )
 
-    device_in_area = dr.DeviceEntry(id="device-test-area", area_id="test-area")
-    device_no_area = dr.DeviceEntry(id="device-no-area-id")
-    device_diff_area = dr.DeviceEntry(id="device-diff-area", area_id="diff-area")
-    device_area_a = dr.DeviceEntry(id="device-area-a-id", area_id="area-a")
-    device_has_label1 = dr.DeviceEntry(id="device-has-label1-id", labels={"label1"})
-    device_has_label2 = dr.DeviceEntry(id="device-has-label2-id", labels={"label2"})
+    device_in_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-test-area", area_id="test-area"
+    )
+    device_no_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-no-area-id"
+    )
+    device_diff_area = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-diff-area", area_id="diff-area"
+    )
+    device_area_a = dr.DeviceEntry(
+        config_entry_id="mock-config-entry", id="device-area-a-id", area_id="area-a"
+    )
+    device_has_label1 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry",
+        id="device-has-label1-id",
+        labels={"label1"},
+    )
+    device_has_label2 = dr.DeviceEntry(
+        config_entry_id="mock-config-entry",
+        id="device-has-label2-id",
+        labels={"label2"},
+    )
     device_has_labels = dr.DeviceEntry(
+        config_entry_id="mock-config-entry",
         id="device-has-labels-id",
         labels={"label1", "label2"},
         area_id=area_with_labels.id,
@@ -544,7 +565,7 @@ async def test_async_track_target_selector_state_change_event_empty_selector(
         """Handle state change events."""
 
     with pytest.raises(HomeAssistantError) as excinfo:
-        target.async_track_target_selector_state_change_event(
+        await target.async_track_target_selector_state_change_event(
             hass, {}, state_change_callback
         )
     assert str(excinfo.value) == (
@@ -626,7 +647,7 @@ async def test_async_track_target_selector_state_change_event(
         ATTR_FLOOR_ID: floor,
         ATTR_LABEL_ID: label,
     }
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass, selector_config, state_change_callback
     )
 
@@ -762,7 +783,7 @@ async def test_async_track_target_selector_state_change_event_filter(
         ATTR_ENTITY_ID: targeted_entity,
         ATTR_LABEL_ID: label,
     }
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass, selector_config, state_change_callback, entity_filter
     )
 
@@ -803,16 +824,20 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     hass: HomeAssistant,
 ) -> None:
     """Test on_entities_update callback reports added and removed entities."""
-    entity_updates: list[tuple[set[str], set[str]]] = []
+    entity_updates: list[tuple[set[str], set[str], set[str]]] = []
 
     @callback
     def state_change_callback(event: target.TargetStateChangedData) -> None:
         """Handle state change events."""
 
     @callback
-    def on_entities_update(added: set[str], removed: set[str]) -> None:
+    def on_entities_update(
+        added: set[str],
+        removed: set[str],
+        entity_states: Mapping[str, State | None],
+    ) -> None:
         """Track entity set changes."""
-        entity_updates.append((added, removed))
+        entity_updates.append((added, removed, set(entity_states)))
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -835,16 +860,17 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     hass.states.async_set(entity_b.entity_id, STATE_ON)
     await hass.async_block_till_done()
 
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass,
         {ATTR_LABEL_ID: label.label_id},
         state_change_callback,
         on_entities_update=on_entities_update,
     )
 
-    # Initial setup fires on_entities_update with all entities as "added"
+    # Initial setup fires on_entities_update with all entities as "added".
+    # The states mapping covers the currently targeted entities.
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == ({entity_a.entity_id}, set())
+    assert entity_updates[-1] == ({entity_a.entity_id}, set(), {entity_a.entity_id})
     entity_updates.clear()
 
     # Add label to entity_b → added
@@ -852,7 +878,11 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == ({entity_b.entity_id}, set())
+    assert entity_updates[-1] == (
+        {entity_b.entity_id},
+        set(),
+        {entity_a.entity_id, entity_b.entity_id},
+    )
     entity_updates.clear()
 
     # Remove label from entity_a → removed
@@ -860,7 +890,7 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == (set(), {entity_a.entity_id})
+    assert entity_updates[-1] == (set(), {entity_a.entity_id}, {entity_b.entity_id})
     entity_updates.clear()
 
     # Remove label from entity_b → removed
@@ -868,7 +898,7 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == (set(), {entity_b.entity_id})
+    assert entity_updates[-1] == (set(), {entity_b.entity_id}, set())
     entity_updates.clear()
 
     # Re-add both labels at once — entity_a first, then entity_b
@@ -878,8 +908,12 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 2
-    assert entity_updates[0] == ({entity_a.entity_id}, set())
-    assert entity_updates[1] == ({entity_b.entity_id}, set())
+    assert entity_updates[0] == ({entity_a.entity_id}, set(), {entity_a.entity_id})
+    assert entity_updates[1] == (
+        {entity_b.entity_id},
+        set(),
+        {entity_a.entity_id, entity_b.entity_id},
+    )
     entity_updates.clear()
 
     # After unsubscribing, no more callbacks
@@ -887,6 +921,63 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     entity_reg.async_update_entity(entity_a.entity_id, labels=set())
     await hass.async_block_till_done()
     assert len(entity_updates) == 0
+
+
+async def test_async_track_target_selector_cancels_update_task_on_unsubscribe(
+    hass: HomeAssistant,
+) -> None:
+    """Unsubscribing cancels an in-flight registry-driven update task."""
+    started = asyncio.Event()
+    release = asyncio.Event()  # intentionally never set
+    cancelled = False
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData) -> None:
+        """Handle state change events."""
+
+    async def on_entities_update(
+        added: set[str],
+        removed: set[str],
+        entity_states: Mapping[str, State | None],
+    ) -> None:
+        nonlocal cancelled
+        started.set()
+        try:
+            await release.wait()
+        except asyncio.CancelledError:
+            cancelled = True
+            raise
+
+    entity_reg = er.async_get(hass)
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Cancel Test")
+    entity = entity_reg.async_get_or_create(
+        domain="light", platform="test", unique_id="cancel_a"
+    )
+    hass.states.async_set(entity.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # No entity has the label yet, so the awaited initial update does not fire.
+    unsub = await target.async_track_target_selector_state_change_event(
+        hass,
+        {ATTR_LABEL_ID: label.label_id},
+        state_change_callback,
+        on_entities_update=on_entities_update,
+    )
+
+    # Registry change starts the update task, which blocks indefinitely.
+    entity_reg.async_update_entity(entity.entity_id, labels={label.label_id})
+    await started.wait()
+
+    # Unsubscribing cancels the in-flight task.
+    unsub()
+    await asyncio.sleep(0)
+
+    assert cancelled is True
+
+    # Drain (a no-op once cancelled; releases the task if cancellation regressed).
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_async_track_target_selector_no_on_entities_update(
@@ -904,7 +995,7 @@ async def test_async_track_target_selector_no_on_entities_update(
     await hass.async_block_till_done()
 
     # No on_entities_update — should work without errors
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass,
         {ATTR_ENTITY_ID: entity_id},
         state_change_callback,
@@ -915,3 +1006,94 @@ async def test_async_track_target_selector_no_on_entities_update(
     assert len(events) == 1
 
     unsub()
+
+
+COMPOSITE_ID = "composite0000000000000000000000"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_target_trickle_down_to_splits(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Targeting the legacy id reaches the split devices' entities."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 10,
+        "data": {
+            "devices": [
+                {
+                    "area_id": "area_1",
+                    "config_entries": [entry_a.entry_id, entry_b.entry_id],
+                    "config_entries_subentries": {
+                        entry_a.entry_id: [None],
+                        entry_b.entry_id: [None],
+                    },
+                    "configuration_url": None,
+                    "connections": [["mac", "12:34:56:ab:cd:ef"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": COMPOSITE_ID,
+                    "identifiers": [["domain_a", "1"], ["domain_b", "1"]],
+                    "labels": ["lab"],
+                    "manufacturer": "man",
+                    "model": "mod",
+                    "name": "composite",
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": "custom name",
+                    "primary_config_entry": entry_a.entry_id,
+                    "serial_number": "SERIAL",
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "entity_id": "sensor.a",
+                    "platform": "domain_a",
+                    "unique_id": "a",
+                    "config_entry_id": entry_a.entry_id,
+                    "device_id": COMPOSITE_ID,
+                },
+                {
+                    "entity_id": "sensor.b",
+                    "platform": "domain_b",
+                    "unique_id": "b",
+                    "config_entry_id": entry_b.entry_id,
+                    "device_id": COMPOSITE_ID,
+                },
+            ]
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    selected = target.async_extract_referenced_entity_ids(
+        hass, target.TargetSelection({"device_id": COMPOSITE_ID})
+    )
+    assert COMPOSITE_ID not in selected.missing_devices
+    splits = {
+        d.id
+        for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
+    }
+    # The composite id resolves to its splits only; it is not itself referenced (it is not
+    # a real device), so a device-id consumer does not act on the same device twice.
+    assert selected.referenced_devices == splits
+    assert COMPOSITE_ID not in selected.referenced_devices
+    assert selected.indirectly_referenced == {"sensor.a", "sensor.b"}

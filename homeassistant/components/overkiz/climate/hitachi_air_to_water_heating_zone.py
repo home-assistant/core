@@ -1,6 +1,6 @@
 """Support for HitachiAirToWaterHeatingZone."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -47,6 +47,14 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
+    # Each zone is its own device; zone 1 is the default, zone 2 overrides below.
+    _auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1
+    _room_temperature_state = OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
+    _thermostat_setting_state = OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
+    _set_thermostat_setting_command = (
+        OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1
+    )
+
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
     ) -> None:
@@ -56,16 +64,30 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         if self._attr_device_info:
             self._attr_device_info["manufacturer"] = "Hitachi"
 
+        if "Zone2" in self.device.controllable_name:
+            self._auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE2
+            self._room_temperature_state = (
+                OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE2
+            )
+            self._thermostat_setting_state = (
+                OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE2
+            )
+            self._set_thermostat_setting_command = (
+                OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_2
+            )
+
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            state := self.device.states.get(OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1)
+            state := self.device.states.get(self._auto_manu_mode_state)
         ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -73,6 +95,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
@@ -82,6 +105,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.executor.async_execute_command(
@@ -89,11 +113,10 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        current_temperature = self.device.states.get(
-            OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
-        )
+        current_temperature = self.device.states.get(self._room_temperature_state)
 
         if current_temperature:
             return current_temperature.value_as_float
@@ -101,21 +124,21 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.device.states.get(
-            OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
-        )
+        target_temperature = self.device.states.get(self._thermostat_setting_state)
 
         if target_temperature:
             return target_temperature.value_as_float
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1, float(temperature)
+            self._set_thermostat_setting_command, float(temperature)
         )

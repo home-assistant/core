@@ -110,7 +110,7 @@ async def test_binary_sensor(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -141,7 +141,7 @@ async def test_mount_binary_sensor(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -237,7 +237,7 @@ async def test_mount_refresh_after_issue(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -268,18 +268,21 @@ async def test_mount_refresh_after_issue(
                     "type": "mount_failed",
                     "context": "mount",
                     "reference": "nas",
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "execute_reload",
                             "context": "mount",
                             "reference": "nas",
+                            "reference_extra": None,
                         },
                         {
                             "uuid": uuid4().hex,
                             "type": "execute_remove",
                             "context": "mount",
                             "reference": "nas",
+                            "reference_extra": None,
                         },
                     ],
                 },
@@ -306,6 +309,7 @@ async def test_mount_refresh_after_issue(
                     "type": "mount_failed",
                     "context": "mount",
                     "reference": "nas",
+                    "reference_extra": None,
                 },
             },
         }

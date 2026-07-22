@@ -1,7 +1,7 @@
 """Config flow for AirNow integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyairnow import WebServiceAPI
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
@@ -38,11 +38,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
 
     lat = data[CONF_LATITUDE]
     lng = data[CONF_LONGITUDE]
-    distance = data[CONF_RADIUS]
 
     # Check that the provided latitude/longitude provide a response
     try:
-        test_data = await client.observations.latLong(lat, lng, distance=distance)
+        test_data = await client.observations.latLong(lat, lng)
 
     except InvalidKeyError as exc:
         raise InvalidAuth from exc
@@ -63,6 +62,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -122,6 +122,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AirNowOptionsFlowHandler:

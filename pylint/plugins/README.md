@@ -76,21 +76,36 @@ Every check has a code following the
 |------|------|-------------|
 | `C7401` | [`home-assistant-logger-period`](#c7401-home-assistant-logger-period) | Logger messages must not end with a period |
 | `C7402` | [`home-assistant-logger-capital`](#c7402-home-assistant-logger-capital) | Logger messages must start with a capital letter or use debug level |
-| `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `C7403` | [`home-assistant-relative-import`](#c7403-home-assistant-relative-import) | Use relative imports within an integration |
-| `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `C7404` | [`home-assistant-absolute-import`](#c7404-home-assistant-absolute-import) | Use absolute imports for cross-integration references |
 | `C7405` | [`home-assistant-component-root-import`](#c7405-home-assistant-component-root-import) | Do not import from another integration's internals |
 | `C7406` | [`home-assistant-helper-namespace-import`](#c7406-home-assistant-helper-namespace-import) | Use the helper namespace import pattern |
 | `C7407` | [`home-assistant-import-constant-alias`](#c7407-home-assistant-import-constant-alias) | Aliased DOMAIN import needs a descriptive alias |
 | `C7408` | [`home-assistant-import-constant-unnecessary-alias`](#c7408-home-assistant-import-constant-unnecessary-alias) | Unnecessary alias when importing DOMAIN within the same integration |
-| `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
-| `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
-| `R7401` | [`home-assistant-consider-usefixtures-decorator`](#r7401-home-assistant-consider-usefixtures-decorator) | Use `@pytest.mark.usefixtures` for unused fixtures |
-| `E7404` | [`home-assistant-missing-super-call`](#e7404-home-assistant-missing-super-call) | Method must call its parent via `super()` |
 | `C7409` | [`home-assistant-enforce-sorted-platforms`](#c7409-home-assistant-enforce-sorted-platforms) | PLATFORMS list must be sorted alphabetically |
 | `C7410` | [`home-assistant-enforce-greek-micro-char`](#c7410-home-assistant-enforce-greek-micro-char) | Use Greek mu (U+03BC), not ANSI micro sign (U+00B5) |
 | `C7411` | [`home-assistant-enforce-class-module`](#c7411-home-assistant-enforce-class-module) | Entity class should be in the correct platform module |
+| `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
+| `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
+| `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
+| `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
+| `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
+| `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
+| `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
+| `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
+| `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
+| `E7404` | [`home-assistant-missing-super-call`](#e7404-home-assistant-missing-super-call) | Method must call its parent via `super()` |
+| `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
+| `E7406` | [`home-assistant-exception-translation-key-missing`](#e7406-home-assistant-exception-translation-key-missing) | Translation key not found in `strings.json` exceptions section |
+| `E7408` | [`home-assistant-exception-translation-key-domain-mismatch`](#e7408-home-assistant-exception-translation-key-domain-mismatch) | Only one of `translation_key` / `translation_domain` is set |
+| `E7409` | [`home-assistant-mdi-icon-not-found`](#e7409-home-assistant-mdi-icon-not-found) | MDI icon string does not exist in the Material Design Icons set |
+| `E7410` | [`home-assistant-mdi-icon-json-not-found`](#e7410-home-assistant-mdi-icon-json-not-found) | MDI icon in `icons.json` does not exist in the Material Design Icons set |
+| `E7418` | [`home-assistant-exception-placeholder-mismatch`](#e7418-home-assistant-exception-placeholder-mismatch) | Translation placeholders in code don't match `strings.json` |
+| `R7401` | [`home-assistant-consider-usefixtures-decorator`](#r7401-home-assistant-consider-usefixtures-decorator) | Use `@pytest.mark.usefixtures` for unused fixtures |
+| `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
+| `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
+| `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
+| `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
 | `W7404` | [`home-assistant-async-load-fixtures`](#w7404-home-assistant-async-load-fixtures) | Test fixture files should be loaded asynchronously |
@@ -98,34 +113,28 @@ Every check has a code following the
 | `W7406` | [`home-assistant-unique-id-ip-based`](#w7406-home-assistant-unique-id-ip-based) | Unique ID should not be based on IP/hostname |
 | `W7407` | [`home-assistant-config-flow-polling-field`](#w7407-home-assistant-config-flow-polling-field) | Config flow should not include polling interval fields |
 | `W7408` | [`home-assistant-config-flow-name-field`](#w7408-home-assistant-config-flow-name-field) | Config flow should not include name fields |
-| `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
-| `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
-| `W7418` | [`home-assistant-tests-direct-async-setup-entry`](#w7418-home-assistant-tests-direct-async-setup-entry) | Tests should not call an integration's `async_setup_entry` directly |
-| `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
-| `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
-| `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
-| `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
-| `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
-| `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
-| `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
-| `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
-| `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
-| `W7414` | [`home-assistant-service-registered-in-setup-entry`](#w7414-home-assistant-service-registered-in-setup-entry) | Services should be registered in `async_setup`, not `async_setup_entry` |
-| `W7417` | [`home-assistant-exception-not-translated`](#w7417-home-assistant-exception-not-translated) | `HomeAssistantError` should use `translation_key`/`translation_domain` |
-| `W7419` | [`home-assistant-exception-message-with-translation`](#w7419-home-assistant-exception-message-with-translation) | Don't pass a positional message when `translation_key` is set |
-| `E7406` | [`home-assistant-exception-translation-key-missing`](#e7406-home-assistant-exception-translation-key-missing) | Translation key not found in `strings.json` exceptions section |
-| `E7408` | [`home-assistant-exception-translation-key-domain-mismatch`](#e7408-home-assistant-exception-translation-key-domain-mismatch) | Only one of `translation_key` / `translation_domain` is set |
-| `E7418` | [`home-assistant-exception-placeholder-mismatch`](#e7418-home-assistant-exception-placeholder-mismatch) | Translation placeholders in code don't match `strings.json` |
-| `E7409` | [`home-assistant-mdi-icon-not-found`](#e7409-home-assistant-mdi-icon-not-found) | MDI icon string does not exist in the Material Design Icons set |
-| `E7410` | [`home-assistant-mdi-icon-json-not-found`](#e7410-home-assistant-mdi-icon-json-not-found) | MDI icon in `icons.json` does not exist in the Material Design Icons set |
-| `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `W7409` | [`home-assistant-test-non-deterministic`](#w7409-home-assistant-test-non-deterministic) | Test contains `if`/`match` creating non-deterministic execution |
 | `W7410` | [`home-assistant-missing-reauthentication-flow`](#w7410-home-assistant-missing-reauthentication-flow) | Config flow should implement `async_step_reauth` |
 | `W7411` | [`home-assistant-missing-parallel-updates`](#w7411-home-assistant-missing-parallel-updates) | Platform module should define `PARALLEL_UPDATES` |
 | `W7412` | [`home-assistant-missing-diagnostics`](#w7412-home-assistant-missing-diagnostics) | Integration diagnostics module should implement a diagnostics function |
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
+| `W7414` | [`home-assistant-service-registered-in-setup-entry`](#w7414-home-assistant-service-registered-in-setup-entry) | Services should be registered in `async_setup`, not `async_setup_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7417` | [`home-assistant-exception-not-translated`](#w7417-home-assistant-exception-not-translated) | `HomeAssistantError` should use `translation_key`/`translation_domain` |
+| `W7418` | [`home-assistant-tests-direct-async-setup-entry`](#w7418-home-assistant-tests-direct-async-setup-entry) | Tests should not call an integration's `async_setup_entry` directly |
+| `W7419` | [`home-assistant-exception-message-with-translation`](#w7419-home-assistant-exception-message-with-translation) | Don't pass a positional message when `translation_key` is set |
+| `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
+| `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
+| `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
+| `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
+| `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
+| `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
+| `W7426` | [`home-assistant-tests-direct-async-unload-entry`](#w7426-home-assistant-tests-direct-async-unload-entry) | Tests should not call an integration's `async_unload_entry` directly |
+| `W7427` | [`home-assistant-entity-unique-id-redundant-platform`](#w7427-home-assistant-entity-unique-id-redundant-platform) | Entity unique ID includes the entity platform name (e.g. `sensor`, `light`) as a delimited string-literal segment |
+| `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
+| `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
+| `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
 
 
 ## `home_assistant_logger` checker
@@ -445,6 +454,19 @@ the setup through the normal pipeline:
 See [epic #79](https://github.com/home-assistant/epics/issues/79).
 
 
+## `home_assistant_tests_direct_async_unload_entry` checker
+
+Detects tests that call an integration's `async_unload_entry` directly.
+
+### `W7426`: `home-assistant-tests-direct-async-unload-entry`
+
+Tests should not invoke an integration's `async_unload_entry` from
+`__init__.py` directly. Instead, tests should let Home Assistant trigger
+the unload via `await hass.config_entries.async_unload(entry.entry_id)` so
+that the real unload flow (platform unloading, listener teardown,
+`runtime_data` cleanup, etc.) is exercised.
+
+
 ## `home_assistant_enforce_utcnow` checker
 
 Ensures the Home Assistant helper is used to get the current UTC time.
@@ -456,6 +478,41 @@ The helper is implemented as
 `functools.partial(datetime.datetime.now, UTC)` and avoids the global
 lookup of `UTC` on every call, while keeping the codebase consistent in
 how the current UTC time is obtained.
+
+
+## `home_assistant_enforce_now` checker
+
+Ensures the Home Assistant helper is used to get the current local time.
+
+### `C7425`: `home-assistant-enforce-now`
+
+Use `homeassistant.util.dt.now()` instead of `datetime.datetime.now(<tz>)`
+when called with a non-UTC time zone to create an aware `datetime`. The
+helper returns an aware `datetime` in the given time zone (defaulting to
+`DEFAULT_TIME_ZONE`), keeping the codebase consistent in how the current
+local time is obtained. The UTC case (`datetime.now(UTC)`) is handled by
+the [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow)
+checker, and `datetime.now()` with no argument is handled by the
+[`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now)
+checker.
+
+
+## `home_assistant_enforce_naive_now` checker
+
+Ensures the Home Assistant helper is used to get the current naive local time.
+
+### `C7427`: `home-assistant-enforce-naive-now`
+
+Use `homeassistant.util.dt.naive_now()` instead of `datetime.datetime.now()`
+called without a time zone argument. The helper returns a naive `datetime` in
+system local time, keeping the codebase consistent in how the current naive
+local time is obtained and documenting that a naive `datetime` is intentional.
+An explicit `None` argument (`datetime.now(None)` or `datetime.now(tz=None)`)
+returns a naive `datetime` too and is flagged. The aware cases
+(`datetime.now(<tz>)` and `datetime.now(UTC)`) are handled by the
+[`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) and
+[`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow)
+checkers.
 
 
 ## `home_assistant_entity_unique_id` checker
@@ -505,6 +562,75 @@ The rule fires when:
 Resolve by either computing the id per instance (config-entry id,
 serial, MAC, etc.) or declaring the integration as
 `single_config_entry: true` when there is genuinely only one instance.
+
+
+## `home_assistant_entity_unique_id_format` checker
+
+Hosts format-related checks on the value an entity uses for its unique
+ID (`_attr_unique_id` assignments and `unique_id` property/method
+returns). Migrating unique_ids after an integration has shipped risks
+disrupting existing users, so the antipatterns must be caught before
+they ship. Unlike the gated `entity-unique-id` quality-scale checks,
+these checks are **not** gated on `quality_scale.yaml` claims. Both
+checks inspect every class inheriting from `Entity` in their
+respective scopes (including shared bases and mixins/abstract bases
+subclassed by other classes in the same module); see the per-rule
+sections below for the module scope.
+
+### `W7425`: `home-assistant-entity-unique-id-redundant-domain`
+
+The entity registry already keys uniqueness on `(domain, platform,
+unique_id)` where `platform` is the integration's name (as declared
+by the `"domain"` field in `manifest.json`). Any occurrence of the
+integration's name in the unique_id duplicates information already
+present in the registry key.
+
+The rule fires in every integration module (entity-platform modules,
+`entity.py`, `__init__.py`, ...) when the value used for the entity's
+unique id either:
+
+- references the `DOMAIN` name at any depth (e.g.
+  `f"{DOMAIN}_{entry.entry_id}"`), or
+- contains the integration's domain (read from `manifest.json`) as a
+  delimited segment of any string literal (including f-string literal
+  parts), e.g. `f"myhub-{device_id}"` in an integration whose manifest
+  declares `"domain": "myhub"`. A segment is considered delimited when
+  bordered by a non-alphanumeric character (`_`, `-`, `.`, `:`, space,
+  ...) or a string boundary; letters and digits adjacent to the
+  segment make it part of a longer identifier, so substrings like
+  `"myhubitat_..."` or `"myhub2"` don't match.
+
+Three locations are scanned: class-body `_attr_unique_id` assignments,
+`self._attr_unique_id = ...` assignments inside method bodies, and
+`return` values inside a `unique_id` property/method override.
+Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
+scanned.
+
+### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
+
+In `(domain, platform, unique_id)` the `domain` field is the entity
+platform (e.g. `sensor`, `light`, `binary_sensor` — derived from the
+module the entity lives in), so embedding that name as a delimited
+segment of the unique id duplicates information already in the
+registry key.
+
+The rule fires when the value used for the entity's unique id
+contains the current module's platform name as a delimited segment of
+any string literal. The same boundary rules as `W7425` apply: a
+segment is considered delimited when bordered by a non-alphanumeric
+character (`_`, `-`, `.`, `:`, space, ...) or a string boundary, so
+unrelated substrings like `"highlight-..."` or `"light2"` don't match
+`light`.
+
+Scope is narrower than `W7425`: only files whose integration
+sub-module path keys off a known entity platform name are checked.
+Both single-file platform modules (`sensor.py`, `light.py`, ...) and
+platform packages (`sensor/__init__.py`, `sensor/helpers.py`, ...)
+are in scope. `entity.py`, `__init__.py` at the integration root, and
+other helper sub-modules are out of scope because the platform
+context is ambiguous there. The three in-class scan locations are
+the same as for `W7425`.
+
 
 ## `home_assistant_entity_description_defaults` checker
 
@@ -619,6 +745,34 @@ Drop the redundant `@pytest.mark.usefixtures` decorator; the fixture is
 already applied to every test in the module.
 
 
+## `home_assistant_tests_registry_fixtures` checker
+
+Detects test functions and pytest fixtures that call a registry helper's
+`async_get(hass)` directly instead of using the registry fixtures defined
+in `tests/conftest.py` (`area_registry`, `category_registry`,
+`device_registry`, `entity_registry`, `floor_registry`, `issue_registry`,
+`label_registry`).
+
+### `R7404`: `home-assistant-tests-registry-fixtures`
+
+A `test_*` function or `@pytest.fixture`-decorated function calls
+`<registry>.async_get(hass)` directly (e.g. `er.async_get(hass)`) where
+`<registry>` resolves via a module-level
+`from homeassistant.helpers import ...` statement to one of the seven
+registry helper modules. Request the corresponding registry fixture as a
+test/fixture argument instead:
+
+```python
+async def test_entities(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+    entry = entity_registry.async_get(entity_id)
+```
+
+Only aliases imported from `homeassistant.helpers` are tracked. The
+checker is scoped to test modules; `conftest.py` files (where the
+fixtures themselves are defined) and `tests.helpers` (which exercises the
+registry helpers directly) are exempt.
+
+
 ## `home_assistant_test_determinism` checker
 
 `if` and `match` statements inside test functions create non-deterministic
@@ -705,3 +859,59 @@ Entity class should statically guarantee `_attr_has_entity_name = True`:
 either set at class level, set unconditionally at the top of a method, or
 supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
+
+
+## `home_assistant_test_before_configure` checker
+
+Quality-scale-gated checker for the
+[`test-before-configure`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-configure)
+Bronze rule. Fires only when the integration claims the rule as `done`.
+
+### `W7433`: `home-assistant-missing-test-before-configure`
+
+The config flow creates entries but shows no evidence of surfacing
+connection failures to the user: no `errors=` keyword passed to a call
+(with a non-empty literal or dynamic value) and no abort inside an
+`except` handler. A failure can only be surfaced if it was detected
+first, so this single footprint covers the whole test-before-configure
+chain. Evidence is searched in `config_flow.py` and in the defining
+modules of inherited flow classes from other integrations. OAuth flows
+(`AbstractOAuth2FlowHandler`) are skipped; the token exchange is the
+connection test. Integrations that rely on auto-discovery without
+user-provided connection data should mark the rule `exempt`, per the
+rule's exceptions.
+
+
+## `home_assistant_unnecessary_format_mac` checker
+
+Detects redundant `format_mac()` calls inside `CONNECTION_NETWORK_MAC`
+connection tuples that are passed to device registry API methods via
+`connections=` keyword arguments.
+
+### `W7429`: `home-assistant-unnecessary-format-mac`
+
+`format_mac()` is unnecessary when constructing a `CONNECTION_NETWORK_MAC`
+connection tuple for a device registry API call (`DeviceInfo`,
+`async_get_or_create`, `async_get_device`). The device registry already
+normalizes MAC addresses through `_normalize_connections()` before
+storing them, so the call is redundant.
+
+This rule only flags tuples inside a `connections=` keyword argument.
+Tuples used for direct comparison against `device.connections` (e.g.
+the `in` operator, set intersection) are not flagged because those
+comparisons bypass the device registry normalization and genuinely
+need `format_mac()` to match the stored normalized format.
+
+
+## `home_assistant_serial_port_selector_usb_dependency` checker
+
+Detects config flows using `SerialPortSelector` whose `manifest.json` does
+not declare `usb` as a hard dependency.
+
+### `W7430`: `home-assistant-serial-port-selector-usb-dependency`
+
+`SerialPortSelector` populates its port list via the `usb/list_serial_ports`
+websocket command, which is only registered when the `usb` integration is set
+up. The selector therefore requires `usb` as a hard dependency
+(`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
+does not force `usb` to be set up.

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -28,7 +28,11 @@ from pyoverkiz.models import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
@@ -72,7 +76,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.executions: dict[str, dict[str, str]] = {}
+        self.executions: dict[str, list[dict[str, str]]] = {}
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -83,12 +87,19 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except (BadCredentialsError, NotAuthenticatedError) as exception:
+        except (
+            BadCredentialsError,
+            NotAuthenticatedError,
+            OAuth2TokenRequestReauthError,
+        ) as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+        except OAuth2TokenRequestError as exception:
+            raise UpdateFailed("Failed to refresh OAuth2 token.") from exception
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:
@@ -202,10 +213,14 @@ async def on_device_removed(
     base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 
-    if registered_device := registry.async_get_device(
-        identifiers={(DOMAIN, base_device_url)}
+    if registered_device := registry.async_get_device_by_identifier(
+        (DOMAIN, base_device_url), coordinator.config_entry.entry_id
     ):
-        registry.async_remove_device(registered_device.id)
+        # Detach only this entry; the registry deletes the device once none remain.
+        registry.async_update_device(
+            registered_device.id,
+            remove_config_entry_id=coordinator.config_entry.entry_id,
+        )
 
     if event.device_url in coordinator.devices:
         del coordinator.devices[event.device_url]
@@ -217,7 +232,7 @@ async def on_execution_registered(
 ) -> None:
     """Handle execution registered event."""
     if event.exec_id not in coordinator.executions:
-        coordinator.executions[event.exec_id] = {}
+        coordinator.executions[event.exec_id] = []
 
     if not coordinator.is_stateless:
         coordinator.update_interval = timedelta(seconds=1)

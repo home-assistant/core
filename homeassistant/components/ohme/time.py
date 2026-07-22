@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from ohme import ApiException, OhmeApiClient
 
@@ -63,10 +63,12 @@ class OhmeTime(OhmeEntity, TimeEntity):
     entity_description: OhmeTimeDescription
 
     @property
+    @override
     def native_value(self) -> time:
         """Return the current value of the time."""
         return self.entity_description.value_fn(self.coordinator.client)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time value."""
         try:
