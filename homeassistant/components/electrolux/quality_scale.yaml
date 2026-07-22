@@ -18,6 +18,14 @@ rules:
     status: exempt
     comment: |
       No actions are implemented currently.
+  docs-conditions:
+    status: exempt
+    comment: |
+      No conditions are implemented currently.
+  docs-triggers:
+    status: exempt
+    comment: |
+      No triggers are implemented currently.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -60,7 +68,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 
