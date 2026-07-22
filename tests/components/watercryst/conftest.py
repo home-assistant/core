@@ -1,7 +1,7 @@
 """Common fixtures for the WATERCryst BIOCAT tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from pyocat.models import (
@@ -39,6 +39,12 @@ async def mock_api_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
             device_type_number="12000273",
             line="BIOCAT",
             series="KLS 3000-C",
+            has_flow_rate_sensor=True,
+            has_leakage_protection_system=True,
+            has_lime_scale_protection=True,
+            has_pressure_sensor=True,
+            has_temperature_sensor=True,
+            has_wireless_sensor_option=True,
             name="Schulungsgerät",
             current_firmware_version="V01.05.07",
             current_hardware_version="2",
@@ -58,11 +64,13 @@ async def mock_api_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
                 category="info",
                 title="Unknown Event",
                 description="Unknown Event",
-                timestamp=datetime(2026, 6, 8, 13, 13),
+                timestamp=datetime(2026, 6, 8, 13, 13, tzinfo=UTC),
             ),
             water_protection=WaterProtectionResponse(
                 absence_mode_enabled=False,
-                pause_leakage_protection_until_utc=datetime(2026, 6, 8, 13, 13),
+                pause_leakage_protection_until_utc=datetime(
+                    2026, 6, 8, 13, 13, tzinfo=UTC
+                ),
             ),
             ml_state="success",
         )

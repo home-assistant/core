@@ -34,7 +34,10 @@ class RuntimeData:
     """Strongly typed runtime data container."""
 
     bsn: str
+    has_flow_rate_sensor: bool
     has_leakage_protection_system: bool
+    has_pressure_sensor: bool
+    has_temperature_sensor: bool
     device_info: DeviceInfo
     client: AsyncApiClient
     measurements: MeasurementsUpdateCoordinator
@@ -106,7 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
 
     entry.runtime_data = RuntimeData(
         bsn=bsn,
+        has_flow_rate_sensor=info.has_flow_rate_sensor,
         has_leakage_protection_system=info.has_leakage_protection_system,
+        has_pressure_sensor=info.has_pressure_sensor,
+        has_temperature_sensor=info.has_temperature_sensor,
         device_info=device_info,
         client=client,
         measurements=measurements,

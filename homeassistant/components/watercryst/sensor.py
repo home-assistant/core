@@ -28,7 +28,38 @@ from . import WatercrystConfigEntry
 from .coordinator import MeasurementsUpdateCoordinator, StateUpdateCoordinator
 from .entity import WatercrystEntity
 
-MEASUREMENT_SENSORS = [
+STATE_SENSORS = [
+    SensorEntityDescription(
+        key="mode.id", translation_key="mode_id", icon="mdi:circle-double"
+    ),
+]
+
+EVENT_SENSORS = [
+    SensorEntityDescription(
+        key="event.event_id",
+        translation_key="event_id",
+        icon="mdi:alert-circle-outline",
+    ),
+    SensorEntityDescription(
+        key="event.category",
+        translation_key="event_category",
+        icon="mdi:alert-circle-outline",
+    ),
+]
+
+LEAKAGE_PROTECTION_SENSORS = [
+    SensorEntityDescription(
+        key="water_protection.pause_leakage_protection_until_utc",
+        translation_key="pause_leakage_protection_until_utc",
+        icon="mdi:pause-circle-outline",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="ml_state", translation_key="ml_state", icon="mdi:pipe-leak"
+    ),
+]
+
+TEMPERATURE_SENSORS = [
     SensorEntityDescription(
         key="water_temp",
         translation_key="water_temp",
@@ -36,7 +67,10 @@ MEASUREMENT_SENSORS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=0,
-    ),
+    )
+]
+
+PRESSURE_SENSORS = [
     SensorEntityDescription(
         key="pressure",
         translation_key="pressure",
@@ -44,13 +78,32 @@ MEASUREMENT_SENSORS = [
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
         suggested_display_precision=2,
-    ),
+    )
+]
+
+FLOWRATE_SENSORS = [
     SensorEntityDescription(
         key="flow_rate",
         translation_key="flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="todays_consumption",
+        translation_key="todays_consumption",
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="total_consumption",
+        translation_key="total_consumption",
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -71,37 +124,6 @@ MEASUREMENT_SENSORS = [
     ),
 ]
 
-STATE_SENSORS = [
-    SensorEntityDescription(
-        key="mode.id", translation_key="mode_id", icon="mdi:circle-double"
-    ),
-]
-
-LEAKAGE_PROTECTION_SENSORS = [
-    SensorEntityDescription(
-        key="water_protection.pause_leakage_protection_until_utc",
-        translation_key="pause_leakage_protection_until_utc",
-        icon="mdi:pause-circle-outline",
-        device_class=SensorDeviceClass.TIMESTAMP,
-    ),
-    SensorEntityDescription(
-        key="ml_state", translation_key="ml_state", icon="mdi:pipe-leak"
-    ),
-]
-
-EVENT_SENSORS = [
-    SensorEntityDescription(
-        key="event.event_id",
-        translation_key="event_id",
-        icon="mdi:alert-circle-outline",
-    ),
-    SensorEntityDescription(
-        key="event.category",
-        translation_key="event_category",
-        icon="mdi:alert-circle-outline",
-    ),
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -109,10 +131,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor entities."""
-    async_add_entities(
-        WatercrystMeasurementSensorEntity(config_entry, description)
-        for description in MEASUREMENT_SENSORS
-    )
+    data = config_entry.runtime_data
+
     async_add_entities(
         WatercrystStateSensorEntity(config_entry, description)
         for description in STATE_SENSORS
@@ -121,10 +141,26 @@ async def async_setup_entry(
         WatercrystEventSensorEntity(config_entry, description)
         for description in EVENT_SENSORS
     )
-    if config_entry.runtime_data.has_leakage_protection_system:
+
+    if data.has_leakage_protection_system:
         async_add_entities(
             WatercrystStateSensorEntity(config_entry, description)
             for description in LEAKAGE_PROTECTION_SENSORS
+        )
+    if data.has_temperature_sensor:
+        async_add_entities(
+            WatercrystMeasurementSensorEntity(config_entry, description)
+            for description in TEMPERATURE_SENSORS
+        )
+    if data.has_pressure_sensor:
+        async_add_entities(
+            WatercrystMeasurementSensorEntity(config_entry, description)
+            for description in PRESSURE_SENSORS
+        )
+    if data.has_flow_rate_sensor:
+        async_add_entities(
+            WatercrystMeasurementSensorEntity(config_entry, description)
+            for description in FLOWRATE_SENSORS
         )
 
 

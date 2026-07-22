@@ -62,6 +62,12 @@
       "pressure": {
         "name": "Water pressure"
       },
+      "todays_consumption": {
+        "name": "Todays consumption"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
       "water_temp": {
         "name": "Water temperature"
       }
