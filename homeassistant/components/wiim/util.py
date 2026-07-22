@@ -6,6 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
+from .const import DOMAIN
+
 
 class InvalidHomeAssistantURLError(HomeAssistantError):
     """Error to indicate Home Assistant does not expose a usable URL."""
@@ -17,10 +19,14 @@ def get_homeassistant_local_host(hass: HomeAssistant) -> str:
         base_url = get_url(hass, prefer_external=False)
     except NoURLAvailableError as err:
         raise InvalidHomeAssistantURLError(
-            "Failed to determine Home Assistant URL"
+            translation_domain=DOMAIN,
+            translation_key="missing_homeassistant_url",
         ) from err
 
     if local_host := urlparse(base_url).hostname:
         return local_host
 
-    raise InvalidHomeAssistantURLError("Failed to determine Home Assistant URL")
+    raise InvalidHomeAssistantURLError(
+        translation_domain=DOMAIN,
+        translation_key="missing_homeassistant_url",
+    )
