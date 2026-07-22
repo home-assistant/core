@@ -259,22 +259,24 @@ class IpBanManager:
     async def async_load(self) -> None:
         """Load the existing IP bans."""
 
-        # Migrate from old YAML file if it exists
-        try:
-            path = self.hass.config.path(LEGACY_IP_BANS_FILE)
-            list_ = await self.hass.async_add_executor_job(load_yaml_config_file, path)
-            self.ip_bans_lookup = self._data_from_load(list_)
-            await self._save_all_bans()
-            os.unlink(path)
-            _LOGGER.info("Migrated IP bans in %s", path)
-            return
-        except FileNotFoundError:
-            pass
-        except HomeAssistantError as err:
-            _LOGGER.error("Unable to load %s: %s ", path, str(err))
+        list_ = await self.store.async_load()
 
-        list_ = await self.store.async_load() or {}
-        self.ip_bans_lookup = self._data_from_load(list_)
+        # If no IP bans are found in the store, try to load from legacy YAML file if it exists
+        if list_ is None:
+            try:
+                path = self.hass.config.path(LEGACY_IP_BANS_FILE)
+                list_ = await self.hass.async_add_executor_job(
+                    load_yaml_config_file, path
+                )
+                await self.store.async_save(self._data_to_save())
+                os.unlink(path)
+                _LOGGER.info("Migrated %d IP bans from %s", len(list_), path)
+            except FileNotFoundError:
+                pass
+            except HomeAssistantError as err:
+                _LOGGER.error("Unable to load %s: %s ", path, str(err))
+
+        self.ip_bans_lookup = self._data_from_load(list_) if list_ else {}
 
     @staticmethod
     def _get_ban_entry(ip_ban: IpBan) -> dict[str, str]:
