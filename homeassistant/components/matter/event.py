@@ -49,7 +49,45 @@ class MatterEventEntityDescription(EventEntityDescription, MatterEntityDescripti
     """Describe Matter Event entities."""
 
 
-class MatterEventEntity(MatterEntity, EventEntity):
+class MatterEventEntityBase(MatterEntity, EventEntity):
+    """Base class for Matter Event entities."""
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        # subscribe to NodeEvent events
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_matter_node_event,
+                event_filter=EventType.NODE_EVENT,
+                node_filter=self._endpoint.node.node_id,
+            )
+        )
+
+    @override
+    def _update_from_device(self) -> None:
+        """Call when Node attribute(s) changed."""
+
+    @callback
+    def _on_matter_node_event(
+        self,
+        event: EventType,
+        data: MatterNodeEvent,
+    ) -> None:
+        """Call on NodeEvent."""
+        if data.endpoint_id != self._endpoint.endpoint_id:
+            return
+        self._handle_switch_event(data)
+
+    @callback
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle a Switch cluster event."""
+        raise NotImplementedError
+
+
+class MatterEventEntity(MatterEventEntityBase):
     """Representation of a Matter Event entity."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -91,32 +129,9 @@ class MatterEventEntity(MatterEntity, EventEntity):
         self._attr_event_types = event_types
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-
-        # subscribe to NodeEvent events
-        self._unsubscribes.append(
-            self.matter_client.subscribe_events(
-                callback=self._on_matter_node_event,
-                event_filter=EventType.NODE_EVENT,
-                node_filter=self._endpoint.node.node_id,
-            )
-        )
-
-    @override
-    def _update_from_device(self) -> None:
-        """Call when Node attribute(s) changed."""
-
     @callback
-    def _on_matter_node_event(
-        self,
-        event: EventType,
-        data: MatterNodeEvent,
-    ) -> None:
-        """Call on NodeEvent."""
-        if data.endpoint_id != self._endpoint.endpoint_id:
-            return
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle a Switch cluster event."""
         if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
             # multi press event
             presses = (data.data or {}).get("totalNumberOfPressesCounted", 1)
