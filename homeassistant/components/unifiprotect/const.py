@@ -41,7 +41,6 @@ DEFAULT_VERIFY_SSL = False
 DEFAULT_MAX_MEDIA = 1000
 
 DEVICES_THAT_ADOPT = {
-    ModelType.AIPORT,
     ModelType.CAMERA,
     ModelType.LIGHT,
     ModelType.VIEWPORT,
@@ -87,6 +86,7 @@ EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
 EVENT_TYPE_NFC_SCANNED: Final = "scanned"
 EVENT_TYPE_VEHICLE_DETECTED: Final = "detected"
+EVENT_TYPE_PACKAGE_DETECTED: Final = "detected"
 
 # Delay in seconds before firing vehicle event after last thumbnail
 VEHICLE_EVENT_DELAY_SECONDS: Final = 3

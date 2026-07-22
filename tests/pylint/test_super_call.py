@@ -7,10 +7,9 @@ from pylint.checkers import BaseChecker
 from pylint.interfaces import INFERENCE
 from pylint.testutils import MessageTest
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from . import assert_adds_messages, assert_no_messages
+from . import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -117,8 +116,6 @@ def test_enforce_super_call(
 ) -> None:
     """Good test cases."""
     root_node = astroid.parse(code, "homeassistant.components.pylint_test")
-    walker = ASTWalker(linter)
-    walker.add_checker(super_call_checker)
 
     with (
         patch(
@@ -127,7 +124,7 @@ def test_enforce_super_call(
         ),
         assert_no_messages(linter),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, super_call_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -199,8 +196,6 @@ def test_enforce_super_call_bad(
 ) -> None:
     """Bad test cases."""
     root_node = astroid.parse(code, "homeassistant.components.pylint_test")
-    walker = ASTWalker(linter)
-    walker.add_checker(super_call_checker)
     node = root_node.body[node_idx].body[0]
 
     with (
@@ -222,4 +217,4 @@ def test_enforce_super_call_bad(
             ),
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, super_call_checker, root_node)

@@ -9,7 +9,11 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry
@@ -220,6 +224,37 @@ async def test_deprecate_entity_script(
     assert issue is None
 
 
+async def test_migrate_remove_aiport_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """A leftover AI Port device/entity is removed by type, bootstrap-independent."""
+    mac = "AABBCCDDEEFF"
+    device = device_registry.async_get_or_create(
+        config_entry_id=ufp.entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        model_id="AI Port",
+    )
+    entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{mac}_uptime",
+        config_entry=ufp.entry,
+        device_id=device.id,
+    )
+
+    # AI Port deliberately absent from the bootstrap — cleanup is registry-based
+    await init_entry(hass, ufp, [])
+
+    assert entity_registry.async_get(entity.entity_id) is None
+    assert (
+        device_registry.async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
+        is None
+    )
+
+
 async def test_migrate_insecure_camera_redirected(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -339,6 +374,86 @@ async def test_migrate_insecure_camera_removed_disabled_not_repaired(
     assert (
         issue_registry.async_get_issue(
             DOMAIN, f"insecure_camera_removed_{doorbell.mac}_0_insecure"
+        )
+        is None
+    )
+
+
+async def test_migrate_package_binary_sensor_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """An unused package binary sensor is removed silently."""
+    package = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+    )
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(package.entity_id) is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
+        )
+        is None
+    )
+
+
+async def test_migrate_package_binary_sensor_removed_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Removing a used package binary sensor raises an actionable repair."""
+    package = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, package.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(package.entity_id) is None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["entity_id"] == package.entity_id
+
+
+async def test_migrate_package_binary_sensor_removed_disabled_not_repaired(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A disabled package binary sensor is removed without a repair even if referenced."""
+    package = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await _load_automation(hass, package.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(package.entity_id) is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
         )
         is None
     )

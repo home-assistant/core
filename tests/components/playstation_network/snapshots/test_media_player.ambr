@@ -40,9 +40,9 @@
 # name: test_media_player_psvita[presence_payload0][media_player.playstation_vita-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'PlayStation Vita',
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation Vita',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_vita',
@@ -93,14 +93,14 @@
 # name: test_media_player_psvita[presence_payload1][media_player.playstation_vita-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'entity_picture': 'https://image.api.playstation.com/trophy/np/NPWR03134_00_0008206095F67FD3BB385E9E00A7C9CFE6F5A4AB96/5F87A6997DD23D1C4D4CC0D1F958ED79CB905331.PNG',
-      'entity_picture_local': '/api/media_player_proxy/media_player.playstation_vita?token=123456789&cache=c7c916a6e18aec3d',
-      'friendly_name': 'PlayStation Vita',
-      'media_content_id': 'PCSB00074_00',
-      'media_content_type': <MediaType.GAME: 'game'>,
-      'media_title': "Assassin's Creed® III Liberation",
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://image.api.playstation.com/trophy/np/NPWR03134_00_0008206095F67FD3BB385E9E00A7C9CFE6F5A4AB96/5F87A6997DD23D1C4D4CC0D1F958ED79CB905331.PNG',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.playstation_vita?token=123456789&cache=c7c916a6e18aec3d',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation Vita',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'PCSB00074_00',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.GAME: 'game'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: "Assassin's Creed® III Liberation",
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_vita',
@@ -151,11 +151,11 @@
 # name: test_media_player_psvita[presence_payload2][media_player.playstation_vita-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'entity_picture_local': None,
-      'friendly_name': 'PlayStation Vita',
-      'media_content_type': <MediaType.GAME: 'game'>,
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation Vita',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.GAME: 'game'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_vita',
@@ -206,11 +206,11 @@
 # name: test_platform[PS4_idle][media_player.playstation_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'entity_picture_local': None,
-      'friendly_name': 'PlayStation 4',
-      'media_content_type': <MediaType.GAME: 'game'>,
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation 4',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.GAME: 'game'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_4',
@@ -261,9 +261,9 @@
 # name: test_platform[PS4_offline][media_player.playstation_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'PlayStation 4',
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation 4',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_4',
@@ -314,14 +314,14 @@
 # name: test_platform[PS4_playing][media_player.playstation_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'entity_picture': 'http://gs2-sec.ww.prod.dl.playstation.net/gs2-sec/appkgo/prod/CUSA23081_00/5/i_f5d2adec7665af80b8550fb33fe808df10d292cdd47629a991debfdf72bdee34/i/icon0.png',
-      'entity_picture_local': '/api/media_player_proxy/media_player.playstation_4?token=123456789&cache=924f463745523102',
-      'friendly_name': 'PlayStation 4',
-      'media_content_id': 'CUSA23081_00',
-      'media_content_type': <MediaType.GAME: 'game'>,
-      'media_title': 'Untitled Goose Game',
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'http://gs2-sec.ww.prod.dl.playstation.net/gs2-sec/appkgo/prod/CUSA23081_00/5/i_f5d2adec7665af80b8550fb33fe808df10d292cdd47629a991debfdf72bdee34/i/icon0.png',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.playstation_4?token=123456789&cache=924f463745523102',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation 4',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'CUSA23081_00',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.GAME: 'game'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Untitled Goose Game',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_4',
@@ -372,11 +372,11 @@
 # name: test_platform[PS5_idle][media_player.playstation_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'entity_picture_local': None,
-      'friendly_name': 'PlayStation 5',
-      'media_content_type': <MediaType.GAME: 'game'>,
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation 5',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.GAME: 'game'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_5',
@@ -427,9 +427,9 @@
 # name: test_platform[PS5_offline][media_player.playstation_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'PlayStation 5',
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation 5',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_5',
@@ -480,14 +480,14 @@
 # name: test_platform[PS5_playing][media_player.playstation_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'entity_picture': 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
-      'entity_picture_local': '/api/media_player_proxy/media_player.playstation_5?token=123456789&cache=50dfb7140be0060b',
-      'friendly_name': 'PlayStation 5',
-      'media_content_id': 'PPSA07784_00',
-      'media_content_type': <MediaType.GAME: 'game'>,
-      'media_title': 'STAR WARS Jedi: Survivor™',
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://image.api.playstation.com/vulcan/ap/rnd/202211/2222/l8QTN7ThQK3lRBHhB3nX1s7h.png',
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.playstation_5?token=123456789&cache=50dfb7140be0060b',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PlayStation 5',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'PPSA07784_00',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.GAME: 'game'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'STAR WARS Jedi: Survivor™',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.playstation_5',

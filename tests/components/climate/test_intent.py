@@ -178,7 +178,7 @@ async def test_set_temperature(
     # Put areas on different floors:
     # first floor => living room and office
     # upstairs => bedroom
-    floor_registry = fr.async_get(hass)
+    floor_registry = fr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     first_floor = floor_registry.async_create("First floor")
     living_room_area = area_registry.async_update(
         living_room_area.id, floor_id=first_floor.floor_id

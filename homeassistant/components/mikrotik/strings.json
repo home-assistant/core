@@ -30,6 +30,41 @@
       }
     }
   },
+  "entity": {
+    "button": {
+      "shutdown": {
+        "name": "Shutdown"
+      }
+    },
+    "sensor": {
+      "cpu_load": {
+        "name": "CPU usage"
+      },
+      "disk_usage": {
+        "name": "Disk usage"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting: {error}"
+    },
+    "cannot_login": {
+      "message": "Cannot login: {error}"
+    },
+    "cannot_retrieve_data": {
+      "message": "Error retrieving data: {error}"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "mikrotik_api_error": {
+      "message": "Mikrotik API error: {error}"
+    }
+  },
   "options": {
     "step": {
       "device_tracker": {

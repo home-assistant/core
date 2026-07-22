@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from iometer import IOmeterClient, IOmeterConnectionError, Reading, Status
 
@@ -56,6 +57,7 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         self.client = client
         self.identifier = config_entry.entry_id
 
+    @override
     async def _async_update_data(self) -> IOmeterData:
         """Update data async."""
         try:
@@ -67,8 +69,8 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         fw_version = f"{status.device.core.version}/{status.device.bridge.version}"
         if self.current_fw_version and fw_version != self.current_fw_version:
             device_registry = dr.async_get(self.hass)
-            device_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, status.device.id)}
+            device_entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, status.device.id), self.config_entry.entry_id
             )
             assert device_entry
             device_registry.async_update_device(

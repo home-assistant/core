@@ -1,6 +1,6 @@
 """Support for Velux switches."""
 
-from typing import Any
+from typing import Any, override
 
 from pyvlx import OnOffSwitch
 
@@ -36,16 +36,19 @@ class VeluxOnOffSwitch(VeluxEntity, SwitchEntity):
     node: OnOffSwitch
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.node.is_on()
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.node.set_on()
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.node.set_off()

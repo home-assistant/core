@@ -3,7 +3,7 @@
 
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import Homeworks
@@ -624,6 +624,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -658,6 +659,7 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Options flow handler for Lutron Homeworks."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

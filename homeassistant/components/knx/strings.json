@@ -173,6 +173,10 @@
         "description": "Import a KNX project file to help configure group addresses and datapoint types",
         "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
       },
+      "send": {
+        "description": "Send an arbitrary telegram to the KNX bus.",
+        "title": "[%key:component::knx::config_panel::dialogs::send::title%]"
+      },
       "time_server": {
         "description": "Broadcast the current local time and date to the KNX bus",
         "title": "[%key:component::knx::config_panel::dialogs::time_server::title%]"
@@ -183,6 +187,20 @@
         "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
         "file_upload_label": "ETS project file",
         "title": "Import ETS project"
+      },
+      "send": {
+        "data": {
+          "description": "The data to send in the telegram. The format depends on the selected datapoint type.",
+          "label": "Data"
+        },
+        "description": "You can use the hotkey `s` to spawn this dialog from anywhere in the KNX config panel.",
+        "read_button": "Read",
+        "response": {
+          "description": "Send as GroupValueResponse telegram.",
+          "label": "Response"
+        },
+        "title": "Send KNX telegram",
+        "write_button": "Write"
       },
       "time_server": {
         "date": {
@@ -375,6 +393,10 @@
         "no_selection": "No DPT selected"
       }
     },
+    "dpt_reference": {
+      "description": "Browse supported KNX datapoint types",
+      "title": "DPT reference"
+    },
     "entities": {
       "create": {
         "_": {
@@ -450,6 +472,19 @@
             "section_advanced_options": {
               "description": "Properties of the binary sensor state.",
               "title": "State properties"
+            }
+          }
+        },
+        "button": {
+          "description": "Entity for sending predefined values.",
+          "knx": {
+            "data": {
+              "description": "The value sent when the button is pressed. The format of the value depends on the DPT of the configured address.",
+              "label": "Data"
+            },
+            "ga_send": {
+              "description": "Group address the value is sent to.",
+              "label": "Address"
             }
           }
         },
@@ -951,6 +986,10 @@
         "title": "Create KNX entity",
         "type_selection": {
           "header": "Select entity type"
+        },
+        "yaml": {
+          "mode_hint": "This is an internal representation of the entity configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
+          "yaml_error": "There are YAML errors and it cannot be parsed. Switching to the visual editor may cause pending changes to be lost."
         }
       },
       "description": "Add and manage KNX entities",
@@ -991,13 +1030,17 @@
           "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]"
         },
         "section_advanced_options": {
-          "title": "Advanced options"
+          "title": "Additional settings"
         },
         "show_raw_values": "Show raw values",
         "title": "Add exposure",
         "value_template": {
           "description": "Optionally transform the entity state or attribute value before sending it to KNX using a template. The template receives the entity state or attribute value as `value` variable.",
           "label": "Value template"
+        },
+        "yaml": {
+          "mode_hint": "This is an internal representation of the expose configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
+          "yaml_error": "[%key:component::knx::config_panel::entities::create::yaml::yaml_error%]"
         }
       },
       "description": "Expose Home Assistant entity states to the KNX bus",
@@ -1012,8 +1055,32 @@
       "title": "Information"
     },
     "project": {
-      "description": "Inspect imported group addresses",
+      "description": "Inspect imported project",
+      "devices": {
+        "channels": "Channels",
+        "group_objects": "Group objects",
+        "lines": "Lines",
+        "locations": "Locations",
+        "not_found": "No devices found in project data.",
+        "title": "Devices"
+      },
+      "group_addresses": {
+        "title": "[%key:component::knx::config_panel::common::group_addresses%]"
+      },
       "title": "Project"
+    },
+    "selectors": {
+      "knx-payload-selector": {
+        "dpt_missing": "No DPT selected – Typed mode not available",
+        "mode": {
+          "label": "Payload format",
+          "raw": "Raw payload",
+          "typed": "Typed value"
+        },
+        "raw_length": "Payload length",
+        "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
+        "raw_payload": "Raw payload"
+      }
     }
   },
   "device_automation": {
@@ -1136,6 +1203,15 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "database_missing": "The specified database does not exist.",
+      "host_unreachable": "Could not reach the database host.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_dependency": "Required database driver is not installed.",
+      "permission": "Insufficient privileges to access the database.",
+      "timeout": "Connection timed out."
+    },
     "step": {
       "communication_settings": {
         "data": {
@@ -1149,10 +1225,12 @@
         "sections": {
           "telegram_store_section": {
             "data": {
+              "telegram_db_backend": "Telegram storage backend",
               "telegram_db_load_hours": "Group monitor history",
               "telegram_db_retention_days": "Retention period"
             },
             "data_description": {
+              "telegram_db_backend": "Select where to store KNX telegram history.",
               "telegram_db_load_hours": "Number of hours of telegram history to load when the group monitor is opened.",
               "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly at 3 AM. Set to `0` to delete all telegram history on every nightly run."
             },
@@ -1160,6 +1238,25 @@
           }
         },
         "title": "Communication settings"
+      },
+      "telegram_store_postgres": {
+        "data": {
+          "database": "Database name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "tls": "Use TLS",
+          "user": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "database": "Name of the database to store telegrams in.",
+          "host": "Hostname or IP address of the PostgreSQL server.",
+          "password": "Password for the PostgreSQL user. Leave blank to keep the current password.",
+          "port": "Port the PostgreSQL server is listening on.",
+          "tls": "Encrypt the connection to the PostgreSQL server (`sslmode=require`). Note that the server certificate is not verified.",
+          "user": "Username to authenticate with the PostgreSQL server."
+        },
+        "title": "PostgreSQL connection"
       }
     }
   },
@@ -1233,6 +1330,12 @@
         "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    },
+    "telegram_backend": {
+      "options": {
+        "postgres": "PostgreSQL (External)",
+        "sqlite": "Internal storage (Default)"
       }
     }
   },

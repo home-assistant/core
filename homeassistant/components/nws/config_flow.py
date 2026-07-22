@@ -1,7 +1,7 @@
 """Config flow for National Weather Service (NWS) integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from pynws import SimpleNWS
@@ -9,11 +9,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -56,6 +55,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -133,8 +133,12 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                             self.hass,
                             {
                                 CONF_API_KEY: user_input[CONF_API_KEY],
-                                CONF_LATITUDE: state.attributes[ATTR_LATITUDE],
-                                CONF_LONGITUDE: state.attributes[ATTR_LONGITUDE],
+                                CONF_LATITUDE: state.attributes[
+                                    EntityStateAttribute.LATITUDE
+                                ],
+                                CONF_LONGITUDE: state.attributes[
+                                    EntityStateAttribute.LONGITUDE
+                                ],
                             },
                         )
                         return self.async_create_entry(title=location_entity, data=data)

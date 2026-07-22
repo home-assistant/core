@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Adax component."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from adax import Adax
 from adax_local import Adax as AdaxLocal
@@ -39,6 +39,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             websession=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch data from the Adax."""
         try:
@@ -87,6 +88,7 @@ class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Adax."""
         if result := await self.adax_data_handler.get_status():

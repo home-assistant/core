@@ -4,12 +4,13 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -57,10 +58,24 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Return the device manager."""
         return self._device_manager
 
+    @callback
+    def register_new_device_callback(
+        self, callback_func: Callable[[list[ImouHaDevice]], None]
+    ) -> Callable[[], None]:
+        """Register a callback for new devices and return an unregister callback."""
+        self.new_device_callbacks.append(callback_func)
+
+        @callback
+        def remove_callback() -> None:
+            self.new_device_callbacks.remove(callback_func)
+
+        return remove_callback
+
     def get_device(self, device_key: str) -> ImouHaDevice | None:
         """Return the current device for device_key, if still on the account."""
         return self.devices_by_key.get(device_key)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update coordinator data."""
         try:
@@ -134,8 +149,8 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             device_registry = dr.async_get(self.hass)
             for device_key in removed_keys:
                 del self.devices_by_key[device_key]
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_key)}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_key), self.config_entry.entry_id
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,
@@ -148,5 +163,5 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             for device_key in new_keys:
                 self.devices_by_key[device_key] = fresh_by_key[device_key]
                 new_devices.append(fresh_by_key[device_key])
-            for callback in self.new_device_callbacks:
-                callback(new_devices)
+            for new_device_callback in self.new_device_callbacks:
+                new_device_callback(new_devices)
