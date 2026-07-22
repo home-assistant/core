@@ -212,15 +212,54 @@ async def trigger_subscription_callback(
     client: MagicMock,
     event: EventType = EventType.ATTRIBUTE_UPDATED,
     data: Any = None,
+    node_id: int | None = None,
+    attribute_path: str | None = None,
 ) -> None:
-    """Trigger a subscription callback."""
-    # trigger callback on all subscribers
+    """Trigger subscription callbacks, honoring the subscription filters.
+
+    Like the real client, a subscription only fires when the event, node and
+    attribute path match its filters. ``node_id`` / ``attribute_path`` default to
+    ``None`` (unfiltered), matching the historic broadcast behavior used by the
+    many call sites that only need to trigger a state re-read.
+    """
     for sub in client.subscribe_events.call_args_list:
-        callback = sub.kwargs["callback"]
-        event_filter = sub.kwargs.get("event_filter")
-        if event_filter in (None, event):
-            callback(event, data)
+        kwargs = sub.kwargs
+        if kwargs.get("event_filter") not in (None, event):
+            continue
+        if node_id is not None and kwargs.get("node_filter") not in (None, node_id):
+            continue
+        if attribute_path is not None and kwargs.get("attr_path_filter") not in (
+            None,
+            attribute_path,
+        ):
+            continue
+        kwargs["callback"](event, data)
     await hass.async_block_till_done()
+
+
+async def set_node_attribute_and_notify(
+    hass: HomeAssistant,
+    client: MagicMock,
+    node: MatterNode,
+    endpoint: int,
+    cluster_id: int,
+    attribute_id: int,
+    value: Any,
+) -> None:
+    """Set a node attribute and fire the matching ATTRIBUTE_UPDATED subscription.
+
+    Mirrors the real client: the new value is delivered only to subscriptions for
+    that node and attribute path, so a test cannot accidentally notify a handler
+    about an attribute it never subscribed to.
+    """
+    set_node_attribute(node, endpoint, cluster_id, attribute_id, value)
+    await trigger_subscription_callback(
+        hass,
+        client,
+        data=value,
+        node_id=node.node_id,
+        attribute_path=f"{endpoint}/{cluster_id}/{attribute_id}",
+    )
 
 
 @cache
