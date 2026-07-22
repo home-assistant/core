@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_DISABLED_SCENES, DISPATCHER_ADD_SCENES
 from .scene import TewkeSceneLight
@@ -13,7 +14,6 @@ if TYPE_CHECKING:
     from pytewke.data import Scene
 
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .data import TewkeConfigEntry
 
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TewkeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tewke light entities from a config entry."""
     coordinator = entry.runtime_data.coordinator
@@ -38,7 +38,8 @@ async def async_setup_entry(
         if scene_control_types.get(scene_id) == "light"
     ]
     entities += [
-        TewkeTargetLight(coordinator=coordinator, target=target)
+        # We want to expose the scene lights and physical lights
+        TewkeTargetLight(coordinator=coordinator, target=target)  # type: ignore[misc]
         for target in coordinator.data["targets"].values()
     ]
     async_add_entities(entities)

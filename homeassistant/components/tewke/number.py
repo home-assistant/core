@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, override
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.const import UnitOfPower
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import TewkeEntity
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .coordinator import TewkeCoordinator
     from .data import TewkeConfigEntry
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: TewkeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tewke number entities from a config entry."""
     coordinator = entry.runtime_data.coordinator

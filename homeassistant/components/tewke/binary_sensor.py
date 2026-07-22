@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import TewkeEntity
 
@@ -21,7 +22,6 @@ if TYPE_CHECKING:
     from pytewke.data import ConfigData, RadarData, SensorData
 
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .coordinator import TewkeCoordinator
     from .data import TewkeConfigEntry
@@ -53,7 +53,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[TewkeBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: TewkeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tewke binary sensor entities from a config entry."""
     coordinator = entry.runtime_data.coordinator

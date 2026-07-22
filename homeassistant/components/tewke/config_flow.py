@@ -28,6 +28,7 @@ class TewkeConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_name: str
     _room_name: str | None = None
     _scenes: dict[str, Scene]
+    _scene_control_types: dict[str, str]
     _tap: pytewke.Tap | None = None
 
     @override

@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTemperature,
 )
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import TewkeEntity
 
@@ -32,7 +33,6 @@ if TYPE_CHECKING:
     from pytewke.data import EnergyData, RadarData, SensorData
 
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .coordinator import TewkeCoordinator
     from .data import TewkeConfigEntry
@@ -156,7 +156,7 @@ SENSOR_DESCRIPTIONS: tuple[TewkeSensorEntityDescription, ...] = (
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: TewkeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tewke sensor entities from a config entry."""
     coordinator = entry.runtime_data.coordinator
@@ -199,6 +199,7 @@ class TewkeSensor(TewkeEntity, SensorEntity):
         config = coordinator.data["config"]
         assert config is not None
         hardware_id = config.hardware_id
+        # pylint: disable-next=home-assistant-entity-unique-id-redundant-platform
         self._attr_unique_id = f"{hardware_id}_sensor_{description.key}"
 
     @property

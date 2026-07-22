@@ -9,7 +9,7 @@ Scene brightness is write-only on the Tewke API; the last commanded value is
 held locally for optimistic rendering.
 """
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from pytewke.error import (
     PyTewkeCoapError,
@@ -123,6 +123,7 @@ class TewkeSceneEntity(TewkeEntity):
             LOGGER.exception("Error %s Tewke scene %s", action, self._scene_id)
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class TewkeSceneLight(TewkeSceneEntity, LightEntity):
     """A Tewke scene exposed as a dimmable light.
 
@@ -144,7 +145,7 @@ class TewkeSceneLight(TewkeSceneEntity, LightEntity):
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @override
-    async def async_turn_on(self, **kwargs: object) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate the scene, optionally at a specific brightness."""
         raw = kwargs.get(ATTR_BRIGHTNESS)
         ha_brightness = int(raw) if raw is not None else (self.brightness or 255)
@@ -152,6 +153,6 @@ class TewkeSceneLight(TewkeSceneEntity, LightEntity):
         await self._async_set_scene(state=True, brightness=tewke_brightness)
 
     @override
-    async def async_turn_off(self, **_kwargs: object) -> None:
+    async def async_turn_off(self, **_kwargs: Any) -> None:
         """Deactivate the scene."""
         await self._async_set_scene(state=False)

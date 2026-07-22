@@ -9,7 +9,7 @@ Dimmable targets expose "ColorMode.BRIGHTNESS"; non-dimmable ones expose
 (0-100) and the HA scale (0-255).
 """
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from pytewke.error import (
     PyTewkeCoapError,
@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from .coordinator import TewkeCoordinator
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class TewkeTargetLight(TewkeEntity, LightEntity):
     """A Tewke physical output (target) exposed as a light.
 
@@ -96,7 +97,7 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         return _tewke_to_ha_brightness(target.brightness)
 
     @override
-    async def async_turn_on(self, **kwargs: object) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the output, optionally at a specific brightness."""
         target = self._target
         if target is None:
