@@ -59,10 +59,10 @@ async def test_entity(
     [
         ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
         ("NOC", "12:34:56:10:b9:0e", "camera.front"),
-        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell"),
+        # NDB (Netatmo Doorbell) does not support monitoring on/off, so it is not tested here
     ],
 )
-async def test_setup_component_with_webhook(
+async def test_monitoring_component(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     netatmo_auth: AsyncMock,
@@ -70,7 +70,7 @@ async def test_setup_component_with_webhook(
     camera_id: str,
     camera_entity: str,
 ) -> None:
-    """Test setup with webhook."""
+    """Test monitoring on/off component with webhook and action."""
     with selected_platforms([Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
