@@ -145,8 +145,8 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
                     i,
                 )
                 identifier = f"{self.config_entry.entry_id}-{dev_type}-{i}"
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, identifier)}
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, identifier), self.config_entry.entry_id
                 )
                 if device:
                     device_registry.async_update_device(

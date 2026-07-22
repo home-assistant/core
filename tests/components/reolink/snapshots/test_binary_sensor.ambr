@@ -24,7 +24,7 @@
     'object_id_base': 'Animal',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Animal',
     'platform': 'reolink',
@@ -39,6 +39,7 @@
 # name: test_all_entities[binary_sensor.test_reolink_cam_animal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Animal',
     }),
     'context': <ANY>,
@@ -124,7 +125,7 @@
     'object_id_base': 'Bicycle',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Bicycle',
     'platform': 'reolink',
@@ -139,6 +140,7 @@
 # name: test_all_entities[binary_sensor.test_reolink_cam_bicycle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Bicycle',
     }),
     'context': <ANY>,
@@ -224,7 +226,7 @@
     'object_id_base': 'Face',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Face',
     'platform': 'reolink',
@@ -239,6 +241,7 @@
 # name: test_all_entities[binary_sensor.test_reolink_cam_face-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Face',
     }),
     'context': <ANY>,
@@ -525,7 +528,7 @@
     'object_id_base': 'Package',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Package',
     'platform': 'reolink',
@@ -540,6 +543,7 @@
 # name: test_all_entities[binary_sensor.test_reolink_cam_package-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Package',
     }),
     'context': <ANY>,
@@ -575,7 +579,7 @@
     'object_id_base': 'Person',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Person',
     'platform': 'reolink',
@@ -590,6 +594,7 @@
 # name: test_all_entities[binary_sensor.test_reolink_cam_person-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Person',
     }),
     'context': <ANY>,
@@ -675,7 +680,7 @@
     'object_id_base': 'Vehicle',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Vehicle',
     'platform': 'reolink',
@@ -690,6 +695,7 @@
 # name: test_all_entities[binary_sensor.test_reolink_cam_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Vehicle',
     }),
     'context': <ANY>,
