@@ -800,12 +800,14 @@ class SpeechManager:
         """Validate and process options."""
         # Languages
         language = language or engine_instance.default_language
-        if (
-            language is None
-            or engine_instance.supported_languages is None
-            or language not in engine_instance.supported_languages
-        ):
+        if language is None or engine_instance.supported_languages is None:
             raise HomeAssistantError(f"Language '{language}' not supported")
+        matched_languages = language_util.matches(
+            language, engine_instance.supported_languages
+        )
+        if not matched_languages:
+            raise HomeAssistantError(f"Language '{language}' not supported")
+        language = matched_languages[0]
 
         options = options or {}
         supported_options = engine_instance.supported_options or []
