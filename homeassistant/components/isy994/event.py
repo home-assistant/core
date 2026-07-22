@@ -24,6 +24,8 @@ from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.event import (
+    ATTR_MULTI_PRESS_COUNT,
+    ButtonEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -41,25 +43,15 @@ if TYPE_CHECKING:
 EVENT_BUTTON_UNIQUE_ID_SUFFIX = "_button"
 
 ATTR_DIRECTION = "direction"
-ATTR_MULTI_PRESS_COUNT = "multi_press_count"
 
 DIRECTION_UP = "up"
 DIRECTION_DOWN = "down"
-
-# No shared `ButtonEventType` constant exists in homeassistant.components.event
-# yet (only `DoorbellEventType` does, as precedent) -- these are local literals
-# matching architecture#1377's approved strings verbatim. Replace with the
-# shared enum once a core PR adds it.
-EVENT_TYPE_PRESS_END = "press_end"
-EVENT_TYPE_MULTI_PRESS_END = "multi_press_end"
-EVENT_TYPE_LONG_PRESS_START = "long_press_start"
-EVENT_TYPE_LONG_PRESS_END = "long_press_end"
 
 
 class _ControlEvent(NamedTuple):
     """Standard event type + direction/count for one ISY control command."""
 
-    event_type: str
+    event_type: ButtonEventType
     direction: str
     multi_press_count: int | None = None
 
@@ -70,12 +62,12 @@ class _ControlEvent(NamedTuple):
 # (long-press end) isn't listed here: its direction is whichever fade most
 # recently started, tracked in `ISYButtonEvent._last_fade_direction`.
 CONTROL_TO_EVENT: Final[dict[str, _ControlEvent]] = {
-    CMD_ON: _ControlEvent(EVENT_TYPE_PRESS_END, DIRECTION_UP),
-    CMD_OFF: _ControlEvent(EVENT_TYPE_PRESS_END, DIRECTION_DOWN),
-    CMD_ON_FAST: _ControlEvent(EVENT_TYPE_MULTI_PRESS_END, DIRECTION_UP, 2),
-    CMD_OFF_FAST: _ControlEvent(EVENT_TYPE_MULTI_PRESS_END, DIRECTION_DOWN, 2),
-    CMD_FADE_UP: _ControlEvent(EVENT_TYPE_LONG_PRESS_START, DIRECTION_UP),
-    CMD_FADE_DOWN: _ControlEvent(EVENT_TYPE_LONG_PRESS_START, DIRECTION_DOWN),
+    CMD_ON: _ControlEvent(ButtonEventType.PRESS_END, DIRECTION_UP),
+    CMD_OFF: _ControlEvent(ButtonEventType.PRESS_END, DIRECTION_DOWN),
+    CMD_ON_FAST: _ControlEvent(ButtonEventType.MULTI_PRESS_END, DIRECTION_UP, 2),
+    CMD_OFF_FAST: _ControlEvent(ButtonEventType.MULTI_PRESS_END, DIRECTION_DOWN, 2),
+    CMD_FADE_UP: _ControlEvent(ButtonEventType.LONG_PRESS_START, DIRECTION_UP),
+    CMD_FADE_DOWN: _ControlEvent(ButtonEventType.LONG_PRESS_START, DIRECTION_DOWN),
 }
 
 BUTTON_DESCRIPTION: Final[EventEntityDescription] = EventEntityDescription(
@@ -83,10 +75,10 @@ BUTTON_DESCRIPTION: Final[EventEntityDescription] = EventEntityDescription(
     translation_key="button",
     device_class=EventDeviceClass.BUTTON,
     event_types=[
-        EVENT_TYPE_PRESS_END,
-        EVENT_TYPE_MULTI_PRESS_END,
-        EVENT_TYPE_LONG_PRESS_START,
-        EVENT_TYPE_LONG_PRESS_END,
+        ButtonEventType.PRESS_END,
+        ButtonEventType.MULTI_PRESS_END,
+        ButtonEventType.LONG_PRESS_START,
+        ButtonEventType.LONG_PRESS_END,
     ],
 )
 
@@ -193,7 +185,7 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
             return
         if event.control == CMD_FADE_STOP:
             self._trigger_event(
-                EVENT_TYPE_LONG_PRESS_END,
+                ButtonEventType.LONG_PRESS_END,
                 {ATTR_DIRECTION: self._last_fade_direction},
             )
             self.async_write_ha_state()
@@ -201,7 +193,7 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         control_event = CONTROL_TO_EVENT.get(event.control)
         if control_event is None:
             return
-        if control_event.event_type == EVENT_TYPE_LONG_PRESS_START:
+        if control_event.event_type == ButtonEventType.LONG_PRESS_START:
             self._last_fade_direction = control_event.direction
         event_attributes: dict[str, str | int] = {
             ATTR_DIRECTION: control_event.direction
