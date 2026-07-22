@@ -321,7 +321,10 @@ def _remove_stale_subentries(
 ) -> None:
     """Remove subentries that no longer have a matching vehicle."""
     for subentry in list(entry.subentries.values()):
-        if subentry.subentry_id not in current_subentry_ids:
+        if (
+            subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+            and subentry.subentry_id not in current_subentry_ids
+        ):
             LOGGER.debug("Removing stale subentry %s", subentry.subentry_id)
             hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
 
