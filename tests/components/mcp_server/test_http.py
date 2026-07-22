@@ -513,10 +513,9 @@ async def test_mcp_tool_call(
     assert state
     assert state.state == STATE_OFF
 
-    if isinstance(llm_hass_api, list):
-        llm.async_register_api(
-            hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
-        )
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
