@@ -51,6 +51,46 @@
       }
     }
   },
+  "config_subentries": {
+    "energy_site": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
+        "gateway_mismatch": "This Powerwall system belongs to a different energy site. Expected gateway {expected} but found {actual}. Check the local network address and try again.",
+        "not_supported": "Energy sites are added automatically from your Teslemetry account and cannot be added manually.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Energy site",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
+        "key_not_approved": "Your Powerwall system rejected Home Assistant's key because it has not been approved. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
+        "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
+        "key_pending_verification": "Your approval is still being verified by your Powerwall system. Wait a moment, then submit again.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later."
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure energy site",
+        "user": "Add energy site"
+      },
+      "step": {
+        "credentials": {
+          "data": {
+            "host": "[%key:common::config_flow::data::host%]",
+            "password": "[%key:common::config_flow::data::password%]"
+          },
+          "description": "Enter your Powerwall system's local network address and its Wi-Fi password. Only the last 5 characters of the password are needed - find them on the QR label behind the front cover of your Powerwall 3, or behind the Backup Gateway door on Powerwall 2.",
+          "title": "Connect to your Powerwall system"
+        },
+        "pair": {
+          "description": "Flick the On/Off switch on your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on your Powerwall or Backup Gateway.",
+          "title": "Approve the local access key"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "automatic_blind_spot_camera": {
