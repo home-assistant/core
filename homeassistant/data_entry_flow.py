@@ -164,29 +164,31 @@ def evaluate_condition(condition: Mapping[str, Any], data: Mapping[str, Any]) ->
     return _evaluate_field_condition(condition, data)
 
 
-def is_field_hidden(
-    hidden_condition: bool | Mapping[str, Any] | list[Mapping[str, Any]],
+def is_field_visible(
+    visible_condition: bool | Mapping[str, Any] | list[Mapping[str, Any]],
     data: Mapping[str, Any],
 ) -> bool:
-    """Return True when a field's hidden condition matches the submitted data.
+    """Return True when a field's visible condition matches the submitted data.
 
     A list of conditions is combined with AND.
     """
-    if hidden_condition is True:
+    if visible_condition is True:
         return True
-    if hidden_condition is False:
+    if visible_condition is False:
         return False
-    # An empty list has no condition to fail, so the field is hidden.
+    # An empty list has no condition to fail, so the field is visible.
     conditions = (
-        hidden_condition if isinstance(hidden_condition, list) else [hidden_condition]
+        visible_condition
+        if isinstance(visible_condition, list)
+        else [visible_condition]
     )
     return all(evaluate_condition(condition, data) for condition in conditions)
 
 
 class Required(vol.Required):
-    """Required schema marker that can be conditionally hidden.
+    """Required schema marker that can be conditionally shown.
 
-    While the ``hidden`` condition matches the other fields, the field is not
+    Unless the ``visible`` condition matches the other fields, the field is not
     rendered, is treated as optional, and its value is omitted from the
     submitted data. A list of conditions is combined with AND.
     """
@@ -194,18 +196,18 @@ class Required(vol.Required):
     def __init__(
         self,
         *args: Any,
-        hidden: bool | Condition | list[Condition] | None = None,
+        visible: bool | Condition | list[Condition] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a required marker."""
         super().__init__(*args, **kwargs)
-        self.hidden = hidden
+        self.visible = visible
 
 
 class Optional(vol.Optional):
-    """Optional schema marker that can be conditionally hidden.
+    """Optional schema marker that can be conditionally shown.
 
-    While the ``hidden`` condition matches the other fields, the field is not
+    Unless the ``visible`` condition matches the other fields, the field is not
     rendered and its value is omitted from the submitted data. A list of
     conditions is combined with AND.
     """
@@ -213,12 +215,12 @@ class Optional(vol.Optional):
     def __init__(
         self,
         *args: Any,
-        hidden: bool | Condition | list[Condition] | None = None,
+        visible: bool | Condition | list[Condition] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize an optional marker."""
         super().__init__(*args, **kwargs)
-        self.hidden = hidden
+        self.visible = visible
 
 
 _FlowContextT = TypeVar("_FlowContextT", bound="FlowContext", default="FlowContext")
@@ -1104,14 +1106,14 @@ class section:
         return self.schema(value)
 
 
-def _schema_has_hidden(data_schema: vol.Schema) -> bool:
-    """Return True if the schema (or a nested section) has a hidden marker."""
+def _schema_has_visible(data_schema: vol.Schema) -> bool:
+    """Return True if the schema (or a nested section) has a visible marker."""
     if not isinstance(data_schema.schema, dict):
         return False
     for key, val in data_schema.schema.items():
-        if getattr(key, "hidden", None) is not None:
+        if getattr(key, "visible", None) is not None:
             return True
-        if isinstance(val, section) and _schema_has_hidden(val.schema):
+        if isinstance(val, section) and _schema_has_visible(val.schema):
             return True
     return False
 
@@ -1121,16 +1123,17 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
 ) -> tuple[vol.Schema, _T]:
     """Remove currently hidden fields from the schema and the submitted input.
 
-    A hidden field is treated as optional and its value is omitted, so a hidden
-    required field must not fail validation and a hidden field must not inject a
-    default or keep a stale value. Conditions are evaluated against the input
-    with schema defaults applied, so a field omitted by the client resolves the
-    same as one that was submitted. Because a hidden field holds no value, its
-    visibility is resolved until stable: once hidden, a field reads as absent to
-    the conditions of the other fields. Returns the schema and input unchanged
-    when nothing is hidden, leaving schemas without hidden fields untouched.
+    A field whose ``visible`` condition does not match is treated as optional and
+    its value is omitted, so a hidden required field must not fail validation and
+    a hidden field must not inject a default or keep a stale value. Conditions are
+    evaluated against the input with schema defaults applied, so a field omitted
+    by the client resolves the same as one that was submitted. Because a hidden
+    field holds no value, visibility is resolved until stable: once hidden, a
+    field reads as absent to the conditions of the other fields. Returns the
+    schema and input unchanged when every field is visible, leaving schemas
+    without visibility conditions untouched.
     """
-    if not _schema_has_hidden(data_schema):
+    if not _schema_has_visible(data_schema):
         return data_schema, user_input
 
     eval_data = dict(user_input)
@@ -1143,14 +1146,14 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
             and not isinstance(key.default, vol.Undefined)
         ):
             eval_data[name] = key.default()
-        if (hidden_condition := getattr(key, "hidden", None)) is not None:
-            conditions[name] = hidden_condition
+        if (visible_condition := getattr(key, "visible", None)) is not None:
+            conditions[name] = visible_condition
 
     hidden_names: set[Any] = set()
     while newly_hidden := {
         name
         for name, condition in conditions.items()
-        if name not in hidden_names and is_field_hidden(condition, eval_data)
+        if name not in hidden_names and not is_field_visible(condition, eval_data)
     }:
         hidden_names |= newly_hidden
         for name in newly_hidden:
@@ -1191,13 +1194,13 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
     )
 
 
-def add_hidden_conditions_to_serialized_schema(
+def add_visible_conditions_to_serialized_schema(
     data_schema: vol.Schema, serialized: list[dict[str, Any]]
 ) -> None:
-    """Add `hidden` conditions from schema markers to the serialized fields.
+    """Add `visible` conditions from schema markers to the serialized fields.
 
     `voluptuous_serialize` does not emit marker metadata beyond `description`, so
-    a marker's `hidden` argument is injected here after conversion.
+    a marker's `visible` argument is injected here after conversion.
     Recurses into serialized sections.
     """
     if not isinstance(data_schema.schema, dict):
@@ -1212,7 +1215,7 @@ def add_hidden_conditions_to_serialized_schema(
         if (entry := fields_by_name.get(field.get("name"))) is None:
             continue
         key, val = entry
-        if (hidden_condition := getattr(key, "hidden", None)) is not None:
-            field["hidden"] = hidden_condition
+        if (visible_condition := getattr(key, "visible", None)) is not None:
+            field["visible"] = visible_condition
         if isinstance(val, section) and isinstance(field.get("schema"), list):
-            add_hidden_conditions_to_serialized_schema(val.schema, field["schema"])
+            add_visible_conditions_to_serialized_schema(val.schema, field["schema"])

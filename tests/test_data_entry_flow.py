@@ -1378,7 +1378,7 @@ def test_evaluate_condition(condition: dict, data: dict, expected: bool) -> None
 
 
 @pytest.mark.parametrize(
-    ("hidden", "data", "expected"),
+    ("visible", "data", "expected"),
     [
         (True, {}, True),
         (False, {}, False),
@@ -1397,11 +1397,11 @@ def test_evaluate_condition(condition: dict, data: dict, expected: bool) -> None
         ),
     ],
 )
-def test_is_field_hidden(
-    hidden: bool | dict | list, data: dict, expected: bool
+def test_is_field_visible(
+    visible: bool | dict | list, data: dict, expected: bool
 ) -> None:
-    """Test hidden condition resolution mirrors the frontend semantics."""
-    assert data_entry_flow.is_field_hidden(hidden, data) is expected
+    """Test visible condition resolution mirrors the frontend semantics."""
+    assert data_entry_flow.is_field_visible(visible, data) is expected
 
 
 async def test_hidden_required_field_skips_validation(
@@ -1413,7 +1413,7 @@ async def test_hidden_required_field_skips_validation(
             vol.Required("use_tls", default=True): bool,
             data_entry_flow.Required(
                 "cert_path",
-                hidden={"field": "use_tls", "value": False},
+                visible={"field": "use_tls", "value": True},
             ): str,
         }
     )
@@ -1454,7 +1454,7 @@ async def test_hidden_field_is_omitted_from_data(manager: MockFlowManager) -> No
             data_entry_flow.Optional(
                 "cert_path",
                 default="default.pem",
-                hidden={"field": "use_tls", "value": False},
+                visible={"field": "use_tls", "value": True},
             ): str,
         }
     )
@@ -1494,7 +1494,7 @@ async def test_hidden_required_field_in_section(manager: MockFlowManager) -> Non
                         vol.Required("mode", default="simple"): str,
                         data_entry_flow.Required(
                             "token",
-                            hidden={"field": "mode", "value": "simple"},
+                            visible={"field": "mode", "value": "advanced"},
                         ): str,
                     }
                 ),
@@ -1531,7 +1531,7 @@ async def test_hidden_condition_uses_defaults(manager: MockFlowManager) -> None:
             vol.Optional("mode", default="simple"): str,
             data_entry_flow.Required(
                 "token",
-                hidden={"field": "mode", "value": "simple"},
+                visible={"field": "mode", "value": "advanced"},
             ): str,
         }
     )
@@ -1557,7 +1557,7 @@ async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
             vol.Required("enable_advanced", default=False): bool,
             data_entry_flow.Required(
                 "advanced",
-                hidden={"field": "enable_advanced", "value": False},
+                visible={"field": "enable_advanced", "value": True},
             ): data_entry_flow.section(
                 vol.Schema({vol.Required("token"): str}),
             ),
@@ -1591,15 +1591,15 @@ async def test_hidden_field_reads_as_absent_to_other_conditions(
     schema = vol.Schema(
         {
             vol.Optional("mode", default="simple"): str,
-            # hidden while "simple", so its default must not leak to "extra"
+            # visible only while "advanced", so its default must not leak to "extra"
             data_entry_flow.Optional(
                 "token",
                 default="from_default",
-                hidden={"field": "mode", "value": "simple"},
+                visible={"field": "mode", "value": "advanced"},
             ): str,
             data_entry_flow.Required(
                 "extra",
-                hidden={"field": "token", "operator": "not_exists"},
+                visible={"field": "token", "operator": "exists"},
             ): str,
         }
     )
@@ -1635,7 +1635,7 @@ async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> No
                             vol.Required("mode", default="simple"): str,
                             data_entry_flow.Required(
                                 "token",
-                                hidden={"field": "mode", "value": "simple"},
+                                visible={"field": "mode", "value": "advanced"},
                             ): str,
                         }
                     ),
@@ -1658,20 +1658,20 @@ async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> No
     assert result["data"] == {"advanced": {"mode": "simple"}}
 
 
-def test_add_hidden_conditions_to_serialized_schema() -> None:
-    """Test hidden conditions are injected into the serialized schema."""
-    condition = {"field": "use_tls", "value": False}
+def test_add_visible_conditions_to_serialized_schema() -> None:
+    """Test visible conditions are injected into the serialized schema."""
+    condition = {"field": "use_tls", "value": True}
     schema = vol.Schema(
         {
             vol.Required("use_tls", default=True): bool,
-            data_entry_flow.Required("cert_path", hidden=condition): str,
+            data_entry_flow.Required("cert_path", visible=condition): str,
         }
     )
     serialized = voluptuous_serialize.convert(
         schema, custom_serializer=cv.custom_serializer
     )
-    data_entry_flow.add_hidden_conditions_to_serialized_schema(schema, serialized)
+    data_entry_flow.add_visible_conditions_to_serialized_schema(schema, serialized)
 
     fields = {field["name"]: field for field in serialized}
-    assert "hidden" not in fields["use_tls"]
-    assert fields["cert_path"]["hidden"] == condition
+    assert "visible" not in fields["use_tls"]
+    assert fields["cert_path"]["visible"] == condition

@@ -51,7 +51,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
                 schema, custom_serializer=cv.custom_serializer
             )
             if isinstance(serialized, list):
-                data_entry_flow.add_hidden_conditions_to_serialized_schema(
+                data_entry_flow.add_visible_conditions_to_serialized_schema(
                     schema, serialized
                 )
             data["data_schema"] = serialized
