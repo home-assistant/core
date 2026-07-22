@@ -6,7 +6,8 @@
     },
     "error": {
       "infrared_entity_id": "Select an infrared emitter.",
-      "missing_infrared_entity": "Select an infrared emitter or receiver."
+      "missing_infrared_entity": "Select an infrared emitter or receiver.",
+      "no_hvac_modes": "Select at least one supported mode."
     },
     "step": {
       "ac": {
@@ -36,13 +37,11 @@
         "title": "Set up LG TV"
       },
       "user": {
-        "data": {
-          "device_type": "[%key:common::generic::device_type%]"
-        },
-        "data_description": {
-          "device_type": "The type of LG device to control."
-        },
         "description": "Select the type of LG device to set up.",
+        "menu_options": {
+          "ac": "Air conditioner",
+          "tv": "[%key:common::generic::tv%]"
+        },
         "title": "Set up LG IR Remote"
       }
     }
@@ -215,12 +214,6 @@
     }
   },
   "selector": {
-    "device_type": {
-      "options": {
-        "ac": "Air conditioner",
-        "tv": "[%key:common::generic::tv%]"
-      }
-    },
     "hvac_modes": {
       "options": {
         "cool": "Cool",

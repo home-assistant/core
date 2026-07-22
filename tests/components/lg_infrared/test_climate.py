@@ -1,7 +1,6 @@
 """Tests for the LG Infrared climate platform."""
 
 from collections.abc import Callable
-from unittest.mock import patch
 
 from infrared_protocols.commands.lg_ac import (
     MIN_TEMP,
@@ -21,6 +20,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.infrared import InfraredReceivedSignal
@@ -28,10 +28,10 @@ from homeassistant.components.lg_infrared.const import (
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
     FAN_QUIET,
+    LGDeviceType,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -51,23 +51,30 @@ def platforms() -> list[Platform]:
     return [Platform.CLIMATE]
 
 
-# ── Setup / snapshot ──────────────────────────────────────────────────────────
+@pytest.fixture
+def device_type() -> LGDeviceType:
+    """Return the device type of the config entry."""
+    return LGDeviceType.AC
 
 
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.fixture
+def has_receiver() -> bool:
+    """Return whether the config entry has an infrared receiver configured."""
+    return False
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_ac_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test entity state and registry snapshot."""
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_ac_config_entry.entry_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_availability_follows_emitter(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -78,10 +85,7 @@ async def test_availability_follows_emitter(
     )
 
 
-# ── HVAC mode ─────────────────────────────────────────────────────────────────
-
-
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_set_hvac_mode_off(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -99,7 +103,7 @@ async def test_set_hvac_mode_off(
     assert timings == LgAcCommand(mode=LgAcMode.OFF).get_raw_timings()
 
 
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("hvac_mode", "temp", "fan", "expected_timings_fn"),
     [
@@ -177,7 +181,11 @@ async def test_set_hvac_mode_encodes_correctly(
     assert timings == expected_timings_fn()
 
 
-@pytest.mark.usefixtures("init_ac_integration_all_modes")
+@pytest.mark.parametrize(
+    "hvac_modes",
+    [[HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY]],
+)
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("hvac_mode", "expected_timings_fn"),
     [
@@ -216,10 +224,7 @@ async def test_set_hvac_mode_heat_and_fan_only(
     assert timings == expected_timings_fn()
 
 
-# ── Temperature ───────────────────────────────────────────────────────────────
-
-
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_sends_command_when_active(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -255,7 +260,7 @@ async def test_set_temperature_sends_command_when_active(
     assert float(state.attributes["temperature"]) == 26.0
 
 
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_no_command_when_off(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -275,7 +280,7 @@ async def test_set_temperature_no_command_when_off(
     assert float(state.attributes["temperature"]) == 22.0
 
 
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_no_command_in_dry_mode(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -299,10 +304,7 @@ async def test_set_temperature_no_command_in_dry_mode(
     assert len(mock_infrared_emitter_entity.send_command_calls) == 0
 
 
-# ── Fan mode ──────────────────────────────────────────────────────────────────
-
-
-@pytest.mark.usefixtures("init_ac_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_set_fan_mode_sends_command_when_active(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -333,10 +335,8 @@ async def test_set_fan_mode_sends_command_when_active(
     )
 
 
-# ── Receiver state updates ────────────────────────────────────────────────────
-
-
-@pytest.mark.usefixtures("init_ac_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("lib_fan", "expected_fan_mode"),
     [
@@ -371,7 +371,8 @@ async def test_receiver_updates_state_on_cool_signal(
     assert float(state.attributes["temperature"]) == 24.0
 
 
-@pytest.mark.usefixtures("init_ac_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_updates_state_on_off_signal(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -401,7 +402,8 @@ async def test_receiver_updates_state_on_off_signal(
     assert float(state.attributes["temperature"]) == 24.0
 
 
-@pytest.mark.usefixtures("init_ac_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_unconfigured_hvac_mode(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -422,7 +424,8 @@ async def test_receiver_ignores_unconfigured_hvac_mode(
     assert state.attributes["fan_mode"] == FAN_AUTO
 
 
-@pytest.mark.usefixtures("init_ac_integration_with_receiver")
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_non_lg_ac_signal(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -438,28 +441,27 @@ async def test_receiver_ignores_non_lg_ac_signal(
     assert state.state == HVACMode.OFF  # unchanged from initial
 
 
-async def test_receiver_subscribe_failure_warns_and_continues(
-    hass: HomeAssistant,
-    mock_ac_config_entry_with_receiver: MockConfigEntry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
-    platforms: list[Platform],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the entity still sets up and warns if receiver subscription fails."""
-    mock_ac_config_entry_with_receiver.add_to_hass(hass)
-    with (
-        patch("homeassistant.components.lg_infrared.PLATFORMS", platforms),
-        patch(
-            "homeassistant.components.lg_infrared.climate.async_subscribe_receiver",
-            side_effect=HomeAssistantError("boom"),
+@pytest.mark.parametrize(
+    ("hvac_modes", "expected_features"),
+    [
+        pytest.param(
+            [HVACMode.COOL, HVACMode.DRY],
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE,
+            id="with_temperature_mode",
         ),
-    ):
-        await hass.config_entries.async_setup(
-            mock_ac_config_entry_with_receiver.entry_id
-        )
-        await hass.async_block_till_done()
-
+        pytest.param(
+            [HVACMode.DRY, HVACMode.FAN_ONLY],
+            ClimateEntityFeature.FAN_MODE,
+            id="without_temperature_mode",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_target_temperature_feature_follows_configured_modes(
+    hass: HomeAssistant,
+    expected_features: ClimateEntityFeature,
+) -> None:
+    """Test target temperature is only offered when a mode can carry one."""
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
-    assert "physical remote state updates will be unavailable" in caplog.text
+    assert state.attributes["supported_features"] == expected_features

@@ -19,7 +19,6 @@ class LgIrEntity(Entity):
         device_name: str = "LG TV",
     ) -> None:
         """Initialize LG IR entity."""
-        self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

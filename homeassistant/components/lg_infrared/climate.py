@@ -1,6 +1,5 @@
 """Climate platform for LG IR integration — LG AC."""
 
-import logging
 from typing import Any, override
 
 from infrared_protocols.commands.lg_ac import (
@@ -23,12 +22,11 @@ from homeassistant.components.climate import (
 from homeassistant.components.infrared import (
     InfraredEmitterConsumerEntity,
     InfraredReceivedSignal,
-    async_subscribe_receiver,
+    InfraredReceiverConsumerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -42,8 +40,6 @@ from .const import (
     LGDeviceType,
 )
 from .entity import LgIrEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -67,6 +63,9 @@ _HA_MODE_TO_LIB: dict[HVACMode, LgAcMode] = {
 }
 _LIB_MODE_TO_HA: dict[LgAcMode, HVACMode] = {v: k for k, v in _HA_MODE_TO_LIB.items()}
 
+# Only these modes carry a temperature in the LG AC protocol frame.
+_TEMPERATURE_MODES = (LgAcMode.COOL, LgAcMode.HEAT)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -76,7 +75,14 @@ async def async_setup_entry(
     """Set up LG AC climate entity from config entry."""
     if entry.data[CONF_DEVICE_TYPE] != LGDeviceType.AC:
         return
-    async_add_entities([LgAcClimateEntity(entry, entry.data[CONF_INFRARED_ENTITY_ID])])
+
+    emitter_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
+    if receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
+        async_add_entities(
+            [LgAcClimateWithReceiver(entry, emitter_entity_id, receiver_entity_id)]
+        )
+    else:
+        async_add_entities([LgAcClimateEntity(entry, emitter_entity_id)])
 
 
 class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity):
@@ -90,9 +96,6 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
     _attr_should_poll = False
     _attr_assumed_state = True
     _attr_translation_key = "lg_ac"
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
     _attr_fan_modes = [
         FAN_AUTO,
         FAN_QUIET,
@@ -103,10 +106,10 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
         FAN_HIGH,
     ]
 
-    def __init__(self, entry: ConfigEntry, emitter_id: str) -> None:
+    def __init__(self, entry: ConfigEntry, emitter_entity_id: str) -> None:
         """Initialize LG AC climate entity."""
         super().__init__(entry, unique_id_suffix="climate", device_name="LG AC")
-        self._infrared_emitter_entity_id = emitter_id
+        self._infrared_emitter_entity_id = emitter_entity_id
 
         configured_modes = entry.data.get(
             CONF_HVAC_MODES, [HVACMode.COOL, HVACMode.DRY]
@@ -116,28 +119,71 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
         self._attr_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to infrared availability and receiver signals."""
-        await super().async_added_to_hass()
-        receiver_id = self._entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
-        if receiver_id:
-            try:
-                self.async_on_remove(
-                    async_subscribe_receiver(
-                        self.hass, receiver_id, self._on_ir_received
-                    )
-                )
-            except HomeAssistantError:
-                _LOGGER.warning(
-                    "Could not subscribe to IR receiver %s; "
-                    "physical remote state updates will be unavailable",
-                    receiver_id,
-                )
+        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        # Without a temperature-carrying mode no target temperature can ever be sent.
+        if any(
+            _HA_MODE_TO_LIB[mode] in _TEMPERATURE_MODES
+            for mode in self._attr_hvac_modes
+        ):
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set HVAC mode."""
+        temp = int(self._attr_target_temperature or MIN_TEMP)
+        await self._send_command(
+            self._build_command(
+                _HA_MODE_TO_LIB[hvac_mode], temp, self._attr_fan_mode or FAN_AUTO
+            )
+        )
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set target temperature."""
+        temp = int(kwargs[ATTR_TEMPERATURE])
+        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
+        if lib_mode in _TEMPERATURE_MODES:
+            await self._send_command(
+                self._build_command(lib_mode, temp, self._attr_fan_mode or FAN_AUTO)
+            )
+        self._attr_target_temperature = float(temp)
+        self.async_write_ha_state()
+
+    @override
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set fan mode."""
+        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
+        if lib_mode is not LgAcMode.OFF:
+            temp = int(self._attr_target_temperature or MIN_TEMP)
+            await self._send_command(self._build_command(lib_mode, temp, fan_mode))
+        self._attr_fan_mode = fan_mode
+        self.async_write_ha_state()
+
+    def _build_command(self, mode: LgAcMode, temp: int, fan_mode: str) -> LgAcCommand:
+        """Build a command from a mode, a temperature and a fan mode.
+
+        The library drops the temperature for the modes whose frames cannot carry one,
+        so it can be passed unconditionally.
+        """
+        return LgAcCommand(mode=mode, temperature=temp, fan=_HA_FAN_TO_LIB[fan_mode])
+
+
+class LgAcClimateWithReceiver(LgAcClimateEntity, InfraredReceiverConsumerEntity):
+    """LG AC climate entity that also tracks a configured infrared receiver."""
+
+    def __init__(
+        self, entry: ConfigEntry, emitter_entity_id: str, receiver_entity_id: str
+    ) -> None:
+        """Initialize LG AC climate entity with a receiver."""
+        super().__init__(entry, emitter_entity_id)
+        self._infrared_receiver_entity_id = receiver_entity_id
+
+    @override
     @callback
-    def _on_ir_received(self, signal: InfraredReceivedSignal) -> None:
-        """Update state from physical remote signal."""
+    def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
+        """Update state from a physical remote signal."""
         command = LgAcCommand.from_raw_timings(signal.timings)
         if command is None:
             return
@@ -156,40 +202,3 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
             self._attr_target_temperature = float(command.temperature)
 
         self.async_write_ha_state()
-
-    @override
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set HVAC mode."""
-        temp = int(self._attr_target_temperature or MIN_TEMP)
-        await self._send_command(self._build_command(_HA_MODE_TO_LIB[hvac_mode], temp))
-        self._attr_hvac_mode = hvac_mode
-        self.async_write_ha_state()
-
-    @override
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set target temperature."""
-        temp = int(kwargs[ATTR_TEMPERATURE])
-        self._attr_target_temperature = float(temp)
-        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
-        if lib_mode in (LgAcMode.COOL, LgAcMode.HEAT):
-            await self._send_command(self._build_command(lib_mode, temp))
-        self.async_write_ha_state()
-
-    @override
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set fan mode."""
-        self._attr_fan_mode = fan_mode
-        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
-        if lib_mode is not LgAcMode.OFF:
-            temp = int(self._attr_target_temperature or MIN_TEMP)
-            await self._send_command(self._build_command(lib_mode, temp))
-        self.async_write_ha_state()
-
-    def _build_command(self, mode: LgAcMode, temp: int) -> LgAcCommand:
-        """Build a command from a mode, a temperature and the current fan mode.
-
-        The library drops the temperature for the modes whose frames cannot carry one,
-        so it can be passed unconditionally.
-        """
-        fan = _HA_FAN_TO_LIB[self._attr_fan_mode or FAN_AUTO]
-        return LgAcCommand(mode=mode, temperature=temp, fan=fan)

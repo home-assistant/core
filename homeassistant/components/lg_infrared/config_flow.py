@@ -11,6 +11,7 @@ from homeassistant.components.infrared import (
     async_get_receivers,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     EntitySelector,
@@ -43,14 +44,34 @@ _HVAC_MODE_OPTIONS = [
 _DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
 
 
+@callback
+def _infrared_entity_schema(
+    hass: HomeAssistant, *, emitter_required: bool
+) -> vol.Schema:
+    """Return the emitter/receiver selection schema shared by every device type."""
+    emitter_marker = vol.Required if emitter_required else vol.Optional
+    return vol.Schema(
+        {
+            emitter_marker(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                EntitySelectorConfig(
+                    domain=INFRARED_DOMAIN,
+                    include_entities=async_get_emitters(hass),
+                )
+            ),
+            vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
+                EntitySelectorConfig(
+                    domain=INFRARED_DOMAIN,
+                    include_entities=async_get_receivers(hass),
+                )
+            ),
+        }
+    )
+
+
 class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for LG IR."""
 
     VERSION = 2
-
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self._device_type: LGDeviceType | None = None
 
     def _entity_name(self, entity_id: str) -> str:
         ent_reg = er.async_get(self.hass)
@@ -90,37 +111,20 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle device type selection."""
         emitter_entity_ids = async_get_emitters(self.hass)
-        receiver_entity_ids = async_get_receivers(self.hass)
-        if not emitter_entity_ids and not receiver_entity_ids:
+        if not emitter_entity_ids and not async_get_receivers(self.hass):
             return self.async_abort(reason="no_infrared_entities")
 
-        if user_input is not None:
-            self._device_type = LGDeviceType(user_input[CONF_DEVICE_TYPE])
-            if self._device_type == LGDeviceType.TV:
-                return await self.async_step_tv()
-            return await self.async_step_ac()
+        menu_options = [LGDeviceType.TV.value]
+        # The AC step requires an emitter, so offering it without one dead-ends.
+        if emitter_entity_ids:
+            menu_options.append(LGDeviceType.AC.value)
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_TYPE): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[device_type.value for device_type in LGDeviceType],
-                            translation_key=CONF_DEVICE_TYPE,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                }
-            ),
-        )
+        return self.async_show_menu(step_id="user", menu_options=menu_options)
 
     async def async_step_tv(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle TV entity selection."""
-        emitter_entity_ids = async_get_emitters(self.hass)
-        receiver_entity_ids = async_get_receivers(self.hass)
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -134,22 +138,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="tv",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=emitter_entity_ids,
-                        )
-                    ),
-                    vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=receiver_entity_ids,
-                        )
-                    ),
-                }
-            ),
+            data_schema=_infrared_entity_schema(self.hass, emitter_required=False),
             errors=errors,
         )
 
@@ -157,48 +146,26 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle AC entity and mode selection."""
-        emitter_entity_ids = async_get_emitters(self.hass)
-        receiver_entity_ids = async_get_receivers(self.hass)
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             return await self._async_create_device_entry(LGDeviceType.AC, user_input)
 
         return self.async_show_form(
             step_id="ac",
-            data_schema=self._ac_schema(emitter_entity_ids, receiver_entity_ids),
-            errors=errors,
-        )
-
-    def _ac_schema(
-        self,
-        emitter_entity_ids: list[str],
-        receiver_entity_ids: list[str],
-    ) -> vol.Schema:
-        return vol.Schema(
-            {
-                vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
-                    EntitySelectorConfig(
-                        domain=INFRARED_DOMAIN,
-                        include_entities=emitter_entity_ids,
+            data_schema=_infrared_entity_schema(
+                self.hass, emitter_required=True
+            ).extend(
+                {
+                    vol.Required(CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES): vol.All(
+                        SelectSelector(
+                            SelectSelectorConfig(
+                                options=[mode.value for mode in _HVAC_MODE_OPTIONS],
+                                translation_key=CONF_HVAC_MODES,
+                                mode=SelectSelectorMode.LIST,
+                                multiple=True,
+                            )
+                        ),
+                        vol.Length(min=1, msg="no_hvac_modes"),
                     )
-                ),
-                vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
-                    EntitySelectorConfig(
-                        domain=INFRARED_DOMAIN,
-                        include_entities=receiver_entity_ids,
-                    )
-                ),
-                vol.Required(
-                    CONF_HVAC_MODES,
-                    default=_DEFAULT_HVAC_MODES,
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[m.value for m in _HVAC_MODE_OPTIONS],
-                        translation_key=CONF_HVAC_MODES,
-                        mode=SelectSelectorMode.LIST,
-                        multiple=True,
-                    )
-                ),
-            }
+                }
+            ),
         )

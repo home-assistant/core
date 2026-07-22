@@ -50,7 +50,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 9>,
     'translation_key': 'lg_ac',
-    'unique_id': '01JTEST0000000000000000001_climate',
+    'unique_id': '01JTEST0000000000000000000_climate',
     'unit_of_measurement': None,
   })
 # ---
