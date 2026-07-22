@@ -85,7 +85,7 @@ async def test_setup_ignores_unknown_switch_types(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown switch keys from the API are not turned into entities."""
-    registry = er.async_get(hass)
+    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
     switch_entries = [entry for entry in entries if entry.domain == SWITCH_DOMAIN]
     assert len(switch_entries) == 1
