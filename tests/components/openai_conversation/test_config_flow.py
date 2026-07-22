@@ -251,7 +251,6 @@ async def test_subentry_unsupported_model(
     assert subentry_flow["step_id"] == "init"
     assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
 
-    # Redisplay keeps the submitted values so the errored model field stays shown.
     suggested = {
         key.schema: key.description["suggested_value"]
         for key in subentry_flow["data_schema"].schema
@@ -285,7 +284,6 @@ async def test_subentry_advanced_options_visible_when_not_recommended(
         CONF_STORE_RESPONSES,
     ):
         assert visibility[field] == not_recommended
-    # the recommended toggle itself is always shown
     assert visibility[CONF_RECOMMENDED] is None
 
 
