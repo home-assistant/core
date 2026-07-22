@@ -338,12 +338,15 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        # All cameras have alim_status, but some cameras do not have monitoring attribute (e.g. NDB).
+        # All cameras have alim_status, but some cameras do not have explicit
+        # monitoring attribute (e.g. NDB).
         if self.device.alim_status is None:
+            # Treat camera is unavailable if alim_status is None, as it indicates the camera is not reachable.
             self._attr_available = False
             self._monitoring = None
             self._attr_motion_detection_enabled = False
         else:
+            # Camera is available if alim_status is not None, as it indicates the camera is reachable.
             self._attr_available = True
 
             # NDB cameras do not have a monitoring attribute,
@@ -351,16 +354,14 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             if self.device_type == "NDB":
                 self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
                 self._attr_motion_detection_enabled = False
-            # Other cameras have a monitoring attribute,
+            # Other cameras always have a monitoring attribute,
             # so we use that to determine if the camera is monitoring.
-            elif self.device.monitoring is not None:
+            else:
                 self._monitoring = (
                     bool(self.device.monitoring)
                     and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
                 )
                 self._attr_motion_detection_enabled = self._monitoring
-            # According to tests monitoring None is not possible.
-            # Therefore it is not added (adding would decrease test coverage).
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
