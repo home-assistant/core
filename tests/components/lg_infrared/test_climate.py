@@ -40,6 +40,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
@@ -162,7 +163,6 @@ async def test_set_hvac_mode_encodes_correctly(
     expected_timings_fn: Callable[[], list[int]],
 ) -> None:
     """Test that set_hvac_mode sends correctly encoded timings."""
-    # Set initial temperature and fan before switching mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -549,3 +549,56 @@ async def test_state_restored_on_restart(
     assert state.state == expected_mode
     assert state.attributes["fan_mode"] == expected_fan
     assert state.attributes["temperature"] == expected_temp
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test set_temperature switches mode when one is given, even while off."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ATTR_TEMPERATURE: 24,
+            "hvac_mode": HVACMode.COOL,
+        },
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=24, fan=LgAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert state.attributes["temperature"] == 24.0
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_unsupported_hvac_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test a mode the unit does not support is rejected instead of sent."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+                ATTR_TEMPERATURE: 24,
+                "hvac_mode": HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 0

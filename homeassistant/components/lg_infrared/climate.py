@@ -12,6 +12,7 @@ from infrared_protocols.commands.lg_ac import (
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -169,13 +170,20 @@ class LgAcClimateEntity(
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set target temperature."""
+        """Set the target temperature, switching the HVAC mode when one is given."""
         temp = int(kwargs[ATTR_TEMPERATURE])
-        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
-        if lib_mode in _TEMPERATURE_MODES:
+        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None:
+            self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
+
+        lib_mode = _HA_MODE_TO_LIB[hvac_mode or self._attr_hvac_mode or HVACMode.OFF]
+        if hvac_mode is not None or lib_mode in _TEMPERATURE_MODES:
             await self._send_command(
                 self._build_command(lib_mode, temp, self._attr_fan_mode or FAN_AUTO)
             )
+            if hvac_mode is not None:
+                self._attr_hvac_mode = hvac_mode
+
         self._attr_target_temperature = float(temp)
         self.async_write_ha_state()
 
