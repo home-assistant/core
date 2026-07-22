@@ -242,7 +242,7 @@ async def _create_api_and_login(
             last_error_key = f"{DOMAIN}_last_507_error_{config_entry.entry_id}"
             hass_data = hass.data.setdefault(DOMAIN, {})
             last_error_time = hass_data.get(last_error_key)
-            
+
             if last_error_time is None:
                 _LOGGER.warning(
                     "Growatt login failed (HTTP 507), will retry in 4 hours"
