@@ -463,7 +463,7 @@ async def test_remote_sensor_devices(
     freezer.tick(100)
     async_fire_time_changed(hass)
     state = hass.states.get(ENTITY_ID)
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     for device in device_registry.devices.values():
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id
@@ -551,7 +551,7 @@ async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> 
     an ecobee sensor's name was wrongly reported as a participating sensor.
     """
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # A device from another integration that shares the ecobee sensor's name.
     other_entry = MockConfigEntry(domain="other")
@@ -581,7 +581,7 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
     """Test set sensors used in climate."""
     # Get device_id of remote sensor from the device registry.
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     for device in device_registry.devices.values():
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id
