@@ -259,6 +259,14 @@ async def test_subentry_unsupported_model(
     assert subentry_flow["step_id"] == "init"
     assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
 
+    suggested = {
+        key.schema: key.description["suggested_value"]
+        for key in subentry_flow["data_schema"].schema
+        if isinstance(key.description, dict) and "suggested_value" in key.description
+    }
+    assert suggested.get(CONF_RECOMMENDED) is False
+    assert suggested.get(CONF_CHAT_MODEL) == "o1-mini"
+
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
