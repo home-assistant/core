@@ -2050,7 +2050,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.4.0
+pyatmo==9.5.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
