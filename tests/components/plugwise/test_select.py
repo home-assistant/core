@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import (
-    SELECT_DHW_MODE,
+    DHW_MODE,
     SELECT_GATEWAY_MODE,
     SELECT_REGULATION_MODE,
     SELECT_SCHEDULE,
@@ -211,10 +211,10 @@ async def test_anna_select_dhw_mode(
         },
         blocking=True,
     )
-    assert mock_smile_anna_loria.set_select.call_count == 1
-    mock_smile_anna_loria.set_select.assert_called_with(
-        SELECT_DHW_MODE,
+    assert mock_smile_anna_loria.set_dhw_mode.call_count == 1
+    mock_smile_anna_loria.set_dhw_mode.assert_called_with(
+        DHW_MODE,
         "bfb5ee0a88e14e5f97bfa725a760cc49",
         "boost",
-        "on",
+        5,
     )
