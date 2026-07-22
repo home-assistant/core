@@ -8189,7 +8189,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_device_registry[urzivdhumrwfakie]
+# name: test_device_registry[eikafwrmuhdvizruqzktk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
@@ -8204,7 +8204,7 @@
     'identifiers': set({
       tuple(
         'tuya',
-        'urzivdhumrwfakie',
+        'eikafwrmuhdvizruqzktk',
       ),
     }),
     'labels': set({
