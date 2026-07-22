@@ -1,8 +1,9 @@
 """Test the WATERCryst BIOCAT config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from httpx import HTTPStatusError, Request, RequestError, Response
+from pyocat.models import DeviceResponse
 import pytest
 
 from homeassistant import config_entries
@@ -246,3 +247,38 @@ async def test_form_wrong_device_serial(
         CONF_API_KEY: "<api-key>",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+MOCK_BSN = "1234567890"
+MOCK_API_KEY = "test-api-key"
+
+
+async def test_user_step_uses_bsn_as_title_when_name_is_none(
+    hass: HomeAssistant,
+) -> None:
+    """Test the BIOCAT serial is used as title when the device has no name."""
+    user_input = {
+        CONF_BSN: MOCK_BSN,
+        CONF_API_KEY: MOCK_API_KEY,
+    }
+
+    with patch(
+        "homeassistant.components.watercryst.config_flow.validate_input",
+        new=AsyncMock(return_value=DeviceResponse(name=None)),
+    ) as mock_validate_input:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_BSN
+    assert result["data"] == user_input
+    assert result["result"].unique_id == MOCK_BSN
+
+    mock_validate_input.assert_awaited_once_with(hass, user_input)
