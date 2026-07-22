@@ -88,7 +88,9 @@ class MatterAdapter:
                 node.endpoints[data["endpoint_id"]],
             )
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
-            if device := device_registry.async_get_device(identifiers={identifier}):
+            if device := device_registry.async_get_device_by_identifier(
+                identifier, self.config_entry.entry_id
+            ):
                 device_registry.async_remove_device(device.id)
 
         def node_removed_callback(event: EventType, node_id: int) -> None:
