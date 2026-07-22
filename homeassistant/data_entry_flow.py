@@ -1230,15 +1230,17 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
         if (visible_condition := getattr(key, "visible", None)) is not None:
             conditions[name] = visible_condition
 
+    # Match the frontend: hide fields in schema order, dropping each value before
+    # the next field's condition is evaluated.
     hidden_names: set[Any] = set()
-    while newly_hidden := {
-        name
-        for name, condition in conditions.items()
-        if name not in hidden_names and not is_field_visible(condition, eval_data)
-    }:
-        hidden_names |= newly_hidden
-        for name in newly_hidden:
-            eval_data.pop(name, None)
+    changed = True
+    while changed:
+        changed = False
+        for name, condition in conditions.items():
+            if name not in hidden_names and not is_field_visible(condition, eval_data):
+                hidden_names.add(name)
+                eval_data.pop(name, None)
+                changed = True
 
     new_schema: dict[Any, Any] = {}
     new_input: dict[str, Any] | None = None
@@ -1270,7 +1272,9 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
     if new_input is None and len(new_schema) == len(data_schema.schema):
         return data_schema, user_input
     return (
-        probatio.Schema(new_schema, extra=data_schema.extra, required=data_schema.required),
+        probatio.Schema(
+            new_schema, extra=data_schema.extra, required=data_schema.required
+        ),
         cast(_T, new_input if new_input is not None else user_input),
     )
 
