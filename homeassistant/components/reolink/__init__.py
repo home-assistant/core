@@ -493,7 +493,9 @@ def migrate_entity_ids(
                 new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
-            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
+            existing_device = device_reg.async_get_device_by_identifier(
+                (DOMAIN, new_device_id), config_entry_id
+            )
             if existing_device is None:
                 device_reg.async_update_device(
                     device.id, new_identifiers=new_identifiers

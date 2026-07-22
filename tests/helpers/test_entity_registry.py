@@ -3705,6 +3705,68 @@ async def test_device_does_not_exist(entity_registry: er.EntityRegistry) -> None
         entity_registry.async_update_entity(entity_id, device_id="blah")
 
 
+async def test_composite_device_id_ignored(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a request to link an entity to a composite device id is ignored.
+
+    async_get resolves a composite id to a synthesized read-only device, but it is not a
+    real device, so the request is ignored: the entity keeps its current device link and
+    a warning asks the user to report an issue.
+    """
+    entry_1 = MockConfigEntry(domain="itg1")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="itg2")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("itg1", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("itg2", "1")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+    # The composite id resolves to a synthesized device, but is not a real registry entry
+    assert device_registry.async_get(old_id) is not None
+    assert old_id not in device_registry.devices
+
+    warning = f"Ignoring request to link entity from integration hue to device {old_id}"
+
+    # A new entity is created without a device link
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "1234", device_id=old_id
+    )
+    assert entry.device_id is None
+    assert warning in caplog.text
+
+    caplog.clear()
+    entry = entity_registry.async_update_entity(entry.entity_id, device_id=device_1.id)
+    assert entry.device_id == device_1.id
+    assert warning not in caplog.text
+
+    # An existing entity keeps its current device link on update
+    entry = entity_registry.async_update_entity(entry.entity_id, device_id=old_id)
+    assert entry.device_id == device_1.id
+    assert warning in caplog.text
+
+    caplog.clear()
+    # An existing entity keeps its current device link on re-registration
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "1234", device_id=old_id
+    )
+    assert entry.device_id == device_1.id
+    assert warning in caplog.text
+
+
 async def test_disabled_by_str_not_allowed(entity_registry: er.EntityRegistry) -> None:
     """Test we need to pass disabled by type."""
     with pytest.raises(ValueError):
@@ -5506,7 +5568,7 @@ async def test_migration_repoints_entities(
 async def test_migration_repoints_entities_fallbacks(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """An entity not exactly matching a split falls back by config entry, then first split."""
+    """An entity not exactly matching a split falls back by config entry, then detaches."""
     entry_a = MockConfigEntry(
         domain="domain_a",
         subentries_data=[
@@ -5567,8 +5629,8 @@ async def test_migration_repoints_entities_fallbacks(
     assert (
         entity_registry.async_get("sensor.sub").device_id == by_entry[entry_a.entry_id]
     )
-    # No matching config entry falls back to the first split
-    assert entity_registry.async_get("sensor.none").device_id in {d.id for d in splits}
+    # No split matches the config entry, so the entity is detached
+    assert entity_registry.async_get("sensor.none").device_id is None
 
 
 @pytest.mark.parametrize("load_registries", [False])

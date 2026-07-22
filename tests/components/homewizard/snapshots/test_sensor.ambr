@@ -2,8 +2,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_battery_cycles:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -28,7 +28,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -90,8 +89,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_current:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -116,7 +115,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -183,8 +181,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -209,7 +207,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -276,8 +273,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -302,7 +299,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -369,8 +365,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -395,7 +391,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -462,8 +457,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -488,7 +483,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -555,8 +549,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_production_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -581,7 +575,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -648,8 +641,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_state_of_charge:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -674,7 +667,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -741,8 +733,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_uptime:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -767,7 +759,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -827,8 +818,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_voltage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -853,7 +844,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -920,8 +910,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_wi_fi_rssi:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -946,7 +936,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -1009,8 +998,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1035,7 +1024,6 @@
     'model_id': 'HWE-BAT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '1.00',
     'via_device_id': None,
@@ -1094,8 +1082,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1120,7 +1108,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1187,8 +1174,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_current:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1213,7 +1200,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1280,8 +1266,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1306,7 +1292,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1373,8 +1358,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1399,7 +1384,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1466,8 +1450,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1492,7 +1476,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1559,8 +1542,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1585,7 +1568,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1652,8 +1634,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_power_factor:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1678,7 +1660,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1742,8 +1723,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_production_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1768,7 +1749,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1835,8 +1815,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_reactive_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1861,7 +1841,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -1928,8 +1907,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_voltage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -1954,7 +1933,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2021,8 +1999,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2047,7 +2025,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2106,8 +2083,8 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2132,7 +2109,6 @@
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2195,8 +2171,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2221,7 +2197,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2288,8 +2263,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2314,7 +2289,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2381,8 +2355,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2407,7 +2381,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2474,8 +2447,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2500,7 +2473,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2567,8 +2539,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2593,7 +2565,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2660,8 +2631,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2686,7 +2657,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2753,8 +2723,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2779,7 +2749,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2846,8 +2815,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2872,7 +2841,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -2939,8 +2907,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -2965,7 +2933,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3032,8 +2999,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3058,7 +3025,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3125,8 +3091,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3151,7 +3117,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3218,8 +3183,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3244,7 +3209,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3311,8 +3275,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_factor_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3337,7 +3301,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3401,8 +3364,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_factor_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3427,7 +3390,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3491,8 +3453,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_factor_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3517,7 +3479,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3581,8 +3542,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3607,7 +3568,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3674,8 +3634,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3700,7 +3660,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3767,8 +3726,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3793,7 +3752,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3860,8 +3818,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_production_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3886,7 +3844,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -3953,8 +3910,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -3979,7 +3936,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4046,8 +4002,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4072,7 +4028,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4139,8 +4094,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4165,7 +4120,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4232,8 +4186,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4258,7 +4212,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4325,8 +4278,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_voltage_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4351,7 +4304,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4418,8 +4370,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_voltage_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4444,7 +4396,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4511,8 +4462,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_voltage_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4537,7 +4488,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4604,8 +4554,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4630,7 +4580,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4689,8 +4638,8 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4715,7 +4664,6 @@
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -4778,8 +4726,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_average_demand:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4804,7 +4752,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -4868,8 +4815,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4894,7 +4841,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -4961,8 +4907,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_target_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -4987,7 +4933,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5054,8 +4999,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5080,7 +5025,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5147,8 +5091,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5173,7 +5117,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5240,8 +5183,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5266,7 +5209,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5333,8 +5275,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_dsmr_version:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5359,7 +5301,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5418,8 +5359,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5444,7 +5385,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5511,8 +5451,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5537,7 +5477,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5604,8 +5543,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5630,7 +5569,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5697,8 +5635,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5723,7 +5661,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5790,8 +5727,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5816,7 +5753,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5883,8 +5819,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -5909,7 +5845,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -5976,8 +5911,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6002,7 +5937,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6069,8 +6003,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6095,7 +6029,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6162,8 +6095,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6188,7 +6121,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6255,8 +6187,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6281,7 +6213,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6348,8 +6279,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6374,7 +6305,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6441,8 +6371,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_long_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6467,7 +6397,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6526,8 +6455,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_peak_demand_current_month:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6552,7 +6481,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6616,8 +6544,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6642,7 +6570,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6709,8 +6636,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6735,7 +6662,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6794,8 +6720,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6820,7 +6746,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6887,8 +6812,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -6913,7 +6838,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -6980,8 +6904,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7006,7 +6930,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7073,8 +6996,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_smart_meter_identifier:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7099,7 +7022,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7158,8 +7080,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_smart_meter_model:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7184,7 +7106,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7243,8 +7164,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_tariff:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7269,7 +7190,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7342,8 +7262,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_total_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7368,7 +7288,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7435,8 +7354,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7461,7 +7380,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7528,8 +7446,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7554,7 +7472,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7621,8 +7538,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7647,7 +7564,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7714,8 +7630,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7740,7 +7656,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7799,8 +7714,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7825,7 +7740,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7884,8 +7798,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7910,7 +7824,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -7969,8 +7882,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -7995,7 +7908,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -8054,8 +7966,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -8080,7 +7992,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -8139,8 +8050,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -8165,7 +8076,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -8224,8 +8134,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -8250,7 +8160,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -8317,8 +8226,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -8343,7 +8252,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -8402,8 +8310,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -8428,7 +8336,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -8491,8 +8398,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter_gas:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8513,7 +8420,6 @@
     'model_id': None,
     'name': 'Gas meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'gas_meter_G001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -8580,8 +8486,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter_energy:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8602,7 +8508,6 @@
     'model_id': None,
     'name': 'Heat meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'heat_meter_H001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -8669,8 +8574,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8691,7 +8596,6 @@
     'model_id': None,
     'name': 'Inlet heat meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'inlet_heat_meter_IH001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -8754,8 +8658,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter_water:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8776,7 +8680,6 @@
     'model_id': None,
     'name': 'Warm water meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'warm_water_meter_WW001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -8843,8 +8746,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter_water:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -8865,7 +8768,6 @@
     'model_id': None,
     'name': 'Water meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'water_meter_W001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -8932,8 +8834,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_average_demand:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -8958,7 +8860,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9022,8 +8923,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_current_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9048,7 +8949,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9115,8 +9015,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_current_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9141,7 +9041,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9208,8 +9107,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_current_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9234,7 +9133,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9301,8 +9199,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_dsmr_version:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9327,7 +9225,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9386,8 +9283,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9412,7 +9309,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9479,8 +9375,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9505,7 +9401,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9572,8 +9467,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9598,7 +9493,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9665,8 +9559,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9691,7 +9585,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9758,8 +9651,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9784,7 +9677,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9851,8 +9743,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9877,7 +9769,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -9944,8 +9835,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -9970,7 +9861,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10037,8 +9927,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10063,7 +9953,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10130,8 +10019,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10156,7 +10045,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10223,8 +10111,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10249,7 +10137,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10316,8 +10203,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10342,7 +10229,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10409,8 +10295,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_long_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10435,7 +10321,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10494,8 +10379,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_peak_demand_current_month:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10520,7 +10405,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10584,8 +10468,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10610,7 +10494,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10677,8 +10560,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10703,7 +10586,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10762,8 +10644,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10788,7 +10670,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10855,8 +10736,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10881,7 +10762,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -10948,8 +10828,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -10974,7 +10854,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11041,8 +10920,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_smart_meter_identifier:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11067,7 +10946,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11126,8 +11004,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_smart_meter_model:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11152,7 +11030,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11211,8 +11088,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_tariff:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11237,7 +11114,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11310,8 +11186,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_total_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11336,7 +11212,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11403,8 +11278,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11429,7 +11304,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11496,8 +11370,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11522,7 +11396,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11589,8 +11462,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11615,7 +11488,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11682,8 +11554,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_sags_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11708,7 +11580,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11767,8 +11638,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_sags_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11793,7 +11664,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11852,8 +11722,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_sags_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11878,7 +11748,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -11937,8 +11806,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_swells_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -11963,7 +11832,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -12022,8 +11890,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_swells_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12048,7 +11916,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -12107,8 +11974,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_swells_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12133,7 +12000,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -12192,8 +12058,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12218,7 +12084,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -12285,8 +12150,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12311,7 +12176,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -12370,8 +12234,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12396,7 +12260,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -12459,8 +12322,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.gas_meter_gas:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -12481,7 +12344,6 @@
     'model_id': None,
     'name': 'Gas meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -12548,8 +12410,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.heat_meter_energy:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -12570,7 +12432,6 @@
     'model_id': None,
     'name': 'Heat meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -12637,8 +12498,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.inlet_heat_meter:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -12659,7 +12520,6 @@
     'model_id': None,
     'name': 'Inlet heat meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -12722,8 +12582,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.warm_water_meter_water:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -12744,7 +12604,6 @@
     'model_id': None,
     'name': 'Warm water meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -12811,8 +12670,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.water_meter_water:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -12833,7 +12692,6 @@
     'model_id': None,
     'name': 'Water meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -12900,8 +12758,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_average_demand:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12926,7 +12784,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -12990,8 +12847,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13016,7 +12873,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13083,8 +12939,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_target_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13109,7 +12965,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13176,8 +13031,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_current_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13202,7 +13057,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13269,8 +13123,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_current_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13295,7 +13149,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13362,8 +13215,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_current_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13388,7 +13241,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13455,8 +13307,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_dsmr_version:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13481,7 +13333,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13540,8 +13391,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13566,7 +13417,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13633,8 +13483,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13659,7 +13509,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13726,8 +13575,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13752,7 +13601,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13819,8 +13667,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13845,7 +13693,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -13912,8 +13759,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -13938,7 +13785,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14005,8 +13851,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14031,7 +13877,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14098,8 +13943,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14124,7 +13969,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14191,8 +14035,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14217,7 +14061,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14284,8 +14127,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14310,7 +14153,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14377,8 +14219,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14403,7 +14245,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14470,8 +14311,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14496,7 +14337,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14563,8 +14403,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_long_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14589,7 +14429,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14648,8 +14487,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_peak_demand_current_month:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14674,7 +14513,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14738,8 +14576,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14764,7 +14602,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14831,8 +14668,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14857,7 +14694,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -14916,8 +14752,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -14942,7 +14778,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15009,8 +14844,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15035,7 +14870,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15102,8 +14936,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15128,7 +14962,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15195,8 +15028,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_smart_meter_identifier:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15221,7 +15054,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15280,8 +15112,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_smart_meter_model:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15306,7 +15138,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15365,8 +15196,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_tariff:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15391,7 +15222,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15464,8 +15294,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_total_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15490,7 +15320,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15557,8 +15386,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15583,7 +15412,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15650,8 +15478,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15676,7 +15504,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15743,8 +15570,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15769,7 +15596,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15836,8 +15662,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_sags_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15862,7 +15688,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -15921,8 +15746,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_sags_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -15947,7 +15772,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16006,8 +15830,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_sags_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -16032,7 +15856,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16091,8 +15914,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_swells_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -16117,7 +15940,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16176,8 +15998,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_swells_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -16202,7 +16024,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16261,8 +16082,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_swells_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -16287,7 +16108,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16346,8 +16166,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -16372,7 +16192,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16439,8 +16258,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -16465,7 +16284,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16524,8 +16342,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -16550,7 +16368,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -16613,8 +16430,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.gas_meter_gas:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16635,7 +16452,6 @@
     'model_id': None,
     'name': 'Gas meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'gas_meter_G001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -16702,8 +16518,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.heat_meter_energy:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16724,7 +16540,6 @@
     'model_id': None,
     'name': 'Heat meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'heat_meter_H001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -16791,8 +16606,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.inlet_heat_meter:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16813,7 +16628,6 @@
     'model_id': None,
     'name': 'Inlet heat meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'inlet_heat_meter_IH001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -16876,8 +16690,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.warm_water_meter_water:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16898,7 +16712,6 @@
     'model_id': None,
     'name': 'Warm water meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'warm_water_meter_WW001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -16965,8 +16778,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.water_meter_water:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -16987,7 +16800,6 @@
     'model_id': None,
     'name': 'Water meter',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'water_meter_W001',
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -17054,8 +16866,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_average_demand:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17080,7 +16892,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17144,8 +16955,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_current_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17170,7 +16981,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17237,8 +17047,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_current_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17263,7 +17073,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17330,8 +17139,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_current_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17356,7 +17165,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17423,8 +17231,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17449,7 +17257,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17516,8 +17323,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17542,7 +17349,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17609,8 +17415,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17635,7 +17441,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17702,8 +17507,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17728,7 +17533,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17795,8 +17599,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17821,7 +17625,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17888,8 +17691,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -17914,7 +17717,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -17981,8 +17783,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18007,7 +17809,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18074,8 +17875,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18100,7 +17901,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18167,8 +17967,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18193,7 +17993,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18260,8 +18059,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18286,7 +18085,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18353,8 +18151,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18379,7 +18177,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18446,8 +18243,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_long_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18472,7 +18269,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18531,8 +18327,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18557,7 +18353,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18624,8 +18419,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_failures_detected:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18650,7 +18445,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18709,8 +18503,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18735,7 +18529,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18802,8 +18595,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18828,7 +18621,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18895,8 +18687,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -18921,7 +18713,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -18988,8 +18779,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_total_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19014,7 +18805,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19081,8 +18871,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19107,7 +18897,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19174,8 +18963,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19200,7 +18989,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19267,8 +19055,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19293,7 +19081,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19360,8 +19147,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_sags_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19386,7 +19173,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19445,8 +19231,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_sags_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19471,7 +19257,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19530,8 +19315,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_sags_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19556,7 +19341,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19615,8 +19399,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_swells_detected_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19641,7 +19425,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19700,8 +19483,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_swells_detected_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19726,7 +19509,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19785,8 +19567,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_swells_detected_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19811,7 +19593,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19870,8 +19651,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19896,7 +19677,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -19963,8 +19743,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -19989,7 +19769,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -20048,8 +19827,8 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20074,7 +19853,6 @@
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
@@ -20137,8 +19915,8 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20163,7 +19941,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
@@ -20230,8 +20007,8 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20256,7 +20033,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
@@ -20323,8 +20099,8 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20349,7 +20125,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
@@ -20416,8 +20191,8 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20442,7 +20217,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
@@ -20509,8 +20283,8 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_production_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20535,7 +20309,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
@@ -20602,8 +20375,8 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20628,7 +20401,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
@@ -20687,8 +20459,8 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20713,7 +20485,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
@@ -20776,8 +20547,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20802,7 +20573,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -20869,8 +20639,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_current:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20895,7 +20665,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -20962,8 +20731,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20988,7 +20757,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21055,8 +20823,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21081,7 +20849,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21148,8 +20915,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21174,7 +20941,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21241,8 +21007,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21267,7 +21033,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21334,8 +21099,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_power_factor:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21360,7 +21125,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21424,8 +21188,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21450,7 +21214,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21517,8 +21280,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_production_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21543,7 +21306,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21610,8 +21372,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_reactive_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21636,7 +21398,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21703,8 +21464,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_voltage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21729,7 +21490,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21796,8 +21556,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21822,7 +21582,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21881,8 +21640,8 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21907,7 +21666,6 @@
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
@@ -21970,8 +21728,8 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_total_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -21996,7 +21754,6 @@
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '2.03',
     'via_device_id': None,
@@ -22063,8 +21820,8 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_water_usage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22089,7 +21846,6 @@
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '2.03',
     'via_device_id': None,
@@ -22156,8 +21912,8 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22182,7 +21938,6 @@
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '2.03',
     'via_device_id': None,
@@ -22241,8 +21996,8 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22267,7 +22022,6 @@
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '2.03',
     'via_device_id': None,
@@ -22330,8 +22084,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22356,7 +22110,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -22423,8 +22176,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_current:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22449,7 +22202,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -22516,8 +22268,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22542,7 +22294,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -22609,8 +22360,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22635,7 +22386,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -22702,8 +22452,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22728,7 +22478,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -22795,8 +22544,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22821,7 +22570,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -22888,8 +22636,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_power_factor:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -22914,7 +22662,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -22978,8 +22725,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_production_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23004,7 +22751,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23071,8 +22817,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_reactive_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23097,7 +22843,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23164,8 +22909,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_voltage:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23190,7 +22935,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23257,8 +23001,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23283,7 +23027,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23342,8 +23085,8 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23368,7 +23111,6 @@
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23431,8 +23173,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23457,7 +23199,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23524,8 +23265,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23550,7 +23291,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23617,8 +23357,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23643,7 +23383,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23710,8 +23449,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23736,7 +23475,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23803,8 +23541,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23829,7 +23567,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23896,8 +23633,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -23922,7 +23659,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -23989,8 +23725,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24015,7 +23751,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24082,8 +23817,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24108,7 +23843,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24175,8 +23909,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_energy_export:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24201,7 +23935,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24268,8 +24001,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24294,7 +24027,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24361,8 +24093,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_frequency:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24387,7 +24119,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24454,8 +24185,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24480,7 +24211,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24547,8 +24277,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_factor_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24573,7 +24303,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24637,8 +24366,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_factor_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24663,7 +24392,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24727,8 +24455,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_factor_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24753,7 +24481,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24817,8 +24544,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24843,7 +24570,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -24910,8 +24636,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -24936,7 +24662,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25003,8 +24728,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25029,7 +24754,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25096,8 +24820,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_production_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25122,7 +24846,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25189,8 +24912,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25215,7 +24938,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25282,8 +25004,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25308,7 +25030,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25375,8 +25096,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25401,7 +25122,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25468,8 +25188,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25494,7 +25214,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25561,8 +25280,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_voltage_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25587,7 +25306,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25654,8 +25372,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_voltage_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25680,7 +25398,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25747,8 +25464,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_voltage_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25773,7 +25490,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25840,8 +25556,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25866,7 +25582,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
@@ -25925,8 +25640,8 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_wi_fi_strength:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -25951,7 +25666,6 @@
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
     'via_device_id': None,
