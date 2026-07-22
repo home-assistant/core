@@ -352,6 +352,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Deprecated in 2026.8: remove this legacy store migration path after the
     # deprecation window for .storage/hassio has elapsed.
     legacy_store = HassioConfigStore(hass)
+    remove_legacy_store: bool = False
     if (legacy_data := await legacy_store.async_load()) is not None:
         option_updates = _async_migrate_legacy_options(entry, legacy_data)
 
@@ -361,7 +362,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 options={**entry.options, **option_updates},
             )
 
-        await legacy_store.async_remove()
+        remove_legacy_store = True
 
     # Async setup runs first unconditionally and always populates this field
     user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
@@ -524,6 +525,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _check_deprecated_setup(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # If everything else has succeeded, remove the legacy store if it exists. This is done last to
+    # avoid removing it before it has been moved to the config entry and persisted to disk.
+    if remove_legacy_store:
+        await legacy_store.async_remove()
 
     return True
 
