@@ -1,5 +1,6 @@
 """Test the Model Context Protocol Server init module."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from http import HTTPStatus
@@ -217,12 +218,11 @@ async def test_streamable_error_processing_request(
     setup_integration: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test a failure while processing a streamable request returns a structured 400.
+    """Test an unexpected failure while processing a streamable request returns a structured 500.
 
-    This simulates a client probing the endpoint (e.g. a schema/initialize
-    probe) in a way that causes the underlying MCP server run to fail. The
-    endpoint should respond with a structured client error instead of an
-    unhandled exception.
+    This simulates a defect in the underlying MCP server run (not a
+    request-caused failure). The endpoint should respond with a structured
+    server error instead of an unhandled exception or a misleading 400.
     """
     client = await hass_client()
 
@@ -236,9 +236,45 @@ async def test_streamable_error_processing_request(
             headers={"accept": CONTENT_TYPE_JSON},
         )
 
-    assert response.status == HTTPStatus.BAD_REQUEST
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
     response_data = await response.text()
-    assert response_data == "Could not process request"
+    assert response_data == "Internal error processing request"
+
+
+async def test_streamable_timeout_processing_request(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a request the MCP server never responds to returns a structured 504.
+
+    This simulates the originally reported crash: an out-of-sequence or
+    malformed probe that the session can't turn into a reply, so the
+    request-handling task group never receives a response before the
+    timeout. The endpoint should respond with a structured timeout error
+    instead of hanging or crashing.
+    """
+    client = await hass_client()
+
+    async def hang_forever(*args: Any, **kwargs: Any) -> None:
+        await asyncio.sleep(3600)
+
+    with (
+        patch("homeassistant.components.mcp_server.http.TIMEOUT", 0.05),
+        patch(
+            "homeassistant.components.mcp_server.http.Server.run",
+            side_effect=hang_forever,
+        ),
+    ):
+        response = await client.post(
+            STREAMABLE_API,
+            json=INITIALIZE_MESSAGE,
+            headers={"accept": CONTENT_TYPE_JSON},
+        )
+
+    assert response.status == HTTPStatus.GATEWAY_TIMEOUT
+    response_data = await response.text()
+    assert response_data == "Timed out waiting for a response"
 
 
 async def test_http_sse_multiple_config_entries(
