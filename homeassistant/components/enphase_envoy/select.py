@@ -157,10 +157,7 @@ async def async_setup_entry(
         entities.append(
             EnvoyStorageSettingsSelectEntity(coordinator, STORAGE_MODE_ENTITY)
         )
-    if (
-        envoy_data.acb_inventory
-        and coordinator.envoy.supported_features & SupportedFeatures.ACB
-    ):
+    if envoy_data.acb_inventory:
         entities.append(EnvoyACBSleepSocSelectEntity(coordinator, ACB_SLEEP_SOC_ENTITY))
     async_add_entities(entities)
 
@@ -285,6 +282,12 @@ class EnvoyACBSleepSocSelectEntity(EnvoyBaseEntity, SelectEntity):
             name=f"ACB {self.envoy_serial_num}",
             via_device=(DOMAIN, self.envoy_serial_num),
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the ACB sleep SOC select is available."""
+        return super().available and bool(self.data.acb_inventory)
 
     @property
     @override

@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from pyenphase import Envoy
-from pyenphase.const import SupportedFeatures
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -57,10 +56,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
-    if not (
-        envoy_data.acb_inventory
-        and coordinator.envoy.supported_features & SupportedFeatures.ACB
-    ):
+    if not envoy_data.acb_inventory:
         return
 
     entities: list[ButtonEntity] = [

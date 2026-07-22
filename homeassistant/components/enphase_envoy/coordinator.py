@@ -97,7 +97,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         This is the SOC band that the sleep buttons apply. It is kept as
         in-memory state, since persisting it in the config entry options would
         trigger a reload on every change. When not set by the user it defaults
-        to the band currently configured on a battery, if valid, else a default.
+        to the first battery reporting a valid band (batteries are not
+        guaranteed to agree), else a default.
         """
         if self._acb_sleep_soc_band is not None:
             return self._acb_sleep_soc_band

@@ -954,13 +954,13 @@ def aggregate_acb_sleep_state(acbs: Iterable[EnvoyACB]) -> str:
     """
     states = {acb.sleep_state for acb in acbs}
     if ACBSleepState.GOING_TO_SLEEP in states:
-        return ACBSleepState.GOING_TO_SLEEP
+        return ACBSleepState.GOING_TO_SLEEP.value
     if ACBSleepState.WAKING in states:
-        return ACBSleepState.WAKING
+        return ACBSleepState.WAKING.value
     if states == {ACBSleepState.ASLEEP}:
-        return ACBSleepState.ASLEEP
+        return ACBSleepState.ASLEEP.value
     if states == {ACBSleepState.AWAKE}:
-        return ACBSleepState.AWAKE
+        return ACBSleepState.AWAKE.value
     return ACB_AGGREGATE_SLEEP_STATE_MIXED
 
 
