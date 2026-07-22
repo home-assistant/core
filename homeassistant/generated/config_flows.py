@@ -239,6 +239,7 @@ FLOWS = {
         "fivem",
         "fjaraskupan",
         "flexit_bacnet",
+        "flic_button",
         "flipr",
         "flo",
         "flume",
