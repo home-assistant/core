@@ -45,7 +45,7 @@
   },
   "exceptions": {
     "set_music_mode_failed": {
-      "message": "Unable to set music mode for {name}, consider disabling the music mode option: {error}"
+      "message": "Unable to set music mode for {name}: {error}. Consider disabling the music mode option."
     }
   },
   "options": {
