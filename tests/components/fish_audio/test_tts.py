@@ -9,7 +9,7 @@ from fishaudio.exceptions import ServerError
 import pytest
 
 from homeassistant.components import tts
-from homeassistant.components.fish_audio.const import CONF_BACKEND
+from homeassistant.components.fish_audio.const import CONF_BACKEND, DOMAIN
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
@@ -118,7 +118,7 @@ async def test_tts_missing_voice_id(
     """Test TTS service raises ServiceValidationError when voice_id is missing."""
     # Create a config entry with no voice_id
     entry = MockConfigEntry(
-        domain="fish_audio",
+        domain=DOMAIN,
         data={"api_key": "test-key"},
         unique_id="test_user",
         subentries_data=[

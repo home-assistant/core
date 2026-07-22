@@ -1,6 +1,7 @@
 """Support for Notion."""
 
 from dataclasses import dataclass
+from typing import override
 
 from aionotion.bridge.models import Bridge
 from aionotion.listener.models import Listener, ListenerKind
@@ -59,6 +60,7 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -98,22 +100,20 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         self._bridge_id = sensor.bridge.id
 
         device_registry = dr.async_get(self.hass)
-        this_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, sensor.hardware_id)}
-        )
         bridge = self.coordinator.data.bridges[self._bridge_id]
-        bridge_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, bridge.hardware_id)}
+        bridge_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, bridge.hardware_id), self.coordinator.config_entry.entry_id
         )
 
-        if not bridge_device or not this_device:
+        if not bridge_device or not self.device_entry:
             return
 
         device_registry.async_update_device(
-            this_device.id, via_device_id=bridge_device.id
+            self.device_entry.id, via_device_id=bridge_device.id
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         if self._listener_id in self.coordinator.data.listeners:

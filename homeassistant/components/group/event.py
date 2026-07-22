@@ -1,7 +1,7 @@
 """Platform allowing several event entities to be grouped into one event."""
 
 import itertools
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -118,6 +118,7 @@ class EventGroup(GroupEntity, EventEntity):
         self._attr_unique_id = unique_id
         self._attr_event_types = []
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
@@ -166,6 +167,7 @@ class EventGroup(GroupEntity, EventEntity):
         await super().async_added_to_hass()
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the event group properties."""
         states = [

@@ -15,7 +15,7 @@ from aiohttp import ClientError
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
-from soco.core import SoCo
+from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
 import voluptuous as vol
@@ -114,6 +114,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
+    _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
+    soco_reset()
     soco_config.EVENTS_MODULE = events_asyncio
     soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
@@ -153,6 +155,8 @@ async def async_unload_entry(
         config_entry, PLATFORMS
     )
     await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+    soco_reset()
+    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
     return unload_ok
 
 
@@ -260,8 +264,11 @@ class SonosDiscoveryManager:
             visible_zones = soco.visible_zones
             self._known_invisible = soco.all_zones - visible_zones
             for zone in visible_zones:
-                if zone.uid not in self.data.discovered:
-                    zones_to_add.add(zone)
+                if zone.uid in self.data.discovered or self.is_device_disabled(
+                    zone.uid
+                ):
+                    continue
+                zones_to_add.add(zone)
 
             if not zones_to_add:
                 return
@@ -493,8 +500,21 @@ class SonosDiscoveryManager:
             )
             if not known_speaker:
                 try:
+                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                except HTTPError as err:
+                    await self._process_http_connection_error(err, ip_addr)
+                    continue
+                except (
+                    OSError,
+                    SoCoException,
+                    Timeout,
+                    TimeoutError,
+                ) as ex:
+                    _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
+                    continue
+                try:
                     await self._async_handle_discovery_message(
-                        soco.uid,
+                        uid,
                         ip_addr,
                         "manual zone scan",
                     )
@@ -511,7 +531,7 @@ class SonosDiscoveryManager:
                     # Only send the message if the ping was successful.
                     async_dispatcher_send(
                         self.hass,
-                        f"{SONOS_SPEAKER_ACTIVITY}-{soco.uid}",
+                        f"{SONOS_SPEAKER_ACTIVITY}-{known_speaker.uid}",
                         "manual zone scan",
                     )
                 except SonosUpdateError:
@@ -523,6 +543,16 @@ class SonosDiscoveryManager:
             self.hass, DISCOVERY_INTERVAL.total_seconds(), self.async_poll_manual_hosts
         )
 
+    def is_device_disabled(self, uid: str) -> bool:
+        """Check if the Sonos device is disabled in the device registry."""
+        if not (
+            device := dr.async_get(self.hass).async_get_device(
+                identifiers={(DOMAIN, uid)}
+            )
+        ):
+            return False
+        return device.disabled
+
     async def _async_handle_discovery_message(
         self,
         uid: str,
@@ -531,6 +561,10 @@ class SonosDiscoveryManager:
         boot_seqnum: int | None = None,
     ) -> None:
         """Handle discovered player creation and activity."""
+        if self.is_device_disabled(uid):
+            _LOGGER.debug("Skipping %s for disabled Sonos device: %s", source, uid)
+            return
+
         async with self.discovery_lock:
             if not self.data.discovered:
                 # Initial discovery, attempt to add all visible zones

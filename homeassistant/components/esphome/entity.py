@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast, override
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -12,6 +12,7 @@ from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
+    build_device_unique_id,
 )
 import voluptuous as vol
 
@@ -31,12 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import (
-    DeviceEntityKey,
-    ESPHomeConfigEntry,
-    RuntimeEntryData,
-    build_device_unique_id,
-)
+from .entry_data import DeviceEntityKey, ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -376,6 +372,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
                 connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
@@ -513,6 +510,7 @@ class EsphomeAssistEntity(EsphomeBaseEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()

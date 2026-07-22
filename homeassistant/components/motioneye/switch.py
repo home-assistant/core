@@ -1,7 +1,7 @@
 """Switch platform for motionEye."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import (
@@ -112,6 +112,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return bool(
@@ -128,15 +129,18 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
             camera[self.entity_description.key] = value
             await self._client.async_set_camera(self._camera_id, camera)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._async_send_set_camera(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_send_set_camera(False)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)

@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.kiosker_a98be1ce_disable_screensaver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Disable screensaver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Disable screensaver',
     }),
     'context': <ANY>,
     'entity_id': 'switch.kiosker_a98be1ce_disable_screensaver',

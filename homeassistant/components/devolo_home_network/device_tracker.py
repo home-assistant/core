@@ -1,5 +1,7 @@
 """Platform for device tracker integration."""
 
+from typing import override
+
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo
 
@@ -100,6 +102,7 @@ class DevoloScannerEntity(
         self._attr_name = mac
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
@@ -118,12 +121,14 @@ class DevoloScannerEntity(
         return attrs
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         assert self.mac_address
         return self.coordinator.data.get(self.mac_address) is not None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique ID of the entity."""
         return f"{self._device.serial_number}_{self.mac_address}"

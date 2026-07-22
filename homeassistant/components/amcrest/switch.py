@@ -1,7 +1,7 @@
 """Support for Amcrest Switches."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from amcrest import AmcrestError
 
@@ -66,14 +66,17 @@ class AmcrestSwitch(SwitchEntity):
         self._attr_name = f"{name} {entity_description.name}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_turn_switch(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_turn_switch(False)

@@ -1,6 +1,6 @@
 """Base SamsungTV Entity."""
 
-from typing import Any
+from typing import Any, override
 
 from wakeonlan import send_magic_packet
 
@@ -53,6 +53,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         self._turn_on_action = PluggableAction(self.async_write_ha_state)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the device."""
         if not super().available or self._bridge.auth_failed:
@@ -64,6 +65,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             or self._bridge.power_off_in_progress
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
