@@ -248,7 +248,7 @@ class IpBanManager:
         self.hass = hass
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
         self.ip_bans_lock = asyncio.Lock()
-        self.store = Store(
+        self.store: Store[dict[str, dict[str, str]]] = Store(
             hass=hass,
             version=STORAGE_VERSION,
             key=STORAGE_KEY,
