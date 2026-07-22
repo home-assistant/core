@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for the Whois integration."""
 
+from typing import override
+
 from whois import Domain, query as whois_query
 from whois.exceptions import (
     FailedParsingWhoisOutput,
@@ -33,6 +35,7 @@ class WhoisCoordinator(DataUpdateCoordinator[Domain | None]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> Domain | None:
         """Query WHOIS for domain information."""
         try:

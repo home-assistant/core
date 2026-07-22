@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import dataclasses
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from xiaomi_ble import (
@@ -14,7 +14,7 @@ from xiaomi_ble import (
 )
 from xiaomi_ble.parser import EncryptionScheme
 
-from homeassistant.components import onboarding
+from homeassistant.components import bluetooth, onboarding
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -82,6 +82,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             ADDITIONAL_DISCOVERY_TIMEOUT,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -270,6 +271,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -304,6 +306,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self._async_get_or_create_entry()
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address

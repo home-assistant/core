@@ -1,0 +1,57 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "api_error": "The Karakeep API returned an unexpected response.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url_format": "Enter a valid URL including http:// or https://.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "token": "API token",
+          "url": "URL",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "token": "The API token used to connect to your Karakeep instance.",
+          "url": "The URL of your Karakeep instance, including http:// or https://.",
+          "verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
+        },
+        "description": "Connect to your Karakeep instance."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "archived": {
+        "name": "Archived",
+        "unit_of_measurement": "items"
+      },
+      "bookmarks": {
+        "name": "Bookmarks",
+        "unit_of_measurement": "bookmarks"
+      },
+      "favorites": {
+        "name": "Favorites",
+        "unit_of_measurement": "favorites"
+      },
+      "highlights": {
+        "name": "Highlights",
+        "unit_of_measurement": "highlights"
+      },
+      "lists": {
+        "name": "Lists",
+        "unit_of_measurement": "lists"
+      },
+      "tags": {
+        "name": "Tags",
+        "unit_of_measurement": "tags"
+      }
+    }
+  }
+}

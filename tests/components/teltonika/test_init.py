@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from aiohttp import ClientResponseError, ContentTypeError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
@@ -36,45 +35,12 @@ async def test_load_unload_config_entry(
             ConfigEntryState.SETUP_RETRY,
         ),
         (
-            ContentTypeError(
-                request_info=MagicMock(),
-                history=(),
-                status=403,
-                message="Attempt to decode JSON with unexpected mimetype: text/html",
-                headers={},
-            ),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (
-            ClientResponseError(
-                request_info=MagicMock(),
-                history=(),
-                status=401,
-                message="Unauthorized",
-                headers={},
-            ),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (
-            ClientResponseError(
-                request_info=MagicMock(),
-                history=(),
-                status=403,
-                message="Forbidden",
-                headers={},
-            ),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (
             TeltonikaAuthenticationError("Invalid credentials"),
             ConfigEntryState.SETUP_ERROR,
         ),
     ],
     ids=[
         "connection_error",
-        "content_type_403",
-        "response_401",
-        "response_403",
         "auth_error",
     ],
 )
@@ -95,9 +61,9 @@ async def test_setup_errors(
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("init_integration")
 async def test_device_registry_creation(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:

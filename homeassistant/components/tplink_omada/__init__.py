@@ -2,8 +2,10 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import logging
 
 from tplink_omada_client import OmadaSite
+from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -15,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -24,6 +26,8 @@ from .const import DOMAIN
 from .controller import OmadaSiteController
 from .coordinator import async_cleanup_client_trackers, async_cleanup_devices
 from .services import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -121,3 +125,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def _remove_old_devices(
+    hass: HomeAssistant,
+    entry: OmadaConfigEntry,
+    omada_devices: dict[str, OmadaListDevice],
+) -> None:
+    device_registry = dr.async_get(hass)
+
+    for registered_device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        mac = next(
+            (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
+        )
+        if mac and mac not in omada_devices:
+            device_registry.async_remove_device(registered_device.id)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+    """Migrate old config entry to a new format."""
+
+    if entry.version == 1:
+        # Migrate unique_id from controller_id to controller_id_site_id
+        # to allow multiple sites per controller to be set up independently.
+        _LOGGER.debug(
+            "Migrating tplink_omada config entry from version %s.%s",
+            entry.version,
+            entry.minor_version,
+        )
+
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=f"{entry.unique_id}_{entry.data[CONF_SITE]}",
+            version=2,
+        )
+
+    return True

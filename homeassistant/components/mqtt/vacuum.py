@@ -1,7 +1,7 @@
 """Support for MQTT vacuums."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -235,10 +235,12 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
@@ -321,18 +323,21 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._update_state_attributes(payload)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
+            {"_attr_fan_speed", "_attr_activity"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
         assert self._clean_segments_command_topic is not None
@@ -343,6 +348,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             ),
         )
 
+    @override
     async def async_get_segments(self) -> list[Segment]:
         """Return the available segments."""
         return self._segments
@@ -356,30 +362,37 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_start(self) -> None:
         """Start the vacuum."""
         await self._async_publish_command(VacuumEntityFeature.START)
 
+    @override
     async def async_pause(self) -> None:
         """Pause the vacuum."""
         await self._async_publish_command(VacuumEntityFeature.PAUSE)
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
         await self._async_publish_command(VacuumEntityFeature.STOP)
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Tell the vacuum to return to its dock."""
         await self._async_publish_command(VacuumEntityFeature.RETURN_HOME)
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         await self._async_publish_command(VacuumEntityFeature.CLEAN_SPOT)
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum (usually by playing a song)."""
         await self._async_publish_command(VacuumEntityFeature.LOCATE)
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if (
@@ -390,6 +403,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             return
         await self.async_publish_with_config(self._set_fan_speed_topic, fan_speed)
 
+    @override
     async def async_send_command(
         self,
         command: str,

@@ -411,9 +411,14 @@ async def test_user_setup_wohand(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
-        return_value=[WOHAND_SERVICE_INFO],
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -422,6 +427,7 @@ async def test_user_setup_wohand(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] is None
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     with patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(

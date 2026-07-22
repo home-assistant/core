@@ -1,6 +1,6 @@
 """Config flow for Lunatone."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 import aiohttp
 from lunatone_rest_api_client import Auth, Info
@@ -34,6 +34,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -73,6 +74,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -96,6 +98,11 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         self._data[CONF_URL] = url
+
+        self.context["title_placeholders"] = {
+            "model": discovery_info.properties["device"],
+            "name": discovery_info.name.rsplit(" ", maxsplit=1)[0],
+        }
 
         return await self.async_step_discovery_confirm()
 

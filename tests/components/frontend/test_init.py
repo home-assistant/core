@@ -85,7 +85,7 @@ async def frontend(hass: HomeAssistant, ignore_frontend_deps: None) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         {},
     )
 
@@ -95,7 +95,7 @@ async def frontend_themes(hass: HomeAssistant) -> None:
     """Frontend setup with themes."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         CONFIG_THEMES,
     )
 
@@ -142,7 +142,7 @@ async def mock_http_client_with_extra_js(
     """Start the Home Assistant HTTP component."""
     assert await async_setup_component(
         hass,
-        "frontend",
+        DOMAIN,
         {
             DOMAIN: {
                 CONF_EXTRA_MODULE_URL: ["/local/my_module.js"],
@@ -247,7 +247,7 @@ async def test_themes_persist(
         },
     }
 
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
+    assert await async_setup_component(hass, DOMAIN, CONFIG_THEMES)
     themes_ws_client = await hass_ws_client(hass)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
@@ -958,13 +958,24 @@ async def test_get_version(
     ("from_url", "to_url", "expected_status"),
     [
         ("/.well-known/change-password", "/profile", 302),
-        ("/developer-tools", "/config/developer-tools", 301),
-        ("/developer-tools/yaml", "/config/developer-tools/yaml", 301),
-        ("/developer-tools/state", "/config/developer-tools/state", 301),
-        ("/developer-tools/action", "/config/developer-tools/action", 301),
-        ("/developer-tools/template", "/config/developer-tools/template", 301),
-        ("/developer-tools/event", "/config/developer-tools/event", 301),
-        ("/developer-tools/debug", "/config/developer-tools/debug", 301),
+        ("/developer-tools", "/config/tools", 301),
+        ("/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/developer-tools/state", "/config/tools/state", 301),
+        ("/developer-tools/action", "/config/tools/action", 301),
+        ("/developer-tools/template", "/config/tools/template", 301),
+        ("/developer-tools/event", "/config/tools/event", 301),
+        ("/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/developer-tools/assist", "/config/tools/assist", 301),
+        ("/developer-tools/debug", "/config/tools/debug", 301),
+        ("/config/developer-tools", "/config/tools", 301),
+        ("/config/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/config/developer-tools/state", "/config/tools/state", 301),
+        ("/config/developer-tools/action", "/config/tools/action", 301),
+        ("/config/developer-tools/template", "/config/tools/template", 301),
+        ("/config/developer-tools/event", "/config/tools/event", 301),
+        ("/config/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/config/developer-tools/assist", "/config/tools/assist", 301),
+        ("/config/developer-tools/debug", "/config/tools/debug", 301),
         ("/shopping-list", "/todo", 301),
     ],
 )
@@ -1117,7 +1128,7 @@ async def test_www_local_dir(
 
     await hass.async_add_executor_job(_create_www_and_x_txt)
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_client()
     resp = await client.get("/local/x.txt")
     assert resp.status == HTTPStatus.OK
@@ -1338,7 +1349,7 @@ async def test_update_panel_persists(
         },
     }
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 1, "type": "get_panels"})
@@ -1452,7 +1463,7 @@ async def test_panels_config_invalid_storage(
         "data": "not_a_dict",
     }
 
-    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert "Ignoring invalid panel storage data" in caplog.text
 
     client = await hass_ws_client(hass)

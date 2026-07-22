@@ -109,8 +109,8 @@ async def test_binary_sensor(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            DOMAIN,
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -140,8 +140,8 @@ async def test_mount_binary_sensor(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            DOMAIN,
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -236,8 +236,8 @@ async def test_mount_refresh_after_issue(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            DOMAIN,
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -268,18 +268,21 @@ async def test_mount_refresh_after_issue(
                     "type": "mount_failed",
                     "context": "mount",
                     "reference": "nas",
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "execute_reload",
                             "context": "mount",
                             "reference": "nas",
+                            "reference_extra": None,
                         },
                         {
                             "uuid": uuid4().hex,
                             "type": "execute_remove",
                             "context": "mount",
                             "reference": "nas",
+                            "reference_extra": None,
                         },
                     ],
                 },
@@ -306,6 +309,7 @@ async def test_mount_refresh_after_issue(
                     "type": "mount_failed",
                     "context": "mount",
                     "reference": "nas",
+                    "reference_extra": None,
                 },
             },
         }

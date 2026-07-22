@@ -18,7 +18,7 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api import DOMAIN, const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -127,15 +127,30 @@ async def target_entities(
 
     area_registry.async_update(label_area.id, labels={label1.label_id})
 
-    device1 = dr.DeviceEntry(id="device1", identifiers={("test", "device1")})
-    device2 = dr.DeviceEntry(id="device2", identifiers={("test", "device2")})
+    device1 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device1",
+        identifiers={("test", "device1")},
+    )
+    device2 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device2",
+        identifiers={("test", "device2")},
+    )
     area_device = dr.DeviceEntry(
-        id="area_device", identifiers={("test", "device3")}, area_id=kitchen_area.id
+        config_entry_id=config_entry.entry_id,
+        id="area_device",
+        identifiers={("test", "device3")},
+        area_id=kitchen_area.id,
     )
     label2_device = dr.DeviceEntry(
-        id="label_device", identifiers={("test", "device4")}, labels={label2.label_id}
+        config_entry_id=config_entry.entry_id,
+        id="label_device",
+        identifiers={("test", "device4")},
+        labels={label2.label_id},
     )
     diag_only_device = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
         id="diag_only_device",
         identifiers={("test", "device5")},
         area_id=garage_area.id,
@@ -296,7 +311,7 @@ async def target_entities(
     }
     assert set(label_registry.labels) == {"label_1", "label_2", "label_3"}
     assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom", "garage"}
-    assert set(dr.async_get(hass).devices) == {
+    assert set(dr.async_get(hass).devices) == {  # pylint: disable=home-assistant-tests-registry-fixtures
         "device1",
         "device2",
         "area_device",
@@ -1238,7 +1253,7 @@ async def test_call_service_context_with_user(
     hass_access_token: str,
 ) -> None:
     """Test that the user is set in the service call context."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     calls = async_mock_service(hass, "domain_test", "test_service")
     client = await hass_client_no_auth()
@@ -2745,10 +2760,127 @@ async def test_subscribe_trigger(
     assert sum(hass.bus.async_listeners().values()) == init_count
 
 
+@pytest.mark.parametrize(
+    ("trigger", "expected_error"),
+    [
+        # Unknown trigger platform
+        (
+            {"platform": "nonexistent"},
+            {
+                "code": "invalid_format",
+                "message": "Invalid trigger 'nonexistent' specified",
+            },
+        ),
+        # Missing mandatory config for the trigger platform
+        (
+            {"platform": "numeric_state"},
+            {
+                "code": "invalid_format",
+                "message": "required key not provided @ data['entity_id']",
+            },
+        ),
+        # Unknown device, raised as a HomeAssistantError by the platform validator
+        (
+            {"platform": "device", "domain": "light", "device_id": "nonexistent"},
+            {
+                "code": "home_assistant_error",
+                "message": "Unknown device 'nonexistent'",
+            },
+        ),
+    ],
+)
+async def test_subscribe_trigger_config_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    trigger: dict,
+    expected_error: dict,
+) -> None:
+    """Test trigger config errors are reported to the client without logging."""
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_trigger", "trigger": trigger}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+    # The expected error is not logged by the default websocket error handler
+    assert "Error handling message" not in caplog.text
+
+
+async def test_subscribe_trigger_template_error_spams_log(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a failing trigger template spams the log.
+
+    This documents unwanted behavior. Unlike subscribe_condition and
+    test_condition, subscribe_trigger does not suppress repeated template
+    variable errors: a trigger is evaluated event-driven by its platform (here
+    via async_track_template_result), outside any trace context, so the
+    trace-based suppression used for conditions does not apply. This should be
+    fixed in the future so the error is suppressed/forwarded instead of being
+    logged on every re-render.
+    """
+    caplog.set_level(logging.WARNING)
+    hass.states.async_set("sensor.test", "1")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_trigger",
+            "trigger": {
+                "platform": "template",
+                "value_template": "{{ states('sensor.test') }}{{ undefined_variable }}",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    # Each re-render of the template logs the undefined variable error again
+    for state in ("2", "3", "4"):
+        hass.states.async_set("sensor.test", state)
+        await hass.async_block_till_done()
+
+    assert (
+        caplog.text.count(
+            "Template variable warning: 'undefined_variable' is undefined"
+        )
+        > 1
+    )
+
+
 async def test_test_condition(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test testing a condition."""
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+            "variables": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+    }
+
     hass.states.async_set("hello.world", "paulus")
 
     await websocket_client.send_json_auto_id(
@@ -2801,6 +2933,131 @@ async def test_test_condition(
     assert msg["result"]["result"] is False
 
 
+@pytest.mark.parametrize(
+    ("value_template", "expected_template_errors"),
+    [
+        ("{{ no_such_variable }}", ["'no_such_variable' is undefined"]),
+        # A single render emitting multiple errors forwards all of them
+        ("{{ foo }}{{ bar }}", ["'foo' is undefined", "'bar' is undefined"]),
+    ],
+)
+async def test_test_condition_template_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    expected_template_errors: list[str],
+) -> None:
+    """Test template errors are forwarded in the result without being logged."""
+    caplog.set_level(logging.WARNING)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {"condition": "template", "value_template": value_template},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "result": False,
+        "template_errors": expected_template_errors,
+    }
+
+    assert "Template variable" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("condition", "expected_error"),
+    [
+        # Missing mandatory config, raised by async_validate_condition_config
+        (
+            {"condition": "sun"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "must contain at least one of before, after. for dictionary value "
+                    "@ data['options']"
+                ),
+            },
+        ),
+        # Failing enabled template, raised by async_condition_from_config
+        (
+            {
+                "condition": "template",
+                "value_template": "{{ true }}",
+                "enabled": "{{ 1 / 0 }}",
+            },
+            {
+                "code": "home_assistant_error",
+                "message": (
+                    "Error rendering condition enabled template: "
+                    "ZeroDivisionError: division by zero"
+                ),
+            },
+        ),
+    ],
+)
+async def test_test_condition_config_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    condition: dict,
+    expected_error: dict,
+) -> None:
+    """Test condition config errors are reported to the client without logging."""
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "test_condition", "condition": condition}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+    # The expected error is not logged by the default websocket error handler
+    assert "Error handling message" not in caplog.text
+
+
+async def test_test_condition_check_error_not_logged(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test errors raised while checking the condition are not logged.
+
+    The condition is valid and instantiates fine, but checking it raises (here
+    the entity does not exist). The error is reported to the client without
+    being logged by the default websocket error handler.
+    """
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+    }
+
+    assert "Error handling message" not in caplog.text
+
+
 async def test_subscribe_condition(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -2849,6 +3106,83 @@ async def test_subscribe_condition(
 
 
 @pytest.mark.parametrize(
+    ("value_template", "expected_event"),
+    [
+        # Undefined variable used in a way that raises: forwarded as an error,
+        # with the underlying template error included.
+        (
+            "{{ trigger.to_state.attributes.event_type == 'double_press' }}",
+            {
+                "error": "In 'template' condition: UndefinedError: 'trigger' is undefined",
+                "template_errors": ["'trigger' is undefined"],
+            },
+        ),
+        # Undefined variable used in a way that only warns: the condition still
+        # evaluates to a result, but the template error is forwarded alongside it.
+        (
+            "{{ no_such_variable }}",
+            {"result": False, "template_errors": ["'no_such_variable' is undefined"]},
+        ),
+        # A single render emitting multiple errors forwards all of them.
+        (
+            "{{ foo }}{{ bar }}",
+            {
+                "result": False,
+                "template_errors": ["'foo' is undefined", "'bar' is undefined"],
+            },
+        ),
+    ],
+)
+async def test_subscribe_condition_template_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    expected_event: dict[str, Any],
+) -> None:
+    """Test template errors are forwarded as events and don't spam the log."""
+    caplog.set_level(logging.WARNING)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "template",
+                "value_template": value_template,
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": subscription_id,
+        "type": "event",
+        "event": expected_event,
+    }
+
+    # Let the condition be evaluated a few more times
+    for _ in range(5):
+        freezer.tick(1.1)
+        await hass.async_block_till_done()
+
+    # The unchanged result/error is not re-sent; a ping is the next message
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    # The template error is forwarded, not logged
+    assert "Template variable warning" not in caplog.text
+    assert "Template variable error" not in caplog.text
+
+
+@pytest.mark.parametrize(
     ("condition", "expected_error"),
     [
         # Validated by the websocket command's schema
@@ -2872,17 +3206,6 @@ async def test_subscribe_condition(
                 ),
             },
         ),
-        # Validated by async_validate_condition_config
-        (
-            {"condition": "sun"},
-            {
-                "code": "invalid_format",
-                "message": (
-                    "must contain at least one of before, after. for dictionary value "
-                    "@ data['options']. Got None"
-                ),
-            },
-        ),
     ],
 )
 async def test_subscribe_condition_error(
@@ -2902,6 +3225,60 @@ async def test_subscribe_condition_error(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"] == expected_error
+
+
+@pytest.mark.parametrize(
+    ("condition", "expected_error"),
+    [
+        # Missing mandatory config, raised by async_validate_condition_config
+        (
+            {"condition": "sun"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "must contain at least one of before, after. for dictionary value "
+                    "@ data['options']"
+                ),
+            },
+        ),
+        # Failing enabled template, raised by async_condition_from_config
+        (
+            {
+                "condition": "template",
+                "value_template": "{{ true }}",
+                "enabled": "{{ 1 / 0 }}",
+            },
+            {
+                "code": "home_assistant_error",
+                "message": (
+                    "Error rendering condition enabled template: "
+                    "ZeroDivisionError: division by zero"
+                ),
+            },
+        ),
+    ],
+)
+async def test_subscribe_condition_config_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    condition: dict,
+    expected_error: dict,
+) -> None:
+    """Test condition config errors are reported to the client without logging."""
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_condition", "condition": condition}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+    # The expected error is not logged by the default websocket error handler
+    assert "Error handling message" not in caplog.text
 
 
 async def test_execute_script(
@@ -3898,7 +4275,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
+@pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(

@@ -82,7 +82,8 @@ async def test_automatic_missing_device_cleanup(
         title="Test Omada Controller",
         domain=DOMAIN,
         data=dict(MOCK_ENTRY_DATA),
-        unique_id="12345",
+        unique_id="12345_SiteId",
+        version=2,
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -353,3 +354,24 @@ async def test_unload_cancels_cleanup_and_interval(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert not cleanup_started.is_set()
+
+async def test_migrate_entry_v1_to_v2(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test migration of a version 1 config entry to version 2."""
+    entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="12345",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert entry.unique_id == "12345_SiteId"
+    assert entry.state is ConfigEntryState.LOADED

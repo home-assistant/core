@@ -1,5 +1,7 @@
 """BSBLan base entity."""
 
+from typing import override
+
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -71,6 +73,7 @@ class BSBLanDualCoordinatorEntity(BSBLanEntity):
         super().__init__(fast_coordinator, data)
         self.slow_coordinator = slow_coordinator
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
