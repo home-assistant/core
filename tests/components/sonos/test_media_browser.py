@@ -2,7 +2,7 @@
 
 from functools import partial
 from unittest.mock import MagicMock, Mock, patch
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -439,6 +439,39 @@ def test_get_thumbnail_url_full_caches_track_art() -> None:
 
     assert media.browse_image_uris[track_uri] == item.album_art_uri
     assert result == proxy_url
+
+
+def test_get_thumbnail_url_full_preserves_encoded_content_id() -> None:
+    """Test the proxy URL is returned without unquoting so ids with spaces survive.
+
+    Regression guard for #102557: the content id is percent-encoded into the proxy
+    URL path and aiohttp unquotes it on the way back in, so unquoting here would turn
+    "%20" back into a space (and collapse reserved characters) and break the lookup.
+    """
+    media = Mock()
+    media.browse_image_uris = {}
+    content_id = "A:ALBUM/Abbey Road/Come Together & Friends"
+    proxy_url = (
+        "/api/media_player_proxy/media_player.zone_a/browse_media/album/"
+        + quote(content_id)
+        + "?token=abc"
+    )
+    get_browse_image_url = Mock(return_value=proxy_url)
+
+    result = get_thumbnail_url_full(
+        media,
+        False,
+        get_browse_image_url,
+        MediaType.ALBUM,
+        content_id,
+        None,
+        None,
+    )
+
+    get_browse_image_url.assert_called_once_with(MediaType.ALBUM, content_id, None)
+    assert result == proxy_url
+    assert "%20" in result
+    assert result != unquote(proxy_url)
 
 
 def test_get_thumbnail_url_full_skips_non_track_cache() -> None:
