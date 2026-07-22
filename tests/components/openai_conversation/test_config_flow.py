@@ -307,7 +307,6 @@ async def test_subentry_advanced_options_visible_when_not_recommended(
         CONF_STORE_RESPONSES,
     ):
         assert visibility[field] == not_recommended
-    # the recommended toggle itself is always shown
     assert visibility[CONF_RECOMMENDED] is None
 
 
