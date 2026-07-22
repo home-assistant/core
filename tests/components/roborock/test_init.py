@@ -452,7 +452,7 @@ async def test_cloud_api_repair(
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
     # Check that both expected device names are present, regardless of order
     assert all(
@@ -495,7 +495,7 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
 
     # Fake that the device is reachable locally again.
@@ -513,7 +513,7 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
 
     # Verify that the repair issue is cleared
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
     # Fake the device is cloud only again. Refreshing the coordinator
@@ -529,7 +529,7 @@ async def test_cloud_api_repair_cleared_on_update(
     await hass.async_block_till_done()
 
     # Verify that the repair issue still does not exist
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 0
 
 

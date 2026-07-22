@@ -877,7 +877,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.earn_e_p1
-earn-e-p1==0.1.0
+earn-e-p1==0.2.0
 
 # homeassistant.components.easyenergy
 easyenergy==3.0.1
@@ -1112,7 +1112,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==7.1.0
+gios==7.1.1
 
 # homeassistant.components.glances
 glances-api==0.10.0
@@ -1241,7 +1241,7 @@ hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.8.0
+hassil==3.10.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.2.1
@@ -1374,7 +1374,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==7.5.0
+infrared-protocols==8.2.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1438,7 +1438,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.6.23.203726
+knx-frontend==2026.7.17.104339
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.10.2
@@ -1616,7 +1616,7 @@ momonga==0.3.0
 monarchmoneycommunity==1.5.1
 
 # homeassistant.components.monzo
-monzopy==1.5.1
+monzopy==1.6.0
 
 # homeassistant.components.mopeka
 mopeka-iot-ble==0.8.0
@@ -2050,7 +2050,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.4.0
+pyatmo==9.5.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
@@ -2116,7 +2116,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.2
+pydaikin==2.18.3
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2291,7 +2291,7 @@ pyiskra==0.1.29
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.6.1
+pyisy==3.7.0
 
 # homeassistant.components.itach
 pyitachip2ir2==0.0.8
@@ -2695,7 +2695,7 @@ python-homewizard-energy==10.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.6
+python-izone==1.3.7
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
@@ -3175,7 +3175,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.7.2
+tesla-fleet-api==1.7.6
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3434,7 +3434,7 @@ yalexs-ble==3.3.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.2.7
+yalexs==9.2.10
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
@@ -3446,7 +3446,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==4.3.1
+yoto-api==4.3.2
 
 # homeassistant.components.youless
 youless-api==2.2.0
