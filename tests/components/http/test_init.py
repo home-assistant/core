@@ -406,12 +406,6 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
 STABLE_CREATED_AT = "2026-06-01T00:00:00+00:00"
 PENDING_CREATED_AT = "2026-07-01T00:00:00+00:00"
 
-# _DEFAULT_CONFIG as serialized to storage / websocket JSON.
-_SERIALIZED_DEFAULT_CONFIG = {
-    **_DEFAULT_CONFIG,
-    "created_at": _DEFAULT_CONFIG["created_at"].isoformat(),
-}
-
 
 def _stored_config(
     config: dict,
@@ -1019,7 +1013,7 @@ async def test_yaml_migration_to_storage(
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["yaml_migration_done"] is True
-    assert stored["stable"] == _SERIALIZED_DEFAULT_CONFIG  # untouched defaults
+    assert stored["stable"] == _DEFAULT_CONFIG  # untouched defaults
     assert stored["pending"] == _stored_config(
         yaml_conf, created_at=dt_util.utcnow().isoformat()
     )
@@ -1455,17 +1449,15 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
     assert hass.config.api.port == 9999
     store = await async_get_and_load_store(hass)
     assert store.active_config_type is ActiveConfigType.PENDING
-    # In memory the migration stamps created_at as a datetime; it is
-    # serialized on write.
     assert store.pending == {
         **HTTP_STORAGE_SCHEMA({"server_port": 9999}),
-        "created_at": dt_util.utcnow(),
+        "created_at": dt_util.utcnow().isoformat(),
         "error": None,
         "error_message": None,
     }
     assert store.stable == {
         **HTTP_STORAGE_SCHEMA({"server_port": 9876}),
-        "created_at": dt_util.utcnow(),
+        "created_at": dt_util.utcnow().isoformat(),
         "error": None,
         "error_message": None,
     }
@@ -1544,11 +1536,11 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "stable": _SERIALIZED_DEFAULT_CONFIG,
+        "stable": _DEFAULT_CONFIG,
         "pending": None,
         "revert_at": None,
         "active_config_type": "stable",
-        "default": _SERIALIZED_DEFAULT_CONFIG,
+        "default": _DEFAULT_CONFIG,
     }
 
     new_config = {
@@ -1583,7 +1575,7 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "stable": _SERIALIZED_DEFAULT_CONFIG,
+        "stable": _DEFAULT_CONFIG,
         "pending": {
             **new_config,
             "created_at": created_at,
@@ -1592,7 +1584,7 @@ async def test_websocket_http_config(
         },
         "revert_at": None,
         "active_config_type": "stable",
-        "default": _SERIALIZED_DEFAULT_CONFIG,
+        "default": _DEFAULT_CONFIG,
     }
 
     # Promote: pending becomes stable, pending is cleared.
@@ -1620,7 +1612,7 @@ async def test_websocket_http_config(
         "pending": None,
         "revert_at": None,
         "active_config_type": "stable",
-        "default": _SERIALIZED_DEFAULT_CONFIG,
+        "default": _DEFAULT_CONFIG,
     }
 
     # Promoting again with no pending is rejected.
@@ -1857,7 +1849,7 @@ async def test_pending_config_auto_reverts_to_stable(
         "pending": _stored_config({"server_port": 9999}),
         "revert_at": revert_at.isoformat(),
         "active_config_type": "pending",
-        "default": _SERIALIZED_DEFAULT_CONFIG,
+        "default": _DEFAULT_CONFIG,
     }
 
     # After the delay elapses without a promotion, pending is marked reverted
@@ -1980,7 +1972,7 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
     await store.async_set_pending(HTTP_STORAGE_SCHEMA({"server_port": 9000}))
     assert store.pending == {
         **HTTP_STORAGE_SCHEMA({"server_port": 9000}),
-        "created_at": dt_util.utcnow(),
+        "created_at": dt_util.utcnow().isoformat(),
         "error": None,
         "error_message": None,
     }
@@ -2401,7 +2393,7 @@ async def test_pending_config_promote_cancels_revert(
         "pending": None,
         "revert_at": None,
         "active_config_type": "stable",
-        "default": _SERIALIZED_DEFAULT_CONFIG,
+        "default": _DEFAULT_CONFIG,
     }
 
     # The cancelled revert must not fire after the delay.

@@ -76,6 +76,7 @@ KEY_YAML_MIGRATION_DONE: Final = "yaml_migration_done"
 
 AUTO_REVERT_DELAY: Final = timedelta(minutes=5)
 
+# Created-at timestamp is a machine-readable ISO 8601 string
 HTTP_CONFIG_CREATED_AT: Final = "created_at"
 # Machine-readable error code; the free-text exception message (if any) is
 # stored separately under HTTP_CONFIG_ERROR_MESSAGE.
@@ -103,7 +104,7 @@ class ConfData(TypedDict, total=False):
     ip_ban_enabled: bool
     ssl_profile: str
     use_x_frame_options: bool
-    created_at: datetime
+    created_at: str
     error: str | None
     error_message: str | None
 
@@ -160,7 +161,7 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
 )
 _DEFAULT_CONFIG: Final[ConfData] = ConfData(
     **HTTP_STORAGE_SCHEMA({}),
-    created_at=dt_util.utcnow(),
+    created_at=dt_util.utcnow().isoformat(),
     error=None,
     error_message=None,
 )
@@ -365,7 +366,7 @@ class HTTPConfigStore:
             return
         self._pending = config
         if self._pending is not None:
-            self._pending[HTTP_CONFIG_CREATED_AT] = dt_util.utcnow()
+            self._pending[HTTP_CONFIG_CREATED_AT] = dt_util.utcnow().isoformat()
             self._pending[HTTP_CONFIG_ERROR] = None
             self._pending[HTTP_CONFIG_ERROR_MESSAGE] = None
         await self._async_persist()
@@ -466,7 +467,7 @@ class HTTPConfigStore:
         if validated_config != _strip_meta(self._stable):
             self._pending = ConfData(
                 **validated_config,
-                created_at=dt_util.utcnow(),
+                created_at=dt_util.utcnow().isoformat(),
                 error=None,
                 error_message=None,
             )
@@ -630,14 +631,14 @@ class _HTTPStore(Store[_HTTPStoreData]):
             # 2.2 added the created_at/error metadata to the config slots
             old_data[KEY_STABLE] = {
                 **old_data[KEY_STABLE],
-                HTTP_CONFIG_CREATED_AT: dt_util.utcnow(),
+                HTTP_CONFIG_CREATED_AT: dt_util.utcnow().isoformat(),
                 HTTP_CONFIG_ERROR: None,
                 HTTP_CONFIG_ERROR_MESSAGE: None,
             }
             if old_data[KEY_PENDING] is not None:
                 old_data[KEY_PENDING] = {
                     **old_data[KEY_PENDING],
-                    HTTP_CONFIG_CREATED_AT: dt_util.utcnow(),
+                    HTTP_CONFIG_CREATED_AT: dt_util.utcnow().isoformat(),
                     HTTP_CONFIG_ERROR: None,
                     HTTP_CONFIG_ERROR_MESSAGE: None,
                 }
