@@ -1,6 +1,8 @@
 """Tests for the LG Infrared climate platform."""
 
 from collections.abc import Callable
+from typing import Any
+from unittest.mock import patch
 
 from infrared_protocols.commands.lg_ac import (
     MIN_TEMP,
@@ -37,10 +39,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 from tests.components.infrared.common import (
@@ -497,3 +499,53 @@ async def test_availability_ignores_receiver(hass: HomeAssistant) -> None:
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "restored_attributes", "expected"),
+    [
+        pytest.param(
+            HVACMode.COOL,
+            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            (HVACMode.COOL, FAN_HIGH, 29.0),
+            id="full_state",
+        ),
+        pytest.param(
+            STATE_UNAVAILABLE,
+            {},
+            (HVACMode.OFF, FAN_AUTO, float(MIN_TEMP)),
+            id="unavailable_falls_back_to_defaults",
+        ),
+        pytest.param(
+            HVACMode.HEAT,
+            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            (HVACMode.OFF, FAN_HIGH, 29.0),
+            id="mode_no_longer_configured_is_ignored",
+        ),
+    ],
+)
+async def test_state_restored_on_restart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    restored_state: str,
+    restored_attributes: dict[str, Any],
+    expected: tuple[HVACMode, str, float],
+) -> None:
+    """Test the assumed state is restored, since infrared cannot read it back."""
+    mock_restore_cache(
+        hass, [State(_CLIMATE_ENTITY_ID, restored_state, restored_attributes)]
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.lg_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    expected_mode, expected_fan, expected_temp = expected
+    assert state.state == expected_mode
+    assert state.attributes["fan_mode"] == expected_fan
+    assert state.attributes["temperature"] == expected_temp

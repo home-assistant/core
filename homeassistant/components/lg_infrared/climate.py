@@ -11,6 +11,7 @@ from infrared_protocols.commands.lg_ac import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -25,9 +26,15 @@ from homeassistant.components.infrared import (
     InfraredReceiverConsumerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -85,7 +92,9 @@ async def async_setup_entry(
         async_add_entities([LgAcClimateEntity(entry, emitter_entity_id)])
 
 
-class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity):
+class LgAcClimateEntity(
+    LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntity
+):
     """LG AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
@@ -126,6 +135,25 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
             for mode in self._attr_hvac_modes
         ):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the assumed state, as infrared cannot read it back from the AC."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if last_state is None or last_state.state in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            return
+
+        if last_state.state in self._attr_hvac_modes:
+            self._attr_hvac_mode = HVACMode(last_state.state)
+        if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
+            self._attr_fan_mode = fan_mode
+        if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
+            self._attr_target_temperature = float(temperature)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
