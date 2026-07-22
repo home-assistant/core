@@ -342,12 +342,12 @@ async def test_classic_api_coordinator_login_failed_retries(
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
 
 
-async def test_classic_api_login_failed(
+async def test_classic_api_login_service_unavailable(
     hass: HomeAssistant,
     mock_growatt_classic_api,
     mock_config_entry_classic: MockConfigEntry,
 ) -> None:
-    """Test Classic API setup with 507 login failed error."""
+    """Test Classic API setup with 507 service unavailable error."""
     mock_growatt_classic_api.login.return_value = {
         "success": False,
         "msg": LOGIN_FAILED,

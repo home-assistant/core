@@ -352,7 +352,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="login_failed",
-                    translation_placeholders={"message": "Login failed"},
+                    translation_placeholders={"message": LOGIN_FAILED},
                     retry_after=LOGIN_FAILED_RETRY_INTERVAL.total_seconds(),
                 ) from err
             raise
