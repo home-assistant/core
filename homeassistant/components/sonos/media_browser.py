@@ -109,10 +109,13 @@ def get_thumbnail_url_full(
         and item is not None
         and (art_uri := getattr(item, "album_art_uri", None))
     ):
-        cache = media.browse_image_uris
-        cache[media_content_id] = art_uri
-        while len(cache) > BROWSE_IMAGE_CACHE_SIZE:
-            cache.pop(next(iter(cache)))
+        # Browsing runs in executor threads; serialize writes so concurrent
+        # browses can't race on eviction.
+        with media.browse_image_uris_lock:
+            cache = media.browse_image_uris
+            cache[media_content_id] = art_uri
+            while len(cache) > BROWSE_IMAGE_CACHE_SIZE:
+                cache.pop(next(iter(cache)))
 
     # Do not unquote: get_browse_image_url percent-encodes the content id into the
     # proxy URL path and aiohttp unquotes it automatically, so the id round-trips

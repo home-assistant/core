@@ -1,6 +1,7 @@
 """Support for media metadata handling."""
 
 import datetime
+import threading
 from typing import Any
 
 from soco.core import (
@@ -63,6 +64,8 @@ class SonosMedia:
         # the speaker, captured at browse time so the browse-image proxy can fetch
         # it later (the proxy only receives the content id). Not reset by clear().
         self.browse_image_uris: dict[str, str] = {}
+        # Serializes cache writes, which happen in executor threads during browsing.
+        self.browse_image_uris_lock = threading.Lock()
 
         # This block is reset with clear()
         self.album_name: str | None = None

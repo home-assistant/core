@@ -1,6 +1,7 @@
 """Tests for the Sonos Media Browser."""
 
 from functools import partial
+import threading
 from unittest.mock import MagicMock, Mock, patch
 from urllib.parse import quote, unquote
 
@@ -412,6 +413,7 @@ def test_get_thumbnail_url_full_caches_track_art() -> None:
     """
     media = Mock()
     media.browse_image_uris = {}
+    media.browse_image_uris_lock = threading.Lock()
     track_uri = "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3"
     item = MockMusicServiceItem(
         "Come Together",
@@ -505,6 +507,7 @@ def test_get_thumbnail_url_full_evicts_oldest_track_art() -> None:
     """Test the browse-image cache is bounded and evicts the oldest entry first."""
     media = Mock()
     media.browse_image_uris = {}
+    media.browse_image_uris_lock = threading.Lock()
     get_browse_image_url = Mock(return_value="/proxy")
 
     with patch(
@@ -535,9 +538,9 @@ def test_get_thumbnail_url_full_evicts_oldest_track_art() -> None:
     ]
 
 
+@pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_browse_image_for_track_uses_cached_art(
     hass: HomeAssistant,
-    async_autosetup_sonos,
 ) -> None:
     """Test a track's browse image is served from the art URI captured at browse time."""
     entity_comp = hass.data["entity_components"]["media_player"]
@@ -555,9 +558,9 @@ async def test_browse_image_for_track_uses_cached_art(
     mock_fetch.assert_awaited_once_with(art_url)
 
 
+@pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_browse_image_for_track_falls_back_to_library(
     hass: HomeAssistant,
-    async_autosetup_sonos,
 ) -> None:
     """Test a track with no cached art falls back to a library lookup."""
     entity_comp = hass.data["entity_components"]["media_player"]
