@@ -288,7 +288,7 @@ aioharmanluxury==0.2.3
 aioharmony==1.0.8
 
 # homeassistant.components.hassio
-aiohasupervisor==0.5.0
+aiohasupervisor==0.6.0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.38.0
@@ -669,7 +669,7 @@ bleak==3.0.2
 blebox-uniapi==2.5.5
 
 # homeassistant.components.blink
-blinkpy==0.25.6
+blinkpy==0.25.9
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -2050,7 +2050,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.4.0
+pyatmo==9.5.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
@@ -2291,7 +2291,7 @@ pyiskra==0.1.29
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.6.1
+pyisy==3.7.0
 
 # homeassistant.components.itach
 pyitachip2ir2==0.0.8
@@ -3175,7 +3175,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.7.2
+tesla-fleet-api==1.7.6
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
