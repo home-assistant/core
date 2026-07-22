@@ -2593,7 +2593,7 @@ async def test_mqtt_protocol_failed_migration_to_v5(
     assert len(events) == 1
     assert events[0].data["issue_id"] == "protocol_5_migration"
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, "protocol_5_migration")
     assert issue is not None
