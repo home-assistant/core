@@ -11,12 +11,9 @@ from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
 from electrolux_group_developer_sdk.client.appliances.cr_appliance import CRAppliance
-from electrolux_group_developer_sdk.client.appliances.hd_appliance import HDAppliance
 from electrolux_group_developer_sdk.client.appliances.ov_appliance import OVAppliance
 from electrolux_group_developer_sdk.client.appliances.so_appliance import SOAppliance
 from electrolux_group_developer_sdk.feature_constants import (
-    LIGHT_COLOR_TEMPERATURE,
-    LIGHT_INTENSITY,
     TARGET_TEMPERATURE_C,
     TARGET_TEMPERATURE_F,
 )
@@ -66,13 +63,6 @@ class ElectroluxNumberBaseDescription[T: ApplianceData, **P1 = [T], **P2 = [T]](
 
 
 @dataclass(frozen=True, kw_only=True)
-class ElectroluxNumberDescription[T: ApplianceData](
-    ElectroluxNumberBaseDescription[T, [T], [T]]
-):
-    """Custom number description for Electrolux numbers."""
-
-
-@dataclass(frozen=True, kw_only=True)
 class ElectroluxTemperatureNumberDescription[T: ApplianceData](
     ElectroluxNumberBaseDescription[T, [T], [T, UnitOfTemperature]]
 ):
@@ -83,7 +73,7 @@ class ElectroluxTemperatureNumberDescription[T: ApplianceData](
 class ElectroluxSubmoduleTemperatureNumberDescription[T: ApplianceData](
     ElectroluxNumberBaseDescription[T, [T, str], [T, str, UnitOfTemperature]]
 ):
-    """Custom number description for Electrolux temperature numbers."""
+    """Custom number description for Electrolux submodule temperature numbers."""
 
 
 OVEN_TEMPERATURE_NUMBERS: tuple[
@@ -177,37 +167,6 @@ FRIDGE_FREEZER_TEMPERATURE_NUMBERS: tuple[
     ),
 )
 
-HOOD_NUMBERS: tuple[ElectroluxNumberDescription[HDAppliance], ...] = (
-    ElectroluxNumberDescription(
-        key="light_color",
-        translation_key="light_color",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            LIGHT_COLOR_TEMPERATURE
-        ),
-        value_fn=lambda appliance, **kwargs: (
-            appliance.get_current_light_color_temperature()
-        ),
-        min_fn=lambda appliance: appliance.get_min_light_color_temperature_range(),
-        max_fn=lambda appliance: appliance.get_max_light_color_temperature_range(),
-        step_fn=lambda appliance: appliance.get_step_light_color_temperature_range(),
-        command_payload_fn=lambda value, appliance: (
-            appliance.get_set_light_color_temperature_command(round(value))
-        ),
-    ),
-    ElectroluxNumberDescription(
-        key="light_intensity",
-        translation_key="light_intensity",
-        exists_fn=lambda appliance: appliance.is_feature_supported(LIGHT_INTENSITY),
-        value_fn=lambda appliance, **kwargs: appliance.get_current_light_intensity(),
-        min_fn=lambda appliance: appliance.get_min_light_intensity(),
-        max_fn=lambda appliance: appliance.get_max_light_intensity(),
-        step_fn=lambda appliance: appliance.get_step_light_intensity(),
-        command_payload_fn=lambda value, appliance: (
-            appliance.get_set_light_intensity_command(round(value))
-        ),
-    ),
-)
-
 
 def build_entities_for_appliance(
     appliance_data: ApplianceData,
@@ -250,13 +209,6 @@ def build_entities_for_appliance(
             for cavity in cavities
             for description in FRIDGE_FREEZER_TEMPERATURE_NUMBERS
             if description.exists_fn(appliance_data, cavity)
-        )
-
-    if isinstance(appliance_data, HDAppliance):
-        entities.extend(
-            ElectroluxNumber(appliance_data, coordinator, description)
-            for description in HOOD_NUMBERS
-            if description.exists_fn(appliance_data)
         )
 
     return entities
@@ -344,48 +296,8 @@ class ElectroluxBaseNumber[T: ApplianceData](
         await self.coordinator.client.send_command(self._appliance_id, command)
 
 
-class ElectroluxNumber[T: ApplianceData](ElectroluxBaseNumber[T]):
-    """Representation of an Electrolux light intensity selection."""
-
-    entity_description: ElectroluxNumberDescription[T]
-
-    def __init__(
-        self,
-        appliance_data: T,
-        coordinator: ElectroluxDataUpdateCoordinator,
-        description: ElectroluxNumberDescription[T],
-    ) -> None:
-        """Initialize the number box."""
-        super().__init__(appliance_data, coordinator, description.key)
-        self.entity_description = description
-
-    @override
-    def _get_value(self) -> float | None:
-        return self.entity_description.value_fn(self._appliance_data)
-
-    @override
-    def _get_min(self) -> float:
-        return self.entity_description.min_fn(self._appliance_data)
-
-    @override
-    def _get_max(self) -> float:
-        return self.entity_description.max_fn(self._appliance_data)
-
-    @override
-    def _get_step(self) -> float:
-        return self.entity_description.step_fn(self._appliance_data)
-
-    @override
-    def _get_command_payload(self, value: float) -> dict[str, Any]:
-        rounded_value = round_to_valid_step(value, self._get_min(), self._get_step())
-        return self.entity_description.command_payload_fn(
-            rounded_value,
-            self._appliance_data,
-        )
-
-
 class ElectroluxTemperatureNumber[T: OVAppliance](ElectroluxBaseNumber[T]):
-    """Representation of an Electrolux light intensity selection."""
+    """Representation of an Electrolux temperature number."""
 
     entity_description: ElectroluxTemperatureNumberDescription[T]
 
@@ -462,7 +374,7 @@ class ElectroluxTemperatureNumber[T: OVAppliance](ElectroluxBaseNumber[T]):
 class ElectroluxSubmoduleTemperatureNumber[T: CRAppliance | SOAppliance](
     ElectroluxBaseNumber[T]
 ):
-    """Representation of an Electrolux light intensity selection."""
+    """Representation of an Electrolux temperature number for a submodule."""
 
     entity_description: ElectroluxSubmoduleTemperatureNumberDescription[T]
 

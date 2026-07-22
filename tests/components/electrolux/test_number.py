@@ -41,51 +41,6 @@ async def test_number(
 
 
 @pytest.mark.parametrize(
-    ("appliance_fixture", "entity_id", "command_value", "command_payload"),
-    [
-        (
-            "hood",
-            "number.ceiling_hood_light_color_temperature",
-            10.0,
-            {"lightColorTemperature": 10},
-        ),
-        (
-            "hood",
-            "number.ceiling_hood_light_color_temperature",
-            9.8,
-            {"lightColorTemperature": 10},
-        ),
-        ("hood", "number.ceiling_hood_light_intensity", 10.0, {"lightIntensity": 10}),
-        ("hood", "number.ceiling_hood_light_intensity", 9.8, {"lightIntensity": 10}),
-    ],
-)
-async def test_set_value(
-    hass: HomeAssistant,
-    appliances: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    appliance_fixture: str,
-    entity_id: str,
-    command_value: float,
-    command_payload: dict[str, Any],
-) -> None:
-    """Test states of the number entity."""
-    await setup_integration(hass, mock_config_entry)
-
-    appliance_id = load_appliance(appliance_fixture).applianceId
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: command_value},
-        blocking=True,
-    )
-    appliances.send_command.assert_called_once_with(
-        appliance_id,
-        command_payload,
-    )
-
-
-@pytest.mark.parametrize(
     ("appliance_fixture", "temp_unit", "entity_id", "command_value", "command_payload"),
     [
         (
