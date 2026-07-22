@@ -17,6 +17,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
+pytestmark = pytest.mark.freeze_time("2026-07-22 00:00:00+00:00")
+
 
 @pytest.mark.usefixtures("mock_google_health_client")
 async def test_diagnostics_full_data(

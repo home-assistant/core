@@ -19,7 +19,7 @@
       'auth_implementation': 'google_health',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1784819180,
+        'expires_at': 1784764800,
         'refresh_token': '**REDACTED**',
         'scope': 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/userinfo.profile',
         'token_type': 'Bearer',
@@ -51,7 +51,7 @@
       'auth_implementation': 'google_health',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1784819179,
+        'expires_at': 1784764800,
         'refresh_token': '**REDACTED**',
         'scope': 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/userinfo.profile',
         'token_type': 'Bearer',
@@ -78,7 +78,7 @@
       'auth_implementation': 'google_health',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1784819180,
+        'expires_at': 1784764800,
         'refresh_token': '**REDACTED**',
         'scope': 'https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
         'token_type': 'Bearer',
@@ -107,7 +107,7 @@
       'auth_implementation': 'google_health',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1784819180,
+        'expires_at': 1784764800,
         'refresh_token': '**REDACTED**',
         'scope': 'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly https://www.googleapis.com/auth/googlehealth.profile.readonly https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly https://www.googleapis.com/auth/googlehealth.sleep.readonly https://www.googleapis.com/auth/userinfo.profile',
         'token_type': 'Bearer',
