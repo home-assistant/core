@@ -61,6 +61,20 @@
     }
   },
   "issues": {
+    "issue_addon_app_port_conflict": {
+      "description": "App {addon} has a port conflict on port {port}.",
+      "fix_flow": {
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        },
+        "step": {
+          "addon_clear_port_config": {
+            "description": "App {addon} has a port conflict on port {port}. Clear the port configuration in the app settings, or manually configure the app to use a different port to resolve this."
+          }
+        }
+      },
+      "title": "App port conflict"
+    },
     "issue_addon_boot_fail": {
       "fix_flow": {
         "abort": {
