@@ -94,7 +94,7 @@ FLOWRATE_SENSORS = [
         key="todays_consumption",
         translation_key="todays_consumption",
         device_class=SensorDeviceClass.WATER,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
     ),
