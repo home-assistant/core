@@ -411,7 +411,7 @@ async def test_model_subentry_no_models(
     mock_open_router_client: AsyncMock,
     subentry_type: str,
 ) -> None:
-    """Test the model form falls back to the recommended model when none are returned."""
+    """Test the model flow aborts when no models are available for the modality."""
     await setup_integration(hass, mock_config_entry)
 
     mock_open_router_client.get_models.return_value = []
@@ -420,14 +420,8 @@ async def test_model_subentry_no_models(
         (mock_config_entry.entry_id, subentry_type),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    recommended = {
-        "tts": "openai/gpt-4o-mini-tts-2025-12-15",
-        "stt": "openai/whisper-large-v3",
-    }[subentry_type]
-    model_key = next(k for k in result["data_schema"].schema if k == CONF_MODEL)
-    assert model_key.default() == recommended
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_models"
 
 
 @pytest.mark.usefixtures("mock_openai_client")

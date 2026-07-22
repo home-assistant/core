@@ -74,6 +74,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
+        "no_models": "No speech-to-text models are available for this account.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
@@ -98,6 +99,7 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
+        "no_models": "No text-to-speech models are available for this account.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },

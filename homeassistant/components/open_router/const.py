@@ -13,10 +13,8 @@ CONF_TTS_SPEED = "tts_speed"
 CONF_TTS_VOICE = "tts_voice"
 CONF_WEB_SEARCH = "web_search"
 
-RECOMMENDED_TTS_MODEL = "openai/gpt-4o-mini-tts-2025-12-15"
 RECOMMENDED_TTS_SPEED = 1.0
 RECOMMENDED_TTS_VOICE = "alloy"
-RECOMMENDED_STT_MODEL = "openai/whisper-large-v3"
 RECOMMENDED_WEB_SEARCH = False
 
 # OpenAI-compatible voices offered when a model does not expose its own

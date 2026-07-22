@@ -36,8 +36,6 @@ from .const import (
     DOMAIN,
     FALLBACK_TTS_VOICES,
     RECOMMENDED_CONVERSATION_OPTIONS,
-    RECOMMENDED_STT_MODEL,
-    RECOMMENDED_TTS_MODEL,
     RECOMMENDED_TTS_SPEED,
     RECOMMENDED_TTS_VOICE,
 )
@@ -314,7 +312,6 @@ class _ModelSubentryFlowHandler(OpenRouterSubentryFlowHandler):
     """Shared model-selection subentry flow for the TTS and STT services."""
 
     output_modality: str
-    recommended_model: str
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -356,20 +353,19 @@ class _ModelSubentryFlowHandler(OpenRouterSubentryFlowHandler):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
+        if not self.models:
+            return self.async_abort(reason="no_models")
+
         models = [
             SelectOptionDict(value=model.id, label=model.name)
             for model in self.models.values()
         ]
 
-        # Default to the first available model; the recommended model may not
-        # be returned by the output_modalities filter.
         stored_default = self.options.get(CONF_MODEL)
         if stored_default and any(m["value"] == stored_default for m in models):
             default_model = stored_default
-        elif models:
-            default_model = models[0]["value"]
         else:
-            default_model = self.recommended_model
+            default_model = models[0]["value"]
 
         return self.async_show_form(
             step_id="init",
@@ -394,7 +390,6 @@ class TtsFlowHandler(_ModelSubentryFlowHandler):
     """Handle TTS subentry flow."""
 
     output_modality = "speech"
-    recommended_model = RECOMMENDED_TTS_MODEL
 
     @override
     async def async_step_init(
@@ -472,7 +467,6 @@ class SttFlowHandler(_ModelSubentryFlowHandler):
     """Handle STT subentry flow."""
 
     output_modality = "transcription"
-    recommended_model = RECOMMENDED_STT_MODEL
 
     @override
     async def async_step_init(
