@@ -100,6 +100,29 @@
         "name": "Upper door state"
       }
     },
+    "number": {
+      "bottomoven_target_temperature": {
+        "name": "Lower cavity target temperature"
+      },
+      "freezer_target_temperature": {
+        "name": "Freezer target temperature"
+      },
+      "fridge_target_temperature": {
+        "name": "Fridge target temperature"
+      },
+      "light_color": {
+        "name": "Light color temperature"
+      },
+      "light_intensity": {
+        "name": "Light intensity"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "upperoven_target_temperature": {
+        "name": "Upper cavity target temperature"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "name": "Appliance state",

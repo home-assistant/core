@@ -8,6 +8,17 @@
         "default": "mdi:power-sleep"
       }
     },
+    "number": {
+      "light_color": {
+        "default": "mdi:lightbulb-outline"
+      },
+      "light_intensity": {
+        "default": "mdi:lightbulb-outline"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "default": "mdi:information-outline"
