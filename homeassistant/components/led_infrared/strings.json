@@ -6,7 +6,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "missing_infrared_entity": "Select an infrared emitter."
+      "missing_infrared_entity": "Select an infrared emitter or receiver."
     },
     "step": {
       "reconfigure": {

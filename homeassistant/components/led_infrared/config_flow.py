@@ -147,7 +147,8 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         }
                     )
                 return self.async_update_reload_and_abort(
-                    entry, data_updates=user_input
+                    entry,
+                    data={CONF_DEVICE_TYPE: entry.data[CONF_DEVICE_TYPE], **user_input},
                 )
 
             errors["base"] = "missing_infrared_entity"
