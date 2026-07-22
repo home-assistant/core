@@ -215,7 +215,7 @@ async def trigger_subscription_callback(
     node_id: int | None = None,
     attribute_path: str | None = None,
 ) -> None:
-    """Trigger matching subscription callbacks, or broadcast when filters are omitted."""
+    """Trigger matching subscription callbacks or broadcast when filters are omitted."""
     for sub in client.subscribe_events.call_args_list:
         kwargs = sub.kwargs
         if kwargs.get("event_filter") not in (None, event):
@@ -241,12 +241,7 @@ async def set_node_attribute_and_notify(
     attribute_id: int,
     value: Any,
 ) -> None:
-    """Set a node attribute and fire the matching ATTRIBUTE_UPDATED subscription.
-
-    Mirrors the real client: the new value is delivered only to subscriptions for
-    that node and attribute path, so a test cannot accidentally notify a handler
-    about an attribute it never subscribed to.
-    """
+    """Set a node attribute and fire the matching ATTRIBUTE_UPDATED subscription."""
     set_node_attribute(node, endpoint, cluster_id, attribute_id, value)
     await trigger_subscription_callback(
         hass,
