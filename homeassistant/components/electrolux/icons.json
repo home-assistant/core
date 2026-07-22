@@ -8,6 +8,20 @@
         "default": "mdi:power-sleep"
       }
     },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play-circle"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
     "sensor": {
       "appliance_state": {
         "default": "mdi:information-outline"
