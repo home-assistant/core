@@ -1,6 +1,5 @@
 """Light platform for Poolside LIGHT controls."""
 
-import json
 from typing import Any, override
 
 from homeassistant.components.light import (
@@ -10,6 +9,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,12 +22,10 @@ from .const import (
     BRIGHTNESS_INCREMENTS_FIELD,
     DEFAULT_COLOR_FIELD,
     LIGHT_NAME_FIELD,
-    LOGGER,
     SPEED_FIELD,
     SUPPORTS_BRIGHTNESS_FIELD,
     SUPPORTS_COLORS_FIELD,
     TWINKLE_FIELD,
-    ControlType,
     StatusState,
 )
 from .entity import PoolsideEntity
@@ -48,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(
         PoolsideLight(data.client, control)
         for control in data.controls
-        if control.control_type is ControlType.LIGHT
+        if control.platform is Platform.LIGHT
     )
 
 
@@ -80,22 +78,6 @@ class PoolsideLight(PoolsideEntity, LightEntity):
         self._default_color = control.capability(DEFAULT_COLOR_FIELD)
         if self._supports_color:
             self._attr_supported_features = LightEntityFeature.EFFECT
-
-    def _confirmed_json(self, field: str) -> Any:
-        """Return a confirmed status value that arrives JSON-encoded in a string.
-
-        Unlike most status values, the light capability fields arrive as JSON
-        documents encoded inside the string value (e.g. '["Party Mode"]' or
-        'false'), not as native JSON.
-        """
-        raw = self._confirmed(field)
-        if not isinstance(raw, str):
-            return None
-        try:
-            return json.loads(raw)
-        except ValueError:
-            LOGGER.warning("%s: unparsable %s: %r", self._control.name, field, raw)
-            return None
 
     def _supports_brightness(self) -> bool:
         """Return whether the light is dimmable, assuming yes until told otherwise."""

@@ -6,9 +6,13 @@ from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .client import (
     PoolsideAuthError,
@@ -20,15 +24,19 @@ from .const import (
     CONF_CLIENT_PRIVATE_KEY,
     CONF_CONTROLLER_PUBLIC_KEY,
     CONF_CONTROLLER_UUID,
+    DOMAIN,
     LAST_TIME_SITE_WAS_LOADED_FIELD,
     LOGGER,
+    SITE_MODE_KEY,
+    ControlType,
 )
-from .models import PoolsideControl
+from .models import PoolsideControl, PoolsideSite
 
 PLATFORMS = [
     Platform.CLIMATE,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -39,6 +47,7 @@ class PoolsideData:
     """Runtime data for a Poolside config entry."""
 
     client: PoolsideClient
+    site: PoolsideSite
     controls: list[PoolsideControl]
 
 
@@ -71,13 +80,87 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolsideConfigEntry) -> 
         await client.async_disconnect()
         raise ConfigEntryNotReady from err
 
-    entry.runtime_data = PoolsideData(client=client, controls=controls)
+    entry.runtime_data = PoolsideData(client=client, site=site, controls=controls)
+
+    _async_prune_stale_registry_entries(hass, entry, controls)
 
     if site.uuid is not None:
         entry.async_on_unload(_watch_for_site_reload(hass, entry, client, site.uuid))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+@callback
+def _async_prune_stale_registry_entries(
+    hass: HomeAssistant,
+    entry: PoolsideConfigEntry,
+    controls: list[PoolsideControl],
+) -> None:
+    """Remove registry entries that no longer match the control layout.
+
+    The attendant can delete controls or whole groups; the resulting reload
+    re-fetches the layout, and anything registered under a UUID that didn't
+    come back would otherwise linger as a permanently-unavailable entity.
+    A control that survives but is rendered on a different platform than
+    before (e.g. a filter reconfigured from single- to variable-speed moves
+    from switch to fan) similarly leaves its old-platform entity behind, so
+    each UUID is checked against the entity domains it may legitimately
+    have, not just for existence.
+
+    Entity unique_ids are `{controller}_{uuid}` or `{controller}_{uuid}_{key}`
+    where the UUID is a control's or a body of water's; the site mode sensor
+    (`{controller}_site_mode`) is the one exception. Group devices are
+    identified by their group UUID, the controller device by the controller
+    UUID.
+    """
+    controller_uuid: str = entry.data[CONF_CONTROLLER_UUID]
+    allowed_domains: dict[str, set[str]] = {}
+    valid_identifiers: set[tuple[str, str]] = {(DOMAIN, controller_uuid)}
+    for control in controls:
+        domains = allowed_domains.setdefault(control.uuid, set())
+        domains.add(control.platform.value)
+        if control.control_type is ControlType.TEMPERATURE:
+            domains.add(Platform.SELECT.value)
+        valid_identifiers.add((DOMAIN, control.group.uuid))
+        if (body_of_water_uuid := control.group.body_of_water_uuid) is not None:
+            allowed_domains.setdefault(body_of_water_uuid, set()).add(
+                Platform.SENSOR.value
+            )
+
+    entity_registry = er.async_get(hass)
+    prefix = f"{controller_uuid}_"
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        remainder = entity_entry.unique_id.removeprefix(prefix)
+        if remainder == SITE_MODE_KEY or any(
+            (remainder == uuid or remainder.startswith(f"{uuid}_"))
+            and entity_entry.domain in domains
+            for uuid, domains in allowed_domains.items()
+        ):
+            continue
+        LOGGER.debug(
+            "Removing stale entity %s (unique_id %s)",
+            entity_entry.entity_id,
+            entity_entry.unique_id,
+        )
+        entity_registry.async_remove(entity_entry.entity_id)
+
+    device_registry = dr.async_get(hass)
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if device_entry.identifiers & valid_identifiers:
+            continue
+        LOGGER.debug(
+            "Removing stale device %s (%s)",
+            device_entry.name,
+            device_entry.identifiers,
+        )
+        device_registry.async_update_device(
+            device_entry.id, remove_config_entry_id=entry.entry_id
+        )
 
 
 def _watch_for_site_reload(

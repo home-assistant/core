@@ -78,6 +78,14 @@ VARIABLE_SPEED_CONTROL_TYPES = (
     ControlType.BLOWER,
 )
 
+# Icon-only translation keys per control type, applied by both the fan and
+# switch platforms (a control can render on either); the icons live in
+# icons.json under both domains. Names still come from the control.
+ICON_TRANSLATION_KEYS = {
+    ControlType.WATER_FEATURE: "water_feature",
+    ControlType.FILTER: "filter",
+}
+
 
 class GroupKind(StrEnum):
     """The Kind of a Site.getControlLayout group."""
@@ -86,12 +94,56 @@ class GroupKind(StrEnum):
     LANDSCAPE = "LANDSCAPE"
 
 
+class BodyOfWaterState(StrEnum):
+    """The FRIENDLY_STATE a body of water reports via its CurrentState field."""
+
+    OFF = "OFF"
+    FILTERING = "FILTERING"
+    HEATING = "HEATING"
+    COOLING = "COOLING"
+    ON = "ON"
+    CRITICAL_ALERT = "CRITICAL_ALERT"
+    COOLDOWN = "COOLDOWN"
+    INSTALLER_MODE = "INSTALLER_MODE"
+
+
+class SiteMode(StrEnum):
+    """The controller-wide MODE reported under the site UUID.
+
+    The controller only accepts desired-state writes in NORMAL mode, and
+    INSTALLER mode additionally takes every control out of service from the
+    user's point of view.
+    """
+
+    NORMAL = "NORMAL"
+    INSTALLER = "INSTALLER"
+    FAULT = "FAULT"
+    FACTORY = "FACTORY"
+
+
 class ControlMode(StrEnum):
     """Valid values for a TEMPERATURE control's ControlMode field."""
 
     AUTO = "AUTO"
     HEAT = "HEAT"
     COOL = "COOL"
+
+
+class HeatingMode(StrEnum):
+    """Valid values for a TEMPERATURE control's HeatingMode field."""
+
+    SMART = "SMART"
+    SOLAR = "SOLAR"
+    HEATPUMP = "HEATPUMP"
+    FUEL = "FUEL"
+
+
+class CoolingMode(StrEnum):
+    """Valid values for a TEMPERATURE control's CoolingMode field."""
+
+    SMART = "SMART"
+    HEATPUMP = "HEATPUMP"
+    CHILLER = "CHILLER"
 
 
 # Layout fields (Site.getControlLayout)
@@ -105,15 +157,30 @@ DEFAULT_COLOR_FIELD = "DefaultColor"
 SPEED_INCREMENTS_FIELD = "SpeedIncrements"
 COMBINED_CONTROL_UUID_FIELD = "CombinedControlUUID"
 MEMBER_CONTROL_UUIDS_FIELD = "MemberControlUUIDs"
+
+# TEMPERATURE control capability lists. Reported with the control layout
+# and pushed via Device.setStatus when they change; pushes have been
+# observed keyed both by the group's BodyOfWaterUUID and by the heater
+# control's own UUID, so lookups check every key before falling back to
+# the layout.
 CONTROL_MODES_SUPPORTED_FIELD = "ControlModesSupported"
+HEATING_MODES_SUPPORTED_FIELD = "HeatingModesSupported"
+COOLING_MODES_SUPPORTED_FIELD = "CoolingModesSupported"
 
 # Body-of-water status items (Device.setStatus, keyed by BodyOfWaterUUID)
 CURRENT_TEMPERATURE_FIELD = "Temperature"
+CURRENT_STATE_FIELD = "CurrentState"
 
-# Site-level status item (Device.setStatus, keyed by the site UUID from
-# Site.getControlLayout). Changes whenever the attendant's site configuration
-# is edited - a signal to re-fetch the control layout and reload the entry.
+# Site-level status items (Device.setStatus, keyed by the site UUID from
+# Site.getControlLayout). LastTimeSiteWasLoaded changes whenever the
+# attendant's site configuration is edited - a signal to re-fetch the
+# control layout and reload the entry. Mode is the controller-wide SiteMode.
 LAST_TIME_SITE_WAS_LOADED_FIELD = "LastTimeSiteWasLoaded"
+SITE_MODE_FIELD = "Mode"
+
+# unique_id suffix of the site mode sensor - the one entity not keyed to a
+# control or body-of-water UUID from the layout.
+SITE_MODE_KEY = "site_mode"
 
 # On/off IS pushed via Device.setStatus after all (observed live, keyed by
 # the control's own UUID) - just under different field names than the
@@ -134,6 +201,8 @@ UNKNOWN_POWER_STATE = "UNKNOWN"
 # Device.setDesiredState2 writes instead.
 SET_POINT_FIELD = "SetPoint"
 CONTROL_MODE_FIELD = "ControlMode"
+HEATING_MODE_FIELD = "HeatingMode"
+COOLING_MODE_FIELD = "CoolingMode"
 POWER_LEVEL_FIELD = "PowerLevel"
 BRIGHTNESS_FIELD = "Brightness"
 LIGHT_NAME_FIELD = "LightName"

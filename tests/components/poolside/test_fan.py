@@ -13,6 +13,7 @@ from homeassistant.components.poolside.const import ControlType
 from homeassistant.components.poolside.models import PoolsideControl
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakePoolsideClient, make_control
 
@@ -46,6 +47,25 @@ def controls() -> list[PoolsideControl]:
             ControlItemUUID=POOL_DEVICE_UUID,
         ),
     ]
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_water_feature_uses_fountain_icon_translation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """WATER_FEATURE fans carry the water_feature icon translation key.
+
+    The icon itself (mdi:fountain in icons.json) is resolved by the
+    frontend from this key; the name still comes from the control.
+    """
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry is not None
+    assert entry.translation_key == "water_feature"
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Pool Pool Pump"
 
 
 @pytest.mark.usefixtures("setup_integration")

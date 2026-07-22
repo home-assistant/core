@@ -83,6 +83,7 @@ class FakePoolsideClient:
     def __init__(self, controller_uuid: str = TEST_CONTROLLER_UUID) -> None:
         """Set up the fake client with no status and no controls."""
         self.controller_uuid = controller_uuid
+        self.site_uuid: str | None = TEST_SITE_UUID
         self.available = True
         self._status: dict[str, dict[str, Any]] = {}
         self._status_listeners: dict[str, list[Callable[[], None]]] = {}
@@ -100,6 +101,13 @@ class FakePoolsideClient:
     def get_status(self, control_uuid: str, field: str) -> Any:
         """Return the last known value of a named status field for a control."""
         return self._status.get(control_uuid, {}).get(field)
+
+    @property
+    def site_mode(self) -> Any:
+        """Return the last reported site-wide Mode, mirroring PoolsideClient."""
+        if self.site_uuid is None:
+            return None
+        return self.get_status(self.site_uuid, "Mode")
 
     def set_status(self, control_uuid: str, field: str, value: Any) -> None:
         """Set a status field and notify subscribers, mimicking a status push."""

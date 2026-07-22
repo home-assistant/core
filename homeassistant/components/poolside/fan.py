@@ -3,12 +3,13 @@
 from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PoolsideConfigEntry
 from .client import PoolsideClient
-from .const import POWER_LEVEL_FIELD, VARIABLE_SPEED_CONTROL_TYPES, StatusState
+from .const import ICON_TRANSLATION_KEYS, POWER_LEVEL_FIELD, StatusState
 from .entity import PoolsideEntity
 from .models import PoolsideControl
 
@@ -23,8 +24,7 @@ async def async_setup_entry(
     async_add_entities(
         PoolsideFan(data.client, control)
         for control in data.controls
-        if control.control_type in VARIABLE_SPEED_CONTROL_TYPES
-        and control.is_variable_speed
+        if control.platform is Platform.FAN
     )
 
 
@@ -40,6 +40,8 @@ class PoolsideFan(PoolsideEntity, FanEntity):
     def __init__(self, client: PoolsideClient, control: PoolsideControl) -> None:
         """Set up the fan, reading its allowed speed percentages from the control."""
         super().__init__(client, control)
+        if icon_key := ICON_TRANSLATION_KEYS.get(control.control_type):
+            self._attr_translation_key = icon_key
         self._speed_increments = control.speed_increments
         self._attr_speed_count = len(self._speed_increments)
 

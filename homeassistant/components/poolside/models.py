@@ -3,6 +3,8 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+from homeassistant.const import Platform
+
 from .const import (
     COMBINED_CONTROL_UUID_FIELD,
     CONTROL_TYPE_MAP,
@@ -11,6 +13,7 @@ from .const import (
     MEMBER_CONTROL_UUIDS_FIELD,
     MIN_SET_POINT_FIELD,
     SPEED_INCREMENTS_FIELD,
+    VARIABLE_SPEED_CONTROL_TYPES,
     WINTERIZED_FIELD,
     ControlType,
     GroupKind,
@@ -115,6 +118,23 @@ class PoolsideControl:
     def is_variable_speed(self) -> bool:
         """Return True if this control supports more than one output level."""
         return len(self.speed_increments) > 1
+
+    @property
+    def platform(self) -> Platform:
+        """Return the HA platform this control is rendered on.
+
+        A control's platform can change between layouts (e.g. a filter
+        reconfigured from single- to variable-speed moves from switch to
+        fan), so this is the single source of truth for both entity setup
+        and stale-registry pruning.
+        """
+        if self.control_type is ControlType.TEMPERATURE:
+            return Platform.CLIMATE
+        if self.control_type is ControlType.LIGHT:
+            return Platform.LIGHT
+        if self.control_type in VARIABLE_SPEED_CONTROL_TYPES and self.is_variable_speed:
+            return Platform.FAN
+        return Platform.SWITCH
 
 
 def parse_control_layout(

@@ -1,5 +1,6 @@
 """Base entity for Poolside controls."""
 
+import json
 from typing import Any, override
 
 from homeassistant.exceptions import HomeAssistantError
@@ -14,26 +15,56 @@ from .const import (
     POWER_STATE_FIELD,
     STATUS_FIELD,
     UNKNOWN_POWER_STATE,
+    SiteMode,
     StatusState,
 )
 from .models import PoolsideControl, PoolsideGroup
 
 
-class PoolsideGroupEntity(Entity):
-    """Base class for entities attached to a control group's device."""
+def confirmed_status(
+    client: PoolsideClient, control: PoolsideControl, field: str
+) -> Any:
+    """Return the controller-confirmed value of a field for this control.
+
+    Status pushes win over the connect-time control layout, since they
+    reflect changes made after the layout was fetched. Pushes have been
+    observed keyed by the group's BodyOfWaterUUID (`status_key`), by the
+    control's own UUID, and - for combined controls - by a member's UUID,
+    so every candidate key is checked.
+    """
+    for key in (control.status_key, control.uuid, *control.member_uuids):
+        if (value := client.get_status(key, field)) is not None:
+            return value
+    return control.capability(field)
+
+
+def confirmed_json(client: PoolsideClient, control: PoolsideControl, field: str) -> Any:
+    """Return a confirmed value that may arrive JSON-encoded inside a string.
+
+    Capability fields (supported-mode lists, light catalogs, ...) are native
+    JSON in the control layout but arrive as JSON documents encoded inside
+    the string value in status pushes (e.g. '["HEAT", "COOL"]'), so both
+    shapes are accepted.
+    """
+    value = confirmed_status(client, control, field)
+    if not isinstance(value, str):
+        return value
+    try:
+        return json.loads(value)
+    except ValueError:
+        LOGGER.warning("%s: unparsable %s: %r", control.name, field, value)
+        return None
+
+
+class PoolsideBaseEntity(Entity):
+    """Base class for all Poolside entities: connectivity and status pushes."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, client: PoolsideClient, group: PoolsideGroup) -> None:
-        """Set up the entity on the group's device."""
+    def __init__(self, client: PoolsideClient) -> None:
+        """Set up the entity on a client connection."""
         self._client = client
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, group.uuid)},
-            name=group.name,
-            manufacturer="Poolside",
-            model=group.body_of_water_type or group.kind,
-        )
 
     @property
     @override
@@ -59,22 +90,48 @@ class PoolsideGroupEntity(Entity):
         )
 
 
+class PoolsideGroupEntity(PoolsideBaseEntity):
+    """Base class for entities attached to a control group's device."""
+
+    def __init__(self, client: PoolsideClient, group: PoolsideGroup) -> None:
+        """Set up the entity on the group's device."""
+        super().__init__(client)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, group.uuid)},
+            name=group.name,
+            manufacturer="Poolside",
+            model=group.body_of_water_type or group.kind,
+        )
+
+
 class PoolsideEntity(PoolsideGroupEntity):
     """Base class for entities backed by a single Poolside control."""
+
+    # _attr_name wins over a translated name, so entities whose name comes
+    # from their translation_key (rather than directly from the control's
+    # name) flip this to keep _attr_name unset. A translation_key alone is
+    # no signal - it may exist purely for icon translations.
+    _use_translated_name = False
 
     def __init__(self, client: PoolsideClient, control: PoolsideControl) -> None:
         """Set up the entity for a given control."""
         super().__init__(client, control.group)
         self._control = control
         self._attr_unique_id = f"{client.controller_uuid}_{control.uuid}"
-        self._attr_name = control.name
+        if not self._use_translated_name:
+            self._attr_name = control.name
 
     @property
     @override
     def available(self) -> bool:
-        """Return True if connected and the control isn't disabled or winterized."""
+        """Return True if connected and the control isn't disabled or winterized.
+
+        INSTALLER mode takes the whole site out of service from the user's
+        point of view, so every control goes unavailable while it lasts.
+        """
         return (
             super().available
+            and self._client.site_mode != SiteMode.INSTALLER
             and not self._control.winterized
             and self._power_state() != StatusState.DISABLED
         )
@@ -126,13 +183,21 @@ class PoolsideEntity(PoolsideGroupEntity):
         return None
 
     def _confirmed(self, field: str) -> Any:
-        """Return a confirmed body-level telemetry value pushed by the controller.
+        """Return a confirmed telemetry/capability value pushed by the controller.
 
-        Keyed by `status_key` (the group's BodyOfWaterUUID for TEMPERATURE,
-        this control's own UUID otherwise) - for read-only telemetry like
-        current temperature or supported mode lists.
+        For read-only telemetry like current temperature or supported mode
+        lists; checks every key the value may arrive under.
         """
-        return self._client.get_status(self._control.status_key, field)
+        return confirmed_status(self._client, self._control, field)
+
+    def _confirmed_json(self, field: str) -> Any:
+        """Return a confirmed value that may arrive JSON-encoded in a string."""
+        return confirmed_json(self._client, self._control, field)
+
+    def _confirmed_json_list(self, field: str) -> list[Any]:
+        """Return a confirmed JSON list capability, or [] if absent or malformed."""
+        value = self._confirmed_json(field)
+        return value if isinstance(value, list) else []
 
     def _desired(self, field: str) -> Any:
         """Return this control's last-written (optimistic) desired-state value.
@@ -146,7 +211,18 @@ class PoolsideEntity(PoolsideGroupEntity):
         return self._client.get_status(self._control.uuid, field)
 
     async def _async_write_state(self, **fields: Any) -> None:
-        """Write this control's desired state, translating protocol errors."""
+        """Write this control's desired state, translating protocol errors.
+
+        The controller only accepts desired-state writes while the site is
+        in NORMAL mode, so any other known mode fails fast with a clear
+        message instead of a generic rejection.
+        """
+        mode = self._client.site_mode
+        if mode is not None and mode != SiteMode.NORMAL:
+            raise HomeAssistantError(
+                f"The Poolside controller is in {mode} mode; {self.name} can only"
+                " be changed while it is in NORMAL mode"
+            )
         try:
             await self._client.async_set_desired_state(self._control.uuid, **fields)
         except PoolsideCommandError as err:
@@ -160,9 +236,16 @@ class PoolsideEntity(PoolsideGroupEntity):
 
     @override
     def _status_keys(self) -> set[str]:
-        """Return every key this control's state may arrive under."""
-        return {
+        """Return every key this control's state may arrive under.
+
+        Includes the site UUID (when known) so availability updates as soon
+        as the site-wide Mode changes.
+        """
+        keys = {
             self._control.status_key,
             self._control.uuid,
             *self._control.member_uuids,
         }
+        if (site_uuid := self._client.site_uuid) is not None:
+            keys.add(site_uuid)
+        return keys

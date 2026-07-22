@@ -15,6 +15,7 @@ from .const import (
     PING_TIMEOUT,
     RECONNECT_INITIAL_DELAY,
     RECONNECT_MAX_DELAY,
+    SITE_MODE_FIELD,
     # STATUS_REFRESH_INTERVAL,  # periodic re-sync disabled for now, see below
 )
 from .models import PoolsideControl, PoolsideSite, parse_control_layout
@@ -59,6 +60,7 @@ class PoolsideClient:
         self._client_private_key = client_private_key
         self._pinned_controller_public_key = controller_public_key
         self.controller_uuid = controller_uuid
+        self.site_uuid: str | None = None
 
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._noise: NoiseSession | None = None
@@ -324,12 +326,25 @@ class PoolsideClient:
 
         return await future
 
+    @property
+    def site_mode(self) -> Any | None:
+        """Return the controller's last reported site-wide Mode, if known.
+
+        Requires the site UUID from a previous control-layout fetch; older
+        controller firmware that reports no site UUID has no known mode.
+        """
+        if self.site_uuid is None:
+            return None
+        return self.get_status(self.site_uuid, SITE_MODE_FIELD)
+
     async def async_get_control_layout(
         self,
     ) -> tuple[PoolsideSite, list[PoolsideControl]]:
         """Fetch controls pre-wrapped into their groups from Site.getControlLayout."""
         result = await self.async_send_request("Site.getControlLayout", {})
-        return parse_control_layout(result)
+        site, controls = parse_control_layout(result)
+        self.site_uuid = site.uuid
+        return site, controls
 
     async def async_refresh_status(self) -> None:
         """Fetch every current status item via Device.getStatus and apply it.

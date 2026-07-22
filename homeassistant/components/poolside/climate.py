@@ -8,7 +8,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,7 +20,6 @@ from .const import (
     CURRENT_TEMPERATURE_FIELD,
     SET_POINT_FIELD,
     ControlMode,
-    ControlType,
     StatusState,
 )
 from .entity import PoolsideEntity
@@ -44,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(
         PoolsideThermostat(data.client, control)
         for control in data.controls
-        if control.control_type is ControlType.TEMPERATURE
+        if control.platform is Platform.CLIMATE
     )
 
 
@@ -76,7 +75,7 @@ class PoolsideThermostat(PoolsideEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the modes this body of water's installed equipment supports."""
         modes = [HVACMode.OFF]
-        for raw_mode in self._confirmed(CONTROL_MODES_SUPPORTED_FIELD) or ():
+        for raw_mode in self._confirmed_json_list(CONTROL_MODES_SUPPORTED_FIELD):
             try:
                 modes.append(_HVAC_MODE_BY_CONTROL_MODE[ControlMode(raw_mode)])
             except ValueError:
