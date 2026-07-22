@@ -147,14 +147,8 @@ class Searcher:
             if device_entry := self._device_registry.async_get(device.id):
                 self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
 
-            # Automations referencing this device
-            self._add(
-                ItemType.AUTOMATION,
-                automation.automations_with_device(self.hass, device.id),
-            )
-
-            # Scripts referencing this device
-            self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device.id))
+            # Automations and scripts referencing this device
+            self._async_add_automations_and_scripts_for_device(device)
 
             # Entities of this device
             for entity_entry in er.async_entries_for_device(
@@ -220,6 +214,12 @@ class Searcher:
             automation.blueprint_in_automation(self.hass, automation_entity_id),
         )
 
+        # Labels referenced in this automation
+        self._add(
+            ItemType.LABEL,
+            automation.labels_in_automation(self.hass, automation_entity_id),
+        )
+
         # Floors referenced in this automation
         self._add(
             ItemType.FLOOR,
@@ -233,8 +233,7 @@ class Searcher:
 
         # Devices referenced in this automation
         for device in automation.devices_in_automation(self.hass, automation_entity_id):
-            self._add(ItemType.DEVICE, device)
-            self._async_resolve_up_device(device)
+            self._async_search_referenced_device(device)
 
         # Entities referenced in this automation
         for entity_id in automation.entities_in_automation(
@@ -291,6 +290,19 @@ class Searcher:
             self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
     @callback
+    def _async_search_integration(self, domain: str) -> None:
+        """Find results for an integration."""
+        for entry in self.hass.config_entries.async_entries(domain):
+            self._add(ItemType.CONFIG_ENTRY, entry.entry_id)
+            self._async_search_config_entry(entry.entry_id)
+
+        for entity_id, source in self._entity_sources.items():
+            if source["domain"] != domain:
+                continue
+            self._add(ItemType.ENTITY, entity_id)
+            self._async_search_entity(entity_id, entry_point=False)
+
+    @callback
     def _async_search_device(self, device_id: str, *, entry_point: bool = True) -> None:
         """Find results for a device."""
         if not (device_entry := self._async_resolve_up_device(device_id)):
@@ -300,14 +312,8 @@ class Searcher:
             # Add labels of this device
             self._add(ItemType.LABEL, device_entry.labels)
 
-        # Automations referencing this device
-        self._add(
-            ItemType.AUTOMATION,
-            automation.automations_with_device(self.hass, device_id),
-        )
-
-        # Scripts referencing this device
-        self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device_id))
+        # Automations and scripts referencing this device
+        self._async_add_automations_and_scripts_for_device(device_entry)
 
         # Entities of this device
         for entity_entry in er.async_entries_for_device(
@@ -318,6 +324,46 @@ class Searcher:
             self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
     @callback
+    def _async_add_automations_and_scripts_for_device(
+        self, device_entry: dr.DeviceEntry
+    ) -> None:
+        """Add automations and scripts referencing a device.
+
+        A device produced by splitting a pre-migration composite device is also
+        matched by automations and scripts referencing the composite device id, so
+        the composite id is searched too. A sibling split's id is never searched, so
+        references to a sibling are not matched.
+        """
+        device_ids = {device_entry.id}
+        if device_entry.composite_device_id is not None:
+            device_ids.add(device_entry.composite_device_id)
+        for device_id in device_ids:
+            self._add(
+                ItemType.AUTOMATION,
+                automation.automations_with_device(self.hass, device_id),
+            )
+            self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device_id))
+
+    @callback
+    def _async_search_referenced_device(self, device_id: str) -> None:
+        """Add a device referenced by an automation or script.
+
+        An automation or script created before a composite device was split
+        references the composite device id, which is not a live device. It is
+        expanded to the live split device ids, so the real devices are returned.
+        Any other id (a live device, or a stale reference) is added unchanged.
+        """
+        split_devices = self._device_registry.async_get_devices_for_composite_device_id(
+            device_id
+        )
+        device_ids: Iterable[str] = (
+            [device.id for device in split_devices] if split_devices else (device_id,)
+        )
+        for resolved_device_id in device_ids:
+            self._add(ItemType.DEVICE, resolved_device_id)
+            self._async_resolve_up_device(resolved_device_id)
+
+    @callback
     def _async_search_entity(self, entity_id: str, *, entry_point: bool = True) -> None:
         """Find results for an entity."""
         # Resolve up the entity itself
@@ -326,6 +372,12 @@ class Searcher:
         if entity_entry and entry_point:
             # Add labels of this entity
             self._add(ItemType.LABEL, entity_entry.labels)
+
+        if not entry_point:
+            # If this entity also exists as a resource, we add it.
+            domain = split_entity_id(entity_id)[0]
+            if domain in self.EXIST_AS_ENTITY:
+                self._add(ItemType(domain), entity_id)
 
         # Automations referencing this entity
         self._add(
@@ -394,14 +446,17 @@ class Searcher:
         # Areas with this label
         for area_entry in ar.async_entries_for_label(self._area_registry, label_id):
             self._add(ItemType.AREA, area_entry.id)
+            self._async_resolve_up_area(area_entry.id)
 
         # Devices with this label
         for device in dr.async_entries_for_label(self._device_registry, label_id):
             self._add(ItemType.DEVICE, device.id)
+            self._async_resolve_up_device(device.id)
 
         # Entities with this label
         for entity_entry in er.async_entries_for_label(self._entity_registry, label_id):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
+            self._async_resolve_up_entity(entity_entry.entity_id)
 
             # If this entity also exists as a resource, we add it.
             domain = split_entity_id(entity_entry.entity_id)[0]
@@ -420,7 +475,7 @@ class Searcher:
     @callback
     def _async_search_person(self, person_entity_id: str) -> None:
         """Find results for a person."""
-        # Up resolve the scene entity itself
+        # Up resolve the person entity itself
         if entity_entry := self._async_resolve_up_entity(person_entity_id):
             # Add labels of this person entity
             self._add(ItemType.LABEL, entity_entry.labels)
@@ -437,9 +492,9 @@ class Searcher:
         )
 
         # Add all member entities of this person
-        self._add(
-            ItemType.ENTITY, person.entities_in_person(self.hass, person_entity_id)
-        )
+        for entity_id in person.entities_in_person(self.hass, person_entity_id):
+            self._add(ItemType.ENTITY, entity_id)
+            self._async_resolve_up_entity(entity_id)
 
     @callback
     def _async_search_scene(self, scene_entity_id: str) -> None:
@@ -483,6 +538,9 @@ class Searcher:
             script.blueprint_in_script(self.hass, script_entity_id),
         )
 
+        # Labels referenced in this script
+        self._add(ItemType.LABEL, script.labels_in_script(self.hass, script_entity_id))
+
         # Floors referenced in this script
         self._add(ItemType.FLOOR, script.floors_in_script(self.hass, script_entity_id))
 
@@ -493,8 +551,7 @@ class Searcher:
 
         # Devices referenced in this script
         for device in script.devices_in_script(self.hass, script_entity_id):
-            self._add(ItemType.DEVICE, device)
-            self._async_resolve_up_device(device)
+            self._async_search_referenced_device(device)
 
         # Entities referenced in this script
         for entity_id in script.entities_in_script(self.hass, script_entity_id):

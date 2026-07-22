@@ -17,6 +17,7 @@ from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.issue_registry import IssueRegistry
 
@@ -188,3 +189,33 @@ async def test_device_legacy_firmware(
     assert issue is not None
     assert issue.domain == DOMAIN
     assert issue.issue_id == "unsupported_firmware"
+
+
+async def test_async_execute_command_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ultima_client: MagicMock,
+) -> None:
+    """Test action handles authentication error."""
+    mock_ultima_client.actions.ambilight.side_effect = SmlightAuthError
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "light.mock_title_ambilight"
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    progress = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+    ]
+    assert len(progress) == 1
+    assert progress[0]["step_id"] == "reauth_confirm"
+    assert progress[0]["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"

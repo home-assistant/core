@@ -19,6 +19,7 @@ from roborock.data import (
     ZeoState,
 )
 from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
+from roborock.data.v1.v1_containers import StatusField, StatusV2
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -96,7 +97,7 @@ class RoborockSensorDescriptionQ10(SensorEntityDescription):
 def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
         status := state.status.dock_error_status
-    ) is not None and state.status.dock_type != RoborockDockTypeCode.no_dock:
+    ) is not None and state.status.dock_type != RoborockDockTypeCode.o0_dock:
         return status.name
 
     return None
@@ -259,9 +260,9 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.ENUM,
         options=RoborockDockErrorCode.keys(),
         is_dock_entity=True,
-        # Only available with more than just the basic dock. Dust collection
-        # mode is a proxy for any more complex dock type (e.g. Auto-empty).
-        support_fn=lambda api: api.dust_collection_mode is not None,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.DOCK_ERROR_STATUS
+        ),
     ),
     RoborockSensorDescription(
         key="mop_clean_remaining",
@@ -570,7 +571,6 @@ async def async_setup_entry(
             entities.extend(
                 RoborockSensorEntityB01Q7(coordinator, description)
                 for description in Q7_B01_SENSOR_DESCRIPTIONS
-                if description.value_fn(coordinator.data) is not None
             )
         elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
             entities.extend(
