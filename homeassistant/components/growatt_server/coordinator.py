@@ -15,6 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
     HomeAssistantError,
     ServiceValidationError,
 )
@@ -27,7 +28,9 @@ from .const import (
     BATT_MODE_LOAD_FIRST,
     DEFAULT_URL,
     DOMAIN,
+    LOGIN_FAILED,
     LOGIN_INVALID_AUTH_CODE,
+    SERVICE_UNAVAILABLE_RETRY_INTERVAL,
     V1_DEVICE_TYPES,
 )
 from .models import GrowattRuntimeData
@@ -161,6 +164,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN,
                         translation_key="invalid_credentials",
+                    )
+                if msg == LOGIN_FAILED:
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="login_failed",
+                        translation_placeholders={"message": msg},
                     )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -336,6 +345,15 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Asynchronously update data via library."""
         try:
             return await self.hass.async_add_executor_job(self._sync_update_data)
+        except ConfigEntryNotReady as err:
+            # Check if this is a 507 error (service unavailable)
+            if "507" in str(err):
+                # Schedule automatic retry after 4 hours for coordinator updates
+                self.hass.loop.call_later(
+                    SERVICE_UNAVAILABLE_RETRY_INTERVAL.total_seconds(),
+                    lambda: self.hass.async_create_task(self.async_refresh()),
+                )
+            raise
         except json.decoder.JSONDecodeError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
