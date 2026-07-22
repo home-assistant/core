@@ -6,8 +6,6 @@ from datetime import datetime
 import logging
 from typing import override
 
-from gps3.agps3threaded import AGPS3mechanism
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -32,6 +30,7 @@ from homeassistant.util import dt as dt_util
 
 from . import GPSDConfigEntry
 from .const import DOMAIN
+from .gpsd_client import GPSDClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,15 +44,15 @@ DEFAULT_NAME = "GPS"
 _MODE_VALUES = {2: "2d_fix", 3: "3d_fix"}
 
 
-def count_total_satellites_fn(agps_thread: AGPS3mechanism) -> int | None:
+def count_total_satellites_fn(client: GPSDClient) -> int | None:
     """Count the number of total satellites."""
-    satellites = agps_thread.data_stream.satellites
+    satellites = client.data_stream.satellites
     return None if satellites == "n/a" else len(satellites)
 
 
-def count_used_satellites_fn(agps_thread: AGPS3mechanism) -> int | None:
+def count_used_satellites_fn(client: GPSDClient) -> int | None:
     """Count the number of used satellites."""
-    satellites = agps_thread.data_stream.satellites
+    satellites = client.data_stream.satellites
     if satellites == "n/a":
         return None
 
@@ -66,7 +65,7 @@ def count_used_satellites_fn(agps_thread: AGPS3mechanism) -> int | None:
 class GpsdSensorDescription(SensorEntityDescription):
     """Class describing GPSD sensor entities."""
 
-    value_fn: Callable[[AGPS3mechanism], StateType | datetime]
+    value_fn: Callable[[GPSDClient], StateType | datetime]
 
 
 SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
@@ -77,20 +76,20 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=list(_MODE_VALUES.values()),
-        value_fn=lambda agps_thread: _MODE_VALUES.get(agps_thread.data_stream.mode),
+        value_fn=lambda client: _MODE_VALUES.get(client.data_stream.mode),
     ),
     GpsdSensorDescription(
         key=ATTR_LATITUDE,
         translation_key=ATTR_LATITUDE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda agps_thread: agps_thread.data_stream.lat,
+        value_fn=lambda client: client.data_stream.lat,
         entity_registry_enabled_default=False,
     ),
     GpsdSensorDescription(
         key=ATTR_LONGITUDE,
         translation_key=ATTR_LONGITUDE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda agps_thread: agps_thread.data_stream.lon,
+        value_fn=lambda client: client.data_stream.lon,
         entity_registry_enabled_default=False,
     ),
     GpsdSensorDescription(
@@ -99,7 +98,7 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
-        value_fn=lambda agps_thread: agps_thread.data_stream.alt,
+        value_fn=lambda client: client.data_stream.alt,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -108,8 +107,8 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         translation_key=ATTR_TIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda agps_thread: dt_util.parse_datetime(
-            agps_thread.data_stream.time
+        value_fn=lambda client: dt_util.parse_datetime(
+            client.data_stream.time
         ),
         entity_registry_enabled_default=False,
     ),
@@ -119,7 +118,7 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.SPEED,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
-        value_fn=lambda agps_thread: agps_thread.data_stream.speed,
+        value_fn=lambda client: client.data_stream.speed,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -129,7 +128,7 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.SPEED,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
-        value_fn=lambda agps_thread: agps_thread.data_stream.climb,
+        value_fn=lambda client: client.data_stream.climb,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -179,7 +178,7 @@ class GpsdSensor(SensorEntity):
 
     def __init__(
         self,
-        agps_thread: AGPS3mechanism,
+        client: GPSDClient,
         unique_id: str,
         description: GpsdSensorDescription,
     ) -> None:
@@ -191,11 +190,11 @@ class GpsdSensor(SensorEntity):
         )
         self._attr_unique_id = f"{unique_id}-{self.entity_description.key}"
 
-        self.agps_thread = agps_thread
+        self._client = client
 
     @property
     @override
     def native_value(self) -> StateType | datetime:
         """Return the state of GPSD."""
-        value = self.entity_description.value_fn(self.agps_thread)
+        value = self.entity_description.value_fn(self._client)
         return None if value == "n/a" else value
