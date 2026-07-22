@@ -82,7 +82,9 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
         try:
             response: ClientResponse = await envoy.request(end_point)
             fixture_data[end_point] = (
-                (await response.text()).replace("\n", "").replace(serial, CLEAN_TEXT)
+                (await response.text(errors="replace"))
+                .replace("\n", "")
+                .replace(serial, CLEAN_TEXT)
             )
             fixture_data[f"{end_point}_log"] = json_dumps(
                 {
