@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_bluetooth
+# name: test_bluetooth[service_info0]
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
@@ -20,7 +20,7 @@
     'step_id': 'confirm',
   })
 # ---
-# name: test_bluetooth.1
+# name: test_bluetooth[service_info0].1
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
@@ -75,6 +75,91 @@
       ]),
       'title': 'Gardena Water Computer',
       'unique_id': '00000000-0000-0000-0000-000000000001',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Gardena Water Computer',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_bluetooth[service_info1]
+  FlowResultSnapshot({
+    'context': dict({
+      'confirm_only': True,
+      'discovery_key': dict({
+        'domain': 'bluetooth',
+        'key': '00000000-0000-0000-0000-000000000002',
+        'version': 1,
+      }),
+      'source': 'bluetooth',
+      'title_placeholders': dict({
+        'identifier': '00000000-0000-0000-0000-000000000002',
+        'name': 'Gardena Water Computer',
+      }),
+      'unique_id': '00000000-0000-0000-0000-000000000002',
+    }),
+    'flow_id': <ANY>,
+    'handler': 'gardena_bluetooth',
+    'step_id': 'confirm',
+  })
+# ---
+# name: test_bluetooth[service_info1].1
+  FlowResultSnapshot({
+    'context': dict({
+      'confirm_only': True,
+      'discovery_key': dict({
+        'domain': 'bluetooth',
+        'key': '00000000-0000-0000-0000-000000000002',
+        'version': 1,
+      }),
+      'dismiss_protected': True,
+      'source': 'bluetooth',
+      'title_placeholders': dict({
+        'identifier': '00000000-0000-0000-0000-000000000002',
+        'name': 'Gardena Water Computer',
+      }),
+      'unique_id': '00000000-0000-0000-0000-000000000002',
+    }),
+    'data': dict({
+      'address': '00000000-0000-0000-0000-000000000002',
+      'product_type': 'WATER_COMPUTER',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'gardena_bluetooth',
+    'minor_version': 2,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'address': '00000000-0000-0000-0000-000000000002',
+        'product_type': 'WATER_COMPUTER',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+        'bluetooth': tuple(
+          dict({
+            'domain': 'bluetooth',
+            'key': '00000000-0000-0000-0000-000000000002',
+            'version': 1,
+          }),
+        ),
+      }),
+      'domain': 'gardena_bluetooth',
+      'entry_id': <ANY>,
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'bluetooth',
+      'subentries': list([
+      ]),
+      'title': 'Gardena Water Computer',
+      'unique_id': '00000000-0000-0000-0000-000000000002',
       'version': 1,
     }),
     'subentries': tuple(

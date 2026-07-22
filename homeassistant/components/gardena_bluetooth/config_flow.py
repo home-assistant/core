@@ -78,7 +78,11 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self.address = discovery_info.address
         self.context["title_placeholders"] = {
             "name": PRODUCT_NAMES[mfg.product_type],
-            "identifier": f"{discovery_info.name}, {discovery_info.address}",
+            "identifier": (
+                f"{discovery_info.name}, {discovery_info.address}"
+                if discovery_info.name != discovery_info.address
+                else discovery_info.address
+            ),
         }
         return await self.async_step_confirm()
 
