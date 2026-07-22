@@ -11,28 +11,76 @@
     "step": {
       "reconfigure": {
         "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
         },
         "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
         "title": "Reconfigure LED Infrared device"
       },
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
         },
         "data_description": {
           "device_type": "The type of remote control used for the LED light bulb, lamp, or controller.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
-        "description": "Select the device type and an infrared emitter. You can identify the correct device based on the remote control used. Please refer to the [documentation]({docs_url}).",
+        "description": "Select the device type and at least one infrared emitter or receiver. You can identify the correct device based on the remote control used. Please refer to the [documentation]({docs_url}).",
         "title": "Set up LED Infrared device"
       }
     }
   },
   "entity": {
+    "event": {
+      "received_command": {
+        "name": "Received command",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "blue": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::blue%]",
+              "brightness_down": "Brightness down",
+              "brightness_up": "Brightness up",
+              "cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::cyan%]",
+              "dark_cyan": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::dark_cyan%]",
+              "fade": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::fade%]",
+              "flash": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::flash%]",
+              "green": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::green%]",
+              "light_green": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::light_green%]",
+              "mode_1": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_1%]",
+              "mode_2": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_2%]",
+              "mode_3": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_3%]",
+              "mode_4": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_4%]",
+              "mode_5": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_5%]",
+              "mode_6": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_6%]",
+              "mode_7": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_7%]",
+              "mode_8": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::mode_8%]",
+              "off": "[%key:common::entity::button::power_off::name%]",
+              "on": "[%key:common::entity::button::power_on::name%]",
+              "orange": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::orange%]",
+              "orange_red": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::orange_red%]",
+              "plum": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::plum%]",
+              "purple": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::purple%]",
+              "rebecca_purple": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::rebecca_purple%]",
+              "red": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::red%]",
+              "sky_blue": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::sky_blue%]",
+              "smooth": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::smooth%]",
+              "strobe": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::strobe%]",
+              "timer": "Timer",
+              "tomato": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::tomato%]",
+              "turquoise": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::turquoise%]",
+              "white": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::white%]",
+              "yellow": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::yellow%]"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light": {
         "state_attributes": {
