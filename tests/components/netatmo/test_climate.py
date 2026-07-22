@@ -1,7 +1,7 @@
 """The tests for the Netatmo climate platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1095,6 +1095,7 @@ async def test_webhook_home_id_mismatch(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
+
 
 async def test_thermostat_update_with_none_therm_setpoint_mode(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
