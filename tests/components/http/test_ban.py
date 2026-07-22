@@ -412,3 +412,27 @@ async def test_unix_socket_skips_ban_check(
     ):
         resp = await client.get("/")
     assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_ban_migration(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test ban migration."""
+
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={
+            banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS
+        },
+    ):
+        client = await aiohttp_client(app)
+
+    for remote_addr in BANNED_IPS:
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.FORBIDDEN

@@ -8,6 +8,7 @@ from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
+import os
 from socket import gethostbyaddr, herror
 from typing import Any, Concatenate, Final
 
@@ -22,9 +23,10 @@ from aiohttp.web import (
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.helpers.service import async_register_admin_service
@@ -62,6 +64,8 @@ SCHEMA_UNBAN_SERVICE: Final = vol.Schema(
 STORAGE_KEY = f"{DOMAIN}.ip_bans"
 STORAGE_VERSION = 1
 STORAGE_DELAY = 1.0
+
+LEGACY_IP_BANS_FILE: Final = "ip_bans.yaml"
 
 
 @callback
@@ -255,10 +259,36 @@ class IpBanManager:
     async def async_load(self) -> None:
         """Load the existing IP bans."""
 
+        # Migrate from old YAML file if it exists
+        try:
+            path = self.hass.config.path(LEGACY_IP_BANS_FILE)
+            list_ = await self.hass.async_add_executor_job(load_yaml_config_file, path)
+            self.ip_bans_lookup = self._data_from_load(list_)
+            await self._save_all_bans()
+            os.unlink(path)
+            _LOGGER.info("Migrated IP bans in %s", path)
+            return
+        except FileNotFoundError:
+            pass
+        except HomeAssistantError as err:
+            _LOGGER.error("Unable to load %s: %s ", path, str(err))
+
         list_ = await self.store.async_load() or {}
+        self.ip_bans_lookup = self._data_from_load(list_)
+
+    @staticmethod
+    def _get_ban_entry(ip_ban: IpBan) -> dict[str, str]:
+        """Get the ban entry for a given IP ban."""
+        return {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
+
+    def _data_from_load(
+        self, data: dict[str, dict[str, str]]
+    ) -> dict[IPv4Address | IPv6Address, IpBan]:
+        """Deserialize banned IP addresses."""
 
         ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
-        for ip_ban, ip_info in list_.items():
+
+        for ip_ban, ip_info in data.items():
             try:
                 ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
                 ban = IpBan(ip_ban, ip_info["banned_at"])
@@ -270,15 +300,10 @@ class IpBanManager:
                 _LOGGER.error("Failed to load IP ban: invalid IP address %s", ip_ban)
                 continue
 
-        self.ip_bans_lookup = ip_bans_lookup
-
-    @staticmethod
-    def _get_ban_entry(ip_ban: IpBan) -> dict[str, str]:
-        """Get the ban entry for a given IP ban."""
-        return {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
+        return ip_bans_lookup
 
     def _data_to_save(self) -> dict[str, dict[str, str]]:
-        """Get the data for all banned IP addresses."""
+        """Serialize banned IP addresses."""
         return {
             str(ip_ban.ip_address): self._get_ban_entry(ip_ban)
             for ip_ban in self.ip_bans_lookup.values()
