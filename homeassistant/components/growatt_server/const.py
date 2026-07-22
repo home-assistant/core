@@ -5,6 +5,7 @@ from datetime import timedelta
 from homeassistant.const import Platform
 
 DEVICE_SCAN_INTERVAL = timedelta(hours=1)
+SERVICE_UNAVAILABLE_RETRY_INTERVAL = timedelta(hours=4)
 
 CONF_PLANT_ID = "plant_id"
 
@@ -41,6 +42,7 @@ PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 # Growatt Classic API error codes
 LOGIN_INVALID_AUTH_CODE = "502"
+LOGIN_FAILED = "507"
 
 
 # Config flow error types (also used as abort reasons)

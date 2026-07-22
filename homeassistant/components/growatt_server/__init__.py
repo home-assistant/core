@@ -57,8 +57,10 @@ from .const import (
     DEPRECATED_URLS,
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
+    LOGIN_FAILED,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
+    SERVICE_UNAVAILABLE_RETRY_INTERVAL,
     SUPPORTED_DEVICE_TYPES,
     V1_DEVICE_TYPES,
 )
@@ -213,20 +215,43 @@ async def async_migrate_entry(
 
 
 async def _create_api_and_login(
-    hass: HomeAssistant, username: str, password: str, url: str
+    hass: HomeAssistant,
+    config_entry: GrowattConfigEntry,
+    username: str,
+    password: str,
+    url: str,
 ) -> tuple[growattServer.GrowattApi, dict]:
     """Create API instance and perform login.
 
     Returns both the API instance (with authenticated session) and the login
     response (containing user_id needed for subsequent API calls).
 
+    Raises ConfigEntryNotReady with 4-hour retry scheduling on 507 errors.
     """
     api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
     api.server_url = url
 
-    login_response = await hass.async_add_executor_job(
-        _login_classic_api, api, username, password
-    )
+    try:
+        login_response = await hass.async_add_executor_job(
+            _login_classic_api, api, username, password
+        )
+    except ConfigEntryNotReady as err:
+        # Check if this is a 507 error (service unavailable)
+        if "507" in str(err):
+            # Track the last 507 error time
+            last_error_key = f"{DOMAIN}_last_507_error_{config_entry.entry_id}"
+            hass.data.setdefault(DOMAIN, {})[last_error_key] = datetime.datetime.now()
+            _LOGGER.warning(
+                "Growatt service temporarily unavailable (507), will retry in 4 hours"
+            )
+            # Schedule automatic retry after 4 hours
+            hass.loop.call_later(
+                SERVICE_UNAVAILABLE_RETRY_INTERVAL.total_seconds(),
+                lambda: hass.async_create_task(
+                    hass.config_entries.async_reload(config_entry.entry_id)
+                ),
+            )
+        raise
 
     return api, login_response
 
@@ -251,6 +276,12 @@ def _login_classic_api(
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_credentials",
+            )
+        if msg == LOGIN_FAILED:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+                translation_placeholders={"message": msg},
             )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -358,7 +389,9 @@ async def async_setup_entry(
         else:
             # No cached API (normal setup or migration didn't run)
             # Create new API instance and login
-            api, _ = await _create_api_and_login(hass, username, password, url)
+            api, _ = await _create_api_and_login(
+                hass, config_entry, username, password, url
+            )
 
         # Get plant_id and devices using the authenticated session
         plant_id = config[CONF_PLANT_ID]
