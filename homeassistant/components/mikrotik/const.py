@@ -9,7 +9,7 @@ DEFAULT_DETECTION_TIME: Final = 300
 
 ATTR_MANUFACTURER: Final = "Mikrotik"
 ATTR_SERIAL_NUMBER: Final = "serial-number"
-ATTR_SYSTEM_FIRMWARE: Final = "installed-version"
+ATTR_ROUTERBOARD_FIRMWARE: Final = "current-firmware"
 
 CONF_ARP_PING: Final = "arp_ping"
 CONF_FORCE_DHCP: Final = "force_dhcp"
