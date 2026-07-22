@@ -29,9 +29,8 @@ class DoorbellEventType(StrEnum):
 class ButtonEventType(StrEnum):
     """Standard event types for button device class.
 
-    See architecture#1377. Unlike DoorbellEventType.RING, none of these are
-    mandatory: integrations map only the interactions their hardware can
-    actually produce and omit the rest.
+    None of these are mandatory: integrations map only the
+    interactions their hardware can actually produce.
     """
 
     PRESS_START = "press_start"

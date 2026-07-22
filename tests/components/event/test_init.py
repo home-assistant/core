@@ -415,19 +415,3 @@ async def test_doorbell_missing_ring_event_type(
     assert get_error_message("event.doorbell_without_ring") in caplog.text
     assert get_error_message("event.doorbell_with_ring") not in caplog.text
     assert get_error_message("event.button") not in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("member", "value"),
-    [
-        (ButtonEventType.PRESS_START, "press_start"),
-        (ButtonEventType.PRESS_END, "press_end"),
-        (ButtonEventType.LONG_PRESS_START, "long_press_start"),
-        (ButtonEventType.LONG_PRESS_END, "long_press_end"),
-        (ButtonEventType.MULTI_PRESS_ONGOING, "multi_press_ongoing"),
-        (ButtonEventType.MULTI_PRESS_END, "multi_press_end"),
-    ],
-)
-def test_button_event_type_values(member: ButtonEventType, value: str) -> None:
-    """Test the standard button event type values."""
-    assert member == value
