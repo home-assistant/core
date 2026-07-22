@@ -1,11 +1,14 @@
 """File used for discovering Papouch devices on the local network."""
 
-# TODO:
-
 import asyncio
-import logging
 
-_LOGGER = logging.getLogger(__name__)
+import aiohttp
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from . import create_device
+from .APIClient import PapouchApiClient
 
 
 class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
@@ -29,8 +32,38 @@ class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
         self.discovered_ips.add(ip_address)
 
 
-async def async_discover_papouch_devices() -> list[str]:
-    """Broadcast discovery request and return a list of found IP addresses."""
+async def _is_supported_device(
+    hass: HomeAssistant, ip_address: str
+) -> tuple[str, str] | None:
+    """Return location and name of the device.
+
+    If it is an unsupported device the fuction returns None.
+    """
+
+    session = async_get_clientsession(hass)
+    client = PapouchApiClient(ip_address, session)
+
+    try:
+        await client.fetch_info()
+        device = await create_device(client)
+
+        if device is None:
+            return None
+
+        location = device.get_location()
+        name = device.get_name()
+        return (location, name)  # noqa: TRY300
+    except aiohttp.ClientError:
+        return None
+
+
+async def async_discover_papouch_devices(
+    hass: HomeAssistant,
+) -> dict[str, tuple[str, str]]:
+    """Broadcast discovery request and return a dectionary.
+
+    "ip_address": ("location", "name")
+    """
     loop = asyncio.get_running_loop()
 
     transport, protocol = await loop.create_datagram_endpoint(
@@ -42,4 +75,17 @@ async def async_discover_papouch_devices() -> list[str]:
     await asyncio.sleep(2)
     transport.close()
 
-    return list(protocol.discovered_ips)
+    raw_ips = list(protocol.discovered_ips)
+    semaphore = asyncio.Semaphore(5)
+
+    async def _safe_check(ip: str):
+        async with semaphore:
+            try:
+                async with asyncio.timeout(2.0):
+                    data = await _is_supported_device(hass, ip)
+                    return (ip, data)
+            except TimeoutError:
+                return (ip, None)
+
+    results = await asyncio.gather(*[_safe_check(ip) for ip in raw_ips])
+    return {ip: data for ip, data in results if data is not None}
