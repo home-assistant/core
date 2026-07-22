@@ -338,7 +338,6 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
         ] = bool
 
-        # Advanced options, shown (and applied) only while "recommended" is disabled.
         not_recommended: data_entry_flow.FieldCondition = {
             "field": CONF_RECOMMENDED,
             "value": False,
