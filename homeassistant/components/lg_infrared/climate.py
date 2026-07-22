@@ -25,7 +25,7 @@ from homeassistant.components.infrared import (
     InfraredReceiverConsumerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -179,6 +179,22 @@ class LgAcClimateWithReceiver(LgAcClimateEntity, InfraredReceiverConsumerEntity)
         """Initialize LG AC climate entity with a receiver."""
         super().__init__(entry, emitter_entity_id)
         self._infrared_receiver_entity_id = receiver_entity_id
+
+    @override
+    @callback
+    def _async_infrared_availability_changed(self, available: bool) -> None:
+        """Track availability of the emitter, ignoring the optional receiver.
+
+        Both consumer helpers write ``_attr_available``, so the last source to change
+        would otherwise win: losing the receiver would mark the entity unavailable, and
+        a receiver update could mark it available again while the emitter is gone.
+        """
+        emitter_state = self.hass.states.get(self._infrared_emitter_entity_id)
+        self._attr_available = (
+            emitter_state is not None and emitter_state.state != STATE_UNAVAILABLE
+        )
+        self.async_write_ha_state()
+        self._async_update_receiver_subscription()
 
     @override
     @callback

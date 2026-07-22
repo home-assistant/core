@@ -30,13 +30,19 @@ from homeassistant.components.lg_infrared.const import (
     FAN_QUIET,
     LGDeviceType,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 from tests.components.infrared.common import (
     MockInfraredEmitterEntity,
     MockInfraredReceiverEntity,
@@ -230,7 +236,6 @@ async def test_set_temperature_sends_command_when_active(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
     """Test set_temperature sends IR when AC is on."""
-    # Turn on first
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -438,7 +443,7 @@ async def test_receiver_ignores_non_lg_ac_signal(
 
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
-    assert state.state == HVACMode.OFF  # unchanged from initial
+    assert state.state == HVACMode.OFF
 
 
 @pytest.mark.parametrize(
@@ -465,3 +470,30 @@ async def test_target_temperature_feature_follows_configured_modes(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["supported_features"] == expected_features
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_availability_ignores_receiver(hass: HomeAssistant) -> None:
+    """Test availability follows the emitter only, not the optional receiver."""
+    hass.states.async_set(RECEIVER_ENTITY_ID, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    hass.states.async_set(EMITTER_ENTITY_ID, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # A receiver update must not resurrect the entity while the emitter is gone.
+    hass.states.async_set(RECEIVER_ENTITY_ID, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
