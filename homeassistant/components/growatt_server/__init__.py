@@ -45,6 +45,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     AUTH_API_TOKEN,
@@ -58,7 +59,6 @@ from .const import (
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_FAILED,
-    LOGIN_FAILED_RETRY_INTERVAL,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
     SUPPORTED_DEVICE_TYPES,
@@ -236,7 +236,7 @@ async def _create_api_and_login(
             _login_classic_api, api, username, password, config_entry
         )
     except ConfigEntryNotReady as err:
-        # Check if this is a 507 error (service unavailable)
+        # Check if this is a 507 error (login failed)
         if "507" in str(err):
             # Suppress warning after first occurrence
             last_error_key = f"{DOMAIN}_last_507_error_{config_entry.entry_id}"
@@ -245,9 +245,9 @@ async def _create_api_and_login(
             
             if last_error_time is None:
                 _LOGGER.warning(
-                    "Growatt service temporarily unavailable (507), will retry in 4 hours"
+                    "Growatt login failed (HTTP 507), will retry in 4 hours"
                 )
-            hass_data[last_error_key] = datetime.datetime.now()
+            hass_data[last_error_key] = dt_util.naive_now()
         raise
 
     return api, login_response
