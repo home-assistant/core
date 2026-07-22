@@ -122,7 +122,8 @@ class LEDIrLightEntity(LEDIrBaseEntity, InfraredEmitterConsumerEntity, LightEnti
 
         if event_type in ("on", "off"):
             self._attr_is_on = event_type == "on"
-        elif event_type in self._attr_effect_list and self._attr_is_on:
+        elif event_type in self._attr_effect_list:
+            self._attr_is_on = True
             self._attr_effect = event_type
 
         self.async_write_ha_state()
