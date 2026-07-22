@@ -707,7 +707,7 @@ async def test_entity_assignment_to_sub_device(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test entities are assigned to correct sub devices."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define sub devices
     sub_devices = [

@@ -21,8 +21,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ARP,
+    ATTR_ROUTERBOARD_FIRMWARE,
     ATTR_SERIAL_NUMBER,
-    ATTR_SYSTEM_FIRMWARE,
     CAPSMAN,
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
@@ -107,10 +107,10 @@ class MikrotikData:
     def get_hub_details(self) -> None:
         """Get Hub info."""
         self._get_system_details()
-        self.hostname = self.system[IDENTITY].get(NAME)
-        self.model = self.system[ROUTERBOARD].get(ATTR_MODEL)
-        self.firmware = self.system[ROUTERBOARD].get(ATTR_SYSTEM_FIRMWARE)
-        self.serial_number = self.system[ROUTERBOARD].get(ATTR_SERIAL_NUMBER)
+        self.hostname = str(self.system[IDENTITY].get(NAME))
+        self.model = str(self.system[ROUTERBOARD].get(ATTR_MODEL))
+        self.firmware = str(self.system[ROUTERBOARD].get(ATTR_ROUTERBOARD_FIRMWARE))
+        self.serial_number = str(self.system[ROUTERBOARD].get(ATTR_SERIAL_NUMBER))
         self.support_capsman = bool(
             self.command(MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True)
         )

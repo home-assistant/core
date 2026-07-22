@@ -288,7 +288,7 @@ aioharmanluxury==0.2.3
 aioharmony==1.0.8
 
 # homeassistant.components.hassio
-aiohasupervisor==0.5.0
+aiohasupervisor==0.6.0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.38.0
@@ -669,7 +669,7 @@ bleak==3.0.2
 blebox-uniapi==2.5.5
 
 # homeassistant.components.blink
-blinkpy==0.25.6
+blinkpy==0.25.9
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -1601,7 +1601,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.5.0
+mitsubishi-comfort==0.5.1
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -2050,7 +2050,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.4.0
+pyatmo==9.5.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
@@ -2080,7 +2080,7 @@ pybotvac==0.0.29
 pybraendstofpriser==2.2.0
 
 # homeassistant.components.braviatv
-pybravia==0.4.1
+pybravia==0.5.1
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.14
@@ -2291,7 +2291,7 @@ pyiskra==0.1.29
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.6.1
+pyisy==3.7.0
 
 # homeassistant.components.itach
 pyitachip2ir2==0.0.8
@@ -2719,7 +2719,7 @@ python-mpd2==3.1.1
 python-mystrom==2.5.0
 
 # homeassistant.components.open_router
-python-open-router==0.3.3
+python-open-router==0.4.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
@@ -3461,7 +3461,7 @@ yt-dlp[default]==2026.03.17
 zabbix-utils==2.0.4
 
 # homeassistant.components.zamg
-zamg==0.3.6
+zamg==0.4.1
 
 # homeassistant.components.zimi
 zcc-helper==3.8
