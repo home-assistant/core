@@ -249,17 +249,13 @@ async def test_form_wrong_device_serial(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-MOCK_BSN = "1234567890"
-MOCK_API_KEY = "test-api-key"
-
-
 async def test_user_step_uses_bsn_as_title_when_name_is_none(
     hass: HomeAssistant,
 ) -> None:
     """Test the BIOCAT serial is used as title when the device has no name."""
     user_input = {
-        CONF_BSN: MOCK_BSN,
-        CONF_API_KEY: MOCK_API_KEY,
+        CONF_BSN: "2025001395300149",
+        CONF_API_KEY: "<api-key>",
     }
 
     with patch(
@@ -277,8 +273,8 @@ async def test_user_step_uses_bsn_as_title_when_name_is_none(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_BSN
+    assert result["title"] == "2025001395300149"
     assert result["data"] == user_input
-    assert result["result"].unique_id == MOCK_BSN
+    assert result["result"].unique_id == "2025001395300149"
 
     mock_validate_input.assert_awaited_once_with(hass, user_input)
