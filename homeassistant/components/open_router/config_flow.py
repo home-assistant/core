@@ -1,10 +1,8 @@
 """Config flow for OpenRouter integration."""
 
 import logging
-from types import SimpleNamespace
 from typing import Any, override
 
-from aiohttp import ClientError
 from python_open_router import OpenRouterClient, OpenRouterError, SupportedParameter
 import voluptuous as vol
 
@@ -101,9 +99,6 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
-
-
 class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for OpenRouter."""
 
@@ -111,48 +106,18 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         """Initialize the subentry flow."""
         self.models: dict[str, Any] = {}
 
-    async def _get_models(self) -> None:
-        """Fetch models from OpenRouter."""
+    async def _get_models(self, output_modalities: str | None = None) -> None:
+        """Fetch models from OpenRouter.
+
+        When output_modalities is provided, the API filters models
+        server-side (e.g. "speech" for TTS, "transcription" for STT).
+        """
         entry = self._get_entry()
         client = OpenRouterClient(
             entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
         )
-        models = await client.get_models()
+        models = await client.get_models(output_modalities=output_modalities)
         self.models = {model.id: model for model in models}
-
-    async def _get_models_by_modality(self, output_modalities: str) -> None:
-        """Fetch models from OpenRouter filtered by output modality.
-
-        Uses the OpenRouter API's output_modalities query parameter:
-        - "speech" for TTS models
-        - "transcription" for STT models
-
-        Models are stored as SimpleNamespace objects with id and name attributes.
-
-        The python_open_router client does not expose the output_modalities
-        filter, so the request is made directly; connection and HTTP errors are
-        re-raised as OpenRouterError to match the client's contract.
-        """
-        entry = self._get_entry()
-        session = async_get_clientsession(self.hass)
-        url = f"{OPENROUTER_API_BASE}/models?output_modalities={output_modalities}"
-        headers = {
-            "Authorization": f"Bearer {entry.data[CONF_API_KEY]}",
-        }
-        try:
-            async with session.get(url, headers=headers) as response:
-                response.raise_for_status()
-                data = await response.json()
-        except ClientError as err:
-            raise OpenRouterError("Error communicating with OpenRouter") from err
-        self.models = {
-            model_data["id"]: SimpleNamespace(
-                id=model_data["id"],
-                name=model_data.get("name", model_data["id"]),
-                supported_voices=model_data.get("supported_voices"),
-            )
-            for model_data in data.get("data", [])
-        }
 
 
 class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
@@ -384,7 +349,7 @@ class _ModelSubentryFlowHandler(OpenRouterSubentryFlowHandler):
     async def _async_model_selection_form(self) -> SubentryFlowResult:
         """Show the model-selection form for the configured output modality."""
         try:
-            await self._get_models_by_modality(self.output_modality)
+            await self._get_models(output_modalities=self.output_modality)
         except OpenRouterError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
