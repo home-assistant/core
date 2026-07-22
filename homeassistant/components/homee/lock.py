@@ -1,6 +1,6 @@
 """The Homee lock platform."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyHomee.const import AttributeChangedBy, AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -71,11 +71,13 @@ class HomeeLock(HomeeEntity, LockEntity):
             self._attr_supported_features = LockEntityFeature.OPEN
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return if lock is locked."""
         return self._attribute.current_value == LOCK_STATE_LOCKED
 
     @property
+    @override
     def is_open(self) -> bool:
         """Return if lock is open (unlatched)."""
         # Require target_value too, so mid-transition away from "open" resolves
@@ -87,6 +89,7 @@ class HomeeLock(HomeeEntity, LockEntity):
         )
 
     @property
+    @override
     def is_locking(self) -> bool:
         """Return if lock is locking."""
         return (
@@ -95,6 +98,7 @@ class HomeeLock(HomeeEntity, LockEntity):
         )
 
     @property
+    @override
     def is_unlocking(self) -> bool:
         """Return if lock is unlocking."""
         return (
@@ -103,6 +107,7 @@ class HomeeLock(HomeeEntity, LockEntity):
         )
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if lock is opening (unlatching)."""
         return (
@@ -112,6 +117,7 @@ class HomeeLock(HomeeEntity, LockEntity):
         )
 
     @property
+    @override
     def changed_by(self) -> str:
         """Return by whom or what the lock was last changed."""
         changed_id = str(self._attribute.changed_by_id)
@@ -129,14 +135,17 @@ class HomeeLock(HomeeEntity, LockEntity):
 
         return f"{changed_by_name}-{changed_id}"
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock specified lock. A code to lock the lock with may be specified."""
         await self.async_set_homee_value(LOCK_STATE_LOCKED)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock specified lock. A code to unlock the lock with may be specified."""
         await self.async_set_homee_value(LOCK_STATE_UNLOCKED)
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open (unlatch) the lock."""
         if TYPE_CHECKING:

@@ -12,6 +12,7 @@ from aiohttp.web_middlewares import middleware
 import pytest
 
 from homeassistant.components import http
+from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -309,9 +310,9 @@ async def test_access_from_supervisor_ip(
 
 async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
         await async_setup_component(
-            hass, "http", {"http": {http.CONF_IP_BAN_ENABLED: False}}
+            hass, DOMAIN, {"http": {http.CONF_IP_BAN_ENABLED: False}}
         )
 
     assert len(mock_setup.mock_calls) == 0
@@ -319,8 +320,8 @@ async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
 
 async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
-        await async_setup_component(hass, "http", {"http": {}})
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
+        await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -404,27 +405,14 @@ async def test_failed_login_attempts_counter(
 
     app.router.add_get(
         "/auth_true",
-        request_handler_factory(
-            hass,
-            Mock(requires_auth=True, use_query_token_for_auth=False),
-            auth_true_handler,
-        ),
+        request_handler_factory(hass, Mock(requires_auth=True), auth_true_handler),
     )
     app.router.add_get(
         "/auth_false",
-        request_handler_factory(
-            hass,
-            Mock(requires_auth=True, use_query_token_for_auth=False),
-            auth_handler,
-        ),
+        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
     )
     app.router.add_get(
-        "/",
-        request_handler_factory(
-            hass,
-            Mock(requires_auth=False, use_query_token_for_auth=False),
-            auth_handler,
-        ),
+        "/", request_handler_factory(hass, Mock(requires_auth=False), auth_handler)
     )
 
     setup_bans(hass, app, 5)

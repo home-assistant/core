@@ -1,7 +1,7 @@
 """Support for Tuya Cover."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.definition.cover import (
     CoverDefinition,
@@ -232,11 +232,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
         return self._read_wrapper(self._current_position)
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
@@ -245,6 +247,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         return self._read_wrapper(self._tilt_position)
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
         # If it's available, prefer the position over the current state
@@ -253,6 +256,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         return self._read_wrapper(self._current_state_wrapper)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._set_position is not None:
@@ -269,6 +273,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 self._instruction_wrapper, TuyaCoverAction.OPEN
             )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if self._set_position is not None:
@@ -285,12 +290,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 self._instruction_wrapper, TuyaCoverAction.CLOSE
             )
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_send_wrapper_updates(
             self._set_position, kwargs[ATTR_POSITION]
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if (
@@ -301,6 +308,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 self._instruction_wrapper, TuyaCoverAction.STOP
             )
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         await self._async_send_wrapper_updates(

@@ -3,9 +3,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
+from typing import override
 
 from pyportainer import StackType
-from pyportainer.models.docker import DockerSystemDF
+from pyportainer.models.docker import DockerContainerState, DockerSystemDF
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -15,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation
+from homeassistant.const import UnitOfInformation, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -42,6 +43,7 @@ class PortainerContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer container sensor description."""
 
     value_fn: Callable[[PortainerContainerData], StateType]
+    supported_fn: Callable[[PortainerContainerData], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,7 +85,23 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="container_state",
         value_fn=lambda data: data.container.state,
         device_class=SensorDeviceClass.ENUM,
-        options=["running", "exited", "paused", "restarting", "created", "dead"],
+        options=[state.value for state in DockerContainerState],
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="container_health_state",
+        translation_key="container_health_state",
+        value_fn=lambda data: (
+            health.status
+            if (state := data.container_inspect.state) and (health := state.health)
+            else None
+        ),
+        supported_fn=lambda data: (
+            (state := data.container_inspect.state) is not None
+            and state.health is not None
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=["healthy", "unhealthy", "starting"],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
@@ -121,7 +139,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             and data.stats.memory_stats.usage > 0
             else 0.0
         ),
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -150,7 +168,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             and data.stats.cpu_stats.online_cpus > 0
             else 0.0
         ),
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -314,17 +332,11 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
     PortainerStackSensorEntityDescription(
         key="stack_type",
         translation_key="stack_type",
-        value_fn=lambda data: (
-            "swarm"
-            if data.stack.type == StackType.SWARM
-            else "compose"
-            if data.stack.type == StackType.COMPOSE
-            else "kubernetes"
-            if data.stack.type == StackType.KUBERNETES
-            else None
-        ),
+        value_fn=lambda data: {
+            stack.value: stack.name.lower() for stack in StackType
+        }.get(data.stack.type),
         device_class=SensorDeviceClass.ENUM,
-        options=["swarm", "compose", "kubernetes"],
+        options=[stack.name.lower() for stack in StackType],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerStackSensorEntityDescription(
@@ -400,6 +412,7 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
+            if entity_description.supported_fn(container)
         )
 
     def _async_add_new_stacks(
@@ -473,6 +486,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
     entity_description: PortainerContainerSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
@@ -484,6 +498,7 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
     entity_description: PortainerEndpointSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
@@ -498,6 +513,7 @@ class PortainerDockerSystemDiskSpaceSensor(
     entity_description: PortainerDockerSystemDiskSpaceSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
@@ -510,6 +526,7 @@ class PortainerStackSensor(PortainerStackEntity, SensorEntity):
     entity_description: PortainerStackSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.stack_data)
@@ -521,6 +538,7 @@ class PortainerVolumeSensor(PortainerVolumeEntity, SensorEntity):
     entity_description: PortainerVolumeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.volume_data)

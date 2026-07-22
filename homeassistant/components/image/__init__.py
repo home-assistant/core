@@ -2,7 +2,6 @@
 
 import asyncio
 import collections
-from collections.abc import Container, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -11,14 +10,18 @@ import os
 from random import SystemRandom
 from typing import Final, final, override
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import httpx
 from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONTENT_TYPE_MULTIPART,
+    EVENT_HOMEASSISTANT_STOP,
+    EntityStateAttribute,
+)
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -42,7 +45,7 @@ from homeassistant.helpers.typing import (
     VolDictType,
 )
 
-from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
+from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT, ImageEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,7 +197,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for image entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {ImageEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
     )
 
     # Entity Properties
@@ -217,6 +220,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_content_type
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return a link to the image as entity picture."""
         if self._attr_entity_picture is not None:
@@ -293,6 +297,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state."""
         if self.image_last_updated is None:
@@ -301,9 +306,10 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        return {"access_token": self.access_tokens[-1]}
+        return {ImageEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]}
 
     @callback
     def async_update_token(self) -> None:
@@ -315,27 +321,38 @@ class ImageView(HomeAssistantView):
     """View to serve an image."""
 
     name = "api:image:image"
-    use_query_token_for_auth = True
+    requires_auth = False
     url = "/api/image_proxy/{entity_id}"
 
     def __init__(self, component: EntityComponent[ImageEntity]) -> None:
         """Initialize an image view."""
         self.component = component
 
-    @callback
-    @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
-        """Return valid auth tokens, which can be used for query token authentication."""
-        if (image_entity := self.component.get_entity(match_info["entity_id"])) is None:
-            return ()
-
-        return image_entity.access_tokens
-
-    @callback
-    def _get_image_entity(self, entity_id: str) -> ImageEntity:
-        """Get image entity from request."""
+    async def _authenticate_request(
+        self, request: web.Request, entity_id: str
+    ) -> ImageEntity:
+        """Authenticate request and return image entity."""
         if (image_entity := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
+
+        authenticated = (
+            request[KEY_AUTHENTICATED]
+            or request.query.get("token") in image_entity.access_tokens
+        )
+
+        if not authenticated:
+            if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
+                raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
+            raise web.HTTPForbidden
 
         return image_entity
 
@@ -345,7 +362,7 @@ class ImageView(HomeAssistantView):
         This is sent by some DLNA renderers, like Samsung ones, prior to sending
         the GET request.
         """
-        image_entity = self._get_image_entity(entity_id)
+        image_entity = await self._authenticate_request(request, entity_id)
 
         # Don't use `handle` as we don't care about the stream case, we only want
         # to verify that the image exists.
@@ -361,7 +378,7 @@ class ImageView(HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
-        image_entity = self._get_image_entity(entity_id)
+        image_entity = await self._authenticate_request(request, entity_id)
         return await self.handle(request, image_entity)
 
     async def handle(
@@ -458,6 +475,7 @@ class ImageStreamView(ImageView):
     url = "/api/image_proxy_stream/{entity_id}"
     name = "api:image:stream"
 
+    @override
     async def handle(
         self, request: web.Request, image_entity: ImageEntity
     ) -> web.StreamResponse:

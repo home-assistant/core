@@ -17,7 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .auth import DropboxConfigEntryAuth
-from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH2_SCOPES
 
 type DropboxConfigEntry = ConfigEntry[DropboxAPIClient]
 
@@ -31,6 +31,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> b
             translation_domain=DOMAIN,
             translation_key="oauth2_implementation_unavailable",
         ) from err
+
+    token = entry.data["token"]
+    if not set(token.get("scope", "").split()).issuperset(OAUTH2_SCOPES):
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_scopes",
+        )
+    if "refresh_token" not in token:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_refresh_token",
+        )
+
     oauth2_session = OAuth2Session(hass, entry, oauth2_implementation)
 
     auth = DropboxConfigEntryAuth(

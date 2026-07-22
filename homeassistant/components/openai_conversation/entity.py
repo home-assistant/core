@@ -73,6 +73,7 @@ from .const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_SERVICE_TIER,
@@ -93,6 +94,7 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_PRO_MODE,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_SERVICE_TIER,
@@ -497,7 +499,7 @@ class OpenAIBaseLLMEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
+    async def _async_handle_chat_log(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -528,11 +530,16 @@ class OpenAIBaseLLMEntity(Entity):
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
             }
+
             reasoning_summary = options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
             )
             if reasoning_summary != "off":
                 reasoning["summary"] = reasoning_summary
+
+            if options.get(CONF_PRO_MODE, RECOMMENDED_PRO_MODE):
+                reasoning["mode"] = "pro"
+
             model_args["reasoning"] = reasoning
             model_args["include"] = ["reasoning.encrypted_content"]
 

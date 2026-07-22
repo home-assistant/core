@@ -2,7 +2,7 @@
 
 import datetime
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pysqueezebox.player import Alarm
 
@@ -22,7 +22,7 @@ from .entity import SqueezeboxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -116,6 +116,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
             f"{format_mac(self._player.player_id)}_alarm_{self._alarm_id}"
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up alarm switch when added to hass."""
         await super().async_added_to_hass()
@@ -137,25 +138,30 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         return self.coordinator.data["alarms"][self._alarm_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the alarm is available."""
         return super().available and self._alarm_id in self.coordinator.data["alarms"]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Squeezebox alarm switch."""
         return {ATTR_ALARM_ID: str(self._alarm_id)}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return cast(bool, self.alarm["enabled"])
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.coordinator.player.async_update_alarm(self._alarm_id, enabled=False)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.coordinator.player.async_update_alarm(self._alarm_id, enabled=True)
@@ -176,15 +182,18 @@ class SqueezeBoxAlarmsEnabledEntity(SqueezeboxEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return cast(bool, self.coordinator.player.alarms_enabled)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.coordinator.player.async_set_alarms_enabled(False)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.coordinator.player.async_set_alarms_enabled(True)

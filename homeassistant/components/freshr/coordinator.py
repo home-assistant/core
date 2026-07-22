@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientError
 from pyfreshr import FreshrClient
@@ -55,6 +56,7 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[dict[str, DeviceSummary]]):
         )
         self.client = FreshrClient(session=async_create_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> dict[str, DeviceSummary]:
         """Fetch the list of devices from the Fresh-r API."""
         username = self.config_entry.data[CONF_USERNAME]
@@ -83,8 +85,8 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[dict[str, DeviceSummary]]):
             if stale_ids:
                 device_registry = dr.async_get(self.hass)
                 for device_id in stale_ids:
-                    if device := device_registry.async_get_device(
-                        identifiers={(DOMAIN, device_id)}
+                    if device := device_registry.async_get_device_by_identifier(
+                        (DOMAIN, device_id), self.config_entry.entry_id
                     ):
                         device_registry.async_update_device(
                             device.id,
@@ -128,6 +130,7 @@ class FreshrReadingsCoordinator(DataUpdateCoordinator[DeviceReadings]):
         """Return the device ID."""
         return self._device.id
 
+    @override
     async def _async_update_data(self) -> DeviceReadings:
         """Fetch current readings for this device from the Fresh-r API."""
         try:

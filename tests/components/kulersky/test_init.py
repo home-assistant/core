@@ -22,7 +22,7 @@ async def test_migrate_entry(
 
     mock_config_entry_v1.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     # Create device registry entries for old integration
     dev_reg.async_get_or_create(
         config_entry_id=mock_config_entry_v1.entry_id,
