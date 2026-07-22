@@ -19,6 +19,7 @@ from homeassistant.components.growatt_server.const import (
     DEFAULT_PLANT_ID,
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
+    LOGIN_FAILED,
     LOGIN_INVALID_AUTH_CODE,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -280,6 +281,81 @@ async def test_classic_api_coordinator_auth_failed_triggers_reauth(
         for flow in flows
     )
     assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
+
+
+async def test_classic_api_coordinator_service_unavailable_retries(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test 507 service unavailable during coordinator update triggers retry."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    mock_growatt_classic_api.plant_info.return_value = {
+        "deviceList": [],
+        "totalEnergy": 1250.0,
+        "todayEnergy": 12.5,
+        "invTodayPpv": 2500,
+        "plantMoneyText": "123.45/USD",
+    }
+    mock_growatt_classic_api.tlx_detail.return_value = {
+        "data": {"deviceSn": "TLX123456"}
+    }
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    # Service temporarily unavailable between updates
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": LOGIN_FAILED,
+    }
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Integration should remain loaded (ConfigEntryNotReady is transient)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    # Should NOT trigger a reauth flow
+    flows = hass.config_entries.flow.async_progress()
+    assert not any(
+        flow["context"]["source"] == "reauth"
+        and flow["context"]["entry_id"] == mock_config_entry_classic.entry_id
+        for flow in flows
+    )
+    # Entities should be unavailable but not logged out
+    assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
+    
+    # Advance 4 hours and verify recovery
+    freezer.tick(timedelta(hours=4))
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": "user123"},
+    }
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Entry should recover after service becomes available again
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+
+async def test_classic_api_login_service_unavailable(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+) -> None:
+    """Test Classic API setup with 507 service unavailable error."""
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": LOGIN_FAILED,
+    }
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_classic_api_setup(
