@@ -289,7 +289,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     combined["lastdataupdate"] = parsed.replace(
                         tzinfo=dt_util.get_default_time_zone()
                     )
-                except (ValueError, TypeError):
+                except ValueError, TypeError:
                     _LOGGER.debug(
                         "Could not parse SPH time field for %s: %r",
                         self.device_id,
