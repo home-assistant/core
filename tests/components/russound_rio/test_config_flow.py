@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.russound_rio.const import (
-    CONF_ENABLE_ZONE_SOURCE_EXCLUSION,
+    CONF_ZONE_SOURCE_EXCLUSION,
     DOMAIN,
     TYPE_SERIAL,
     TYPE_TCP,
@@ -555,7 +555,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            CONF_ENABLE_ZONE_SOURCE_EXCLUSION: True,
+            CONF_ZONE_SOURCE_EXCLUSION: True,
         },
     )
     await hass.async_block_till_done()
@@ -565,7 +565,7 @@ async def test_options_flow(
         result["data"]
         == mock_config_entry.options
         == {
-            CONF_ENABLE_ZONE_SOURCE_EXCLUSION: True,
+            CONF_ZONE_SOURCE_EXCLUSION: True,
         }
     )
     assert mock_russound_client.disconnect.await_count == 1

@@ -19,9 +19,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
 )
-from homeassistant.components.russound_rio.const import (
-    CONF_ENABLE_ZONE_SOURCE_EXCLUSION,
-)
+from homeassistant.components.russound_rio.const import CONF_ZONE_SOURCE_EXCLUSION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_SEEK,
@@ -374,7 +372,7 @@ async def test_source_list_exclusion(
     hass.config_entries.async_update_entry(
         mock_config_entry,
         options={
-            CONF_ENABLE_ZONE_SOURCE_EXCLUSION: enable_exclusion,
+            CONF_ZONE_SOURCE_EXCLUSION: enable_exclusion,
         },
     )
 

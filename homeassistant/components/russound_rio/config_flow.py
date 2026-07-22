@@ -31,7 +31,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import RussoundConfigEntry
 from .const import (
     CONF_BAUDRATE,
-    CONF_ENABLE_ZONE_SOURCE_EXCLUSION,
+    CONF_ZONE_SOURCE_EXCLUSION,
     DEFAULT_BAUDRATE,
     DEFAULT_PORT,
     DOMAIN,
@@ -71,7 +71,7 @@ SERIAL_SCHEMA = vol.Schema(
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(
-            CONF_ENABLE_ZONE_SOURCE_EXCLUSION,
+            CONF_ZONE_SOURCE_EXCLUSION,
             default=True,
         ): bool,
     }

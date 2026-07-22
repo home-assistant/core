@@ -111,10 +111,10 @@
     "step": {
       "init": {
         "data": {
-          "enable_zone_source_exclusion": "Enable zone source exclusion"
+          "zone_source_exclusion": "Zone source exclusion"
         },
         "data_description": {
-          "enable_zone_source_exclusion": "Exclude sources that are disabled for a zone from that zone's available source list. (Only available on compatible Russound devices)"
+          "zone_source_exclusion": "When enabled, Home Assistant hides sources that are disabled for a zone from the source list for that zone."
         }
       }
     }
