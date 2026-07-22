@@ -15,6 +15,7 @@ from homeassistant.components.tts import (
     TTSAudioResponse,
     Voice,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.generated.languages import LANGUAGES
@@ -65,7 +66,12 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
     _attr_supported_languages = sorted(LANGUAGES)
     _attr_default_language = "en"
 
-    _attr_name = None
+    def __init__(
+        self, entry: OpenRouterConfigEntry, subentry: ConfigSubentry
+    ) -> None:
+        """Initialize the TTS entity."""
+        super().__init__(entry, subentry)
+        self._attr_name = subentry.title
 
     @callback
     @override
