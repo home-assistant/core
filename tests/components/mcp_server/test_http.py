@@ -15,6 +15,7 @@ import mcp.client.sse
 import mcp.client.streamable_http
 from mcp.shared.exceptions import McpError
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -391,16 +392,120 @@ async def test_mcp_tools_list(
     assert tool.inputSchema
     assert tool.inputSchema.get("type") == "object"
     properties = tool.inputSchema.get("properties")
-    assert properties.get("name") == {"type": "string"}
+    for field in ("name", "area", "floor"):
+        assert properties.get(field) == {"type": "string"}
+    assert "required" not in tool.inputSchema
 
 
-@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+@pytest.mark.parametrize(
+    ("llm_hass_api", "tool_name"),
+    [
+        pytest.param(
+            TEST_LLM_API_ID,
+            "HassCustomTool",
+            id="plain",
+        ),
+        pytest.param(
+            [llm.LLM_API_ASSIST, TEST_LLM_API_ID],
+            "test-api__HassCustomTool",
+            id="namespaced",
+        ),
+    ],
+)
+async def test_mcp_tool_call_preserves_non_intent_tool_arguments(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+    tool_name: str,
+) -> None:
+    """Test target arguments are not normalized based on the tool name."""
+    received_arguments: list[dict[str, Any]] = []
+
+    class HassCustomTool(llm.Tool):
+        """Test non-intent tool whose name resembles an intent tool."""
+
+        name = "HassCustomTool"
+        parameters = vol.Schema(
+            {
+                vol.Optional("name"): str,
+                vol.Optional("area"): str,
+                vol.Optional("floor"): str,
+            }
+        )
+
+        async def async_call(
+            self,
+            _hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            _llm_context: llm.LLMContext,
+        ) -> dict[str, Any]:
+            """Record the arguments received through MCP."""
+            received_arguments.append(tool_input.tool_args)
+            return {"success": True}
+
+    class CustomLLMAPI(llm.API):
+        """Test API exposing a non-intent Hass-named tool."""
+
+        async def async_get_api_instance(
+            self, llm_context: llm.LLMContext
+        ) -> llm.APIInstance:
+            """Return the custom tool API instance."""
+            return llm.APIInstance(
+                api=self,
+                api_prompt="Test prompt",
+                llm_context=llm_context,
+                tools=[HassCustomTool()],
+            )
+
+    llm.async_register_api(
+        hass, CustomLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+    arguments = {"name": "kitchen light", "area": "", "floor": " \t "}
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(name=tool_name, arguments=arguments)
+
+    assert not result.isError
+    assert received_arguments == [arguments]
+
+
+@pytest.mark.parametrize(
+    ("llm_hass_api", "tool_name"),
+    [
+        pytest.param(llm.LLM_API_ASSIST, "HassTurnOn", id="assist"),
+        pytest.param(STATELESS_LLM_API, "HassTurnOn", id="stateless"),
+        pytest.param(
+            [llm.LLM_API_ASSIST, TEST_LLM_API_ID],
+            "assist__HassTurnOn",
+            id="namespaced",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        pytest.param({"name": "kitchen light"}, id="omitted-empty-targets"),
+        pytest.param(
+            {"name": "kitchen light", "area": ""},
+            id="mixed-valid-empty-string-target",
+        ),
+        pytest.param(
+            {"name": "kitchen light", "floor": " \t "},
+            id="mixed-valid-whitespace-target",
+        ),
+    ],
+)
 async def test_mcp_tool_call(
     hass: HomeAssistant,
     setup_integration: None,
     mcp_url: str,
     mcp_client: Any,
     hass_supervisor_access_token: str,
+    arguments: dict[str, str],
+    llm_hass_api: str | list[str],
+    tool_name: str,
 ) -> None:
     """Test the tool call endpoint."""
 
@@ -408,10 +513,15 @@ async def test_mcp_tool_call(
     assert state
     assert state.state == STATE_OFF
 
+    if isinstance(llm_hass_api, list):
+        llm.async_register_api(
+            hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+        )
+
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
-            name="HassTurnOn",
-            arguments={"name": "kitchen light"},
+            name=tool_name,
+            arguments=arguments,
         )
 
     assert not result.isError
@@ -426,6 +536,35 @@ async def test_mcp_tool_call(
     state = hass.states.get("light.kitchen")
     assert state
     assert state.state == STATE_ON
+
+
+async def test_mcp_tool_call_rejects_all_empty_targets(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test all empty target arguments are left for strict validation."""
+
+    state = hass.states.get("light.kitchen")
+    assert state
+    assert state.state == STATE_OFF
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="HassTurnOn",
+            arguments={"name": "", "area": " \t "},
+        )
+
+    assert result.isError
+    assert len(result.content) == 1
+    assert result.content[0].type == "text"
+    assert "Error calling tool" in result.content[0].text
+
+    state = hass.states.get("light.kitchen")
+    assert state
+    assert state.state == STATE_OFF
 
 
 async def test_mcp_tool_call_failed(
