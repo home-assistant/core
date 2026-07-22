@@ -215,13 +215,7 @@ async def trigger_subscription_callback(
     node_id: int | None = None,
     attribute_path: str | None = None,
 ) -> None:
-    """Trigger subscription callbacks, honoring the subscription filters.
-
-    Like the real client, a subscription only fires when the event, node and
-    attribute path match its filters. ``node_id`` / ``attribute_path`` default to
-    ``None`` (unfiltered), matching the historic broadcast behavior used by the
-    many call sites that only need to trigger a state re-read.
-    """
+    """Trigger matching subscription callbacks, or broadcast when filters are omitted."""
     for sub in client.subscribe_events.call_args_list:
         kwargs = sub.kwargs
         if kwargs.get("event_filter") not in (None, event):
