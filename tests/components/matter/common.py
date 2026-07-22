@@ -65,6 +65,7 @@ FIXTURES = [
     "mock_generic_switch",
     "mock_generic_switch_multi",
     "mock_humidity_sensor",
+    "mock_latching_switch",
     "mock_laundry_dryer",
     "mock_leak_sensor",
     "mock_light_sensor",

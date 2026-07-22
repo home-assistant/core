@@ -99,37 +99,60 @@ async def test_legacy_event_entity_disabled_by_default(
     assert entity_entry.unique_id.endswith("-GenericSwitch-59-1")
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_generic_switch_multi"])
+@pytest.mark.parametrize(
+    (
+        "node_fixture",
+        "entity_id",
+        "expected_event_types",
+        "event_id",
+        "event_data",
+        "expected_event_type",
+    ),
+    [
+        pytest.param(
+            "mock_generic_switch",
+            "event.mock_generic_switch_button_2",
+            ["initial_press", "short_release", "long_press", "long_release"],
+            1,
+            None,
+            "initial_press",
+            id="momentary",
+        ),
+        pytest.param(
+            "mock_generic_switch_multi",
+            "event.mock_generic_switch_button_1_2",
+            ["multi_press_1", "multi_press_2", "long_press", "long_release"],
+            6,
+            {"totalNumberOfPressesCounted": 2},
+            "multi_press_2",
+            id="multi_press",
+        ),
+    ],
+)
 async def test_legacy_event_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    entity_id: str,
+    expected_event_types: list[str],
+    event_id: int,
+    event_data: dict[str, Any] | None,
+    expected_event_type: str,
 ) -> None:
     """Test the legacy event entity still works when enabled."""
-    entity_registry.async_update_entity(
-        "event.mock_generic_switch_button_1_2", disabled_by=None
-    )
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
     config_entry = hass.config_entries.async_entries("matter")[0]
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("event.mock_generic_switch_button_1_2")
+    state = hass.states.get(entity_id)
     assert state
-    # check event_types from featuremap 30 (0b11110) and MultiPressMax unset
-    # (default 2)
-    assert state.attributes[ATTR_EVENT_TYPES] == [
-        "multi_press_1",
-        "multi_press_2",
-        "long_press",
-        "long_release",
-    ]
-    # trigger firing a MultiPressComplete event from the device
-    await trigger_switch_event(
-        hass, matter_client, matter_node, 6, {"totalNumberOfPressesCounted": 2}
-    )
-    state = hass.states.get("event.mock_generic_switch_button_1_2")
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_2"
+    assert state.attributes[ATTR_EVENT_TYPES] == expected_event_types
+    # trigger firing an event from the device
+    await trigger_switch_event(hass, matter_client, matter_node, event_id, event_data)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_EVENT_TYPE] == expected_event_type
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_generic_switch_multi"])
@@ -176,6 +199,25 @@ async def test_generic_switch_multi_node(
     state = hass.states.get("event.mock_generic_switch_button_1")
     assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_end"
     assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 3
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_latching_switch"])
+async def test_latching_switch_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test event entity for a latching switch node."""
+    state = hass.states.get("event.mock_latching_switch_button")
+    assert state
+    assert state.state == "unknown"
+    # check event_types from featuremap 1 (0b1)
+    assert state.attributes[ATTR_EVENT_TYPES] == ["switch_latched"]
+    # trigger firing a SwitchLatched event from the device
+    await trigger_switch_event(hass, matter_client, matter_node, 0, {"newPosition": 1})
+    state = hass.states.get("event.mock_latching_switch_button")
+    assert state.attributes[ATTR_EVENT_TYPE] == "switch_latched"
+    assert state.attributes["newPosition"] == 1
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_action_switch"])
