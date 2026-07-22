@@ -269,8 +269,9 @@ async def test_ip_bans_notifications(
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    app = web.Application()
     """Testing if notifications are created for banned IPs."""
+
+    app = web.Application()
     app[KEY_HASS] = hass
 
     async def unauth_handler(request):
