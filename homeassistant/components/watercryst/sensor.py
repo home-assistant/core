@@ -93,7 +93,7 @@ FLOWRATE_SENSORS = [
     SensorEntityDescription(
         key="todays_consumption",
         translation_key="todays_consumption",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
@@ -101,7 +101,7 @@ FLOWRATE_SENSORS = [
     SensorEntityDescription(
         key="total_consumption",
         translation_key="total_consumption",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
@@ -111,6 +111,7 @@ FLOWRATE_SENSORS = [
         translation_key="last_water_tap_volume",
         icon="mdi:cup-water",
         device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
     ),
