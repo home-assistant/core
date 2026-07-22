@@ -22,14 +22,14 @@ from aiohttp.web import (
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.util import dt as dt_util, yaml as yaml_util
+from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, KEY_HASS, is_supervisor_unix_socket_request
 from .view import HomeAssistantView
@@ -45,7 +45,6 @@ KEY_LOGIN_THRESHOLD = AppKey[int]("ban_manager.ip_bans_lookup")
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
-IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
@@ -59,6 +58,10 @@ SCHEMA_UNBAN_SERVICE: Final = vol.Schema(
         vol.Required(CONF_IP_ADDRESS): cv.string,
     }
 )
+
+STORAGE_KEY = f"{DOMAIN}.ip_bans"
+STORAGE_VERSION = 1
+STORAGE_DELAY = 1.0
 
 
 @callback
@@ -155,10 +158,7 @@ async def process_wrong_login(request: Request) -> None:
             gethostbyaddr, request.remote
         )
 
-    base_msg = (
-        "Login attempt or request with invalid authentication from"
-        f" {remote_host} ({remote_addr})."
-    )
+    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
@@ -242,21 +242,20 @@ class IpBanManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Init the ban manager."""
         self.hass = hass
-        self.path = hass.config.path(IP_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
         self.ip_bans_lock = asyncio.Lock()
+        self.store = Store(
+            hass=hass,
+            version=STORAGE_VERSION,
+            key=STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
+        )
 
     async def async_load(self) -> None:
         """Load the existing IP bans."""
-        try:
-            list_ = await self.hass.async_add_executor_job(
-                load_yaml_config_file, self.path
-            )
-        except FileNotFoundError:
-            return
-        except HomeAssistantError as err:
-            _LOGGER.error("Unable to load %s: %s", self.path, str(err))
-            return
+
+        list_ = await self.store.async_load() or {}
 
         ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
         for ip_ban, ip_info in list_.items():
@@ -278,36 +277,29 @@ class IpBanManager:
         """Get the ban entry for a given IP ban."""
         return {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
 
-    def _add_ban(self, ip_ban: IpBan) -> None:
-        """Update config file with new banned IP address."""
-        with open(self.path, "a", encoding="utf8") as out:
-            ban_entry = {str(ip_ban.ip_address): self._get_ban_entry(ip_ban)}
-            # Write in a single write call to avoid interleaved writes
-            out.write("\n" + yaml_util.dump(ban_entry))
-
-    def _save_all_bans(self) -> None:
-        """Save all banned IP addresses to the config file."""
-        ip_bans = {
+    def _data_to_save(self) -> dict[str, dict[str, str]]:
+        """Get the data for all banned IP addresses."""
+        return {
             str(ip_ban.ip_address): self._get_ban_entry(ip_ban)
             for ip_ban in self.ip_bans_lookup.values()
         }
-        try:
-            yaml_util.save_yaml(self.path, ip_bans)
-        except OSError as exc:
-            _LOGGER.error("Failed to save IP bans to file: %s", exc)
+
+    async def _save_all_bans(self) -> None:
+        """Save all banned IP addresses to the store."""
+        self.store.async_delay_save(data_func=self._data_to_save, delay=STORAGE_DELAY)
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
         async with self.ip_bans_lock:
             if remote_addr not in self.ip_bans_lookup:
-                new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-                await self.hass.async_add_executor_job(self._add_ban, new_ban)
+                self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
+                await self._save_all_bans()
 
     async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Remove a banned IP address from the banned list."""
         async with self.ip_bans_lock:
             if self.ip_bans_lookup.pop(remote_addr, None):
-                await self.hass.async_add_executor_job(self._save_all_bans)
+                await self._save_all_bans()
             else:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
