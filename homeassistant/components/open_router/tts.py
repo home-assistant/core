@@ -1,6 +1,6 @@
 """Text-to-speech support for OpenRouter."""
 
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator, Mapping
 import logging
 from typing import Any, Literal, override
 
@@ -11,7 +11,8 @@ from homeassistant.components.tts import (
     ATTR_PREFERRED_FORMAT,
     ATTR_VOICE,
     TextToSpeechEntity,
-    TtsAudioType,
+    TTSAudioRequest,
+    TTSAudioResponse,
     Voice,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -90,11 +91,12 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
         }
 
     @override
-    async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Load tts audio file from the engine."""
-        options = {**self.subentry.data, **options}
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Generate speech from an incoming message, streaming the audio response."""
+        message = "".join([chunk async for chunk in request.message_gen])
+        options = {**self.subentry.data, **request.options}
         client = self.entry.runtime_data
 
         response_format = options.get(ATTR_PREFERRED_FORMAT, "mp3")
@@ -107,25 +109,25 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
         else:
             codec = response_format
 
-        try:
-            async with client.audio.speech.with_streaming_response.create(
-                model=self.model,
-                voice=options[ATTR_VOICE],
-                input=message,
-                response_format=codec,
-                speed=options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
-                extra_headers={
-                    "X-Title": "Home Assistant",
-                    "HTTP-Referer": (
-                        "https://www.home-assistant.io/integrations/open_router"
-                    ),
-                },
-            ) as response:
-                response_data = bytearray()
-                async for chunk in response.iter_bytes():
-                    response_data.extend(chunk)
-        except OpenAIError as exc:
-            _LOGGER.exception("Error during TTS")
-            raise HomeAssistantError(exc) from exc
+        async def data_gen() -> AsyncGenerator[bytes]:
+            try:
+                async with client.audio.speech.with_streaming_response.create(
+                    model=self.model,
+                    voice=options[ATTR_VOICE],
+                    input=message,
+                    response_format=codec,
+                    speed=options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
+                    extra_headers={
+                        "X-Title": "Home Assistant",
+                        "HTTP-Referer": (
+                            "https://www.home-assistant.io/integrations/open_router"
+                        ),
+                    },
+                ) as response:
+                    async for chunk in response.iter_bytes():
+                        yield chunk
+            except OpenAIError as exc:
+                _LOGGER.exception("Error during TTS")
+                raise HomeAssistantError(exc) from exc
 
-        return response_format, bytes(response_data)
+        return TTSAudioResponse(response_format, data_gen())

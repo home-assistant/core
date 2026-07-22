@@ -110,6 +110,8 @@ class OpenRouterSTTEntity(SpeechToTextEntity, OpenRouterEntity):
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
+        # OpenRouter's transcription API requires the full audio file upfront
+        # and returns a single result, so it cannot be sent incrementally.
         audio_bytes = bytearray()
         async for chunk in stream:
             audio_bytes.extend(chunk)
