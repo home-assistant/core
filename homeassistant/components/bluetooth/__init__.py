@@ -94,7 +94,7 @@ from .const import (
 )
 from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import BluetoothCallback, BluetoothChange
+from .models import BluetoothCallback, BluetoothCallbackReplay, BluetoothChange
 from .storage import BluetoothStorage
 from .util import adapter_title, resolve_scanning_mode
 
@@ -109,6 +109,7 @@ __all__ = [
     "BaseHaScanner",
     "BluetoothCallback",
     "BluetoothCallbackMatcher",
+    "BluetoothCallbackReplay",
     "BluetoothChange",
     "BluetoothReachabilityIntent",
     "BluetoothScannerDevice",

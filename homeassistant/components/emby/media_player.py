@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
-    DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -179,7 +178,7 @@ class EmbyDevice(MediaPlayerEntity):
     @override
     def name(self):
         """Return the name of the device."""
-        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
+        return f"Emby {self.device.name}"
 
     @property
     @override

@@ -25,7 +25,7 @@
   "entity": {
     "button": {
       "rotation-reset": {
-        "name": "Reset Rotation"
+        "name": "Reset rotation"
       }
     },
     "cover": {
@@ -38,14 +38,30 @@
         "name": "Rotation"
       },
       "rotation-max": {
-        "name": "Maximum Rotation"
+        "name": "Maximum rotation"
       },
       "rotation-min": {
-        "name": "Minimum Rotation"
+        "name": "Minimum rotation"
       },
       "rotation-raw": {
-        "name": "Raw Rotation"
+        "name": "Raw rotation"
       }
+    }
+  },
+  "services": {
+    "set_cover_position_and_tilt": {
+      "description": "Moves the cover and tilt to the target position simultaneously, preventing cancellation of individual movements.",
+      "fields": {
+        "position": {
+          "description": "Target vertical position. 0 means closed, 100 means fully open.",
+          "name": "Position"
+        },
+        "tilt_position": {
+          "description": "Target tilt position.",
+          "name": "Tilt position"
+        }
+      },
+      "name": "Set cover position and tilt"
     }
   }
 }

@@ -62,7 +62,7 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My input sensor")
     type(product).model = PropertyMock(return_value="inputSensorD")
-    return feature, "binary_sensor.my_input_sensor"
+    return feature, "binary_sensor.my_input_sensor_input"
 
 
 @pytest.mark.parametrize(
@@ -87,7 +87,7 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
         pytest.param(
             "inputsensor",
             "BleBox-inputSensorD-aa11bb22cc33-0.input",
-            "My input sensor",
+            "My input sensor Input",
             None,
             STATE_ON,
             "My input sensor",

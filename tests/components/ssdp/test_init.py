@@ -763,6 +763,11 @@ async def test_bind_failure_skips_adapter(
         if self.source == ("2001:db8::", 0, 0, 1):
             raise OSError
 
+    # The UPnP server needs a presentation URL, which is derived from the
+    # instance URL. In production http is set up before ssdp; set an internal
+    # URL here so get_url() succeeds without relying on http being set up.
+    hass.config.internal_url = "http://10.10.10.10:8123"
+
     SsdpListener.async_start = _async_start
     UpnpServer.async_start = _async_start
     await init_ssdp_component(hass)

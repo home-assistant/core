@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -215,10 +216,13 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         old_state = await self.async_get_last_state()
         if (
             old_state is not None
-            and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
+            and old_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+            is not None
         ):
             # restore also brightness in dimmables devices
-            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+            self._brightness = int(
+                old_state.attributes[LightEntityStateAttribute.BRIGHTNESS]
+            )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -12,6 +12,7 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.esphome import DOMAIN
+from homeassistant.components.esphome.const import CONF_NOISE_PSK
 from homeassistant.components.esphome.entry_data import RuntimeEntryData
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -21,6 +22,53 @@ from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from .conftest import MockGenericDeviceEntryType
 
 
+async def test_migrate_entity_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a legacy unique id is migrated to the version 3 format."""
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "11:22:33:44:55:AA-sensor-mysensor",
+        suggested_object_id="my_sensor",
+        disabled_by=None,
+    )
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            entity_category=ESPHomeEntityCategory.DIAGNOSTIC,
+            icon="mdi:leaf",
+        )
+    ]
+    states = [SensorState(key=1, state=50)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.my_sensor")
+    assert state is not None
+    assert state.state == "50"
+    entry = entity_registry.async_get("sensor.my_sensor")
+    assert entry is not None
+    # The legacy unique id should have been renamed to the version 3 format,
+    # keeping the entity (and its entity_id) instead of creating a new one
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, "11:22:33:44:55:AA-sensor-mysensor"
+        )
+        is None
+    )
+
+
 async def test_migrate_entity_unique_id_downgrade_upgrade(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -28,18 +76,20 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test unique id migration prefers the original entity on downgrade upgrade."""
+    # The original entity, already in the version 3 format
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
-        "my_sensor",
-        suggested_object_id="old_sensor",
+        "11:22:33:44:55:AA/0/sensor/my sensor",
+        suggested_object_id="new_sensor",
         disabled_by=None,
     )
+    # A duplicate left behind in the legacy format by a downgrade
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
         "11:22:33:44:55:AA-sensor-mysensor",
-        suggested_object_id="new_sensor",
+        suggested_object_id="old_sensor",
         disabled_by=None,
     )
     entity_info = [
@@ -64,22 +114,28 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
     assert state.state == "50"
     entry = entity_registry.async_get("sensor.new_sensor")
     assert entry is not None
-    # Confirm we did not touch the entity that was created
+    # Confirm we did not touch the legacy entity that was created
     # on downgrade so when they upgrade again they can delete the
     # entity that was only created on downgrade and they keep
     # the original one.
     assert (
-        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, "my_sensor")
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, "11:22:33:44:55:AA-sensor-mysensor"
+        )
         is not None
     )
-    # Note that ESPHome includes the EntityInfo type in the unique id
-    # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
 
 
 async def test_discover_zwave() -> None:
     """Test ESPHome discovery of Z-Wave JS."""
     hass = Mock()
+    # The noise PSK is read from the config entry, not the live client, so that
+    # a dynamically provisioned key that could not be applied to the already
+    # connected client is still passed on to the add-on.
+    hass.config_entries.async_get_entry.return_value = Mock(
+        data={CONF_NOISE_PSK: "mock-noise-psk"}
+    )
     entry_data = RuntimeEntryData(
         "mock-id",
         "mock-title",
@@ -105,6 +161,7 @@ async def test_discover_zwave() -> None:
             device_info,
             None,
         )
+        hass.config_entries.async_get_entry.assert_called_once_with("mock-id")
         mock_create_flow.assert_called_once_with(
             hass,
             "zwave_js",
@@ -114,7 +171,7 @@ async def test_discover_zwave() -> None:
                 zwave_home_id=1234,
                 ip_address="mock-client-address",
                 port=1234,
-                noise_psk=None,
+                noise_psk="mock-noise-psk",
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain="esphome",

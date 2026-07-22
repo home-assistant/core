@@ -1,0 +1,96 @@
+{
+  "582dfbdace4d4aeb832923ce7d1ddda0": {
+    "active_preset": "home",
+    "available_schedules": ["Winter", "Test ", "off"],
+    "climate_mode": "auto",
+    "control_state": "cooling",
+    "dev_class": "thermostat",
+    "firmware": "2018-02-08T11:15:53+01:00",
+    "hardware": "6539-1301-5002",
+    "location": "15da035090b847e7a21f93e08c015ebc",
+    "model": "ThermoTouch",
+    "name": "Anna",
+    "preset_modes": ["away", "vacation", "no_frost", "home", "asleep"],
+    "select_schedule": "Winter",
+    "sensors": {
+      "illuminance": 45.0,
+      "setpoint_high": 23.5,
+      "setpoint_low": 4.0,
+      "temperature": 24.1
+    },
+    "temperature_offset": {
+      "lower_bound": -2.0,
+      "resolution": 0.1,
+      "setpoint": 0.0,
+      "upper_bound": 2.0
+    },
+    "thermostat": {
+      "lower_bound": 4.0,
+      "resolution": 0.1,
+      "setpoint_high": 23.5,
+      "setpoint_low": 4.0,
+      "upper_bound": 30.0
+    },
+    "vendor": "Plugwise"
+  },
+  "9ff0569b4984459fb243af64c0901894": {
+    "binary_sensors": {
+      "plugwise_notification": false
+    },
+    "dev_class": "gateway",
+    "firmware": "4.3.8",
+    "hardware": "AME Smile 2.0 board",
+    "location": "674b657c138a41a291d315d7471deb06",
+    "mac_address": "C493000278E2",
+    "model": "Gateway",
+    "model_id": "smile_thermo",
+    "name": "Smile Anna",
+    "notifications": {},
+    "sensors": {
+      "outdoor_temperature": 15.5
+    },
+    "vendor": "Plugwise"
+  },
+  "bfb5ee0a88e14e5f97bfa725a760cc49": {
+    "available": true,
+    "binary_sensors": {
+      "cooling_enabled": true,
+      "cooling_state": true,
+      "dhw_state": false,
+      "flame_state": false,
+      "heating_state": false
+    },
+    "dev_class": "heater_central",
+    "dhw_modes": ["off", "auto", "boost", "eco", "comfort"],
+    "location": "674b657c138a41a291d315d7471deb06",
+    "max_dhw_temperature": {
+      "lower_bound": 35.0,
+      "resolution": 0.01,
+      "setpoint": 53.0,
+      "upper_bound": 60.0
+    },
+    "maximum_boiler_temperature": {
+      "lower_bound": 25.0,
+      "resolution": 0.01,
+      "setpoint": 40.0,
+      "upper_bound": 45.0
+    },
+    "model": "Generic heater/cooler",
+    "model_id": "173",
+    "name": "OpenTherm",
+    "select_dhw_mode": "auto",
+    "sensors": {
+      "dhw_temperature": 52.9,
+      "intended_boiler_temperature": 0.0,
+      "modulation_level": 100,
+      "outdoor_air_temperature": 17.2,
+      "return_temperature": 26.3,
+      "water_temperature": 25.3
+    },
+    "switches": {
+      "cooling_ena_switch": true,
+      "dhw_cm_switch": true
+    },
+    "vendor": "Atlantic"
+  }
+}

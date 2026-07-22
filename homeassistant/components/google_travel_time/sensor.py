@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
     CONF_MODE,
-    CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     UnitOfTime,
 )
@@ -74,7 +73,7 @@ async def async_setup_entry(
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
-    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+    name = config_entry.title
 
     client_options = ClientOptions(api_key=api_key)
     client = RoutesAsyncClient(client_options=client_options)

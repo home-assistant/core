@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events; they are updated via the coordinator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: todo
+    comment: Tracked clients are represented as scanner entities without a device registry entry.
+  diagnostics: todo
+  discovery:
+    status: todo
+    comment: The router could be discovered via DHCP.
+  discovery-update-info: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: todo
+    comment: Clients connecting after setup are not added until Home Assistant restarts.
+  entity-category:
+    status: exempt
+    comment: This integration only creates device tracker entities.
+  entity-device-class:
+    status: exempt
+    comment: This integration only creates device tracker entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration only creates device tracker entities.
+  entity-translations:
+    status: exempt
+    comment: Device tracker entities are named after the tracked client's hostname.
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: Device tracker entities use the icon of their source type.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: This integration has no repairs beyond the deprecated YAML import issue.
+  stale-devices:
+    status: todo
+    comment: Clients that stop connecting are not removed automatically.
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: The openwrt-luci-rpc library is synchronous and is run in the executor.
+  inject-websession:
+    status: exempt
+    comment: The openwrt-luci-rpc library uses requests and does not accept an injected websession.
+  strict-typing: todo

@@ -79,10 +79,8 @@ class _KNXDate(DateEntity, RestoreEntity):
         """Restore last state."""
         await super().async_added_to_hass()
         if (
-            not self._device.remote_value.readable
-            and (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
+            last_state := await self.async_get_last_state()
+        ) is not None and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._device.remote_value.value = XKNXDate.from_date(
                 dt_date.fromisoformat(last_state.state)
             )

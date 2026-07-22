@@ -106,10 +106,12 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
@@ -222,6 +224,21 @@ COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
             binary_sensor.DOMAIN
         )
+    }
+)
+
+# No default so an unset type keeps the automatic Thermostat/HeaterCooler routing.
+CLIMATE_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TYPE): vol.All(
+            cv.string,
+            vol.In(
+                (
+                    TYPE_HEATER_COOLER,
+                    TYPE_THERMOSTAT,
+                )
+            ),
+        ),
     }
 )
 
@@ -359,6 +376,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "humidifier":
             config = HUMIDIFIER_SCHEMA(config)
+
+        elif domain == "climate":
+            config = CLIMATE_SCHEMA(config)
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)

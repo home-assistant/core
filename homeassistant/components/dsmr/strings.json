@@ -11,26 +11,15 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "setup_network": {
-        "data": {
-          "dsmr_version": "Select DSMR version",
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "title": "Select connection address"
-      },
-      "setup_serial": {
-        "data": {
-          "dsmr_version": "[%key:component::dsmr::config::step::setup_network::data::dsmr_version%]",
-          "port": "Select device"
-        },
-        "title": "[%key:common::config_flow::data::device%]"
-      },
       "user": {
         "data": {
-          "type": "Connection type"
+          "dsmr_version": "Select DSMR version",
+          "port": "Select device"
         },
-        "title": "Select connection type"
+        "data_description": {
+          "port": "Select a serial device, or enter a network address such as socket://host:port"
+        },
+        "title": "[%key:common::config_flow::data::device%]"
       }
     }
   },

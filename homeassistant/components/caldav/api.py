@@ -1,4 +1,5 @@
 """Library for working with CalDAV api."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 

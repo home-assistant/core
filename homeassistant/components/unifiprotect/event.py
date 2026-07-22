@@ -86,7 +86,7 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_public_event(
-                self.device.mac, EventType.RING, self._async_ring_event
+                self.device.id, EventType.RING, self._async_ring_event
             )
         )
 
@@ -382,7 +382,7 @@ class ProtectDeviceSmartDetectEventEntity(
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_public_event(
-                self.device.mac, EventType.SMART_DETECT, self._async_smart_detect_event
+                self.device.id, EventType.SMART_DETECT, self._async_smart_detect_event
             )
         )
 

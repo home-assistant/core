@@ -1,17 +1,29 @@
 """Test the Tesla Wall Connector config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.tesla_wall_connector.const import DOMAIN
+from homeassistant.components.tesla_wall_connector.const import (
+    CONF_SPLIT_PHASE,
+    DEFAULT_SPLIT_PHASE,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from tests.common import MockConfigEntry
+from .conftest import (
+    get_default_version_data,
+    get_lifetime_mock,
+    get_vitals_mock,
+    get_wifi_status_mock,
+)
+
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
@@ -35,6 +47,7 @@ async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tesla Wall Connector"
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result2["options"] == {CONF_SPLIT_PHASE: DEFAULT_SPLIT_PHASE}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -50,11 +63,19 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1", CONF_SPLIT_PHASE: True},
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_HOST)
+        == "1.1.1.1"
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_SPLIT_PHASE)
+        is True
+    )
 
 
 async def test_form_other_error(
@@ -131,6 +152,79 @@ async def test_dhcp_can_finish(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "1.2.3.4"}
+    assert result["options"] == {CONF_SPLIT_PHASE: DEFAULT_SPLIT_PHASE}
+
+
+async def test_form_with_split_phase(hass: HomeAssistant) -> None:
+    """Test setting single-phase / split-phase during setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_version",
+            return_value=get_default_version_data(),
+        ),
+        patch(
+            "homeassistant.components.tesla_wall_connector.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_SPLIT_PHASE: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result2["options"] == {CONF_SPLIT_PHASE: True}
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4"},
+        options={CONF_SPLIT_PHASE: False},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tesla_wall_connector.WallConnector"
+    ) as wall_connector:
+        client = wall_connector.return_value
+        client.async_get_version = AsyncMock(return_value=get_default_version_data())
+        client.async_get_vitals = AsyncMock(return_value=get_vitals_mock())
+        client.async_get_lifetime = AsyncMock(return_value=get_lifetime_mock())
+        client.async_get_wifi_status = AsyncMock(return_value=get_wifi_status_mock())
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+        assert wall_connector.call_args.kwargs[CONF_SPLIT_PHASE] is False
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        wall_connector.reset_mock()
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_SPLIT_PHASE: True},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_SPLIT_PHASE: True}
+    assert entry.options == {CONF_SPLIT_PHASE: True}
+    assert entry.state is ConfigEntryState.LOADED
+    assert wall_connector.call_args.kwargs[CONF_SPLIT_PHASE] is True
 
 
 async def test_dhcp_already_exists(

@@ -116,9 +116,8 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         if removed_locks := previous_locks - current_locks:
             LOGGER.debug("Removed locks: %s", ", ".join(removed_locks))
             for lock_id in removed_locks:
-                device_registry.async_update_device(
-                    device_id=previous_locks_by_lock_id[lock_id].id,
-                    remove_config_entry_id=self.config_entry.entry_id,
+                device_registry.async_remove_device(
+                    previous_locks_by_lock_id[lock_id].id
                 )
 
         if new_lock_ids := current_locks - previous_locks:

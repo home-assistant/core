@@ -42,6 +42,8 @@ type HeosConfigEntry = ConfigEntry[HeosCoordinator]
 class HeosCoordinator(DataUpdateCoordinator[None]):
     """Define the HEOS integration coordinator."""
 
+    config_entry: HeosConfigEntry
+
     def __init__(self, hass: HomeAssistant, config_entry: HeosConfigEntry) -> None:
         """Set up the coordinator and set in config_entry."""
         credentials: Credentials | None = None
@@ -208,8 +210,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         # updated_player_ids contains the mapped IDs in format old:new
         for old_id, new_id in updated_player_ids.items():
             # update device registry
-            entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, str(old_id))}
+            entry = device_registry.async_get_device_by_identifier(
+                (DOMAIN, str(old_id)), self.config_entry.entry_id
             )
             if entry:
                 new_identifiers = entry.identifiers.copy()

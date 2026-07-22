@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Maximum Rotation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Maximum rotation',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -21,7 +21,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Minimum Rotation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Minimum rotation',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -39,7 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by WMS WebControl pro API',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Raw Rotation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Keuken alle Raw rotation',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

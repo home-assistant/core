@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
@@ -10,12 +9,11 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -26,6 +24,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
+    LOGGER,
     OTA_BEGIN,
     OTA_ERROR,
     OTA_PROGRESS,
@@ -42,8 +41,6 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import get_device_entry_gen, get_release_url
-
-LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -391,7 +388,9 @@ class RpcSleepingUpdateEntity(
         if self.last_state is None:
             return None
 
-        return self.last_state.attributes.get(ATTR_INSTALLED_VERSION)
+        return self.last_state.attributes.get(
+            UpdateEntityStateAttribute.INSTALLED_VERSION
+        )
 
     @property
     @override
@@ -407,7 +406,7 @@ class RpcSleepingUpdateEntity(
         if self.last_state is None:
             return None
 
-        return self.last_state.attributes.get(ATTR_LATEST_VERSION)
+        return self.last_state.attributes.get(UpdateEntityStateAttribute.LATEST_VERSION)
 
     @property
     @override

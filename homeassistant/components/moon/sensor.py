@@ -1,24 +1,13 @@
 """Support for tracking the moon phases."""
 
-from astral import moon
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-
-STATE_FIRST_QUARTER = "first_quarter"
-STATE_FULL_MOON = "full_moon"
-STATE_LAST_QUARTER = "last_quarter"
-STATE_NEW_MOON = "new_moon"
-STATE_WANING_CRESCENT = "waning_crescent"
-STATE_WANING_GIBBOUS = "waning_gibbous"
-STATE_WAXING_CRESCENT = "waxing_crescent"
-STATE_WAXING_GIBBOUS = "waxing_gibbous"
+from .helpers import MOON_PHASES, moon_phase
 
 
 async def async_setup_entry(
@@ -35,16 +24,7 @@ class MoonSensorEntity(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = [
-        STATE_NEW_MOON,
-        STATE_WAXING_CRESCENT,
-        STATE_FIRST_QUARTER,
-        STATE_WAXING_GIBBOUS,
-        STATE_FULL_MOON,
-        STATE_WANING_GIBBOUS,
-        STATE_LAST_QUARTER,
-        STATE_WANING_CRESCENT,
-    ]
+    _attr_options = list(MOON_PHASES)
     _attr_translation_key = "phase"
 
     def __init__(self, entry: ConfigEntry) -> None:
@@ -58,22 +38,4 @@ class MoonSensorEntity(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""
-        today = dt_util.now().date()
-        state = moon.phase(today)
-
-        if state < 0.5 or state > 27.5:
-            self._attr_native_value = STATE_NEW_MOON
-        elif state < 6.5:
-            self._attr_native_value = STATE_WAXING_CRESCENT
-        elif state < 7.5:
-            self._attr_native_value = STATE_FIRST_QUARTER
-        elif state < 13.5:
-            self._attr_native_value = STATE_WAXING_GIBBOUS
-        elif state < 14.5:
-            self._attr_native_value = STATE_FULL_MOON
-        elif state < 20.5:
-            self._attr_native_value = STATE_WANING_GIBBOUS
-        elif state < 21.5:
-            self._attr_native_value = STATE_LAST_QUARTER
-        else:
-            self._attr_native_value = STATE_WANING_CRESCENT
+        self._attr_native_value = moon_phase()

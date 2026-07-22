@@ -236,18 +236,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 )
                 device_reg.async_update_device(
                     device.id,
-                    add_config_entry_id=entry.entry_id,
-                    add_config_subentry_id=subentry_id,
+                    new_config_entry_id=entry.entry_id,
+                    new_config_subentry_id=subentry_id,
                     new_identifiers=new_identifiers,
-                )
-
-                # Removing None from the list of subentries if existing
-                # as the device should only belong to the subentry
-                # and not the main config entry
-                device_reg.async_update_device(
-                    device.id,
-                    remove_config_entry_id=entry.entry_id,
-                    remove_config_subentry_id=None,
                 )
 
         # Update the resource config

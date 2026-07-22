@@ -31,7 +31,7 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from .const import CONF_ADVANCED_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -240,8 +240,8 @@ async def async_setup_template_entry(
     options = dict(config_entry.options)
     options.pop("template_type")
 
-    if advanced_options := options.pop(CONF_ADVANCED_OPTIONS, None):
-        options = {**options, **advanced_options}
+    if additional_options := options.pop(CONF_ADDITIONAL_OPTIONS, None):
+        options = {**options, **additional_options}
 
     if replace_value_template and CONF_VALUE_TEMPLATE in options:
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)

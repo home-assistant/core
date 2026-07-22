@@ -1,6 +1,7 @@
 """Conftest for Picnic tests."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 import json
 from unittest.mock import MagicMock, patch
 
@@ -9,11 +10,17 @@ import pytest
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.mock_title_shopping_cart"
+
+SetupDeliveryFixture = Callable[
+    [str, tuple[timedelta, timedelta] | None, tuple[timedelta, timedelta]],
+    Awaitable[dict],
+]
 
 
 @pytest.fixture
@@ -37,11 +44,46 @@ def mock_picnic_api():
         client.session.auth_token = "3q29fpwhulzes"
         client.get_cart.return_value = json.loads(load_fixture("picnic/cart.json"))
         client.get_user.return_value = json.loads(load_fixture("picnic/user.json"))
-        client.get_deliveries.return_value = json.loads(
-            load_fixture("picnic/delivery.json")
-        )
+        client.get_deliveries.return_value = [
+            json.loads(load_fixture("picnic/delivery.json"))
+        ]
         client.get_delivery_position.return_value = {}
         yield client
+
+
+@pytest.fixture
+def setup_delivery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_picnic_api: MagicMock,
+) -> SetupDeliveryFixture:
+    """Return a factory to set up the integration with the delivery in a given state."""
+
+    async def _setup(
+        status: str,
+        eta2: tuple[timedelta, timedelta] | None,
+        slot_window: tuple[timedelta, timedelta],
+    ) -> dict:
+        delivery = mock_picnic_api.get_deliveries.return_value[0]
+        delivery["status"] = status
+        delivery["delivery_time"] = None
+        # eta2 is the API's field name for the route-planning ETA
+        delivery["eta2"] = eta2 and {
+            "start": (dt_util.utcnow() + eta2[0]).isoformat(),
+            "end": (dt_util.utcnow() + eta2[1]).isoformat(),
+        }
+        delivery["slot"]["window_start"] = (
+            dt_util.utcnow() + slot_window[0]
+        ).isoformat()
+        delivery["slot"]["window_end"] = (dt_util.utcnow() + slot_window[1]).isoformat()
+
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        return delivery
+
+    return _setup
 
 
 @pytest.fixture

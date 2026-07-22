@@ -134,7 +134,7 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
                 "type": "config/core/update",
                 "latitude": 60,
                 "longitude": 50,
-                "elevation": 25,
+                "elevation": 25.6,
                 "location_name": "Huis",
                 "unit_system": "imperial",
                 "time_zone": "America/New_York",

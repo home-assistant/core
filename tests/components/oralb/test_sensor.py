@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import (
     async_address_present,
 )
 from homeassistant.components.oralb.const import DOMAIN
+from homeassistant.components.sensor import ATTR_OPTIONS
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -17,6 +18,8 @@ from homeassistant.util import dt as dt_util
 from . import (
     ORALB_IO_SERIES_4_SERVICE_INFO,
     ORALB_IO_SERIES_6_SERVICE_INFO,
+    ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO,
+    ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO,
     ORALB_SERVICE_INFO,
 )
 
@@ -136,6 +139,50 @@ async def test_sensors_io_series_4(hass: HomeAssistant) -> None:
     assert toothbrush_sensor.state == "gum_care"
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
     assert toothbrush_sensor_attrs[ATTR_ASSUMED_STATE] is True
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sector_sensor_six_sectors(hass: HomeAssistant) -> None:
+    """Test the sector sensor while brushing with a six sector routine."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    sector_sensor = hass.states.get("sensor.io_series_48be_sector")
+    assert sector_sensor.state == "sector_5"
+    assert sector_sensor.attributes[ATTR_OPTIONS] == [
+        "no_sector",
+        "sector_1",
+        "sector_2",
+        "sector_3",
+        "sector_4",
+        "sector_5",
+        "sector_6",
+        "sector_7",
+    ]
+
+    number_of_sectors_sensor = hass.states.get(
+        "sensor.io_series_48be_number_of_sectors"
+    )
+    assert number_of_sectors_sensor.state == "6"
+
+    # The "last sector" sentinel resolves to the sector count (sector 6)
+    inject_bluetooth_service_info(hass, ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    sector_sensor = hass.states.get("sensor.io_series_48be_sector")
+    assert sector_sensor.state == "sector_6"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

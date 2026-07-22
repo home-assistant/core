@@ -916,7 +916,7 @@ def remove_stale_blu_trv_devices(
             continue
 
         LOGGER.debug("Removing stale BLU TRV device %s", device.name)
-        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+        dev_reg.async_remove_device(device.id)
 
 
 @callback
@@ -938,9 +938,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         if any(identifier[0] == DOMAIN for identifier in device.identifiers):
             LOGGER.debug("Removing empty sub-device %s", device.name)
-            dev_reg.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
+            dev_reg.async_remove_device(device.id)
 
 
 def format_ble_addr(ble_addr: str) -> str:

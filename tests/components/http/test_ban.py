@@ -310,7 +310,7 @@ async def test_access_from_supervisor_ip(
 
 async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
         await async_setup_component(
             hass, DOMAIN, {"http": {http.CONF_IP_BAN_ENABLED: False}}
         )
@@ -320,7 +320,7 @@ async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
 
 async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
         await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1

@@ -23,6 +23,7 @@ from homeassistant.components.enphase_envoy.coordinator import (
     FIRMWARE_REFRESH_INTERVAL,
     MAC_VERIFICATION_DELAY,
     SCAN_INTERVAL,
+    TOKEN_REPAIR_ID,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -34,12 +35,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -131,6 +136,104 @@ async def test_expired_token_in_config(
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [("manual")],
+    indirect=True,
+)
+@respx.mock
+async def test_not_expired_token_with_manual_token(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with 365 day token in config and manual token option on."""
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=config_entry.data[CONF_TOKEN],
+        envoy_serial="1234",
+    )
+    caplog.set_level(logging.DEBUG)
+
+    await setup_integration(hass, config_entry)
+
+    assert (
+        "Envoy 1234: 365 days remaining on token, fresh=True, manual token mode=True"
+        in caplog.text
+    )
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [["manual", 25]],  # expires in 25 days
+    indirect=True,
+)
+@respx.mock
+async def test_almost_expired_token_with_manual_token(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with token within warning time in config and manual token option on."""
+    caplog.set_level(logging.DEBUG)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # Make sure to mock pyenphase.auth.EnvoyTokenAuth._obtain_token
+    # when specifying username and password in EnvoyTokenauth
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=config_entry.data[CONF_TOKEN],
+        envoy_serial="1234",
+    )
+    await setup_integration(
+        hass,
+        config_entry,
+    )
+    assert (
+        "Envoy 1234: 25 days remaining on token, fresh=False, manual token mode=True"
+        in caplog.text
+    )
+
+    # verify repair was issued
+    assert len(events) == 1
+    assert events[0].data == {
+        "action": "create",
+        "domain": DOMAIN,
+        "issue_id": f"{TOKEN_REPAIR_ID}_1234",
+    }
+
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [["manual", -1]],  # expired yesterday
+    indirect=True,
+)
+@respx.mock
+async def test_expired_token_with_manual_token(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with expired token in config and manual token option on."""
+
+    # manual token mode has no option to use username/pw to refresh token
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError(
+        "fail authentication"
+    )
+    # setup should fail with expired token
+    await setup_integration(
+        hass, config_entry, expected_state=ConfigEntryState.SETUP_ERROR
+    )
 
 
 async def test_coordinator_update_error(

@@ -9,11 +9,11 @@ from matter_server.common.errors import UpdateCheckError, UpdateError
 from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 
 from homeassistant.components.update import (
-    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -204,7 +204,9 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         await super().async_added_to_hass()
 
         if state := await self.async_get_last_state():
-            self._attr_latest_version = state.attributes.get(ATTR_LATEST_VERSION)
+            self._attr_latest_version = state.attributes.get(
+                UpdateEntityStateAttribute.LATEST_VERSION
+            )
 
         if (extra_data := await self.async_get_last_extra_data()) and (
             matter_extra_data := MatterUpdateExtraStoredData.from_dict(

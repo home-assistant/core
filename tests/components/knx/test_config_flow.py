@@ -1,8 +1,10 @@
 """Test the KNX config flow."""
 
+import asyncio
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from knx_telegram_store.connection import ConnectionCheckResult, ConnectionErrorKind
 import pytest
 from xknx.exceptions import XKNXException
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
@@ -21,6 +23,8 @@ from homeassistant.components.knx.config_flow import (
     DEFAULT_ENTRY_DATA,
     DEFAULT_ENTRY_OPTIONS,
     OPTION_MANUAL_TUNNEL,
+    _build_dsn,
+    _parse_dsn,
 )
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -41,13 +45,17 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DOMAIN,
+    KNX_TELEGRAM_BACKEND_POSTGRES,
+    KNX_TELEGRAM_BACKEND_SQLITE,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
 )
@@ -1065,6 +1073,7 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_STATE_UPDATER: True,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_DB_RETENTION_DEFAULT,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+        CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_SQLITE,
     }
     knx_setup.assert_called_once()
 
@@ -1690,6 +1699,7 @@ async def test_options_communication_settings(
             CONF_KNX_TELEGRAM_STORE_SECTION: {
                 CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
                 CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
+                CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_SQLITE,
             },
         },
     )
@@ -1699,6 +1709,7 @@ async def test_options_communication_settings(
         CONF_KNX_RATE_LIMIT: 40,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+        CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_SQLITE,
     }
     assert mock_config_entry.data == initial_data
     assert mock_config_entry.options == {
@@ -1706,5 +1717,313 @@ async def test_options_communication_settings(
         CONF_KNX_RATE_LIMIT: 40,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+        CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_SQLITE,
     }
     assert len(knx_setup.mock_calls) == 2
+
+
+async def _advance_to_postgres_step(
+    hass: HomeAssistant, flow_id: str, *, retention_days: int = 14
+) -> config_entries.ConfigFlowResult:
+    """Select the PostgreSQL backend and land on its connection step."""
+    result = await hass.config_entries.options.async_configure(
+        flow_id,
+        user_input={
+            CONF_KNX_STATE_UPDATER: False,
+            CONF_KNX_RATE_LIMIT: 40,
+            CONF_KNX_TELEGRAM_STORE_SECTION: {
+                CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+                CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: retention_days,
+                CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_POSTGRES,
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "telegram_store_postgres"
+    assert not result["errors"]
+    return result
+
+
+async def test_options_telegram_store_postgres(
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options flow selecting the PostgreSQL telegram store backend."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await _advance_to_postgres_step(hass, result["flow_id"])
+    with patch(
+        "knx_telegram_store.backends.postgres.PostgresStore.check_config",
+        return_value=ConnectionCheckResult.success(),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "db.local",
+                "port": 5432,
+                "user": "knx",
+                "password": "s3cret",
+                "database": "knx_telegrams",
+                "tls": True,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        mock_config_entry.options[CONF_KNX_TELEGRAM_DB_BACKEND]
+        == KNX_TELEGRAM_BACKEND_POSTGRES
+    )
+    assert mock_config_entry.options[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS] == 14
+    assert (
+        mock_config_entry.options[CONF_KNX_TELEGRAM_DB_POSTGRES_DSN]
+        == "postgresql://knx:s3cret@db.local:5432/knx_telegrams?sslmode=require"
+    )
+    assert len(knx_setup.mock_calls) == 2
+
+
+async def test_options_telegram_store_postgres_reuses_password(
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the PostgreSQL store reuses the stored password when left blank."""
+    existing_dsn = "postgresql://olduser:oldpass@old.host:6543/olddb?sslmode=require"
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: existing_dsn,
+        },
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await _advance_to_postgres_step(hass, result["flow_id"], retention_days=7)
+
+    # Submit with an empty password - the existing one (parsed from the DSN)
+    # must be reused.
+    with patch(
+        "knx_telegram_store.backends.postgres.PostgresStore.check_config",
+        return_value=ConnectionCheckResult.success(),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "new.host",
+                "port": 5432,
+                "user": "newuser",
+                "password": "",
+                "database": "newdb",
+                "tls": False,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        mock_config_entry.options[CONF_KNX_TELEGRAM_DB_POSTGRES_DSN]
+        == "postgresql://newuser:oldpass@new.host:5432/newdb"
+    )
+    assert len(knx_setup.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("error_kind", "expected_error"),
+    [
+        pytest.param(ConnectionErrorKind.AUTH, "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            ConnectionErrorKind.HOST_UNREACHABLE,
+            "host_unreachable",
+            id="host_unreachable",
+        ),
+    ],
+)
+async def test_options_telegram_store_postgres_connection_failure(
+    hass: HomeAssistant,
+    knx_setup: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error_kind: ConnectionErrorKind,
+    expected_error: str,
+) -> None:
+    """Test the PostgreSQL step maps connection check failures to form errors."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await _advance_to_postgres_step(hass, result["flow_id"])
+    with patch(
+        "knx_telegram_store.backends.postgres.PostgresStore.check_config",
+        return_value=ConnectionCheckResult.failure(error_kind, "check failed"),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "db.local",
+                "port": 5432,
+                "user": "knx",
+                "password": "wrong_password",
+                "database": "knx_telegrams",
+                "tls": True,
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "telegram_store_postgres"
+    assert result["errors"] == {"base": expected_error}
+
+
+async def test_options_telegram_store_postgres_timeout(
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options flow surfaces a timeout when the connection check hangs."""
+
+    async def hanging_check(dsn: str) -> None:
+        await asyncio.Event().wait()
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await _advance_to_postgres_step(hass, result["flow_id"])
+    with (
+        patch("homeassistant.components.knx.config_flow.DSN_CHECK_TIMEOUT", 0.05),
+        patch(
+            "knx_telegram_store.backends.postgres.PostgresStore.check_config",
+            side_effect=hanging_check,
+        ),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "db.local",
+                "port": 5432,
+                "user": "knx",
+                "password": "s3cret",
+                "database": "knx_telegrams",
+                "tls": True,
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "telegram_store_postgres"
+    assert result["errors"] == {"base": "timeout"}
+
+
+async def test_options_telegram_store_postgres_malformed_dsn(
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the PostgreSQL step maps a DSN the driver rejects to a form error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await _advance_to_postgres_step(hass, result["flow_id"])
+    # An unterminated bracketed IPv6 address makes engine creation
+    # raise ValueError before any connection attempt.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "host": "[::1",
+            "port": 5432,
+            "user": "knx",
+            "password": "s3cret",
+            "database": "knx_telegrams",
+            "tls": False,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "telegram_store_postgres"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize(
+    ("dsn", "expected"),
+    [
+        pytest.param("", {}, id="empty"),
+        # Invalid port makes urlparse.port raise ValueError -> {}
+        pytest.param("postgresql://host:notaport/db", {}, id="invalid_port"),
+        pytest.param(
+            "postgresql://u:p@h:5432/db?sslmode=require",
+            {
+                "user": "u",
+                "password": "p",
+                "host": "h",
+                "port": 5432,
+                "database": "db",
+                "tls": True,
+            },
+            id="full",
+        ),
+        pytest.param(
+            "postgresql://user%40domain:p%40ss%25word@h:5432/db",
+            {
+                "user": "user@domain",
+                "password": "p@ss%word",
+                "host": "h",
+                "port": 5432,
+                "database": "db",
+                "tls": False,
+            },
+            id="percent_encoded_credentials",
+        ),
+        pytest.param(
+            "postgresql://u:p@[2001:db8::1]:5432/db",
+            {
+                "user": "u",
+                "password": "p",
+                "host": "2001:db8::1",
+                "port": 5432,
+                "database": "db",
+                "tls": False,
+            },
+            id="ipv6_host",
+        ),
+        pytest.param(
+            "postgresql://u:p@h:5432/db%3Fquery%23hash",
+            {
+                "user": "u",
+                "password": "p",
+                "host": "h",
+                "port": 5432,
+                "database": "db?query#hash",
+                "tls": False,
+            },
+            id="percent_encoded_database",
+        ),
+    ],
+)
+def test_parse_dsn(dsn: str, expected: dict) -> None:
+    """Test PostgreSQL DSN parsing, including malformed input."""
+    assert _parse_dsn(dsn) == expected
+
+
+@pytest.mark.parametrize(
+    ("user", "password", "host", "database"),
+    [
+        pytest.param("simple", "plain", "localhost", "knx", id="plain"),
+        pytest.param("user@domain", "p@ss", "localhost", "knx", id="at_sign"),
+        pytest.param("user", "p@ss%word", "localhost", "knx", id="percent_sign"),
+        pytest.param(
+            "us:er", "p/a:s@s", "localhost", "knx", id="multiple_special_chars"
+        ),
+        pytest.param("user", "pass", "2001:db8::1", "knx", id="ipv6_host"),
+        pytest.param(
+            "user", "pass", "localhost", "knx?query#hash", id="database_special_chars"
+        ),
+    ],
+)
+def test_dsn_round_trip(user: str, password: str, host: str, database: str) -> None:
+    """Test _build_dsn -> _parse_dsn -> _build_dsn produces identical DSNs.
+
+    Catches double percent-encoding: urlparse returns percent-encoded values,
+    so _parse_dsn must decode them before they are fed back into _build_dsn.
+    IPv6 hosts must be bracketed in the netloc for the DSN to stay parseable.
+    Database names with URL delimiters are percent-encoded to prevent truncation.
+    """
+    params = {
+        "user": user,
+        "password": password,
+        "host": host,
+        "port": 5432,
+        "database": database,
+        "tls": False,
+    }
+    dsn1 = _build_dsn(params)
+    parsed = _parse_dsn(dsn1)
+    dsn2 = _build_dsn(parsed)
+    assert dsn1 == dsn2

@@ -93,8 +93,9 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
         for pool_id in removed_pools:
             pool_data = self.data.pop(pool_id)
             await pool_data.measures_coordinator.async_shutdown()
-            device_entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, pool_data.ico["serial_number"])}
+            device_entry = self._device_registry.async_get_device_by_identifier(
+                (DOMAIN, pool_data.ico["serial_number"]),
+                self.config_entry.entry_id,
             )
             if device_entry:
                 self._device_registry.async_update_device(

@@ -225,5 +225,5 @@ class Control4Cover(Control4Entity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         c4_blind = self._create_api_object()
-        await c4_blind.setLevelTarget(kwargs[ATTR_POSITION])
+        await c4_blind.set_level_target(kwargs[ATTR_POSITION])
         await self.coordinator.async_request_refresh()

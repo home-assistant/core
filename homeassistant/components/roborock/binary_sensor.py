@@ -98,7 +98,9 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dirty_water_box_status,
         is_dock_entity=True,
-        support_fn=lambda api: api.wash_towel_mode is not None,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.DIRTY_WATER_BOX_STATUS
+        ),
     ),
     RoborockBinarySensorDescription(
         key="clean_box_empty",
@@ -107,7 +109,9 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.clear_water_box_status,
         is_dock_entity=True,
-        support_fn=lambda api: api.wash_towel_mode is not None,
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.CLEAR_WATER_BOX_STATUS
+        ),
     ),
     RoborockBinarySensorDescription(
         key="clean_fluid_empty",
@@ -120,9 +124,8 @@ BINARY_SENSOR_DESCRIPTIONS = [
             else None
         ),
         is_dock_entity=True,
-        support_fn=lambda api: (
-            api.wash_towel_mode is not None
-            and api.device_features.is_clean_fluid_delivery_supported
+        support_fn=lambda api: api.device_features.is_field_supported(
+            StatusV2, StatusField.CLEAN_FLUID_STATUS
         ),
     ),
     RoborockBinarySensorDescription(

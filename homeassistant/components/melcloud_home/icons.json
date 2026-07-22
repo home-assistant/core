@@ -29,6 +29,20 @@
         }
       }
     },
+    "number": {
+      "frost_protection_max_temp": {
+        "default": "mdi:thermometer"
+      },
+      "frost_protection_min_temp": {
+        "default": "mdi:thermometer-low"
+      },
+      "overheat_protection_max_temp": {
+        "default": "mdi:thermometer-high"
+      },
+      "overheat_protection_min_temp": {
+        "default": "mdi:thermometer"
+      }
+    },
     "sensor": {
       "room_temperature": {
         "default": "mdi:home-thermometer"

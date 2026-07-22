@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation, ollama
 from homeassistant.components.conversation import trace
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -292,7 +293,7 @@ async def test_template_variables(
         ),
     ],
 )
-@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -314,7 +315,7 @@ async def test_function_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     def completion_result(*args, messages, **kwargs):
         for message in messages:
@@ -379,7 +380,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -398,7 +399,7 @@ async def test_function_exception(
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     def completion_result(*args, messages, **kwargs):
         for message in messages:

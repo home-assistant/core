@@ -67,6 +67,7 @@ def mock_overseerr_client() -> Generator[AsyncMock]:
         client.get_tv_details.return_value = TVDetails.from_json(
             load_fixture("tv.json", DOMAIN)
         )
+        client.search.return_value = []
         yield client
 
 

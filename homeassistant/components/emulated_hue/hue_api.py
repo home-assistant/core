@@ -50,7 +50,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -62,6 +61,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers.event import async_track_state_change_event
@@ -382,9 +382,16 @@ class HueOneLightChangeView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         # Get the entity's supported features
-        entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        entity_features = entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if entity.domain == light.DOMAIN:
-            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
+            color_modes = (
+                entity.attributes.get(
+                    light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+                )
+                or []
+            )
 
         # Parse the request
         parsed: dict[str, Any] = {
@@ -769,7 +776,10 @@ def _entity_unique_id(entity_id: str) -> str:
 
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
-    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
+    color_modes = (
+        state.attributes.get(light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
+        or []
+    )
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)
 
@@ -865,7 +875,7 @@ def state_supports_hue_brightness(
         return light.brightness_supported(color_modes)
     if not (required_feature := DIMMABLE_SUPPORTED_FEATURES_BY_DOMAIN.get(domain)):
         return False
-    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
     enum = ENTITY_FEATURES_BY_DOMAIN[domain]
     features = enum(features) if type(features) is int else features
     return required_feature in features

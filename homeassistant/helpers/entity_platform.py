@@ -38,7 +38,6 @@ from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
 from . import device_registry as dr, entity_registry as er, service, translation
-from .deprecation import deprecated_function
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
 from .frame import report_usage
@@ -55,6 +54,10 @@ SLOW_ADD_ENTITY_MAX_WAIT = 15  # Per Entity
 SLOW_ADD_MIN_TIMEOUT = 500
 
 MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY = 10000
+
+# Protocol integrations act as bridges for entire networks and legitimately
+# create large numbers of entities, so they are exempt from the entity limit.
+ENTITY_LIMIT_EXEMPT_DOMAINS = {"hue", "matter", "mqtt", "zha", "zwave_js"}
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM: HassKey[dict[str, list[EntityPlatform]]] = HassKey(
@@ -968,6 +971,7 @@ class EntityPlatform:
                 disabled_by is None
                 and not registered_entity_id
                 and self.config_entry is not None
+                and self.config_entry.domain not in ENTITY_LIMIT_EXEMPT_DOMAINS
                 and entity_registry.entities.get_enabled_count_for_config_entry_id(
                     self.config_entry.entry_id
                 )
@@ -1232,77 +1236,6 @@ class EntityPlatform:
     def platform_name(self) -> str:
         """Return the platform name (e.g hue)."""
         return self.platform_data.platform_name
-
-    @property
-    @deprecated_function(
-        "platform_data.component_translations",
-        breaks_in_ha_version="2026.8",
-    )
-    def component_translations(self) -> dict[str, str]:
-        """Return the component translations.
-
-        Will be removed in Home Assistant Core 2026.8.
-        """
-        return self.platform_data.component_translations
-
-    @property
-    @deprecated_function(
-        "platform_data.platform_translations",
-        breaks_in_ha_version="2026.8",
-    )
-    def platform_translations(self) -> dict[str, str]:
-        """Return the platform translations.
-
-        Will be removed in Home Assistant Core 2026.8.
-        """
-        return self.platform_data.platform_translations
-
-    @property
-    @deprecated_function(
-        "platform_data.object_id_component_translations",
-        breaks_in_ha_version="2026.8",
-    )
-    def object_id_component_translations(self) -> dict[str, str]:
-        """Return the object ID component translations.
-
-        Will be removed in Home Assistant Core 2026.8.
-        """
-        return self.platform_data.object_id_component_translations
-
-    @property
-    @deprecated_function(
-        "platform_data.object_id_platform_translations",
-        breaks_in_ha_version="2026.8",
-    )
-    def object_id_platform_translations(self) -> dict[str, str]:
-        """Return the object ID platform translations.
-
-        Will be removed in Home Assistant Core 2026.8.
-        """
-        return self.platform_data.object_id_platform_translations
-
-    @property
-    @deprecated_function(
-        "platform_data.default_language_platform_translations",
-        breaks_in_ha_version="2026.8",
-    )
-    def default_language_platform_translations(self) -> dict[str, str]:
-        """Return the default language platform translations.
-
-        Will be removed in Home Assistant Core 2026.8.
-        """
-        return self.platform_data.default_language_platform_translations
-
-    @deprecated_function(
-        "platform_data.async_load_translations",
-        breaks_in_ha_version="2026.8",
-    )
-    async def async_load_translations(self) -> None:
-        """Load translations.
-
-        Will be removed in Home Assistant Core 2026.8.
-        """
-        return await self.platform_data.async_load_translations()
 
 
 @overload

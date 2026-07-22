@@ -32,8 +32,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
-
-    # Setup connection with hub
     hub = config_entry.runtime_data
 
     override_type = (
@@ -42,11 +40,28 @@ async def async_setup_entry(
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
-    entities: list[SelectEntity] = [
-        NoboProfileSelector(zone_id, hub) for zone_id in hub.zones
-    ]
-    entities.append(NoboGlobalSelector(hub, override_type))
-    async_add_entities(entities, True)
+    async_add_entities([NoboGlobalSelector(hub, override_type)], True)
+
+    known_zones: set[str] = set()
+
+    @callback
+    def _add_profiles(_hub: nobo) -> None:
+        """Add week-profile selectors for zones added to the hub."""
+        if hub.connected:
+            # Forget zones no longer on the hub so a removed-then-re-added zone
+            # (the hub reuses zone ids) is detected as new again. Skip while
+            # disconnected: a stale/empty snapshot would drop live zones and
+            # cause duplicate re-adds on reconnect.
+            known_zones.intersection_update(hub.zones)
+        new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
+        known_zones.update(new_zones)
+        async_add_entities(
+            (NoboProfileSelector(zone_id, hub) for zone_id in new_zones), True
+        )
+
+    _add_profiles(hub)
+    hub.register_callback(_add_profiles)
+    config_entry.async_on_unload(lambda: hub.deregister_callback(_add_profiles))
 
 
 class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
@@ -143,15 +158,18 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         """Fetch new state data for this zone."""
         self._read_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Available when the hub is connected and the zone still exists."""
+        return super().available and self._id in self._nobo.zones
+
     @callback
     @override
     def _read_state(self) -> None:
-        """Copy the current hub state onto the entity attributes."""
-        if self._id not in self._nobo.zones:
-            # Zone removed via the Nobø app; mark unavailable.
-            self._attr_available = False
+        """Read the current state from the hub. These are only local calls."""
+        if not self.available:
             return
-        self._attr_available = True
         self._profiles = {
             profile["week_profile_id"]: profile["name"].replace("\xa0", " ")
             for profile in self._nobo.week_profiles.values()

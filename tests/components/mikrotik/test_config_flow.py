@@ -23,8 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 DEMO_USER_INPUT = {
     CONF_HOST: "0.0.0.0",
     CONF_USERNAME: "username",
@@ -92,9 +90,9 @@ async def test_flow_works(hass: HomeAssistant, api) -> None:
     assert result["data"][CONF_PORT] == 8278
 
 
-async def test_options(hass: HomeAssistant, api) -> None:
+async def test_options(hass: HomeAssistant, api, mock_config_entry) -> None:
     """Test updating options."""
-    entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY)
+    entry = mock_config_entry(data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -122,10 +120,12 @@ async def test_options(hass: HomeAssistant, api) -> None:
     }
 
 
-async def test_host_already_configured(hass: HomeAssistant, auth_error) -> None:
+async def test_host_already_configured(
+    hass: HomeAssistant, auth_error, mock_config_entry
+) -> None:
     """Test host already configured."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY)
+    entry = mock_config_entry(data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -168,12 +168,9 @@ async def test_wrong_credentials(hass: HomeAssistant, auth_error) -> None:
     }
 
 
-async def test_reauth_success(hass: HomeAssistant, api) -> None:
+async def test_reauth_success(hass: HomeAssistant, api, mock_config_entry) -> None:
     """Test we can reauth."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEMO_USER_INPUT,
-    )
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)
@@ -196,12 +193,11 @@ async def test_reauth_success(hass: HomeAssistant, api) -> None:
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_reauth_failed(hass: HomeAssistant, auth_error) -> None:
+async def test_reauth_failed(
+    hass: HomeAssistant, auth_error, mock_config_entry
+) -> None:
     """Test reauth fails due to wrong password."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEMO_USER_INPUT,
-    )
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)
@@ -222,12 +218,11 @@ async def test_reauth_failed(hass: HomeAssistant, auth_error) -> None:
     }
 
 
-async def test_reauth_failed_conn_error(hass: HomeAssistant, conn_error) -> None:
+async def test_reauth_failed_conn_error(
+    hass: HomeAssistant, conn_error, mock_config_entry
+) -> None:
     """Test reauth failed due to connection error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEMO_USER_INPUT,
-    )
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)

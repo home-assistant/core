@@ -1,8 +1,12 @@
 """Config flow for KNX."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from typing import Any, Final, Literal, override
+from urllib.parse import quote, unquote, urlparse, urlunparse
 
+from knx_telegram_store import ConnectionErrorKind
+from knx_telegram_store.backends.postgres import PostgresStore
 import voluptuous as vol
 from xknx import XKNX
 from xknx.exceptions.exception import (
@@ -49,8 +53,16 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_DATABASE,
+    CONF_KNX_TELEGRAM_DB_HOST,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_PASSWORD,
+    CONF_KNX_TELEGRAM_DB_PORT,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+    CONF_KNX_TELEGRAM_DB_TLS,
+    CONF_KNX_TELEGRAM_DB_USER,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
@@ -58,6 +70,8 @@ from .const import (
     DEFAULT_ROUTING_IA,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_BACKEND_POSTGRES,
+    KNX_TELEGRAM_BACKEND_SQLITE,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     KNXConfigEntryData,
@@ -82,11 +96,16 @@ DEFAULT_ENTRY_OPTIONS = KNXConfigEntryOptions(
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
     telegram_db_retention_days=KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     telegram_db_load_hours=KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+    telegram_db_backend=KNX_TELEGRAM_BACKEND_SQLITE,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
 
 CONF_KNX_TELEGRAM_STORE_SECTION: Final = "telegram_store_section"
+
+# Timeout for the PostgreSQL connection check, so an unreachable host cannot
+# block the options flow until the driver/OS connection timeout expires.
+DSN_CHECK_TIMEOUT = 10
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
@@ -113,6 +132,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a KNX config flow."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize KNX config flow."""
@@ -951,6 +971,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         """Manage KNX communication settings."""
         if user_input is not None:
             telegram_store_section = user_input[CONF_KNX_TELEGRAM_STORE_SECTION]
+            backend = telegram_store_section[CONF_KNX_TELEGRAM_DB_BACKEND]
             self.new_entry_options |= KNXConfigEntryOptions(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
@@ -960,7 +981,10 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 telegram_db_retention_days=telegram_store_section[
                     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS
                 ],
+                telegram_db_backend=backend,
             )
+            if backend == KNX_TELEGRAM_BACKEND_POSTGRES:
+                return await self.async_step_telegram_store_postgres()
             return self.finish_flow()
 
         data_schema = {
@@ -1020,6 +1044,22 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                             ),
                             vol.Coerce(int),
                         ),
+                        vol.Required(
+                            CONF_KNX_TELEGRAM_DB_BACKEND,
+                            default=self.initial_options.get(
+                                CONF_KNX_TELEGRAM_DB_BACKEND,
+                                KNX_TELEGRAM_BACKEND_SQLITE,
+                            ),
+                        ): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    KNX_TELEGRAM_BACKEND_SQLITE,
+                                    KNX_TELEGRAM_BACKEND_POSTGRES,
+                                ],
+                                mode=selector.SelectSelectorMode.DROPDOWN,
+                                translation_key="telegram_backend",
+                            )
+                        ),
                     }
                 ),
             ),
@@ -1027,5 +1067,136 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="communication_settings",
             data_schema=vol.Schema(data_schema),
+            last_step=False,
+        )
+
+    async def async_step_telegram_store_postgres(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Collect and validate the PostgreSQL telegram store connection."""
+        current_dsn = self.initial_options.get(CONF_KNX_TELEGRAM_DB_POSTGRES_DSN, "")
+        parsed = _parse_dsn(current_dsn)
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Reuse the stored password when the field is left blank.
+            params = {
+                **user_input,
+                CONF_KNX_TELEGRAM_DB_PASSWORD: (
+                    user_input.get(CONF_KNX_TELEGRAM_DB_PASSWORD)
+                    or parsed.get(CONF_KNX_TELEGRAM_DB_PASSWORD, "")
+                ),
+            }
+            dsn = _build_dsn(params)
+            errors = await _async_check_postgres_dsn(dsn)
+            if not errors:
+                self.new_entry_options |= KNXConfigEntryOptions(
+                    telegram_db_postgres_dsn=dsn
+                )
+                return self.finish_flow()
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_KNX_TELEGRAM_DB_HOST,
+                    default=parsed.get(CONF_KNX_TELEGRAM_DB_HOST, "localhost"),
+                ): selector.TextSelector(),
+                vol.Required(
+                    CONF_KNX_TELEGRAM_DB_PORT,
+                    default=parsed.get(CONF_KNX_TELEGRAM_DB_PORT, 5432),
+                ): vol.All(
+                    selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=1,
+                            max=65535,
+                            mode=selector.NumberSelectorMode.BOX,
+                        )
+                    ),
+                    vol.Coerce(int),
+                ),
+                vol.Required(
+                    CONF_KNX_TELEGRAM_DB_USER,
+                    default=parsed.get(CONF_KNX_TELEGRAM_DB_USER, ""),
+                ): selector.TextSelector(),
+                vol.Required(
+                    CONF_KNX_TELEGRAM_DB_PASSWORD, default=""
+                ): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                ),
+                vol.Required(
+                    CONF_KNX_TELEGRAM_DB_DATABASE,
+                    default=parsed.get(CONF_KNX_TELEGRAM_DB_DATABASE, "knx_telegrams"),
+                ): selector.TextSelector(),
+                vol.Required(
+                    CONF_KNX_TELEGRAM_DB_TLS,
+                    default=parsed.get(CONF_KNX_TELEGRAM_DB_TLS, False),
+                ): selector.BooleanSelector(),
+            }
+        )
+        if user_input is not None:
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        return self.async_show_form(
+            step_id="telegram_store_postgres",
+            data_schema=data_schema,
+            errors=errors,
             last_step=True,
         )
+
+
+async def _async_check_postgres_dsn(dsn: str) -> dict[str, str]:
+    """Validate a PostgreSQL DSN, returning form errors on failure."""
+    connection_errors = {
+        ConnectionErrorKind.AUTH: "invalid_auth",
+        ConnectionErrorKind.HOST_UNREACHABLE: "host_unreachable",
+        ConnectionErrorKind.DATABASE_MISSING: "database_missing",
+        ConnectionErrorKind.PERMISSION: "permission",
+        ConnectionErrorKind.TIMEOUT: "timeout",
+        ConnectionErrorKind.MISSING_DEPENDENCY: "missing_dependency",
+    }
+    try:
+        async with asyncio.timeout(DSN_CHECK_TIMEOUT):
+            check_result = await PostgresStore.check_config(dsn)
+    except TimeoutError:
+        return {"base": "timeout"}
+    except ValueError:
+        return {"base": "cannot_connect"}
+    if not check_result.ok:
+        return {"base": connection_errors.get(check_result.kind, "cannot_connect")}
+    return {}
+
+
+def _build_dsn(params: dict[str, Any]) -> str:
+    """Build a PostgreSQL DSN from form params."""
+    quoted_user = quote(params.get(CONF_KNX_TELEGRAM_DB_USER, ""), safe="")
+    quoted_password = quote(params.get(CONF_KNX_TELEGRAM_DB_PASSWORD, ""), safe="")
+    host = params.get(CONF_KNX_TELEGRAM_DB_HOST, "localhost")
+    if ":" in host and not host.startswith("["):
+        # IPv6 literals must be bracketed in the URL netloc
+        host = f"[{host}]"
+    port = int(params.get(CONF_KNX_TELEGRAM_DB_PORT, 5432))
+    quoted_database = quote(
+        params.get(CONF_KNX_TELEGRAM_DB_DATABASE, "knx_telegrams"), safe=""
+    )
+    tls = params.get(CONF_KNX_TELEGRAM_DB_TLS, False)
+
+    netloc = f"{quoted_user}:{quoted_password}@{host}:{port}"
+    query = "sslmode=require" if tls else ""
+    return urlunparse(("postgresql", netloc, f"/{quoted_database}", "", query, ""))
+
+
+def _parse_dsn(dsn: str) -> dict[str, Any]:
+    """Parse a PostgreSQL DSN into form params."""
+    if not dsn:
+        return {}
+    try:
+        url = urlparse(dsn)
+        return {
+            CONF_KNX_TELEGRAM_DB_USER: unquote(url.username or ""),
+            CONF_KNX_TELEGRAM_DB_PASSWORD: unquote(url.password or ""),
+            CONF_KNX_TELEGRAM_DB_HOST: url.hostname or "localhost",
+            CONF_KNX_TELEGRAM_DB_PORT: url.port or 5432,
+            CONF_KNX_TELEGRAM_DB_DATABASE: unquote(url.path.lstrip("/")),
+            CONF_KNX_TELEGRAM_DB_TLS: "sslmode=require" in url.query,
+        }
+    except ValueError, AttributeError:
+        return {}

@@ -283,7 +283,7 @@ async def test_cleanup_button_deprecation_issue(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_cleanup_button")
 
 
@@ -303,5 +303,5 @@ async def test_firmware_update_button_deprecation_issue(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_firmware_update_button")

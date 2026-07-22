@@ -1,10 +1,11 @@
 """ZHA device automation trigger tests."""
 
 from collections.abc import Callable, Coroutine
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from zha.application.const import ATTR_ENDPOINT_ID
+from zha.application.const import ATTR_ENDPOINT_ID, RadioType
+from zha.quirks import DEVICE_REGISTRY
 from zigpy.application import ControllerApplication
 from zigpy.device import Device as ZigpyDevice
 import zigpy.profiles.zha
@@ -558,3 +559,28 @@ async def test_validate_trigger_config_unloaded_bad_info(
     )
 
     assert "Unable to find trigger" in caplog.text
+
+
+async def test_device_trigger_cache_built_with_quirk_resolver(
+    zigpy_app_controller: ControllerApplication,
+    setup_zha: Callable[..., Coroutine[None]],
+) -> None:
+    """Test the early device trigger cache is built with quirk resolution.
+
+    Regression test: without quirk resolution, quirk-defined triggers (e.g.
+    remote button presses) are missing whenever the cache is used as a
+    fallback (i.e. before ZHA has finished loading).
+    """
+    with patch.object(
+        RadioType.ezsp.controller,
+        "new",
+        AsyncMock(return_value=zigpy_app_controller),
+    ) as mock_new:
+        await setup_zha()
+
+    # Both the trigger cache app and the gateway app must quirk-resolve devices
+    assert len(mock_new.await_args_list) == 2
+    assert all(
+        call.kwargs.get("device_resolver") == DEVICE_REGISTRY.resolve
+        for call in mock_new.await_args_list
+    )

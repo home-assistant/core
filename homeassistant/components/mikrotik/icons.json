@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "button": {
+      "shutdown": {
+        "default": "mdi:power"
+      }
+    },
+    "sensor": {
+      "cpu_load": {
+        "default": "mdi:chip"
+      },
+      "disk_usage": {
+        "default": "mdi:harddisk"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      }
+    }
+  }
+}

@@ -21,6 +21,11 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_FW_VERSION, DOMAIN
@@ -245,5 +250,44 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={"host": reauth_entry.data[CONF_HOST]},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and token."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Normalize a cleared token field to None, matching how token-less
+            # devices are stored everywhere else in the integration.
+            token = user_input.get(CONF_TOKEN) or None
+            errors, system_info, _ = await self._async_test_connection(
+                user_input[CONF_HOST], token
+            )
+            if not errors:
+                assert system_info is not None
+                await self.async_set_unique_id(system_info.get_value("esp", "esp_id"))
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: user_input[CONF_HOST], CONF_TOKEN: token},
+                )
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Optional(CONF_TOKEN): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                schema, user_input or reconfigure_entry.data
+            ),
             errors=errors,
         )

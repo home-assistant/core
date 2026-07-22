@@ -1,5 +1,7 @@
 """Provides device triggers for LCN."""
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -75,7 +77,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    event_data = {
+    event_data: dict[str, Any] = {
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         **{
             key: config[key]

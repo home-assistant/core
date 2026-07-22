@@ -53,8 +53,8 @@
 # name: test_buttons[button.frenck_identify-identify-key-light-mini].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -79,7 +79,6 @@
     'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
@@ -139,8 +138,8 @@
 # name: test_buttons[button.frenck_restart-restart-key-light-mini].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -165,7 +164,6 @@
     'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,

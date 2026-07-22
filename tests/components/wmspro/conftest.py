@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from wmspro.action import Action, ActionList
 
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -82,10 +83,12 @@ async def mock_hub_configuration(
     request: pytest.FixtureRequest, hass: HomeAssistant
 ) -> AsyncGenerator[AsyncMock]:
     """Override WebControlPro._getConfiguration with a param fixture file."""
+    hub_config = await async_load_json_object_fixture(hass, request.param, DOMAIN)
     with patch(
         "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
+        return_value=hub_config,
     ) as mock_hub_configuration:
+        mock_hub_configuration.configure_mock(**hub_config)
         yield mock_hub_configuration
 
 
@@ -94,10 +97,12 @@ async def mock_hub_status(
     request: pytest.FixtureRequest, hass: HomeAssistant
 ) -> AsyncGenerator[AsyncMock]:
     """Override WebControlPro._getStatus with a param fixture file."""
+    hub_status = await async_load_json_object_fixture(hass, request.param, DOMAIN)
     with patch(
         "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
+        return_value=hub_status,
     ) as mock_hub_status:
+        mock_hub_status.configure_mock(**hub_status)
         yield mock_hub_status
 
 
@@ -118,9 +123,11 @@ def mock_action_call() -> Generator[Callable]:
     async def fake_call(self, **kwargs):
         self._update_params(kwargs)
 
-    with patch(
-        "wmspro.action.Action.__call__",
-        fake_call,
+    with patch.object(
+        Action,
+        "__call__",
+        side_effect=fake_call,
+        autospec=True,
     ) as mock_action_call:
         yield mock_action_call
 
@@ -135,9 +142,11 @@ def mock_action_list_call() -> Generator[Callable]:
             dest = self._control.dests[args["destinationId"]]
             await dest.actions[args["actionId"]](**args["parameters"])
 
-    with patch(
-        "wmspro.action.ActionList.__call__",
-        fake_list_call,
+    with patch.object(
+        ActionList,
+        "__call__",
+        side_effect=fake_list_call,
+        autospec=True,
     ) as mock_action_list_call:
         yield mock_action_list_call
 

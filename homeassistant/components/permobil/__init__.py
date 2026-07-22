@@ -1,59 +1,37 @@
 """The MyPermobil integration."""
 
-import logging
-
-from mypermobil import MyPermobil, MyPermobilClientException
-
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_EMAIL,
-    CONF_REGION,
-    CONF_TOKEN,
-    CONF_TTL,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import issue_registry as ir
 
-from .const import APPLICATION
-from .coordinator import MyPermobilCoordinator, PermobilConfigEntry
-
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
+DOMAIN = "permobil"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PermobilConfigEntry) -> bool:
-    """Set up MyPermobil from a config entry."""
-
-    # create the API object from the config and save it in hass
-    session = async_get_clientsession(hass)
-    p_api = MyPermobil(
-        application=APPLICATION,
-        session=session,
-        email=entry.data[CONF_EMAIL],
-        region=entry.data[CONF_REGION],
-        code=entry.data[CONF_CODE],
-        token=entry.data[CONF_TOKEN],
-        expiration_date=entry.data[CONF_TTL],
+async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
+    """Set up config entry."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "entries": "/config/integrations/integration/permobil",
+        },
     )
-    try:
-        p_api.self_authenticate()
-    except MyPermobilClientException as err:
-        _LOGGER.error("Error authenticating  %s", err)
-        raise ConfigEntryAuthFailed(f"Config error for {p_api.email}") from err
-
-    # create the coordinator with the API object
-    coordinator = MyPermobilCoordinator(hass, entry, p_api)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PermobilConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
+        # Remove any remaining disabled or ignored entries
+        for _entry in hass.config_entries.async_entries(DOMAIN):
+            hass.async_create_task(hass.config_entries.async_remove(_entry.entry_id))

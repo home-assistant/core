@@ -139,7 +139,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                order=call.data.get(ATTR_ORDER),
+                order=call.data.get(ATTR_ORDER, 0),
             )
         )
 

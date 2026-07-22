@@ -5,7 +5,11 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
+from homeassistant.components.knx.const import (
+    CONF_RESPOND_TO_READ,
+    CONF_STATE_ADDRESS,
+    KNX_ADDRESS,
+)
 from homeassistant.components.knx.schema import NumberSchema
 from homeassistant.const import CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, State
@@ -108,6 +112,43 @@ async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) 
 
     # update from KNX passive address
     await knx.receive_write(test_passive_address, (0x4E, 0xDE))
+    state = hass.states.get("number.test")
+    assert state.state == "9000.96"
+
+
+async def test_number_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX number with state_address restores state until bus read completes."""
+    test_address = "1/1/1"
+    test_state_address = "2/2/2"
+
+    RESTORE_DATA = {
+        "native_max_value": None,  # Ignored by KNX number
+        "native_min_value": None,  # Ignored by KNX number
+        "native_step": None,  # Ignored by KNX number
+        "native_unit_of_measurement": None,  # Ignored by KNX number
+        "native_value": 160.0,
+    }
+    mock_restore_cache_with_extra_data(
+        hass, ((State("number.test", "abc"), RESTORE_DATA),)
+    )
+
+    await knx.setup_integration(
+        {
+            NumberSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: test_address,
+                CONF_STATE_ADDRESS: test_state_address,
+                CONF_TYPE: "illuminance",
+            }
+        }
+    )
+    # StateUpdater initialize state - restored value is used before response is received
+    await knx.assert_read(test_state_address)
+    state = hass.states.get("number.test")
+    assert state.state == "160.0"
+
+    # bus reports a different value than restored - state updates to the real value
+    await knx.receive_response(test_state_address, (0x4E, 0xDE))
     state = hass.states.get("number.test")
     assert state.state == "9000.96"
 

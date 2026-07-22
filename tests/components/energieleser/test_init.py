@@ -6,18 +6,21 @@ from energieleser import (
     EnergieleserConnectionError,
     EnergieleserError,
     EnergieleserUnknownDeviceError,
+    StromleserOneDevice,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
+from homeassistant.components.energieleser.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import STROMLESER_DEVICE_ID, STROMLESER_SW_VERSION
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_energieleser_client")
@@ -89,3 +92,62 @@ async def test_device_exposes_discovery_sw_version(
     )
     assert device is not None
     assert device.sw_version == STROMLESER_SW_VERSION
+
+
+async def test_meter_locked_repair_issue(
+    hass: HomeAssistant,
+    mock_energieleser_client: AsyncMock,
+    mock_stromleser_device: StromleserOneDevice,
+    mock_locked_stromleser_device: StromleserOneDevice,
+    mock_stromleser_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test repair issue is created when meter is locked and deleted when unlocked."""
+    mock_energieleser_client.get_device.return_value = mock_locked_stromleser_device
+    mock_stromleser_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"pin_locked_{mock_stromleser_config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "meter_locked"
+    assert (
+        issue.learn_more_url
+        == "https://docs.energieleser.de/en/docs/stromleser-one/installation/preparation"
+    )
+    assert issue.translation_placeholders == {
+        "device_name": mock_stromleser_config_entry.title,
+    }
+
+    mock_energieleser_client.get_device.return_value = mock_stromleser_device
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_meter_locked_repair_issue_removed_on_unload(
+    hass: HomeAssistant,
+    mock_energieleser_client: AsyncMock,
+    mock_locked_stromleser_device: StromleserOneDevice,
+    mock_stromleser_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue is deleted when entry is unloaded."""
+    mock_energieleser_client.get_device.return_value = mock_locked_stromleser_device
+    mock_stromleser_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"pin_locked_{mock_stromleser_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    assert await hass.config_entries.async_unload(mock_stromleser_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

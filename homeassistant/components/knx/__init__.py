@@ -24,11 +24,13 @@ from .const import (
     CONF_KNX_KNXKEY_FILENAME,
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DATA_HASS_CONFIG,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_BACKEND_SQLITE,
     KNX_TELEGRAM_DB_PATH_SQLITE,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
@@ -188,10 +190,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_options.setdefault(CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER)
         new_options.setdefault(CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT)
 
+        new_options[CONF_KNX_TELEGRAM_DB_BACKEND] = KNX_TELEGRAM_BACKEND_SQLITE
+
         hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options, version=2
+            entry, data=new_data, options=new_options, version=2, minor_version=2
         )
         _LOGGER.info("Migration to version 2 successful")
+
+    if entry.version == 2 and entry.minor_version < 2:
+        # version 2.2 introduced in 2026.8
+        new_options = {**entry.options}
+        if CONF_KNX_TELEGRAM_DB_BACKEND not in new_options:
+            new_options[CONF_KNX_TELEGRAM_DB_BACKEND] = KNX_TELEGRAM_BACKEND_SQLITE
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, minor_version=2
+        )
+        _LOGGER.info("Migration to version 2.2 successful")
 
     return True
 

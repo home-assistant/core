@@ -2133,6 +2133,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = ConfigEntryItems(hass)
         self._store = ConfigEntryStore(hass)
+        self._initialized = asyncio.Event()
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -2277,7 +2278,7 @@ class ConfigEntries:
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
 
-        dev_reg.async_clear_config_entry(entry_id)
+        dev_reg.async_clear_config_entry(entry_id, entry.domain)
         ent_reg.async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
@@ -2302,6 +2303,7 @@ class ConfigEntries:
 
         if config is None:
             self._entries = ConfigEntryItems(self.hass)
+            self._initialized.set()
             return
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
@@ -2340,6 +2342,12 @@ class ConfigEntries:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
             )
+
+        self._initialized.set()
+
+    async def async_wait_initialized(self) -> None:
+        """Wait until the config entries are loaded from storage."""
+        await self._initialized.wait()
 
     async def _async_scan_orphan_ignored_entries(
         self, event: Event[NoEventData]
@@ -2686,7 +2694,7 @@ class ConfigEntries:
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
 
-        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
+        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id, entry.domain)
         ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
         return result
 

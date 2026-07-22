@@ -359,9 +359,9 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             if avail_source.name == source:
                 audio_only = _SourceType.VIDEO not in avail_source.source_type
                 if audio_only:
-                    await self._create_api_object().setAudioSource(avail_source.idx)
+                    await self._create_api_object().set_audio_source(avail_source.idx)
                 else:
-                    await self._create_api_object().setVideoAndAudioSource(
+                    await self._create_api_object().set_video_and_audio_source(
                         avail_source.idx
                     )
                 break
@@ -371,50 +371,50 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
     @override
     async def async_turn_off(self) -> None:
         """Turn off the room."""
-        await self._create_api_object().setRoomOff()
+        await self._create_api_object().set_room_off()
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the room."""
         if mute:
-            await self._create_api_object().setMuteOn()
+            await self._create_api_object().set_mute_on()
         else:
-            await self._create_api_object().setMuteOff()
+            await self._create_api_object().set_mute_off()
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set room volume, 0-1 scale."""
-        await self._create_api_object().setVolume(int(volume * 100))
+        await self._create_api_object().set_volume(int(volume * 100))
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_volume_up(self) -> None:
         """Increase the volume by 1."""
-        await self._create_api_object().setIncrementVolume()
+        await self._create_api_object().set_increment_volume()
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_volume_down(self) -> None:
         """Decrease the volume by 1."""
-        await self._create_api_object().setDecrementVolume()
+        await self._create_api_object().set_decrement_volume()
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_media_pause(self) -> None:
         """Issue a pause command."""
-        await self._create_api_object().setPause()
+        await self._create_api_object().set_pause()
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_media_play(self) -> None:
         """Issue a play command."""
-        await self._create_api_object().setPlay()
+        await self._create_api_object().set_play()
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_media_stop(self) -> None:
         """Issue a stop command."""
-        await self._create_api_object().setStop()
+        await self._create_api_object().set_stop()
         await self.coordinator.async_request_refresh()

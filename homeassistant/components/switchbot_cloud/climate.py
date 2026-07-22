@@ -15,7 +15,6 @@ from switchbot_api import (
 
 from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
     ATTR_TEMPERATURE,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -24,6 +23,7 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.const import (
@@ -128,10 +128,10 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         _LOGGER.debug("Last state attributes: %s", last_state.attributes)
         self._attr_hvac_mode = HVACMode(last_state.state)
         self._attr_fan_mode = last_state.attributes.get(
-            ATTR_FAN_MODE, self._attr_fan_mode
+            ClimateEntityStateAttribute.FAN_MODE, self._attr_fan_mode
         )
         self._attr_target_temperature = last_state.attributes.get(
-            ATTR_TEMPERATURE, self._attr_target_temperature
+            ClimateEntityStateAttribute.TEMPERATURE, self._attr_target_temperature
         )
 
     def _get_mode(self, hvac_mode: HVACMode | None) -> int:

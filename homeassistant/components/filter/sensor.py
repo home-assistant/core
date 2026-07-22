@@ -16,23 +16,21 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -307,17 +305,21 @@ class SensorFilter(SensorEntity):
 
         self._state = temp_state.state
 
-        self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
-        self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
-        self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
+        self._attr_icon = new_state.attributes.get(EntityStateAttribute.ICON, ICON)
+        self._attr_device_class = new_state.attributes.get(
+            EntityStateAttribute.DEVICE_CLASS
+        )
+        self._attr_state_class = new_state.attributes.get(
+            SensorEntityCapabilityAttribute.STATE_CLASS
+        )
 
         if self._attr_native_unit_of_measurement != new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
         ):
             for filt in self._filters:
                 filt.reset()
             self._attr_native_unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if update_ha:

@@ -59,7 +59,7 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-device-class: todo
   entity-translations: done
   exception-translations: done

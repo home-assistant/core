@@ -98,9 +98,7 @@ def _remove_old_devices(
             (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
         )
         if mac and mac not in omada_devices:
-            device_registry.async_update_device(
-                registered_device.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(registered_device.id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:

@@ -16,9 +16,7 @@ from .errors import CannotConnect, LoginError
 
 
 @contextmanager
-def mikrotik_config_entry_errors(
-    suppress_errors: bool = False, host: str | None = None
-) -> Generator[None]:
+def mikrotik_config_entry_errors(suppress_errors: bool = False) -> Generator[None]:
     """Handle common Mikrotik API exceptions as ConfigEntry errors."""
     try:
         yield

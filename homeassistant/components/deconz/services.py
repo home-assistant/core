@@ -187,8 +187,8 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
     ]
 
     # Don't remove the Gateway service entry
-    hub_service = device_registry.async_get_device(
-        identifiers={(DOMAIN, hub.api.config.bridge_id)}
+    hub_service = device_registry.async_get_device_by_identifier(
+        (DOMAIN, hub.api.config.bridge_id), hub.config_entry.entry_id
     )
     if hub_service and hub_service.id in devices_to_be_removed:
         devices_to_be_removed.remove(hub_service.id)

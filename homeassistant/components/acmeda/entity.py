@@ -29,16 +29,8 @@ class AcmedaEntity(entity.Entity):
         if self.entity_id in ent_registry.entities:
             ent_registry.async_remove(self.entity_id)
 
-        dev_registry = dr.async_get(self.hass)
-        device = dev_registry.async_get_device(identifiers={(DOMAIN, self.unique_id)})
-        if (
-            device is not None
-            and self.registry_entry is not None
-            and self.registry_entry.config_entry_id is not None
-        ):
-            dev_registry.async_update_device(
-                device.id, remove_config_entry_id=self.registry_entry.config_entry_id
-            )
+        if self.device_entry:
+            dr.async_get(self.hass).async_remove_device(self.device_entry.id)
 
         await self.async_remove(force_remove=True)
 

@@ -232,7 +232,7 @@ async def test_gateway_version_issue(
 
     await async_init_integration(hass, mock_config_entry)
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
     assert (issue is not None) == issue_exists
 

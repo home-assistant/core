@@ -639,7 +639,7 @@ async def test_time_remaining_trigger_entity_removed_from_target(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    label_reg = lr.async_get(hass)
+    label_reg = lr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     label = label_reg.async_create("Test Time Remaining")
 
     entry = entity_registry.async_get_or_create(
@@ -688,7 +688,7 @@ async def test_time_remaining_trigger_entity_added_to_target(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    label_reg = lr.async_get(hass)
+    label_reg = lr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     label = label_reg.async_create("Test Time Remaining Add")
 
     entry = entity_registry.async_get_or_create(

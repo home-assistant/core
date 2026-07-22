@@ -126,6 +126,7 @@ NO_IOT_CLASS = [
     "temperature",
     "timer",
     "trace",
+    "vibration",
     "web_rtc",
     "webhook",
     "websocket_api",

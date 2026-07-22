@@ -167,7 +167,7 @@ async def test_migrate_entry_creates_repair_issue(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, "update_redirect_uri")
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, "update_redirect_uri")  # pylint: disable=home-assistant-tests-registry-fixtures
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
 

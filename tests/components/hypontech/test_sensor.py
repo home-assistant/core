@@ -46,7 +46,7 @@ async def test_device_manufacturer_uses_oem(
     with patch("homeassistant.components.hypontech._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     overview_device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.unique_id)}
     )

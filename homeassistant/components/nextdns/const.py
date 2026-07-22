@@ -12,6 +12,8 @@ ATTR_STATUS = "status"
 
 CONF_PROFILE_ID = "profile_id"
 
+SUBENTRY_TYPE_PROFILE = "profile"
+
 UPDATE_INTERVAL_CONNECTION = timedelta(minutes=5)
 UPDATE_INTERVAL_ANALYTICS = timedelta(minutes=10)
 UPDATE_INTERVAL_SETTINGS = timedelta(minutes=1)

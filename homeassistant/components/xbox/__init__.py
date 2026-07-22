@@ -160,14 +160,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bo
                 )
                 hass.config_entries.async_add_subentry(entry, subentry)
 
-                if device := dev_reg.async_get_device({(DOMAIN, friend.xuid)}):
+                if device := dev_reg.async_get_device_by_identifier(
+                    (DOMAIN, friend.xuid), entry.entry_id
+                ):
                     dev_reg.async_update_device(
                         device.id,
                         remove_config_entry_id=entry.entry_id,
                         add_config_subentry_id=subentry.subentry_id,
                         add_config_entry_id=entry.entry_id,
                     )
-            if device := dev_reg.async_get_device({(DOMAIN, "xbox_live")}):
+            if device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, "xbox_live"), entry.entry_id
+            ):
                 dev_reg.async_update_device(
                     device.id, new_identifiers={(DOMAIN, client.xuid)}
                 )

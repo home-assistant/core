@@ -16,10 +16,11 @@ from homeassistant.components.ai_task import (
 from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
 from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
+from homeassistant.components.llm import AssistAPI
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, llm
+from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -77,7 +78,7 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    llm_api = llm.AssistAPI(hass)
+    llm_api = AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",

@@ -22,13 +22,24 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import _LOGGER, CONF_REFRESH_TOKEN, DOMAIN, PLATFORMS
+from .services import async_setup_services
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 type EcobeeConfigEntry = ConfigEntry[EcobeeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the ecobee integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:

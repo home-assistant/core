@@ -43,4 +43,4 @@ PTZ_MOVE_DURATION_MS = 500
 # Upper bound for a full coordinator refresh (device list + status for all devices).
 UPDATE_TIMEOUT = 300
 
-PLATFORMS = [Platform.BUTTON, Platform.CAMERA, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.CAMERA, Platform.SENSOR, Platform.SWITCH]

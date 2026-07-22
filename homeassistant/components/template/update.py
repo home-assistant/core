@@ -6,13 +6,12 @@ from typing import TYPE_CHECKING, Any, override
 import voluptuous as vol
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as UPDATE_DOMAIN,
     ENTITY_ID_FORMAT,
     UpdateEntity,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
@@ -244,8 +243,12 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
-        self._attr_installed_version = last_state.attributes[ATTR_INSTALLED_VERSION]
-        self._attr_latest_version = last_state.attributes[ATTR_LATEST_VERSION]
+        self._attr_installed_version = last_state.attributes[
+            UpdateEntityStateAttribute.INSTALLED_VERSION
+        ]
+        self._attr_latest_version = last_state.attributes[
+            UpdateEntityStateAttribute.LATEST_VERSION
+        ]
         return True
 
 

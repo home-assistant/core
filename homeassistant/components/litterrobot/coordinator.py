@@ -81,8 +81,8 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if stale_members := self.previous_members - current_members:
             device_registry = dr.async_get(self.hass)
             for device_id in stale_members:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_id), self.config_entry.entry_id
                 )
                 if device:
                     device_registry.async_update_device(

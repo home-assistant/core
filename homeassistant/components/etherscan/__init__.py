@@ -1,1 +1,1 @@
-"""The etherscan component."""
+"""The Etherscan integration."""

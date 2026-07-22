@@ -236,8 +236,8 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 "Detected change in devices: serial %s removed",
                 serial_num,
             )
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, serial_num)}
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, serial_num), self.config_entry.entry_id
             )
             if device:
                 device_registry.async_update_device(

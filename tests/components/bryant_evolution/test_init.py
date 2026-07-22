@@ -92,7 +92,7 @@ async def test_setup_multiple_systems_zones(
         assert state.attributes["current_temperature"] == zone
 
     # Check that the created devices are wired to each other as expected.
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     def find_device(name):
         return next(filter(lambda x: x.name == name, device_registry.devices.values()))

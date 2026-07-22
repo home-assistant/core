@@ -36,9 +36,14 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
-from .util import async_redact_data, entity_entry_as_dict
+from .util import async_redact_data, device_entry_as_dict, entity_entry_as_dict
 
-__all__ = ["REDACTED", "async_redact_data", "entity_entry_as_dict"]
+__all__ = [
+    "REDACTED",
+    "async_redact_data",
+    "device_entry_as_dict",
+    "entity_entry_as_dict",
+]
 
 _LOGGER = logging.getLogger(__name__)
 

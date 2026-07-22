@@ -71,6 +71,4 @@ async def delete_devices(
     dev_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for dev_entry in dev_entries:
         if any(identifier[1] in channel_ids for identifier in dev_entry.identifiers):
-            device_registry.async_update_device(
-                dev_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(dev_entry.id)

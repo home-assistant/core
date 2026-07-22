@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import (
+from . import setup_mikrotik_entry
+from .const import (
     DEVICE_2_WIRELESS,
     DEVICE_3_DHCP_NUMERIC_NAME,
     DEVICE_3_WIRELESS,
@@ -22,18 +23,19 @@ from . import (
     MOCK_DATA,
     MOCK_OPTIONS,
     WIRELESS_DATA,
-    setup_mikrotik_entry,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, patch
+from tests.common import async_fire_time_changed, patch
 
 
 @pytest.fixture
 def mock_device_registry_devices(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry,
 ) -> None:
     """Create device registry devices so the device tracker entities are enabled."""
-    config_entry = MockConfigEntry(domain="something_else")
+    config_entry = mock_config_entry(domain="something_else", data={})
     config_entry.add_to_hass(hass)
 
     for idx, device in enumerate(
@@ -214,11 +216,15 @@ async def test_hub_wifiwave2(hass: HomeAssistant, mock_device_registry_devices) 
 
 
 async def test_restoring_devices(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry,
 ) -> None:
     """Test restoring existing device_tracker entities if not detected on startup."""
-    config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS
+    config_entry = mock_config_entry(
+        domain=mikrotik.DOMAIN,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
     )
     config_entry.add_to_hass(hass)
 
