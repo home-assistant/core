@@ -101,6 +101,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
         super().__init__(netatmo_device)
+        # Custom attribute to indicate pending webhook connection/monitoring status,
+        # None means no mid-poll webhook, True means positive webhook, False means negative webhook.
+        self._webhook_connection: bool | None = None
+        self._webhook_on: bool | None = None
 
         self._attr_unique_id = (
             f"{netatmo_device.device.entity_id}-{device_type_to_str(self.device_type)}"
@@ -173,9 +177,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._attr_available = False
-                self._attr_is_streaming = False
-                self._monitoring = None
+                self._webhook_connection = False
                 self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
@@ -183,9 +185,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._attr_available = True
-                self._attr_is_streaming = False
-                self._monitoring = False
+                self._webhook_on = False
                 self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
@@ -193,14 +193,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._attr_available = True
-                # Mark camera as not monitoring until we receive an ON event,
-                # as the camera may be connected but not actively monitoring.
-                # Note: NDB cameras do not have a monitoring attribute, so we
-                # cannot determine if they are (can) monitoring or not.
-                # async_update will set the monitoring state based on the
-                # alim_status for NDB cameras.
-                self._monitoring = False
+                self._webhook_connection = True
                 self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
@@ -208,8 +201,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     data["camera_id"],
                     event_type,
                 )
-                self._attr_available = True
-                self._monitoring = True
+                self._webhook_on = True
                 if self.device_type != "NDB":
                     self._attr_motion_detection_enabled = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
@@ -256,7 +248,21 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     def is_on(self) -> bool:
         """Return whether monitoring is currently active."""
+        # Webhook override
+        if self._webhook_on is not None:
+            return self._webhook_on
+        # Fallback to pyatmo property
         return bool(self._monitoring)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Webhook override
+        if self._webhook_connection is not None:
+            return self._webhook_connection
+        # Fallback to pyatmo property
+        return getattr(self.device, "reachable", False)
 
     @property
     @override
@@ -344,17 +350,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        # All cameras have alim_status, but some cameras do not have explicit
-        # monitoring attribute (e.g. NDB).
-        if self.device.alim_status is None:
-            # Treat camera is unavailable if alim_status is None, as it indicates the camera is not reachable.
-            self._attr_available = False
-            self._monitoring = None
-            self._attr_motion_detection_enabled = False
-        else:
-            # Camera is available if alim_status is not None, as it indicates the camera is reachable.
-            self._attr_available = True
+        # Clear the webhook flags
+        self._webhook_connection = None
+        self._webhook_on = None
 
+        if self.device.reachable:
             # NDB cameras do not have a monitoring attribute,
             # so we check the alim_status to determine if the camera is monitoring.
             if self.device_type == "NDB":
@@ -368,10 +368,15 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
                 )
                 self._attr_motion_detection_enabled = self._monitoring
+        else:
+            self._monitoring = None
+            self._attr_motion_detection_enabled = False
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
         )
+
+        self.async_write_ha_state()
 
     def process_events(self, event_list: list[NaEvent]) -> dict:
         """Add meta data to events."""
