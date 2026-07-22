@@ -20,6 +20,7 @@ from . import get_addons_list
 from .const import (
     ATTR_SLUG,
     EXTRA_PLACEHOLDERS,
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
@@ -31,6 +32,7 @@ from .const import (
     PLACEHOLDER_KEY_ADDON_DOCUMENTATION,
     PLACEHOLDER_KEY_ADDON_INFO,
     PLACEHOLDER_KEY_COMPONENTS,
+    PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REFERENCE,
 )
 from .coordinator import get_issues_info
@@ -231,6 +233,19 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
         return placeholders or None
 
 
+class AppPortConflictRepairFlow(AddonIssueRepairFlow):
+    """Handler for app port conflict issue fixing flows."""
+
+    @property
+    @override
+    def description_placeholders(self) -> dict[str, str] | None:
+        """Get description placeholders for steps."""
+        placeholders: dict[str, str] = super().description_placeholders or {}
+        if self.issue and self.issue.reference_extra:
+            placeholders[PLACEHOLDER_KEY_PORT] = str(self.issue.reference_extra["port"])
+        return placeholders or None
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -245,6 +260,8 @@ async def async_create_fix_flow(
         return DockerConfigIssueRepairFlow(hass, issue_id)
     if issue and issue.key == ISSUE_KEY_ADDON_DEPRECATED:
         return DeprecatedAddonIssueRepairFlow(hass, issue_id)
+    if issue and issue.key == ISSUE_KEY_ADDON_APP_PORT_CONFLICT:
+        return AppPortConflictRepairFlow(hass, issue_id)
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,

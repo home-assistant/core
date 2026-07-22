@@ -761,12 +761,14 @@ async def test_supervisor_issues_add_remove(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "execute_reboot",
                             "context": "system",
                             "reference": None,
+                            "reference_extra": None,
                         }
                     ],
                 },
@@ -801,6 +803,7 @@ async def test_supervisor_issues_add_remove(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -873,6 +876,7 @@ async def test_supervisor_remove_missing_issue_without_error(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -926,6 +930,7 @@ async def test_supervisor_issues_detached_addon_missing(
                     "type": "detached_addon_missing",
                     "context": "addon",
                     "reference": "test",
+                    "reference_extra": None,
                 },
             },
         }
@@ -977,12 +982,14 @@ async def test_supervisor_issues_ntp_sync_failed(
                     "type": "ntp_sync_failed",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "enable_ntp",
                             "context": "system",
                             "reference": None,
+                            "reference_extra": None,
                         }
                     ],
                 },
@@ -1032,6 +1039,7 @@ async def test_supervisor_issues_disk_lifetime(
                     "type": "disk_lifetime",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1079,6 +1087,7 @@ async def test_supervisor_issues_free_space(
                     "type": "free_space",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1133,6 +1142,7 @@ async def test_supervisor_issues_addon_pwned(
                     "type": "pwned",
                     "context": "addon",
                     "reference": "test",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1201,6 +1211,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1221,6 +1232,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": "updated",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1241,6 +1253,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": "updated",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1366,6 +1379,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
