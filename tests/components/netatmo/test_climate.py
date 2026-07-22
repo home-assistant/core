@@ -1,6 +1,7 @@
 """The tests for the Netatmo climate platform."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -44,7 +45,13 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
+from .common import (
+    fake_get_image,
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
 from tests.common import MockConfigEntry
 
@@ -1098,46 +1105,41 @@ async def test_webhook_home_id_mismatch(
 
 
 async def test_thermostat_update_with_none_therm_setpoint_mode(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test thermostat update when Netatmo returns no therm setpoint mode."""
-    with selected_platforms([Platform.CLIMATE]):
+    """Test thermostat setup when Netatmo returns no therm setpoint mode."""
+
+    def set_none_therm_setpoint_mode(payload: dict[str, Any]) -> None:
+        """Set the thermostat setpoint mode to None in the backend response."""
+        home = payload.get("body", {}).get("home")
+        if home is None:
+            return
+
+        for room in home.get("rooms", []):
+            if room["id"] == "2746182631":
+                room["therm_setpoint_mode"] = None
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with a missing thermostat setpoint mode."""
+        kwargs["msg_callback"] = set_none_therm_setpoint_mode
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_get_image.side_effect = fake_get_image
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    climate_entity_livingroom = "climate.livingroom_livingroom"
-
-    response = {
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": None,
-                }
-            ],
-            "modules": [
-                {
-                    "id": "12:34:56:00:01:ae",
-                    "name": "Livingroom",
-                    "type": "NATherm1",
-                }
-            ],
-        },
-        "mode": None,
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-
-    await simulate_webhook(hass, webhook_id, response)
-
-    state = hass.states.get(climate_entity_livingroom)
+    state = hass.states.get("climate.livingroom_livingroom")
     assert state is not None
     assert state.state == HVACMode.AUTO
     assert state.attributes["preset_mode"] == PRESET_SCHEDULE
