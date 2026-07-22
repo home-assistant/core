@@ -1,7 +1,7 @@
 """Cisco Webex notify component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from webexpythonsdk import ApiError, WebexAPI, exceptions
@@ -50,6 +50,7 @@ class CiscoWebexNotificationService(BaseNotificationService):
         self.room = room
         self.client = client
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 

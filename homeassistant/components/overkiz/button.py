@@ -1,6 +1,7 @@
 """Support for Overkiz (virtual) buttons."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
 from pyoverkiz.types import StateType as OverkizStateType
@@ -97,6 +98,9 @@ SUPPORTED_COMMANDS = {
 }
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
@@ -120,7 +124,7 @@ async def async_setup_entry(
                 description,
             )
             for command in device.definition.commands
-            if (description := SUPPORTED_COMMANDS.get(command.command_name))
+            if (description := SUPPORTED_COMMANDS.get(command))
         )
 
     async_add_entities(entities)
@@ -131,6 +135,7 @@ class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
 
     entity_description: OverkizButtonDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         if self.entity_description.press_args:

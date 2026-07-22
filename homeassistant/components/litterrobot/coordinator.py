@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from datetime import timedelta
 import logging
+from typing import override
 
 from pylitterbot import Account, FeederRobot, LitterRobot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
@@ -54,6 +55,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 if domain == DOMAIN:
                     self.previous_members.add(identifier)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
         try:
@@ -79,8 +81,8 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if stale_members := self.previous_members - current_members:
             device_registry = dr.async_get(self.hass)
             for device_id in stale_members:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_id), self.config_entry.entry_id
                 )
                 if device:
                     device_registry.async_update_device(
@@ -89,6 +91,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                     )
         self.previous_members = current_members
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:

@@ -23,6 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ACTION_LONG_PRESS,
     ACTION_MULTITAP,
     ACTION_PRESS,
     ACTION_RELEASE,
@@ -35,6 +36,7 @@ from .const import (
     ATTR_SERIAL,
     ATTR_TYPE,
     BRIDGE_DEVICE_ID,
+    BUTTON_STATUS_LONG_HOLD,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
@@ -142,7 +144,9 @@ async def _async_migrate_unique_ids(
             return None
         sensor_id = unique_id.split("_")[1]
         new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
-        if dev_entry := dev_reg.async_get_device(identifiers={(DOMAIN, unique_id)}):
+        if dev_entry := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, unique_id), entry.entry_id
+        ):
             dev_reg.async_update_device(
                 dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
             )
@@ -450,6 +454,8 @@ def _async_subscribe_keypad_events(
             action = ACTION_PRESS
         elif event_type == BUTTON_STATUS_MULTITAP:
             action = ACTION_MULTITAP
+        elif event_type == BUTTON_STATUS_LONG_HOLD:
+            action = ACTION_LONG_PRESS
         else:
             action = ACTION_RELEASE
 

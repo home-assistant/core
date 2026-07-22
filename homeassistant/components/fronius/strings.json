@@ -36,6 +36,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "backup_mode": {
+        "name": "Backup mode"
+      },
+      "battery_standby": {
+        "name": "Battery standby"
+      }
+    },
     "sensor": {
       "capacity_designed": {
         "name": "Designed capacity"
