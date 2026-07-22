@@ -194,6 +194,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._attr_available = True
+                # Mark camera as not monitoring until we receive an ON event,
+                # as the camera may be connected but not actively monitoring.
+                # Note: NDB cameras do not have a monitoring attribute, so we
+                # cannot determine if they are (can) monitoring or not.
+                # async_update will set the monitoring state based on the
+                # alim_status for NDB cameras.
                 self._monitoring = False
                 self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_ON:
