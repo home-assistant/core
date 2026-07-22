@@ -22,6 +22,7 @@ from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.config import (
     _DEFAULT_CONFIG,
     AUTO_REVERT_DELAY,
+    ERROR_APPLY_FAILED,
     ERROR_NOT_PROMOTED,
     HTTP_STORAGE_SCHEMA,
     ActiveConfigType,
@@ -413,10 +414,19 @@ _SERIALIZED_DEFAULT_CONFIG = {
 
 
 def _stored_config(
-    config: dict, *, created_at: str = PENDING_CREATED_AT, error: str | None = None
+    config: dict,
+    *,
+    created_at: str = PENDING_CREATED_AT,
+    error: str | None = None,
+    error_message: str | None = None,
 ) -> dict:
     """Return a schema-normalised config slot as persisted at storage version 2.2."""
-    return {**HTTP_STORAGE_SCHEMA(config), "created_at": created_at, "error": error}
+    return {
+        **HTTP_STORAGE_SCHEMA(config),
+        "created_at": created_at,
+        "error": error,
+        "error_message": error_message,
+    }
 
 
 def _stable_http_storage(
@@ -1033,6 +1043,7 @@ async def test_yaml_migration_matches_stable_no_pending(
         **existing_stable,
         "created_at": STABLE_CREATED_AT,
         "error": None,
+        "error_message": None,
     }
     hass_storage[DOMAIN] = {
         "version": 2,
@@ -1158,6 +1169,7 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
         **existing_stable,
         "created_at": STABLE_CREATED_AT,
         "error": None,
+        "error_message": None,
     }
     hass_storage[DOMAIN] = {
         "version": 2,
@@ -1186,6 +1198,7 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
         "use_x_frame_options": True,
         "created_at": dt_util.utcnow().isoformat(),
         "error": None,
+        "error_message": None,
     }
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
@@ -1446,11 +1459,13 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
         **HTTP_STORAGE_SCHEMA({"server_port": 9999}),
         "created_at": dt_util.utcnow(),
         "error": None,
+        "error_message": None,
     }
     assert store.stable == {
         **HTTP_STORAGE_SCHEMA({"server_port": 9876}),
         "created_at": dt_util.utcnow(),
         "error": None,
+        "error_message": None,
     }
     # The migrated payload is written back to disk right away.
     assert hass_storage[DOMAIN]["minor_version"] == 2
@@ -1554,6 +1569,7 @@ async def test_websocket_http_config(
         **new_config,
         "created_at": created_at,
         "error": None,
+        "error_message": None,
     }
     await hass.async_block_till_done()
     assert len(restart_calls) == 1
@@ -1566,7 +1582,12 @@ async def test_websocket_http_config(
     assert response["success"]
     assert response["result"] == {
         "stable": _SERIALIZED_DEFAULT_CONFIG,
-        "pending": {**new_config, "created_at": created_at, "error": None},
+        "pending": {
+            **new_config,
+            "created_at": created_at,
+            "error": None,
+            "error_message": None,
+        },
         "revert_at": None,
         "active_config_type": "stable",
         "default": _SERIALIZED_DEFAULT_CONFIG,
@@ -1581,13 +1602,19 @@ async def test_websocket_http_config(
         **new_config,
         "created_at": created_at,
         "error": None,
+        "error_message": None,
     }
 
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "stable": {**new_config, "created_at": created_at, "error": None},
+        "stable": {
+            **new_config,
+            "created_at": created_at,
+            "error": None,
+            "error_message": None,
+        },
         "pending": None,
         "revert_at": None,
         "active_config_type": "stable",
@@ -1634,6 +1661,7 @@ async def test_websocket_http_config(
         **new_config,
         "created_at": created_at,
         "error": None,
+        "error_message": None,
     }
     await hass.async_block_till_done()
     assert len(restart_calls) == 3
@@ -1925,7 +1953,11 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
     # the error persisted on it; this same start continues on stable.
     assert hass_storage["http"]["data"] == {
         "stable": _stored_config({"server_port": 9876}, created_at=STABLE_CREATED_AT),
-        "pending": _stored_config({"server_port": 80}, error=str(bind_error)),
+        "pending": _stored_config(
+            {"server_port": 80},
+            error=ERROR_APPLY_FAILED,
+            error_message=str(bind_error),
+        ),
         "yaml_migration_done": True,
     }
     assert hass.config.api is not None
@@ -1948,6 +1980,7 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
         **HTTP_STORAGE_SCHEMA({"server_port": 9000}),
         "created_at": dt_util.utcnow(),
         "error": None,
+        "error_message": None,
     }
 
     stable_server.close()
@@ -1970,8 +2003,18 @@ async def test_pending_config_reverted_in_place_on_ssl_failure(
         "minor_version": 2,
         "key": DOMAIN,
         "data": {
-            "stable": {**stable, "created_at": STABLE_CREATED_AT, "error": None},
-            "pending": {**pending, "created_at": PENDING_CREATED_AT, "error": None},
+            "stable": {
+                **stable,
+                "created_at": STABLE_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
+            "pending": {
+                **pending,
+                "created_at": PENDING_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
             "yaml_migration_done": True,
         },
     }
@@ -1985,7 +2028,8 @@ async def test_pending_config_reverted_in_place_on_ssl_failure(
     assert stored_pending == {
         **pending,
         "created_at": PENDING_CREATED_AT,
-        "error": ANY,
+        "error": ERROR_APPLY_FAILED,
+        "error_message": ANY,
     }
     assert hass.config.api is not None
     assert hass.config.api.port == 9876
@@ -1993,7 +2037,7 @@ async def test_pending_config_reverted_in_place_on_ssl_failure(
     assert len(restart_calls) == 0
     assert (
         "Could not use SSL certificate from /nonexistent/cert.pem"
-        in stored_pending["error"]
+        in stored_pending["error_message"]
     )
 
 
@@ -2023,8 +2067,18 @@ async def test_pending_config_reverted_in_place_on_ssl_peer_cert_failure(
         "minor_version": 2,
         "key": DOMAIN,
         "data": {
-            "stable": {**stable, "created_at": STABLE_CREATED_AT, "error": None},
-            "pending": {**pending, "created_at": PENDING_CREATED_AT, "error": None},
+            "stable": {
+                **stable,
+                "created_at": STABLE_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
+            "pending": {
+                **pending,
+                "created_at": PENDING_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
             "yaml_migration_done": True,
         },
     }
@@ -2039,9 +2093,10 @@ async def test_pending_config_reverted_in_place_on_ssl_peer_cert_failure(
     assert stored_pending == {
         **pending,
         "created_at": PENDING_CREATED_AT,
-        "error": ANY,
+        "error": ERROR_APPLY_FAILED,
+        "error_message": ANY,
     }
-    assert stored_pending["error"] is not None
+    assert stored_pending["error_message"] is not None
     assert hass.config.api is not None
     assert hass.config.api.port == 9876
     assert hass.config.api.use_ssl is False
@@ -2076,7 +2131,12 @@ async def test_stable_config_ssl_peer_cert_failure_fails_setup(
         "minor_version": 2,
         "key": DOMAIN,
         "data": {
-            "stable": {**stable, "created_at": STABLE_CREATED_AT, "error": None},
+            "stable": {
+                **stable,
+                "created_at": STABLE_CREATED_AT,
+                "error": None,
+                "error_message": None,
+            },
             "pending": None,
             "yaml_migration_done": True,
         },
@@ -2194,7 +2254,11 @@ async def test_pending_and_stable_config_bind_failure_fails_setup(
 
     assert hass_storage["http"]["data"] == {
         "stable": _stored_config({"server_port": 9876}, created_at=STABLE_CREATED_AT),
-        "pending": _stored_config({"server_port": 80}, error=str(bind_error)),
+        "pending": _stored_config(
+            {"server_port": 80},
+            error=ERROR_APPLY_FAILED,
+            error_message=str(bind_error),
+        ),
         "yaml_migration_done": True,
     }
 
@@ -2267,7 +2331,10 @@ async def test_recovery_mode_bind_failure_falls_back_to_default_config(
     # The bind failure is recorded on the stable slot in memory only; stable
     # errors are never persisted.
     assert store.stable == _stored_config(
-        {"server_port": 80}, created_at=STABLE_CREATED_AT, error=str(bind_error)
+        {"server_port": 80},
+        created_at=STABLE_CREATED_AT,
+        error=ERROR_APPLY_FAILED,
+        error_message=str(bind_error),
     )
     default_server.close()
     await default_server.wait_closed()

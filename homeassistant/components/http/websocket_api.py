@@ -39,6 +39,8 @@ async def websocket_get_config(
 
     ``stable`` is the confirmed-working config
     ``pending`` is an unconfirmed config awaiting promotion, or ``None``.
+    A pending config that failed its trial is kept with its ``error``
+    (and ``error_message``) recorded, but is never applied again.
     ``revert_at`` is when an unconfirmed pending config auto-reverts to
     stable, or ``None`` when no revert is scheduled.
     ``active_config_type`` is the slot the running server was started with.
