@@ -251,6 +251,15 @@ async def test_subentry_unsupported_model(
     assert subentry_flow["step_id"] == "init"
     assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
 
+    # Redisplay keeps the submitted values so the errored model field stays shown.
+    suggested = {
+        key.schema: key.description["suggested_value"]
+        for key in subentry_flow["data_schema"].schema
+        if isinstance(key.description, dict) and "suggested_value" in key.description
+    }
+    assert suggested.get(CONF_RECOMMENDED) is False
+    assert suggested.get(CONF_CHAT_MODEL) == "o1-mini"
+
 
 @pytest.mark.parametrize(
     ("model", "reasoning_effort_options"),

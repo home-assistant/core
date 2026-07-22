@@ -364,10 +364,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                 errors[CONF_CHAT_MODEL] = "model_not_supported"
 
+            options.update(user_input)
+            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
+                options.pop(CONF_LLM_HASS_API)
             if not errors:
-                options.update(user_input)
-                if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
-                    options.pop(CONF_LLM_HASS_API)
                 return await self.async_step_model()
 
         return self.async_show_form(
