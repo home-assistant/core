@@ -14,6 +14,9 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "password": "[%key:component::vodafone_station::config::step::user::data_description::password%]"
+        },
         "description": "The password for {username} is invalid.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
@@ -26,11 +29,24 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::ssl%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your Mikrotik router.",
+          "name": "The name of your Mikrotik router.",
+          "password": "The password for your Mikrotik router.",
+          "port": "The port of your Mikrotik router.",
+          "username": "The username for your Mikrotik router.",
+          "verify_ssl": "Verify SSL certificate of your Mikrotik router."
+        },
         "title": "Set up Mikrotik Router"
       }
     }
   },
   "entity": {
+    "button": {
+      "shutdown": {
+        "name": "Shutdown"
+      }
+    },
     "sensor": {
       "cpu_load": {
         "name": "CPU usage"
@@ -67,6 +83,11 @@
           "arp_ping": "Enable ARP ping",
           "detection_time": "Consider home interval",
           "force_dhcp": "Force scanning using DHCP"
+        },
+        "data_description": {
+          "arp_ping": "Enable ARP ping for device tracking. This will send an ARP request to the device to check if it is online.",
+          "detection_time": "The time interval in seconds to consider a device as home after it was last seen.",
+          "force_dhcp": "Force scanning using DHCP. This will use the DHCP leases to track devices."
         }
       }
     }
