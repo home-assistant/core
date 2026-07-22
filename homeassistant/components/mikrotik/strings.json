@@ -30,6 +30,24 @@
       }
     }
   },
+  "entity": {
+    "button": {
+      "shutdown": {
+        "name": "Shutdown"
+      }
+    },
+    "sensor": {
+      "cpu_load": {
+        "name": "CPU usage"
+      },
+      "disk_usage": {
+        "name": "Disk usage"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Error connecting: {error}"

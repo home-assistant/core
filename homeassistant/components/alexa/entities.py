@@ -45,7 +45,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import network
+from homeassistant.helpers import entity_registry as er, intent, network
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.decorator import Registry
 
@@ -283,10 +283,14 @@ class AlexaEntity:
 
     def friendly_name(self) -> str:
         """Return the Alexa API friendly name."""
-        friendly_name: str = self.entity_conf.get(
-            CONF_NAME, self.entity.name
-        ).translate(TRANSLATION_TABLE)
-        return friendly_name
+        name: str | None = self.entity_conf.get(CONF_NAME)
+        if name is None:
+            entity_entry = er.async_get(self.hass).async_get(self.entity_id)
+            aliases = intent.async_get_entity_aliases(
+                self.hass, entity_entry, state=self.entity, allow_empty=False
+            )
+            name = aliases[0]
+        return name.translate(TRANSLATION_TABLE)
 
     def description(self) -> str:
         """Return the Alexa API description."""
