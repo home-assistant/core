@@ -1143,7 +1143,6 @@ async def test_thermostat_update_with_none_therm_setpoint_mode(
     assert state.attributes["preset_mode"] == PRESET_SCHEDULE
 
 
-
 async def test_webhook_set_point(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
