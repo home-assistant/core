@@ -91,7 +91,7 @@
           "data_description": {
             "model": "The model to use to transcribe speech."
           },
-          "description": "Configure the speech-to-text service"
+          "description": "Configure the speech-to-text service. Every language Home Assistant supports is offered, but the actual set depends on the model you pick; check the upstream provider's documentation for the languages it supports."
         }
       }
     },
@@ -116,7 +116,7 @@
           "data_description": {
             "model": "The model to use to synthesize speech."
           },
-          "description": "Configure the text-to-speech service"
+          "description": "Configure the text-to-speech service. Every language Home Assistant supports is offered, but the actual set depends on the model you pick; check the upstream provider's documentation for the languages it supports."
         },
         "voice": {
           "data": {

@@ -16,6 +16,7 @@ from homeassistant.components.tts import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenRouterConfigEntry
@@ -57,66 +58,11 @@ class OpenRouterTTSEntity(TextToSpeechEntity, OpenRouterEntity):
     """OpenRouter TTS entity."""
 
     _attr_supported_options = [ATTR_VOICE, ATTR_PREFERRED_FORMAT]
-    _attr_supported_languages = [
-        "af-ZA",
-        "ar-SA",
-        "hy-AM",
-        "az-AZ",
-        "be-BY",
-        "bs-BA",
-        "bg-BG",
-        "ca-ES",
-        "zh-CN",
-        "hr-HR",
-        "cs-CZ",
-        "da-DK",
-        "nl-NL",
-        "en-US",
-        "et-EE",
-        "fi-FI",
-        "fr-FR",
-        "gl-ES",
-        "de-DE",
-        "el-GR",
-        "he-IL",
-        "hi-IN",
-        "hu-HU",
-        "is-IS",
-        "id-ID",
-        "it-IT",
-        "ja-JP",
-        "kn-IN",
-        "kk-KZ",
-        "ko-KR",
-        "lv-LV",
-        "lt-LT",
-        "mk-MK",
-        "ms-MY",
-        "mr-IN",
-        "mi-NZ",
-        "ne-NP",
-        "no-NO",
-        "fa-IR",
-        "pl-PL",
-        "pt-PT",
-        "ro-RO",
-        "ru-RU",
-        "sr-RS",
-        "sk-SK",
-        "sl-SI",
-        "es-ES",
-        "sw-KE",
-        "sv-SE",
-        "fil-PH",
-        "ta-IN",
-        "th-TH",
-        "tr-TR",
-        "uk-UA",
-        "ur-PK",
-        "vi-VN",
-        "cy-GB",
-    ]
-    _attr_default_language = "en-US"
+    # OpenRouter routes to many speech models and its API does not advertise
+    # per-model language support, so we advertise every language Home Assistant
+    # knows about and let the selected provider handle it.
+    _attr_supported_languages = sorted(LANGUAGES)
+    _attr_default_language = "en"
 
     _attr_name = None
 
