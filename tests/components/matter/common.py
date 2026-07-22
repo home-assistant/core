@@ -50,6 +50,7 @@ FIXTURES = [
     "inovelli_vtm30",
     "inovelli_vtm31",
     "longan_link_thermostat",
+    "mock_action_switch",
     "mock_air_purifier",
     "mock_battery_storage",
     "mock_cooktop",

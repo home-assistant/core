@@ -8,6 +8,8 @@ from matter_server.client.models import device_types
 from matter_server.common.models import EventType, MatterNodeEvent
 
 from homeassistant.components.event import (
+    ATTR_MULTI_PRESS_COUNT,
+    ButtonEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -31,6 +33,21 @@ EVENT_TYPES_MAP = {
     4: "long_release",  # clusters.Switch.Events.LongRelease
     5: "multi_press_ongoing",  # clusters.Switch.Events.MultiPressOngoing
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
+}
+
+# mapping from raw event id's to standard button event types
+STANDARD_EVENT_TYPES_MAP: dict[int, str] = {
+    clusters.Switch.Events.SwitchLatched.event_id: "switch_latched",
+    clusters.Switch.Events.InitialPress.event_id: ButtonEventType.PRESS_START,
+    clusters.Switch.Events.LongPress.event_id: ButtonEventType.LONG_PRESS_START,
+    clusters.Switch.Events.ShortRelease.event_id: ButtonEventType.PRESS_END,
+    clusters.Switch.Events.LongRelease.event_id: ButtonEventType.LONG_PRESS_END,
+    clusters.Switch.Events.MultiPressOngoing.event_id: (
+        ButtonEventType.MULTI_PRESS_ONGOING
+    ),
+    clusters.Switch.Events.MultiPressComplete.event_id: (
+        ButtonEventType.MULTI_PRESS_END
+    ),
 }
 
 
@@ -87,8 +104,69 @@ class MatterEventEntityBase(MatterEntity, EventEntity):
         raise NotImplementedError
 
 
+class MatterButtonEventEntity(MatterEventEntityBase):
+    """Matter Event entity using the standard button event types."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+        # fill the event types based on the features the switch supports
+        event_types: list[str] = []
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
+        )
+        if feature_map & SwitchFeature.kLatchingSwitch:
+            # a latching switch only supports the switch_latched event
+            event_types.append("switch_latched")
+        elif feature_map & SwitchFeature.kMomentarySwitch:
+            event_types.append(ButtonEventType.PRESS_START)
+            if feature_map & SwitchFeature.kMomentarySwitchRelease:
+                event_types.append(ButtonEventType.PRESS_END)
+            if feature_map & SwitchFeature.kMomentarySwitchLongPress:
+                event_types.append(ButtonEventType.LONG_PRESS_START)
+                event_types.append(ButtonEventType.LONG_PRESS_END)
+            if feature_map & SwitchFeature.kMomentarySwitchMultiPress:
+                if not feature_map & SwitchFeature.kActionSwitch:
+                    # an action switch reports only the final result
+                    # of a multi-press sequence
+                    event_types.append(ButtonEventType.MULTI_PRESS_ONGOING)
+                event_types.append(ButtonEventType.MULTI_PRESS_END)
+
+        self._attr_event_types = event_types
+
+    @override
+    @callback
+    def _handle_switch_event(self, data: MatterNodeEvent) -> None:
+        """Handle a Switch cluster event."""
+        if (event_type := STANDARD_EVENT_TYPES_MAP.get(data.event_id)) is None:
+            return
+        if event_type not in self.event_types:
+            # this should not happen, but guard for bad things
+            # some remotes send events that they do not report as supported (sigh...)
+            return
+
+        # pass the event data as-is (such as the advanced Position data)
+        event_data = dict(data.data or {})
+        if data.event_id == clusters.Switch.Events.MultiPressOngoing.event_id:
+            event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
+                "currentNumberOfPressesCounted", 1
+            )
+        elif data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
+            # NOTE: a count of 0 means the multi-press sequence was aborted
+            # because the number of presses exceeded MultiPressMax
+            event_data[ATTR_MULTI_PRESS_COUNT] = event_data.get(
+                "totalNumberOfPressesCounted", 1
+            )
+
+        self._trigger_event(event_type, event_data)
+        self.async_write_ha_state()
+
+
 class MatterEventEntity(MatterEventEntityBase):
-    """Representation of a Matter Event entity."""
+    """Legacy Matter Event entity, replaced by MatterButtonEventEntity.
+
+    Deprecated and disabled by default in HA 2026.8, remove in 2027.2.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
@@ -154,9 +232,33 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.EVENT,
         entity_description=MatterEventEntityDescription(
+            key="GenericSwitchButton",
+            device_class=EventDeviceClass.BUTTON,
+            translation_key="button",
+        ),
+        entity_class=MatterButtonEventEntity,
+        required_attributes=(
+            clusters.Switch.Attributes.CurrentPosition,
+            clusters.Switch.Attributes.FeatureMap,
+        ),
+        device_type=(
+            device_types.Doorbell,
+            device_types.GenericSwitch,
+        ),
+        optional_attributes=(
+            clusters.Switch.Attributes.NumberOfPositions,
+            clusters.FixedLabel.Attributes.LabelList,
+        ),
+        allow_multi=True,  # also used for the legacy event and sensor entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
             translation_key="button",
+            # Deprecated and disabled by default in HA 2026.8, remove in 2027.2
+            entity_registry_enabled_default=False,
         ),
         entity_class=MatterEventEntity,
         required_attributes=(
