@@ -261,6 +261,34 @@ async def test_subentry_unsupported_model(
     assert suggested.get(CONF_CHAT_MODEL) == "o1-mini"
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_subentry_advanced_options_visible_when_not_recommended(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test advanced options carry the visibility condition hiding them when recommended."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["step_id"] == "init"
+
+    visibility = {
+        key.schema: getattr(key, "visible", None)
+        for key in subentry_flow["data_schema"].schema
+    }
+    not_recommended = {"field": CONF_RECOMMENDED, "value": False}
+    for field in (
+        CONF_CHAT_MODEL,
+        CONF_MAX_TOKENS,
+        CONF_TOP_P,
+        CONF_TEMPERATURE,
+        CONF_STORE_RESPONSES,
+    ):
+        assert visibility[field] == not_recommended
+    # the recommended toggle itself is always shown
+    assert visibility[CONF_RECOMMENDED] is None
+
+
 @pytest.mark.parametrize(
     ("model", "reasoning_effort_options"),
     [
