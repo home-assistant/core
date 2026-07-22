@@ -1,6 +1,6 @@
 """Tests for the Russound RIO media player."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiorussound.const import FeatureFlag
 from aiorussound.exceptions import CommandError
@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_SEEK_POSITION,
@@ -17,6 +18,9 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+)
+from homeassistant.components.russound_rio.const import (
+    CONF_ENABLE_ZONE_SOURCE_EXCLUSION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -347,3 +351,40 @@ async def test_play_media_unknown_type(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("enable_exclusion", "expected_sources"),
+    [
+        (False, ["Aux", "Spotify"]),
+        (True, ["Aux"]),
+    ],
+)
+async def test_source_list_exclusion(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+    enable_exclusion: bool,
+    expected_sources: list[str],
+) -> None:
+    """Test zone source exclusion."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            CONF_ENABLE_ZONE_SOURCE_EXCLUSION: enable_exclusion,
+        },
+    )
+
+    mock_russound_client.controllers[1].zones[1].enabled_sources = [1]
+
+    with patch(
+        "homeassistant.components.russound_rio.media_player.is_feature_supported",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID_ZONE_1)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == expected_sources

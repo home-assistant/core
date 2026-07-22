@@ -107,6 +107,18 @@
       "message": "Unsupported media type for Russound zone: {media_type}"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_zone_source_exclusion": "Enable zone source exclusion"
+        },
+        "data_description": {
+          "enable_zone_source_exclusion": "Exclude sources that are disabled for a zone from that zone's available source list. (Only available on compatible Russound devices)"
+        }
+      }
+    }
+  },
   "selector": {
     "connection_type": {
       "options": {
