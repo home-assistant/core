@@ -1096,7 +1096,6 @@ async def test_webhook_home_id_mismatch(
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
 
-
 async def test_thermostat_update_with_none_therm_setpoint_mode(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
@@ -1105,26 +1104,43 @@ async def test_thermostat_update_with_none_therm_setpoint_mode(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.livingroom_livingroom"
 
-    entity = hass.data[CLIMATE_DOMAIN].get_entity(climate_entity_livingroom)
-    assert entity is not None
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": None,
+                }
+            ],
+            "modules": [
+                {
+                    "id": "12:34:56:00:01:ae",
+                    "name": "Livingroom",
+                    "type": "NATherm1",
+                }
+            ],
+        },
+        "mode": None,
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
 
-    with patch.object(
-        type(entity.device),
-        "therm_setpoint_mode",
-        new_callable=PropertyMock,
-        return_value=None,
-        create=True,
-    ):
-        entity.async_update_callback()
-        entity.async_write_ha_state()
-        await hass.async_block_till_done()
+    await simulate_webhook(hass, webhook_id, response)
 
     state = hass.states.get(climate_entity_livingroom)
     assert state is not None
     assert state.state == HVACMode.AUTO
     assert state.attributes["preset_mode"] == PRESET_SCHEDULE
+
 
 
 async def test_webhook_set_point(
