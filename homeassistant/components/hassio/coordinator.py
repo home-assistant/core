@@ -1122,11 +1122,11 @@ def async_register_supervisor_in_dev_reg(
 
 @callback
 def async_remove_devices_from_dev_reg(
-    dev_reg: dr.DeviceRegistry, devices: set[str]
+    entry_id: str, dev_reg: dr.DeviceRegistry, devices: set[str]
 ) -> None:
     """Remove devices from the device registry."""
     for device in devices:
-        if dev := dev_reg.async_get_device(identifiers={(DOMAIN, device)}):
+        if dev := dev_reg.async_get_device_by_identifier((DOMAIN, device), entry_id):
             dev_reg.async_remove_device(dev.id)
 
 
@@ -1339,7 +1339,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data.addons):
-            async_remove_devices_from_dev_reg(self.dev_reg, stale_addons)
+            async_remove_devices_from_dev_reg(self.entry_id, self.dev_reg, stale_addons)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return the new data because
@@ -1410,6 +1410,11 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
+
+    async def async_refresh_after_store_reload(self) -> None:
+        """Refresh addon data when the store was already reloaded externally."""
+        async with self._debounced_refresh.async_lock():
+            await super()._async_refresh(log_failures=True)
 
     async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
         """Force refresh of addon info data for a specific addon."""
@@ -1557,11 +1562,15 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         }
         if stale_mounts := supervisor_mount_devices - set(new_data.mounts):
             async_remove_devices_from_dev_reg(
-                self.dev_reg, {f"mount_{stale_mount}" for stale_mount in stale_mounts}
+                self.entry_id,
+                self.dev_reg,
+                {f"mount_{stale_mount}" for stale_mount in stale_mounts},
             )
 
         if not self.is_hass_os and (
-            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
+            dev := self.dev_reg.async_get_device_by_identifier(
+                (DOMAIN, "OS"), self.entry_id
+            )
         ):
             # Remove the OS device if it exists and the installation is not hassos
             self.dev_reg.async_remove_device(dev.id)
