@@ -10,7 +10,6 @@ from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
     DOMAIN,
-    ButtonEventType,
     DoorbellEventType,
     EventDeviceClass,
     EventEntity,
