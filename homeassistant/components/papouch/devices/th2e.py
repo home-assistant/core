@@ -15,12 +15,13 @@ _LOGGER = logging.getLogger(__name__)
 class TH2E(PapouchDevice):
     """Represents devices of TH2E family."""
 
-    def __init__(self, api_client: PapouchApiClient) -> None:
-        """Constructor for TH2E device. Downloading the settings during creation."""
+    def __init__(self, api_client: PapouchApiClient, info: str) -> None:
+        """Constructor for TH2E device. Downloading the settings before creation."""
         self.name = "Papouch TH2E"
         self.manufacturer = "Papouch s.r.o."
         self.api_client = api_client
         self.units_sensors = []
+        self.info = info
 
         self._parse_initial_settings()
 
@@ -50,6 +51,20 @@ class TH2E(PapouchDevice):
                 )
 
         return parsed_data
+
+    @override
+    def get_location(self) -> str:
+        """Return the location of the device."""
+        root = defused_ET.fromstring(self.info)
+        heartbeat = root.find("heartbeat")
+        return heartbeat.attrib.get("location")
+
+    @override
+    def get_name(self) -> str:
+        """Return the name of the device."""
+        root = defused_ET.fromstring(self.info)
+        heartbeat = root.find("heartbeat")
+        return heartbeat.attrib.get("device")
 
     @override
     def get_supported_buttons(self) -> list[dict[str, Any]]:

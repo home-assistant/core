@@ -3,6 +3,9 @@
 # TODO:
 
 import asyncio
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
@@ -10,8 +13,8 @@ class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
 
     def __init__(self) -> None:
         """Initialize the protocol with the required magic packet and target port."""
-        self.magic_packet = b"\x00\x04\x95\x06" + bytes(84)
-        self.target_port = 19540
+        self.magic_packet = b"\x00\x00\x00\xf6"
+        self.target_port = 30718
         self.discovered_ips: set[str] = set()
         self.transport: asyncio.DatagramTransport | None = None
 

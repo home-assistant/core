@@ -143,6 +143,21 @@ class PapouchDevice(ABC):
         """Switch the device network mode to WEB."""
 
     @abstractmethod
+    def get_location(self) -> str:
+        """Return the location of the device.
+
+        Note that this method is used only in a config flow
+        that means after user changes the location of the device
+        this method will return invalid data.
+
+        These data are from info value but it is loaded only in ctor.
+        """
+
+    @abstractmethod
+    def get_name(self) -> str:
+        """Return the name of the device."""
+
+    @abstractmethod
     def _parse_initial_settings(self) -> None:
         """Parse settings XML for each device.
 

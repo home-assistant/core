@@ -1,5 +1,6 @@
 """Config flow for the Papouch integration."""
 
+import asyncio
 import logging
 import re
 
@@ -25,7 +26,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.discovered_ip: str | None = None
         self._saved_input: dict | None = None
-        self._discovered_ips: list[str] | None = None
+        self._discovered_ips: dict[str, str] | None = None
 
     async def _test_connection(
         self, ip_address: str
@@ -45,6 +46,28 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None
         else:
             return {}, mode_device
+
+    async def _is_supported_device(self, ip_address: str) -> tuple[str, str] | None:
+        """Return location and name of the device.
+
+        If it is unsupported device the fuction returns None.
+        """
+
+        session = async_get_clientsession(self.hass)
+        client = PapouchApiClient(ip_address, session)
+
+        try:
+            await client.fetch_info()
+            device = await create_device(client)
+
+            if device is None:
+                return None
+
+            location = device.get_location()
+            name = device.get_name()
+            return (location, name)  # noqa: TRY300
+        except aiohttp.ClientError:
+            return None
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
@@ -81,14 +104,33 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         if self._discovered_ips is None:
-            self._discovered_ips = await async_discover_papouch_devices()
+            raw_ips = await async_discover_papouch_devices()
+
+            semaphore = asyncio.Semaphore(5)
+
+            async def _safe_check(ip: str) -> tuple[str, str] | None:
+                async with semaphore:
+                    try:
+                        async with asyncio.timeout(2.0):
+                            return await self._is_supported_device(ip)
+                    except TimeoutError:
+                        return None
+
+            results = await asyncio.gather(*[_safe_check(ip) for ip in raw_ips])
+
+            self._discovered_ips = {}
+            for ip, device_info in zip(raw_ips, results, strict=False):
+                if device_info is not None:
+                    location, name = device_info
+                    self._discovered_ips[ip] = f"{name} ({location}) - {ip}"
 
         if not self._discovered_ips and not self.discovered_ip and not errors:
             return await self.async_step_manual()
 
-        options = {ip: ip for ip in self._discovered_ips}
+        options = self._discovered_ips.copy()
+
         if self.discovered_ip and self.discovered_ip not in options:
-            options[self.discovered_ip] = self.discovered_ip
+            options[self.discovered_ip] = f"Unknown device - {self.discovered_ip}"
 
         options["manual"] = "Enter IP manually"
 

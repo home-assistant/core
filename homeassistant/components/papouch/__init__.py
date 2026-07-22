@@ -67,16 +67,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> 
 
 
 async def create_device(api_client: PapouchApiClient) -> PapouchDevice | None:
-    """Function that creates proper device instance."""
+    """Function that creates proper device instance.
+
+    Returns "None" if the device is not supported
+    or when the device doesn't have proper identification tag.
+    """
 
     info = await api_client.fetch_info()
-    device = ET.fromstring(info).find("heartbeat").attrib.get("device")
+
+    try:
+        root = ET.fromstring(info)
+        heartbeat = root.find("heartbeat")
+
+        if heartbeat is None:
+            return None
+
+        device = heartbeat.attrib.get("device")
+
+    except ET.ParseError:
+        return None
+    except AttributeError:
+        return None
 
     if "Quido" in device:
         # settings are being fetched now, because ctor isn't async
         settings = await api_client.fetch_settings()
-        return Quido(api_client, settings)
+        return Quido(api_client, settings, info)
     elif "TH2E" in device:
-        return TH2E(api_client)
+        return TH2E(api_client, info)
     else:
         return None

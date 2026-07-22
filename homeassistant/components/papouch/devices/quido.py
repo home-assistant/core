@@ -23,23 +23,19 @@ class Quido(PapouchDevice):
         "Counts ascending and descending edges",
     ]
 
-    def __init__(
-        self,
-        api_client: PapouchApiClient,
-        settings: str,
-        number_temp: int = 1,
-    ) -> None:
-        """Constructor for Quido device. Downloading the settings during/before creation."""
+    def __init__(self, api_client: PapouchApiClient, settings: str, info: str) -> None:
+        """Constructor for Quido device. Downloading the settings before creation."""
         self.name = "Papouch Quido"
         self.manufacturer = "Papouch s.r.o."
         self.api_client = api_client
         self.number_inputs = -1
         self.number_outputs = -1
-        self.number_temp = number_temp
+        self.number_temp = 1
         self.counter_states = {}
         self.settings = settings
         self.size_counter_bits = 16
         self.temperature_unit = "°C"  # default
+        self.info = info
 
         self._parse_initial_settings()
 
@@ -376,6 +372,20 @@ class Quido(PapouchDevice):
 
         except (defused_ET.ParseError, ValueError, TypeError) as err:
             _LOGGER.error("Failed to parse initial settings: %s", err)
+
+    @override
+    def get_location(self) -> str:
+        """Return the location of the device."""
+        root = defused_ET.fromstring(self.info)
+        heartbeat = root.find("heartbeat")
+        return heartbeat.attrib.get("location")
+
+    @override
+    def get_name(self) -> str:
+        """Return the name of the device."""
+        root = defused_ET.fromstring(self.info)
+        heartbeat = root.find("heartbeat")
+        return heartbeat.attrib.get("device")
 
     async def _turn_on_coil(self, item_id: str) -> None:
         """Command for turning on the coil by its id."""
