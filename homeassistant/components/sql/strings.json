@@ -21,7 +21,7 @@
           "query": "Query to run, needs to start with 'SELECT'"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "device_class": "Device class",
               "state_class": "State class",
@@ -87,21 +87,21 @@
           "query": "[%key:component::sql::config::step::options::data_description::query%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
-              "device_class": "[%key:component::sql::config::step::options::sections::advanced_options::data::device_class%]",
-              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data::state_class%]",
-              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data::unit_of_measurement%]",
-              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data::value_template%]"
+              "device_class": "[%key:component::sql::config::step::options::sections::additional_options::data::device_class%]",
+              "state_class": "[%key:component::sql::config::step::options::sections::additional_options::data::state_class%]",
+              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::additional_options::data::unit_of_measurement%]",
+              "value_template": "[%key:component::sql::config::step::options::sections::additional_options::data::value_template%]"
             },
             "data_description": {
-              "device_class": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::device_class%]",
-              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::state_class%]",
-              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::unit_of_measurement%]",
-              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::value_template%]"
+              "device_class": "[%key:component::sql::config::step::options::sections::additional_options::data_description::device_class%]",
+              "state_class": "[%key:component::sql::config::step::options::sections::additional_options::data_description::state_class%]",
+              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::additional_options::data_description::unit_of_measurement%]",
+              "value_template": "[%key:component::sql::config::step::options::sections::additional_options::data_description::value_template%]"
             },
-            "description": "[%key:component::sql::config::step::options::sections::advanced_options::name%]",
-            "name": "[%key:component::sql::config::step::options::sections::advanced_options::name%]"
+            "description": "[%key:component::sql::config::step::options::sections::additional_options::name%]",
+            "name": "[%key:component::sql::config::step::options::sections::additional_options::name%]"
           }
         }
       }

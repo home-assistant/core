@@ -118,6 +118,12 @@
     }
   },
   "selector": {
+    "request_media_type": {
+      "options": {
+        "movie": "Movie",
+        "tv": "TV"
+      }
+    },
     "request_sort_order": {
       "options": {
         "added": "Added",
@@ -157,6 +163,42 @@
         }
       },
       "name": "Get requests"
+    },
+    "request_media": {
+      "description": "Creates a media request in Seerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Seerr instance to create the request on.",
+          "name": "Seerr instance"
+        },
+        "media_id": {
+          "description": "The TMDB ID or TVDB ID of the media to request.",
+          "name": "Media ID"
+        },
+        "media_type": {
+          "description": "Type of media to request.",
+          "name": "Media type"
+        },
+        "seasons": {
+          "description": "For TV requests: seasons to request. Optional list of integers (e.g., [1, 2, 4]). If omitted, all seasons will be requested.",
+          "name": "Seasons"
+        }
+      },
+      "name": "Request media"
+    },
+    "search_media": {
+      "description": "Searches for media in Seerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Seerr instance to search.",
+          "name": "Seerr instance"
+        },
+        "query": {
+          "description": "The search query.",
+          "name": "Query"
+        }
+      },
+      "name": "Search media"
     }
   }
 }

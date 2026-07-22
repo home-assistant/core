@@ -4,7 +4,7 @@ from typing import override
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_MODE, CONF_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -18,7 +18,12 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-from .const import ATTR_ACTION, DOMAIN, HumidifierAction, HumidifierEntityFeature
+from .const import (
+    DOMAIN,
+    HumidifierAction,
+    HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
+)
 
 MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
@@ -40,7 +45,9 @@ def _supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> boo
 class ModeChangedTrigger(EntityTargetStateTriggerBase):
     """Trigger for humidifier mode changes."""
 
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_MODE)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=HumidifierEntityStateAttribute.MODE)
+    }
     _schema = MODE_CHANGED_TRIGGER_SCHEMA
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
@@ -62,10 +69,12 @@ class ModeChangedTrigger(EntityTargetStateTriggerBase):
 TRIGGERS: dict[str, type[Trigger]] = {
     "mode_changed": ModeChangedTrigger,
     "started_drying": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.DRYING
+        {DOMAIN: DomainSpec(value_source=HumidifierEntityStateAttribute.ACTION)},
+        HumidifierAction.DRYING,
     ),
     "started_humidifying": make_entity_target_state_trigger(
-        {DOMAIN: DomainSpec(value_source=ATTR_ACTION)}, HumidifierAction.HUMIDIFYING
+        {DOMAIN: DomainSpec(value_source=HumidifierEntityStateAttribute.ACTION)},
+        HumidifierAction.HUMIDIFYING,
     ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
     "turned_on": make_entity_target_state_trigger(DOMAIN, STATE_ON),

@@ -23,6 +23,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.group import (
     expand_entity_ids as _expand_entity_ids,
     get_entity_ids as _get_entity_ids,
+    get_group_entities,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
@@ -122,14 +123,42 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     Async friendly.
     """
-    if DOMAIN not in hass.data:
-        return []
+    groups: list[str] = []
 
-    return [
-        group.entity_id
-        for group in hass.data[DATA_COMPONENT].entities
-        if entity_id in group.tracking
-    ]
+    if DOMAIN in hass.data:
+        groups.extend(
+            group.entity_id
+            for group in hass.data[DATA_COMPONENT].entities
+            if entity_id in group.tracking
+        )
+
+    groups.extend(
+        group_entity_id
+        for group_entity_id, entity in get_group_entities(hass).items()
+        if entity.group is not None
+        and entity_id in entity.group.member_entity_ids
+        and group_entity_id not in groups
+    )
+
+    # Config entry groups whose platform does not (yet) register in
+    # the group entities registry of the group helper.
+    entity_registry = er.async_get(hass)
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        members = [
+            er.async_resolve_entity_id(entity_registry, member) or member
+            for member in entry.options[CONF_ENTITIES]
+        ]
+        if entity_id not in members:
+            continue
+        groups.extend(
+            registry_entry.entity_id
+            for registry_entry in er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
+            )
+            if registry_entry.entity_id not in groups
+        )
+
+    return groups
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
