@@ -69,6 +69,9 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         self._model = entry.data["model"]
         self._serial = entry.data.get("serialNumber")
 
+        # Lock to serialize API commands and prevent race conditions
+        self.api_lock = asyncio.Lock()
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
