@@ -78,8 +78,8 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
             self.coordinator.data.active_zones.add(self._zone_id)
             self.coordinator.async_set_updated_data(self.coordinator.data)
 
-            await asyncio.sleep(SWITCH_REFRESH_DELAY)
-            await self.coordinator.async_request_refresh()
+        await asyncio.sleep(SWITCH_REFRESH_DELAY)
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -90,5 +90,5 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
             self.coordinator.data.active_zones.discard(self._zone_id)
             self.coordinator.async_set_updated_data(self.coordinator.data)
 
-            await asyncio.sleep(SWITCH_REFRESH_DELAY)
-            await self.coordinator.async_request_refresh()
+        await asyncio.sleep(SWITCH_REFRESH_DELAY)
+        await self.coordinator.async_request_refresh()
