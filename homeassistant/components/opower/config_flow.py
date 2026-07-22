@@ -8,6 +8,7 @@ from opower import (
     CannotConnect,
     InvalidAuth,
     MfaChallenge,
+    MfaCodeRejected,
     MfaHandlerBase,
     Opower,
     create_cookie_jar,
@@ -94,6 +95,8 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             except MfaChallenge as exc:
                 self.mfa_handler = exc.handler
                 return await self.async_step_mfa_options()
+            except MfaCodeRejected:
+                errors["base"] = "mfa_transaction_rejected"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except CannotConnect:
@@ -210,6 +213,8 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         except MfaChallenge as exc:
             self.mfa_handler = exc.handler
             return await self.async_step_mfa_options()
+        except MfaCodeRejected:
+            errors["base"] = "mfa_transaction_rejected"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except CannotConnect:

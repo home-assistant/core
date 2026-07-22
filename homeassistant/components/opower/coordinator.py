@@ -10,8 +10,12 @@ from opower import (
     AggregateType,
     CostRead,
     Forecast,
+    InvalidCredentials,
     MeterType,
+    MfaCodeRejected,
     Opower,
+    PasswordExpired,
+    ProtocolError,
     ReadResolution,
     create_cookie_jar,
 )
@@ -107,9 +111,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # Given the infrequent updating (every 12h)
             # assume previous session has expired and re-login.
             await self.api.async_login()
-        except (InvalidAuth, MfaChallenge) as err:
+        except (InvalidCredentials, PasswordExpired, MfaChallenge) as err:
             _LOGGER.error("Error during login: %s", err)
             raise ConfigEntryAuthFailed from err
+        except (InvalidAuth, MfaCodeRejected, ProtocolError) as err:
+            _LOGGER.error("Temporary or protocol error during login: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)
             raise UpdateFailed(

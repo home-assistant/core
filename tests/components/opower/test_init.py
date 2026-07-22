@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from opower.exceptions import ApiException, CannotConnect, InvalidAuth
+from opower.exceptions import (
+    ApiException,
+    CannotConnect,
+    InvalidAuth,
+    InvalidCredentials,
+    MfaCodeRejected,
+)
 import pytest
 
 from homeassistant.components.opower.const import DOMAIN
@@ -44,7 +50,15 @@ async def test_setup_unload_entry(
         ),
         (
             InvalidAuth(),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            InvalidCredentials(),
             ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            MfaCodeRejected(),
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
 )

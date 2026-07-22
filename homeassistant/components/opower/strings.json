@@ -7,7 +7,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_mfa_code": "The security code is incorrect. Please try again."
+      "invalid_mfa_code": "The security code is incorrect. Please try again.",
+      "mfa_transaction_rejected": "The provider rejected the MFA transaction. Your saved TOTP secret has not been marked invalid; wait for a fresh code window and try again."
     },
     "step": {
       "credentials": {
