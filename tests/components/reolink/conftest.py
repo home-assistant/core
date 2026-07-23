@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from reolink_aio.api import Chime
-from reolink_aio.enums import ConnectionEnum
+from reolink_aio.enums import BatteryEnum, ConnectionEnum
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -135,8 +135,45 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.broken_cmds = ["GetManualRec"]
     host_mock.baichuan_cmds = ["GetPtzCurPos"]
     host_mock.renewtimer.return_value = 600
-    host_mock.wifi_connection.return_value = False
+    host_mock.wifi_connection.return_value = True
     host_mock.wifi_signal.return_value = -45
+    host_mock.ptz_pan_position.return_value = 1200
+    host_mock.ptz_tilt_position.return_value = 300
+    host_mock.battery_percentage.return_value = 85
+    host_mock.battery_temperature.return_value = 25
+    host_mock.battery_status.return_value = BatteryEnum.charging.value
+    host_mock.cpu_usage = 5
+    host_mock.hdd_list = [0]
+    host_mock.hdd_type.return_value = "HDD"
+    host_mock.hdd_storage.return_value = 95
+    host_mock.hdd_available.return_value = True
+    host_mock.ai_delay.return_value = 5
+    host_mock.ai_sensitivity.return_value = 50
+    host_mock.auto_track_disappear_time.return_value = 10
+    host_mock.auto_track_limit_left.return_value = -1
+    host_mock.auto_track_limit_right.return_value = -1
+    host_mock.auto_track_stop_time.return_value = 10
+    host_mock.daynight_threshold.return_value = 10
+    host_mock.get_focus.return_value = 10
+    host_mock.get_zoom.return_value = 20
+    host_mock.image_brightness.return_value = 128
+    host_mock.image_contrast.return_value = 128
+    host_mock.image_hue.return_value = 128
+    host_mock.image_saturation.return_value = 128
+    host_mock.image_sharpness.return_value = 128
+    host_mock.md_sensitivity.return_value = 30
+    host_mock.pir_interval.return_value = 5
+    host_mock.pir_sensitivity.return_value = 50
+    host_mock.ptz_guard_time.return_value = 60
+    host_mock.quick_reply_time.return_value = 10
+    host_mock.volume.return_value = 80
+    host_mock.volume_doorbell.return_value = 80
+    host_mock.volume_speak.return_value = 80
+    host_mock.alarm_volume = 90
+    host_mock.message_volume = 70
+    host_mock.whiteled_event_brightness.return_value = 100
+    host_mock.whiteled_event_flash_time.return_value = 5
+    host_mock.whiteled_event_on_time.return_value = 10
     host_mock.whiteled_mode_list.return_value = []
     host_mock.post_recording_time_list.return_value = []
     host_mock.zoom_range.return_value = {
@@ -195,6 +232,13 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.smart_ai_type_list.return_value = ["people"]
     host_mock.baichuan.smart_ai_index.return_value = 1
     host_mock.baichuan.smart_ai_name.return_value = "zone1"
+    host_mock.baichuan.smart_ai_delay.return_value = 5
+    host_mock.baichuan.smart_ai_sensitivity.return_value = 50
+    host_mock.baichuan.audio_noise_reduction.return_value = 50
+    host_mock.baichuan.cry_sensitivity.return_value = 3
+    host_mock.baichuan.ir_brightness.return_value = 100
+    host_mock.baichuan.pre_record_time.return_value = 10
+    host_mock.baichuan.pre_record_battery_stop.return_value = 10
     host_mock.whiteled_brightness.return_value = None
 
     def ai_detect_type(channel: int, object_type: str) -> str | None:

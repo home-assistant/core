@@ -21,6 +21,7 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -314,8 +315,10 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
-        if state and state.attributes.get(ATTR_TEMPERATURE):
-            self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
+        if state and state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE):
+            self._attr_target_temperature = float(
+                state.attributes[ClimateEntityStateAttribute.TEMPERATURE]
+            )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

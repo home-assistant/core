@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.block_device import COAP
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM
+from aioshelly.const import DEFAULT_HTTPS_PORT, MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_PORT,
+    CONF_VERIFY_SSL,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -524,7 +525,10 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
-            ip_address="192.168.1.37", device_mac="123456789ABC", port=80
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=80,
+            verify_ssl=False,
         )
 
 
@@ -548,7 +552,38 @@ async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
-            ip_address="192.168.1.37", device_mac="123456789ABC", port=8001
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=8001,
+            verify_ssl=False,
+        )
+
+
+async def test_rpc_entry_https_verify_ssl_disabled(hass: HomeAssistant) -> None:
+    """Test Gen2 HTTPS setup passes verify_ssl=False to ConnectionOptions."""
+    data = {
+        CONF_HOST: "192.168.1.37",
+        CONF_SLEEP_PERIOD: 0,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+        CONF_PORT: DEFAULT_HTTPS_PORT,
+        CONF_VERIFY_SSL: False,
+    }
+    entry = await init_integration(hass, 2, data=data, skip_setup=True)
+    with (
+        patch("homeassistant.components.shelly.RpcDevice.initialize"),
+        patch(
+            "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+        ) as rpc_device_mock,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=DEFAULT_HTTPS_PORT,
+            verify_ssl=False,
         )
 
 

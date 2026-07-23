@@ -98,6 +98,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 use_tls=self._use_tls,
                 timeout=60.0,
                 pool_maxsize=30,
+                redact_debug_log=True,
             )
         except FRITZ_AUTH_EXCEPTIONS:
             return ERROR_AUTH_INVALID

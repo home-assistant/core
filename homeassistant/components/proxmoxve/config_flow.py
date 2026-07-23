@@ -356,30 +356,6 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return proxmox_nodes, errors
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle a flow initiated by configuration file."""
-        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
-
-        try:
-            proxmox_nodes = await self.hass.async_add_executor_job(
-                _get_nodes_data, import_data
-            )
-        except ProxmoxConnectTimeout:
-            return self.async_abort(reason="connect_timeout")
-        except ProxmoxAuthenticationError:
-            return self.async_abort(reason="invalid_auth")
-        except ProxmoxSSLError:
-            return self.async_abort(reason="ssl_error")
-        except ProxmoxNoNodesFound:
-            return self.async_abort(reason="no_nodes_found")
-        except ProxmoxConnectionError:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(
-            title=import_data[CONF_HOST],
-            data={**import_data, CONF_NODES: proxmox_nodes},
-        )
-
     def _get_auth_schema(
         self,
         data: Mapping[str, Any],

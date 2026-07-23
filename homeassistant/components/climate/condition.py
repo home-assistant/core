@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS, UnitOfTemperature
+from homeassistant.const import CONF_OPTIONS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
@@ -19,7 +19,7 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import ATTR_HUMIDITY, ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
+from .const import DOMAIN, ClimateEntityStateAttribute, HVACAction, HVACMode
 
 CONF_HVAC_MODE = "hvac_mode"
 
@@ -57,7 +57,9 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
     """Mixin for climate target temperature conditions with unit conversion."""
 
     _base_unit = UnitOfTemperature.CELSIUS
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TEMPERATURE)
+    }
     _unit_converter = TemperatureConverter
 
     @override
@@ -65,7 +67,8 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
         """Skip climate entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_TEMPERATURE) is not None
+            and state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE)
+            is not None
         )
 
     @override
@@ -78,7 +81,9 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
 class ClimateTargetHumidityCondition(EntityNumericalConditionBase):
     """Condition for climate target humidity."""
 
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HUMIDITY)
+    }
     _valid_unit = "%"
 
     @override
@@ -86,7 +91,7 @@ class ClimateTargetHumidityCondition(EntityNumericalConditionBase):
         """Skip climate entities that do not expose a target humidity."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_HUMIDITY) is not None
+            and state.attributes.get(ClimateEntityStateAttribute.HUMIDITY) is not None
         )
 
 
@@ -105,13 +110,16 @@ CONDITIONS: dict[str, type[Condition]] = {
         },
     ),
     "is_cooling": make_entity_state_condition(
-        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.COOLING
+        {DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HVAC_ACTION)},
+        HVACAction.COOLING,
     ),
     "is_drying": make_entity_state_condition(
-        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.DRYING
+        {DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HVAC_ACTION)},
+        HVACAction.DRYING,
     ),
     "is_heating": make_entity_state_condition(
-        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
+        {DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HVAC_ACTION)},
+        HVACAction.HEATING,
     ),
     "is_target_humidity": ClimateTargetHumidityCondition,
     "is_target_temperature": ClimateTargetTemperatureCondition,

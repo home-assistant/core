@@ -51,6 +51,7 @@ __all__ = [
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
     "SelectEntity",
+    "SelectEntityCapabilityAttribute",
     "SelectEntityDescription",
 ]
 

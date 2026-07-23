@@ -35,11 +35,11 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
@@ -352,7 +352,10 @@ async def webhook_stream_camera(
         "mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"
     }
 
-    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CameraEntityFeature.STREAM:
+    if (
+        camera_state.attributes[EntityStateAttribute.SUPPORTED_FEATURES]
+        & CameraEntityFeature.STREAM
+    ):
         try:
             resp["hls_path"] = await camera.async_request_stream(
                 hass, camera_state.entity_id, "hls"

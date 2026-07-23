@@ -76,7 +76,7 @@ def disable_block_async_io(disable_block_async_io):
 def mock_http_start_stop() -> Generator[None]:
     """Mock HTTP start and stop."""
     with (
-        patch("homeassistant.components.http.start_http_server_and_save_config"),
+        patch("homeassistant.components.http.HomeAssistantHTTP.start"),
         patch("homeassistant.components.http.HomeAssistantHTTP.stop"),
     ):
         yield
@@ -619,9 +619,11 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     assert "recorder" in hass.config.components
     assert "http" in hass.config.components
 
-    assert order == [
-        "http",
-        "an_after_dep",
+    # http (a dependency) and an_after_dep (an after_dependency) are both set
+    # up in the frontend substage of stage 0; their relative order depends on
+    # set iteration order and is not guaranteed.
+    assert set(order[:2]) == {"http", "an_after_dep"}
+    assert order[2:] == [
         "frontend",
         "recorder",
         "normal_integration",

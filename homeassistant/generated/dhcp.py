@@ -911,6 +911,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "204EF6*",
     },
     {
+        "domain": "roomba",
+        "registered_devices": True,
+    },
+    {
         "domain": "ruuvi_gateway",
         "hostname": "ruuvigateway*",
     },
@@ -1053,6 +1057,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "steamist",
         "hostname": "my[45]50*",
         "macaddress": "001E0C*",
+    },
+    {
+        "domain": "stiebel_eltron",
+        "hostname": "servicewelt*",
     },
     {
         "domain": "sunricher_dali",

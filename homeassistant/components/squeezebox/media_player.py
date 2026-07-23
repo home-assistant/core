@@ -125,8 +125,8 @@ async def async_setup_entry(
         player = coordinator.player
         _LOGGER.debug("Setting up media_player device and entity for player %s", player)
         device_registry = dr.async_get(hass)
-        server_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, coordinator.server_uuid)},
+        server_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, coordinator.server_uuid), entry.entry_id
         )
 
         name = player.name

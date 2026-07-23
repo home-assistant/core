@@ -16,12 +16,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -298,7 +298,9 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        return validator(value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        return validator(
+            value, state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        )
 
     def _get_temperature_from_state(self, state: State | None) -> float | None:
         """Get temperature value in Celsius from state."""
