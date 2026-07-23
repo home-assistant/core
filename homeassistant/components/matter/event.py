@@ -110,10 +110,12 @@ class MatterEventEntityBase(MatterEntity, EventEntity):
 class MatterButtonEventEntity(MatterEventEntityBase):
     """Matter Event entity using the standard button event types."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the entity."""
-        super().__init__(*args, **kwargs)
-        # fill the event types based on the features the switch supports
+    @override
+    @callback
+    def _update_from_device(self) -> None:
+        """Call when Node attribute(s) changed."""
+        # (re)fill the event types based on the features the switch supports,
+        # as the feature map can change during the lifetime of the entity
         event_types: list[str] = []
         feature_map = int(
             self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)

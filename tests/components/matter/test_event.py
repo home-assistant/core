@@ -17,7 +17,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import snapshot_matter_entities, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
 async def trigger_switch_event(
@@ -84,6 +88,21 @@ async def test_generic_switch_node(
     await trigger_switch_event(hass, matter_client, matter_node, 3)
     state = hass.states.get("event.mock_generic_switch_button")
     assert state.attributes[ATTR_EVENT_TYPE] == "press_end"
+    # event types are recomputed when the feature map changes,
+    # here multi press support is added (featuremap 30)
+    set_node_attribute(matter_node, 1, 59, 65532, 30)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/59/65532", 30)
+    )
+    state = hass.states.get("event.mock_generic_switch_button")
+    assert state.attributes[ATTR_EVENT_TYPES] == [
+        "press_start",
+        "press_end",
+        "long_press_start",
+        "long_press_end",
+        "multi_press_ongoing",
+        "multi_press_end",
+    ]
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_generic_switch"])
