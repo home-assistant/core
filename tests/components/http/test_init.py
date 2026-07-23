@@ -990,14 +990,14 @@ async def test_supervisor_http_config_view(
             "port": 8123,
             "ssl": False,
             "ssl_peer_certificate": False,
-            "custom_server_host": False,
+            "server_host": ["0.0.0.0", "::"],
         }
 
-        # A specific bind is opaque to Supervisor, so it is flagged.
+        # A specific bind is reported verbatim so Supervisor can decide.
         hass.http.server_host = ["1.2.3.4"]
         resp = await client.get("/api/core/http_config")
         assert resp.status == HTTPStatus.OK
-        assert (await resp.json())["custom_server_host"] is True
+        assert (await resp.json())["server_host"] == ["1.2.3.4"]
 
 
 async def test_yaml_migration_to_storage(

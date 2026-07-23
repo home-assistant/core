@@ -421,18 +421,14 @@ class HassioHTTPConfigView(HomeAssistantView):
         if not is_supervisor_unix_socket_request(request):
             raise web.HTTPNotFound
         server: HomeAssistantHTTP = request.app[KEY_HASS].http
-        # server_host unset or the all-interfaces default means Supervisor can
-        # reach Core on the container IP; a specific bind is opaque to it, so it
-        # must skip probes that assume that address.
-        default_bind = server.server_host is None or set(server.server_host) == set(
-            _DEFAULT_BIND
-        )
         return self.json(
             {
                 "port": server.server_port,
                 "ssl": server.ssl_certificate is not None,
                 "ssl_peer_certificate": server.ssl_peer_certificate is not None,
-                "custom_server_host": not default_bind,
+                # The bind address(es). Supervisor decides whether it can reach
+                # Core there or must skip probes that assume the container IP.
+                "server_host": server.server_host or _DEFAULT_BIND,
             }
         )
 
