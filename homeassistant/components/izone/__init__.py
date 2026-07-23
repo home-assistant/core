@@ -55,7 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     try:
         discovery = await async_ensure_discovery(hass)
     except (OSError, RuntimeError) as err:
-        raise ConfigEntryNotReady("iZone discovery service failed to start") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="discovery_start_failed",
+        ) from err
 
     # Heal legacy / host-less entries here (not in migrate) so ConfigEntryNotReady
     # can retry. Upstream pairs migrate→data={} with this setup-time rebind.
@@ -64,7 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
             endpoints = await async_discover_all_endpoints(hass)
         except OSError as err:
             raise ConfigEntryNotReady(
-                "iZone discovery failed while resolving legacy config entry"
+                translation_domain=DOMAIN,
+                translation_key="discovery_failed_legacy",
             ) from err
 
         excluded_uids = yaml_excluded_uids(hass)
@@ -82,13 +86,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
 
         if not eligible:
             raise ConfigEntryNotReady(
-                "No eligible iZone controller found to bind to legacy config entry"
+                translation_domain=DOMAIN,
+                translation_key="no_eligible_controller",
             )
 
         if len(eligible) > 1:
             raise ConfigEntryError(
-                "Multiple eligible iZone controllers found for a legacy config entry; "
-                "delete this entry and re-add each controller individually"
+                translation_domain=DOMAIN,
+                translation_key="multiple_eligible_controllers",
             )
 
         endpoint = eligible[0]
@@ -104,15 +109,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     elif CONF_HOST not in entry.data:
         uid = entry.unique_id
         if not isinstance(uid, str):
-            raise ConfigEntryError("iZone config entry is missing unique_id")
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="missing_unique_id",
+            )
         try:
             resolved = await async_discover_endpoint(hass, uid)
         except OSError as err:
             raise ConfigEntryNotReady(
-                "iZone discovery failed while resolving config entry host"
+                translation_domain=DOMAIN,
+                translation_key="discovery_failed_host",
             ) from err
         if resolved is None:
-            raise ConfigEntryNotReady(f"No iZone controller found for unique_id {uid}")
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="controller_not_found",
+                translation_placeholders={"uid": uid},
+            )
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_HOST: resolved.host},
@@ -120,9 +133,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
 
     uid = entry.unique_id
     if not isinstance(uid, str):
-        raise ConfigEntryError("iZone config entry is missing unique_id")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="missing_unique_id",
+        )
     if CONF_HOST not in entry.data:
-        raise ConfigEntryError("iZone config entry is missing host")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="missing_host",
+        )
 
     host: str = entry.data[CONF_HOST]
 
@@ -143,14 +162,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
         )
     except pizone.UnpairedBridgeError as err:
         raise ConfigEntryError(
-            "iZone bridge is not paired with an air conditioner"
+            translation_domain=DOMAIN,
+            translation_key="bridge_unpaired",
         ) from err
     except ConnectionError as err:
         raise ConfigEntryNotReady(
-            f"Unable to connect to iZone controller at {host}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
         ) from err
     except pizone.ControllerCommandError as err:
-        raise ConfigEntryError(f"iZone controller at {host} rejected setup") from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_rejected",
+            translation_placeholders={"host": host},
+        ) from err
 
     entry.async_on_unload(controller.close)
 
