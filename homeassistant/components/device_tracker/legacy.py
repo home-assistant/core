@@ -855,6 +855,15 @@ class Device(RestoreEntity):
 
         if self._state == STATE_HOME:
             attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = [ENTITY_ID_HOME]
+            if self.gps is None and (
+                home_zone := self.hass.states.get(ENTITY_ID_HOME)
+            ) is not None:
+                attributes[EntityStateAttribute.LATITUDE] = home_zone.attributes.get(
+                    EntityStateAttribute.LATITUDE
+                )
+                attributes[EntityStateAttribute.LONGITUDE] = home_zone.attributes.get(
+                    EntityStateAttribute.LONGITUDE
+                )
 
         return attributes
 
