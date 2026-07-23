@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_basic_controller_properties[climate.izone_controller_000000001-entry]
+# name: test_climate_entities[climate.izone_controller_000000001-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -54,7 +54,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_basic_controller_properties[climate.izone_controller_000000001-state]
+# name: test_climate_entities[climate.izone_controller_000000001-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'control_zone': 1,
@@ -92,7 +92,7 @@
     'state': 'cool',
   })
 # ---
-# name: test_basic_controller_properties[climate.living_room-entry]
+# name: test_climate_entities[climate.living_room-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -138,7 +138,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_basic_controller_properties[climate.living_room-state]
+# name: test_climate_entities[climate.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'airflow_max': 100,
