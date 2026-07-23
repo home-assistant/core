@@ -90,6 +90,7 @@ async def test_dual_lens_sub_devices(
     """Test dual lens camera with separate sensors per lens uses lens sub-devices."""
     reolink_host.model = TEST_DUO_MODEL
     reolink_host.is_nvr = False
+    reolink_host.is_dual_lens = True
     reolink_host.channels = [0, 1]
     reolink_host.stream_channels = [0, 1]
     # a Reolink Duo reports a junk name like "2" for the second channel,
