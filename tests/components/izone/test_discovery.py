@@ -97,8 +97,10 @@ async def test_ensure_discovery_recreates_after_stop(
 
     assert mock_create.await_count == 2
     assert isinstance(
-        hass.data[DATA_DISCOVERY_SERVICE], izone_discovery.DiscoveryRuntime
+        hass.data[DATA_DISCOVERY_SERVICE], izone_discovery.DiscoveryServiceState
     )
+    assert hass.data[DATA_DISCOVERY_SERVICE].runtime is not None
+    assert hass.data[DATA_DISCOVERY_SERVICE].runtime.service is second_service
 
 
 async def test_ensure_discovery_serializes_concurrent_reopen(
@@ -142,7 +144,10 @@ async def test_ensure_discovery_serializes_concurrent_reopen(
         )
         await asyncio.sleep(0)
         assert create_calls == 2
-        assert isinstance(hass.data[DATA_DISCOVERY_SERVICE], asyncio.Future)
+        state = hass.data[DATA_DISCOVERY_SERVICE]
+        assert isinstance(state, izone_discovery.DiscoveryServiceState)
+        assert state.starting is not None
+        assert not state.starting.done()
 
         release.set()
         service_one, service_two = await asyncio.gather(task_one, task_two)
@@ -187,7 +192,10 @@ async def test_ensure_discovery_serializes_concurrent_create(
         )
         await asyncio.sleep(0)
         assert create_calls == 1
-        assert isinstance(hass.data[DATA_DISCOVERY_SERVICE], asyncio.Future)
+        state = hass.data[DATA_DISCOVERY_SERVICE]
+        assert isinstance(state, izone_discovery.DiscoveryServiceState)
+        assert state.starting is not None
+        assert not state.starting.done()
 
         release.set()
         service_one, service_two = await asyncio.gather(task_one, task_two)
@@ -196,8 +204,9 @@ async def test_ensure_discovery_serializes_concurrent_create(
     assert service_two is mock_service
     mock_create.assert_awaited_once()
     assert isinstance(
-        hass.data[DATA_DISCOVERY_SERVICE], izone_discovery.DiscoveryRuntime
+        hass.data[DATA_DISCOVERY_SERVICE], izone_discovery.DiscoveryServiceState
     )
+    assert hass.data[DATA_DISCOVERY_SERVICE].runtime is not None
 
 
 async def test_ensure_discovery_failure_fails_concurrent_waiters(
