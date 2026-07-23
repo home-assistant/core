@@ -21,7 +21,7 @@ class GeoSphereEntity(CoordinatorEntity[GeoSphereUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        municipality = coordinator.data.municipality
+        municipality = coordinator.data.location_warnings.municipality
         self._attr_unique_id = f"{municipality.municipality_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, municipality.municipality_id)},

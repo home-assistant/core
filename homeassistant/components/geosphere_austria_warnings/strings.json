@@ -23,7 +23,8 @@
   "entity": {
     "sensor": {
       "active_warnings": {
-        "name": "Active warnings"
+        "name": "Active warnings",
+        "unit_of_measurement": "warnings"
       },
       "warning_level": {
         "name": "Warning level",

@@ -35,7 +35,7 @@
     'supported_features': 0,
     'translation_key': 'active_warnings',
     'unique_id': '30740-active_warnings',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'warnings',
   })
 # ---
 # name: test_sensors[sensor.schwechat_active_warnings-state]
@@ -43,6 +43,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Schwechat Active warnings',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'warnings',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.schwechat_active_warnings',

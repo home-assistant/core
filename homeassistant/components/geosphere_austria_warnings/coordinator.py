@@ -1,5 +1,6 @@
 """Data update coordinator for the GeoSphere Austria Warnings integration."""
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from pygeosphere_warnings import (
@@ -14,6 +15,7 @@ from pygeosphere_warnings import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -28,7 +30,15 @@ UPDATE_INTERVAL = timedelta(minutes=5)
 type GeoSphereConfigEntry = ConfigEntry[GeoSphereUpdateCoordinator]
 
 
-class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
+@dataclass
+class GeoSphereData:
+    """Warnings for the configured municipality."""
+
+    location_warnings: LocationWarnings
+    active_warnings: list[WeatherWarning]
+
+
+class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
     """Coordinator fetching warnings for a single municipality."""
 
     config_entry: GeoSphereConfigEntry
@@ -44,9 +54,8 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
         )
         self.client = GeoSphereWarningsClient(async_get_clientsession(hass))
         self._last_modified: datetime | None = None
-        self.active_warnings: list[WeatherWarning] = []
 
-    async def _async_update_data(self) -> LocationWarnings:
+    async def _async_update_data(self) -> GeoSphereData:
         """Fetch warnings, skipping the full fetch when nothing changed."""
         try:
             last_modified = await self.client.get_last_modified()
@@ -61,9 +70,9 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
                     self.config_entry.data[CONF_LONGITUDE],
                 )
             else:
-                location_warnings = self.data
+                location_warnings = self.data.location_warnings
         except GeoSphereMunicipalityNotFoundError as err:
-            raise UpdateFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="municipality_not_found",
             ) from err
@@ -81,7 +90,11 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
             ) from err
         self._last_modified = last_modified
         now = dt_util.utcnow()
-        self.active_warnings = [
-            warning for warning in location_warnings.warnings if warning.is_active(now)
-        ]
-        return location_warnings
+        return GeoSphereData(
+            location_warnings=location_warnings,
+            active_warnings=[
+                warning
+                for warning in location_warnings.warnings
+                if warning.is_active(now)
+            ],
+        )
