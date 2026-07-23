@@ -7,7 +7,7 @@ from pytewke.error import PyTewkeObserveError
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
-from .const import CONF_DEFAULT_SCENE_FAN_DIMMING, CONF_DISABLED_SCENES, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from pytewke.data import (
@@ -23,13 +23,6 @@ if TYPE_CHECKING:
 
     from .coordinator import TewkeCoordinator
     from .data import TewkeConfigEntry
-
-
-def _get_default_scene_fan_dimming(entry: TewkeConfigEntry) -> dict[str, int]:
-    """Return per-scene fan dimming defaults, preferring options over initial data."""
-    return entry.options.get(CONF_DEFAULT_SCENE_FAN_DIMMING) or entry.data.get(
-        CONF_DEFAULT_SCENE_FAN_DIMMING, {}
-    )
 
 
 def _tewke_to_ha_brightness(value: int) -> int:
@@ -92,18 +85,6 @@ async def async_setup_observe(
 
             new_data = dict(entry.data)
             new_data["scene_control_types"] = new_scene_control_types
-
-            if CONF_DISABLED_SCENES in new_data:
-                new_data[CONF_DISABLED_SCENES] = [
-                    sid
-                    for sid in new_data[CONF_DISABLED_SCENES]
-                    if sid not in removed_configured_ids
-                ]
-            if CONF_DEFAULT_SCENE_FAN_DIMMING in new_data:
-                new_fan_dimming = dict(new_data[CONF_DEFAULT_SCENE_FAN_DIMMING])
-                for sid in removed_configured_ids:
-                    new_fan_dimming.pop(sid, None)
-                new_data[CONF_DEFAULT_SCENE_FAN_DIMMING] = new_fan_dimming
 
             entry.runtime_data.scene_control_types = new_scene_control_types
             hass.config_entries.async_update_entry(entry, data=new_data)
