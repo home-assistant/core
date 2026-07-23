@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from eq3btsmart.models import Status
 
@@ -76,6 +77,7 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
 

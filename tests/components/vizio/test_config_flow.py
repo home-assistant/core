@@ -445,6 +445,36 @@ async def test_zeroconf_flow_already_configured(hass: HomeAssistant) -> None:
     # Flow should abort because device is already setup
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures(
+    "vizio_connect", "vizio_bypass_setup", "vizio_guess_device_type"
+)
+async def test_zeroconf_flow_already_configured_updates_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery updates the stored host when the IP has changed."""
+    config = MOCK_SPEAKER_CONFIG.copy()
+    config[CONF_HOST] = HOST2
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        unique_id=UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    # Rediscover the same device on a new IP address
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Flow should abort and the entry host should be updated to the new IP
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST
 
 
 @pytest.mark.usefixtures(
@@ -555,10 +585,7 @@ async def test_zeroconf_abort_when_ignored(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures(
-    "vizio_connect",
-    "vizio_bypass_setup",
-    "vizio_hostname_check",
-    "vizio_guess_device_type",
+    "vizio_connect", "vizio_bypass_setup", "vizio_guess_device_type"
 )
 async def test_zeroconf_flow_already_configured_hostname(hass: HomeAssistant) -> None:
     """Test already configured during zeroconf when entry uses hostname."""
@@ -578,6 +605,8 @@ async def test_zeroconf_flow_already_configured_hostname(hass: HomeAssistant) ->
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
-    # Flow should abort because device is already setup
+    # Flow should abort because device is already setup and the hostname should
+    # be replaced with the discovered IP
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST

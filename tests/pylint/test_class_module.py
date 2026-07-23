@@ -5,10 +5,9 @@ from pylint.checkers import BaseChecker
 from pylint.interfaces import UNDEFINED
 from pylint.testutils import MessageTest
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from . import assert_adds_messages, assert_no_messages
+from . import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -54,11 +53,9 @@ def test_enforce_class_module_good(
 ) -> None:
     """Good test cases."""
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_class_module_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_class_module_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -90,11 +87,9 @@ def test_enforce_class_platform_good(
         pass
     """
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_class_module_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_class_module_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -128,8 +123,6 @@ def test_enforce_class_module_bad_simple(
     """,
         path,
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_class_module_checker)
 
     with assert_adds_messages(
         linter,
@@ -154,7 +147,7 @@ def test_enforce_class_module_bad_simple(
             end_col_offset=35,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_class_module_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -185,8 +178,6 @@ def test_enforce_class_module_bad_nested(
     """,
         path,
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_class_module_checker)
 
     with assert_adds_messages(
         linter,
@@ -211,7 +202,7 @@ def test_enforce_class_module_bad_nested(
             end_col_offset=21,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_class_module_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -236,11 +227,9 @@ def test_enforce_entity_good(
         pass
     """
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_class_module_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_class_module_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -265,8 +254,6 @@ def test_enforce_entity_bad(
         pass
     """
     root_node = astroid.parse(code, path)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_class_module_checker)
 
     with assert_adds_messages(
         linter,
@@ -281,4 +268,4 @@ def test_enforce_entity_bad(
             end_col_offset=18,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_class_module_checker, root_node)

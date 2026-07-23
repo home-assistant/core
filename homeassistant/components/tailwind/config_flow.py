@@ -1,7 +1,7 @@
 """Config flow to configure the Tailwind integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from gotailwind import (
     MIN_REQUIRED_FIRMWARE_VERSION,
@@ -45,6 +45,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
     host: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -85,6 +86,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -225,6 +227,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
