@@ -322,13 +322,14 @@ def _finalize_output(value: Any, _nested: bool = False) -> Any:
     """
     if _nested and isinstance(value, ReprEnum):
         return value.value
-    if type(value) in _FINALIZE_DICT_TYPES:
+    value_type = type(value)
+    if value_type in _FINALIZE_DICT_TYPES:
         return {
             _finalize_output(key, True): _finalize_output(item, True)
             for key, item in value.items()
         }
-    if type(value) in _FINALIZE_CONTAINER_TYPES:
-        return type(value)(_finalize_output(item, True) for item in value)
+    if value_type in _FINALIZE_CONTAINER_TYPES:
+        return value_type(_finalize_output(item, True) for item in value)
     return value
 
 
