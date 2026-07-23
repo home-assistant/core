@@ -421,8 +421,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         await self._zone.set_operation_mode(self._target_operation_mode(hvac_mode))
         if not self._device.power:
             await self.coordinator.async_set({PROPERTY_POWER: True})
-        else:
-            await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     def _target_operation_mode(self, hvac_mode: HVACMode) -> str:
         """Return the zone operation mode for a direction, preserving the method."""
