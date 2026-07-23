@@ -2,18 +2,20 @@
 
 from unittest.mock import MagicMock
 
-from aiolyric.objects.device import LyricDevice
-from aiolyric.objects.priority import LyricRoom
 import pytest
 
 from homeassistant.components.lyric.binary_sensor import (
     ACCESSORY_BINARY_SENSORS,
     DEVICE_BINARY_SENSORS,
-    async_setup_entry,
 )
 from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-MAC_ID = "5CFCE1B67035"
+from .conftest import MAC_ID, async_setup_lyric_entry
+
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def _mock_accessory(
@@ -38,119 +40,30 @@ def _mock_device(
     return device
 
 
-def _coordinator_for(
-    device: LyricDevice, rooms: list[LyricRoom] | None = None
-) -> MagicMock:
-    """Build a coordinator mock that supports full entity property resolution.
+async def test_device_pairing_enabled_created(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_credentials: None,
+    mock_lyric_api: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Device Pairing Enabled is created via a real config entry setup.
 
-    Wires up locations_dict/rooms_dict so LyricDeviceEntity.device and
-    LyricAccessoryEntity.room/.accessory resolve through the same lookups
-    the real entities use, not just a flat pre-set attribute.
+    Exercises the full boundary: real HTTP responses (mocked at the aiohttp
+    transport level with the actual live payload shape) -> real aiolyric
+    parsing -> real coordinator -> real entity setup -> registered state.
+    devicePairingEnabled has no known aiolyric field-name mismatch, so this
+    passes against the currently-pinned release.
     """
-    location = MagicMock()
-    location.location_id = "location1"
-    location.devices = [device]
-    location.devices_dict = {device.mac_id: device}
+    await async_setup_lyric_entry(hass, mock_config_entry)
 
-    coordinator = MagicMock()
-    coordinator.data.locations = [location]
-    coordinator.data.locations_dict = {"location1": location}
-    coordinator.data.rooms_dict = {
-        device.mac_id: {room.id: room for room in rooms or []}
-    }
-    return coordinator
-
-
-async def _setup_and_collect(coordinator: MagicMock) -> tuple[list, list]:
-    """Run async_setup_entry and return (device_entities, accessory_entities)."""
-    entry = MagicMock()
-    entry.runtime_data = coordinator
-
-    added: list[list] = []
-    async_add_entities = MagicMock(
-        side_effect=lambda entities: added.append(list(entities))
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", "lyric", f"{MAC_ID}_device_pairing_enabled"
     )
-
-    await async_setup_entry(MagicMock(), entry, async_add_entities)
-    return added[0], added[1]
-
-
-async def test_async_setup_entry_generates_correct_unique_ids() -> None:
-    """Entity unique_ids are correctly formed and don't collide across rooms.
-
-    Uses real LyricDevice/LyricRoom/LyricAccessory objects (constructed with
-    field names aiolyric 2.1.1 already parses correctly) to verify the ID
-    formula itself: device-level IDs key off the device MAC, accessory-level
-    IDs additionally key off room id and accessory id - the parts most
-    likely to collide when more room/accessory sensors are added later.
-    """
-    device = LyricDevice(
-        MagicMock(),
-        {
-            "macID": MAC_ID,
-            "vacationHold": {"enabled": False},
-            "settings": {"devicePairingEnabled": True},
-        },
-    )
-    room1 = LyricRoom(
-        {
-            "id": 1,
-            "accessories": [
-                {"id": 1, "type": "IndoorAirSensor", "detectMotion": False},
-                {"id": 0, "type": "Thermostat", "detectMotion": False},
-            ],
-        }
-    )
-    room2 = LyricRoom(
-        {
-            "id": 2,
-            "accessories": [
-                {"id": 2, "type": "IndoorAirSensor", "detectMotion": True},
-            ],
-        }
-    )
-
-    coordinator = _coordinator_for(device, [room1, room2])
-    device_entities, accessory_entities = await _setup_and_collect(coordinator)
-
-    assert {e.unique_id for e in device_entities} == {
-        f"{MAC_ID}_vacation_hold",
-        f"{MAC_ID}_device_pairing_enabled",
-    }
-
-    # Only the IndoorAirSensor accessories produce Room Motion entities, one
-    # per room, and each unique_id is distinct despite sharing a device MAC.
-    assert {e.unique_id for e in accessory_entities} == {
-        f"{MAC_ID}_room1_acc1_room_motion",
-        f"{MAC_ID}_room2_acc2_room_motion",
-    }
-
-
-async def test_device_pairing_enabled_end_to_end_with_real_payload() -> None:
-    """Device Pairing Enabled resolves correctly through real object parsing.
-
-    Unlike vacation_hold and room_motion, this field isn't affected by any
-    known aiolyric field-name mismatch, so this exercises the full
-    integration boundary (real LyricDevice -> entity.is_on) end-to-end.
-    """
-    device = LyricDevice(
-        MagicMock(),
-        {
-            "macID": MAC_ID,
-            "vacationHold": {"Enabled": False},
-            "settings": {"devicePairingEnabled": True},
-        },
-    )
-    coordinator = _coordinator_for(device)
-    device_entities, _ = await _setup_and_collect(coordinator)
-
-    pairing_entity = next(
-        e
-        for e in device_entities
-        if e.entity_description.key == "device_pairing_enabled"
-    )
-    assert pairing_entity.unique_id == f"{MAC_ID}_device_pairing_enabled"
-    assert pairing_entity.is_on is True
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
 
 
 @pytest.mark.xfail(
@@ -163,65 +76,64 @@ async def test_device_pairing_enabled_end_to_end_with_real_payload() -> None:
         "this marker must be removed."
     ),
 )
-async def test_vacation_hold_end_to_end_with_live_payload() -> None:
-    """Vacation Hold should resolve True given a live-shaped payload.
+async def test_vacation_hold_created(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_credentials: None,
+    mock_lyric_api: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Vacation Hold should read "on" via a real config entry setup.
 
-    Built from the actual API response shape captured from a live account,
-    not a synthetic/pre-parsed mock - currently fails because of the
-    pending key-name fix, by design.
+    The mocked /locations response has vacationHold.Enabled = True (the
+    real live shape), so this documents the currently-pinned aiolyric bug
+    rather than hiding it - it fails today for the same reason the real
+    entity does, and will start passing once the dependency is fixed.
     """
-    device = LyricDevice(
-        MagicMock(),
-        {
-            "macID": MAC_ID,
-            "vacationHold": {"Enabled": True},
-            "settings": {"devicePairingEnabled": True},
-        },
-    )
-    coordinator = _coordinator_for(device)
-    device_entities, _ = await _setup_and_collect(coordinator)
+    await async_setup_lyric_entry(hass, mock_config_entry)
 
-    vacation_entity = next(
-        e for e in device_entities if e.entity_description.key == "vacation_hold"
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", "lyric", f"{MAC_ID}_vacation_hold"
     )
-    assert vacation_entity.is_on is True
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
 
 
 @pytest.mark.xfail(
     strict=True,
     reason=(
-        "aiolyric 2.1.1's LyricAccessory.type reads JSON key 'type', but "
-        "Resideo's live API returns 'sensorType'. Fixed upstream in "
-        "timmo001/aiolyric#165; once that's released and the manifest pin is "
-        "bumped, this will start passing for real and this marker must be "
-        "removed."
+        "aiolyric 2.1.1's LyricPriority.current_priority reads JSON key "
+        "'currentPriority' and LyricAccessory.type reads 'type', but "
+        "Resideo's live API returns 'priority' and 'sensorType'. Fixed "
+        "upstream in timmo001/aiolyric#165; once that's released and the "
+        "manifest pin is bumped, this will start passing for real and this "
+        "marker must be removed."
     ),
 )
-async def test_room_motion_end_to_end_with_live_payload() -> None:
-    """Room Motion should be created and reflect real data from a live payload.
+async def test_room_motion_created(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_credentials: None,
+    mock_lyric_api: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Room Motion should be created via a real config entry setup.
 
-    Built from the actual /priority response shape captured from a live
-    T9-T10 account - currently fails because accessory.type never matches
-    "IndoorAirSensor" under the pending key-name fix, so no entity is
-    created at all.
+    The mocked /priority response uses the real live shape ("priority",
+    "sensorType"), so under the currently-pinned aiolyric this entity
+    doesn't get created at all - documents the gap instead of hiding it.
     """
-    device = LyricDevice(MagicMock(), {"macID": MAC_ID})
-    room = LyricRoom(
-        {
-            "id": 1,
-            "accessories": [
-                {"id": 1, "sensorType": "IndoorAirSensor", "detectMotion": True},
-            ],
-        }
-    )
-    coordinator = _coordinator_for(device, [room])
-    _, accessory_entities = await _setup_and_collect(coordinator)
+    await async_setup_lyric_entry(hass, mock_config_entry)
 
-    motion_entity = next(
-        e for e in accessory_entities if e.entity_description.key == "room_motion"
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", "lyric", f"{MAC_ID}_room1_acc1_room_motion"
     )
-    assert motion_entity.unique_id == f"{MAC_ID}_room1_acc1_room_motion"
-    assert motion_entity.is_on is True
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
 
 
 def test_vacation_hold_value_fn() -> None:
