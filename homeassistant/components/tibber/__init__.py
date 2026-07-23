@@ -56,11 +56,6 @@ class TibberRuntimeData:
     price_coordinator: TibberPriceCoordinator | None = field(default=None)
     _client: tibber.Tibber | None = None
 
-    @property
-    def client(self) -> tibber.Tibber | None:
-        """Return the cached Tibber client, if any."""
-        return self._client
-
     async def _async_get_access_token(self) -> str:
         """Return a valid Tibber access token."""
         await self.session.async_ensure_token_valid()
@@ -85,18 +80,17 @@ class TibberRuntimeData:
             await self._client.set_access_token(access_token)
         return self._client
 
-
-async def _async_disconnect_client(client: tibber.Tibber | None) -> None:
-    """Disconnect the realtime connection without raising."""
-    if client is None:
-        return
-    try:
-        async with asyncio.timeout(DISCONNECT_TIMEOUT):
-            await client.rt_disconnect()
-    except Exception:  # noqa: BLE001
-        _LOGGER.warning(
-            "Error disconnecting the Tibber realtime connection", exc_info=True
-        )
+    async def async_disconnect(self) -> None:
+        """Disconnect the cached realtime connection without raising."""
+        if self._client is None:
+            return
+        try:
+            async with asyncio.timeout(DISCONNECT_TIMEOUT):
+                await self._client.rt_disconnect()
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning(
+                "Error disconnecting the Tibber realtime connection", exc_info=True
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -145,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     async def _close(event: Event) -> None:
-        await _async_disconnect_client(tibber_connection)
+        await entry.runtime_data.async_disconnect()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
@@ -190,5 +184,5 @@ async def async_unload_entry(
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        await _async_disconnect_client(config_entry.runtime_data.client)
+        await config_entry.runtime_data.async_disconnect()
     return unload_ok

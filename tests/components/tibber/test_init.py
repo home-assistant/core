@@ -106,6 +106,38 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("recorder_mock")
+async def test_async_get_client_propagates_rotated_token(hass: HomeAssistant) -> None:
+    """Ensure a rotated OAuth token is pushed to the cached client on next fetch."""
+    session = MagicMock()
+    session.async_ensure_token_valid = AsyncMock()
+    session.token = {CONF_ACCESS_TOKEN: "token-1"}
+
+    runtime = TibberRuntimeData(
+        session=session,
+    )
+
+    with patch("homeassistant.components.tibber.tibber.Tibber") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.set_access_token = AsyncMock()
+        mock_client_cls.return_value = mock_client
+
+        await runtime.async_get_client(hass)
+        mock_client_cls.assert_called_once_with(
+            access_token="token-1",
+            websession=ANY,
+            time_zone=ANY,
+            ssl=ANY,
+            refresh_access_token=ANY,
+        )
+
+        session.token = {CONF_ACCESS_TOKEN: "token-2"}
+        await runtime.async_get_client(hass)
+
+        mock_client_cls.assert_called_once()
+        mock_client.set_access_token.assert_awaited_once_with("token-2")
+
+
+@pytest.mark.usefixtures("recorder_mock")
 async def test_data_api_runtime_missing_token_raises(hass: HomeAssistant) -> None:
     """Ensure missing tokens trigger reauthentication."""
     session = MagicMock()
