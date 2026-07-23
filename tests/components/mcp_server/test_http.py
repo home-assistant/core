@@ -397,6 +397,7 @@ async def test_mcp_tools_list(
     assert "required" not in tool.inputSchema
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     ("llm_hass_api", "tool_name"),
     [
@@ -414,7 +415,6 @@ async def test_mcp_tools_list(
 )
 async def test_mcp_tool_call_preserves_non_intent_tool_arguments(
     hass: HomeAssistant,
-    setup_integration: None,
     mcp_url: str,
     mcp_client: Any,
     hass_supervisor_access_token: str,
@@ -537,9 +537,9 @@ async def test_mcp_tool_call(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_mcp_tool_call_rejects_all_empty_targets(
     hass: HomeAssistant,
-    setup_integration: None,
     mcp_url: str,
     mcp_client: Any,
     hass_supervisor_access_token: str,
