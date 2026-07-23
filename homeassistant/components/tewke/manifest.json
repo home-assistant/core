@@ -1,7 +1,7 @@
 {
   "domain": "tewke",
   "name": "Tewke",
-  "codeowners": ["@1NFR4R3D"],
+  "codeowners": ["@1NFR4R3D", "@SirenGlitch", "@oskarwilliams"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tewke",
   "integration_type": "device",
