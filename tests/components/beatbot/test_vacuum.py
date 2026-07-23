@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import Protocol
 from unittest.mock import AsyncMock, MagicMock
 
+from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
 import pytest
 
 from homeassistant.components.beatbot.iot.category import VACUUM_FEATURES_BY_CATEGORY
@@ -22,6 +23,8 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
 DEVICE_ID = "test-device-1"
 
@@ -276,3 +279,60 @@ async def test_vacuum_action_triggers_single_device_refresh(
 
     coordinator.api.send_action.assert_awaited_once_with(DEVICE_ID, INTERFACE_START)
     coordinator.async_schedule_device_state_refresh.assert_called_once_with(DEVICE_ID)
+
+
+async def test_vacuum_action_rejects_offline_device(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
+    """Raise a translated error without sending a command while offline."""
+    coordinator = coordinator_factory("pool_clean_bot")
+    coordinator.data[DEVICE_ID].is_online = False
+    coordinator.api = SimpleNamespace(send_action=AsyncMock())
+    coordinator.async_schedule_device_state_refresh = MagicMock()
+    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await vacuum.async_start()
+
+    assert exc_info.value.translation_key == "device_offline"
+    coordinator.api.send_action.assert_not_awaited()
+    coordinator.async_schedule_device_state_refresh.assert_not_called()
+
+
+async def test_vacuum_action_triggers_reauth(
+    hass: HomeAssistant,
+    coordinator_factory: CoordinatorFactory,
+) -> None:
+    """Start reauthentication when a control command rejects the token."""
+    coordinator = coordinator_factory("pool_clean_bot")
+    coordinator.api = SimpleNamespace(
+        send_action=AsyncMock(side_effect=BeatbotAuthenticationError),
+    )
+    coordinator.config_entry = SimpleNamespace(async_start_reauth=MagicMock())
+    coordinator.async_schedule_device_state_refresh = MagicMock()
+    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
+    vacuum.hass = hass
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await vacuum.async_start()
+
+    coordinator.config_entry.async_start_reauth.assert_called_once_with(hass)
+    coordinator.async_schedule_device_state_refresh.assert_not_called()
+
+
+async def test_vacuum_action_translates_connection_error(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
+    """Translate control transport failures into a user-facing error."""
+    coordinator = coordinator_factory("pool_clean_bot")
+    coordinator.api = SimpleNamespace(
+        send_action=AsyncMock(side_effect=BeatbotConnectionError),
+    )
+    coordinator.async_schedule_device_state_refresh = MagicMock()
+    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await vacuum.async_start()
+
+    assert exc_info.value.translation_key == "control_connection_error"
+    coordinator.async_schedule_device_state_refresh.assert_not_called()
