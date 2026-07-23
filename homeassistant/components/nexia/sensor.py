@@ -341,8 +341,10 @@ class NexiaRoomIQSensor(NexiaRoomIQEntity, SensorEntity):
         except KeyError:
             # RoomIQ sensor no longer present
             return False
-        return super().available and self.entity_description.available_fn(
-            room_iq_sensor
+        return (
+            super().available
+            and (not room_iq_sensor.has_online or bool(room_iq_sensor.connected))
+            and self.entity_description.available_fn(room_iq_sensor)
         )
 
     @property
