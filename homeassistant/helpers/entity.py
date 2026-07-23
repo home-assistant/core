@@ -1620,6 +1620,8 @@ class Entity(
 
         if device_id := registry_entry.device_id:
             self.device_entry = dr.async_get(self.hass).async_get(device_id)
+        else:
+            self.device_entry = None
 
         if registry_entry.disabled:
             await self.async_remove()
@@ -1656,6 +1658,12 @@ class Entity(
     ) -> None:
         """Handle device registry update."""
         data = event.data
+
+        if data["action"] == "remove":
+            # Prevent accesses to a removed device registry entry before the
+            # entity has been removed
+            self.device_entry = None
+            return
 
         if data["action"] != "update":
             return
