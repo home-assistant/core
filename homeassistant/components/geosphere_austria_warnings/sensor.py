@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pygeosphere_warnings import WeatherWarning
 
@@ -72,6 +73,7 @@ class GeoSphereSensor(GeoSphereEntity, SensorEntity):
     entity_description: GeoSphereSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.active_warnings)

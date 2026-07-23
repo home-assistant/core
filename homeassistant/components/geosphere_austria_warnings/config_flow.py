@@ -1,6 +1,6 @@
 """Config flow for the GeoSphere Austria Warnings integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pygeosphere_warnings import (
     GeoSphereMunicipalityNotFoundError,
@@ -59,6 +59,7 @@ class GeoSphereConfigFlow(ConfigFlow, domain=DOMAIN):
             return location_warnings.municipality
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

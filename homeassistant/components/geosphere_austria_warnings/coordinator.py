@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from pygeosphere_warnings import (
     GeoSphereApiError,
@@ -55,6 +56,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
         self.client = GeoSphereWarningsClient(async_get_clientsession(hass))
         self._last_modified: datetime | None = None
 
+    @override
     async def _async_update_data(self) -> GeoSphereData:
         """Fetch warnings, skipping the full fetch when nothing changed."""
         try:
