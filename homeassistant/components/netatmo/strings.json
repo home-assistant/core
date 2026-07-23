@@ -205,7 +205,7 @@
           "weather_areas": "Configured weather areas to edit or remove."
         },
         "description": "Configure enabled homes and public weather sensors.",
-        "title": "Homes selection and public weather"
+        "title": "Home selection and public weather"
       }
     }
   },
