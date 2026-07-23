@@ -11,6 +11,7 @@ from aiohttp import ClientError, ClientResponseError
 from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
 import pytest
 
+from homeassistant.components.beatbot import config_flow as config_flow_module
 from homeassistant.components.beatbot.config_flow import (
     BeatbotConfigFlow,
     BeatbotOAuth2Implementation,
@@ -247,6 +248,45 @@ async def test_user_flow_tests_resource_api_before_create(
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
+async def test_resource_api_request_adds_access_token(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Pass the OAuth access token to the resource API request adapter."""
+    session = SimpleNamespace(request=AsyncMock())
+
+    def _client(region: str, request):
+        async def _get_devices() -> list:
+            await request(
+                "GET",
+                "https://api.example/devices",
+                headers={"X-Test": "value"},
+                timeout=10,
+            )
+            return []
+
+        assert region == "cn"
+        return SimpleNamespace(get_devices=_get_devices)
+
+    monkeypatch.setattr(
+        config_flow_module, "async_get_clientsession", Mock(return_value=session)
+    )
+    monkeypatch.setattr(config_flow_module, "BeatbotClient", _client)
+    flow = BeatbotConfigFlow()
+    flow.hass = hass
+
+    result = await flow._async_validate_resource_api(
+        {"region": "cn", "token": {"access_token": "access-token"}}
+    )
+
+    assert result is None
+    session.request.assert_awaited_once_with(
+        "GET",
+        "https://api.example/devices",
+        headers={"X-Test": "value", "Authorization": "Bearer access-token"},
+        timeout=10,
+    )
+
+
 @pytest.mark.parametrize("sub", ["", 123, None])
 async def test_user_flow_rejects_invalid_subject(
     hass: HomeAssistant, sub: object
@@ -448,6 +488,48 @@ async def test_reauth_updates_existing_entry_not_duplicate(hass: HomeAssistant) 
     assert new_access_token != original_token["access_token"]
     # Region from the refreshed token is persisted on the entry.
     assert entries[0].data["region"] == "cn"
+
+
+async def test_reauth_aborts_when_resource_api_rejects_token(
+    hass: HomeAssistant,
+    mock_get_devices: AsyncMock,
+) -> None:
+    """Do not update the entry when the refreshed token fails validation."""
+    original_token = _make_token("account-1", nonce="old", region="cn")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="account-1",
+        title="Beatbot",
+        source=SOURCE_USER,
+        data={
+            "auth_implementation": DOMAIN,
+            "region": "cn",
+            "token": original_token,
+        },
+    )
+    entry.add_to_hass(hass)
+    mock_get_devices.side_effect = BeatbotAuthenticationError
+    _register_mock_impl(hass, _make_token("account-1", nonce="new", region="cn"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"implementation": DOMAIN}
+    )
+    result = await _complete_external_auth(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+    assert entry.data["token"] == original_token
 
 
 async def test_reauth_different_account_aborts_unique_id_mismatch(

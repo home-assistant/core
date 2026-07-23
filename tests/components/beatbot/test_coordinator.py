@@ -56,6 +56,24 @@ async def test_coordinator_only_keeps_supported_products(hass: HomeAssistant) ->
     api.get_device_states.assert_awaited_once()
 
 
+async def test_coordinator_drops_unsupported_product_category(
+    hass: HomeAssistant,
+) -> None:
+    """Devices outside the supported product categories are dropped."""
+    device = _device("dev-mower", SUPPORTED_PRODUCT)
+    device.product_category = "lawn_mower"
+    api = SimpleNamespace(
+        get_devices=AsyncMock(return_value=[device]),
+        get_device_states=AsyncMock(return_value={}),
+    )
+    coordinator = BeatbotCoordinator(hass, api)
+
+    data = await coordinator._async_update_data()
+
+    assert data == {}
+    api.get_device_states.assert_awaited_once()
+
+
 async def test_coordinator_auth_failure_requests_reauth(
     hass: HomeAssistant,
 ) -> None:
@@ -82,6 +100,37 @@ async def test_coordinator_connection_failure_is_retryable(
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
+
+
+async def test_coordinator_state_auth_failure_requests_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """Authentication failures from the state endpoint trigger reauth."""
+    device = _device("dev-1", SUPPORTED_PRODUCT)
+    api = SimpleNamespace(
+        get_devices=AsyncMock(return_value=[device]),
+        get_device_states=AsyncMock(side_effect=BeatbotAuthenticationError),
+    )
+    coordinator = BeatbotCoordinator(hass, api)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_state_connection_failure_keeps_device(
+    hass: HomeAssistant,
+) -> None:
+    """Keep discovery data when the runtime state endpoint is unavailable."""
+    device = _device("dev-1", SUPPORTED_PRODUCT)
+    api = SimpleNamespace(
+        get_devices=AsyncMock(return_value=[device]),
+        get_device_states=AsyncMock(side_effect=BeatbotConnectionError("offline")),
+    )
+    coordinator = BeatbotCoordinator(hass, api)
+
+    data = await coordinator._async_update_data()
+
+    assert data == {"dev-1": device}
 
 
 async def test_coordinator_empty_allow_list_drops_everything(
@@ -333,3 +382,49 @@ async def test_poll_removes_registry_only_stale_device_after_three_misses(
 
     coordinator._remove_device_from_registries.assert_called_once_with("dev-stale")
     coordinator._schedule_entry_reload.assert_called_once()
+
+
+def test_coordinator_finds_and_removes_registered_device(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Find Beatbot identifiers and remove their matching registry entities."""
+    registry_device = SimpleNamespace(
+        id="registry-device-id",
+        identifiers={(coord_mod.DOMAIN, "dev-1"), ("other", "ignored")},
+    )
+    device_registry = SimpleNamespace(
+        async_get_device=Mock(return_value=registry_device),
+        async_update_device=Mock(),
+    )
+    entity_registry = SimpleNamespace(async_remove=Mock())
+    monkeypatch.setattr(coord_mod.dr, "async_get", Mock(return_value=device_registry))
+    monkeypatch.setattr(
+        coord_mod.dr,
+        "async_entries_for_config_entry",
+        Mock(return_value=[registry_device]),
+    )
+    monkeypatch.setattr(coord_mod.er, "async_get", Mock(return_value=entity_registry))
+    monkeypatch.setattr(
+        coord_mod.er,
+        "async_entries_for_device",
+        Mock(
+            return_value=[
+                SimpleNamespace(config_entry_id="entry", entity_id="vacuum.beatbot"),
+                SimpleNamespace(config_entry_id="other", entity_id="sensor.other"),
+            ]
+        ),
+    )
+    coordinator = BeatbotCoordinator(hass, SimpleNamespace(), _entry())
+
+    assert coordinator._registered_device_ids() == {"dev-1"}
+
+    coordinator._remove_device_from_registries("dev-1")
+
+    device_registry.async_get_device.assert_called_once_with(
+        identifiers={(coord_mod.DOMAIN, "dev-1")}
+    )
+    entity_registry.async_remove.assert_called_once_with("vacuum.beatbot")
+    device_registry.async_update_device.assert_called_once_with(
+        "registry-device-id", remove_config_entry_id="entry"
+    )

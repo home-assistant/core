@@ -9,7 +9,12 @@ from unittest.mock import AsyncMock, MagicMock
 from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
 import pytest
 
-from homeassistant.components.beatbot.iot.category import VACUUM_FEATURES_BY_CATEGORY
+from homeassistant.components.beatbot.iot.category import (
+    VACUUM_FEATURES_BY_CATEGORY,
+    ProductCategory,
+    vacuum_activity,
+    vacuum_features_from_capabilities,
+)
 from homeassistant.components.beatbot.iot.const import (
     INTERFACE_PAUSE,
     INTERFACE_RETURN_TO_BASE,
@@ -261,8 +266,72 @@ def test_vacuum_features_skip_readonly_action(
     assert VacuumEntityFeature.START not in vacuum.supported_features
 
 
+def test_unknown_status_is_idle() -> None:
+    """Unknown work states fall back to idle."""
+    assert (
+        vacuum_activity(ProductCategory.POOL_CLEAN_BOT, 999, 0) is VacuumActivity.IDLE
+    )
+
+
+def test_non_vacuum_capabilities_do_not_define_features() -> None:
+    """Ignore capability sets that do not describe the vacuum platform."""
+    capabilities = {
+        "sensor.temperature": BeatbotCapability(
+            interface_info="sensor.temperature",
+            retrievable=True,
+            non_controllable=True,
+        )
+    }
+
+    assert vacuum_features_from_capabilities(capabilities) is None
+
+
+@pytest.mark.parametrize(
+    ("online", "last_update_success", "expected"),
+    [(True, True, True), (False, True, False), (True, False, False)],
+)
+def test_vacuum_availability(
+    coordinator_factory: CoordinatorFactory,
+    online: bool,
+    last_update_success: bool,
+    expected: bool,
+) -> None:
+    """Require both an online device and a successful coordinator update."""
+    coordinator = coordinator_factory("pool_clean_bot")
+    coordinator.data[DEVICE_ID].is_online = online
+    coordinator.last_update_success = last_update_success
+
+    assert BeatbotVacuum(coordinator, DEVICE_ID).available is expected
+
+
+def test_vacuum_device_info(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
+    """Expose the Beatbot device metadata through the vacuum entity."""
+    coordinator = coordinator_factory("pool_clean_bot")
+    coordinator.data[DEVICE_ID].name = "AquaSense"
+    coordinator.data[DEVICE_ID].model = "AquaSense 2"
+
+    device_info = BeatbotVacuum(coordinator, DEVICE_ID).device_info
+
+    assert device_info["identifiers"] == {("beatbot", DEVICE_ID)}
+    assert device_info["name"] == "AquaSense"
+    assert device_info["manufacturer"] == "Beatbot"
+    assert device_info["model"] == "AquaSense 2"
+
+
+@pytest.mark.parametrize(
+    ("method", "interface"),
+    [
+        ("async_start", INTERFACE_START),
+        ("async_pause", INTERFACE_PAUSE),
+        ("async_return_to_base", INTERFACE_RETURN_TO_BASE),
+    ],
+)
 async def test_vacuum_action_triggers_single_device_refresh(
     coordinator_factory: CoordinatorFactory,
+    method: str,
+    interface: str,
 ) -> None:
     """Refresh only the controlled device after a control command.
 
@@ -275,9 +344,9 @@ async def test_vacuum_action_triggers_single_device_refresh(
     coordinator.async_schedule_device_state_refresh = MagicMock()
     vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
 
-    await vacuum.async_start()
+    await getattr(vacuum, method)()
 
-    coordinator.api.send_action.assert_awaited_once_with(DEVICE_ID, INTERFACE_START)
+    coordinator.api.send_action.assert_awaited_once_with(DEVICE_ID, interface)
     coordinator.async_schedule_device_state_refresh.assert_called_once_with(DEVICE_ID)
 
 
