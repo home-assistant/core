@@ -8,14 +8,19 @@ from aiopapouch import PapouchApiClient, create_device
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+ACTIVE_DISCOVERY_TIMEOUT = 2
+MAGIC_PACKET = b"\x00\x00\x00\xf6"
+TARGET_PORT = 30718
+SEMAPHORE_COUNTER = 5
+
 
 class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
     """Protocol implementation for broadcasting and receiving Papouch discovery packets."""
 
     def __init__(self) -> None:
         """Initialize the protocol with the required magic packet and target port."""
-        self.magic_packet = b"\x00\x00\x00\xf6"
-        self.target_port = 30718
+        self.magic_packet = MAGIC_PACKET
+        self.target_port = TARGET_PORT
         self.discovered_ips: set[str] = set()
         self.transport: asyncio.DatagramTransport | None = None
 
@@ -33,7 +38,7 @@ class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):
 async def _is_supported_device(
     hass: HomeAssistant, ip_address: str
 ) -> tuple[str, str] | None:
-    """Return location and name of the device.
+    """Return tuple (location, name) of the device.
 
     If it is an unsupported device the fuction returns None.
     """
@@ -48,8 +53,8 @@ async def _is_supported_device(
         if device is None:
             return None
 
-        location = device.get_location()
-        name = device.get_name()
+        location = device.location
+        name = device.name
         return (location, name)  # noqa: TRY300
     except aiohttp.ClientError:
         return None
@@ -58,9 +63,13 @@ async def _is_supported_device(
 async def async_discover_papouch_devices(
     hass: HomeAssistant,
 ) -> dict[str, tuple[str, str]]:
-    """Broadcast discovery request and return a dectionary.
+    """Broadcast discovery request and return a dictionary of discovered devices.
 
-    "ip_address": ("location", "name")
+    Creates semaphore preventing network congestion and fail-safe timeout that
+    will destroy the session afterwards.
+
+    Returns:
+        A dictionary mapping IP addresses to a tuple containing (location, name)
     """
     loop = asyncio.get_running_loop()
 
@@ -70,16 +79,16 @@ async def async_discover_papouch_devices(
         allow_broadcast=True,
     )
 
-    await asyncio.sleep(2)
+    await asyncio.sleep(ACTIVE_DISCOVERY_TIMEOUT)
     transport.close()
 
     raw_ips = list(protocol.discovered_ips)
-    semaphore = asyncio.Semaphore(5)
+    semaphore = asyncio.Semaphore(SEMAPHORE_COUNTER)
 
     async def _safe_check(ip: str):
         async with semaphore:
             try:
-                async with asyncio.timeout(2.0):
+                async with asyncio.timeout(ACTIVE_DISCOVERY_TIMEOUT):
                     data = await _is_supported_device(hass, ip)
                     return (ip, data)
             except TimeoutError:

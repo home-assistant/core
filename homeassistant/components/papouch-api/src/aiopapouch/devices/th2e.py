@@ -14,13 +14,29 @@ _LOGGER = logging.getLogger(__name__)
 class TH2E(PapouchDevice):
     """Represents devices of TH2E family."""
 
+    @property
+    def name(self) -> str:
+        """Return device's name."""
+        return self._name
+
+    @property
+    def location(self) -> str:
+        """Return device's location."""
+        return self._location
+
+    @property
+    def manufacturer(self) -> str:
+        """Return device's manufacturer."""
+        return "Papouch s.r.o."
+
     def __init__(self, api_client: PapouchApiClient, info: str) -> None:
         """Constructor for TH2E device. Downloading the settings before creation."""
-        self.name = "Papouch TH2E"
-        self.manufacturer = "Papouch s.r.o."
+        self.info = info
+
+        self._name = self.get_name()
+        self._location = self.get_location()
         self.api_client = api_client
         self.units_sensors = []
-        self.info = info
 
         self._parse_initial_settings()
 

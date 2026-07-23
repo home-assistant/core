@@ -12,10 +12,13 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, WEB_MODE_INDEX
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .discovery import async_discover_papouch_devices
 
 _LOGGER = logging.getLogger(__name__)
+
+WEB_MODE_INDEX = "3"
+DHCP_TIMEOUT = 5
 
 
 class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -69,7 +72,13 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Discover the device from a DHCP request."""
+        """Discover the device from a DHCP request.
+
+        After finding some device HA will immediately send a "discovery" message
+        to create a device instatnce, but at that moment the device can have turned off
+        the WEB server and suppose that 5 seconds is enough for the device to activate it.
+        """
+
         self.discovered_ip = discovery_info.ip
 
         for entry in self._async_current_entries():
@@ -84,10 +93,12 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         client = PapouchApiClient(self.discovered_ip, session)
 
         try:
-            await asyncio.sleep(5)
+            await asyncio.sleep(DHCP_TIMEOUT)
             device = await create_device(client)
             if device:
-                self.discovered_name = f"{device.get_name()} ({device.get_location()}) - {self.discovered_ip}"
+                self.discovered_name = (
+                    f"{device.name} ({device.location}) - {self.discovered_ip}"
+                )
             else:
                 return self.async_abort(reason="unsupported_device")
         except aiohttp.ClientError as err:

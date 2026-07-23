@@ -22,19 +22,45 @@ class Quido(PapouchDevice):
         "Counts ascending and descending edges",
     ]
 
+    @property
+    def name(self) -> str:
+        """Return device's name."""
+        return self._name
+
+    @property
+    def location(self) -> str:
+        """Return device's location."""
+        return self._location
+
+    @property
+    def manufacturer(self) -> str:
+        """Return device's manufacturer."""
+        return "Papouch s.r.o."
+
     def __init__(self, api_client: PapouchApiClient, settings: str, info: str) -> None:
-        """Constructor for Quido device. Downloading the settings before creation."""
-        self.name = "Papouch Quido"
-        self.manufacturer = "Papouch s.r.o."
+        """Constructor for Quido device.
+
+        Note that Quido needs settings and info in parameters.
+        So creating Quido needs using the network even for dummy devices.
+        """
+
+        self.info = info
+        self.settings = settings
+
+        # Note that get_name and get_location are contracts from base class
+        # but since parsing XML every time someone needs a name is expensive
+        # it is stored right away
+        # moreover this should be done AFTER setting the info
+        self._name = self.get_name()
+        self._location = self.get_location()
+
         self.api_client = api_client
         self.number_inputs = -1
         self.number_outputs = -1
         self.number_temp = 1
         self.counter_states = {}
-        self.settings = settings
         self.size_counter_bits = 16
         self.temperature_unit = "°C"  # default
-        self.info = info
 
         self._parse_initial_settings()
 

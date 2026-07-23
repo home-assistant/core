@@ -66,7 +66,10 @@ class PapouchApiClient:
             self._check_response(await response.text(encoding=ENCODING))
 
     def _check_response(self, raw_xml):
-        """Supposingly every device will use same response status."""
+        """Check if the response of the sending a command contains status 1 (ok).
+
+        Supposedly every device will use same response status.
+        """
         root = defused_ET.fromstring(raw_xml)
 
         result_tag = root.find("result")

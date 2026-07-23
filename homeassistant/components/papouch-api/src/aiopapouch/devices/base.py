@@ -7,9 +7,20 @@ from typing import Any
 class PapouchDevice(ABC):
     """Abstract class for Papouch devices."""
 
-    name: str = ""
-    manufacturer: str = ""
-    device_identifiers: dict = {()}
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Return device's name."""
+
+    @property
+    @abstractmethod
+    def location(self) -> str:
+        """Return device's location."""
+
+    @property
+    @abstractmethod
+    def manufacturer(self) -> str:
+        """Return device's manufacturer."""
 
     @abstractmethod
     def parse_xml(self, xml_data: str) -> dict:

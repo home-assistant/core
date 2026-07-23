@@ -17,6 +17,6 @@ class PapouchEntity(CoordinatorEntity[PapouchDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(entry.domain, entry.entry_id)},
-            name=coordinator.device.name,
+            name=f"{coordinator.device.name} {coordinator.device.location}",
             manufacturer=coordinator.device.manufacturer,
         )
