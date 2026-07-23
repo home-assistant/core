@@ -1097,25 +1097,32 @@ async def test_config_entry(
         not in caplog.text
     )
 
-    # Default without context should log a warning
+    # Default without context should raise
     caplog.clear()
-    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
-    assert crd.config_entry is None
-    assert (
-        "Detected that integration 'my_integration' relies on ContextVar, "
-        "but should pass the config entry explicitly."
-    ) in caplog.text
+    crd = None
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'my_integration' relies on ContextVar, "
+            "but should pass the config entry explicitly."
+        ),
+    ):
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd is None
 
-    # Default with context should log a warning
+    # Default with context should raise
     caplog.clear()
     frame._REPORTED_INTEGRATIONS.clear()
     config_entries.current_entry.set(entry)
-    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
-    assert (
-        "Detected that integration 'my_integration' relies on ContextVar, "
-        "but should pass the config entry explicitly."
-    ) in caplog.text
-    assert crd.config_entry is entry
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected that integration 'my_integration' relies on ContextVar, "
+            "but should pass the config entry explicitly."
+        ),
+    ):
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd is None
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])

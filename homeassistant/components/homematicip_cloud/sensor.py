@@ -23,7 +23,6 @@ from homematicip.device import (
     LightSensor,
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
-    MotionDetectorPushButton,
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
@@ -215,9 +214,6 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
             HomematicipIlluminanceSensor(hap, device),
         ],
         MotionDetectorOutdoor: lambda device: [
-            HomematicipIlluminanceSensor(hap, device),
-        ],
-        MotionDetectorPushButton: lambda device: [
             HomematicipIlluminanceSensor(hap, device),
         ],
         PresenceDetectorIndoor: lambda device: [
