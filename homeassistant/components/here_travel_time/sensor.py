@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_MODE,
-    CONF_NAME,
     EntityStateAttribute,
     UnitOfLength,
     UnitOfTime,
@@ -83,7 +82,7 @@ async def async_setup_entry(
     """Add HERE travel time entities from a config_entry."""
 
     entry_id = config_entry.entry_id
-    name = config_entry.data[CONF_NAME]
+    name = config_entry.title
     coordinator = config_entry.runtime_data
 
     sensors: list[HERETravelTimeSensor] = [

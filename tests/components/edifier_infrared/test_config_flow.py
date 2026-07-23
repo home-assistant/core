@@ -21,7 +21,9 @@ from tests.components.infrared import EMITTER_ENTITY_ID
 @pytest.mark.parametrize(
     ("model", "expected_command_set"),
     [
-        (EdifierModel.R1700BT, EdifierCommandSet.R1700BT),
+        (EdifierModel.R1700BT_PRE_2017, EdifierCommandSet.R1700BT_PRE_2017),
+        (EdifierModel.R1700BT_2017, EdifierCommandSet.R1700BT_2017),
+        (EdifierModel.R1700BTS, EdifierCommandSet.R1700BTS),
         (EdifierModel.R1280DB, EdifierCommandSet.R1280DB),
         (EdifierModel.R1280T, EdifierCommandSet.R1280T),
         (EdifierModel.S360DB, EdifierCommandSet.S360DB),
@@ -81,7 +83,7 @@ async def test_user_flow_already_configured(
         result["flow_id"],
         user_input={
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
-            CONF_MODEL: EdifierModel.R1700BT.value,
+            CONF_MODEL: EdifierModel.R1700BTS.value,
         },
     )
 
@@ -104,8 +106,8 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("entity_name", "expected_title"),
     [
-        (None, "Edifier R1700BT via Test IR emitter"),
-        ("Living room IR", "Edifier R1700BT via Living room IR"),
+        (None, "Edifier R1700BTs via Test IR emitter"),
+        ("Living room IR", "Edifier R1700BTs via Living room IR"),
     ],
 )
 async def test_user_flow_title_from_entity_name(
@@ -124,7 +126,7 @@ async def test_user_flow_title_from_entity_name(
         result["flow_id"],
         user_input={
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
-            CONF_MODEL: EdifierModel.R1700BT.value,
+            CONF_MODEL: EdifierModel.R1700BTS.value,
         },
     )
 
