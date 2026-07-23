@@ -24,7 +24,10 @@ async def test_async_setup(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test setting up a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -44,7 +47,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert entry.runtime_data is not None
     assert entry.runtime_data.reg_number == "AB12CDE"
 
-    entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(
         entity_registry,
         entry.entry_id,
@@ -56,7 +58,10 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     assert state.state == "AB12CDE"
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test unloading a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -74,7 +79,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(
         entity_registry,
         entry.entry_id,
