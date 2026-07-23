@@ -63,10 +63,10 @@
     },
     "update": {
       "firmware_update": {
-        "name": "RouterOS Firmware Update"
+        "name": "RouterOS"
       },
       "routerboard_update": {
-        "name": "RouterBOARD Firmware Update"
+        "name": "RouterBOARD"
       }
     }
   },

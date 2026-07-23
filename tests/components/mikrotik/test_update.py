@@ -13,18 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
-from .const import (
-    ROUTERBOARD_DATA,
-    TEST_FIRMWARE,
-    TEST_INSTALLED_VERSION,
-    TEST_LATEST_VERSION,
-    UPDATE_DATA,
-)
+from .const import ROUTERBOARD_DATA, TEST_FIRMWARE, TEST_INSTALLED_VERSION, UPDATE_DATA
 
 from tests.common import snapshot_platform
 
-FW_UPDATE_ENTITY_ID = "update.mikrotik_routeros_firmware_update"
-ROUTERBOARD_UPDATE_ENTITY_ID = "update.mikrotik_routerboard_firmware_update"
+FW_UPDATE_ENTITY_ID = "update.mikrotik_routeros"
+ROUTERBOARD_UPDATE_ENTITY_ID = "update.mikrotik_routerboard"
 
 
 @pytest.mark.parametrize(
@@ -100,22 +94,6 @@ async def test_firmware_update_install_with_backup(
 
     assert mock_api.call_args_list[-2].args == ("/system/backup/save",)
     assert mock_api.call_args_list[-1].args == ("/system/package/update/install",)
-
-
-async def test_update_entity_release_url(
-    hass: HomeAssistant,
-) -> None:
-    """Test the RouterOS firmware update entity release URL."""
-    await setup_mikrotik_entry(hass, **UPDATE_DATA[0])
-
-    assert (state := hass.states.get(FW_UPDATE_ENTITY_ID))
-    assert (
-        state.attributes["release_url"]
-        == f"https://cdn.mikrotik.com/routeros/{TEST_LATEST_VERSION}/CHANGELOG"
-    )
-
-    assert (state := hass.states.get(ROUTERBOARD_UPDATE_ENTITY_ID))
-    assert state.attributes["release_url"] is None
 
 
 @pytest.mark.parametrize(
