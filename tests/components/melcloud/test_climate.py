@@ -1,5 +1,6 @@
 """Test the MELCloud climate platform."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -22,6 +23,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 ZONE_CLIMATE_ENTITY = "climate.ecodan_zone_1"
 
+HEAT_ONLY_MODES = ["heat-thermostat", "heat-flow", "curve"]
 HEAT_COOL_MODES = [
     "heat-thermostat",
     "heat-flow",
@@ -43,72 +45,61 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("operation_modes", "expected_hvac_modes"),
+    [
+        (HEAT_ONLY_MODES, [HVACMode.OFF, HVACMode.HEAT]),
+        (HEAT_COOL_MODES, [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL]),
+    ],
+)
 @pytest.mark.usefixtures("mock_get_devices")
-async def test_hvac_modes_heat_only(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_hvac_modes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_atw_device: MagicMock,
+    operation_modes: list[str],
+    expected_hvac_modes: list[HVACMode],
 ) -> None:
-    """A heat-only zone exposes only OFF and HEAT."""
+    """The hvac modes reflect the zone's heating/cooling capability."""
+    mock_atw_device.zones[0].operation_modes = operation_modes
     await setup_platform(hass, mock_config_entry, [Platform.CLIMATE])
     state = hass.states.get(ZONE_CLIMATE_ENTITY)
     assert state is not None
-    assert state.attributes["hvac_modes"] == [HVACMode.OFF, HVACMode.HEAT]
+    assert state.attributes["hvac_modes"] == expected_hvac_modes
 
 
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected_power"),
+    [
+        (SERVICE_TURN_ON, {}, True),
+        (SERVICE_TURN_OFF, {}, False),
+        (SERVICE_SET_HVAC_MODE, {"hvac_mode": HVACMode.OFF}, False),
+    ],
+)
 @pytest.mark.usefixtures("mock_get_devices")
-async def test_turn_off(
+async def test_power(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_atw_device: MagicMock,
+    service: str,
+    service_data: dict[str, Any],
+    expected_power: bool,
 ) -> None:
-    """Turning off powers the device down."""
+    """Turning the zone on/off toggles the device power."""
     await setup_platform(hass, mock_config_entry, [Platform.CLIMATE])
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ZONE_CLIMATE_ENTITY},
+        service,
+        {ATTR_ENTITY_ID: ZONE_CLIMATE_ENTITY, **service_data},
         blocking=True,
     )
-    mock_atw_device.set.assert_awaited_with({"power": False})
-
-
-@pytest.mark.usefixtures("mock_get_devices")
-async def test_turn_on(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_atw_device: MagicMock,
-) -> None:
-    """Turning on powers the device up."""
-    await setup_platform(hass, mock_config_entry, [Platform.CLIMATE])
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZONE_CLIMATE_ENTITY},
-        blocking=True,
-    )
-    mock_atw_device.set.assert_awaited_with({"power": True})
-
-
-@pytest.mark.usefixtures("mock_get_devices")
-async def test_set_hvac_mode_heat(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_atw_device: MagicMock,
-) -> None:
-    """Setting hvac_mode HEAT keeps the current control method."""
-    await setup_platform(hass, mock_config_entry, [Platform.CLIMATE])
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ZONE_CLIMATE_ENTITY, "hvac_mode": HVACMode.HEAT},
-        blocking=True,
-    )
-    mock_atw_device.zones[0].set_operation_mode.assert_awaited_once_with("heat-flow")
-    mock_atw_device.set.assert_not_called()
+    mock_atw_device.set.assert_awaited_with({"power": expected_power})
 
 
 @pytest.mark.parametrize(
     ("current_mode", "hvac_mode", "expected_mode"),
     [
+        ("heat-flow", HVACMode.HEAT, "heat-flow"),
         ("heat-flow", HVACMode.COOL, "cool-flow"),
         ("heat-thermostat", HVACMode.COOL, "cool-thermostat"),
         ("curve", HVACMode.COOL, "cool-thermostat"),
@@ -117,7 +108,7 @@ async def test_set_hvac_mode_heat(
     ],
 )
 @pytest.mark.usefixtures("mock_get_devices")
-async def test_set_hvac_mode_preserves_method(
+async def test_set_hvac_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_atw_device: MagicMock,
@@ -125,7 +116,7 @@ async def test_set_hvac_mode_preserves_method(
     hvac_mode: HVACMode,
     expected_mode: str,
 ) -> None:
-    """Switching direction preserves the flow/thermostat method where possible."""
+    """Setting a direction selects the operation mode, preserving the method."""
     zone = mock_atw_device.zones[0]
     zone.operation_modes = HEAT_COOL_MODES
     zone.operation_mode = current_mode
@@ -138,23 +129,6 @@ async def test_set_hvac_mode_preserves_method(
     )
     zone.set_operation_mode.assert_awaited_once_with(expected_mode)
     mock_atw_device.set.assert_not_called()
-
-
-@pytest.mark.usefixtures("mock_get_devices")
-async def test_set_hvac_mode_off(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_atw_device: MagicMock,
-) -> None:
-    """Setting hvac_mode OFF powers the device down."""
-    await setup_platform(hass, mock_config_entry, [Platform.CLIMATE])
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ZONE_CLIMATE_ENTITY, "hvac_mode": HVACMode.OFF},
-        blocking=True,
-    )
-    mock_atw_device.set.assert_awaited_with({"power": False})
 
 
 @pytest.mark.usefixtures("mock_get_devices")

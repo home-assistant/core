@@ -69,16 +69,6 @@ COOL_OPERATION_MODES = {
 }
 
 
-def zone_can_heat(zone: Zone) -> bool:
-    """Return True if the zone supports any heating operation mode."""
-    return any(mode in HEAT_OPERATION_MODES for mode in zone.operation_modes)
-
-
-def zone_can_cool(zone: Zone) -> bool:
-    """Return True if the zone supports any cooling operation mode."""
-    return any(mode in COOL_OPERATION_MODES for mode in zone.operation_modes)
-
-
 ATW_ZONE_HVAC_ACTION_LOOKUP = {
     atw.STATUS_IDLE: HVACAction.IDLE,
     atw.STATUS_HEAT_ZONES: HVACAction.HEATING,
@@ -396,9 +386,9 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         self._attr_device_info = self.coordinator.zone_device_info(atw_zone)
 
         self._attr_hvac_modes = [HVACMode.OFF]
-        if zone_can_heat(atw_zone):
+        if any(mode in HEAT_OPERATION_MODES for mode in atw_zone.operation_modes):
             self._attr_hvac_modes.append(HVACMode.HEAT)
-        if zone_can_cool(atw_zone):
+        if any(mode in COOL_OPERATION_MODES for mode in atw_zone.operation_modes):
             self._attr_hvac_modes.append(HVACMode.COOL)
 
     @property
@@ -435,11 +425,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
             await self.coordinator.async_request_refresh()
 
     def _target_operation_mode(self, hvac_mode: HVACMode) -> str:
-        """Return the zone operation mode for a direction, preserving the method.
-
-        Keeps the current control method (thermostat/flow) when the target
-        direction has an equivalent, else falls back to the thermostat variant.
-        """
+        """Return the zone operation mode for a direction, preserving the method."""
         current = self._zone.operation_mode
         if hvac_mode == HVACMode.HEAT:
             if current == ZONE_OPERATION_MODE_COOL_FLOW:
