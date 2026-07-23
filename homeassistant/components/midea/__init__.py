@@ -18,12 +18,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import CONF_KEY, CONF_SUBTYPE
-from .entity import MideaLanConfigEntry
+from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
     """Set up Midea from a config entry."""
 
     data = entry.data
@@ -71,6 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
