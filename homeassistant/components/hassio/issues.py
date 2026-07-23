@@ -25,7 +25,7 @@ class Suggestion:
     type: str
     context: ContextType
     reference: str | None = None
-    reference_extra: dict | None = None
+    reference_extra: dict | None = field(default=None, hash=False)
 
     @property
     def key(self) -> str:
@@ -63,7 +63,7 @@ class Issue:
     type: str
     context: ContextType
     reference: str | None = None
-    reference_extra: dict | None = None
+    reference_extra: dict | None = field(default=None, hash=False)
     suggestions: list[Suggestion] = field(default_factory=list, compare=False)
 
     @property
