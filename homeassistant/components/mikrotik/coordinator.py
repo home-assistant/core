@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ARP,
-    ATTR_FIRMWARE,
+    ATTR_ROUTERBOARD_FIRMWARE,
     ATTR_SERIAL_NUMBER,
     CAPSMAN,
     CONF_ARP_PING,
@@ -32,14 +32,14 @@ from .const import (
     DOMAIN,
     HEALTH,
     IDENTITY,
-    INFO,
     IS_CAPSMAN,
     IS_WIFI,
     IS_WIFIWAVE2,
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
-    SYSTEM,
+    RESOURCE,
+    ROUTERBOARD,
     WIFI,
     WIFIWAVE2,
     WIRELESS,
@@ -75,6 +75,14 @@ class MikrotikData:
         self.firmware: str = ""
         self.serial_number: str = ""
         self.sensors: dict[str, Any] = {}
+        self.system: dict[str, Any] = {}
+
+    def _get_system_details(self) -> None:
+        """Retrieve system and routerboard details from Mikrotik API."""
+        self.system[IDENTITY] = (self.command(MIKROTIK_SERVICES[IDENTITY]) or [{}])[0]
+        self.system[ROUTERBOARD] = (
+            self.command(MIKROTIK_SERVICES[ROUTERBOARD], suppress_errors=True) or [{}]
+        )[0]
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -96,19 +104,13 @@ class MikrotikData:
         """Return force_dhcp option setting."""
         return self.config_entry.options.get(CONF_FORCE_DHCP, False)  # type: ignore[no-any-return]
 
-    def get_info(self, param: str) -> str:
-        """Return device model name."""
-        cmd = IDENTITY if param == NAME else INFO
-        if data := self.command(MIKROTIK_SERVICES[cmd], suppress_errors=(cmd == INFO)):
-            return str(data[0].get(param))
-        return ""
-
     def get_hub_details(self) -> None:
         """Get Hub info."""
-        self.hostname = self.get_info(NAME)
-        self.model = self.get_info(ATTR_MODEL)
-        self.firmware = self.get_info(ATTR_FIRMWARE)
-        self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
+        self._get_system_details()
+        self.hostname = str(self.system[IDENTITY].get(NAME))
+        self.model = str(self.system[ROUTERBOARD].get(ATTR_MODEL))
+        self.firmware = str(self.system[ROUTERBOARD].get(ATTR_ROUTERBOARD_FIRMWARE))
+        self.serial_number = str(self.system[ROUTERBOARD].get(ATTR_SERIAL_NUMBER))
         self.support_capsman = bool(
             self.command(MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True)
         )
@@ -164,14 +166,14 @@ class MikrotikData:
                 _LOGGER.debug("Using arp-ping to check devices")
                 arp_devices = self.get_list_from_interface(ARP)
 
-            # get new hub firmware version if updated
-            self.firmware = self.get_info(ATTR_FIRMWARE)
+            # get hub details and system info
+            self._get_system_details()
 
             self.sensors[HEALTH] = (
                 self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []
             )
-            self.sensors[SYSTEM] = (
-                self.command(MIKROTIK_SERVICES[SYSTEM], suppress_errors=True) or []
+            self.sensors[RESOURCE] = (
+                self.command(MIKROTIK_SERVICES[RESOURCE], suppress_errors=True) or []
             )
 
         if not device_list:
@@ -339,7 +341,7 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             _error = api_error
 
     if _error is not None:
-        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], _error)
+        _LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], _error)
         if "invalid user name or password" in str(_error):
             raise LoginError from _error
         raise CannotConnect from _error

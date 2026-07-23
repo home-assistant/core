@@ -155,7 +155,7 @@ async def test_store_telegram_history_error_handling(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
 
@@ -183,7 +183,7 @@ async def test_store_telegram_history_needs_migration_timeout(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
 
@@ -546,7 +546,7 @@ async def test_postgres_backend_init_error(
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is None
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         is not None
