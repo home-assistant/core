@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, WARNINGS_URL
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, WARNINGS_URL
 from .coordinator import GeoSphereUpdateCoordinator
 
 
@@ -12,6 +12,7 @@ class GeoSphereEntity(CoordinatorEntity[GeoSphereUpdateCoordinator]):
     """Common base entity for all GeoSphere Austria Warnings entities."""
 
     _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,

@@ -10,5 +10,6 @@ DOMAIN = "geosphere_austria_warnings"
 
 LOGGER = logging.getLogger(__package__)
 
+ATTRIBUTION = "Data provided by GeoSphere Austria"
 MANUFACTURER = "GeoSphere Austria"
 WARNINGS_URL = "https://warnungen.zamg.at/"

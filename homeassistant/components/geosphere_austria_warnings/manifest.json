@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pygeosphere_warnings"],
   "quality_scale": "bronze",
-  "requirements": ["pygeosphere-warnings==0.1.0"]
+  "requirements": ["pygeosphere-warnings==0.1.1"]
 }

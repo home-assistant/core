@@ -2231,7 +2231,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.geosphere_austria_warnings
-pygeosphere-warnings==0.1.0
+pygeosphere-warnings==0.1.1
 
 # homeassistant.components.gtfs
 pygtfs==0.1.11
