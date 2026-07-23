@@ -1,7 +1,5 @@
 """Support for AVM Fritz!Box functions."""
 
-import logging
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,6 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    _LOGGER,
     CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_SSL,
@@ -25,8 +24,6 @@ from .const import (
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

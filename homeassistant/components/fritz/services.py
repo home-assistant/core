@@ -1,7 +1,5 @@
 """Services for Fritz integration."""
 
-import logging
-
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzActionFailedError,
@@ -18,10 +16,8 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .coordinator import FritzConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
 SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
