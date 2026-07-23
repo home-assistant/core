@@ -1,4 +1,4 @@
-"""Config flow for Midea LAN."""
+"""Config flow for Midea."""
 
 from operator import itemgetter
 from typing import Any, override

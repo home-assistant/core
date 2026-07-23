@@ -1,4 +1,4 @@
-"""The Midea LAN integration."""
+"""The Midea integration."""
 
 from midealocal.const import ProtocolVersion
 from midealocal.devices import device_selector
@@ -24,7 +24,7 @@ _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> bool:
-    """Set up Midea LAN from a config entry."""
+    """Set up Midea from a config entry."""
 
     data = entry.data
     device_id: int = data[CONF_DEVICE_ID]
