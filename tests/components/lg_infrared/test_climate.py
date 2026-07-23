@@ -1,6 +1,5 @@
 """Tests for the LG Infrared climate platform."""
 
-from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -26,17 +25,16 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.infrared import InfraredReceivedSignal
-from homeassistant.components.lg_infrared.const import (
+from homeassistant.components.lg_infrared.climate import (
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
     FAN_QUIET,
-    LGDeviceType,
 )
+from homeassistant.components.lg_infrared.const import LGDeviceType
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -45,7 +43,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import (
     MockInfraredEmitterEntity,
     MockInfraredReceiverEntity,
@@ -114,42 +112,34 @@ async def test_set_hvac_mode_off(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("hvac_mode", "temp", "fan", "expected_timings_fn"),
+    ("hvac_mode", "temp", "fan", "expected_cmd"),
     [
         pytest.param(
             HVACMode.COOL,
             24,
             FAN_AUTO,
-            lambda: LgAcCommand(
-                mode=LgAcMode.COOL, temperature=24, fan=LgAcFanSpeed.AUTO
-            ).get_raw_timings(),
+            LgAcCommand(mode=LgAcMode.COOL, temperature=24, fan=LgAcFanSpeed.AUTO),
             id="cool_24_auto",
         ),
         pytest.param(
             HVACMode.COOL,
             18,
             FAN_LOW,
-            lambda: LgAcCommand(
-                mode=LgAcMode.COOL, temperature=18, fan=LgAcFanSpeed.LOW
-            ).get_raw_timings(),
+            LgAcCommand(mode=LgAcMode.COOL, temperature=18, fan=LgAcFanSpeed.LOW),
             id="cool_18_low",
         ),
         pytest.param(
             HVACMode.COOL,
             30,
             FAN_HIGH,
-            lambda: LgAcCommand(
-                mode=LgAcMode.COOL, temperature=30, fan=LgAcFanSpeed.HIGH
-            ).get_raw_timings(),
+            LgAcCommand(mode=LgAcMode.COOL, temperature=30, fan=LgAcFanSpeed.HIGH),
             id="cool_30_high",
         ),
         pytest.param(
             HVACMode.DRY,
             24,
             FAN_MEDIUM,
-            lambda: LgAcCommand(
-                mode=LgAcMode.DRY, fan=LgAcFanSpeed.MEDIUM
-            ).get_raw_timings(),
+            LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.MEDIUM),
             id="dry_medium",
         ),
     ],
@@ -160,7 +150,7 @@ async def test_set_hvac_mode_encodes_correctly(
     hvac_mode: HVACMode,
     temp: int,
     fan: str,
-    expected_timings_fn: Callable[[], list[int]],
+    expected_cmd: LgAcCommand,
 ) -> None:
     """Test that set_hvac_mode sends correctly encoded timings."""
     await hass.services.async_call(
@@ -186,7 +176,7 @@ async def test_set_hvac_mode_encodes_correctly(
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
-    assert timings == expected_timings_fn()
+    assert timings == expected_cmd.get_raw_timings()
 
 
 @pytest.mark.parametrize(
@@ -195,20 +185,18 @@ async def test_set_hvac_mode_encodes_correctly(
 )
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("hvac_mode", "expected_timings_fn"),
+    ("hvac_mode", "expected_cmd"),
     [
         pytest.param(
             HVACMode.HEAT,
-            lambda: LgAcCommand(
+            LgAcCommand(
                 mode=LgAcMode.HEAT, temperature=MIN_TEMP, fan=LgAcFanSpeed.AUTO
-            ).get_raw_timings(),
+            ),
             id="heat",
         ),
         pytest.param(
             HVACMode.FAN_ONLY,
-            lambda: LgAcCommand(
-                mode=LgAcMode.FAN_ONLY, fan=LgAcFanSpeed.AUTO
-            ).get_raw_timings(),
+            LgAcCommand(mode=LgAcMode.FAN_ONLY, fan=LgAcFanSpeed.AUTO),
             id="fan_only",
         ),
     ],
@@ -217,7 +205,7 @@ async def test_set_hvac_mode_heat_and_fan_only(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     hvac_mode: HVACMode,
-    expected_timings_fn: Callable[[], list[int]],
+    expected_cmd: LgAcCommand,
 ) -> None:
     """Test heat and fan-only modes encode from the entity defaults."""
     await hass.services.async_call(
@@ -229,7 +217,7 @@ async def test_set_hvac_mode_heat_and_fan_only(
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
-    assert timings == expected_timings_fn()
+    assert timings == expected_cmd.get_raw_timings()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -472,33 +460,6 @@ async def test_target_temperature_feature_follows_configured_modes(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["supported_features"] == expected_features
-
-
-@pytest.mark.parametrize("has_receiver", [True])
-@pytest.mark.usefixtures("init_integration")
-async def test_availability_ignores_receiver(hass: HomeAssistant) -> None:
-    """Test availability follows the emitter only, not the optional receiver."""
-    hass.states.async_set(RECEIVER_ENTITY_ID, STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(_CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    hass.states.async_set(EMITTER_ENTITY_ID, STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(_CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # A receiver update must not resurrect the entity while the emitter is gone.
-    hass.states.async_set(RECEIVER_ENTITY_ID, STATE_UNKNOWN)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(_CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

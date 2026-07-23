@@ -42,14 +42,15 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
-    FAN_MEDIUM_HIGH,
-    FAN_MEDIUM_LOW,
-    FAN_QUIET,
     LGDeviceType,
 )
 from .entity import LgIrEntity
 
 PARALLEL_UPDATES = 1
+
+FAN_QUIET = "quiet"
+FAN_MEDIUM_LOW = "medium_low"
+FAN_MEDIUM_HIGH = "medium_high"
 
 _HA_FAN_TO_LIB: dict[str, LgAcFanSpeed] = {
     FAN_AUTO: LgAcFanSpeed.AUTO,
@@ -176,7 +177,9 @@ class LgAcClimateEntity(
         if hvac_mode is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
 
-        lib_mode = _HA_MODE_TO_LIB[hvac_mode or self._attr_hvac_mode or HVACMode.OFF]
+        lib_mode = _HA_MODE_TO_LIB.get(
+            hvac_mode or self._attr_hvac_mode or HVACMode.OFF, LgAcMode.OFF
+        )
         if hvac_mode is not None or lib_mode in _TEMPERATURE_MODES:
             await self._send_command(
                 self._build_command(lib_mode, temp, self._attr_fan_mode or FAN_AUTO)
@@ -190,7 +193,9 @@ class LgAcClimateEntity(
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
+        lib_mode = _HA_MODE_TO_LIB.get(
+            self._attr_hvac_mode or HVACMode.OFF, LgAcMode.OFF
+        )
         if lib_mode is not LgAcMode.OFF:
             temp = int(self._attr_target_temperature or MIN_TEMP)
             await self._send_command(self._build_command(lib_mode, temp, fan_mode))
@@ -215,22 +220,6 @@ class LgAcClimateWithReceiver(LgAcClimateEntity, InfraredReceiverConsumerEntity)
         """Initialize LG AC climate entity with a receiver."""
         super().__init__(entry, emitter_entity_id)
         self._infrared_receiver_entity_id = receiver_entity_id
-
-    @override
-    @callback
-    def _async_infrared_availability_changed(self, available: bool) -> None:
-        """Track availability of the emitter, ignoring the optional receiver.
-
-        Both consumer helpers write ``_attr_available``, so the last source to change
-        would otherwise win: losing the receiver would mark the entity unavailable, and
-        a receiver update could mark it available again while the emitter is gone.
-        """
-        emitter_state = self.hass.states.get(self._infrared_emitter_entity_id)
-        self._attr_available = (
-            emitter_state is not None and emitter_state.state != STATE_UNAVAILABLE
-        )
-        self.async_write_ha_state()
-        self._async_update_receiver_subscription()
 
     @override
     @callback

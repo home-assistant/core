@@ -5,7 +5,6 @@
       "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
-      "infrared_entity_id": "Select an infrared emitter.",
       "missing_infrared_entity": "Select an infrared emitter or receiver.",
       "no_hvac_modes": "Select at least one supported mode."
     },
