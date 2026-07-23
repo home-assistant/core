@@ -65,7 +65,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
                 self.data is None
                 or last_modified is None
                 or self._last_modified is None
-                or last_modified > self._last_modified
+                or last_modified != self._last_modified
             ):
                 location_warnings = await self.client.get_warnings_for_coords(
                     self.config_entry.data[CONF_LATITUDE],
