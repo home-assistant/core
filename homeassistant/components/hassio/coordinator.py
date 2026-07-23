@@ -459,12 +459,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             type=str(data.type),
             context=data.context,
             reference=data.reference,
+            reference_extra=data.reference_extra,
             suggestions=[
                 Suggestion(
                     uuid=suggestion.uuid,
                     type=str(suggestion.type),
                     context=suggestion.context,
                     reference=suggestion.reference,
+                    reference_extra=suggestion.reference_extra,
                 )
                 for suggestion in suggestions
             ],
