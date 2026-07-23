@@ -156,9 +156,9 @@ class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
         key: str,
     ) -> None:
         """Initialize the entity."""
-        # online sensors are separate devices
         dev_info: DeviceInfo | None = None
         if sensor.has_online:
+            # has_online indicates the RoomIQ sensor connects remotely
             dev_info = DeviceInfo(
                 identifiers={(DOMAIN, str(sensor.id))},
                 model=None,  # not reported
