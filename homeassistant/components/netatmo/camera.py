@@ -230,7 +230,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
         # Return None when the camera cannot provide a live snapshot,
         # to prevent unnecessary API calls and errors in the logs
-        if not self.available or not self._monitoring:
+        if not self.available or not self.is_on:
             return None
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
@@ -250,9 +250,17 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Return whether monitoring is currently active."""
         # Webhook override
         if self._webhook_on is not None:
+            if self._webhook_on and self.device_type == "NDB":
+                return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
             return self._webhook_on
+
         # Fallback to pyatmo property
-        return bool(self._monitoring)
+        if self.device_type == "NDB":
+            return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+        return (
+            bool(self.device.monitoring)
+            and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+        )
 
     @property
     @override
@@ -261,8 +269,13 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         # Webhook override
         if self._webhook_connection is not None:
             return self._webhook_connection
+
+        # Fallback by parent class
+        if not super().available:
+            return False
+
         # Fallback to pyatmo property
-        return getattr(self.device, "reachable", False)
+        return bool(getattr(self.device, "reachable", False))
 
     @property
     @override
@@ -292,7 +305,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         # Return early if camera is already off or unavailable (None).
-        if self._monitoring is not True:
+        if self.is_on is not True:
             return
         try:
             await self.device.async_monitoring_off()
@@ -305,15 +318,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         ) as err:
             raise HomeAssistantError(f"Could not turn off camera: {err}") from err
 
-        self._monitoring = False
-        self._attr_motion_detection_enabled = False
-        self.async_write_ha_state()
-
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         # Return early if camera is already on or unavailable (None).
-        if self._monitoring is not False:
+        if self.is_on is not False:
             return
         try:
             await self.device.async_monitoring_on()
@@ -326,16 +335,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         ) as err:
             raise HomeAssistantError(f"Could not turn on camera: {err}") from err
 
-        self._monitoring = True
-        if self.device_type != "NDB":
-            self._attr_motion_detection_enabled = True
-        self.async_write_ha_state()
-
     @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         # Return None when the camera cannot provide a live stream.
-        if not self.available or not self._monitoring:
+        if not self.is_on:
             return None
 
         if self.device.is_local:
@@ -350,26 +354,19 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        # Clear the webhook flags
+        # Clear the webhook flags as polling has updated the state,
+        # and we want to reflect the actual state from the device.
         self._webhook_connection = None
         self._webhook_on = None
 
         if self.device.reachable:
-            # NDB cameras do not have a monitoring attribute,
-            # so we check the alim_status to determine if the camera is monitoring.
+            # NDB cameras do not have motion detection, so we set to False.
             if self.device_type == "NDB":
-                self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
                 self._attr_motion_detection_enabled = False
-            # Other cameras always have a monitoring attribute,
-            # so we use that to determine if the camera is monitoring.
+            # Other cameras have motion detection when monitoring.
             else:
-                self._monitoring = (
-                    bool(self.device.monitoring)
-                    and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-                )
-                self._attr_motion_detection_enabled = self._monitoring
+                self._attr_motion_detection_enabled = self.is_on
         else:
-            self._monitoring = None
             self._attr_motion_detection_enabled = False
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
