@@ -47,6 +47,25 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return {}, mode_device
 
+    async def _async_process_user_input(
+        self, user_input: dict
+    ) -> tuple[dict[str, str], ConfigFlowResult | None]:
+        """Process user input, test connection, and determine the next routing step."""
+        errors, mode_device = await self._test_connection(user_input["ip_address"])
+
+        if not errors:
+            self._saved_input = user_input
+            if mode_device == -1:
+                return {}, self.async_abort(reason="mode_is_missing")
+            if mode_device != WEB_MODE_INDEX:
+                return {}, await self.async_step_web_mode()
+
+            return {}, self.async_create_entry(
+                title=f"Papouch {user_input['ip_address']}", data=user_input
+            )
+
+        return errors, None
+
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -66,9 +85,6 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await asyncio.sleep(5)
-
-            # create dummy device (DRY)
-
             device = await create_device(client)
             if device:
                 self.discovered_name = f"{device.get_name()} ({device.get_location()}) - {self.discovered_ip}"
@@ -88,18 +104,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input["ip_address"] = self.discovered_ip
-            errors, mode_device = await self._test_connection(user_input["ip_address"])
-
-            if not errors:
-                self._saved_input = user_input
-                if mode_device == -1:
-                    return self.async_abort(reason="mode_is_missing")
-                if mode_device != WEB_MODE_INDEX:
-                    return await self.async_step_web_mode()
-
-                return self.async_create_entry(
-                    title=f"Papouch {user_input['ip_address']}", data=user_input
-                )
+            errors, result = await self._async_process_user_input(user_input)
+            if result:
+                return result
 
         schema = vol.Schema(
             {
@@ -125,18 +132,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._saved_input = user_input
                 return await self.async_step_manual()
 
-            errors, mode_device = await self._test_connection(user_input["ip_address"])
-
-            if not errors:
-                self._saved_input = user_input
-                if mode_device == -1:
-                    return self.async_abort(reason="mode_is_missing")
-                if mode_device != WEB_MODE_INDEX:
-                    return await self.async_step_web_mode()
-
-                return self.async_create_entry(
-                    title=f"Papouch {user_input['ip_address']}", data=user_input
-                )
+            errors, result = await self._async_process_user_input(user_input)
+            if result:
+                return result
 
         if self._discovered_ips is None:
             results = await async_discover_papouch_devices(self.hass)
@@ -178,18 +176,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            errors, mode_device = await self._test_connection(user_input["ip_address"])
-
-            if not errors:
-                self._saved_input = user_input
-                if mode_device == -1:
-                    return self.async_abort(reason="mode_is_missing")
-                if mode_device != WEB_MODE_INDEX:
-                    return await self.async_step_web_mode()
-
-                return self.async_create_entry(
-                    title=f"Papouch {user_input['ip_address']}", data=user_input
-                )
+            errors, result = await self._async_process_user_input(user_input)
+            if result:
+                return result
 
         default_ip = self.discovered_ip or ""
         default_interval = DEFAULT_SCAN_INTERVAL
@@ -224,8 +213,6 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         client = PapouchApiClient(self._saved_input["ip_address"], session)
 
         try:
-            # Note that this is a dummy device and wouldn't be used later.
-            # Used for DRY rule
             device = await create_device(client)
 
             if device is None:

@@ -365,6 +365,9 @@ aioopenexchangerates==0.6.8
 # homeassistant.components.nmap_tracker
 aiooui==0.1.9
 
+# homeassistant.components.papouch
+aiopapouch==0.1.0
+
 # homeassistant.components.pegel_online
 aiopegelonline==0.1.1
 

@@ -41,6 +41,10 @@
         "create_entry": {
             "default": "The Papouch device has been successfully configured.",
             "web_mode_success": "The device was successfully switched to WEB mode. Please wait 10 seconds while the device restarts."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to the device.",
+            "invalid_ip_format": "Invalid IP address format."
         }
     }
 }
