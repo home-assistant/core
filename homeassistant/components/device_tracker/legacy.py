@@ -45,7 +45,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, GPSType, StateType
+from homeassistant.helpers.typing import ConfigType, GPSType
 from homeassistant.setup import (
     SetupPhases,
     async_notify_setup_error,
@@ -855,9 +855,10 @@ class Device(RestoreEntity):
 
         if self._state == STATE_HOME:
             attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = [ENTITY_ID_HOME]
-            if self.gps is None and (
-                home_zone := self.hass.states.get(ENTITY_ID_HOME)
-            ) is not None:
+            if (
+                self.gps is None
+                and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
+            ):
                 attributes[EntityStateAttribute.LATITUDE] = home_zone.attributes.get(
                     EntityStateAttribute.LATITUDE
                 )
