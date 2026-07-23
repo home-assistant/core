@@ -29,13 +29,7 @@ def test_get_datetime_from_future_time_valid() -> None:
 
 
 async def test_schedule_status_sensor_end_to_end() -> None:
-    """Schedule Status is created as a diagnostic sensor with the real value.
-
-    Built from a real LyricDevice parsed from a live-shaped payload (not a
-    pre-set mock), exercising the actual aiolyric parsing boundary through
-    to the entity's native_value. scheduleStatus has no known aiolyric
-    field-name mismatch, so this is expected to pass today.
-    """
+    """Test the schedule status diagnostic sensor."""
     mac_id = "5CFCE1B67035"
     device = LyricDevice(
         MagicMock(),
