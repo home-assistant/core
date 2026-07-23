@@ -617,7 +617,6 @@ async def test_subscribe_network_topology(
     assert entry is not None
 
     topology = _mock_topology()
-    matter_client.get_network_topology = AsyncMock(return_value=topology)
 
     subscription_callback: Callable[[EventType, NetworkTopology], None] | None = None
     unsubscribe = MagicMock()
@@ -635,6 +634,17 @@ async def test_subscribe_network_topology(
 
     matter_client.subscribe_events.side_effect = capture_subscription
 
+    during_fetch = _mock_topology()
+    during_fetch.collected_at = 1767888030000
+
+    async def fetch_topology() -> NetworkTopology:
+        # an update arriving while the initial fetch is in flight is buffered
+        assert subscription_callback is not None
+        subscription_callback(EventType.NETWORK_TOPOLOGY_UPDATED, during_fetch)
+        return topology
+
+    matter_client.get_network_topology = AsyncMock(side_effect=fetch_topology)
+
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json({ID: 1, TYPE: "matter/subscribe_network_topology"})
     msg = await ws_client.receive_json()
@@ -647,6 +657,11 @@ async def test_subscribe_network_topology(
     msg = await ws_client.receive_json()
     assert msg["type"] == "event"
     assert msg["event"] == _expected_topology(topology, [entry.id, None, None])
+
+    # the update buffered during the fetch is flushed right after
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"] == _expected_topology(during_fetch, [entry.id, None, None])
 
     # a topology update from the server is forwarded to the subscription
     updated = _mock_topology()
@@ -663,4 +678,36 @@ async def test_subscribe_network_topology(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
+    unsubscribe.assert_called_once_with()
+
+
+@pytest.mark.usefixtures("integration")
+async def test_subscribe_network_topology_fetch_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+) -> None:
+    """Test the event subscription is cleaned up when the initial fetch fails."""
+    matter_client.server_info.schema_version = 13
+    unsubscribe = MagicMock()
+
+    def capture_subscription(
+        callback: Callable[[EventType, NetworkTopology], None],
+        event_filter: EventType | None = None,
+        node_filter: int | None = None,
+        attr_path_filter: str | None = None,
+    ) -> MagicMock:
+        return unsubscribe
+
+    matter_client.subscribe_events.side_effect = capture_subscription
+    matter_client.get_network_topology = AsyncMock(
+        side_effect=ServerVersionTooOld("Command not available")
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({ID: 1, TYPE: "matter/subscribe_network_topology"})
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_supported"
     unsubscribe.assert_called_once_with()

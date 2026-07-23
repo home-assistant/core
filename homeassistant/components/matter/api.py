@@ -380,6 +380,7 @@ def _serialize_topology(
     return result
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/network_topology",
@@ -402,6 +403,7 @@ async def websocket_network_topology(
     connection.send_result(msg[ID], _serialize_topology(hass, matter, topology))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/subscribe_network_topology",
@@ -420,23 +422,44 @@ async def websocket_subscribe_network_topology(
     if not _topology_supported(connection, msg, matter):
         return
 
+    initial_sent = False
+    # updates are full snapshots, so only the newest buffered one matters
+    buffered: NetworkTopology | None = None
+
     @callback
     def forward_topology(event: EventType, topology: NetworkTopology) -> None:
+        nonlocal buffered
+        if not initial_sent:
+            buffered = topology
+            return
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], _serialize_topology(hass, matter, topology)
             )
         )
 
-    # the initial fetch also opts this client in to topology events server-side
-    topology = await matter.matter_client.get_network_topology()
-    connection.subscriptions[msg[ID]] = matter.matter_client.subscribe_events(
+    # subscribe before the fetch: the fetch opts this client in server-side,
+    # and an update may arrive before the command result does
+    unsubscribe = matter.matter_client.subscribe_events(
         callback=forward_topology,
         event_filter=EventType.NETWORK_TOPOLOGY_UPDATED,
     )
+    try:
+        topology = await matter.matter_client.get_network_topology()
+    except Exception:
+        unsubscribe()
+        raise
+    connection.subscriptions[msg[ID]] = unsubscribe
     connection.send_result(msg[ID])
     connection.send_message(
         websocket_api.event_message(
             msg[ID], _serialize_topology(hass, matter, topology)
         )
     )
+    if buffered is not None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], _serialize_topology(hass, matter, buffered)
+            )
+        )
+    initial_sent = True
