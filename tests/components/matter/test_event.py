@@ -225,6 +225,18 @@ async def test_generic_switch_multi_node(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_doorbell"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        pytest.param({}, id="doorbell_only"),
+        # an endpoint advertising the GenericSwitch device type alongside
+        # Doorbell should not get the standard button event entity either
+        pytest.param(
+            {"1/29/0": [{"0": 328, "1": 1}, {"0": 15, "1": 1}]},
+            id="doorbell_and_generic_switch",
+        ),
+    ],
+)
 async def test_doorbell_node(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
