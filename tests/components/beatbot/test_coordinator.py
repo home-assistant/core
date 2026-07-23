@@ -185,6 +185,7 @@ async def test_device_event_overlays_state_without_resetting_poll(
     listener = Mock()
     remove_listener = coordinator.async_add_listener(listener)
     next_poll = coordinator._unsub_refresh
+    coordinator.last_update_success = False
 
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.beatbot.coordinator"
@@ -198,6 +199,7 @@ async def test_device_event_overlays_state_without_resetting_poll(
     assert "source=websocket" in caplog.text
     assert "interfaceInfo=vacuum.battery, old=80, new=42" in caplog.text
     assert "interfaceInfo=online, old=True, new=False" in caplog.text
+    assert coordinator.last_update_success
     assert coordinator._unsub_refresh is next_poll
     listener.assert_called_once()
     remove_listener()

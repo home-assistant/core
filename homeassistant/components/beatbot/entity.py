@@ -38,21 +38,7 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
         return self.coordinator.data[self._device_id]
 
     async def _async_send_command(self, command: Callable[[], Awaitable[Any]]) -> None:
-        """Run a control API call with HA-idiomatic error translation.
-
-        - Auth failure escalates to ConfigEntryAuthFailed so HA triggers the
-          reauth flow — consistent with the coordinator's poll path. A raw
-          library auth error would otherwise fail the call without prompting
-          the user to sign in again.
-        - Connection/transport failure surfaces as HomeAssistantError so the
-          user sees a readable message instead of an opaque stack.
-
-        No retry: the backend returns a synchronous Result envelope, so a
-        failed request means the action likely did not apply (or the response
-        was lost). Blindly retrying toggle-semantics actions (start/pause)
-        risks double execution. State reconciliation is left to the
-        post-control refresh and the regular reconciliation poll.
-        """
+        """Run without retrying and translate library errors for Home Assistant."""
         if not self.data.is_online:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

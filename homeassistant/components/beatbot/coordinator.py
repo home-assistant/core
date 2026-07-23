@@ -292,6 +292,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         # DataUpdateCoordinator.async_set_updated_data resets the next poll
         # deadline. Notify listeners directly so steady event traffic cannot
         # postpone the source-of-truth reconciliation poll indefinitely.
+        self.last_update_success = True
         self.async_update_listeners()
 
     @staticmethod
