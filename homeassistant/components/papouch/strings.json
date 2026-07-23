@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "title": "Papouch",
@@ -21,6 +22,13 @@
                 "menu_options": {
                     "execute_switch": "Change mode to WEB",
                     "abort_switch": "Cancel"
+                }
+            },
+            "discovery_confirm": {
+                "title": "Add {name}",
+                "description": "Do you want to add {name} to Home Assistant?",
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
                 }
             }
         },

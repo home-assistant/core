@@ -1,5 +1,6 @@
 """Config flow for the Papouch integration."""
 
+import asyncio
 import logging
 import re
 
@@ -24,6 +25,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.discovered_ip: str | None = None
+        self.discovered_name: str | None = None
         self._saved_input: dict | None = None
         self._discovered_ips: dict[str, str] | None = None
 
@@ -51,12 +53,69 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Discover the device from a DHCP request."""
         self.discovered_ip = discovery_info.ip
-        discovered_mac = discovery_info.macaddress
 
+        for entry in self._async_current_entries():
+            if entry.data.get("ip_address") == self.discovered_ip:
+                return self.async_abort(reason="already_configured")
+
+        discovered_mac = discovery_info.macaddress
         await self.async_set_unique_id(discovered_mac)
         self._abort_if_unique_id_configured(updates={"ip_address": self.discovered_ip})
 
-        return await self.async_step_user()
+        session = async_get_clientsession(self.hass)
+        client = PapouchApiClient(self.discovered_ip, session)
+
+        try:
+            await asyncio.sleep(5)
+
+            # create dummy device (DRY)
+
+            device = await create_device(client)
+            if device:
+                self.discovered_name = f"{device.get_name()} ({device.get_location()}) - {self.discovered_ip}"
+            else:
+                return self.async_abort(reason="unsupported_device")
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Failed to fetch device info after DHCP: %s", err)
+            return self.async_abort(reason="cannot_connect")
+
+        self.context.update({"title_placeholders": {"name": self.discovered_name}})
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(self, user_input=None) -> ConfigFlowResult:
+        """Step after adding the device via DHCP."""
+        errors = {}
+
+        if user_input is not None:
+            user_input["ip_address"] = self.discovered_ip
+            errors, mode_device = await self._test_connection(user_input["ip_address"])
+
+            if not errors:
+                self._saved_input = user_input
+                if mode_device == -1:
+                    return self.async_abort(reason="mode_is_missing")
+                if mode_device != WEB_MODE_INDEX:
+                    return await self.async_step_web_mode()
+
+                return self.async_create_entry(
+                    title=f"Papouch {user_input['ip_address']}", data=user_input
+                )
+
+        schema = vol.Schema(
+            {
+                vol.Required("scan_interval", default=DEFAULT_SCAN_INTERVAL): vol.All(
+                    int, vol.Range(min=1, max=3600)
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"name": self.discovered_name},
+        )
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step featuring active UDP discovery."""
