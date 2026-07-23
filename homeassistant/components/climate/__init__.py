@@ -26,7 +26,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from .const import (  # noqa: F401
     ATTR_CURRENT_HUMIDITY,
@@ -823,11 +826,24 @@ async def async_service_temperature_set(
             translation_key="low_temp_higher_than_high_temp",
         )
 
+    # min_temp/max_temp are shown rounded to the display precision (a step
+    # in the Home Assistant unit), so a request equal to a displayed limit
+    # can convert back to a value just outside the real limit. Clamp
+    # overshoots smaller than one display step to the limit; the maximum
+    # genuine display-rounding error is half a step.
+    tolerance = TemperatureDeltaConverter.convert(
+        entity.precision, hass.config.units.temperature_unit, temp_unit
+    )
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = check_temp = TemperatureConverter.convert(
+            converted_temp = TemperatureConverter.convert(
                 temp, hass.config.units.temperature_unit, temp_unit
             )
+            if max_temp < converted_temp < max_temp + tolerance:
+                converted_temp = max_temp
+            elif min_temp - tolerance < converted_temp < min_temp:
+                converted_temp = min_temp
+            kwargs[value] = check_temp = converted_temp
 
             _LOGGER.debug(
                 "Check valid temperature %d %s (%d %s) in range %d %s - %d %s",
