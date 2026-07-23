@@ -1082,6 +1082,20 @@ async def test_parse_result_dict_keeps_stringified_value(
     assert isinstance(result["foo"], str)
 
 
+async def test_parse_result_cyclic_container_raises(hass: HomeAssistant) -> None:
+    """A cyclic passed-in container raises TemplateError instead of crashing.
+
+    Cyclic values cannot be constructed within a template (the sandbox blocks
+    mutation), so this only covers a cycle passed in as a variable. Resolution
+    recurses through the back-reference until the recursion limit, which is
+    surfaced as a TemplateError.
+    """
+    cyclic: list[object] = []
+    cyclic.append(cyclic)
+    with pytest.raises(TemplateError):
+        render(hass, "{{ x }}", {"x": cyclic})
+
+
 @pytest.mark.parametrize(
     "template_string",
     [
