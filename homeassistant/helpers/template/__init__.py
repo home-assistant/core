@@ -630,7 +630,8 @@ class Template:
             render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
-        except jinja2.TemplateError as ex:
+        # A cyclic value makes the finalize hook recurse until RecursionError.
+        except (jinja2.TemplateError, RecursionError) as ex:
             if error_value is _SENTINEL:
                 _LOGGER.error(
                     "Error parsing value: %s (value: %s, template: %s)",

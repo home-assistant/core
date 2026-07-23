@@ -224,6 +224,19 @@ def test_render_with_possible_json_value_with_invalid_json(hass: HomeAssistant) 
     assert tpl.async_render_with_possible_json_value("{ I AM NOT JSON }") == ""
 
 
+def test_render_with_possible_json_value_cyclic(hass: HomeAssistant) -> None:
+    """A cyclic value returns the fallback instead of escaping a RecursionError."""
+    cyclic: list[object] = []
+    cyclic.append(cyclic)
+    tpl = template.Template("{{ x }}", hass)
+    assert (
+        tpl.async_render_with_possible_json_value(
+            "value", error_value="fallback", variables={"x": cyclic}
+        )
+        == "fallback"
+    )
+
+
 def test_render_with_possible_json_value_with_template_error_value(
     hass: HomeAssistant,
 ) -> None:
