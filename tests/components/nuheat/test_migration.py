@@ -394,6 +394,8 @@ async def test_version_one_oauth_entry_advances_without_legacy_data(
 @pytest.mark.asyncio
 async def test_provisional_oauth_subject_migration_preserves_registry_identity(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Changing account identity does not change thermostat-level identity."""
     data = {
@@ -428,11 +430,11 @@ async def test_provisional_oauth_subject_migration_preserves_registry_identity(
     after = local_state(hass, [entry], records)
     assert after["entities"] == before["entities"]
     assert after["devices"] == before["devices"]
-    entity = er.async_get(hass).async_get(automation_reference)
+    entity = entity_registry.async_get(automation_reference)
     assert entity is not None
     assert entity.entity_id == "climate.master_bath_floor"
     assert entity.unique_id == "ABC123"
-    assert dr.async_get(hass).async_get(records[0][1].id).id == records[0][1].id
+    assert device_registry.async_get(records[0][1].id).id == records[0][1].id
 
 
 @pytest.mark.asyncio
@@ -521,7 +523,10 @@ async def test_one_legacy_entry_becomes_oauth_account(
 
 @pytest.mark.asyncio
 async def test_customized_entity_and_device_survive_initialization(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Setup reuses legacy registry records and preserves all customization."""
     entry = add_legacy_entry(hass, "ABC123")
@@ -548,7 +553,6 @@ async def test_customized_entity_and_device_survive_initialization(
         assert await hass.config_entries.async_setup(entry.entry_id) is True
         await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entities = [
         item
         for item in entity_registry.entities.values()
@@ -567,7 +571,6 @@ async def test_customized_entity_and_device_survive_initialization(
     assert migrated_entity.labels == {label.label_id}
     assert migrated_entity.config_entry_id == entry.entry_id
 
-    device_registry = dr.async_get(hass)
     devices = [
         item
         for item in device_registry.devices.values()
@@ -584,7 +587,10 @@ async def test_customized_entity_and_device_survive_initialization(
 
 @pytest.mark.asyncio
 async def test_multiple_entries_consolidate_and_transfer_registry_ownership(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Matching thermostats share one account entry without registry churn."""
     anchor = add_legacy_entry(hass, "ABC123")
@@ -604,7 +610,6 @@ async def test_multiple_entries_consolidate_and_transfer_registry_ownership(
     assert result["reason"] == "migration_successful"
     assert hass.config_entries.async_get_entry(redundant.entry_id) is None
     assert hass.config_entries.async_entries(DOMAIN) == [anchor]
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_a.entity_id).id == entity_a.id
     migrated_b = entity_registry.async_get(entity_b.entity_id)
     assert migrated_b.id == entity_b.id
@@ -620,7 +625,6 @@ async def test_multiple_entries_consolidate_and_transfer_registry_ownership(
         == 2
     )
 
-    device_registry = dr.async_get(hass)
     assert device_registry.async_get(device_a.id).id == device_a.id
     migrated_device_b = device_registry.async_get(device_b.id)
     assert migrated_device_b.id == device_b.id
@@ -664,7 +668,10 @@ async def test_unrelated_and_temporarily_omitted_entries_remain_untouched(
 
 @pytest.mark.asyncio
 async def test_wrong_account_rolls_back_without_registry_changes(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """The initiating serial must exist before any local mutation occurs."""
     entry = add_legacy_entry(hass, "ABC123")
@@ -679,10 +686,8 @@ async def test_wrong_account_rolls_back_without_registry_changes(
     assert entry.version == 1
     assert entry.unique_id == "ABC123"
     assert entry.data == original_data
-    assert (
-        er.async_get(hass).async_get(entity.entity_id).config_entry_id == entry.entry_id
-    )
-    assert dr.async_get(hass).async_get(device.id).config_entries == {entry.entry_id}
+    assert entity_registry.async_get(entity.entity_id).config_entry_id == entry.entry_id
+    assert device_registry.async_get(device.id).config_entries == {entry.entry_id}
 
 
 @pytest.mark.asyncio
@@ -695,6 +700,8 @@ async def test_wrong_account_rolls_back_without_registry_changes(
 )
 async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     error: Exception,
     reason: str,
     caplog: pytest.LogCaptureFixture,
@@ -730,10 +737,8 @@ async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
     assert entry.data == original_data
     assert entry.version == 1
     assert hass.config_entries.async_get_entry(entry.entry_id) is entry
-    assert (
-        er.async_get(hass).async_get(entity.entity_id).config_entry_id == entry.entry_id
-    )
-    assert dr.async_get(hass).async_get(device.id).config_entries == {entry.entry_id}
+    assert entity_registry.async_get(entity.entity_id).config_entry_id == entry.entry_id
+    assert device_registry.async_get(device.id).config_entries == {entry.entry_id}
     assert LEGACY_PASSWORD not in caplog.text
     assert authorization_code not in caplog.text
     assert "synthetic-refresh-token" not in caplog.text
@@ -743,6 +748,8 @@ async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
 @pytest.mark.parametrize("anchor_loaded", [False, True])
 async def test_existing_oauth_account_absorbs_matching_legacy_entry(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hass_client_no_auth: ClientSessionGenerator,
     anchor_loaded: bool,
 ) -> None:
@@ -785,10 +792,10 @@ async def test_existing_oauth_account_absorbs_matching_legacy_entry(
     assert account_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == jwt_access_token(
         ACCOUNT_SUBJECT
     )
-    assert er.async_get(hass).async_get(entity.entity_id).config_entry_id == (
+    assert entity_registry.async_get(entity.entity_id).config_entry_id == (
         account_entry.entry_id
     )
-    assert dr.async_get(hass).async_get(device.id).config_entries == {
+    assert device_registry.async_get(device.id).config_entries == {
         account_entry.entry_id
     }
 
@@ -825,6 +832,7 @@ async def test_direct_consolidation_reports_only_confirmed_serials(
 
 def test_registry_transfer_rejects_an_unexpected_owner(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A conflicting registry owner aborts instead of recreating the entity."""
     old_entry = add_legacy_entry(hass, "ABC123")
@@ -842,7 +850,7 @@ def test_registry_transfer_rejects_an_unexpected_owner(
         version=OAUTH_CONFIG_ENTRY_VERSION,
     )
     unrelated_entry.add_to_hass(hass)
-    entity = er.async_get(hass).async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         CLIMATE_DOMAIN,
         DOMAIN,
         "ABC123",
@@ -857,7 +865,7 @@ def test_registry_transfer_rejects_an_unexpected_owner(
             anchor_entry_id=anchor_entry.entry_id,
         )
 
-    assert er.async_get(hass).async_get(entity.entity_id).config_entry_id == (
+    assert entity_registry.async_get(entity.entity_id).config_entry_id == (
         unrelated_entry.entry_id
     )
 
@@ -902,6 +910,7 @@ def test_migration_plan_is_immutable_and_revalidates_before_execution(
 @pytest.mark.asyncio
 async def test_rollback_restores_loaded_existing_oauth_anchor(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """A failed migration returns a previously loaded OAuth anchor to service."""
     anchor, legacy, records, plan = build_existing_anchor_plan(hass, loaded=True)
@@ -942,7 +951,7 @@ async def test_rollback_restores_loaded_existing_oauth_anchor(
     unload.assert_awaited_once_with(anchor.entry_id)
     setup.assert_awaited_once_with(anchor.entry_id)
     assert (
-        ir.async_get(hass).async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{anchor.entry_id}"
         )
         is None
@@ -952,6 +961,7 @@ async def test_rollback_restores_loaded_existing_oauth_anchor(
 @pytest.mark.asyncio
 async def test_rollback_leaves_originally_unloaded_anchor_unloaded(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Rollback does not load an OAuth anchor that was originally offline."""
     anchor, legacy, records, plan = build_existing_anchor_plan(hass, loaded=False)
@@ -972,7 +982,7 @@ async def test_rollback_leaves_originally_unloaded_anchor_unloaded(
     assert anchor.state is ConfigEntryState.NOT_LOADED
     setup.assert_not_awaited()
     assert (
-        ir.async_get(hass).async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{anchor.entry_id}"
         )
         is None
@@ -982,6 +992,7 @@ async def test_rollback_leaves_originally_unloaded_anchor_unloaded(
 @pytest.mark.asyncio
 async def test_rollback_loaded_state_restore_failure_creates_repair_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Failure to restart a previously loaded anchor makes rollback incomplete."""
     anchor, _, _, plan = build_existing_anchor_plan(hass, loaded=True)
@@ -1010,7 +1021,7 @@ async def test_rollback_loaded_state_restore_failure_creates_repair_issue(
     setup.assert_awaited_once_with(anchor.entry_id)
     assert anchor.state is ConfigEntryState.NOT_LOADED
     assert (
-        ir.async_get(hass).async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{anchor.entry_id}"
         )
         is not None
@@ -1034,15 +1045,16 @@ async def test_rollback_loaded_state_restore_failure_creates_repair_issue(
 async def test_pre_boundary_failures_restore_exact_local_state(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     failure_point: str,
+    issue_registry: ir.IssueRegistry,
     occurrence: int,
 ) -> None:
     """Every failure before the first removal restores original local state."""
     entries, records, plan = build_three_entry_plan(hass)
     unrelated = add_legacy_entry(hass, "OTHER1", username="unrelated@example.invalid")
     before = local_state(hass, [*entries, unrelated], records)
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     original_remove = hass.config_entries.async_remove
 
     async def fail_first_remove(entry_id):
@@ -1117,14 +1129,13 @@ async def test_pre_boundary_failures_restore_exact_local_state(
 
     assert hass.config_entries.async_remove == original_remove
     assert local_state(hass, [*entries, unrelated], records) == before
-    assert len(er.async_get(hass).entities) == 3
-    assert len(dr.async_get(hass).devices) == 3
+    assert len(entity_registry.entities) == 3
+    assert len(device_registry.devices) == 3
     assert LEGACY_PASSWORD not in caplog.text
     assert "synthetic-access-token" not in caplog.text
     assert "synthetic-refresh-token" not in caplog.text
-    issue_reg = ir.async_get(hass)
     assert (
-        issue_reg.async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{plan.anchor_entry_id}"
         )
         is None
@@ -1134,6 +1145,9 @@ async def test_pre_boundary_failures_restore_exact_local_state(
 @pytest.mark.asyncio
 async def test_later_cleanup_failure_is_resumable_after_restart(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Cleanup after the removal boundary leaves a usable, retryable anchor."""
     entries, records, plan = build_three_entry_plan(hass)
@@ -1169,7 +1183,7 @@ async def test_later_cleanup_failure_is_resumable_after_restart(
     assert hass.config_entries.async_get_entry(unrelated.entry_id) is unrelated
     assert unrelated.data == unrelated_data
     assert (
-        ir.async_get(hass).async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_CLEANUP_INCOMPLETE}_{plan.anchor_entry_id}"
         )
         is not None
@@ -1188,29 +1202,30 @@ async def test_later_cleanup_failure_is_resumable_after_restart(
     assert CONF_PASSWORD not in entries[0].data
     assert hass.config_entries.async_get_entry(unrelated.entry_id) is unrelated
     assert (
-        ir.async_get(hass).async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_CLEANUP_INCOMPLETE}_{plan.anchor_entry_id}"
         )
         is None
     )
     for entity, device, *_ in records:
-        assert er.async_get(hass).async_get(entity.entity_id).id == entity.id
-        assert er.async_get(hass).async_get(entity.entity_id).config_entry_id == (
+        assert entity_registry.async_get(entity.entity_id).id == entity.id
+        assert entity_registry.async_get(entity.entity_id).config_entry_id == (
             entries[0].entry_id
         )
-        assert dr.async_get(hass).async_get(device.id).config_entries == {
+        assert device_registry.async_get(device.id).config_entries == {
             entries[0].entry_id
         }
 
 
 @pytest.mark.asyncio
 async def test_rollback_failure_creates_secret_free_repair_issue(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Incomplete restoration is visible without logging credential values."""
     entries, _, plan = build_three_entry_plan(hass)
-    entity_registry = er.async_get(hass)
-
     with (
         patch.object(
             entity_registry,
@@ -1224,7 +1239,7 @@ async def test_rollback_failure_creates_secret_free_repair_issue(
         await execute_migration_plan(hass, plan, oauth_data=oauth_data())
 
     assert (
-        ir.async_get(hass).async_get_issue(
+        issue_registry.async_get_issue(
             DOMAIN, f"{ISSUE_ROLLBACK_FAILED}_{entries[0].entry_id}"
         )
         is not None
@@ -1242,6 +1257,8 @@ async def test_rollback_failure_creates_secret_free_repair_issue(
 @pytest.mark.asyncio
 async def test_restart_after_registry_transfer_converges_without_duplicates(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A process stop after ownership transfer is safe to plan and retry."""
     entries, records, plan = build_three_entry_plan(hass)
@@ -1268,13 +1285,15 @@ async def test_restart_after_registry_transfer_converges_without_duplicates(
     assert result.cleanup_complete is True
     assert hass.config_entries.async_entries(DOMAIN) == [entries[0]]
     assert CONF_PASSWORD not in entries[0].data
-    assert len(er.async_get(hass).entities) == len(records)
-    assert len(dr.async_get(hass).devices) == len(records)
+    assert len(entity_registry.entities) == len(records)
+    assert len(device_registry.devices) == len(records)
 
 
 @pytest.mark.asyncio
 async def test_restart_after_anchor_conversion_resumes_cleanup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A process stop after durable markers converges during next setup."""
     entries, records, plan = build_three_entry_plan(hass)
@@ -1304,13 +1323,15 @@ async def test_restart_after_anchor_conversion_resumes_cleanup(
     assert hass.config_entries.async_entries(DOMAIN) == [entries[0]]
     assert CONF_PASSWORD not in entries[0].data
     assert CONF_MIGRATION_STATE not in entries[0].data
-    assert len(er.async_get(hass).entities) == len(records)
-    assert len(dr.async_get(hass).devices) == len(records)
+    assert len(entity_registry.entities) == len(records)
+    assert len(device_registry.devices) == len(records)
 
 
 @pytest.mark.asyncio
 async def test_retry_after_successful_rollback_completes(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A rolled-back migration can be planned again and completed."""
     entries, records, plan = build_three_entry_plan(hass)
@@ -1340,5 +1361,5 @@ async def test_retry_after_successful_rollback_completes(
     assert result.cleanup_complete is True
     assert hass.config_entries.async_entries(DOMAIN) == [entries[0]]
     assert CONF_PASSWORD not in entries[0].data
-    assert len(er.async_get(hass).entities) == len(records)
-    assert len(dr.async_get(hass).devices) == len(records)
+    assert len(entity_registry.entities) == len(records)
+    assert len(device_registry.devices) == len(records)

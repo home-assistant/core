@@ -56,6 +56,9 @@
     "oauth_subject_migration_failed": {
       "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
     },
+    "unsupported_mode": {
+      "message": "NuHeat reported unsupported thermostat mode {mode}. Refresh before retrying."
+    },
     "unsupported_preset": {
       "message": "The preset {preset} is not supported by NuHeat."
     }
