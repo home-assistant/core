@@ -110,6 +110,8 @@ class MatterEventEntityBase(MatterEntity, EventEntity):
 class MatterButtonEventEntity(MatterEventEntityBase):
     """Matter Event entity using the standard button event types."""
 
+    _map_initial_press_to_press_end: bool = False
+
     @override
     @callback
     def _update_from_device(self) -> None:
@@ -120,13 +122,24 @@ class MatterButtonEventEntity(MatterEventEntityBase):
         feature_map = int(
             self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
         )
+        # a momentary switch without release support (and no action switch)
+        # only emits InitialPress, and such single-event interactions
+        # map to the matching end event type
+        self._map_initial_press_to_press_end = bool(
+            feature_map & SwitchFeature.kMomentarySwitch
+        ) and not feature_map & (
+            SwitchFeature.kMomentarySwitchRelease | SwitchFeature.kActionSwitch
+        )
         if feature_map & SwitchFeature.kLatchingSwitch:
             # a latching switch only supports the switch_latched event
             event_types.append("switch_latched")
         elif feature_map & SwitchFeature.kMomentarySwitch:
-            event_types.append(ButtonEventType.PRESS_START)
-            if feature_map & SwitchFeature.kMomentarySwitchRelease:
+            if self._map_initial_press_to_press_end:
                 event_types.append(ButtonEventType.PRESS_END)
+            else:
+                event_types.append(ButtonEventType.PRESS_START)
+                if feature_map & SwitchFeature.kMomentarySwitchRelease:
+                    event_types.append(ButtonEventType.PRESS_END)
             if feature_map & SwitchFeature.kMomentarySwitchLongPress:
                 event_types.append(ButtonEventType.LONG_PRESS_START)
                 event_types.append(ButtonEventType.LONG_PRESS_END)
@@ -145,6 +158,11 @@ class MatterButtonEventEntity(MatterEventEntityBase):
         """Handle a Switch cluster event."""
         if (event_type := STANDARD_EVENT_TYPES_MAP.get(data.event_id)) is None:
             return
+        if (
+            self._map_initial_press_to_press_end
+            and data.event_id == clusters.Switch.Events.InitialPress.event_id
+        ):
+            event_type = ButtonEventType.PRESS_END
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things
             # some remotes send events that they do not report as supported (sigh...)

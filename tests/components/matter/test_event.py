@@ -224,6 +224,25 @@ async def test_generic_switch_multi_node(
     assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 3
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_generic_switch"])
+@pytest.mark.parametrize("attributes", [{"1/59/65532": 2}])
+async def test_momentary_switch_without_release(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test event entity for a momentary switch without release support."""
+    state = hass.states.get("event.mock_generic_switch_button")
+    assert state
+    # a switch with featuremap 2 (0b10) only emits InitialPress,
+    # which maps to press_end for single-event interactions
+    assert state.attributes[ATTR_EVENT_TYPES] == ["press_end"]
+    # trigger firing an InitialPress event from the device
+    await trigger_switch_event(hass, matter_client, matter_node, 1)
+    state = hass.states.get("event.mock_generic_switch_button")
+    assert state.attributes[ATTR_EVENT_TYPE] == "press_end"
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_doorbell"])
 @pytest.mark.parametrize(
     "attributes",
