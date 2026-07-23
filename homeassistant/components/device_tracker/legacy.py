@@ -854,7 +854,17 @@ class Device(RestoreEntity):
             attributes[ATTR_BATTERY] = self.battery
 
         if self._state == STATE_HOME:
-            attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = [ENTITY_ID_HOME]
+            if self.gps is not None:
+                in_zones = zone.async_in_zones(
+                    self.hass, self.gps[0], self.gps[1], self.gps_accuracy
+                )[1]
+                if ENTITY_ID_HOME not in in_zones:
+                    in_zones.insert(0, ENTITY_ID_HOME)
+                attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = in_zones
+            else:
+                attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = [
+                    ENTITY_ID_HOME
+                ]
             if (
                 self.gps is None
                 and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
