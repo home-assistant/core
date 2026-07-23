@@ -1,6 +1,7 @@
 """Support for ESPHome climate devices."""
 
 from functools import partial
+import logging
 from math import isfinite
 from typing import Any, cast, override
 
@@ -67,6 +68,8 @@ from .entity import (
 from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 FAN_QUIET = "quiet"
 
@@ -143,9 +146,14 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
-        self._attr_temperature_unit = TEMPERATURE_UNIT_MAP.get(
-            static_info.temperature_unit, UnitOfTemperature.CELSIUS
-        )
+        if (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit)) is None:
+            _LOGGER.debug(
+                "%s: Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
+                self.entity_id,
+                static_info.temperature_unit,
+            )
+            ha_unit = UnitOfTemperature.CELSIUS
+        self._attr_temperature_unit = ha_unit
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes

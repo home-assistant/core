@@ -1,6 +1,7 @@
 """Support for ESPHome water heaters."""
 
 from functools import partial
+import logging
 from typing import Any, override
 
 from aioesphomeapi import (
@@ -31,6 +32,7 @@ from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
 
+_LOGGER = logging.getLogger(__name__)
 
 _WATER_HEATER_MODES: EsphomeEnumMapper[WaterHeaterMode, str] = EsphomeEnumMapper(
     {
@@ -58,9 +60,14 @@ class EsphomeWaterHeater(
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
-        self._attr_temperature_unit = TEMPERATURE_UNIT_MAP.get(
-            static_info.temperature_unit, UnitOfTemperature.CELSIUS
-        )
+        if (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit)) is None:
+            _LOGGER.debug(
+                "%s: Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
+                self.entity_id,
+                static_info.temperature_unit,
+            )
+            ha_unit = UnitOfTemperature.CELSIUS
+        self._attr_temperature_unit = ha_unit
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step

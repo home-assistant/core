@@ -31,7 +31,6 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
-    DATA_COMPONENT,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
     SERVICE_SET_FAN_MODE,
@@ -690,16 +689,13 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
 
 
 @pytest.mark.parametrize(
-    ("temperature_unit", "expected_unit"),
+    ("temperature_unit", "expected_temperature"),
     [
-        (TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
-        (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureUnit.KELVIN, UnitOfTemperature.KELVIN),
-        (
-            3,
-            UnitOfTemperature.CELSIUS,
-        ),  # unknown value falls back to Celsius
-        (None, UnitOfTemperature.CELSIUS),  # None value falls back to Celsius
+        pytest.param(TemperatureUnit.CELSIUS, 22.0, id="celsius"),
+        pytest.param(TemperatureUnit.FAHRENHEIT, -5.6, id="fahrenheit"),
+        pytest.param(TemperatureUnit.KELVIN, -251.1, id="kelvin"),
+        pytest.param(3, 22.0, id="unknown_falls_back_to_celsius"),
+        pytest.param(None, 22.0, id="none_falls_back_to_celsius"),
     ],
 )
 async def test_climate_entity_temperature_unit(
@@ -707,9 +703,10 @@ async def test_climate_entity_temperature_unit(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
     temperature_unit: TemperatureUnit | int | None,
-    expected_unit: UnitOfTemperature,
+    expected_temperature: float,
 ) -> None:
     """Test that the temperature unit is passed through correctly."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     entity_info = [
         ClimateInfo(
             object_id="myclimate",
@@ -724,7 +721,6 @@ async def test_climate_entity_temperature_unit(
         entity_info=entity_info,
         states=states,
     )
-    assert hass.states.get("climate.test_my_climate") is not None
-    entity = hass.data[DATA_COMPONENT].get_entity("climate.test_my_climate")
-    assert entity is not None
-    assert entity.temperature_unit == expected_unit
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature

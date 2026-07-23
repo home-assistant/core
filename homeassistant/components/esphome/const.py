@@ -45,8 +45,7 @@ NO_WAKE_WORD: Final[str] = "no_wake_word"
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
 WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
 
-TEMPERATURE_UNIT_MAP: dict[TemperatureUnit | None, UnitOfTemperature] = {
-    None: UnitOfTemperature.CELSIUS,
+TEMPERATURE_UNIT_MAP: dict[TemperatureUnit, UnitOfTemperature] = {
     TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
     TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
     TemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,

@@ -16,7 +16,6 @@ import pytest
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_LIST,
-    DATA_COMPONENT,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
@@ -29,7 +28,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 
@@ -468,16 +466,13 @@ async def test_water_heater_set_away_mode(
 
 
 @pytest.mark.parametrize(
-    ("temperature_unit", "expected_unit"),
+    ("temperature_unit", "expected_temperature"),
     [
-        (TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
-        (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureUnit.KELVIN, UnitOfTemperature.KELVIN),
-        (
-            3,
-            UnitOfTemperature.CELSIUS,
-        ),  # unknown value falls back to Celsius
-        (None, UnitOfTemperature.CELSIUS),  # None value falls back to Celsius
+        pytest.param(TemperatureUnit.CELSIUS, 50.0, id="celsius"),
+        pytest.param(TemperatureUnit.FAHRENHEIT, 10.0, id="fahrenheit"),
+        pytest.param(TemperatureUnit.KELVIN, -223.1, id="kelvin"),
+        pytest.param(3, 50.0, id="unknown_falls_back_to_celsius"),
+        pytest.param(None, 50.0, id="none_falls_back_to_celsius"),
     ],
 )
 async def test_water_heater_temperature_unit(
@@ -485,7 +480,7 @@ async def test_water_heater_temperature_unit(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
     temperature_unit: TemperatureUnit | int | None,
-    expected_unit: UnitOfTemperature,
+    expected_temperature: float,
 ) -> None:
     """Test that the temperature unit is passed through correctly."""
     entity_info = [
@@ -504,7 +499,6 @@ async def test_water_heater_temperature_unit(
         entity_info=entity_info,
         states=states,
     )
-    assert hass.states.get("water_heater.test_my_boiler") is not None
-    entity = hass.data[DATA_COMPONENT].get_entity("water_heater.test_my_boiler")
-    assert entity is not None
-    assert entity.temperature_unit == expected_unit
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
