@@ -23,13 +23,13 @@ rules:
     comment: This integration does not provide conditions.
   docs-high-level-description:
     status: done
-    comment: The integration documentation is submitted in home-assistant.io#46992.
+    comment: The integration documentation is submitted in home-assistant.io#46993.
   docs-installation-instructions:
     status: done
-    comment: Setup and OAuth authorization are documented in home-assistant.io#46992.
+    comment: Setup and OAuth authorization are documented in home-assistant.io#46993.
   docs-removal-instructions:
     status: done
-    comment: Removal instructions are documented in home-assistant.io#46992.
+    comment: Removal instructions are documented in home-assistant.io#46993.
   docs-triggers:
     status: exempt
     comment: This integration does not provide triggers.
