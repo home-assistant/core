@@ -426,17 +426,16 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     def _target_operation_mode(self, hvac_mode: HVACMode) -> str:
         """Return the zone operation mode for a direction, preserving the method."""
-        current = self._zone.operation_mode
         if hvac_mode == HVACMode.HEAT:
-            if current == ZONE_OPERATION_MODE_COOL_FLOW:
+            if self._zone.operation_mode == ZONE_OPERATION_MODE_COOL_FLOW:
                 return ZONE_OPERATION_MODE_HEAT_FLOW
-            if current in HEAT_OPERATION_MODES:
-                return current
+            if self._zone.operation_mode in HEAT_OPERATION_MODES:
+                return self._zone.operation_mode
             return ZONE_OPERATION_MODE_HEAT_THERMOSTAT
-        if current == ZONE_OPERATION_MODE_HEAT_FLOW:
+        if self._zone.operation_mode == ZONE_OPERATION_MODE_HEAT_FLOW:
             return ZONE_OPERATION_MODE_COOL_FLOW
-        if current in COOL_OPERATION_MODES:
-            return current
+        if self._zone.operation_mode in COOL_OPERATION_MODES:
+            return self._zone.operation_mode
         return ZONE_OPERATION_MODE_COOL_THERMOSTAT
 
     @override
