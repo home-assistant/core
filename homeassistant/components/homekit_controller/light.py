@@ -188,8 +188,12 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         characteristics: dict[str, Any] = {}
 
         if brightness is not None:
-            characteristics[CharacteristicsTypes.BRIGHTNESS] = int(
-                brightness * 100 / 255
+            # Never send 0 for a nonzero requested brightness; some devices
+            # such as Nanoleaf Essentials treat brightness 0 with on as full
+            # brightness. Brightness 0 is already handled as turn_off by the
+            # light component.
+            characteristics[CharacteristicsTypes.BRIGHTNESS] = max(
+                1, int(brightness * 100 / 255)
             )
 
         # If they send both temperature and hs_color, and the device
