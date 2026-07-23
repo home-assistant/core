@@ -271,7 +271,9 @@ class IpBanManager:
                 self.ip_bans_lookup = self._data_from_load(list_) if list_ else {}
                 await self.store.async_save(self._data_to_save())
                 os.unlink(path)
-                _LOGGER.info("Migrated %d IP bans from %s", len(list_), path)
+                _LOGGER.info(
+                    "Migrated %d IP bans from %s", len(self.ip_bans_lookup), path
+                )
             except FileNotFoundError:
                 pass
             except HomeAssistantError as err:
