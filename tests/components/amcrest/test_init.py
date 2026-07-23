@@ -2,10 +2,12 @@
 
 from unittest.mock import patch
 
+from homeassistant.components.amcrest.const import RESOLUTION_LIST
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_CONFIG_ENTRY_TITLE, setup_mock_amcrest_checker
+from .conftest import TEST_CONFIG_ENTRY_TITLE, TEST_SERIAL, setup_mock_amcrest_checker
 
 from tests.common import MockConfigEntry
 
@@ -53,3 +55,69 @@ async def test_unload_entry(
 
     assert stop_event.is_set()
     assert loaded_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_binary_sensor_assigns_unique_id_on_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    loaded_config_entry: MockConfigEntry,
+) -> None:
+    """Test binary sensors lazily assign unique_id during update."""
+    title_slug = TEST_CONFIG_ENTRY_TITLE.lower().replace(" ", "_")
+    entity_id = f"binary_sensor.{title_slug}_motion_detected"
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.unique_id == f"{TEST_SERIAL}-motion_detected-0"
+
+
+async def test_sensor_assigns_unique_id_on_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    loaded_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensors lazily assign unique_id during update."""
+    title_slug = TEST_CONFIG_ENTRY_TITLE.lower().replace(" ", "_")
+    entity_id = f"sensor.{title_slug}_sd_used"
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.unique_id == f"{TEST_SERIAL}-sdcard-0"
+
+
+async def test_camera_assigns_unique_id_on_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    loaded_config_entry: MockConfigEntry,
+) -> None:
+    """Test camera lazily assigns unique_id during update."""
+    title_slug = TEST_CONFIG_ENTRY_TITLE.lower().replace(" ", "_")
+    entity_id = f"camera.{title_slug}"
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.unique_id == f"{TEST_SERIAL}-{RESOLUTION_LIST['high']}-0"
