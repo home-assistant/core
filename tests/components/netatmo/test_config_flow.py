@@ -7,7 +7,9 @@ from pyatmo.const import ALL_SCOPES
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.netatmo.config_flow import CONF_ENABLED_HOMES
 from homeassistant.components.netatmo.const import (
+    CONF_DISABLED_HOMES,
     CONF_NEW_AREA,
     CONF_WEATHER_AREAS,
     DOMAIN,
@@ -15,6 +17,7 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -23,6 +26,7 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
+from .common import selected_platforms
 from .conftest import CLIENT_ID
 
 from tests.common import MockConfigEntry, start_reauth_flow
@@ -30,6 +34,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 VALID_CONFIG = {}
+
+HOME_1_ID = "91763b24c43d3e344f424e8b"
+HOME_2_ID = "91763b24c43d3e344f424e8c"
 
 
 async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
@@ -235,6 +242,48 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     for k, v in expected_result.items():
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
+
+
+@pytest.mark.usefixtures("netatmo_auth")
+async def test_option_flow_homes(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test selecting the enabled homes in the options flow."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "public_weather_areas"
+        schema_keys = [str(key) for key in result["data_schema"].schema]
+        assert CONF_ENABLED_HOMES in schema_keys
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_ENABLED_HOMES: [HOME_1_ID]}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_DISABLED_HOMES] == [HOME_2_ID]
+    # The pre-existing weather areas are preserved
+    assert "Home avg" in config_entry.options[CONF_WEATHER_AREAS]
+
+
+async def test_option_flow_homes_entry_not_loaded(hass: HomeAssistant) -> None:
+    """Test the home selector is not offered when the entry is not loaded."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=DOMAIN, data=VALID_CONFIG, options={}
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "public_weather_areas"
+    schema_keys = [str(key) for key in result["data_schema"].schema]
+    assert CONF_ENABLED_HOMES not in schema_keys
 
 
 @pytest.mark.usefixtures("current_request_with_host")

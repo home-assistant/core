@@ -13,7 +13,9 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.components.netatmo.const import CONF_DISABLED_HOMES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -73,6 +75,9 @@ FAKE_WEBHOOK = {
     "push_type": "display_change",
 }
 
+HOME_1_ID = "91763b24c43d3e344f424e8b"
+HOME_2_ID = "91763b24c43d3e344f424e8c"
+
 
 async def test_setup_component(
     hass: HomeAssistant, config_entry: MockConfigEntry
@@ -112,6 +117,86 @@ async def test_setup_component(
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+@pytest.mark.usefixtures("netatmo_auth")
+async def test_setup_with_disabled_home(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a disabled home is excluded from the account topology."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={**config_entry.options, CONF_DISABLED_HOMES: [HOME_1_ID]},
+    )
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    account = config_entry.runtime_data.account
+    assert set(account.all_homes_id) == {HOME_1_ID, HOME_2_ID}
+    assert HOME_2_ID in account.homes
+    # The disabled home is only known as a weather station pseudo-home,
+    # without its topology (rooms, climate devices)
+    assert not account.homes[HOME_1_ID].rooms
+    assert not hass.states.async_entity_ids(CLIMATE_DOMAIN)
+
+
+@pytest.mark.usefixtures("netatmo_auth")
+async def test_disabling_home_reloads_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test disabling a home reloads the entry without the home's devices."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        climate_entity_ids = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+        assert climate_entity_ids
+        assert hass.states.get(climate_entity_ids[0]).state != STATE_UNAVAILABLE
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={**config_entry.options, CONF_DISABLED_HOMES: [HOME_1_ID]},
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.runtime_data.disabled_homes == {HOME_1_ID}
+    assert not config_entry.runtime_data.account.homes[HOME_1_ID].rooms
+    # The disabled home's entities are no longer provided; only their
+    # registry-restored placeholder states remain
+    for entity_id in climate_entity_ids:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("options_update", "expected_reload_calls"),
+    [
+        pytest.param({CONF_DISABLED_HOMES: [HOME_1_ID]}, 1, id="home_disabled"),
+        pytest.param({CONF_DISABLED_HOMES: []}, 0, id="home_selection_unchanged"),
+        pytest.param({"weather_areas": {}}, 0, id="unrelated_option"),
+    ],
+)
+@pytest.mark.usefixtures("netatmo_auth")
+async def test_reload_on_home_selection_change(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    options_update: dict[str, Any],
+    expected_reload_calls: int,
+) -> None:
+    """Test the entry is only reloaded when the set of enabled homes changes."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with patch.object(hass.config_entries, "async_reload") as mock_reload:
+            hass.config_entries.async_update_entry(
+                config_entry, options={**config_entry.options, **options_update}
+            )
+            await hass.async_block_till_done()
+
+    assert mock_reload.call_count == expected_reload_calls
 
 
 async def test_setup_component_with_config(

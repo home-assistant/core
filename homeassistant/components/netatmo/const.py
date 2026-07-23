@@ -60,6 +60,7 @@ NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
 CONF_AREA_NAME = "area_name"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
+CONF_DISABLED_HOMES = "disabled_homes"
 CONF_LAT_NE = "lat_ne"
 CONF_LAT_SW = "lat_sw"
 CONF_LON_NE = "lon_ne"
