@@ -1,7 +1,7 @@
 """Switch entities for Beatbot."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -44,20 +44,24 @@ class BeatbotSwitch(BeatbotEntity, SwitchEntity):
         self._attr_translation_key = description.translation_key
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the switch can be controlled."""
         return self.data.is_online and self.coordinator.last_update_success
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the switch state."""
         value = getattr(self.data, self._description.data_field)
         return value is True or value in {1, "on"}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._async_set_enabled("on")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_set_enabled("off")

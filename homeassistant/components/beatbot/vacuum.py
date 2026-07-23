@@ -1,6 +1,6 @@
 """Vacuum entities for the Beatbot integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -59,6 +59,7 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
         self._error_mask = VACUUM_ERROR_MASK_BY_CATEGORY.get(category, -1)
 
     @property
+    @override
     def activity(self) -> VacuumActivity:
         """Return the current vacuum activity."""
         if self.data.error_code & self._error_mask:
@@ -66,10 +67,12 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
         return self._status_map.get(self.data.work_status, VacuumActivity.IDLE)
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the vacuum can be controlled."""
         return self.data.is_online and self.coordinator.last_update_success
 
+    @override
     async def async_start(self) -> None:
         """Start cleaning."""
         await self._async_send_command(
@@ -77,6 +80,7 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
         )
         self.coordinator.async_schedule_device_state_refresh(self._device_id)
 
+    @override
     async def async_pause(self) -> None:
         """Pause cleaning."""
         await self._async_send_command(
@@ -84,6 +88,7 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
         )
         self.coordinator.async_schedule_device_state_refresh(self._device_id)
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return the cleaner to its base."""
         await self._async_send_command(

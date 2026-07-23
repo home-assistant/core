@@ -1,6 +1,7 @@
 """Select entities for Beatbot."""
 
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
@@ -28,15 +29,18 @@ class BeatbotWorkModeSelect(BeatbotEntity, SelectEntity):
         }
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the work mode can be controlled."""
         return self.data.is_online and self.coordinator.last_update_success
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the active work-mode label."""
         return self.data.work_mode_options.get(self.data.work_mode)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the device work mode."""
         if option not in self._option_to_value:

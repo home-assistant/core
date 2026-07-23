@@ -1,5 +1,7 @@
 """Sensors for the Beatbot integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -75,6 +77,7 @@ class BeatbotStatusSensor(BeatbotEntity, SensorEntity):
         self._attr_options = list(dict.fromkeys(self._status_map.values()))
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the translated work-status key."""
         return self._status_map.get(self.data.work_status)
@@ -98,6 +101,7 @@ class BeatbotBatterySensor(BeatbotEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_battery"
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the battery percentage."""
         return self.data.battery_level
@@ -132,6 +136,7 @@ class BeatbotErrorSensor(BeatbotEntity, SensorEntity):
         self._attr_options = [key for key, _ in bits] + ["none"]
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the primary active error key."""
         for key, bit in self._bits:
@@ -140,6 +145,7 @@ class BeatbotErrorSensor(BeatbotEntity, SensorEntity):
         return "none"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Per-bit on/off map. Keys are raw capability slugs (not translated)."""
         code = self.data.error_code
