@@ -187,7 +187,7 @@ async def test_filter_sensor(
 ) -> None:
     """Test numeric sensors are filtered."""
 
-    registry = er.async_get(hass_)
+    registry = er.async_get(hass_)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Unregistered sensor without a unit of measurement - should be in logbook
     entity_id1 = "sensor.bla"
@@ -3225,7 +3225,7 @@ async def test_context_user_ids_lru_eviction(
         for_live_stream=True,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     processor = logbook.processor.EventProcessor.__new__(
         logbook.processor.EventProcessor
@@ -3353,7 +3353,7 @@ async def test_parent_user_attribution_does_not_use_origin_event_fallback(
         memoize_new_contexts=False,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     processor = logbook.processor.EventProcessor.__new__(
         logbook.processor.EventProcessor
