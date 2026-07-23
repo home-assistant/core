@@ -1,4 +1,4 @@
-"""Tests for midea_lan entity behavior via loaded platforms."""
+"""Tests for midea entity behavior via loaded platforms."""
 
 from collections.abc import Callable
 
