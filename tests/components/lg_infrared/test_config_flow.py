@@ -11,7 +11,7 @@ from homeassistant.components.lg_infrared.const import (
     DOMAIN,
     LGDeviceType,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er
@@ -25,7 +25,7 @@ from tests.components.infrared import (
 
 async def _async_start_flow(
     hass: HomeAssistant, device_type: LGDeviceType
-) -> dict[str, str]:
+) -> ConfigFlowResult:
     """Start the user flow and pick a device type from the menu."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

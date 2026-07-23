@@ -234,9 +234,7 @@ class LgAcClimateWithReceiver(LgAcClimateEntity, InfraredReceiverConsumerEntity)
             return
         self._attr_hvac_mode = hvac_mode
 
-        # A power-off frame is a fixed code carrying neither fan nor temperature, so the
-        # decoded command leaves them unset. Keep the last known values instead, otherwise
-        # powering off would reset them.
+        # Power-off frames omit fan and temperature, so preserve the last known values.
         if command.fan is not None:
             self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
         if command.temperature is not None:
