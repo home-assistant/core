@@ -45,7 +45,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, GPSType, StateType
+from homeassistant.helpers.typing import ConfigType, GPSType
 from homeassistant.setup import (
     SetupPhases,
     async_notify_setup_error,
@@ -839,9 +839,9 @@ class Device(RestoreEntity):
     @final
     @property
     @override
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes: dict[str, StateType] = {
+        attributes: dict[str, Any] = {
             DeviceTrackerEntityStateAttribute.SOURCE_TYPE: self.source_type
         }
 
@@ -852,6 +852,29 @@ class Device(RestoreEntity):
 
         if self.battery is not None:
             attributes[ATTR_BATTERY] = self.battery
+
+        if self._state == STATE_HOME:
+            if self.gps is not None:
+                in_zones = zone.async_in_zones(
+                    self.hass, self.gps[0], self.gps[1], self.gps_accuracy
+                )[1]
+                if ENTITY_ID_HOME not in in_zones:
+                    in_zones.insert(0, ENTITY_ID_HOME)
+                attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = in_zones
+            else:
+                attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = [
+                    ENTITY_ID_HOME
+                ]
+            if (
+                self.gps is None
+                and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
+            ):
+                attributes[EntityStateAttribute.LATITUDE] = home_zone.attributes.get(
+                    EntityStateAttribute.LATITUDE
+                )
+                attributes[EntityStateAttribute.LONGITUDE] = home_zone.attributes.get(
+                    EntityStateAttribute.LONGITUDE
+                )
 
         return attributes
 
