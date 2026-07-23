@@ -344,7 +344,7 @@ async def test_setup_api_push_api_data_default(
     assert result
     assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=8123, refresh_token=ANY)
+        HomeAssistantOptions(ssl=False, port=80, refresh_token=ANY)
     )
     refresh_token = (
         supervisor_client.homeassistant.set_options.mock_calls[0].args[0].refresh_token
@@ -420,7 +420,7 @@ async def test_setup_api_existing_hassio_user(
     assert result
     assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
-        HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
+        HomeAssistantOptions(ssl=False, port=80, refresh_token=token.token)
     )
 
 

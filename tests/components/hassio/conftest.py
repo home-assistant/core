@@ -17,6 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import SUPERVISOR_TOKEN
 
+from tests.common import async_mock_service
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -28,6 +29,19 @@ def disable_security_filter() -> Generator[None]:
         re.compile("not-matching-anything"),
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_homeassistant_restart(hass: HomeAssistant) -> None:
+    """Register a no-op homeassistant.restart service.
+
+    Under Supervisor the HTTP default port is 80, but _DEFAULT_CONFIG is frozen
+    to 8123 at import time in the test process, so the config store treats the
+    default as a pending change and schedules an auto-revert. Tests here advance
+    time past the trial window, firing that revert, which restarts Core - mock
+    the service so the call does not fail on a missing handler.
+    """
+    async_mock_service(hass, "homeassistant", "restart")
 
 
 @pytest.fixture
