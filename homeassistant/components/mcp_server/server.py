@@ -58,7 +58,7 @@ def _normalize_hass_target_arguments(
     tool: llm.Tool | None, arguments: dict[str, Any]
 ) -> dict[str, Any]:
     """Remove empty target arguments from Home Assistant intent tool calls."""
-    while isinstance(tool, llm.NamespacedTool):
+    if isinstance(tool, llm.NamespacedTool):
         tool = tool.tool
 
     if not isinstance(tool, llm.IntentTool):
