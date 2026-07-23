@@ -43,6 +43,189 @@ def _ha_to_tewke_brightness(value: int) -> int:
     return round(value / 255 * 100)
 
 
+class _TewkeObserver:
+    """Observer for Tewke device callbacks."""
+
+    def __init__(
+        self,
+        coordinator: TewkeCoordinator,
+        hass: HomeAssistant,
+        entry: TewkeConfigEntry,
+    ) -> None:
+        """Initialize the observer."""
+        self.coordinator = coordinator
+        self.hass = hass
+        self.entry = entry
+
+    def on_scene_update(self, scenes: dict[str, Scene]) -> None:
+        """Handle scene updates from the Tewke device.
+
+        This callback is triggered when the scenes on the device change. It
+        identifies new scenes and creates a repair issue to configure them.
+        """
+        self.coordinator.reset_observation_timeout()
+        if self.coordinator.data is None:
+            return
+
+        scene_control_types = self.entry.runtime_data.scene_control_types
+
+        # Handle scenes that are no longer provided by the device
+        removed_configured_ids = [
+            sid for sid in scene_control_types if sid not in scenes
+        ]
+        if removed_configured_ids:
+            LOGGER.info(
+                "Marking deleted scenes as unavailable: %s", removed_configured_ids
+            )
+            new_scene_control_types = dict(scene_control_types)
+
+            for sid in removed_configured_ids:
+                del new_scene_control_types[sid]
+
+            new_data = dict(self.entry.data)
+            new_data["scene_control_types"] = new_scene_control_types
+
+            self.entry.runtime_data.scene_control_types = new_scene_control_types
+            self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+            return
+
+        configured_scenes = {
+            scene_id: scene
+            for scene_id, scene in scenes.items()
+            if scene_id in scene_control_types
+        }
+
+        self.coordinator.async_set_updated_data(
+            {
+                **self.coordinator.data,
+                "scenes": configured_scenes,
+                "scenes_all": scenes,
+            }
+        )
+
+        # Remove pending scenes that no longer exist on the device
+        stale_ids = [
+            sid for sid in self.entry.runtime_data.pending_scenes if sid not in scenes
+        ]
+        for sid in stale_ids:
+            del self.entry.runtime_data.pending_scenes[sid]
+
+        new_scenes = {
+            scene_id: scene
+            for scene_id, scene in scenes.items()
+            if scene_id not in scene_control_types
+            and scene_id not in self.entry.runtime_data.pending_scenes
+        }
+
+        if not new_scenes and not self.entry.runtime_data.pending_scenes:
+            ir.async_delete_issue(
+                self.hass, DOMAIN, f"new_scenes_found_{self.entry.entry_id}"
+            )
+
+        if new_scenes:
+            LOGGER.info("Discovered new scenes, pending configuration: %s", new_scenes)
+            self.entry.runtime_data.pending_scenes.update(new_scenes)
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"new_scenes_found_{self.entry.entry_id}",
+                data={"entry_id": self.entry.entry_id},
+                is_fixable=True,
+                is_persistent=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="new_scenes_found",
+                translation_placeholders={"name": self.entry.title},
+            )
+
+    def on_target_update(self, targets: dict[int, Target]) -> None:
+        """Handle target updates from the Tewke device.
+
+        This callback is triggered when the targets on the device change.
+        It updates the coordinator with the new target data.
+        """
+        self.coordinator.reset_observation_timeout()
+        if self.coordinator.data is None:
+            return
+
+        self.coordinator.async_set_updated_data(
+            {
+                **self.coordinator.data,
+                "targets": targets,
+            }
+        )
+
+    def on_sensor_update(self, sensor_data: SensorData) -> None:
+        """Handle sensor updates from the Tewke device.
+
+        This callback is triggered when the sensors on the device change.
+        """
+        self.coordinator.reset_observation_timeout()
+        if self.coordinator.data is None:
+            return
+        self.coordinator.async_set_updated_data(
+            {**self.coordinator.data, "sensors": sensor_data}
+        )
+
+    def on_radar_update(self, radar_data: RadarData) -> None:
+        """Handle radar updates from the Tewke device.
+
+        This callback is triggered when the radar on the device changes.
+        """
+        self.coordinator.reset_observation_timeout()
+        if self.coordinator.data is None:
+            return
+        self.coordinator.async_set_updated_data(
+            {**self.coordinator.data, "radar": radar_data}
+        )
+
+    def on_energy_update(self, energy_data: EnergyData) -> None:
+        """Handle energy updates from the Tewke device.
+
+        This callback is triggered when the energy on the device changes.
+        """
+        self.coordinator.reset_observation_timeout()
+        if self.coordinator.data is None:
+            return
+        self.coordinator.async_set_updated_data(
+            {**self.coordinator.data, "energy": energy_data}
+        )
+
+    def on_config_update(self, config_data: ConfigData) -> None:
+        """Handle config updates from the Tewke device.
+
+        This callback is triggered when the config on the device changes.
+        """
+        self.coordinator.reset_observation_timeout()
+        if self.coordinator.data is None:
+            return
+        self.coordinator.async_set_updated_data(
+            {**self.coordinator.data, "config": config_data}
+        )
+        device_registry = dr.async_get(self.hass)
+        tap = self.entry.runtime_data.tap
+        device_id = tap.wall_dock_id
+        if device_id is None:
+            return
+
+        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+
+        if device:
+            new_name = config_data.device_name
+            if new_name and new_name != self.entry.data.get(CONF_NAME):
+                LOGGER.debug("Device renamed to %r, updating HA", new_name)
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    title=new_name,
+                    data={**self.entry.data, CONF_NAME: new_name},
+                )
+                device_registry.async_update_device(device.id, name=new_name)
+
+            new_version = config_data.tewke_os_version
+            if new_version and new_version != device.sw_version:
+                LOGGER.debug("Device updated to %r, updating HA", new_version)
+                device_registry.async_update_device(device.id, sw_version=new_version)
+
+
 async def async_setup_observe(
     coordinator: TewkeCoordinator,
     hass: HomeAssistant,
@@ -58,162 +241,7 @@ async def async_setup_observe(
     tap.clear_callbacks()
     await tap._observation_manager.close()  # noqa: SLF001
 
-    def _on_scene_update(scenes: dict[str, Scene]) -> None:
-        """Handle scene updates from the Tewke device.
-
-        This callback is triggered when the scenes on the device change. It
-        identifies new scenes and creates a repair issue to configure them.
-        """
-        coordinator.reset_observation_timeout()
-        if coordinator.data is None:
-            return
-
-        scene_control_types = entry.runtime_data.scene_control_types
-
-        # Handle scenes that are no longer provided by the device
-        removed_configured_ids = [
-            sid for sid in scene_control_types if sid not in scenes
-        ]
-        if removed_configured_ids:
-            LOGGER.info(
-                "Marking deleted scenes as unavailable: %s", removed_configured_ids
-            )
-            new_scene_control_types = dict(scene_control_types)
-
-            for sid in removed_configured_ids:
-                del new_scene_control_types[sid]
-
-            new_data = dict(entry.data)
-            new_data["scene_control_types"] = new_scene_control_types
-
-            entry.runtime_data.scene_control_types = new_scene_control_types
-            hass.config_entries.async_update_entry(entry, data=new_data)
-            return
-
-        configured_scenes = {
-            scene_id: scene
-            for scene_id, scene in scenes.items()
-            if scene_id in scene_control_types
-        }
-
-        coordinator.async_set_updated_data(
-            {
-                **coordinator.data,
-                "scenes": configured_scenes,
-                "scenes_all": scenes,
-            }
-        )
-
-        # Remove pending scenes that no longer exist on the device
-        stale_ids = [
-            sid for sid in entry.runtime_data.pending_scenes if sid not in scenes
-        ]
-        for sid in stale_ids:
-            del entry.runtime_data.pending_scenes[sid]
-
-        new_scenes = {
-            scene_id: scene
-            for scene_id, scene in scenes.items()
-            if scene_id not in scene_control_types
-            and scene_id not in entry.runtime_data.pending_scenes
-        }
-
-        if not new_scenes and not entry.runtime_data.pending_scenes:
-            ir.async_delete_issue(hass, DOMAIN, f"new_scenes_found_{entry.entry_id}")
-
-        if new_scenes:
-            LOGGER.info("Discovered new scenes, pending configuration: %s", new_scenes)
-            entry.runtime_data.pending_scenes.update(new_scenes)
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"new_scenes_found_{entry.entry_id}",
-                data={"entry_id": entry.entry_id},
-                is_fixable=True,
-                is_persistent=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="new_scenes_found",
-                translation_placeholders={"name": entry.title},
-            )
-
-    def _on_target_update(targets: dict[int, Target]) -> None:
-        """Handle target updates from the Tewke device.
-
-        This callback is triggered when the targets on the device change.
-        It updates the coordinator with the new target data.
-        """
-        coordinator.reset_observation_timeout()
-        if coordinator.data is None:
-            return
-
-        coordinator.async_set_updated_data(
-            {
-                **coordinator.data,
-                "targets": targets,
-            }
-        )
-
-    def _on_sensor_update(sensor_data: SensorData) -> None:
-        """Handle sensor updates from the Tewke device.
-
-        This callback is triggered when the sensors on the device change.
-        """
-        coordinator.reset_observation_timeout()
-        if coordinator.data is None:
-            return
-        coordinator.async_set_updated_data({**coordinator.data, "sensors": sensor_data})
-
-    def _on_radar_update(radar_data: RadarData) -> None:
-        """Handle radar updates from the Tewke device.
-
-        This callback is triggered when the radar on the device changes.
-        """
-        coordinator.reset_observation_timeout()
-        if coordinator.data is None:
-            return
-        coordinator.async_set_updated_data({**coordinator.data, "radar": radar_data})
-
-    def _on_energy_update(energy_data: EnergyData) -> None:
-        """Handle energy updates from the Tewke device.
-
-        This callback is triggered when the energy on the device changes.
-        """
-        coordinator.reset_observation_timeout()
-        if coordinator.data is None:
-            return
-        coordinator.async_set_updated_data({**coordinator.data, "energy": energy_data})
-
-    def _on_config_update(config_data: ConfigData) -> None:
-        """Handle config updates from the Tewke device.
-
-        This callback is triggered when the config on the device changes.
-        """
-        coordinator.reset_observation_timeout()
-        if coordinator.data is None:
-            return
-        coordinator.async_set_updated_data({**coordinator.data, "config": config_data})
-        device_registry = dr.async_get(hass)
-        device_id = tap.wall_dock_id
-        if device_id is None:
-            return
-
-        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
-
-        if device:
-            new_name = config_data.device_name
-            if new_name and new_name != entry.data.get(CONF_NAME):
-                LOGGER.debug("Device renamed to %r, updating HA", new_name)
-                hass.config_entries.async_update_entry(
-                    entry,
-                    title=new_name,
-                    data={**entry.data, CONF_NAME: new_name},
-                )
-                device_registry.async_update_device(device.id, name=new_name)
-
-            new_version = config_data.tewke_os_version
-            if new_version and new_version != device.sw_version:
-                LOGGER.debug("Device updated to %r, updating HA", new_version)
-                device_registry.async_update_device(device.id, sw_version=new_version)
+    observer = _TewkeObserver(coordinator, hass, entry)
 
     try:
         LOGGER.debug(
@@ -221,12 +249,12 @@ async def async_setup_observe(
             entry.data.get(CONF_NAME, entry.entry_id),
         )
         await tap.observe(
-            scene_callback=_on_scene_update,
-            target_callback=_on_target_update,
-            sensor_callback=_on_sensor_update,
-            radar_callback=_on_radar_update,
-            energy_callback=_on_energy_update,
-            config_change_callback=_on_config_update,
+            scene_callback=observer.on_scene_update,
+            target_callback=observer.on_target_update,
+            sensor_callback=observer.on_sensor_update,
+            radar_callback=observer.on_radar_update,
+            energy_callback=observer.on_energy_update,
+            config_change_callback=observer.on_config_update,
         )
     except PyTewkeObserveError:
         LOGGER.warning(
@@ -243,6 +271,6 @@ async def async_setup_observe(
 
     # Process scenes already fetched during initial discovery
     if coordinator.data and "scenes_all" in coordinator.data:
-        _on_scene_update(coordinator.data["scenes_all"])
+        observer.on_scene_update(coordinator.data["scenes_all"])
 
     return True
