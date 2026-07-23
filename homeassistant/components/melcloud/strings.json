@@ -62,6 +62,18 @@
         "name": "Water pump {number}"
       }
     },
+    "select": {
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "cool-flow": "Flow temperature (cooling)",
+          "cool-thermostat": "Room thermostat (cooling)",
+          "curve": "Weather compensation curve",
+          "heat-flow": "Flow temperature",
+          "heat-thermostat": "Room thermostat"
+        }
+      }
+    },
     "sensor": {
       "condensing_temperature": {
         "name": "Condensing temperature"

@@ -20,6 +20,7 @@ from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
