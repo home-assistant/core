@@ -853,6 +853,9 @@ class Device(RestoreEntity):
         if self.battery is not None:
             attributes[ATTR_BATTERY] = self.battery
 
+        if self._state == STATE_HOME:
+            attributes[DeviceTrackerEntityStateAttribute.IN_ZONES] = [ENTITY_ID_HOME]
+
         return attributes
 
     @property
