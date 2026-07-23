@@ -4,26 +4,35 @@ from chemelex_nuheat import ScheduleMode, ThermostatMode
 
 from homeassistant.components.climate import HVACMode
 
-from .const import PRESET_PERMANENT_HOLD, PRESET_RUN, PRESET_TEMPORARY_HOLD
+from .const import PRESET_MANUAL, PRESET_RUN, PRESET_TEMPORARY_HOLD
 
 MODE_TO_PRESET = {
     ThermostatMode.AUTO: PRESET_RUN,
     ThermostatMode.HOLD: PRESET_TEMPORARY_HOLD,
-    ThermostatMode.MANUAL: PRESET_PERMANENT_HOLD,
+    ThermostatMode.MANUAL: PRESET_MANUAL,
 }
 PRESET_TO_MODE = {
     PRESET_RUN: ScheduleMode.AUTO,
     PRESET_TEMPORARY_HOLD: ScheduleMode.HOLD,
-    PRESET_PERMANENT_HOLD: ScheduleMode.MANUAL,
+    PRESET_MANUAL: ScheduleMode.MANUAL,
 }
 
 
-def preset_for_api_mode(mode: int) -> str:
-    """Map a reported v2 integer mode to a Home Assistant preset."""
+def is_supported_api_mode(mode: int) -> bool:
+    """Return whether a provisional v2 integer mode has a safe mapping."""
+    try:
+        ThermostatMode(mode)
+    except ValueError:
+        return False
+    return True
+
+
+def preset_for_api_mode(mode: int) -> str | None:
+    """Map a provisional reported v2 mode without disguising unknown values."""
     try:
         return MODE_TO_PRESET[ThermostatMode(mode)]
     except ValueError, KeyError:
-        return PRESET_PERMANENT_HOLD
+        return None
 
 
 def api_mode_for_preset(preset: str) -> ScheduleMode:
@@ -34,16 +43,13 @@ def api_mode_for_preset(preset: str) -> ScheduleMode:
         raise ValueError(f"Unsupported preset mode: {preset}") from err
 
 
-def hvac_mode_for_api_mode(mode: int) -> HVACMode:
-    """Map API Auto to AUTO and both hold modes to legacy HEAT."""
+def hvac_mode_for_api_mode(mode: int) -> HVACMode | None:
+    """Map scheduled operation to AUTO and distinct Manual operation to HEAT."""
     try:
-        return (
-            HVACMode.AUTO
-            if ThermostatMode(mode) is ThermostatMode.AUTO
-            else HVACMode.HEAT
-        )
+        thermostat_mode = ThermostatMode(mode)
     except ValueError:
-        return HVACMode.HEAT
+        return None
+    return HVACMode.HEAT if thermostat_mode is ThermostatMode.MANUAL else HVACMode.AUTO
 
 
 def api_mode_for_hvac_mode(hvac_mode: HVACMode) -> ScheduleMode:
@@ -60,15 +66,15 @@ def setpoint_command_mode(
 ) -> ScheduleMode:
     """Choose temporary Hold or Manual for a target-temperature write.
 
-    The legacy entity behaves like the thermostat UI: changing a setpoint while
-    running a schedule creates a temporary hold, while permanent hold/HEAT stays
-    Manual. The v2 Hold expiration semantics still require live validation.
+    Changing a setpoint during scheduled operation uses the documented Hold
+    command, while Manual/HEAT remains Manual. The v2 response values and Hold
+    expiration semantics still require live validation.
     """
     if requested_hvac_mode is HVACMode.HEAT:
         return ScheduleMode.MANUAL
     try:
         if ThermostatMode(current_mode) is ThermostatMode.MANUAL:
             return ScheduleMode.MANUAL
-    except ValueError:
-        return ScheduleMode.MANUAL
+    except ValueError as err:
+        raise ValueError(f"Unsupported API mode: {current_mode}") from err
     return ScheduleMode.HOLD

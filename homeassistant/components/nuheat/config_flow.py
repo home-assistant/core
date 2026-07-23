@@ -93,6 +93,7 @@ class NuHeatConfigFlow(
         except NuHeatApiError, NuHeatDataError:
             return self.async_abort(reason="cannot_connect")
 
+        account_title = account.username or "NuHeat"
         await self.async_set_unique_id(unique_id)
 
         if self.source == SOURCE_REAUTH:
@@ -104,7 +105,7 @@ class NuHeatConfigFlow(
                         entry,
                         oauth_data=data,
                         account_unique_id=unique_id,
-                        account_title=account.username,
+                        account_title=account_title,
                         thermostats=thermostats,
                     )
                 except MigrationAccountMismatchError:
@@ -139,7 +140,7 @@ class NuHeatConfigFlow(
                 entry, version=OAUTH_CONFIG_ENTRY_VERSION
             )
             return self.async_update_reload_and_abort(
-                entry, title=account.username, data=data
+                entry, title=account_title, data=data
             )
 
         for existing_entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -157,7 +158,7 @@ class NuHeatConfigFlow(
                 )
                 break
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=account.username, data=data)
+        return self.async_create_entry(title=account_title, data=data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

@@ -745,7 +745,7 @@ caldav==2.1.0
 chefiq-ble==1.0.1
 
 # homeassistant.components.nuheat
-chemelex-nuheat@git+https://github.com/kilo-WATT/chemelex-nuheat.git@29ecb01c371b6beb3c0bb21053ae291adb96deb7
+chemelex-nuheat@git+https://github.com/kilo-WATT/chemelex-nuheat.git@246e2f0b542b888a9508618c2932420ea410d05a
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0

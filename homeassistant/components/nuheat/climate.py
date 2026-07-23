@@ -26,6 +26,7 @@ from .behavior import (
     api_mode_for_hvac_mode,
     api_mode_for_preset,
     hvac_mode_for_api_mode,
+    is_supported_api_mode,
     preset_for_api_mode,
     setpoint_command_mode,
 )
@@ -95,8 +96,10 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def available(self) -> bool:
-        return super().available and self.coordinator.is_thermostat_available(
-            self._serial_number
+        return (
+            super().available
+            and self.coordinator.is_thermostat_available(self._serial_number)
+            and is_supported_api_mode(self.thermostat.mode)
         )
 
     @property
@@ -112,18 +115,18 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def min_temp(self) -> float:
-        value = self.thermostat.min_temperature
-        return self._from_celsius(DEFAULT_MIN_TEMP if value is None else value)
+        # OpenAPI v2 does not expose the thermostat's native minimum.
+        return self._from_celsius(DEFAULT_MIN_TEMP)
 
     @property
     @override
     def max_temp(self) -> float:
-        value = self.thermostat.max_temperature
-        return self._from_celsius(DEFAULT_MAX_TEMP if value is None else value)
+        # OpenAPI v2 does not expose the thermostat's native maximum.
+        return self._from_celsius(DEFAULT_MAX_TEMP)
 
     @property
     @override
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         return hvac_mode_for_api_mode(self.thermostat.mode)
 
     @property
@@ -133,7 +136,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     @property
     @override
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> str | None:
         return preset_for_api_mode(self.thermostat.mode)
 
     @override
@@ -141,12 +144,20 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+        try:
+            mode = setpoint_command_mode(
+                self.thermostat.mode, kwargs.get(ATTR_HVAC_MODE)
+            )
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_mode",
+                translation_placeholders={"mode": str(self.thermostat.mode)},
+            ) from err
         thermostat = await self.coordinator.api.set_target_temperature(
             self._serial_number,
             self._to_celsius(float(temperature)),
-            mode=setpoint_command_mode(
-                self.thermostat.mode, kwargs.get(ATTR_HVAC_MODE)
-            ),
+            mode=mode,
         )
         self.coordinator.async_update_thermostat(thermostat)
 

@@ -30,6 +30,7 @@ from homeassistant.components.nuheat.behavior import (
     api_mode_for_hvac_mode,
     api_mode_for_preset,
     hvac_mode_for_api_mode,
+    is_supported_api_mode,
     preset_for_api_mode,
     setpoint_command_mode,
 )
@@ -37,7 +38,12 @@ from homeassistant.components.nuheat.climate import (
     NuHeatClimateEntity,
     async_setup_entry as async_setup_climate,
 )
-from homeassistant.components.nuheat.const import DOMAIN
+from homeassistant.components.nuheat.const import (
+    AUTHORIZE_URL,
+    DOMAIN,
+    OAUTH_SCOPES,
+    TOKEN_URL,
+)
 from homeassistant.components.nuheat.coordinator import NuHeatCoordinator
 from homeassistant.components.nuheat.migration import OAUTH_CONFIG_ENTRY_VERSION
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -69,6 +75,13 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 ACCOUNT_SUBJECT = "synthetic-account-subject"
+
+
+def test_official_oauth_endpoints_and_scopes() -> None:
+    """Test OAuth constants match the current official NAM documentation."""
+    assert AUTHORIZE_URL == "https://identity.nam.mynuheat.com/connect/authorize"
+    assert TOKEN_URL == "https://identity.nam.mynuheat.com/connect/token"
+    assert OAUTH_SCOPES == ("openid", "openapi", "offline_access")
 
 
 def thermostat(
@@ -263,6 +276,29 @@ async def test_successful_oauth_setup(
     assert result["data"]["auth_implementation"] == "test"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == jwt_access_token()
     assert result["result"].unique_id == ACCOUNT_SUBJECT
+
+
+@pytest.mark.asyncio
+async def test_oauth_setup_uses_fallback_for_nullable_account_name(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """A nullable documented userName does not prevent account setup."""
+    with (
+        patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.nuheat.config_flow.NuHeatClient.get_account",
+            AsyncMock(return_value=Account(None)),
+        ),
+        patch(
+            "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
+            AsyncMock(return_value=[thermostat()]),
+        ),
+    ):
+        result = await complete_oauth_flow(
+            hass, hass_client_no_auth, oauth_implementation()
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "NuHeat"
 
 
 @pytest.mark.asyncio
@@ -678,7 +714,7 @@ async def test_climate_state_and_writes_follow_ha_unit(
     [
         ("Run Schedule", ScheduleMode.AUTO, ThermostatMode.AUTO),
         ("Temporary Hold", ScheduleMode.HOLD, ThermostatMode.HOLD),
-        ("Permanent Hold", ScheduleMode.MANUAL, ThermostatMode.MANUAL),
+        ("Manual", ScheduleMode.MANUAL, ThermostatMode.MANUAL),
     ],
 )
 async def test_preset_and_mode_mapping(
@@ -723,7 +759,7 @@ async def test_legacy_hvac_mode_service_calls(
     assert entity.preset_modes == [
         "Run Schedule",
         "Temporary Hold",
-        "Permanent Hold",
+        "Manual",
     ]
 
     await entity.async_set_hvac_mode(hvac_mode)
@@ -751,6 +787,38 @@ def test_setpoint_compatibility_mapping(
 ) -> None:
     """Setpoints isolate temporary-Hold versus Manual compatibility policy."""
     assert setpoint_command_mode(api_mode, requested_hvac_mode) is expected
+
+
+def test_manual_is_never_permanent_hold_and_unknown_modes_are_not_mapped() -> None:
+    """Manual is explicit and unknown v2 values are withheld."""
+    assert preset_for_api_mode(ThermostatMode.MANUAL) == "Manual"
+    assert preset_for_api_mode(ThermostatMode.MANUAL) != "Permanent Hold"
+    assert preset_for_api_mode(999) is None
+    assert hvac_mode_for_api_mode(999) is None
+    assert is_supported_api_mode(999) is False
+    with pytest.raises(ValueError, match="Unsupported API mode"):
+        setpoint_command_mode(999)
+
+
+def test_hold_remains_scheduled_hvac_operation() -> None:
+    """Temporary Hold remains under the thermostat's Auto operating mode."""
+    assert hvac_mode_for_api_mode(ThermostatMode.HOLD) is HVACMode.AUTO
+
+
+@pytest.mark.asyncio
+async def test_unknown_mode_is_unavailable_and_rejects_setpoint(
+    hass: HomeAssistant,
+) -> None:
+    """Unknown v2 mode values never silently issue a Manual command."""
+    coordinator, api, _ = await coordinator_with(hass, thermostat(mode=999))
+    entity = NuHeatClimateEntity(coordinator, "ABC123")
+
+    assert entity.available is False
+    with pytest.raises(ServiceValidationError) as raised:
+        await entity.async_set_temperature(temperature=22.0)
+    assert raised.value.translation_domain == DOMAIN
+    assert raised.value.translation_key == "unsupported_mode"
+    api.set_target_temperature.assert_not_awaited()
 
 
 @pytest.mark.asyncio
