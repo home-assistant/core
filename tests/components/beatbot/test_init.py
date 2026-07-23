@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
-
 from homeassistant.components.beatbot.iot.const import DOMAIN, SUPPORTED_PLATFORMS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -161,6 +159,7 @@ async def _assert_first_refresh_failure(
         ) as event_client_cls,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert entry.state is expected_state
     coordinator.async_config_entry_first_refresh.assert_awaited_once()
@@ -175,17 +174,13 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.config_entry_reauth.title",
-            "component.homeassistant.issues.config_entry_reauth.description",
-        ]
-    ],
-)
 async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
     """An authentication failure starts reauthentication."""
-    await _assert_first_refresh_failure(
-        hass, ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR
-    )
+    with patch.object(
+        hass.config_entries.flow, "async_init", new_callable=AsyncMock
+    ) as reauth_flow:
+        await _assert_first_refresh_failure(
+            hass, ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR
+        )
+
+    reauth_flow.assert_awaited_once()
