@@ -18,6 +18,9 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not register custom actions/services.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide conditions.
   docs-high-level-description:
     status: done
     comment: The integration documentation is submitted in home-assistant.io#46992.
@@ -27,6 +30,9 @@ rules:
   docs-removal-instructions:
     status: done
     comment: Removal instructions are documented in home-assistant.io#46992.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -34,3 +40,51 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register custom actions/services.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Devices are discovered from the authenticated Beatbot cloud account.
+  discovery:
+    status: exempt
+    comment: Devices are discovered from the authenticated Beatbot cloud account.
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: done
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
