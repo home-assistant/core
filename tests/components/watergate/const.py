@@ -1,6 +1,11 @@
 """Constants for the Watergate tests."""
 
-from watergate_local_api.models import DeviceState, NetworkingData, TelemetryData
+from watergate_local_api.models import (
+    AutoShutOffState,
+    DeviceState,
+    NetworkingData,
+    TelemetryData,
+)
 from watergate_local_api.models.water_meter import WaterMeter
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_WEBHOOK_ID
@@ -40,3 +45,5 @@ DEFAULT_NETWORKING_STATE = NetworkingData(
 )
 
 DEFAULT_TELEMETRY_STATE = TelemetryData(0.0, 100, 28.32, None, [])
+
+DEFAULT_AUTO_SHUT_OFF_STATE = AutoShutOffState(True, 1000, 60)
