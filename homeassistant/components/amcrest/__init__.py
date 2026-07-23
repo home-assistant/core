@@ -337,20 +337,11 @@ def _monitor_events(
     name: str,
     api: AmcrestChecker,
     event_codes: set[str],
-    stop_event: threading.Event | None = None,
 ) -> None:
-    """Monitor camera events. Exits when stop_event is set (config flow only)."""
-    while stop_event is None or not stop_event.is_set():
-        if stop_event:
-            api.available_flag.wait(timeout=1.0)
-        else:
-            api.available_flag.wait()
-        if stop_event and stop_event.is_set():
-            break
+    while True:
+        api.available_flag.wait()
         try:
             for code, payload in api.event_actions("All"):
-                if stop_event and stop_event.is_set():
-                    return
                 event_data = {"camera": name, "event": code, "payload": payload}
                 hass.bus.fire("amcrest", event_data)
                 if code in event_codes:
@@ -372,17 +363,14 @@ def _start_event_monitor(
     name: str,
     api: AmcrestChecker,
     event_codes: set[str],
-    stop_event: threading.Event | None = None,
-) -> threading.Event | None:
-    """Start event monitor. Returns stop_event when provided (for config flow)."""
+) -> None:
     thread = threading.Thread(
         target=_monitor_events,
         name=f"Amcrest {name}",
-        args=(hass, name, api, event_codes, stop_event),
-        daemon=stop_event is None,
+        args=(hass, name, api, event_codes),
+        daemon=True,
     )
     thread.start()
-    return stop_event
 
 
 @dataclass
@@ -404,7 +392,6 @@ class AmcrestRuntimeData:
     """Runtime data stored on the config entry."""
 
     device: AmcrestDevice
-    stop_event: threading.Event | None = None
 
 
 type AmcrestConfigEntry = ConfigEntry[AmcrestRuntimeData]
@@ -534,14 +521,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    runtime_data.stop_event = threading.Event()
-    _start_event_monitor(hass, name, api, event_codes, runtime_data.stop_event)
+    _start_event_monitor(hass, name, api, event_codes)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> bool:
     """Unload a config entry."""
-    if entry.runtime_data.stop_event is not None:
-        entry.runtime_data.stop_event.set()
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

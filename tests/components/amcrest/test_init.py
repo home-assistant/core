@@ -40,7 +40,6 @@ async def test_setup_entry_loads_platforms(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.device is not None
-    assert mock_config_entry.runtime_data.stop_event is not None
 
     entity_ids = hass.states.async_entity_ids()
     title_slug = TEST_CONFIG_ENTRY_TITLE.lower().replace(" ", "_")
@@ -58,13 +57,10 @@ async def test_unload_entry(
     hass: HomeAssistant,
     loaded_config_entry: MockConfigEntry,
 ) -> None:
-    """Test config entry unload sets stop_event and unloads platforms."""
-    stop_event = loaded_config_entry.runtime_data.stop_event
-
+    """Test config entry unload unloads platforms."""
     assert await hass.config_entries.async_unload(loaded_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert stop_event.is_set()
     assert loaded_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
