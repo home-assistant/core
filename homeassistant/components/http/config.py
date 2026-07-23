@@ -493,11 +493,13 @@ class HTTPConfigStore:
         """Write the current state to disk (or remove the file if empty)."""
         # An error on the confirmed-working stable config is transient;
         # never persist it.
-        self._stable[HTTP_CONFIG_ERROR] = None
-        self._stable[HTTP_CONFIG_ERROR_MESSAGE] = None
         await self._store.async_save(
             {
-                KEY_STABLE: self._stable,
+                KEY_STABLE: {
+                    **self._stable,
+                    HTTP_CONFIG_ERROR: None,
+                    HTTP_CONFIG_ERROR_MESSAGE: None,
+                },
                 KEY_PENDING: self._pending,
                 KEY_YAML_MIGRATION_DONE: self._yaml_migration_done,
             }
