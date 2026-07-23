@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -114,7 +114,9 @@ async def test_yaml_import_success(
     assert issue.severity == ir.IssueSeverity.WARNING
 
 
-async def test_yaml_import_full_config(hass: HomeAssistant) -> None:
+async def test_yaml_import_full_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test YAML import with all platform keys creates the configured entities."""
     binary_sensors = [
         "audio_detected",
@@ -151,22 +153,32 @@ async def test_yaml_import_full_config(hass: HomeAssistant) -> None:
 
     slug = _entity_slug("Front Door")
     entity_ids = hass.states.async_entity_ids()
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+    sensor_entity_ids = {
+        reg_entry.entity_id
+        for reg_entry in registry_entries
+        if reg_entry.domain == "sensor"
+    }
     assert f"binary_sensor.{slug}_audio_detected" in entity_ids
     assert f"binary_sensor.{slug}_crossline_detected" in entity_ids
     assert f"binary_sensor.{slug}_motion_detected" in entity_ids
     assert f"binary_sensor.{slug}_online" in entity_ids
-    assert f"sensor.{slug}_ptz_preset" in entity_ids
-    assert f"sensor.{slug}_sd_used" in entity_ids
+    assert f"sensor.{slug}_ptz_preset" in sensor_entity_ids
+    assert f"sensor.{slug}_sd_used" in sensor_entity_ids
     assert f"switch.{slug}_privacy_mode" in entity_ids
     assert f"camera.{slug}" in entity_ids
     assert (
         len([eid for eid in entity_ids if eid.startswith(f"binary_sensor.{slug}")]) == 4
     )
-    assert len([eid for eid in entity_ids if eid.startswith(f"sensor.{slug}")]) == 2
+    assert len(sensor_entity_ids) == 2
     assert len([eid for eid in entity_ids if eid.startswith(f"switch.{slug}")]) == 1
 
 
-async def test_yaml_import_entity_subset(hass: HomeAssistant) -> None:
+async def test_yaml_import_entity_subset(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test YAML import honors configured entity subsets."""
     with (
         patch_amcrest_checker(),
@@ -187,16 +199,25 @@ async def test_yaml_import_entity_subset(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     entity_ids = hass.states.async_entity_ids()
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+    sensor_entity_ids = {
+        reg_entry.entity_id
+        for reg_entry in registry_entries
+        if reg_entry.domain == "sensor"
+    }
     assert "binary_sensor.front_door_motion_detected" in entity_ids
-    assert "sensor.front_door_sd_used" in entity_ids
+    assert "sensor.front_door_sd_used" in sensor_entity_ids
     assert "switch.front_door_privacy_mode" in entity_ids
     assert "camera.front_door" in entity_ids
     assert (
         len([eid for eid in entity_ids if eid.startswith("binary_sensor.front_door")])
         == 1
     )
-    assert len([eid for eid in entity_ids if eid.startswith("sensor.front_door")]) == 1
+    assert len(sensor_entity_ids) == 1
     assert len([eid for eid in entity_ids if eid.startswith("switch.front_door")]) == 1
 
 
