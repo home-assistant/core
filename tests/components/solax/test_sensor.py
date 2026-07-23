@@ -56,7 +56,6 @@ async def test_coordinator_update_failure(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # making sure the base state is actually healthy before the test run.
     assert (
         hass.states.get("sensor.solax_abcdefghij_network_voltage").state
         != STATE_UNAVAILABLE

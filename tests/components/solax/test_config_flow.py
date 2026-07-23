@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
-from solax.inverter import Inverter, InverterResponse
+from solax.inverter import Inverter, InverterError, InverterResponse
 from solax.inverters import X1Boost, X1MiniV34
 
 from homeassistant import config_entries
@@ -129,6 +129,7 @@ async def test_form_discover_error(
     ("side_effect", "expected_error"),
     [
         pytest.param(ConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(InverterError, "cannot_connect", id="inverter_error"),
         pytest.param(Exception, "unknown", id="unknown"),
     ],
 )
