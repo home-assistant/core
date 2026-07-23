@@ -102,7 +102,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CANNOT_CONNECT
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
