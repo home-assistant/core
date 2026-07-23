@@ -205,6 +205,21 @@ async def test_generic_switch_multi_node(
     assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 3
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_doorbell"])
+async def test_doorbell_node(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_node: MatterNode,
+) -> None:
+    """Test a doorbell node only gets the legacy event entity for now."""
+    # the Doorbell device type is excluded from the standard button event
+    # entity, so it can get a dedicated doorbell event entity in the future
+    assert hass.states.async_entity_ids("event") == []
+    entity_entry = entity_registry.async_get("event.mock_doorbell_button_deprecated")
+    assert entity_entry
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_latching_switch"])
 async def test_latching_switch_node(
     hass: HomeAssistant,

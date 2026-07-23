@@ -244,10 +244,9 @@ DISCOVERY_SCHEMAS = [
             clusters.Switch.Attributes.CurrentPosition,
             clusters.Switch.Attributes.FeatureMap,
         ),
-        device_type=(
-            device_types.Doorbell,
-            device_types.GenericSwitch,
-        ),
+        # the Doorbell device type gets a dedicated doorbell event entity
+        # instead of the standard button event entity
+        device_type=(device_types.GenericSwitch,),
         optional_attributes=(
             clusters.Switch.Attributes.NumberOfPositions,
             clusters.FixedLabel.Attributes.LabelList,
