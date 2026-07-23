@@ -4765,7 +4765,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_level-entry]

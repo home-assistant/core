@@ -487,6 +487,9 @@ DISCOVERY_SCHEMAS = [
             clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
         ),
         allow_multi=True,
+        # DefaultOpenDuration is nullable per spec (no default duration configured);
+        # without this, the entity is skipped entirely whenever the value is null.
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
