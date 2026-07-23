@@ -67,16 +67,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        # Two-layer gating: category first (coarse — "do we support this
-        # product line at all"), then productId (fine — "is this specific
-        # model verified"). CATEGORY_MAP normalizes the backend's
-        # productCategory string (incl. casing variants) to a ProductCategory
-        # enum; an unmapped/unknown category yields None and is rejected here,
-        # so half-implemented lines (e.g. lawn_mower with empty status/error
-        # maps) and unknown categories never produce stub entities. Dropped
-        # devices are logged at INFO so a user whose model is not yet on the
-        # allow-list can see why it never appears in HA instead of vanishing
-        # silently.
+        # Gate first by supported product line, then by verified model.
         result: dict[str, BeatbotDeviceData] = {}
         for d in devices:
             if CATEGORY_MAP.get(d.product_category) not in SUPPORTED_PRODUCT_CATEGORIES:

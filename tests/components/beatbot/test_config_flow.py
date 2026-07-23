@@ -10,6 +10,10 @@ from unittest.mock import AsyncMock, Mock
 from aiohttp import ClientError, ClientResponseError
 import pytest
 
+from homeassistant.components.beatbot.api import (
+    BeatbotAuthError,
+    BeatbotConnectionError,
+)
 from homeassistant.components.beatbot.config_flow import (
     BeatbotConfigFlow,
     BeatbotOAuth2Implementation,
@@ -26,6 +30,8 @@ from tests.common import MockConfigEntry
 
 REDIRECT_URI = "http://example.com/auth/external/callback"
 REQUEST_INFO = SimpleNamespace(real_url="https://oauth.beatbot.com/oauth2/token")
+
+pytestmark = pytest.mark.usefixtures("mock_get_devices", "mock_setup_entry")
 
 
 @pytest.mark.parametrize(
@@ -217,6 +223,31 @@ async def test_user_flow_stores_region_from_token(hass: HomeAssistant) -> None:
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data["region"] == "cn"
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (BeatbotAuthError(), "oauth_error"),
+        (BeatbotConnectionError(), "cannot_connect"),
+    ],
+)
+async def test_user_flow_tests_resource_api_before_create(
+    hass: HomeAssistant,
+    mock_get_devices: AsyncMock,
+    error: Exception,
+    reason: str,
+) -> None:
+    """Abort when the regional device API cannot be accessed."""
+    mock_get_devices.side_effect = error
+    _register_mock_impl(hass, _make_token("account-1", region="cn"))
+
+    result = await _start_user_flow(hass)
+    result = await _complete_external_auth(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 @pytest.mark.parametrize("sub", ["", 123, None])

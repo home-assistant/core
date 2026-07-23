@@ -15,10 +15,9 @@ from .coordinator import BeatbotCoordinator
 from .entity import BeatbotEntity
 from .iot.category import (
     CATEGORY_MAP,
-    STATUS_MAP_BY_CATEGORY,
-    VACUUM_ERROR_MASK_BY_CATEGORY,
     VACUUM_FEATURES_BY_CATEGORY,
     ProductCategory,
+    vacuum_activity,
     vacuum_features_from_capabilities,
 )
 from .iot.const import INTERFACE_PAUSE, INTERFACE_RETURN_TO_BASE, INTERFACE_START
@@ -29,7 +28,7 @@ VACUUM_TRANSLATION_KEYS = {
 }
 
 
-class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
+class BeatbotVacuum(BeatbotEntity, StateVacuumEntity):
     """Represent a Beatbot cleaner as a vacuum entity."""
 
     def __init__(
@@ -52,18 +51,15 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
         if features is None:
             features = VACUUM_FEATURES_BY_CATEGORY.get(category, VacuumEntityFeature(0))
         self._attr_supported_features = features
-        self._status_map = STATUS_MAP_BY_CATEGORY.get(category, {})
-        # Preserve the legacy "any non-zero code is an error" behavior for
-        # categories that do not yet define a bit map.
-        self._error_mask = VACUUM_ERROR_MASK_BY_CATEGORY.get(category, -1)
+        self._category = category
 
     @property
     @override
     def activity(self) -> VacuumActivity:
         """Return the current vacuum activity."""
-        if self.data.error_code & self._error_mask:
-            return VacuumActivity.ERROR
-        return self._status_map.get(self.data.work_status, VacuumActivity.IDLE)
+        return vacuum_activity(
+            self._category, self.data.work_status, self.data.error_code
+        )
 
     @property
     @override
@@ -106,5 +102,5 @@ async def async_setup_entry(
     """Set up Beatbot vacuum entities."""
     coordinator = entry.runtime_data.coordinator
     async_add_entities(
-        BeatbotPoolVacuum(coordinator, device_id) for device_id in coordinator.data
+        BeatbotVacuum(coordinator, device_id) for device_id in coordinator.data
     )

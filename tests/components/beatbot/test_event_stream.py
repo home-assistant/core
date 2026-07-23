@@ -14,6 +14,7 @@ from homeassistant.components.beatbot.iot.event_stream import (
     _RefreshToken,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 
 
 def _client(hass: HomeAssistant) -> tuple[BeatbotEventClient, Mock]:
@@ -121,10 +122,40 @@ def test_malformed_and_unknown_events_do_not_route(hass: HomeAssistant) -> None:
     client, coordinator = _client(hass)
 
     client._handle_text_message("not-json")
+    client._handle_text_message(
+        _event(
+            "event-missing-value",
+            "properties_changed",
+            {"interfaceInfo": "sensor.error"},
+        )
+    )
     client._handle_text_message(_event("event-4", "status", {"online": "yes"}))
     client._handle_text_message(_event("event-5", "future_type", {}))
 
     coordinator.async_apply_device_event.assert_not_called()
+
+
+async def test_terminal_refresh_error_starts_reauth(hass: HomeAssistant) -> None:
+    """A terminal OAuth refresh failure must not enter the reconnect loop."""
+    client, _ = _client(hass)
+    client._connect_and_receive = AsyncMock(
+        side_effect=_RefreshToken("rejected", handshake=True)
+    )
+    client._oauth_session.token = {"access_token": "rejected"}
+    client._oauth_session.async_ensure_token_valid = AsyncMock(
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=SimpleNamespace(real_url="https://oauth.beatbot.com/token"),
+            status=400,
+            domain="beatbot",
+        )
+    )
+    client._entry.data = {"token": client._oauth_session.token}
+    client._entry.async_start_reauth = Mock()
+    hass.config_entries.async_update_entry = Mock()
+
+    await client._run()
+
+    client._entry.async_start_reauth.assert_called_once_with(hass)
 
 
 async def test_device_added_reloads_entry(hass: HomeAssistant) -> None:

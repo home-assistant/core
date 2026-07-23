@@ -15,7 +15,7 @@ from homeassistant.components.beatbot.iot.const import (
     INTERFACE_VACUUM_STATE,
 )
 from homeassistant.components.beatbot.models import BeatbotCapability, BeatbotDeviceData
-from homeassistant.components.beatbot.vacuum import BeatbotPoolVacuum
+from homeassistant.components.beatbot.vacuum import BeatbotVacuum
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     VacuumActivity,
@@ -59,7 +59,7 @@ def test_vacuum_no_deprecated_battery_feature(
     category: str, expected_features: set
 ) -> None:
     """Vacuum must not advertise the deprecated BATTERY feature."""
-    vacuum = BeatbotPoolVacuum(_make_coordinator(category), DEVICE_ID)
+    vacuum = BeatbotVacuum(_make_coordinator(category), DEVICE_ID)
 
     assert VacuumEntityFeature.BATTERY not in vacuum.supported_features
     assert set(vacuum.supported_features) == expected_features
@@ -78,14 +78,14 @@ def test_clean_base_station_notice_does_not_set_vacuum_error() -> None:
     coordinator = _make_coordinator("clean_base_station")
     coordinator.data[DEVICE_ID].error_code = 1 << 5
 
-    vacuum = BeatbotPoolVacuum(coordinator, DEVICE_ID)
+    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
 
     assert vacuum.activity is not VacuumActivity.ERROR
 
 
 def test_clean_base_station_uses_its_own_translation() -> None:
     """The station vacuum entity must not use the pool-cleaner name."""
-    vacuum = BeatbotPoolVacuum(_make_coordinator("clean_base_station"), DEVICE_ID)
+    vacuum = BeatbotVacuum(_make_coordinator("clean_base_station"), DEVICE_ID)
 
     assert vacuum.translation_key == "beatbot_clean_base_station_vacuum"
 
@@ -95,7 +95,7 @@ def test_clean_base_station_fault_sets_vacuum_error() -> None:
     coordinator = _make_coordinator("clean_base_station")
     coordinator.data[DEVICE_ID].error_code = 1 << 4
 
-    vacuum = BeatbotPoolVacuum(coordinator, DEVICE_ID)
+    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
 
     assert vacuum.activity is VacuumActivity.ERROR
 
@@ -105,7 +105,7 @@ def test_clean_base_station_fault_wins_over_notice() -> None:
     coordinator = _make_coordinator("clean_base_station")
     coordinator.data[DEVICE_ID].error_code = (1 << 0) | (1 << 24)
 
-    vacuum = BeatbotPoolVacuum(coordinator, DEVICE_ID)
+    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
 
     assert vacuum.activity is VacuumActivity.ERROR
 
@@ -118,7 +118,7 @@ def test_vacuum_does_not_advertise_stop() -> None:
 
 def test_work_mode_is_not_exposed_as_vacuum_fan_speed() -> None:
     """Work mode belongs to select.work_mode, not vacuum.set_fan_speed."""
-    vacuum = BeatbotPoolVacuum(
+    vacuum = BeatbotVacuum(
         _make_coordinator(
             "pool_clean_bot",
             work_mode_options={0: "fast", 2: "custom"},
@@ -146,7 +146,7 @@ def test_vacuum_features_derived_from_capabilities() -> None:
             non_controllable=False,
         ),
     }
-    vacuum = BeatbotPoolVacuum(
+    vacuum = BeatbotVacuum(
         _make_coordinator("pool_clean_bot", capabilities=capabilities),
         DEVICE_ID,
     )
@@ -176,7 +176,7 @@ def test_vacuum_features_omit_missing_action() -> None:
             non_controllable=False,
         ),
     }
-    vacuum = BeatbotPoolVacuum(
+    vacuum = BeatbotVacuum(
         _make_coordinator("pool_clean_bot", capabilities=capabilities),
         DEVICE_ID,
     )
@@ -188,7 +188,7 @@ def test_vacuum_features_omit_missing_action() -> None:
 
 def test_vacuum_features_are_state_only_when_no_capabilities() -> None:
     """Empty capabilities array must not infer unsupported actions."""
-    vacuum = BeatbotPoolVacuum(
+    vacuum = BeatbotVacuum(
         _make_coordinator("pool_clean_bot", capabilities={}),
         DEVICE_ID,
     )
@@ -210,7 +210,7 @@ def test_vacuum_features_skip_readonly_action() -> None:
             non_controllable=True,
         ),
     }
-    vacuum = BeatbotPoolVacuum(
+    vacuum = BeatbotVacuum(
         _make_coordinator("pool_clean_bot", capabilities=capabilities),
         DEVICE_ID,
     )
@@ -229,7 +229,7 @@ async def test_vacuum_action_triggers_single_device_refresh() -> None:
         send_action=AsyncMock(),
     )
     coordinator.async_schedule_device_state_refresh = MagicMock()
-    vacuum = BeatbotPoolVacuum(coordinator, DEVICE_ID)
+    vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
 
     await vacuum.async_start()
 

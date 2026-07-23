@@ -7,6 +7,11 @@ import json
 import logging
 from typing import Any, override
 
+from beatbot_cloud import (
+    BeatbotAuthenticationError,
+    BeatbotClient,
+    BeatbotConnectionError,
+)
 from beatbot_cloud.const import (
     OAUTH2_AUTHORIZE_URL,
     OAUTH2_CLIENT_ID,
@@ -20,6 +25,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .iot.const import DOMAIN
 
@@ -156,6 +162,8 @@ class BeatbotConfigFlow(
             self._abort_if_unique_id_mismatch()
             if data.get("region") not in REGION_API_BASE_URL:
                 return self.async_abort(reason="unknown_region")
+            if abort_result := await self._async_validate_resource_api(data):
+                return abort_result
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
                 data_updates=data,
@@ -163,4 +171,26 @@ class BeatbotConfigFlow(
         if data.get("region") not in REGION_API_BASE_URL:
             return self.async_abort(reason="unknown_region")
         self._abort_if_unique_id_configured()
+        if abort_result := await self._async_validate_resource_api(data):
+            return abort_result
         return self.async_create_entry(title="Beatbot", data=data)
+
+    async def _async_validate_resource_api(
+        self, data: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult | None:
+        """Verify the token can access the regional device API."""
+        token = data["token"]["access_token"]
+        session = async_get_clientsession(self.hass)
+
+        async def _request(method: str, url: str, **kwargs: Any):
+            headers = {**kwargs.pop("headers", {}), "Authorization": f"Bearer {token}"}
+            return await session.request(method, url, headers=headers, **kwargs)
+
+        client = BeatbotClient(data["region"], _request)
+        try:
+            await client.get_devices()
+        except BeatbotAuthenticationError:
+            return self.async_abort(reason="oauth_error")
+        except BeatbotConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        return None

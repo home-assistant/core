@@ -12,13 +12,17 @@ from beatbot_cloud import (
     BeatbotConnectionError,
     BeatbotConnectionReplacedError,
     BeatbotEvent,
+    BeatbotEventError,
     BeatbotEventStream,
     BeatbotTokenRejectedError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
@@ -111,11 +115,24 @@ class BeatbotEventClient:
                             translation_domain=DOMAIN,
                             translation_key="auth_error",
                         ) from err
-                    await self._async_refresh_token_once(err.access_token)
-                    self._token_refresh_attempted = True
-                    failures = 0
-                    continue
-                except BeatbotAuthenticationError, ConfigEntryAuthFailed:
+                    try:
+                        await self._async_refresh_token_once(err.access_token)
+                    except ConfigEntryAuthFailed:
+                        raise
+                    except BeatbotConnectionError as refresh_err:
+                        failures += 1
+                        _LOGGER.warning(
+                            "Beatbot OAuth token refresh failed: %s", refresh_err
+                        )
+                    else:
+                        self._token_refresh_attempted = True
+                        failures = 0
+                        continue
+                except (
+                    BeatbotAuthenticationError,
+                    ConfigEntryAuthFailed,
+                    OAuth2TokenRequestReauthError,
+                ):
                     _LOGGER.warning(
                         "Beatbot event stream authorization failed; "
                         "starting reauthentication"
@@ -168,6 +185,11 @@ class BeatbotEventClient:
         )
         try:
             await self._oauth_session.async_ensure_token_valid()
+        except OAuth2TokenRequestReauthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
         except ConfigEntryAuthFailed:
             raise
         except Exception as err:
@@ -213,11 +235,9 @@ class BeatbotEventClient:
             while not self._stopping:
                 try:
                     event = await stream.receive()
-                except BeatbotConnectionError as err:
-                    if str(err).startswith("Event "):
-                        _LOGGER.warning("Ignoring malformed Beatbot event: %s", err)
-                        continue
-                    raise
+                except BeatbotEventError as err:
+                    _LOGGER.warning("Ignoring malformed Beatbot event: %s", err)
+                    continue
                 self._token_refresh_attempted = False
                 self._handle_event(event)
         finally:
@@ -255,20 +275,14 @@ class BeatbotEventClient:
         )
 
         if event_type == "properties_changed":
-            if not isinstance(payload, dict) or not isinstance(
-                interface_info := payload.get("interfaceInfo"), str
-            ):
-                _LOGGER.warning("Ignoring malformed Beatbot property event")
-                return
+            assert isinstance(payload, dict)
+            interface_info = payload["interfaceInfo"]
             self._coordinator.async_apply_device_event(
-                device_id, {interface_info: payload.get("value")}
+                device_id, {interface_info: payload["value"]}
             )
         elif event_type == "status":
-            if not isinstance(payload, dict) or not isinstance(
-                online := payload.get("online"), bool
-            ):
-                _LOGGER.warning("Ignoring malformed Beatbot status event")
-                return
+            assert isinstance(payload, dict)
+            online = payload["online"]
             self._coordinator.async_apply_device_event(
                 device_id, None, is_online=online
             )

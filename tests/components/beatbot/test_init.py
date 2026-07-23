@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.beatbot import async_setup_entry, async_unload_entry
 from homeassistant.components.beatbot.iot.const import DOMAIN, SUPPORTED_PLATFORMS
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
@@ -57,9 +56,7 @@ async def test_async_setup_entry_starts_runtime_objects(
             return_value=event_client,
         ) as event_client_cls,
     ):
-        # Exercise construction order directly; config entry orchestration is mocked.
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        assert await async_setup_entry(hass, entry) is True
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
     api_cls.assert_called_once()
     coordinator_cls.assert_called_once()
@@ -99,10 +96,8 @@ async def test_async_unload_entry_stops_events_and_unloads_platforms(
             return_value=event_client,
         ),
     ):
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        await async_setup_entry(hass, entry)
-        # pylint: disable-next=home-assistant-tests-direct-async-unload-entry
-        assert await async_unload_entry(hass, entry) is True
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_unload(entry.entry_id)
 
     event_client.async_stop.assert_awaited_once()
     coordinator.async_cancel_pending_refreshes.assert_called_once()
@@ -116,36 +111,39 @@ async def test_async_unload_failure_keeps_runtime_services(
 ) -> None:
     """Keep runtime services active when platform unload fails."""
     entry = _entry()
+    entry.add_to_hass(hass)
+    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
     coordinator = Mock()
+    coordinator.async_config_entry_first_refresh = AsyncMock()
     coordinator.async_cancel_pending_refreshes = Mock()
     event_client = Mock()
+    event_client.async_start = Mock()
     event_client.async_stop = AsyncMock()
-    entry.runtime_data = SimpleNamespace(
-        coordinator=coordinator,
-        event_client=event_client,
-    )
-    hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
 
-    # pylint: disable-next=home-assistant-tests-direct-async-unload-entry
-    assert await async_unload_entry(hass, entry) is False
+    with (
+        patch("homeassistant.components.beatbot.BeatbotAPI", return_value=Mock()),
+        patch(
+            "homeassistant.components.beatbot.BeatbotCoordinator",
+            return_value=coordinator,
+        ),
+        patch(
+            "homeassistant.components.beatbot.BeatbotEventClient",
+            return_value=event_client,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert not await hass.config_entries.async_unload(entry.entry_id)
 
     event_client.async_stop.assert_not_awaited()
     coordinator.async_cancel_pending_refreshes.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    ("error", "expected"),
-    [
-        (ConfigEntryNotReady, ConfigEntryNotReady),
-        (ConfigEntryAuthFailed, ConfigEntryAuthFailed),
-    ],
-)
-async def test_async_setup_entry_propagates_first_refresh_failures(
+async def _assert_first_refresh_failure(
     hass: HomeAssistant,
     error: type[Exception],
-    expected: type[Exception],
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Setup fails before platform/event setup when the first refresh fails."""
     entry = _entry()
     entry.add_to_hass(hass)
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
@@ -161,11 +159,33 @@ async def test_async_setup_entry_propagates_first_refresh_failures(
         patch(
             "homeassistant.components.beatbot.BeatbotEventClient"
         ) as event_client_cls,
-        pytest.raises(expected),
     ):
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
+    assert entry.state is expected_state
     coordinator.async_config_entry_first_refresh.assert_awaited_once()
     hass.config_entries.async_forward_entry_setups.assert_not_called()
     event_client_cls.assert_not_called()
+
+
+async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
+    """A transient first refresh failure schedules setup retry."""
+    await _assert_first_refresh_failure(
+        hass, ConfigEntryNotReady, ConfigEntryState.SETUP_RETRY
+    )
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.homeassistant.issues.config_entry_reauth.title",
+            "component.homeassistant.issues.config_entry_reauth.description",
+        ]
+    ],
+)
+async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
+    """An authentication failure starts reauthentication."""
+    await _assert_first_refresh_failure(
+        hass, ConfigEntryAuthFailed, ConfigEntryState.SETUP_ERROR
+    )

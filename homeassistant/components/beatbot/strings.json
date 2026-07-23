@@ -4,6 +4,7 @@
       "already_configured": "This account is already configured.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "authorize_url_timeout": "Timed out generating authorize URL.",
+      "cannot_connect": "Cannot connect to Beatbot servers.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "no_url_available": "No authorization URL available. Make sure Home Assistant is reachable, or enable My Home Assistant.",
@@ -44,131 +45,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "charging": {
-        "name": "Charging"
-      },
-      "online": {
-        "name": "Online"
-      }
-    },
-    "select": {
-      "work_mode": {
-        "name": "Work mode",
-        "state": {
-          "ai": "AI mode",
-          "cec": "Low power mode",
-          "custom": "Custom mode",
-          "daily": "Daily",
-          "fast": "Fast mode",
-          "multi": "Multi-platform mode",
-          "platform": "Sun shelf mode",
-          "pro": "Pro mode",
-          "standard": "Standard mode",
-          "surface": "Surface mode",
-          "wall": "Wall mode"
-        }
-      }
-    },
-    "sensor": {
-      "battery": {
-        "name": "Battery"
-      },
-      "error": {
-        "name": "Error",
-        "state": {
-          "charge_high_temperature": "Charging high temp",
-          "charge_low_temperature": "Charging low temp",
-          "dust_box_full": "Dust box full",
-          "dust_box_loss": "Dust box lost",
-          "enter_shawdow_water_error": "Shadow water error",
-          "env_high_temperature": "High temperature",
-          "env_low_temperature": "Low temperature",
-          "err_dust_not_install": "Base station dust box not installed",
-          "motor_airpump_left": "Left air pump motor",
-          "motor_airpump_right": "Right air pump motor",
-          "motor_brush": "Brush motor",
-          "motor_error": "Motor error",
-          "motor_pump": "Pump motor",
-          "motor_reagent": "Reagent motor",
-          "motor_rod": "Rod motor",
-          "motor_thruster": "Thruster motor",
-          "motor_thruster_left": "Left thruster motor",
-          "motor_thruster_right": "Right thruster motor",
-          "motor_wheel_left": "Left wheel motor",
-          "motor_wheel_right": "Right wheel motor",
-          "none": "None",
-          "notice_clean_base_dust": "Base station dust box is not in position during cleaning",
-          "notice_clean_closed_dust": "Unable to close the robot bottom dust box during cleaning",
-          "notice_clean_comm": "Robot and base station communication error during cleaning",
-          "notice_clean_done_normal": "Cleaning completed normally",
-          "notice_clean_drain_pump_empty": "Drain pump dry-run protection activated",
-          "notice_clean_lever_not_reset": "Lever could not reset during cleaning",
-          "notice_clean_opend_dust": "Unable to open the robot bottom dust box during cleaning",
-          "notice_clean_robot_not_pos": "Robot left the cleaning position during cleaning",
-          "notice_clean_spray_leave_pos": "Spray head left the required cleaning position",
-          "notice_clean_spray_not_pos": "Spray head did not reach the required position",
-          "notice_clean_user_end_early": "Self-cleaning ended early by user",
-          "notice_cleaned_lever_not_reset": "Lever could not reset after cleaning",
-          "notice_cleaned_spray_not_reset": "Spray head could not reset after cleaning",
-          "notice_cln_robot_dust_not_pos": "Robot dust box not installed during cleaning",
-          "notice_self_base_dust": "Base station dust box not installed during self-check",
-          "notice_self_not_paired": "Robot and base station Bluetooth connection error",
-          "notice_self_robot_dust": "Robot dust box not installed",
-          "notice_self_robot_not_comm": "Base station did not receive a message from the robot",
-          "notice_self_robot_not_pos": "Robot is not in the cleaning position",
-          "notice_self_temp_low": "Low ambient temperature during self-check",
-          "platform_clean_err": "Platform clean error",
-          "power_cutting": "Power cut",
-          "power_low": "Low power",
-          "self_err_clean_conflict": "Self-check cleaning conflict",
-          "self_err_lever": "Self-check lever error",
-          "self_err_pusher": "Self-check pusher error",
-          "self_err_spray": "Self-check spray head error",
-          "trapped": "Trapped"
-        }
-      },
-      "firmware": {
-        "name": "Firmware"
-      },
-      "work_status": {
-        "name": "Status",
-        "state": {
-          "auto_dock": "Auto dock",
-          "charge_done": "Charge done",
-          "charging": "Charging",
-          "chase_light": "Chasing light",
-          "check_down": "Self-check complete",
-          "clean_done": "Clean done",
-          "clean_wait": "Clean wait",
-          "cleaning": "Cleaning",
-          "diving": "Diving",
-          "dock": "Dock",
-          "dock_done": "Dock done",
-          "emerge": "Emerging",
-          "finish_connect": "Connected",
-          "goto_charge": "Going to charge",
-          "paused": "Paused",
-          "remote_control": "Remote control",
-          "replenish_energy": "Replenishing energy",
-          "return_trip": "Return trip",
-          "self_checking": "Self-checking",
-          "self_cleaning": "Self cleaning",
-          "sleep": "Sleep",
-          "standby": "Standby",
-          "uncheck": "Not checked",
-          "wifi_connect": "Wi-Fi connecting"
-        }
-      }
-    },
-    "switch": {
-      "child_lock": {
-        "name": "Child lock"
-      },
-      "voice_disturb": {
-        "name": "Voice do not disturb"
-      }
-    },
     "vacuum": {
       "beatbot_clean_base_station_vacuum": {
         "name": "Cleaning Base Station"
