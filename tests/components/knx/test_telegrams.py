@@ -195,6 +195,7 @@ async def test_store_init_timeout_retries_and_succeeds(
     hass: HomeAssistant,
     knx: KNXTestKit,
     freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """A transient init timeout is retried in the background and then succeeds."""
     freezer.move_to("2024-01-01 12:00:00+00:00")
@@ -211,7 +212,6 @@ async def test_store_init_timeout_retries_and_succeeds(
         await knx.setup_integration()
 
         telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-        issue_registry = ir.async_get(hass)
 
         assert telegrams_module.store is None
         assert (
@@ -234,6 +234,7 @@ async def test_store_init_timeout_exhausts_retries_and_aborts(
     hass: HomeAssistant,
     knx: KNXTestKit,
     freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """A persistent init timeout disables the store once the retry budget is spent."""
     freezer.move_to("2024-01-01 12:00:00+00:00")
@@ -247,7 +248,6 @@ async def test_store_init_timeout_exhausts_retries_and_aborts(
         await knx.setup_integration()
 
         telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-        issue_registry = ir.async_get(hass)
 
         assert telegrams_module.store is None
         assert (
