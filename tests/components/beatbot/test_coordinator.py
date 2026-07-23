@@ -133,6 +133,30 @@ async def test_coordinator_state_connection_failure_keeps_device(
     assert data == {"dev-1": device}
 
 
+async def test_coordinator_applies_batch_device_state(
+    hass: HomeAssistant,
+) -> None:
+    """Apply runtime values returned by the batch state endpoint."""
+    device = _device("dev-1", SUPPORTED_PRODUCT)
+    api = SimpleNamespace(
+        get_devices=AsyncMock(return_value=[device]),
+        get_device_states=AsyncMock(
+            return_value={
+                "dev-1": {
+                    "states": {"vacuum.battery": 42},
+                    "is_online": False,
+                }
+            }
+        ),
+    )
+    coordinator = BeatbotCoordinator(hass, api)
+
+    data = await coordinator._async_update_data()
+
+    assert data["dev-1"].battery_level == 42
+    assert data["dev-1"].is_online is False
+
+
 async def test_coordinator_empty_allow_list_drops_everything(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
