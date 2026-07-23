@@ -195,15 +195,17 @@
       },
       "public_weather_areas": {
         "data": {
+          "enabled_homes": "Enabled homes",
           "new_area": "Area name",
           "weather_areas": "Weather areas"
         },
         "data_description": {
+          "enabled_homes": "Homes to be managed by this integration. Newly added homes are enabled by default.",
           "new_area": "Name of a new weather area to add.",
           "weather_areas": "Configured weather areas to edit or remove."
         },
-        "description": "Configure public weather sensors.",
-        "title": "[%key:component::netatmo::options::step::public_weather::title%]"
+        "description": "Configure enabled homes and public weather sensors.",
+        "title": "Homes selection and public weather"
       }
     }
   },
