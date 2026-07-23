@@ -471,6 +471,28 @@ class PeekIterator(Iterator[av.Packet]):
             yield packet
 
 
+def repair_initial_missing_dts(packets: PeekIterator) -> None:
+    """Repair a missing DTS on the initial video keyframe."""
+    buffered_packets = packets.peek()
+    first_video_packet = next(
+        (packet for packet in buffered_packets if packet.stream.type == "video"), None
+    )
+    if (
+        first_video_packet is None
+        or not first_video_packet.is_keyframe
+        or first_video_packet.dts is not None
+    ):
+        return
+
+    next_video_packet = next(
+        (packet for packet in buffered_packets if packet.stream.type == "video"), None
+    )
+    if next_video_packet is None or next_video_packet.dts is None:
+        return
+
+    first_video_packet.dts = next_video_packet.dts - (next_video_packet.duration or 1)
+
+
 class TimestampValidator:
     """Validate ordering of timestamps for packets in a stream."""
 
@@ -630,8 +652,9 @@ def stream_worker(
         int(1 / video_stream.time_base),  # type: ignore[operator]
         int(1 / audio_stream.time_base) if audio_stream else 1,  # type: ignore[operator]
     )
+    unvalidated_packets = PeekIterator(container.demux((video_stream, audio_stream)))
     container_packets = PeekIterator(
-        filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
+        filter(dts_validator.is_valid, unvalidated_packets)
     )
 
     def is_video(packet: av.Packet) -> Any:
@@ -645,6 +668,7 @@ def stream_worker(
     # Use a peeking iterator to peek into the start of the stream, ensuring
     # everything looks good, then go back to the start when muxing below.
     try:
+        repair_initial_missing_dts(unvalidated_packets)
         # Get the required bitstream filter
         audio_bsf = get_audio_bitstream_filter(container_packets.peek(), audio_stream)
         # Advance to the first keyframe for muxing, then rewind so the muxing
