@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, patch
 
+from google_health_api.model import ListDataPointResult, _ListDataPointsModel
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -33,9 +34,12 @@ async def test_sensor_empty_rollup(
     mock_google_health_client: AsyncMock,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test steps and distance sensors when the rollup endpoint returns no data."""
+    """Test rollup sensors when the rollup endpoints return no data."""
     mock_google_health_client.steps.today.return_value = None
     mock_google_health_client.distance.today.return_value = None
+    mock_google_health_client.active_energy_burned.today.return_value = None
+    mock_google_health_client.total_calories.today.return_value = None
+    mock_google_health_client.floors.today.return_value = None
 
     assert await integration_setup()
 
@@ -46,3 +50,32 @@ async def test_sensor_empty_rollup(
     distance_state = hass.states.get("sensor.google_health_distance")
     assert distance_state is not None
     assert distance_state.state == "0.0"
+
+    active_calories_state = hass.states.get("sensor.google_health_active_calories")
+    assert active_calories_state is not None
+    assert active_calories_state.state == "0.0"
+
+    total_calories_state = hass.states.get("sensor.google_health_total_calories")
+    assert total_calories_state is not None
+    assert total_calories_state.state == "0.0"
+
+    floors_state = hass.states.get("sensor.google_health_floors")
+    assert floors_state is not None
+    assert floors_state.state == "0"
+
+
+async def test_sensor_empty_sleep(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test sleep sensors when the sleep endpoint returns no data."""
+    mock_google_health_client.sleep.list.return_value = ListDataPointResult(
+        _ListDataPointsModel(data_points=[])
+    )
+
+    assert await integration_setup()
+
+    time_asleep_state = hass.states.get("sensor.google_health_time_asleep")
+    assert time_asleep_state is not None
+    assert time_asleep_state.state == "unknown"

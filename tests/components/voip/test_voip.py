@@ -80,7 +80,7 @@ async def test_is_valid_call(
     protocol = HassVoipDatagramProtocol(hass, voip_devices)
     assert not protocol.is_valid_call(call_info)
 
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     allowed_call_entity_id = ent_reg.async_get_entity_id(
         "switch", voip.DOMAIN, f"{voip_device.voip_id}-allow_call"
     )

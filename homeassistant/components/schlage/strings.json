@@ -42,7 +42,9 @@
           "60": "1 minute",
           "120": "2 minutes",
           "240": "4 minutes",
-          "300": "5 minutes"
+          "300": "5 minutes",
+          "360": "6 minutes",
+          "600": "10 minutes"
         }
       }
     },

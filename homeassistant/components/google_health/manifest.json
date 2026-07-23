@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["google-health-api==0.5.1"]
+  "requirements": ["google-health-api==0.6.0"]
 }

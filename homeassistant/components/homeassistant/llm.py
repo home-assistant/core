@@ -18,13 +18,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
-from homeassistant.helpers.llm import (
-    LLM_API_ASSIST,
-    NO_ENTITIES_PROMPT,
-    LLMContext,
-    Tool,
-    ToolInput,
-)
+from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
 
@@ -33,6 +27,11 @@ from .exposed_entities import async_should_expose
 # Domains bucketed out of the exposed-entity overview.
 CALENDAR_DOMAIN = "calendar"
 SCRIPT_DOMAIN = "script"
+
+NO_ENTITIES_PROMPT = (
+    "Only if the user wants to control a device, tell them to expose entities "
+    "to their voice assistant in Home Assistant."
+)
 
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"

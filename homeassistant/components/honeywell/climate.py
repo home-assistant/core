@@ -152,10 +152,8 @@ def remove_stale_devices(
             # If device_id is None an invalid device entry was
             # found for this config entry. If the device_id is not
             # in existing device ids it's a stale device entry.
-            # Remove config entry from this device entry in either case.
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            # Remove the device entry in either case.
+            device_registry.async_remove_device(device_entry.id)
 
 
 class HoneywellUSThermostat(ClimateEntity):

@@ -140,7 +140,7 @@ async def test_subentry_reconfigure_export_settings(
     # The subentry ID is used as device identifier
     assert len(events) == 1
     issue_id = events[0].data["issue_id"]
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     repair_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert repair_issue.translation_key == translation_key
 

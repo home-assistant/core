@@ -190,18 +190,10 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     trend_config_entry: MockConfigEntry,
-    sensor_config_entry: ConfigEntry,
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test the trend config entry is removed when the source entity is removed."""
-    # Add another config entry to the sensor device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        sensor_device.id, add_config_entry_id=other_config_entry.entry_id
-    )
-
+    """Test the source entity is removed but the source device is not removed."""
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -213,21 +205,21 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 
     events = track_entity_registry_actions(hass, trend_entity_entry.entity_id)
 
-    # Remove the source sensor's config entry from the device, this removes the
-    # source sensor
+    # Remove the source entity, this does not remove the source device
     with patch(
         "homeassistant.components.trend.async_unload_entry",
         wraps=trend.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
-        )
+        entity_registry.async_remove(sensor_entity_entry.entity_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_called_once()
 
     # Check that the helper entity is removed
     assert not entity_registry.async_get("binary_sensor.my_trend")
+
+    # Check that the source device is not removed
+    assert device_registry.async_get(sensor_device.id) is not None
 
     # Check that the trend config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -394,7 +386,7 @@ async def test_migration_1_1(
     sensor_entity_entry: er.RegistryEntry,
     sensor_device: dr.DeviceEntry,
 ) -> None:
-    """Test migration from v1.1 removes trend config entry from device."""
+    """Test migration from v1.1 keeps the helper entity linked to the source device."""
 
     trend_config_entry = MockConfigEntry(
         data={},
@@ -410,22 +402,13 @@ async def test_migration_1_1(
     )
     trend_config_entry.add_to_hass(hass)
 
-    # Add the helper config entry to the device
-    device_registry.async_update_device(
-        sensor_device.id, add_config_entry_id=trend_config_entry.entry_id
-    )
-
-    # Check preconditions
-    sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id in sensor_device.config_entries
-
     await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert trend_config_entry.state is ConfigEntryState.LOADED
 
-    # Check that the helper config entry is removed from the device and the helper
-    # entity is linked to the source device
+    # Check that the helper config entry is not in the device and the helper entity
+    # is linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
     assert trend_config_entry.entry_id not in sensor_device.config_entries
     trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")

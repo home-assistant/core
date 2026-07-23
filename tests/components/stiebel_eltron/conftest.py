@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import OperatingMode
 import pytest
@@ -31,6 +32,22 @@ def mock_get_controller_model() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
+def mock_connect_tcp(
+    mock_modbus_connection: MockModbusConnection,
+) -> Generator[AsyncMock]:
+    """Patch connect_tcp to return the in-memory mock connection."""
+    connect = AsyncMock(return_value=mock_modbus_connection)
+    with (
+        patch("homeassistant.components.stiebel_eltron.connect_tcp", new=connect),
+        patch(
+            "homeassistant.components.stiebel_eltron.config_flow.connect_tcp",
+            new=connect,
+        ),
+    ):
+        yield connect
+
+
+@pytest.fixture(autouse=True)
 def mock_lwz_api() -> Generator[MagicMock]:
     """Patch the LWZ API and return the mocked client."""
 
@@ -38,29 +55,16 @@ def mock_lwz_api() -> Generator[MagicMock]:
         "homeassistant.components.stiebel_eltron.coordinator.LwzStiebelEltronAPI",
         autospec=True,
     ) as mock_api_cls:
-        api_client = MagicMock()
+        api_client = mock_api_cls.return_value
 
-        api_client.get_target_temp = MagicMock(return_value=22.5)
-        api_client.get_current_temp = MagicMock(return_value=21.0)
-        api_client.get_current_humidity = MagicMock(return_value=45.0)
-        api_client.get_operation = MagicMock(return_value=OperatingMode.AUTOMATIC)
-        api_client.get_heating_status = MagicMock(return_value=True)
-        api_client.get_cooling_status = MagicMock(return_value=False)
-        api_client.get_filter_alarm_status = MagicMock(return_value=False)
+        api_client.get_target_temp.return_value = 22.5
+        api_client.get_current_temp.return_value = 21.0
+        api_client.get_current_humidity.return_value = 45.0
+        api_client.get_operation.return_value = OperatingMode.AUTOMATIC
+        api_client.get_heating_status.return_value = True
+        api_client.get_cooling_status.return_value = False
+        api_client.get_filter_alarm_status.return_value = False
 
-        def _connect() -> None:
-            api_client.is_connected = True
-
-        api_client.connect = AsyncMock(side_effect=_connect)
-        api_client.close = AsyncMock()
-        api_client.async_update = AsyncMock()
-        api_client.set_operation = AsyncMock()
-        api_client.set_target_temp = AsyncMock()
-
-        api_client.is_connected = False
-        api_client.host = "1.1.1.1"
-
-        mock_api_cls.return_value = api_client
         yield api_client
 
 
