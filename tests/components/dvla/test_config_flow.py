@@ -24,6 +24,7 @@ async def assert_error_recovers(
         side_effect=[
             error,
             {"registrationNumber": "AB12CDE"},
+            {"registrationNumber": "AB12CDE"},
         ],
     ):
         result = await hass.config_entries.flow.async_init(
