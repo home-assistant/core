@@ -1,7 +1,9 @@
 """Test the api module."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, call
 
+from matter_server.client.exceptions import ServerVersionTooOld
 from matter_server.client.models.node import (
     MatterFabricData,
     NetworkType,
@@ -10,7 +12,14 @@ from matter_server.client.models.node import (
 )
 from matter_server.common.errors import InvalidCommand, NodeCommissionFailed
 from matter_server.common.helpers.util import dataclass_to_dict
-from matter_server.common.models import CommissioningParameters
+from matter_server.common.models import (
+    CommissioningParameters,
+    EventType,
+    NetworkTopology,
+    NetworkTopologyConnection,
+    NetworkTopologyNode,
+    TopologyDirectionInfo,
+)
 import pytest
 
 from homeassistant.components.matter.api import (
@@ -465,3 +474,193 @@ async def test_interview_node(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
+
+
+def _mock_topology() -> NetworkTopology:
+    """Return a mock topology with a known node, an unknown node and a border router."""
+    return NetworkTopology(
+        collected_at=1767888000000,
+        nodes=[
+            NetworkTopologyNode(
+                id="30",
+                kind="matter",
+                network_type="thread",
+                node_id=30,
+                role="router",
+                available=True,
+            ),
+            NetworkTopologyNode(
+                id="99",
+                kind="matter",
+                network_type="thread",
+                node_id=99,
+                role="end_device",
+                available=True,
+            ),
+            NetworkTopologyNode(
+                id="br_1122AABBCC334455",
+                kind="border_router",
+                network_type="thread",
+                role="router",
+                ext_address="1122AABBCC334455",
+                vendor_name="Apple",
+            ),
+        ],
+        connections=[
+            NetworkTopologyConnection(
+                source="30",
+                target="br_1122AABBCC334455",
+                network="thread",
+                strength="strong",
+                source_to_target=TopologyDirectionInfo(strength="strong", lqi=3),
+            ),
+        ],
+    )
+
+
+def _expected_topology(
+    topology: NetworkTopology, ha_device_ids: list[str | None]
+) -> dict:
+    """Return the expected ws payload for the given topology."""
+    expected = dataclass_to_dict(topology)
+    for node, ha_device_id in zip(expected["nodes"], ha_device_ids, strict=True):
+        node["ha_device_id"] = ha_device_id
+    return expected
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
+async def test_network_topology(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the network_topology command."""
+    matter_client.server_info.schema_version = 13
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    topology = _mock_topology()
+    matter_client.get_network_topology = AsyncMock(return_value=topology)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({ID: 1, TYPE: "matter/network_topology"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    # node 30 maps to the registry device, node 99 and the border router do not
+    assert msg["result"] == _expected_topology(topology, [entry.id, None, None])
+    matter_client.get_network_topology.assert_called_once_with(refresh=False)
+
+    matter_client.get_network_topology.reset_mock()
+    await ws_client.send_json({ID: 2, TYPE: "matter/network_topology", "refresh": True})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.get_network_topology.assert_called_once_with(refresh=True)
+
+
+@pytest.mark.parametrize(
+    "command", ["matter/network_topology", "matter/subscribe_network_topology"]
+)
+@pytest.mark.usefixtures("integration")
+async def test_network_topology_not_supported(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    command: str,
+) -> None:
+    """Test the topology commands against a server without topology support."""
+    # the conftest default schema version (1) predates network topology
+    matter_client.get_network_topology = AsyncMock()
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({ID: 1, TYPE: command})
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_supported"
+    matter_client.get_network_topology.assert_not_called()
+
+    # a version mismatch raised by the client also maps to not_supported
+    matter_client.server_info.schema_version = 13
+    matter_client.get_network_topology.side_effect = ServerVersionTooOld(
+        "Command not available due to too old server version"
+    )
+    await ws_client.send_json({ID: 2, TYPE: command})
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_supported"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
+async def test_subscribe_network_topology(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the subscribe_network_topology command."""
+    matter_client.server_info.schema_version = 13
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    topology = _mock_topology()
+    matter_client.get_network_topology = AsyncMock(return_value=topology)
+
+    subscription_callback: Callable[[EventType, NetworkTopology], None] | None = None
+    unsubscribe = MagicMock()
+
+    def capture_subscription(
+        callback: Callable[[EventType, NetworkTopology], None],
+        event_filter: EventType | None = None,
+        node_filter: int | None = None,
+        attr_path_filter: str | None = None,
+    ) -> MagicMock:
+        nonlocal subscription_callback
+        assert event_filter is EventType.NETWORK_TOPOLOGY_UPDATED
+        subscription_callback = callback
+        return unsubscribe
+
+    matter_client.subscribe_events.side_effect = capture_subscription
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({ID: 1, TYPE: "matter/subscribe_network_topology"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.get_network_topology.assert_called_once_with()
+    assert subscription_callback is not None
+
+    # the initial snapshot is pushed as the first event
+    msg = await ws_client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"] == _expected_topology(topology, [entry.id, None, None])
+
+    # a topology update from the server is forwarded to the subscription
+    updated = _mock_topology()
+    updated.collected_at = 1767888060000
+    updated.nodes = topology.nodes[:1]
+    updated.connections = []
+    subscription_callback(EventType.NETWORK_TOPOLOGY_UPDATED, updated)
+    msg = await ws_client.receive_json()
+
+    assert msg["type"] == "event"
+    assert msg["event"] == _expected_topology(updated, [entry.id])
+
+    await ws_client.send_json({ID: 2, TYPE: "unsubscribe_events", "subscription": 1})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    unsubscribe.assert_called_once_with()
