@@ -50,7 +50,7 @@ class BeatbotWorkModeSelect(BeatbotEntity, SelectEntity):
             return
         target_value = self._option_to_value[option]
         await self._async_send_command(
-            self.coordinator.api.set_work_mode(self._device_id, option)
+            lambda: self.coordinator.api.set_work_mode(self._device_id, option)
         )
         # The command response confirms acceptance, but the cloud state event
         # arrives later. Apply the selected value immediately so HA does not
@@ -59,7 +59,7 @@ class BeatbotWorkModeSelect(BeatbotEntity, SelectEntity):
         self.coordinator.async_apply_device_event(
             self._device_id, {"select.work_mode": target_value}
         )
-        _LOGGER.info(
+        _LOGGER.debug(
             "Applied Beatbot work mode after successful command "
             "(deviceId=%s, option=%s, value=%s)",
             self._device_id,
@@ -80,4 +80,6 @@ async def async_setup_entry(
         BeatbotWorkModeSelect(coordinator, device_id)
         for device_id, device in coordinator.data.items()
         if device.work_mode_options
+        and (capability := device.capabilities.get("select.work_mode")) is not None
+        and not capability.non_controllable
     )

@@ -7,6 +7,7 @@ device is populated correctly no matter which platform's entities load
 first or fail to load.
 """
 
+from collections.abc import Awaitable, Callable
 from typing import Any, override
 
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -35,7 +36,7 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
         """Return the latest data for this device."""
         return self.coordinator.data[self._device_id]
 
-    async def _async_send_command(self, coro: Any) -> None:
+    async def _async_send_command(self, command: Callable[[], Awaitable[Any]]) -> None:
         """Run a control API call with HA-idiomatic error translation.
 
         - Auth failure escalates to ConfigEntryAuthFailed so HA triggers the
@@ -49,7 +50,7 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
         failed request means the action likely did not apply (or the response
         was lost). Blindly retrying toggle-semantics actions (start/pause)
         risks double execution. State reconciliation is left to the
-        post-control refresh and the 30s poll.
+        post-control refresh and the regular reconciliation poll.
         """
         if not self.data.is_online:
             raise HomeAssistantError(
@@ -60,8 +61,10 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
                 },
             )
         try:
-            await coro
+            await command()
         except BeatbotAuthError as err:
+            if self.coordinator.config_entry is not None:
+                self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed from err
         except BeatbotConnectionError as err:
             raise HomeAssistantError(
@@ -80,7 +83,8 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
             identifiers={(DOMAIN, self._device_id)},
             name=self.data.name or None,
             manufacturer="Beatbot",
-            model=self.data.product_id,
+            model=self.data.model or None,
+            model_id=self.data.product_id,
             # Show each firmware channel's version distinctly (e.g.
             # "ch1:0.0.80 ch2:0.0.80") rather than collapsing to one value.
             sw_version=" ".join(

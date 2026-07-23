@@ -117,7 +117,7 @@ async def test_device_event_overlays_state_without_resetting_poll(
     next_poll = coordinator._unsub_refresh
 
     with caplog.at_level(
-        logging.INFO, logger="homeassistant.components.beatbot.coordinator"
+        logging.DEBUG, logger="homeassistant.components.beatbot.coordinator"
     ):
         coordinator.async_apply_device_event(
             "dev-1", {"vacuum.battery": 42}, is_online=False
@@ -165,7 +165,7 @@ async def test_post_control_refresh_fetches_only_target_device(
     coordinator.async_set_updated_data({"dev-1": device})
 
     with caplog.at_level(
-        logging.INFO, logger="homeassistant.components.beatbot.coordinator"
+        logging.DEBUG, logger="homeassistant.components.beatbot.coordinator"
     ):
         coordinator.async_schedule_device_state_refresh("dev-1")
         task = coordinator._refresh_tasks["dev-1"]
@@ -293,6 +293,25 @@ async def test_poll_new_device_schedules_platform_reload(
 
     assert data == {"dev-new": device}
     coordinator._schedule_entry_reload.assert_called_once()
+
+
+async def test_poll_preserves_state_missing_from_batch(hass: HomeAssistant) -> None:
+    """Preserve last-known runtime state when batch data omits a device."""
+    previous = _device("dev-1", SUPPORTED_PRODUCT)
+    previous.battery_level = 42
+    discovered = _device("dev-1", SUPPORTED_PRODUCT)
+    discovered.name = "Updated name"
+    api = SimpleNamespace(
+        get_devices=AsyncMock(return_value=[discovered]),
+        get_device_states=AsyncMock(return_value={}),
+    )
+    coordinator = BeatbotCoordinator(hass, api, _entry())
+    coordinator.async_set_updated_data({"dev-1": previous})
+
+    data = await coordinator._async_update_data()
+
+    assert data["dev-1"].name == "Updated name"
+    assert data["dev-1"].battery_level == 42
 
 
 async def test_poll_removes_registry_only_stale_device_after_three_misses(

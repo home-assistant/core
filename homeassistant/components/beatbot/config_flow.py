@@ -140,11 +140,16 @@ class BeatbotConfigFlow(
         traffic is never silently routed to the wrong backend.
         """
         access_token = (data.get("token") or {}).get("access_token")
-        if access_token and (claims := _decode_access_token(access_token)):
-            if sub := claims.get("sub"):
-                await self.async_set_unique_id(str(sub))
-            if region := claims.get("region"):
-                data["region"] = str(region)
+        claims = (
+            _decode_access_token(access_token)
+            if isinstance(access_token, str)
+            else None
+        )
+        if claims is None or not isinstance(sub := claims.get("sub"), str) or not sub:
+            return self.async_abort(reason="oauth_error")
+        await self.async_set_unique_id(sub)
+        if region := claims.get("region"):
+            data["region"] = str(region)
         if self.source == SOURCE_REAUTH:
             # Verify the account matches before rejecting its region, so a
             # reauth with the wrong account still surfaces unique_id_mismatch.

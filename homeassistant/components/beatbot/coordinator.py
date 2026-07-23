@@ -61,7 +61,11 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         except BeatbotAuthError as err:
             raise ConfigEntryAuthFailed from err
         except BeatbotConnectionError as err:
-            raise UpdateFailed(f"Connection error: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # Two-layer gating: category first (coarse — "do we support this
         # product line at all"), then productId (fine — "is this specific
@@ -76,7 +80,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         result: dict[str, BeatbotDeviceData] = {}
         for d in devices:
             if CATEGORY_MAP.get(d.product_category) not in SUPPORTED_PRODUCT_CATEGORIES:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Skipping device %s (productId=%s): product category %r is "
                     "not supported by this integration",
                     d.device_id,
@@ -85,7 +89,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                 )
                 continue
             if d.product_id not in SUPPORTED_PRODUCT_IDS:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Skipping device %s: productId %r is not on the verified "
                     "allow-list (add it to SUPPORTED_PRODUCT_IDS to enable)",
                     d.device_id,
@@ -108,11 +112,12 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             )
             states = {}
         else:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Beatbot state pull completed (source=batch, deviceCount=%s)",
                 len(states),
             )
 
+        previous_data = self.data if isinstance(self.data, dict) else {}
         for device_id, device in result.items():
             if (state := states.get(device_id)) is not None:
                 self._apply_state_with_logging(
@@ -122,16 +127,24 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                     state.get("is_online"),
                     source="batch",
                 )
+            elif (previous_device := previous_data.get(device_id)) is not None:
+                # Discovery and runtime state are separate endpoints. Preserve
+                # the last-known state when the batch response is partial or
+                # unavailable, while retaining fresh discovery metadata.
+                for field in set(HA_STATE_FIELD_MAP.values()):
+                    setattr(device, field, getattr(previous_device, field))
+                device.is_online = previous_device.is_online
         self._reconcile_device_set(result)
         return result
 
     @callback
     def _reconcile_device_set(self, result: dict[str, BeatbotDeviceData]) -> None:
         """Reconcile successful discovery results with the active device set."""
+        initial_refresh = not isinstance(self.data, dict)
         previous_data = self.data if isinstance(self.data, dict) else {}
         previous_ids = set(previous_data) | self._registered_device_ids()
         current_ids = set(result)
-        added_ids = current_ids - previous_ids
+        added_ids = set() if initial_refresh else current_ids - previous_ids
         missing_ids = previous_ids - current_ids
 
         for device_id in current_ids:
@@ -156,7 +169,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             self._missing_device_counts.pop(device_id, None)
 
         if added_ids or confirmed_removed:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Device discovery changed; added=%s removed=%s",
                 sorted(added_ids),
                 sorted(confirmed_removed),
@@ -191,7 +204,9 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         ):
             if entity.config_entry_id == self._entry_id:
                 entity_registry.async_remove(entity.entity_id)
-        device_registry.async_remove_device(device.id)
+        device_registry.async_update_device(
+            device.id, remove_config_entry_id=self._entry_id
+        )
 
     @callback
     def _schedule_entry_reload(self) -> None:
@@ -215,7 +230,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         Used after a control command (start/pause/return/work_mode) to confirm
         the new state quickly and cheaply: a single `GET /devices/{id}/state`
         instead of re-running the full discovery + batch-state refresh. The
-        30s poll still runs as normal for everything else.
+        regular reconciliation poll still runs as normal for everything else.
 
         Waits `POST_CONTROL_REFRESH_DELAY` before fetching: the device does
         not report the new state the instant the action is issued, so reading
@@ -241,7 +256,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             return
         state_values = state.get("states")
         is_online = state.get("is_online")
-        _LOGGER.info(
+        _LOGGER.debug(
             "Beatbot state pull completed "
             "(source=post_control, deviceId=%s, states=%r, online=%s)",
             device_id,
@@ -299,7 +314,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                 continue
             old_value = getattr(device, field)
             if old_value != new_value:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Beatbot state changed "
                     "(source=%s, deviceId=%s, interfaceInfo=%s, old=%r, new=%r)",
                     source,
@@ -309,7 +324,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
                     new_value,
                 )
         if is_online is not None and device.is_online != bool(is_online):
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Beatbot state changed "
                 "(source=%s, deviceId=%s, interfaceInfo=online, old=%r, new=%r)",
                 source,

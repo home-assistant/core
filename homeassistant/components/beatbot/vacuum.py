@@ -26,7 +26,6 @@ from .iot.const import INTERFACE_PAUSE, INTERFACE_RETURN_TO_BASE, INTERFACE_STAR
 VACUUM_TRANSLATION_KEYS = {
     ProductCategory.POOL_CLEAN_BOT: "beatbot_pool_vacuum",
     ProductCategory.CLEAN_BASE_STATION: "beatbot_clean_base_station_vacuum",
-    ProductCategory.LAWN_MOWER: "beatbot_lawn_mower_vacuum",
 }
 
 
@@ -76,7 +75,7 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
     async def async_start(self) -> None:
         """Start cleaning."""
         await self._async_send_command(
-            self.coordinator.api.send_action(self._device_id, INTERFACE_START)
+            lambda: self.coordinator.api.send_action(self._device_id, INTERFACE_START)
         )
         self.coordinator.async_schedule_device_state_refresh(self._device_id)
 
@@ -84,7 +83,7 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
     async def async_pause(self) -> None:
         """Pause cleaning."""
         await self._async_send_command(
-            self.coordinator.api.send_action(self._device_id, INTERFACE_PAUSE)
+            lambda: self.coordinator.api.send_action(self._device_id, INTERFACE_PAUSE)
         )
         self.coordinator.async_schedule_device_state_refresh(self._device_id)
 
@@ -92,7 +91,9 @@ class BeatbotPoolVacuum(BeatbotEntity, StateVacuumEntity):
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return the cleaner to its base."""
         await self._async_send_command(
-            self.coordinator.api.send_action(self._device_id, INTERFACE_RETURN_TO_BASE)
+            lambda: self.coordinator.api.send_action(
+                self._device_id, INTERFACE_RETURN_TO_BASE
+            )
         )
         self.coordinator.async_schedule_device_state_refresh(self._device_id)
 

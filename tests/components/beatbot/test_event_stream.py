@@ -227,7 +227,7 @@ async def test_rejected_token_is_refreshed_only_once(hass: HomeAssistant) -> Non
 async def test_repeated_handshake_401_starts_reauth(hass: HomeAssistant) -> None:
     """Start reauthentication after a repeated handshake rejection."""
     client, _ = _client(hass)
-    client._handshake_refresh_attempted = True
+    client._token_refresh_attempted = True
     client._connect_and_receive = AsyncMock(
         side_effect=_RefreshToken("rejected-again", handshake=True)
     )

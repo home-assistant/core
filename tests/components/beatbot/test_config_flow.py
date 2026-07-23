@@ -74,7 +74,7 @@ async def test_registers_local_implementation_when_missing(
     assert isinstance(register.call_args.args[2], BeatbotOAuth2Implementation)
 
 
-def _make_token(sub: str, *, nonce: str = "v1", region: str | None = None) -> dict:
+def _make_token(sub: object, *, nonce: str = "v1", region: str | None = None) -> dict:
     """Build a fake OAuth2 token whose access_token is a JWT with `sub`.
 
     `nonce` differentiates tokens for the same account (simulating a refresh)
@@ -217,6 +217,20 @@ async def test_user_flow_stores_region_from_token(hass: HomeAssistant) -> None:
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data["region"] == "cn"
+
+
+@pytest.mark.parametrize("sub", ["", 123, None])
+async def test_user_flow_rejects_invalid_subject(
+    hass: HomeAssistant, sub: object
+) -> None:
+    """Reject tokens without a non-empty string account subject."""
+    _register_mock_impl(hass, _make_token(sub, region="cn"))
+
+    result = await _start_user_flow(hass)
+    result = await _complete_external_auth(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
 
 
 async def test_user_flow_aborts_authorize_url_timeout(

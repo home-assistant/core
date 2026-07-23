@@ -177,5 +177,4 @@ async def async_setup_entry(
         # actually has a bit map to decode against.
         if bits := ERROR_BITS_BY_CATEGORY.get(category, []):
             entities.append(BeatbotErrorSensor(coordinator, device_id, bits))
-    # for lawn mower add
     async_add_entities(entities)

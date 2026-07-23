@@ -65,8 +65,9 @@ class BeatbotEventClient:
         self._task: asyncio.Task[None] | None = None
         self._stream: BeatbotEventStream | None = None
         self._stopping = False
-        self._handshake_refresh_attempted = False
+        self._token_refresh_attempted = False
         self._has_connected = False
+        self._connection_generation = 0
         self._seen_event_ids: OrderedDict[str, None] = OrderedDict()
         self._reload_scheduled = False
 
@@ -96,6 +97,7 @@ class BeatbotEventClient:
         try:
             while not self._stopping:
                 try:
+                    connection_generation = self._connection_generation
                     await self._connect_and_receive()
                 except asyncio.CancelledError:
                     raise
@@ -104,13 +106,13 @@ class BeatbotEventClient:
                     # instances continuously evict one another.
                     return
                 except _RefreshToken as err:
-                    if err.handshake and self._handshake_refresh_attempted:
+                    if self._token_refresh_attempted:
                         raise ConfigEntryAuthFailed(
-                            "WebSocket handshake still unauthorized after token refresh"
+                            translation_domain=DOMAIN,
+                            translation_key="auth_error",
                         ) from err
                     await self._async_refresh_token_once(err.access_token)
-                    if err.handshake:
-                        self._handshake_refresh_attempted = True
+                    self._token_refresh_attempted = True
                     failures = 0
                     continue
                 except BeatbotAuthenticationError, ConfigEntryAuthFailed:
@@ -126,6 +128,8 @@ class BeatbotEventClient:
                     ClientError,
                     ConnectionError,
                 ) as err:
+                    if self._connection_generation != connection_generation:
+                        failures = 0
                     failures += 1
                     _LOGGER.warning("Beatbot event stream disconnected: %s", err)
                 except Exception:
@@ -164,15 +168,17 @@ class BeatbotEventClient:
         )
         try:
             await self._oauth_session.async_ensure_token_valid()
+        except ConfigEntryAuthFailed:
+            raise
         except Exception as err:
             _LOGGER.warning(
-                "Beatbot OAuth refresh after event stream rejection failed "
+                "Transient Beatbot OAuth refresh failure after event stream rejection "
                 "(entry_id=%s): %s",
                 self._entry.entry_id,
                 err,
             )
-            raise ConfigEntryAuthFailed from err
-        _LOGGER.info(
+            raise BeatbotConnectionError("OAuth token refresh failed") from err
+        _LOGGER.debug(
             "Beatbot OAuth token rotated after event stream rejection (entry_id=%s)",
             self._entry.entry_id,
         )
@@ -181,7 +187,10 @@ class BeatbotEventClient:
         await self._oauth_session.async_ensure_token_valid()
         token = self._oauth_session.token.get("access_token")
         if not token:
-            raise ConfigEntryAuthFailed("OAuth token has no access_token")
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            )
 
         stream = BeatbotEventStream(
             async_get_clientsession(self._hass),
@@ -193,16 +202,24 @@ class BeatbotEventClient:
         self._stream = stream
         try:
             await stream.connect()
-            self._handshake_refresh_attempted = False
             is_reconnect = self._has_connected
             self._has_connected = True
+            self._connection_generation += 1
             _LOGGER.debug(
                 "Connected to Beatbot event stream at %s", self._api.event_stream_url
             )
             if is_reconnect:
                 await self._coordinator.async_request_refresh()
             while not self._stopping:
-                self._handle_event(await stream.receive())
+                try:
+                    event = await stream.receive()
+                except BeatbotConnectionError as err:
+                    if str(err).startswith("Event "):
+                        _LOGGER.warning("Ignoring malformed Beatbot event: %s", err)
+                        continue
+                    raise
+                self._token_refresh_attempted = False
+                self._handle_event(event)
         finally:
             await stream.close()
             if self._stream is stream:
@@ -230,7 +247,7 @@ class BeatbotEventClient:
         if event_id in self._seen_event_ids:
             return
         self._remember_event(event_id)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Received Beatbot event eventId=%s deviceId=%s type=%s",
             event_id,
             device_id,
@@ -295,7 +312,9 @@ class BeatbotEventClient:
         ):
             if entity.config_entry_id == self._entry.entry_id:
                 entity_registry.async_remove(entity.entity_id)
-        device_registry.async_remove_device(device.id)
+        device_registry.async_update_device(
+            device.id, remove_config_entry_id=self._entry.entry_id
+        )
 
     def _remember_event(self, event_id: str) -> None:
         self._seen_event_ids[event_id] = None

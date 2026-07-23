@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -100,6 +101,7 @@ async def test_async_unload_entry_stops_events_and_unloads_platforms(
     ):
         # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         await async_setup_entry(hass, entry)
+        # pylint: disable-next=home-assistant-tests-direct-async-unload-entry
         assert await async_unload_entry(hass, entry) is True
 
     event_client.async_stop.assert_awaited_once()
@@ -107,6 +109,28 @@ async def test_async_unload_entry_stops_events_and_unloads_platforms(
     hass.config_entries.async_unload_platforms.assert_awaited_once_with(
         entry, SUPPORTED_PLATFORMS
     )
+
+
+async def test_async_unload_failure_keeps_runtime_services(
+    hass: HomeAssistant,
+) -> None:
+    """Keep runtime services active when platform unload fails."""
+    entry = _entry()
+    coordinator = Mock()
+    coordinator.async_cancel_pending_refreshes = Mock()
+    event_client = Mock()
+    event_client.async_stop = AsyncMock()
+    entry.runtime_data = SimpleNamespace(
+        coordinator=coordinator,
+        event_client=event_client,
+    )
+    hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
+
+    # pylint: disable-next=home-assistant-tests-direct-async-unload-entry
+    assert await async_unload_entry(hass, entry) is False
+
+    event_client.async_stop.assert_not_awaited()
+    coordinator.async_cancel_pending_refreshes.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -67,8 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> bool:
     """Unload a config entry."""
+    if not await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS):
+        return False
     # Cancel any post-control refresh tasks still sleeping in their delay
     # window before tearing down the coordinator/api/session they close over.
     await entry.runtime_data.event_client.async_stop()
     entry.runtime_data.coordinator.async_cancel_pending_refreshes()
-    return await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
+    return True

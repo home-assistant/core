@@ -68,7 +68,7 @@ class BeatbotSwitch(BeatbotEntity, SwitchEntity):
 
     async def _async_set_enabled(self, enabled: str) -> None:
         await self._async_send_command(
-            self.coordinator.api.set_switch(
+            lambda: self.coordinator.api.set_switch(
                 self._device_id,
                 self._description.interface_info,
                 enabled,

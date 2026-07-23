@@ -173,20 +173,23 @@
       "beatbot_clean_base_station_vacuum": {
         "name": "Cleaning Base Station"
       },
-      "beatbot_lawn_mower_vacuum": {
-        "name": "Lawn Mower"
-      },
       "beatbot_pool_vacuum": {
         "name": "Pool Cleaner"
       }
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication with Beatbot failed."
+    },
     "control_connection_error": {
       "message": "Failed to control {device} because the Beatbot server could not be reached."
     },
     "device_offline": {
       "message": "{device} is offline."
+    },
+    "update_error": {
+      "message": "Failed to update Beatbot data: {error}"
     }
   }
 }
