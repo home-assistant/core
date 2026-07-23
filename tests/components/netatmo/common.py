@@ -18,9 +18,12 @@ from homeassistant.util.aiohttp import MockRequest
 from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
+HOME_1_ID = "91763b24c43d3e344f424e8b"
+HOME_2_ID = "91763b24c43d3e344f424e8c"
+
 COMMON_RESPONSE = {
     "user_id": "91763b24c43d3e344f424e8d",
-    "home_id": "91763b24c43d3e344f424e8b",
+    "home_id": HOME_1_ID,
     "home_name": "MYHOME",
     "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
 }

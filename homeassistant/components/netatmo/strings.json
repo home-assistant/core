@@ -200,11 +200,11 @@
           "weather_areas": "Weather areas"
         },
         "data_description": {
-          "enabled_homes": "Homes to be managed by this integration. Newly added homes are enabled by default.",
+          "enabled_homes": "Homes to be managed by this integration. Newly added homes are enabled by default. Leave empty to enable all homes.",
           "new_area": "Name of a new weather area to add.",
           "weather_areas": "Configured weather areas to edit or remove."
         },
-        "description": "Configure enabled homes and public weather sensors.",
+        "description": "Configure enabled homes and public weather sensors. Newly added homes are enabled by default; leave the homes selection empty to enable all homes.",
         "title": "Home selection and public weather"
       }
     }

@@ -347,6 +347,11 @@ class NetatmoDataHandler:
         self.setup_air_care()
 
         for home in self.account.homes.values():
+            # A disabled home can reappear in account.homes as a pseudo-home
+            # holding its weather modules once weather data has been fetched
+            if home.entity_id in self.disabled_homes:
+                continue
+
             signal_home = f"{HOME}-{home.entity_id}"
 
             await self.subscribe(HOME, signal_home, None, home_id=home.entity_id)
