@@ -839,9 +839,9 @@ class Device(RestoreEntity):
     @final
     @property
     @override
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes: dict[str, StateType] = {
+        attributes: dict[str, Any] = {
             DeviceTrackerEntityStateAttribute.SOURCE_TYPE: self.source_type
         }
 
