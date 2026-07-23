@@ -647,6 +647,9 @@ base36==0.1.1
 # homeassistant.components.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.beatbot
+beatbot-cloud==0.1.0
+
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
 
