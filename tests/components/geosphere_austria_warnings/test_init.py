@@ -76,7 +76,6 @@ async def test_warnings_fetch_skipped_when_unchanged(
     await setup_integration(hass, mock_config_entry)
     assert mock_client.get_warnings_for_coords.call_count == 1
 
-    # Unchanged Last-Modified: warnings are not refetched
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
