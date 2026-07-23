@@ -2086,6 +2086,128 @@ async def test_migration_detaches_via_device_of_dropped_parent(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_migration_rewrites_via_device_of_split_parent(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A child's via link to a split composite parent is rewritten to a live split.
+
+    The parent's split in the child's own config entry is preferred, then one owned
+    by the child's domain, then any split - the same ladder the via_device
+    resolution uses.
+    """
+    entry_test = MockConfigEntry(domain="test")
+    entry_test.add_to_hass(hass)
+    entry_matter = MockConfigEntry(domain="matter")
+    entry_matter.add_to_hass(hass)
+    entry_matter_2 = MockConfigEntry(domain="matter")
+    entry_matter_2.add_to_hass(hass)
+    entry_other = MockConfigEntry(domain="other")
+    entry_other.add_to_hass(hass)
+
+    def _device(**overrides: Any) -> dict[str, Any]:
+        device = {
+            "area_id": None,
+            "config_entries": [entry_test.entry_id],
+            "config_entries_subentries": {entry_test.entry_id: [None]},
+            "configuration_url": None,
+            "connections": [],
+            "created_at": "1970-01-01T00:00:00+00:00",
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "id": "device0000000000000000000000000",
+            "identifiers": [["test", "1"]],
+            "labels": [],
+            "manufacturer": None,
+            "model": None,
+            "name": None,
+            "model_id": None,
+            "modified_at": "1970-01-01T00:00:00+00:00",
+            "name_by_user": None,
+            "primary_config_entry": entry_test.entry_id,
+            "serial_number": None,
+            "sw_version": None,
+            "via_device_id": None,
+        }
+        return device | overrides
+
+    composite_id = "composite0000000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Parent spanning two config entries -> split by the migration
+                _device(
+                    id=composite_id,
+                    config_entries=[entry_test.entry_id, entry_matter.entry_id],
+                    config_entries_subentries={
+                        entry_test.entry_id: [None],
+                        entry_matter.entry_id: [None],
+                    },
+                    identifiers=[["test", "hub"]],
+                ),
+                # Child owned by a config entry that owns a split
+                _device(
+                    id="childentry000000000000000000000",
+                    config_entries=[entry_matter.entry_id],
+                    config_entries_subentries={entry_matter.entry_id: [None]},
+                    identifiers=[["matter", "child1"]],
+                    primary_config_entry=entry_matter.entry_id,
+                    via_device_id=composite_id,
+                ),
+                # Child owned by another config entry of a split's domain
+                _device(
+                    id="childdomain00000000000000000000",
+                    config_entries=[entry_matter_2.entry_id],
+                    config_entries_subentries={entry_matter_2.entry_id: [None]},
+                    identifiers=[["matter", "child2"]],
+                    primary_config_entry=entry_matter_2.entry_id,
+                    via_device_id=composite_id,
+                ),
+                # Child sharing neither config entry nor domain with a split
+                _device(
+                    id="childother000000000000000000000",
+                    config_entries=[entry_other.entry_id],
+                    config_entries_subentries={entry_other.entry_id: [None]},
+                    identifiers=[["other", "child3"]],
+                    primary_config_entry=entry_other.entry_id,
+                    via_device_id=composite_id,
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    splits = {
+        split.config_entry_id: split
+        for split in registry.async_get_devices_for_composite_device_id(composite_id)
+    }
+    test_split = splits[entry_test.entry_id]
+    matter_split = splits[entry_matter.entry_id]
+
+    # The child in a config entry owning a split links to that split
+    child_same_entry = registry.async_get("childentry000000000000000000000")
+    assert child_same_entry is not None
+    assert child_same_entry.via_device_id == matter_split.id
+
+    # The child in another config entry of a split's domain links to that split
+    child_same_domain = registry.async_get("childdomain00000000000000000000")
+    assert child_same_domain is not None
+    assert child_same_domain.via_device_id == matter_split.id
+
+    # The child sharing neither config entry nor domain links to the first split
+    child_other = registry.async_get("childother000000000000000000000")
+    assert child_other is not None
+    assert child_other.via_device_id == test_split.id
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_migration_collapses_multi_subentry_device(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -3868,6 +3990,145 @@ async def test_get_or_create_via_device_none(
     assert relinked.via_device_id is None
 
 
+async def test_get_or_create_unknown_via_device_id_raises_cleanly(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An unknown via_device_id raises without inserting a device."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    removed = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "removed")}
+    )
+    device_registry.async_remove_device(removed.id)
+
+    with pytest.raises(dr.DeviceInfoError, match="is not a registered device id"):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("hue", "device")},
+            via_device_id="unknown-device-id",
+        )
+
+    # The id of a removed device is stale and rejected the same way
+    with pytest.raises(dr.DeviceInfoError, match="is not a registered device id"):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("hue", "device")},
+            via_device_id=removed.id,
+        )
+
+    assert device_registry.async_get_device(identifiers={("hue", "device")}) is None
+    assert len(device_registry.devices) == 0
+
+
+async def test_update_device_unknown_via_device_id_raises(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An unknown via_device_id raises on update, leaving the device unchanged."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "device")}
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="unknown via device unknown-device-id"
+    ):
+        device_registry.async_update_device(
+            device.id, via_device_id="unknown-device-id"
+        )
+
+    assert device_registry.async_get(device.id).via_device_id is None
+
+
+async def test_get_or_create_composite_via_device_id_resolved(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A composite via_device_id resolves to a split: same entry, same domain, any."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="matter")
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry(domain="matter")
+    entry_3.add_to_hass(hass)
+    entry_4 = MockConfigEntry(domain="other")
+    entry_4.add_to_hass(hass)
+    split_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "hub")}
+    )
+    split_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "hub")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[split_1.id] = attr.evolve(
+        split_1, composite_device_id=old_id
+    )
+    device_registry.devices[split_2.id] = attr.evolve(
+        split_2, composite_device_id=old_id
+    )
+
+    # A child in a config entry owning a split resolves to that split
+    child = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id,
+        identifiers={("matter", "child")},
+        via_device_id=old_id,
+    )
+    assert child.via_device_id == split_2.id
+    assert "passes the id of a pre-migration composite device" in caplog.text
+
+    # A child in another config entry of a split's domain resolves to that split
+    domain_child = device_registry.async_get_or_create(
+        config_entry_id=entry_3.entry_id,
+        identifiers={("matter", "child")},
+        via_device_id=old_id,
+    )
+    assert domain_child.via_device_id == split_2.id
+
+    # A child sharing neither config entry nor domain falls back to any split
+    other_child = device_registry.async_get_or_create(
+        config_entry_id=entry_4.entry_id,
+        identifiers={("other", "child")},
+        via_device_id=old_id,
+    )
+    assert other_child.via_device_id == split_1.id
+
+
+async def test_update_device_composite_via_device_id_resolved(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A composite via_device_id resolves to a split on update."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    split_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "hub")}
+    )
+    split_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "hub")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[split_1.id] = attr.evolve(
+        split_1, composite_device_id=old_id
+    )
+    device_registry.devices[split_2.id] = attr.evolve(
+        split_2, composite_device_id=old_id
+    )
+    child = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "child")}
+    )
+
+    updated = device_registry.async_update_device(child.id, via_device_id=old_id)
+
+    assert updated.via_device_id == split_2.id
+    assert "passes the id of a pre-migration composite device" in caplog.text
+
+
 async def test_via_device_prefers_same_config_entry(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -4145,6 +4406,10 @@ async def test_update(
     """Verify that we can update some attributes of a device."""
     created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
     freezer.move_to(created_at)
+    via_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "via")},
+    )
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -4180,7 +4445,7 @@ async def test_update(
             serial_number="serial_no",
             suggested_area="suggested_area",
             sw_version="version",
-            via_device_id="98765B",
+            via_device_id=via_device.id,
         )
 
     assert mock_save.call_count == 1
@@ -4207,7 +4472,7 @@ async def test_update(
         serial_number="serial_no",
         suggested_area="suggested_area",
         sw_version="version",
-        via_device_id="98765B",
+        via_device_id=via_device.id,
     )
 
     assert device_registry.async_get_device(identifiers={("hue", "456")}) is None

@@ -895,22 +895,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     composite_splits.setdefault(old_id, {})[config_entry_id] = split[
                         "id"
                     ]
-            # Rewrite via_device_id links that pointed at a now-split composite parent
-            # to a live split: the parent's split in the child's own config entry when
-            # there is one, otherwise any of the parent's splits, so the link never
-            # dangles on the removed composite id. A link to a retained unsplit parent is
-            # left unchanged; a link to a dropped parent is detached below.
-            for device in devices:
-                if (
-                    splits := composite_splits.get(device["via_device_id"])
-                ) is not None:
-                    device["via_device_id"] = splits.get(
-                        device["config_entry_id"], next(iter(splits.values()))
-                    )
-                elif device["via_device_id"] in dropped_device_ids:
-                    # The parent was dropped (no config entries); detach the link as
-                    # async_remove_device would, so it does not dangle on a removed id.
-                    device["via_device_id"] = None
             old_data["devices"] = devices
             # A split inherited the composite's disabled_by, which may not match its
             # single config entry (e.g. a split owned by an enabled entry must not stay
@@ -926,6 +910,40 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         _migrate_device_disabled_by(
                             split, config_entry.disabled_by is not None
                         )
+
+            def _split_for_via_device(
+                config_entry_id: str, splits: dict[str, str]
+            ) -> str:
+                """Pick the split for via device."""
+                if (split_id := splits.get(config_entry_id)) is not None:
+                    return split_id
+                config_entries = self.hass.config_entries
+                self_entry = config_entries.async_get_entry(config_entry_id)
+                if self_entry is not None:
+                    for split_entry_id, split_id in splits.items():
+                        split_entry = config_entries.async_get_entry(split_entry_id)
+                        if (
+                            split_entry is not None
+                            and split_entry.domain == self_entry.domain
+                        ):
+                            return split_id
+                return next(iter(splits.values()))
+
+            # Rewrite via_device_id links that pointed at a now-split composite parent
+            # to a live split, so the link never dangles on the removed composite id.
+            # The domain rung needs the config entries, which are initialized above
+            # whenever splits exist. A link to a retained unsplit parent is left
+            # unchanged; a link to a dropped parent is detached.
+            for device in devices:
+                if (
+                    splits := composite_splits.get(device["via_device_id"])
+                ) is not None:
+                    device["via_device_id"] = _split_for_via_device(
+                        device["config_entry_id"], splits
+                    )
+                elif device["via_device_id"] in dropped_device_ids:
+                    device["via_device_id"] = None
+
             deleted_devices: list[dict[str, Any]] = []
             for device in old_data["deleted_devices"]:
                 # One target per config entry. config_entries_subentries was a set, so
@@ -1497,6 +1515,43 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self.devices.get_devices_for_composite_device_id(device_id)
         )
 
+    @callback
+    def _resolve_via_device_id(
+        self, via_device_id: str, config_entry_id: str
+    ) -> str | None:
+        """Resolve a via_device_id to the id of a registered device.
+
+        The id of a pre-migration composite device is resolved to one of the devices
+        it was split into - preferring the split owned by config_entry_id, then one
+        owned by the same domain, then any of them. Returns None for an unknown id.
+        """
+        if via_device_id in self.devices:
+            return via_device_id
+        if splits := self.devices.get_devices_for_composite_device_id(via_device_id):
+            # The composite resolution can be removed in HA Core 2027.8
+            report_usage(
+                f"passes the id of a pre-migration composite device {via_device_id} "
+                "as `via_device_id`; pass the id of a single device instead, e.g. "
+                "one returned by async_get_device_by_identifier",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2027.8",
+            )
+            for split in splits:
+                if split.config_entry_id == config_entry_id:
+                    return split.id
+            if (
+                config_entry := self.hass.config_entries.async_get_entry(
+                    config_entry_id
+                )
+            ) is not None and (
+                split_in_domain := self._first_device_in_domain(
+                    splits, config_entry.domain
+                )
+            ) is not None:
+                return split_in_domain.id
+            return splits[0].id
+        return None
+
     def _substitute_name_placeholders(
         self,
         domain: str,
@@ -1627,6 +1682,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         }
 
         device_info_type = _determine_device_info_type(config_entry, device_info)
+
+        if via_device_id is not UNDEFINED and via_device_id is not None:
+            resolved_via_device_id = self._resolve_via_device_id(
+                via_device_id, config_entry_id
+            )
+            if resolved_via_device_id is None:
+                raise DeviceInfoError(
+                    config_entry.domain,
+                    device_info,
+                    f"via_device_id {via_device_id} is not a registered device id",
+                )
+            via_device_id = resolved_via_device_id
 
         if identifiers is None or identifiers is UNDEFINED:
             identifiers = set()
@@ -2030,6 +2097,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             else old.config_entry_id
         )
         is_move = effective_config_entry_id != old.config_entry_id
+
+        if via_device_id is not UNDEFINED and via_device_id is not None:
+            resolved_via_device_id = self._resolve_via_device_id(
+                via_device_id, effective_config_entry_id
+            )
+            if resolved_via_device_id is None:
+                raise HomeAssistantError(
+                    f"Can't link device to unknown via device {via_device_id}"
+                )
+            via_device_id = resolved_via_device_id
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
