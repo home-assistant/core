@@ -18,6 +18,7 @@ CONF_DETECTION_TIME: Final = "detection_time"
 NAME: Final = "name"
 
 ARP: Final = "arp"
+BACKUP: Final = "backup"
 CAPSMAN: Final = "capsman"
 DHCP: Final = "dhcp"
 HEALTH: Final = "health"
@@ -37,6 +38,7 @@ WIRELESS: Final = "wireless"
 
 MIKROTIK_SERVICES: Final = {
     ARP: "/ip/arp/getall",
+    BACKUP: "/system/backup/save",
     CAPSMAN: "/caps-man/registration-table/getall",
     DHCP: "/ip/dhcp-server/lease/getall",
     HEALTH: "/system/health/print",
