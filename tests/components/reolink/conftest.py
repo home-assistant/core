@@ -98,6 +98,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.is_nvr = True
     host_mock.is_hub = False
     host_mock.is_battery = False
+    host_mock.is_dual_lens = False
     host_mock.mac_address = TEST_MAC
     host_mock.uid = TEST_UID
     host_mock.onvif_enabled = True
