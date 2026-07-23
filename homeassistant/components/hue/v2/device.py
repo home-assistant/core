@@ -78,7 +78,9 @@ async def async_setup_devices(bridge: HueBridge):
     @callback
     def remove_device(hue_device_id: str) -> None:
         """Remove device from registry."""
-        if device := dev_reg.async_get_device(identifiers={(DOMAIN, hue_device_id)}):
+        if device := dev_reg.async_get_device_by_identifier(
+            (DOMAIN, hue_device_id), entry.entry_id
+        ):
             # note: removal of any underlying entities is handled by core
             dev_reg.async_remove_device(device.id)
 

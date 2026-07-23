@@ -2,15 +2,28 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_cert": "Invalid certificate",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::smtp::config::step::user::data_description::password%]",
+          "username": "[%key:component::smtp::config::step::user::data_description::username%]"
+        },
+        "title": "Re-authenticate SMTP"
+      },
       "reconfigure": {
         "data": {
           "encryption": "[%key:component::smtp::config::step::user::data::encryption%]",
@@ -54,6 +67,17 @@
           "server": "Hostname or IP address of the SMTP server. For example, `smtp.example.com`.",
           "username": "Username used to authenticate with the SMTP server.",
           "verify_ssl": "Enable certificate verification for secure SSL/TLS connections."
+        },
+        "sections": {
+          "options": {
+            "data": {
+              "timeout": "[%key:component::smtp::options::step::init::data::timeout%]"
+            },
+            "data_description": {
+              "timeout": "[%key:component::smtp::options::step::init::data_description::timeout%]"
+            },
+            "name": "Additional options"
+          }
         }
       }
     }
@@ -61,13 +85,24 @@
   "config_subentries": {
     "recipient": {
       "abort": {
-        "already_configured": "Recipient is already configured"
+        "already_configured": "Recipient is already configured",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Recipient",
       "initiate_flow": {
         "user": "Add recipient"
       },
       "step": {
+        "reconfigure": {
+          "data": {
+            "recipient": "[%key:common::config_flow::data::email%]"
+          },
+          "data_description": {
+            "recipient": "[%key:component::smtp::config_subentries::recipient::step::user::data_description::recipient%]"
+          },
+          "description": "Update the recipient email address.",
+          "title": "Reconfigure recipient"
+        },
         "user": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
@@ -84,8 +119,17 @@
     }
   },
   "exceptions": {
+    "authentication_error": {
+      "message": "Failed to authenticate with SMTP server. Please verify your credentials."
+    },
+    "connection_error": {
+      "message": "Failed to connect to SMTP server."
+    },
     "remote_path_not_allowed": {
       "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
+    },
+    "send_mail_connection_error": {
+      "message": "Failed to send email message due to a connection error."
     }
   },
   "issues": {

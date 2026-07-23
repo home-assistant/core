@@ -6,21 +6,21 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 28.5,
-      'min_temp': 7.5,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.5,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.5,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'comfort',
         'eco',
         'boost',
         'away',
         'none',
       ]),
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -55,26 +55,26 @@
 # name: test_climate_state[climate.comet_blue_aa_bb_cc_dd_ee_ff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20.5,
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Comet Blue aa:bb:cc:dd:ee:ff',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 28.5,
-      'min_temp': 7.5,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.5,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.5,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'comfort',
         'eco',
         'boost',
         'away',
         'none',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.5,
-      'temperature': 20.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.comet_blue_aa_bb_cc_dd_ee_ff',

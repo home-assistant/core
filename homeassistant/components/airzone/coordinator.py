@@ -3,7 +3,7 @@
 from asyncio import timeout
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi
@@ -43,6 +43,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):

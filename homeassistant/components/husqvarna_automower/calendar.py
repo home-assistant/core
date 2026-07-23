@@ -2,18 +2,16 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioautomower.model import make_name_string
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
-from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
@@ -57,10 +55,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
     @property
     def device_name(self) -> str:
         """Return the prefix for the event summary."""
-        device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, self.mower_id)}
-        )
+        device_entry = self.device_entry
         if TYPE_CHECKING:
             assert device_entry is not None
             assert device_entry.name is not None
@@ -68,6 +63,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         return device_entry.name_by_user or device_entry.name
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
         if not self.available:
@@ -90,6 +86,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             rrule=program_event.rrule_str,
         )
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

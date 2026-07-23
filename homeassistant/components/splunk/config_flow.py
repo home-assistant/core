@@ -3,7 +3,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from hass_splunk import hass_splunk
 import voluptuous as vol
@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -55,7 +56,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_TOKEN): str,
                     vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_SSL, default=False): bool,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                     vol.Optional(CONF_VERIFY_SSL, default=True): bool,
                     vol.Optional(CONF_NAME): str,
                 }
@@ -108,7 +109,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Required(CONF_TOKEN): str,
                         vol.Required(CONF_HOST): str,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                        vol.Optional(CONF_SSL, default=False): bool,
+                        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
                         vol.Optional(CONF_NAME): str,
                     }
@@ -158,7 +159,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             host=user_input.get(CONF_HOST, DEFAULT_HOST),
             port=user_input.get(CONF_PORT, DEFAULT_PORT),
             token=user_input[CONF_TOKEN],
-            use_ssl=user_input.get(CONF_SSL, False),
+            use_ssl=user_input.get(CONF_SSL, DEFAULT_SSL),
             verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
         )
 

@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -194,7 +195,7 @@ async def _async_setup_block_entry(
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
@@ -294,6 +295,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
         port=get_http_port(entry.data),
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
     )
 
     ws_context = await get_ws_context(hass)
@@ -308,7 +310,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:

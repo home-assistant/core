@@ -1,6 +1,7 @@
 """Support for MotionMount numeric control."""
 
 import socket
+from typing import override
 
 import motionmount
 
@@ -49,10 +50,12 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
         self._attr_unique_id = f"{self._base_unique_id}-extension"
 
     @property
+    @override
     def native_value(self) -> float:
         """Get native value."""
         return float(self.mm.extension or 0)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for extension."""
         try:
@@ -80,10 +83,12 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
         self._attr_unique_id = f"{self._base_unique_id}-turn"
 
     @property
+    @override
     def native_value(self) -> float:
         """Get native value."""
         return float(self.mm.turn or 0) * -1
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for turn."""
         try:

@@ -1,7 +1,7 @@
 """Support for loads connected with WMS WebControl pro."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from wmspro.const import (
     WMS_WebControl_pro_API_actionDescription,
@@ -40,11 +40,13 @@ class WebControlProSwitch(WebControlProGenericEntity, SwitchEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LoadSwitch)
         return action["onOffState"]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LoadSwitch)
@@ -52,6 +54,7 @@ class WebControlProSwitch(WebControlProGenericEntity, SwitchEntity):
             onOffState=True, responseType=WMS_WebControl_pro_API_responseType.Detailed
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.LoadSwitch)

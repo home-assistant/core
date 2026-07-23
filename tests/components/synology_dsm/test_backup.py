@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -93,6 +93,7 @@ def mock_dsm_with_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -146,6 +147,7 @@ def mock_dsm_without_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
