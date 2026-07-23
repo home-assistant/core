@@ -1,7 +1,6 @@
 """Support for AVM FRITZ!Box update platform."""
 
 from dataclasses import dataclass
-import logging
 from typing import Any, override
 
 from homeassistant.components.update import (
@@ -13,10 +12,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import _LOGGER
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
-
-_LOGGER = logging.getLogger(__name__)
 
 # Set a sane value to avoid too many updates
 PARALLEL_UPDATES = 5

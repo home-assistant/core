@@ -5,7 +5,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
-import logging
 import re
 from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
@@ -35,6 +34,7 @@ from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    _LOGGER,
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_CONF_OLD_DISCOVERY,
@@ -56,8 +56,6 @@ from .models import (
     HostInfo,
     Interface,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
 

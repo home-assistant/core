@@ -2,7 +2,6 @@
 
 from collections.abc import Mapping
 import ipaddress
-import logging
 import socket
 from typing import Any, Self, override
 from urllib.parse import ParseResult, urlparse
@@ -36,6 +35,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .const import (
+    _LOGGER,
     CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
@@ -52,8 +52,6 @@ from .const import (
     FRITZ_AUTH_EXCEPTIONS,
 )
 from .coordinator import FritzConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):

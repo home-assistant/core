@@ -1,11 +1,9 @@
 """Helpers for AVM FRITZ!Box."""
 
 from collections.abc import ValuesView
-import logging
 
+from .const import _LOGGER
 from .models import FritzDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _is_tracked(mac: str, current_devices: ValuesView[set[str]]) -> bool:
