@@ -53,7 +53,6 @@ class TewkeNewSceneRepairFlow(RepairsFlow):
         for i, _ in enumerate(self._pending_list):
             scene_configs.append(f"scene_section_{i}")
         pending: dict[str, Scene] = self.entry.runtime_data.pending_scenes
-        LOGGER.warning(self.entry.runtime_data.scene_control_types)
         new_control_types = self.entry.runtime_data.scene_control_types.copy()
         added_scenes: list[Scene] = []
         index_name_to_id = {
