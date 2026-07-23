@@ -60,7 +60,11 @@ class EsphomeWaterHeater(
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
-        if (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit)) is None:
+        if (
+            static_info.temperature_unit is None
+            or (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit))
+            is None
+        ):
             _LOGGER.debug(
                 "%s: Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
                 self.entity_id,

@@ -146,7 +146,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
-        if (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit)) is None:
+        if (
+            static_info.temperature_unit is None
+            or (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit))
+            is None
+        ):
             _LOGGER.debug(
                 "%s: Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
                 self.entity_id,
