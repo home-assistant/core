@@ -304,9 +304,7 @@ async def test_agents_list_skips_foreign_metadata_files(
     """Foreign .metadata.json files in the bucket are skipped, not crash the listing."""
     mock_main, mock_metadata = mock_backup_files
 
-    # An unrelated `.metadata.json` from another tool: valid JSON object, but
-    # missing the keys this integration expects. Previously this crashed
-    # async_list_backups with KeyError, hiding all backups from the user.
+    # Simulate metadata left behind by another bucket-based backup integration.
     foreign_metadata = Mock()
     foreign_metadata.file_name = "testprefix/foreign.metadata.json"
     foreign_download = Mock()
