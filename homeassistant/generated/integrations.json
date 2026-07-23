@@ -4341,8 +4341,8 @@
         }
       }
     },
-    "midea_lan": {
-      "name": "Midea LAN",
+    "midea": {
+      "name": "Midea",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
