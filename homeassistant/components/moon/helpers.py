@@ -26,6 +26,10 @@ MOON_PHASES: tuple[str, ...] = (
     STATE_WANING_CRESCENT,
 )
 
+# astral.moon.phase returns 0-27.99; illumination increases up to the full moon
+# (value 14) and decreases afterwards.
+_FULL_MOON_PHASE_VALUE = 14
+
 
 @callback
 def moon_phase() -> str:
@@ -46,3 +50,10 @@ def moon_phase() -> str:
     if value < 21.5:
         return STATE_LAST_QUARTER
     return STATE_WANING_CRESCENT
+
+
+@callback
+def is_waxing() -> bool:
+    """Return whether the moon is currently waxing (illumination increasing)."""
+    value: float = moon.phase(dt_util.now().date())
+    return value < _FULL_MOON_PHASE_VALUE
