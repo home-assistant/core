@@ -481,7 +481,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "isy994",
     "itach",
     "itunes",
-    "izone",
     "jellyfin",
     "joaoapps_join",
     "juicenet",
