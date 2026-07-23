@@ -1,15 +1,16 @@
 """Tests for the Honeywell Lyric sensor platform."""
 
 from datetime import datetime
-from unittest.mock import MagicMock
 
-from aiolyric.objects.device import LyricDevice
-
-from homeassistant.components.lyric.sensor import (
-    async_setup_entry,
-    get_datetime_from_future_time,
-)
+from homeassistant.components.lyric.sensor import get_datetime_from_future_time
 from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .conftest import MAC_ID, async_setup_lyric_entry
+
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def test_get_datetime_from_future_time_none() -> None:
@@ -28,41 +29,29 @@ def test_get_datetime_from_future_time_valid() -> None:
     assert isinstance(result, datetime)
 
 
-async def test_schedule_status_sensor_end_to_end() -> None:
-    """Test the schedule status diagnostic sensor."""
-    mac_id = "5CFCE1B67035"
-    device = LyricDevice(
-        MagicMock(),
-        {
-            "macID": mac_id,
-            "units": "Fahrenheit",
-            "scheduleStatus": "Resume",
-        },
+async def test_schedule_status_sensor_end_to_end(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_credentials: None,
+    mock_lyric_api: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the schedule status diagnostic sensor via a real config entry setup.
+
+    scheduleStatus comes from the base /locations response (not the
+    /priority endpoint), so it has no known aiolyric field-name mismatch
+    and passes for real against the currently-pinned release.
+    """
+    await async_setup_lyric_entry(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", "lyric", f"{MAC_ID}_schedule_status"
     )
-    location = MagicMock()
-    location.location_id = "location1"
-    location.devices = [device]
-    location.devices_dict = {mac_id: device}
+    assert entity_id
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    coordinator = MagicMock()
-    coordinator.data.locations = [location]
-    coordinator.data.locations_dict = {"location1": location}
-    coordinator.data.rooms_dict = {}
-
-    entry = MagicMock()
-    entry.runtime_data = coordinator
-
-    added: list[list] = []
-    async_add_entities = MagicMock(
-        side_effect=lambda entities: added.append(list(entities))
-    )
-
-    await async_setup_entry(MagicMock(), entry, async_add_entities)
-
-    device_entities = added[0]
-    schedule_entity = next(
-        e for e in device_entities if e.entity_description.key == "schedule_status"
-    )
-    assert schedule_entity.unique_id == f"{mac_id}_schedule_status"
-    assert schedule_entity.entity_category is EntityCategory.DIAGNOSTIC
-    assert schedule_entity.native_value == "Resume"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Resume"
