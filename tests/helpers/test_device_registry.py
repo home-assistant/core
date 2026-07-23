@@ -2086,128 +2086,6 @@ async def test_migration_detaches_via_device_of_dropped_parent(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_rewrites_via_device_of_split_parent(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """A child's via link to a split composite parent is rewritten to a live split.
-
-    The parent's split in the child's own config entry is preferred, then one owned
-    by the child's domain, then any split - the same ladder the via_device
-    resolution uses.
-    """
-    entry_test = MockConfigEntry(domain="test")
-    entry_test.add_to_hass(hass)
-    entry_matter = MockConfigEntry(domain="matter")
-    entry_matter.add_to_hass(hass)
-    entry_matter_2 = MockConfigEntry(domain="matter")
-    entry_matter_2.add_to_hass(hass)
-    entry_other = MockConfigEntry(domain="other")
-    entry_other.add_to_hass(hass)
-
-    def _device(**overrides: Any) -> dict[str, Any]:
-        device = {
-            "area_id": None,
-            "config_entries": [entry_test.entry_id],
-            "config_entries_subentries": {entry_test.entry_id: [None]},
-            "configuration_url": None,
-            "connections": [],
-            "created_at": "1970-01-01T00:00:00+00:00",
-            "disabled_by": None,
-            "entry_type": None,
-            "hw_version": None,
-            "id": "device0000000000000000000000000",
-            "identifiers": [["test", "1"]],
-            "labels": [],
-            "manufacturer": None,
-            "model": None,
-            "name": None,
-            "model_id": None,
-            "modified_at": "1970-01-01T00:00:00+00:00",
-            "name_by_user": None,
-            "primary_config_entry": entry_test.entry_id,
-            "serial_number": None,
-            "sw_version": None,
-            "via_device_id": None,
-        }
-        return device | overrides
-
-    composite_id = "composite0000000000000000000000"
-    hass_storage[dr.STORAGE_KEY] = {
-        "version": 1,
-        "minor_version": 12,
-        "key": dr.STORAGE_KEY,
-        "data": {
-            "devices": [
-                # Parent spanning two config entries -> split by the migration
-                _device(
-                    id=composite_id,
-                    config_entries=[entry_test.entry_id, entry_matter.entry_id],
-                    config_entries_subentries={
-                        entry_test.entry_id: [None],
-                        entry_matter.entry_id: [None],
-                    },
-                    identifiers=[["test", "hub"]],
-                ),
-                # Child owned by a config entry that owns a split
-                _device(
-                    id="childentry000000000000000000000",
-                    config_entries=[entry_matter.entry_id],
-                    config_entries_subentries={entry_matter.entry_id: [None]},
-                    identifiers=[["matter", "child1"]],
-                    primary_config_entry=entry_matter.entry_id,
-                    via_device_id=composite_id,
-                ),
-                # Child owned by another config entry of a split's domain
-                _device(
-                    id="childdomain00000000000000000000",
-                    config_entries=[entry_matter_2.entry_id],
-                    config_entries_subentries={entry_matter_2.entry_id: [None]},
-                    identifiers=[["matter", "child2"]],
-                    primary_config_entry=entry_matter_2.entry_id,
-                    via_device_id=composite_id,
-                ),
-                # Child sharing neither config entry nor domain with a split
-                _device(
-                    id="childother000000000000000000000",
-                    config_entries=[entry_other.entry_id],
-                    config_entries_subentries={entry_other.entry_id: [None]},
-                    identifiers=[["other", "child3"]],
-                    primary_config_entry=entry_other.entry_id,
-                    via_device_id=composite_id,
-                ),
-            ],
-            "deleted_devices": [],
-        },
-    }
-
-    dr.async_setup(hass)
-    await dr.async_load(hass)
-    registry = dr.async_get(hass)
-
-    splits = {
-        split.config_entry_id: split
-        for split in registry.async_get_devices_for_composite_device_id(composite_id)
-    }
-    test_split = splits[entry_test.entry_id]
-    matter_split = splits[entry_matter.entry_id]
-
-    # The child in a config entry owning a split links to that split
-    child_same_entry = registry.async_get("childentry000000000000000000000")
-    assert child_same_entry is not None
-    assert child_same_entry.via_device_id == matter_split.id
-
-    # The child in another config entry of a split's domain links to that split
-    child_same_domain = registry.async_get("childdomain00000000000000000000")
-    assert child_same_domain is not None
-    assert child_same_domain.via_device_id == matter_split.id
-
-    # The child sharing neither config entry nor domain links to the first split
-    child_other = registry.async_get("childother000000000000000000000")
-    assert child_other is not None
-    assert child_other.via_device_id == test_split.id
-
-
-@pytest.mark.parametrize("load_registries", [False])
 async def test_migration_collapses_multi_subentry_device(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -5340,11 +5218,14 @@ async def test_migration_remaps_via_device_id_to_split(
 ) -> None:
     """A child's via_device_id is remapped to a live parent split.
 
-    To the split in the child's own config entry when the parent spanned it, otherwise to
-    one of the parent's splits - never left dangling on the removed composite id.
+    To the split in the child's own config entry when the parent spanned it, then to a
+    split owned by the child's domain, otherwise to one of the parent's splits - never
+    left dangling on the removed composite id.
     """
     entry_a = MockConfigEntry(domain="dom_a")
     entry_a.add_to_hass(hass)
+    entry_a2 = MockConfigEntry(domain="dom_a")
+    entry_a2.add_to_hass(hass)
     entry_b = MockConfigEntry(domain="dom_b")
     entry_b.add_to_hass(hass)
     entry_c = MockConfigEntry(domain="dom_c")
@@ -5394,6 +5275,13 @@ async def test_migration_remaps_via_device_id_to_split(
                     [["dom_a", "c"]],
                     "parent000000000000000000000000",
                 ),
+                # child in another config entry of dom_a, which the parent does not span
+                _device(
+                    "childa200000000000000000000000",
+                    [entry_a2.entry_id],
+                    [["dom_a", "c2"]],
+                    "parent000000000000000000000000",
+                ),
                 # child in a config entry the parent does not span
                 _device(
                     "childc000000000000000000000000",
@@ -5421,6 +5309,12 @@ async def test_migration_remaps_via_device_id_to_split(
     child = registry.async_get_device(identifiers={("dom_a", "c")})
     assert child is not None
     assert child.via_device_id == parent_a.id
+
+    # The child in entry_a2, which the parent did not span, points at the parent's
+    # split owned by its domain
+    child_a2 = registry.async_get_device(identifiers={("dom_a", "c2")})
+    assert child_a2 is not None
+    assert child_a2.via_device_id == parent_a.id
 
     # The child in entry_c, which the parent did not span, points at one of the parent's
     # splits rather than the removed composite id
