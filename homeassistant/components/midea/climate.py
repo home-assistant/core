@@ -1,7 +1,6 @@
 """Midea Climate entries."""
 
 from dataclasses import dataclass
-import logging
 from typing import Any, cast, override
 
 from midealocal.const import DeviceType
@@ -46,8 +45,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, FanSpeed
 from .entity import MideaConfigEntry, MideaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 

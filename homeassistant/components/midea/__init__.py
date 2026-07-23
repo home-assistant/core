@@ -20,7 +20,10 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from .const import CONF_KEY, CONF_SUBTYPE
 from .entity import MideaConfigEntry
 
-_PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
@@ -67,10 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
         await hass.async_add_executor_job(device.close)
 
     entry.async_on_unload(_close_device)
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -98,6 +98,47 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "arofene_link": {
+        "name": "Methanal"
+      },
+      "fall_asleep_status": {
+        "name": "Fall asleep"
+      },
+      "filter_cleaning_reminder": {
+        "name": "Filter cleaning"
+      },
+      "full_dust": {
+        "name": "Full dust"
+      },
+      "header_exist": {
+        "name": "Header"
+      },
+      "led_status": {
+        "name": "LED"
+      },
+      "night_mode": {
+        "name": "Night mode"
+      },
+      "portable_senser": {
+        "name": "Portable sensor"
+      },
+      "presets_function": {
+        "name": "Presets function"
+      },
+      "rinse_aid": {
+        "name": "Rinse aid"
+      },
+      "salt": {
+        "name": "Salt"
+      },
+      "screen_status": {
+        "name": "Screen"
+      },
+      "tank_full": {
+        "name": "Tank full"
+      }
+    },
     "climate": {
       "climate_zone1": {
         "name": "Zone 1 thermostat"
