@@ -253,3 +253,22 @@ async def test_room_iq_sensor_no_longer_present(
     state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
     assert state is not None
     assert state.state == "unavailable"
+
+
+async def test_1_room_iq_sensor(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, entity_registry: EntityRegistry
+) -> None:
+    """Test one-RoomIQ sensor case."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000003).get_zone_by_id(400)
+    assert len(zone.get_sensors()) == 1
+
+    config_entry = await setup_integration(hass, patch_nexia_home)
+
+    for entry in entity_registry.entities.values():
+        if entry.disabled_by is not None:
+            entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.kitchen_kitchen_roomiq_temperature")
+    assert state is None

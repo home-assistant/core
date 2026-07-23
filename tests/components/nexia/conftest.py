@@ -76,9 +76,8 @@ def create_mock_zone(
     zone.get_requested_mode.return_value = requested_mode
     _sensors = sensors or []
     zone.get_sensors.return_value = _sensors
-    zone.get_sensor_by_id.side_effect = lambda sid: next(
-        s for s in _sensors if s.id == sid
-    )
+    sensor_by_id = {sensor.id: sensor for sensor in _sensors}
+    zone.get_sensor_by_id.side_effect = sensor_by_id.__getitem__
     zone.get_setpoint_status.return_value = setpoint_status
     zone.get_status.return_value = status
     zone.get_temperature.return_value = temperature
@@ -352,7 +351,10 @@ def mock_nexia_home() -> NonCallableMock[NexiaHome]:
     )
     zone.thermostat = thermostat3
 
-    zone = create_mock_zone(zone_id=400, name="Kitchen", temperature=77)
+    sensor1 = create_mock_sensor(401, "Kitchen", 1.0, temperature=77)
+    zone = create_mock_zone(
+        zone_id=400, name="Kitchen", sensors=[sensor1], temperature=77
+    )
     thermostat4 = create_mock_thermostat(
         thermostat_id=2000003,
         name="Kitchen",
