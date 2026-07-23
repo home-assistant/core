@@ -9,6 +9,7 @@ import random
 from aiohttp import ClientError
 from beatbot_cloud import (
     BeatbotAuthenticationError,
+    BeatbotClient,
     BeatbotConnectionError,
     BeatbotConnectionReplacedError,
     BeatbotEvent,
@@ -30,7 +31,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from ..api import BeatbotAPI
 from ..coordinator import BeatbotCoordinator
 from .const import (
     DOMAIN,
@@ -57,7 +57,7 @@ class BeatbotEventClient:
         hass: HomeAssistant,
         entry: ConfigEntry,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-        api: BeatbotAPI,
+        api: BeatbotClient,
         coordinator: BeatbotCoordinator,
     ) -> None:
         """Initialize the Beatbot event client."""

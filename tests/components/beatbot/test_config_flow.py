@@ -8,12 +8,9 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientError, ClientResponseError
+from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
 import pytest
 
-from homeassistant.components.beatbot.api import (
-    BeatbotAuthError,
-    BeatbotConnectionError,
-)
 from homeassistant.components.beatbot.config_flow import (
     BeatbotConfigFlow,
     BeatbotOAuth2Implementation,
@@ -228,7 +225,7 @@ async def test_user_flow_stores_region_from_token(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("error", "reason"),
     [
-        (BeatbotAuthError(), "oauth_error"),
+        (BeatbotAuthenticationError(), "oauth_error"),
         (BeatbotConnectionError(), "cannot_connect"),
     ],
 )

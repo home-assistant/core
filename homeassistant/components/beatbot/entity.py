@@ -10,11 +10,12 @@ first or fail to load.
 from collections.abc import Awaitable, Callable
 from typing import Any, override
 
+from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
+
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import BeatbotAuthError, BeatbotConnectionError
 from .coordinator import BeatbotCoordinator
 from .iot.const import DOMAIN
 from .models import BeatbotDeviceData
@@ -41,8 +42,8 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
 
         - Auth failure escalates to ConfigEntryAuthFailed so HA triggers the
           reauth flow — consistent with the coordinator's poll path. A raw
-          BeatbotAuthError from a service call would otherwise just fail the
-          call with no prompt to re-login.
+          library auth error would otherwise fail the call without prompting
+          the user to sign in again.
         - Connection/transport failure surfaces as HomeAssistantError so the
           user sees a readable message instead of an opaque stack.
 
@@ -62,7 +63,7 @@ class BeatbotEntity(CoordinatorEntity[BeatbotCoordinator]):
             )
         try:
             await command()
-        except BeatbotAuthError as err:
+        except BeatbotAuthenticationError as err:
             if self.coordinator.config_entry is not None:
                 self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed from err

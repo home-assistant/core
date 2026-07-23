@@ -5,13 +5,18 @@ from datetime import timedelta
 import logging
 from typing import override
 
+from beatbot_cloud import (
+    BeatbotAuthenticationError,
+    BeatbotClient,
+    BeatbotConnectionError,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import BeatbotAPI, BeatbotAuthError, BeatbotConnectionError
 from .iot.category import CATEGORY_MAP
 from .iot.const import (
     DOMAIN,
@@ -33,7 +38,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        api: BeatbotAPI,
+        api: BeatbotClient,
         config_entry: ConfigEntry | None = None,
     ) -> None:
         """Initialize the Beatbot coordinator."""
@@ -58,7 +63,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
     async def _async_update_data(self) -> dict[str, BeatbotDeviceData]:
         try:
             devices = await self.api.get_devices()
-        except BeatbotAuthError as err:
+        except BeatbotAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except BeatbotConnectionError as err:
             raise UpdateFailed(
@@ -95,7 +100,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         # endpoints.
         try:
             states = await self.api.get_device_states()
-        except BeatbotAuthError as err:
+        except BeatbotAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except BeatbotConnectionError as err:
             _LOGGER.warning(
@@ -234,7 +239,7 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
         await asyncio.sleep(POST_CONTROL_REFRESH_DELAY)
         try:
             state = await self.api.get_device_state(device_id)
-        except BeatbotAuthError as err:
+        except BeatbotAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except BeatbotConnectionError as err:
             _LOGGER.warning(

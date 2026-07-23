@@ -1,19 +1,18 @@
 """The Beatbot integration."""
 
 from dataclasses import dataclass
-import logging
+from typing import Any
+
+from beatbot_cloud import BeatbotClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .api import BeatbotAPI
 from .config_flow import BeatbotOAuth2Implementation
 from .coordinator import BeatbotCoordinator
 from .iot.const import DOMAIN, SUPPORTED_PLATFORMS
 from .iot.event_stream import BeatbotEventClient
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -21,7 +20,7 @@ class BeatbotRuntimeData:
     """Runtime objects owned by a Beatbot config entry."""
 
     coordinator: BeatbotCoordinator
-    api: BeatbotAPI
+    api: BeatbotClient
     session: config_entry_oauth2_flow.OAuth2Session
     event_client: BeatbotEventClient
 
@@ -47,7 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> b
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    api = BeatbotAPI(hass, entry, session)
+    async def _async_request(method: str, url: str, **kwargs: Any) -> Any:
+        return await session.async_request(method, url, **kwargs)
+
+    api = BeatbotClient(entry.data["region"], _async_request)
     coordinator = BeatbotCoordinator(hass, api, entry)
 
     await coordinator.async_config_entry_first_refresh()

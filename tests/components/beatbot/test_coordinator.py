@@ -7,13 +7,10 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
+from beatbot_cloud import BeatbotAuthenticationError, BeatbotConnectionError
 import pytest
 
 from homeassistant.components.beatbot import coordinator as coord_mod
-from homeassistant.components.beatbot.api import (
-    BeatbotAuthError,
-    BeatbotConnectionError,
-)
 from homeassistant.components.beatbot.coordinator import BeatbotCoordinator
 from homeassistant.components.beatbot.models import BeatbotDeviceData
 from homeassistant.core import HomeAssistant
@@ -64,7 +61,7 @@ async def test_coordinator_auth_failure_requests_reauth(
 ) -> None:
     """Auth failures during first refresh become ConfigEntryAuthFailed."""
     api = SimpleNamespace(
-        get_devices=AsyncMock(side_effect=BeatbotAuthError),
+        get_devices=AsyncMock(side_effect=BeatbotAuthenticationError),
         get_device_states=AsyncMock(return_value={}),
     )
     coordinator = BeatbotCoordinator(hass, api)

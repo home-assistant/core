@@ -43,7 +43,7 @@ async def test_async_setup_entry_starts_runtime_objects(
 
     with (
         patch(
-            "homeassistant.components.beatbot.BeatbotAPI", return_value=Mock()
+            "homeassistant.components.beatbot.BeatbotClient", return_value=Mock()
         ) as api_cls,
         patch(
             "homeassistant.components.beatbot.BeatbotCoordinator",
@@ -84,7 +84,7 @@ async def test_async_unload_entry_stops_events_and_unloads_platforms(
     event_client.async_stop = AsyncMock()
 
     with (
-        patch("homeassistant.components.beatbot.BeatbotAPI", return_value=Mock()),
+        patch("homeassistant.components.beatbot.BeatbotClient", return_value=Mock()),
         patch(
             "homeassistant.components.beatbot.BeatbotCoordinator",
             return_value=coordinator,
@@ -120,7 +120,7 @@ async def test_async_unload_failure_keeps_runtime_services(
     event_client.async_stop = AsyncMock()
 
     with (
-        patch("homeassistant.components.beatbot.BeatbotAPI", return_value=Mock()),
+        patch("homeassistant.components.beatbot.BeatbotClient", return_value=Mock()),
         patch(
             "homeassistant.components.beatbot.BeatbotCoordinator",
             return_value=coordinator,
@@ -149,7 +149,7 @@ async def _assert_first_refresh_failure(
     coordinator.async_config_entry_first_refresh = AsyncMock(side_effect=error)
 
     with (
-        patch("homeassistant.components.beatbot.BeatbotAPI", return_value=Mock()),
+        patch("homeassistant.components.beatbot.BeatbotClient", return_value=Mock()),
         patch(
             "homeassistant.components.beatbot.BeatbotCoordinator",
             return_value=coordinator,

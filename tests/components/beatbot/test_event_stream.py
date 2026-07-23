@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from types import SimpleNamespace
+from typing import Protocol
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -17,7 +18,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestReauthError
 
 
-def _client(hass: HomeAssistant) -> tuple[BeatbotEventClient, Mock]:
+class EventFactory(Protocol):
+    """Create a serialized Beatbot event."""
+
+    def __call__(
+        self,
+        event_id: str,
+        event_type: str,
+        payload: dict | None,
+        device_id: str = "dev-1",
+    ) -> str:
+        """Serialize one Beatbot event."""
+
+
+@pytest.fixture
+def event_client(hass: HomeAssistant) -> tuple[BeatbotEventClient, Mock]:
+    """Return an event client and its coordinator."""
     coordinator = Mock()
     client = BeatbotEventClient(
         hass,
@@ -29,21 +45,27 @@ def _client(hass: HomeAssistant) -> tuple[BeatbotEventClient, Mock]:
     return client, coordinator
 
 
-def _event(
-    event_id: str,
-    event_type: str,
-    payload: dict | None,
-    device_id: str = "dev-1",
-) -> str:
-    return json.dumps(
-        {
-            "eventId": event_id,
-            "type": event_type,
-            "deviceId": device_id,
-            "occurredAt": "2026-07-01T08:00:00Z",
-            "payload": payload,
-        }
-    )
+@pytest.fixture
+def event_factory() -> EventFactory:
+    """Return a Beatbot event factory."""
+
+    def _event(
+        event_id: str,
+        event_type: str,
+        payload: dict | None,
+        device_id: str = "dev-1",
+    ) -> str:
+        return json.dumps(
+            {
+                "eventId": event_id,
+                "type": event_type,
+                "deviceId": device_id,
+                "occurredAt": "2026-07-01T08:00:00Z",
+                "payload": payload,
+            }
+        )
+
+    return _event
 
 
 def test_start_registers_entry_background_task(hass: HomeAssistant) -> None:
@@ -74,12 +96,14 @@ def test_start_registers_entry_background_task(hass: HomeAssistant) -> None:
     assert client._task is task
 
 
-def test_property_event_routes_incremental_state(hass: HomeAssistant) -> None:
+def test_property_event_routes_incremental_state(
+    event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
+) -> None:
     """Route a property event to the coordinator."""
-    client, coordinator = _client(hass)
+    client, coordinator = event_client
 
     client._handle_text_message(
-        _event(
+        event_factory(
             "event-1",
             "properties_changed",
             {"interfaceInfo": "vacuum.battery", "value": 76},
@@ -91,21 +115,25 @@ def test_property_event_routes_incremental_state(hass: HomeAssistant) -> None:
     )
 
 
-def test_status_event_routes_online_state(hass: HomeAssistant) -> None:
+def test_status_event_routes_online_state(
+    event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
+) -> None:
     """Route a status event to the coordinator."""
-    client, coordinator = _client(hass)
+    client, coordinator = event_client
 
-    client._handle_text_message(_event("event-2", "status", {"online": False}))
+    client._handle_text_message(event_factory("event-2", "status", {"online": False}))
 
     coordinator.async_apply_device_event.assert_called_once_with(
         "dev-1", None, is_online=False
     )
 
 
-def test_duplicate_event_is_applied_once(hass: HomeAssistant) -> None:
+def test_duplicate_event_is_applied_once(
+    event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
+) -> None:
     """Apply duplicate event identifiers only once."""
-    client, coordinator = _client(hass)
-    message = _event(
+    client, coordinator = event_client
+    message = event_factory(
         "event-3",
         "properties_changed",
         {"interfaceInfo": "sensor.error", "value": 4},
@@ -117,27 +145,31 @@ def test_duplicate_event_is_applied_once(hass: HomeAssistant) -> None:
     coordinator.async_apply_device_event.assert_called_once()
 
 
-def test_malformed_and_unknown_events_do_not_route(hass: HomeAssistant) -> None:
+def test_malformed_and_unknown_events_do_not_route(
+    event_client: tuple[BeatbotEventClient, Mock], event_factory: EventFactory
+) -> None:
     """Ignore malformed and unsupported events."""
-    client, coordinator = _client(hass)
+    client, coordinator = event_client
 
     client._handle_text_message("not-json")
     client._handle_text_message(
-        _event(
+        event_factory(
             "event-missing-value",
             "properties_changed",
             {"interfaceInfo": "sensor.error"},
         )
     )
-    client._handle_text_message(_event("event-4", "status", {"online": "yes"}))
-    client._handle_text_message(_event("event-5", "future_type", {}))
+    client._handle_text_message(event_factory("event-4", "status", {"online": "yes"}))
+    client._handle_text_message(event_factory("event-5", "future_type", {}))
 
     coordinator.async_apply_device_event.assert_not_called()
 
 
-async def test_terminal_refresh_error_starts_reauth(hass: HomeAssistant) -> None:
+async def test_terminal_refresh_error_starts_reauth(
+    hass: HomeAssistant, event_client: tuple[BeatbotEventClient, Mock]
+) -> None:
     """A terminal OAuth refresh failure must not enter the reconnect loop."""
-    client, _ = _client(hass)
+    client, _ = event_client
     client._connect_and_receive = AsyncMock(
         side_effect=_RefreshToken("rejected", handshake=True)
     )
@@ -158,13 +190,17 @@ async def test_terminal_refresh_error_starts_reauth(hass: HomeAssistant) -> None
     client._entry.async_start_reauth.assert_called_once_with(hass)
 
 
-async def test_device_added_reloads_entry(hass: HomeAssistant) -> None:
+async def test_device_added_reloads_entry(
+    hass: HomeAssistant,
+    event_client: tuple[BeatbotEventClient, Mock],
+    event_factory: EventFactory,
+) -> None:
     """Reload the entry after a device-added event."""
-    client, coordinator = _client(hass)
+    client, coordinator = event_client
     hass.config_entries.async_reload = AsyncMock(return_value=True)
 
     client._handle_text_message(
-        _event(
+        event_factory(
             "event-added",
             "device_added",
             {
@@ -182,12 +218,14 @@ async def test_device_added_reloads_entry(hass: HomeAssistant) -> None:
 
 async def test_device_removed_with_null_payload_reloads_entry(
     hass: HomeAssistant,
+    event_client: tuple[BeatbotEventClient, Mock],
+    event_factory: EventFactory,
 ) -> None:
     """Reload the entry after a device-removed event."""
-    client, coordinator = _client(hass)
+    client, coordinator = event_client
     hass.config_entries.async_reload = AsyncMock(return_value=True)
 
-    client._handle_text_message(_event("event-removed", "device_removed", None))
+    client._handle_text_message(event_factory("event-removed", "device_removed", None))
     await hass.async_block_till_done()
 
     hass.config_entries.async_reload.assert_awaited_once_with("entry")
@@ -196,23 +234,27 @@ async def test_device_removed_with_null_payload_reloads_entry(
 
 async def test_malformed_device_lifecycle_events_do_not_reload(
     hass: HomeAssistant,
+    event_client: tuple[BeatbotEventClient, Mock],
+    event_factory: EventFactory,
 ) -> None:
     """Ignore malformed device lifecycle events."""
-    client, _ = _client(hass)
+    client, _ = event_client
     hass.config_entries.async_reload = AsyncMock(return_value=True)
 
     client._handle_text_message(
-        _event("bad-added", "device_added", {"deviceId": "another-device"})
+        event_factory("bad-added", "device_added", {"deviceId": "another-device"})
     )
-    client._handle_text_message(_event("bad-removed", "device_removed", {}))
+    client._handle_text_message(event_factory("bad-removed", "device_removed", {}))
     await hass.async_block_till_done()
 
     hass.config_entries.async_reload.assert_not_awaited()
 
 
-async def test_stop_is_idempotent(hass: HomeAssistant) -> None:
+async def test_stop_is_idempotent(
+    event_client: tuple[BeatbotEventClient, Mock],
+) -> None:
     """Allow the event client to be stopped repeatedly."""
-    client, _ = _client(hass)
+    client, _ = event_client
 
     await client.async_stop()
     await client.async_stop()
@@ -255,9 +297,11 @@ async def test_rejected_token_is_refreshed_only_once(hass: HomeAssistant) -> Non
     implementation.async_refresh_token.assert_awaited_once()
 
 
-async def test_repeated_handshake_401_starts_reauth(hass: HomeAssistant) -> None:
+async def test_repeated_handshake_401_starts_reauth(
+    hass: HomeAssistant, event_client: tuple[BeatbotEventClient, Mock]
+) -> None:
     """Start reauthentication after a repeated handshake rejection."""
-    client, _ = _client(hass)
+    client, _ = event_client
     client._token_refresh_attempted = True
     client._connect_and_receive = AsyncMock(
         side_effect=_RefreshToken("rejected-again", handshake=True)
@@ -269,9 +313,11 @@ async def test_repeated_handshake_401_starts_reauth(hass: HomeAssistant) -> None
     client._entry.async_start_reauth.assert_called_once_with(hass)
 
 
-async def test_reconnect_requests_full_refresh(hass: HomeAssistant) -> None:
+async def test_reconnect_requests_full_refresh(
+    event_client: tuple[BeatbotEventClient, Mock],
+) -> None:
     """Request a full refresh after reconnecting the event stream."""
-    client, coordinator = _client(hass)
+    client, coordinator = event_client
     coordinator.async_request_refresh = AsyncMock()
     client._has_connected = True
 

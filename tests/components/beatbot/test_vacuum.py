@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Protocol
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -25,27 +26,45 @@ from homeassistant.components.vacuum import (
 DEVICE_ID = "test-device-1"
 
 
-def _make_coordinator(
-    category: str,
-    *,
-    work_mode_options: dict[int, str] | None = None,
-    capabilities: dict[str, BeatbotCapability] | None = None,
-) -> SimpleNamespace:
-    """Build a minimal coordinator carrying a single device."""
-    device = BeatbotDeviceData(
-        device_id=DEVICE_ID,
-        product_id="pool-bot-x",
-        product_category=category,
-        work_status=0,
-        work_mode=0,
-        error_code=0,
-        battery_level=80,
-        versions=[],
-        is_online=True,
-        work_mode_options=work_mode_options or {},
-        capabilities=capabilities or {},
-    )
-    return SimpleNamespace(data={DEVICE_ID: device})
+class CoordinatorFactory(Protocol):
+    """Create a minimal coordinator carrying a single device."""
+
+    def __call__(
+        self,
+        category: str,
+        *,
+        work_mode_options: dict[int, str] | None = None,
+        capabilities: dict[str, BeatbotCapability] | None = None,
+    ) -> SimpleNamespace:
+        """Create the coordinator."""
+
+
+@pytest.fixture
+def coordinator_factory() -> CoordinatorFactory:
+    """Return a coordinator factory."""
+
+    def _create(
+        category: str,
+        *,
+        work_mode_options: dict[int, str] | None = None,
+        capabilities: dict[str, BeatbotCapability] | None = None,
+    ) -> SimpleNamespace:
+        device = BeatbotDeviceData(
+            device_id=DEVICE_ID,
+            product_id="pool-bot-x",
+            product_category=category,
+            work_status=0,
+            work_mode=0,
+            error_code=0,
+            battery_level=80,
+            versions=[],
+            is_online=True,
+            work_mode_options=work_mode_options or {},
+            capabilities=capabilities or {},
+        )
+        return SimpleNamespace(data={DEVICE_ID: device})
+
+    return _create
 
 
 @pytest.mark.parametrize(
@@ -56,10 +75,12 @@ def _make_coordinator(
     ],
 )
 def test_vacuum_no_deprecated_battery_feature(
-    category: str, expected_features: set
+    coordinator_factory: CoordinatorFactory,
+    category: str,
+    expected_features: set[VacuumEntityFeature],
 ) -> None:
     """Vacuum must not advertise the deprecated BATTERY feature."""
-    vacuum = BeatbotVacuum(_make_coordinator(category), DEVICE_ID)
+    vacuum = BeatbotVacuum(coordinator_factory(category), DEVICE_ID)
 
     assert VacuumEntityFeature.BATTERY not in vacuum.supported_features
     assert set(vacuum.supported_features) == expected_features
@@ -73,9 +94,11 @@ def test_category_table_has_no_battery_feature() -> None:
         assert VacuumEntityFeature.BATTERY not in features
 
 
-def test_clean_base_station_notice_does_not_set_vacuum_error() -> None:
+def test_clean_base_station_notice_does_not_set_vacuum_error(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """Informational station notices must not fault the vacuum entity."""
-    coordinator = _make_coordinator("clean_base_station")
+    coordinator = coordinator_factory("clean_base_station")
     coordinator.data[DEVICE_ID].error_code = 1 << 5
 
     vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
@@ -83,16 +106,20 @@ def test_clean_base_station_notice_does_not_set_vacuum_error() -> None:
     assert vacuum.activity is not VacuumActivity.ERROR
 
 
-def test_clean_base_station_uses_its_own_translation() -> None:
+def test_clean_base_station_uses_its_own_translation(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """The station vacuum entity must not use the pool-cleaner name."""
-    vacuum = BeatbotVacuum(_make_coordinator("clean_base_station"), DEVICE_ID)
+    vacuum = BeatbotVacuum(coordinator_factory("clean_base_station"), DEVICE_ID)
 
     assert vacuum.translation_key == "beatbot_clean_base_station_vacuum"
 
 
-def test_clean_base_station_fault_sets_vacuum_error() -> None:
+def test_clean_base_station_fault_sets_vacuum_error(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """The five station fault bits must continue to set ERROR activity."""
-    coordinator = _make_coordinator("clean_base_station")
+    coordinator = coordinator_factory("clean_base_station")
     coordinator.data[DEVICE_ID].error_code = 1 << 4
 
     vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
@@ -100,9 +127,11 @@ def test_clean_base_station_fault_sets_vacuum_error() -> None:
     assert vacuum.activity is VacuumActivity.ERROR
 
 
-def test_clean_base_station_fault_wins_over_notice() -> None:
+def test_clean_base_station_fault_wins_over_notice(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """A real fault must not be hidden when notice bits are also active."""
-    coordinator = _make_coordinator("clean_base_station")
+    coordinator = coordinator_factory("clean_base_station")
     coordinator.data[DEVICE_ID].error_code = (1 << 0) | (1 << 24)
 
     vacuum = BeatbotVacuum(coordinator, DEVICE_ID)
@@ -116,10 +145,12 @@ def test_vacuum_does_not_advertise_stop() -> None:
         assert VacuumEntityFeature.STOP not in features
 
 
-def test_work_mode_is_not_exposed_as_vacuum_fan_speed() -> None:
+def test_work_mode_is_not_exposed_as_vacuum_fan_speed(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """Work mode belongs to select.work_mode, not vacuum.set_fan_speed."""
     vacuum = BeatbotVacuum(
-        _make_coordinator(
+        coordinator_factory(
             "pool_clean_bot",
             work_mode_options={0: "fast", 2: "custom"},
         ),
@@ -129,7 +160,9 @@ def test_work_mode_is_not_exposed_as_vacuum_fan_speed() -> None:
     assert VacuumEntityFeature.FAN_SPEED not in vacuum.supported_features
 
 
-def test_vacuum_features_derived_from_capabilities() -> None:
+def test_vacuum_features_derived_from_capabilities(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """Features must match the capabilities the backend actually advertises.
 
     A device reporting only vacuum.state (retrievable) + vacuum.start must
@@ -147,7 +180,7 @@ def test_vacuum_features_derived_from_capabilities() -> None:
         ),
     }
     vacuum = BeatbotVacuum(
-        _make_coordinator("pool_clean_bot", capabilities=capabilities),
+        coordinator_factory("pool_clean_bot", capabilities=capabilities),
         DEVICE_ID,
     )
 
@@ -159,7 +192,9 @@ def test_vacuum_features_derived_from_capabilities() -> None:
     assert VacuumEntityFeature.RETURN_HOME not in vacuum.supported_features
 
 
-def test_vacuum_features_omit_missing_action() -> None:
+def test_vacuum_features_omit_missing_action(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """No vacuum.start capability -> START must not be advertised."""
     capabilities = {
         INTERFACE_VACUUM_STATE: BeatbotCapability(
@@ -177,7 +212,7 @@ def test_vacuum_features_omit_missing_action() -> None:
         ),
     }
     vacuum = BeatbotVacuum(
-        _make_coordinator("pool_clean_bot", capabilities=capabilities),
+        coordinator_factory("pool_clean_bot", capabilities=capabilities),
         DEVICE_ID,
     )
 
@@ -186,17 +221,21 @@ def test_vacuum_features_omit_missing_action() -> None:
     assert VacuumEntityFeature.RETURN_HOME in vacuum.supported_features
 
 
-def test_vacuum_features_are_state_only_when_no_capabilities() -> None:
+def test_vacuum_features_are_state_only_when_no_capabilities(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """Empty capabilities array must not infer unsupported actions."""
     vacuum = BeatbotVacuum(
-        _make_coordinator("pool_clean_bot", capabilities={}),
+        coordinator_factory("pool_clean_bot", capabilities={}),
         DEVICE_ID,
     )
 
     assert set(vacuum.supported_features) == {VacuumEntityFeature.STATE}
 
 
-def test_vacuum_features_skip_readonly_action() -> None:
+def test_vacuum_features_skip_readonly_action(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """An action flagged non_controllable=True is read-only, not advertised."""
     capabilities = {
         INTERFACE_VACUUM_STATE: BeatbotCapability(
@@ -211,7 +250,7 @@ def test_vacuum_features_skip_readonly_action() -> None:
         ),
     }
     vacuum = BeatbotVacuum(
-        _make_coordinator("pool_clean_bot", capabilities=capabilities),
+        coordinator_factory("pool_clean_bot", capabilities=capabilities),
         DEVICE_ID,
     )
 
@@ -219,12 +258,14 @@ def test_vacuum_features_skip_readonly_action() -> None:
     assert VacuumEntityFeature.START not in vacuum.supported_features
 
 
-async def test_vacuum_action_triggers_single_device_refresh() -> None:
+async def test_vacuum_action_triggers_single_device_refresh(
+    coordinator_factory: CoordinatorFactory,
+) -> None:
     """Refresh only the controlled device after a control command.
 
     Do not run the full discovery and batch-state refresh.
     """
-    coordinator = _make_coordinator("pool_clean_bot")
+    coordinator = coordinator_factory("pool_clean_bot")
     coordinator.api = SimpleNamespace(
         send_action=AsyncMock(),
     )
