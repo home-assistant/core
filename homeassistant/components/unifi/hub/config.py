@@ -21,8 +21,10 @@ from ..const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
+    CONF_ENABLE_SPEEDTESTS,
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
+    CONF_SPEEDTEST_INTERVAL,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -31,7 +33,9 @@ from ..const import (
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
+    DEFAULT_ENABLE_SPEEDTESTS,
     DEFAULT_IGNORE_WIRED_BUG,
+    DEFAULT_SPEEDTEST_INTERVAL,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -82,6 +86,10 @@ class UnifiConfig:
     """Config entry option to allow bandwidth sensors."""
     option_allow_uptime_sensors: bool
     """Config entry option to allow uptime sensors."""
+    option_enable_speedtests: bool
+    """Config entry option to enable speedtest entities and scheduling."""
+    option_speedtest_interval: timedelta
+    """Config entry option defining time between scheduled speedtests."""
 
     @classmethod
     def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
@@ -118,5 +126,11 @@ class UnifiConfig:
             ),
             option_allow_uptime_sensors=options.get(
                 CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
+            ),
+            option_enable_speedtests=options.get(
+                CONF_ENABLE_SPEEDTESTS, DEFAULT_ENABLE_SPEEDTESTS
+            ),
+            option_speedtest_interval=timedelta(
+                minutes=options.get(CONF_SPEEDTEST_INTERVAL, DEFAULT_SPEEDTEST_INTERVAL)
             ),
         )

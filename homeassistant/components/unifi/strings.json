@@ -183,7 +183,9 @@
               "client_source": "Create entities from network clients",
               "detection_time": "Time in seconds from last seen until considered away",
               "dpi_restrictions": "Allow control of DPI restriction groups",
+              "enable_speedtests": "Enable speedtests",
               "ignore_wired_bug": "Disable UniFi Network wired bug logic",
+              "speedtest_interval": "Speedtest interval",
               "ssid_filter": "Select SSIDs to track wireless clients on",
               "track_wired_clients": "Include wired network clients"
             },
@@ -193,7 +195,9 @@
               "client_source": "Select which network clients to create entities from.",
               "detection_time": "Number of seconds since last seen before a client is considered away.",
               "dpi_restrictions": "Enable switches to control DPI restriction groups.",
+              "enable_speedtests": "Enable scheduled speedtests, sensors and a button for this hub.",
               "ignore_wired_bug": "Disable workaround for a UniFi Network bug that sometimes reports wired clients as wireless.",
+              "speedtest_interval": "Interval (in minutes) between automated speedtests. Only used when speedtests are enabled above.",
               "ssid_filter": "Only track wireless clients connected to selected SSIDs.",
               "track_wired_clients": "Include wired clients in device tracking."
             },

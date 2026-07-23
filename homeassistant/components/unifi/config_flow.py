@@ -34,6 +34,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import UnifiConfigEntry
@@ -44,9 +49,11 @@ from .const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
+    CONF_ENABLE_SPEEDTESTS,
     CONF_IGNORE_WIRED_BUG,
     CONF_MORE_OPTIONS,
     CONF_SITE_ID,
+    CONF_SPEEDTEST_INTERVAL,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -268,6 +275,11 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             more_options = user_input.pop(CONF_MORE_OPTIONS, {})
             user_input.update(more_options)
             self.options.update(user_input)
+
+            if not self.options.get(
+                CONF_ENABLE_SPEEDTESTS, self.hub.config.option_enable_speedtests
+            ):
+                self.options.pop(CONF_SPEEDTEST_INTERVAL, None)
             return self.async_create_entry(title="", data=self.options)
 
         clients_to_block = {}
@@ -375,6 +387,28 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                     CONF_ALLOW_UPTIME_SENSORS,
                                     default=self.hub.config.option_allow_uptime_sensors,
                                 ): bool,
+                                vol.Optional(
+                                    CONF_ENABLE_SPEEDTESTS,
+                                    default=self.hub.config.option_enable_speedtests,
+                                ): bool,
+                                vol.Optional(
+                                    CONF_SPEEDTEST_INTERVAL,
+                                    default=self.options.get(
+                                        CONF_SPEEDTEST_INTERVAL,
+                                    )
+                                    or int(
+                                        self.hub.config.option_speedtest_interval.total_seconds()
+                                        // 60
+                                    ),
+                                ): NumberSelector(
+                                    NumberSelectorConfig(
+                                        min=30,
+                                        max=180,
+                                        step=1,
+                                        unit_of_measurement="min",
+                                        mode=NumberSelectorMode.BOX,
+                                    )
+                                ),
                             }
                         ),
                         SectionConfig(collapsed=True),
