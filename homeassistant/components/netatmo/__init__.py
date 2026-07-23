@@ -156,8 +156,12 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     data = config_entry.runtime_data
-    modules = [m for h in data.account.homes.values() for m in h.modules]
-    rooms = [r for h in data.account.homes.values() for r in h.rooms]
+    # Disabled homes are filtered so their leftover devices can be deleted
+    homes = [
+        h for h in data.account.homes.values() if h.entity_id not in data.disabled_homes
+    ]
+    modules = [m for h in homes for m in h.modules]
+    rooms = [r for h in homes for r in h.rooms]
 
     return not any(
         identifier

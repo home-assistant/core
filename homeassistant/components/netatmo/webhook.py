@@ -71,6 +71,10 @@ async def async_handle_webhook(
         return
     data_handler = entry.runtime_data
 
+    # The webhook is account-wide, so events for disabled homes still arrive
+    if data.get(ATTR_HOME_ID) in data_handler.disabled_homes:
+        return
+
     event_type = data.get(ATTR_EVENT_TYPE)
 
     if event_type in SUBEVENT_TYPE_MAP:

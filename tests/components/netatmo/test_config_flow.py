@@ -1,7 +1,8 @@
 """Test the Netatmo config flow."""
 
+from functools import partial
 from ipaddress import ip_address
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pyatmo.const import ALL_SCOPES
 import pytest
@@ -26,7 +27,7 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
-from .common import selected_platforms
+from .common import HOME_1_ID, HOME_2_ID, fake_post_request, selected_platforms
 from .conftest import CLIENT_ID
 
 from tests.common import MockConfigEntry, start_reauth_flow
@@ -34,9 +35,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 VALID_CONFIG = {}
-
-HOME_1_ID = "91763b24c43d3e344f424e8b"
-HOME_2_ID = "91763b24c43d3e344f424e8c"
 
 
 async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
@@ -244,11 +242,27 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
 
+@pytest.mark.parametrize(
+    ("initial_disabled", "selection", "expected_disabled"),
+    [
+        pytest.param([], [HOME_1_ID], [HOME_2_ID], id="disable_one_home"),
+        pytest.param([HOME_2_ID], [], [], id="empty_selection_enables_all"),
+    ],
+)
 @pytest.mark.usefixtures("netatmo_auth")
 async def test_option_flow_homes(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    initial_disabled: list[str],
+    selection: list[str],
+    expected_disabled: list[str],
 ) -> None:
     """Test selecting the enabled homes in the options flow."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={**config_entry.options, CONF_DISABLED_HOMES: initial_disabled},
+    )
+
     with selected_platforms([Platform.CLIMATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -257,8 +271,64 @@ async def test_option_flow_homes(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "public_weather_areas"
-        schema_keys = [str(key) for key in result["data_schema"].schema]
-        assert CONF_ENABLED_HOMES in schema_keys
+        schema = result["data_schema"].schema
+        homes_key = next(key for key in schema if key == CONF_ENABLED_HOMES)
+        # The selector defaults to the stored enabled homes, named by home
+        assert homes_key.default() == [
+            home_id
+            for home_id in (HOME_1_ID, HOME_2_ID)
+            if home_id not in initial_disabled
+        ]
+        assert schema[homes_key].options == {HOME_1_ID: "MYHOME", HOME_2_ID: "Unknown"}
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_ENABLED_HOMES: selection}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_DISABLED_HOMES] == expected_disabled
+    # The pre-existing weather areas are preserved
+    assert "Home avg" in config_entry.options[CONF_WEATHER_AREAS]
+
+
+def _drop_second_home(payload: dict) -> None:
+    """Trim the homesdata payload to a single-home topology."""
+    if "homes" in payload.get("body", {}):
+        payload["body"]["homes"] = [
+            home for home in payload["body"]["homes"] if home["id"] == HOME_1_ID
+        ]
+
+
+async def test_option_flow_single_disabled_home(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the selector is still offered when the only home is disabled."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={**config_entry.options, CONF_DISABLED_HOMES: [HOME_1_ID]},
+    )
+
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass, msg_callback=_drop_second_home
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "public_weather_areas"
+        assert CONF_ENABLED_HOMES in result["data_schema"].schema
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_ENABLED_HOMES: [HOME_1_ID]}
@@ -266,9 +336,59 @@ async def test_option_flow_homes(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_DISABLED_HOMES] == []
+
+
+async def test_option_flow_single_home_no_selector(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the selector is not offered with a single home and none disabled."""
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass, msg_callback=_drop_second_home
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "public_weather_areas"
+    assert CONF_ENABLED_HOMES not in result["data_schema"].schema
+
+
+@pytest.mark.usefixtures("netatmo_auth")
+async def test_option_flow_home_added_mid_flow(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a home appearing while the form is open stays enabled by default."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+
+        # A new home appears in the account topology while the form is open
+        config_entry.runtime_data.account.all_homes_id["new_home_id"] = "New home"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_ENABLED_HOMES: [HOME_1_ID]}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Only the homes offered on the form can be disabled
     assert config_entry.options[CONF_DISABLED_HOMES] == [HOME_2_ID]
-    # The pre-existing weather areas are preserved
-    assert "Home avg" in config_entry.options[CONF_WEATHER_AREAS]
 
 
 async def test_option_flow_homes_entry_not_loaded(hass: HomeAssistant) -> None:
@@ -282,8 +402,7 @@ async def test_option_flow_homes_entry_not_loaded(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
-    schema_keys = [str(key) for key in result["data_schema"].schema]
-    assert CONF_ENABLED_HOMES not in schema_keys
+    assert CONF_ENABLED_HOMES not in result["data_schema"].schema
 
 
 @pytest.mark.usefixtures("current_request_with_host")

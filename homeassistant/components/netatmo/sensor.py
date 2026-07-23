@@ -625,8 +625,12 @@ async def async_setup_entry(
 
         async_add_entities(new_entities)
 
-    async_dispatcher_connect(
-        hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"signal-{DOMAIN}-public-update-{entry.entry_id}",
+            add_public_entities,
+        )
     )
 
     await add_public_entities(False)
