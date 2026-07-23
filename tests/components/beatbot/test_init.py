@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
+
+from beatbot_cloud import BeatbotAuthenticationError
+import pytest
 
 from homeassistant.components.beatbot.iot.const import DOMAIN, SUPPORTED_PLATFORMS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestReauthError,
+)
 
 from tests.common import MockConfigEntry
 
@@ -66,6 +74,65 @@ async def test_async_setup_entry_starts_runtime_objects(
     event_client.async_start.assert_called_once()
     assert entry.runtime_data.coordinator is coordinator
     assert entry.runtime_data.event_client is event_client
+
+
+async def test_request_adapter_translates_oauth_refresh_rejection(
+    hass: HomeAssistant,
+) -> None:
+    """Translate terminal OAuth refresh errors for the Beatbot client."""
+    entry = _entry()
+    entry.add_to_hass(hass)
+    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
+    response = object()
+    session = SimpleNamespace(
+        async_request=AsyncMock(
+            side_effect=[
+                response,
+                OAuth2TokenRequestReauthError(
+                    request_info=SimpleNamespace(
+                        real_url="https://oauth.beatbot.com/token"
+                    ),
+                    status=400,
+                    domain=DOMAIN,
+                ),
+            ]
+        )
+    )
+    request_adapter = None
+
+    def _client(_region: str, request):
+        nonlocal request_adapter
+        request_adapter = request
+        return Mock()
+
+    async def _first_refresh() -> None:
+        assert request_adapter is not None
+        assert await request_adapter("GET", "https://api.example/devices") is response
+        with pytest.raises(BeatbotAuthenticationError):
+            await request_adapter("GET", "https://api.example/devices")
+
+    coordinator = Mock()
+    coordinator.async_config_entry_first_refresh = AsyncMock(side_effect=_first_refresh)
+    event_client = Mock()
+
+    with (
+        patch(
+            "homeassistant.components.beatbot.config_entry_oauth2_flow.OAuth2Session",
+            return_value=session,
+        ),
+        patch("homeassistant.components.beatbot.BeatbotClient", side_effect=_client),
+        patch(
+            "homeassistant.components.beatbot.BeatbotCoordinator",
+            return_value=coordinator,
+        ),
+        patch(
+            "homeassistant.components.beatbot.BeatbotEventClient",
+            return_value=event_client,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert session.async_request.await_count == 2
 
 
 async def test_async_unload_entry_stops_events_and_unloads_platforms(

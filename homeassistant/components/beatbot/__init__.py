@@ -3,10 +3,11 @@
 from dataclasses import dataclass
 from typing import Any
 
-from beatbot_cloud import BeatbotClient
+from beatbot_cloud import BeatbotAuthenticationError, BeatbotClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .config_flow import BeatbotOAuth2Implementation
@@ -47,7 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> b
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     async def _async_request(method: str, url: str, **kwargs: Any) -> Any:
-        return await session.async_request(method, url, **kwargs)
+        try:
+            return await session.async_request(method, url, **kwargs)
+        except OAuth2TokenRequestReauthError as err:
+            raise BeatbotAuthenticationError from err
 
     api = BeatbotClient(entry.data["region"], _async_request)
     coordinator = BeatbotCoordinator(hass, api, entry)
