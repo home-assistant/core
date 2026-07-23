@@ -25,7 +25,7 @@ from .models import MatterDiscoverySchema
 SwitchFeature = clusters.Switch.Bitmaps.Feature
 
 EVENT_TYPES_MAP = {
-    # mapping from raw event id's to translation keys
+    # mapping from raw event IDs to translation keys
     0: "switch_latched",  # clusters.Switch.Events.SwitchLatched
     1: "initial_press",  # clusters.Switch.Events.InitialPress
     2: "long_press",  # clusters.Switch.Events.LongPress
@@ -35,7 +35,7 @@ EVENT_TYPES_MAP = {
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
 }
 
-# mapping from raw event id's to standard button event types
+# mapping from raw event IDs to standard button event types
 STANDARD_EVENT_TYPES_MAP: dict[int, str] = {
     clusters.Switch.Events.SwitchLatched.event_id: "switch_latched",
     clusters.Switch.Events.InitialPress.event_id: ButtonEventType.PRESS_START,
