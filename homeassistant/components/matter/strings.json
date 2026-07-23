@@ -180,6 +180,16 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "switch_latched": "Switch latched"
+            }
+          }
+        }
+      },
+      "button_deprecated": {
+        "name": "Button (deprecated)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
               "initial_press": "Pressed",
               "long_press": "Held down",
               "long_release": "Released after being held down",
@@ -192,7 +202,7 @@
               "multi_press_7": "Pressed 7 times",
               "multi_press_8": "Pressed 8 times",
               "short_release": "Released after being pressed",
-              "switch_latched": "Switch latched"
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
             }
           }
         }

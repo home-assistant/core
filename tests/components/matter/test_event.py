@@ -93,11 +93,14 @@ async def test_legacy_event_entity_disabled_by_default(
     matter_node: MatterNode,
 ) -> None:
     """Test the legacy event entity is registered but disabled by default."""
-    assert hass.states.get("event.mock_generic_switch_button_2") is None
-    entity_entry = entity_registry.async_get("event.mock_generic_switch_button_2")
+    assert hass.states.get("event.mock_generic_switch_button_deprecated") is None
+    entity_entry = entity_registry.async_get(
+        "event.mock_generic_switch_button_deprecated"
+    )
     assert entity_entry
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert entity_entry.unique_id.endswith("-GenericSwitch-59-1")
+    assert entity_entry.original_name == "Button (deprecated)"
 
 
 @pytest.mark.parametrize(
@@ -112,7 +115,7 @@ async def test_legacy_event_entity_disabled_by_default(
     [
         pytest.param(
             "mock_generic_switch",
-            "event.mock_generic_switch_button_2",
+            "event.mock_generic_switch_button_deprecated",
             ["initial_press", "short_release", "long_press", "long_release"],
             1,
             None,
@@ -121,7 +124,7 @@ async def test_legacy_event_entity_disabled_by_default(
         ),
         pytest.param(
             "mock_generic_switch_multi",
-            "event.mock_generic_switch_button_1_2",
+            "event.mock_generic_switch_button_deprecated_1",
             ["multi_press_1", "multi_press_2", "long_press", "long_release"],
             6,
             {"totalNumberOfPressesCounted": 2},

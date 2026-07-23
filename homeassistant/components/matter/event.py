@@ -259,7 +259,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterEventEntityDescription(
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
-            translation_key="button",
+            translation_key="button_deprecated",
             # Deprecated and disabled by default in HA 2026.8, remove in 2027.2
             entity_registry_enabled_default=False,
         ),
