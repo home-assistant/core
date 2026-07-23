@@ -28,6 +28,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 
@@ -483,6 +484,7 @@ async def test_water_heater_temperature_unit(
     expected_temperature: float,
 ) -> None:
     """Test that the temperature unit is passed through correctly."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     entity_info = [
         WaterHeaterInfo(
             object_id="my_boiler",
