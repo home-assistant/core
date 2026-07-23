@@ -80,6 +80,8 @@ class GeoSphereConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_build_schema(self.hass),
+data_schema=self.add_suggested_values_to_schema(
+                _build_schema(self.hass), user_input
+            ),
             errors=errors,
         )
