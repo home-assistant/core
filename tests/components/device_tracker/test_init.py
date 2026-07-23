@@ -585,6 +585,7 @@ async def test_see_passive_zone_state(
     assert attrs.get("longitude") == 2
     assert attrs.get("gps_accuracy") == 0
     assert attrs.get("source_type") == SourceType.ROUTER
+    assert attrs.get("in_zones") == ["zone.home"]
 
     mock_legacy_device_scanner.leave_home("dev1")
 
@@ -605,6 +606,84 @@ async def test_see_passive_zone_state(
     assert attrs.get("longitude") is None
     assert attrs.get("gps_accuracy") is None
     assert attrs.get("source_type") == SourceType.ROUTER
+    assert "in_zones" not in attrs
+
+
+async def test_legacy_see_populates_person_and_zone(
+    hass: HomeAssistant,
+    yaml_devices: str,
+) -> None:
+    """Test that legacy device_tracker.see updates person in_zones and zone.home count."""
+    home_lat, home_lon = 32.87336, -117.22743
+    assert await async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            zone.DOMAIN: {
+                "name": "Home",
+                "latitude": home_lat,
+                "longitude": home_lon,
+                "radius": 250,
+            }
+        },
+    )
+    assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "id": "1234",
+                    "name": "tracked person",
+                    "device_trackers": "device_tracker.tracked_phone",
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    common.async_see(
+        hass,
+        dev_id="tracked_phone",
+        location_name=STATE_HOME,
+    )
+    await hass.async_block_till_done()
+
+    tracker_state = hass.states.get("device_tracker.tracked_phone")
+    assert tracker_state.state == STATE_HOME
+    assert tracker_state.attributes["in_zones"] == ["zone.home"]
+    assert tracker_state.attributes["latitude"] == home_lat
+    assert tracker_state.attributes["longitude"] == home_lon
+
+    person_state = hass.states.get("person.tracked_person")
+    assert person_state.state == STATE_HOME
+    assert person_state.attributes["in_zones"] == ["zone.home"]
+    assert person_state.attributes["latitude"] == home_lat
+    assert person_state.attributes["longitude"] == home_lon
+
+    home_zone_state = hass.states.get("zone.home")
+    assert home_zone_state.state == "1"
+    assert home_zone_state.attributes["persons"] == ["person.tracked_person"]
+
+    common.async_see(
+        hass,
+        dev_id="tracked_phone",
+        location_name=STATE_NOT_HOME,
+    )
+    await hass.async_block_till_done()
+
+    tracker_state = hass.states.get("device_tracker.tracked_phone")
+    assert tracker_state.state == STATE_NOT_HOME
+    assert "in_zones" not in tracker_state.attributes
+
+    person_state = hass.states.get("person.tracked_person")
+    assert person_state.state == STATE_NOT_HOME
+    assert person_state.attributes["in_zones"] == []
+
+    home_zone_state = hass.states.get("zone.home")
+    assert home_zone_state.state == "0"
+    assert home_zone_state.attributes["persons"] == []
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")
