@@ -7,9 +7,11 @@ from pizone import ControllerCommandError, ControllerEndpoint, UnpairedBridgeErr
 import pytest
 
 from homeassistant.components.izone.const import DOMAIN
+from homeassistant.components.izone.coordinator import IZoneCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
 
@@ -283,6 +285,8 @@ async def test_setup_missing_host_not_found_retries(
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "controller_not_found"
+    assert entry.error_reason_translation_placeholders == {"uid": "000000001"}
     mock_discovery_service.create_controller.assert_not_awaited()
 
 
@@ -307,6 +311,7 @@ async def test_setup_legacy_domain_unique_id_discovery_oserror_retries(
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "discovery_failed_legacy"
 
 
 async def test_setup_missing_host_discover_oserror_retries(
@@ -329,14 +334,33 @@ async def test_setup_missing_host_discover_oserror_retries(
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "discovery_failed_host"
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "expected_state", "translation_key", "placeholders"),
     [
-        (ConnectionError("offline"), ConfigEntryState.SETUP_RETRY),
-        (UnpairedBridgeError("unpaired"), ConfigEntryState.SETUP_ERROR),
-        (ControllerCommandError("rejected"), ConfigEntryState.SETUP_ERROR),
+        pytest.param(
+            ConnectionError("offline"),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+            {"host": "192.0.2.1"},
+            id="connection-error",
+        ),
+        pytest.param(
+            UnpairedBridgeError("unpaired"),
+            ConfigEntryState.SETUP_ERROR,
+            "bridge_unpaired",
+            None,
+            id="unpaired-bridge",
+        ),
+        pytest.param(
+            ControllerCommandError("rejected"),
+            ConfigEntryState.SETUP_ERROR,
+            "setup_rejected",
+            {"host": "192.0.2.1"},
+            id="command-rejected",
+        ),
     ],
 )
 async def test_setup_create_controller_errors(
@@ -346,6 +370,8 @@ async def test_setup_create_controller_errors(
     mock_discovery_service: Mock,
     side_effect: Exception,
     expected_state: ConfigEntryState,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
     """create_controller failures map to retry vs error entry states."""
     mock_config_entry.add_to_hass(hass)
@@ -353,6 +379,8 @@ async def test_setup_create_controller_errors(
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders == placeholders
 
 
 async def test_setup_discovery_bind_failure_retries(
@@ -375,6 +403,7 @@ async def test_setup_discovery_bind_failure_retries(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "discovery_start_failed"
 
 
 async def test_setup_first_refresh_failure_closes_controller(
@@ -390,6 +419,36 @@ async def test_setup_first_refresh_failure_closes_controller(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_controller.close.assert_awaited()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(ConnectionError("gone"), "update_failed", id="connection-error"),
+        pytest.param(
+            ControllerCommandError("rejected"),
+            "refresh_rejected",
+            id="command-rejected",
+        ),
+    ],
+)
+async def test_coordinator_refresh_errors_are_translated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    side_effect: Exception,
+    translation_key: str,
+) -> None:
+    """Coordinator refresh failures raise translated UpdateFailed."""
+    mock_config_entry.add_to_hass(hass)
+    mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
+    coordinator = IZoneCoordinator(hass, mock_config_entry, mock_controller)
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == {"error": str(side_effect)}
 
 
 async def test_setup_platform_failure_closes_controller(
