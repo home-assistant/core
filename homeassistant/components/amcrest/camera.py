@@ -206,12 +206,6 @@ class AmcrestCam(Camera):
 
     @property
     @override
-    def name(self) -> str:
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
