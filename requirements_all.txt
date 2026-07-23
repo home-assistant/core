@@ -1543,7 +1543,7 @@ matrix-nio==0.25.2
 matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
-matter-python-client==0.7.1
+matter-python-client==1.3.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
