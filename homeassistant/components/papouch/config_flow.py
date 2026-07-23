@@ -5,14 +5,13 @@ import logging
 import re
 
 import aiohttp
+from aiopapouch import PapouchApiClient, create_device
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import create_device
-from .APIClient import PapouchApiClient
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, WEB_MODE_INDEX
 from .discovery import async_discover_papouch_devices
 

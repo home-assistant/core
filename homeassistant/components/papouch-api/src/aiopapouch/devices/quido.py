@@ -6,8 +6,7 @@ import xml.etree.ElementTree as ET
 
 import defusedxml.ElementTree as defused_ET
 
-from ..APIClient import PapouchApiClient
-from ..const import DATA_COUNTER, DATA_INPUT, DATA_SWITCH, DATA_TEMPERATURE
+from ..client import PapouchApiClient
 from .base import PapouchDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,10 +43,10 @@ class Quido(PapouchDevice):
         """Defines parser method for Quido family."""
         root = defused_ET.fromstring(xml_data)
         parsed_data: dict[str, dict[str, Any]] = {
-            DATA_TEMPERATURE: {},
-            DATA_INPUT: {},
-            DATA_SWITCH: {},
-            DATA_COUNTER: {},
+            "temperature": {},
+            "input": {},
+            "switch": {},
+            "counter": {},
         }
 
         for element in root:
@@ -55,15 +54,15 @@ class Quido(PapouchDevice):
 
             if element.tag == "temp":
                 val_str = element.attrib.get("val", "0")
-                parsed_data[DATA_TEMPERATURE][item_id] = float(val_str)
+                parsed_data["temperature"][item_id] = float(val_str)
 
             elif element.tag == "dout":
                 val_str = element.attrib.get("val", "0")
-                parsed_data[DATA_SWITCH][item_id] = int(val_str)
+                parsed_data["switch"][item_id] = int(val_str)
 
             elif element.tag == "din":
-                parsed_data[DATA_INPUT][item_id] = int(element.attrib.get("val", "0"))
-                parsed_data[DATA_COUNTER][item_id] = int(element.attrib.get("cnt", "0"))
+                parsed_data["input"][item_id] = int(element.attrib.get("val", "0"))
+                parsed_data["counter"][item_id] = int(element.attrib.get("cnt", "0"))
 
         return parsed_data
 
@@ -82,7 +81,7 @@ class Quido(PapouchDevice):
         return [
             {
                 "item_id": str(i),
-                "type": DATA_INPUT,
+                "type": "input",
                 "name": f"Input {i}",
             }
             for i in range(1, self.number_inputs + 1)
@@ -95,7 +94,7 @@ class Quido(PapouchDevice):
             {
                 "item_id": str(i),
                 "category": "decrease_counter",
-                "type": DATA_COUNTER,
+                "type": "counter",
                 "name": f"Decrease counter {i} by",
                 "min_value": 0,
                 "max_value": (2**self.size_counter_bits) - 1,
@@ -107,7 +106,7 @@ class Quido(PapouchDevice):
             {
                 "item_id": str(i),
                 "category": f"output_{action}_time",
-                "type": DATA_SWITCH,
+                "type": "switch",
                 "name": f"Output {i} {action} for duration (s)",
                 "min_value": 0.5,
                 "max_value": 127.5,
@@ -127,7 +126,7 @@ class Quido(PapouchDevice):
         sensors = [
             {
                 "item_id": str(i),
-                "type": DATA_TEMPERATURE,
+                "type": "temperature",
                 "name": f"Temperature {i}",
                 "unit": self.temperature_unit,
             }
@@ -138,7 +137,7 @@ class Quido(PapouchDevice):
             [
                 {
                     "item_id": str(i),
-                    "type": DATA_COUNTER,
+                    "type": "counter",
                     "name": f"Input {i} Count",
                     "state_class": "total_increasing",
                     "unit": "pulses",

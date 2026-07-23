@@ -1,18 +1,18 @@
 """This file is used for communicating with the device."""
 
 import logging
-import xml.etree.ElementTree as ET
 
 import aiohttp
 import defusedxml.ElementTree as defused_ET
-
-from .const import ENCODING
 
 INFO_URL = "is.xml"
 DATA_URL = "fresh.xml"
 SETTINGS_URL = "settings.xml"
 SET_URL = "set.xml"
 SAVE_URL = "save.xml"
+
+ENCODING = "iso-8859-2"
+WEB_MODE_INDEX = "3"
 
 _LOGGER = logging.getLogger(__name__)
 

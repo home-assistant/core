@@ -3,12 +3,10 @@
 import asyncio
 
 import aiohttp
+from aiopapouch import PapouchApiClient, create_device
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from . import create_device
-from .APIClient import PapouchApiClient
 
 
 class PapouchDiscoveryProtocol(asyncio.DatagramProtocol):

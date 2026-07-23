@@ -5,8 +5,7 @@ from typing import Any, override
 
 import defusedxml.ElementTree as defused_ET
 
-from ..APIClient import PapouchApiClient
-from ..const import DATA_SENSOR
+from ..client import PapouchApiClient
 from .base import PapouchDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ class TH2E(PapouchDevice):
     @override
     def parse_xml(self, xml_data: str) -> dict:
         root = defused_ET.fromstring(xml_data)
-        parsed_data: dict[str, dict[str, Any]] = {DATA_SENSOR: {}}
+        parsed_data: dict[str, dict[str, Any]] = {"sensor": {}}
 
         populate = len(self.units_sensors) == 0
 
@@ -44,11 +43,9 @@ class TH2E(PapouchDevice):
                 )
 
             if status in ("1", "4"):  # invalid or ready to measure
-                parsed_data[DATA_SENSOR][item_id] = None
+                parsed_data["sensor"][item_id] = None
             else:
-                parsed_data[DATA_SENSOR][item_id] = float(
-                    element.attrib.get("val", "0")
-                )
+                parsed_data["sensor"][item_id] = float(element.attrib.get("val", "0"))
 
         return parsed_data
 
@@ -95,7 +92,7 @@ class TH2E(PapouchDevice):
                 sensors.append(
                     {
                         "item_id": item_id,
-                        "type": DATA_SENSOR,
+                        "type": "sensor",
                         "name": "Temperature",
                         "device_class": "temperature",
                         "unit": unit_map.get(unit_code, "°C"),
@@ -105,7 +102,7 @@ class TH2E(PapouchDevice):
                 sensors.append(
                     {
                         "item_id": item_id,
-                        "type": DATA_SENSOR,
+                        "type": "sensor",
                         "name": "Humidity",
                         "device_class": "humidity",
                         "unit": "%",
@@ -115,7 +112,7 @@ class TH2E(PapouchDevice):
                 sensors.append(
                     {
                         "item_id": item_id,
-                        "type": DATA_SENSOR,
+                        "type": "sensor",
                         "name": "Dew Point",
                         "device_class": "temperature",
                         "unit": unit_map.get(unit_code, "°C"),

@@ -9,7 +9,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/papouch",
-  "integration_type": "hub",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
-  "requirements": []
+  "requirements": ["aiopapouch==0.1.0"]
 }

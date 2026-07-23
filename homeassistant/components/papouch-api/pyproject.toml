@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aiopapouch"
+version = "0.1.0"
+description = "API client and device models for Papouch hardware"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Vladislav Levitskii" }
+]
+dependencies = [
+    "aiohttp>=3.0.0",
+    "defusedxml>=0.7.1"
+]
+
+[project.urls]
+Source = "https://github.com/tvoje-jmeno/papouch-api"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aiopapouch"]

@@ -4,14 +4,13 @@ from datetime import timedelta
 import logging
 
 import aiohttp
+from aiopapouch import PapouchApiClient, PapouchDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .APIClient import PapouchApiClient
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from .devices import PapouchDevice
 
 _LOGGER = logging.getLogger(__name__)
 
