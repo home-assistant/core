@@ -11,6 +11,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_assistant_settings,
     async_get_entity_settings,
+    async_get_should_expose,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -126,6 +127,75 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
 
     assert exposed_entities._assistants == exposed_entities2._assistants
     assert exposed_entities.entities == exposed_entities2.entities
+
+
+async def test_prune_legacy_entities_on_start(hass: HomeAssistant) -> None:
+    """Test stale auto-created legacy entity settings are pruned on start."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    # Auto-created record for a transient entity that no longer exists
+    exposed_entities.entities["geo_location.stale_strike"] = ExposedEntity(
+        assistants={"conversation": {"should_expose": False}}
+    )
+    # Auto-created record for a transient entity that still has a state
+    hass.states.async_set("geo_location.live_strike", "1")
+    exposed_entities.entities["geo_location.live_strike"] = ExposedEntity(
+        assistants={"conversation": {"should_expose": False}}
+    )
+    # Explicit user exposure for an entity that no longer exists
+    exposed_entities.entities["light.gone_but_exposed"] = ExposedEntity(
+        assistants={"conversation": {"should_expose": True}}
+    )
+    # Explicit opt-out for a default-exposed domain that is currently absent;
+    # keep it so the choice is not reversed if the entity returns.
+    exposed_entities.entities["light.gone_opted_out"] = ExposedEntity(
+        assistants={"conversation": {"should_expose": False}}
+    )
+
+    exposed_entities._async_prune_legacy_entities(hass)
+
+    assert set(exposed_entities.entities) == {
+        "geo_location.live_strike",
+        "light.gone_but_exposed",
+        "light.gone_opted_out",
+    }
+
+
+async def test_get_should_expose_does_not_persist(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test async_get_should_expose evaluates exposure without persisting."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    # Registry entity without a conversation option (light is exposed by default)
+    registry_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    assert "conversation" not in registry_light.options
+
+    # Legacy entity (no registry entry) without a stored record
+    legacy_entity_id = "light.legacy"
+
+    # The read-only lookup returns the default but writes nothing, for both the
+    # registry-backed and legacy paths.
+    assert async_get_should_expose(hass, "conversation", registry_light.entity_id)
+    assert async_get_should_expose(hass, "conversation", legacy_entity_id)
+    assert (
+        "conversation"
+        not in entity_registry.async_get(registry_light.entity_id).options
+    )
+    assert legacy_entity_id not in exposed_entities.entities
+
+    # The writing variant does persist, for contrast.
+    assert async_should_expose(hass, "conversation", registry_light.entity_id)
+    assert async_should_expose(hass, "conversation", legacy_entity_id)
+    assert entity_registry.async_get(registry_light.entity_id).options[
+        "conversation"
+    ] == {"should_expose": True}
+    assert legacy_entity_id in exposed_entities.entities
 
 
 async def test_expose_entity(
