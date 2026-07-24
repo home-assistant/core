@@ -10,6 +10,7 @@ from PyViCare.PyViCareUtils import (
 )
 
 from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.types import ViCareData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -314,6 +315,65 @@ async def test_setup_entry_invalid_credentials(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_all_devices_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when a supported device exists but is offline."""
+    mock_config_entry.add_to_hass(hass)
+
+    supported_device = Mock()
+    supported_device.getModel.return_value = "Vitodens300W"
+    client = Mock()
+    client.devices = [supported_device]  # supported, but offline -> filtered out
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=ViCareData(client=client, devices=[]),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_no_supported_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup completes when the account has no supported device.
+
+    The gateway is always present in ``client.devices`` but is filtered out by
+    model. With no supported device this is not a transient failure, so it must
+    not raise ConfigEntryNotReady (which would retry forever).
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    gateway = Mock()
+    gateway.getModel.return_value = "Heatbox1"  # in UNSUPPORTED_DEVICES
+    client = Mock()
+    client.devices = [gateway]
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=ViCareData(client=client, devices=[]),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_invalid_configuration(
