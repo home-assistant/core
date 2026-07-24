@@ -374,17 +374,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_SETUP_METHOD, default=method_default): SelectSelector(
                     SelectSelectorConfig(
-                        options=[
-                            SelectOptionDict(
-                                value=SETUP_METHOD_SEARCH,
-                                label="Search for devices",
-                            ),
-                            SelectOptionDict(
-                                value=SETUP_METHOD_MANUAL_HOST,
-                                label="Enter host",
-                            ),
-                        ],
+                        translation_key="setup_method",
                         mode=SelectSelectorMode.LIST,
+                        options=[
+                            SETUP_METHOD_SEARCH,
+                            SETUP_METHOD_MANUAL_HOST,
+                        ],
                     )
                 ),
                 vol.Optional(CONF_HOST, default=host_default): str,

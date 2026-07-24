@@ -44,6 +44,14 @@
       "message": "Unable to connect to controller {uid}"
     }
   },
+  "selector": {
+    "setup_method": {
+      "options": {
+        "manual_host": "Enter host",
+        "search": "Search for devices"
+      }
+    }
+  },
   "services": {
     "airflow_max": {
       "description": "Sets the airflow maximum percent for a zone.",
