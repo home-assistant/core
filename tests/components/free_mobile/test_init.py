@@ -1,0 +1,85 @@
+"""Tests for the Free Mobile integration."""
+
+from homeassistant.components.free_mobile.const import DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
+
+from . import MOCK_CONFIG
+
+from tests.common import MockConfigEntry
+
+
+async def test_entry_setup_unload(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test integration setup and unload."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_import(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
+    """Test yaml import creates an entry and the deprecation issue."""
+    await async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {
+            NOTIFY_DOMAIN: [
+                {
+                    CONF_PLATFORM: DOMAIN,
+                    CONF_NAME: "notifier_name",
+                    **MOCK_CONFIG,
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(entries := hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entries[0].title == "notifier_name"
+    assert entries[0].data == MOCK_CONFIG
+
+    assert issue_registry.async_get_issue(
+        domain=HOMEASSISTANT_DOMAIN,
+        issue_id=f"deprecated_yaml_{DOMAIN}",
+    )
+
+
+async def test_import_already_configured(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test yaml import aborts if already configured, but still warns."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="notifier_name",
+        data=MOCK_CONFIG,
+    ).add_to_hass(hass)
+
+    await async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {
+            NOTIFY_DOMAIN: [
+                {
+                    CONF_PLATFORM: DOMAIN,
+                    CONF_NAME: "notifier_name",
+                    **MOCK_CONFIG,
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        domain=HOMEASSISTANT_DOMAIN,
+        issue_id=f"deprecated_yaml_{DOMAIN}",
+    )
