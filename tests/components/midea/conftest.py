@@ -1,4 +1,4 @@
-"""Fixtures for Midea LAN tests."""
+"""Fixtures for Midea tests."""
 
 from collections.abc import Callable, Generator
 from typing import Any
@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 from midealocal.const import DeviceType
 import pytest
 
-from homeassistant.components.midea_lan.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
+from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -144,7 +144,7 @@ def entity_entries(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent loading the integration during config flow tests."""
     with patch(
-        "homeassistant.components.midea_lan.async_setup_entry",
+        "homeassistant.components.midea.async_setup_entry",
         return_value=True,
     ) as mock_entry:
         yield mock_entry

@@ -1,9 +1,9 @@
-"""Constants for Midea LAN tests."""
+"""Constants for Midea tests."""
 
 from midealocal.const import ProtocolVersion
 
-from homeassistant.components.midea_lan.const import CONF_KEY, CONF_SUBTYPE
-from homeassistant.components.midea_lan.device_catalog import MIDEA_DEVICE_NAMES
+from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE
+from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,

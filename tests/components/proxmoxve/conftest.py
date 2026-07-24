@@ -65,8 +65,8 @@ MOCK_TEST_TOKEN_CONFIG = {
 MOCK_TEST_OTHER_CONFIG = {
     **MOCK_TEST_CONFIG,
     CONF_AUTH_METHOD: "other",
-    CONF_REALM: "test_realm",
-    CONF_USERNAME: "test_user@test_realm",
+    CONF_REALM: "Test_Realm",
+    CONF_USERNAME: "test_user@Test_Realm",
 }
 
 MOCK_TEST_TOKEN_OTHER_CONFIG = {
@@ -75,8 +75,8 @@ MOCK_TEST_TOKEN_OTHER_CONFIG = {
     CONF_TOKEN_ID: "test_token_id",
     CONF_TOKEN_SECRET: "test_token_secret",
     CONF_AUTH_METHOD: "other",
-    CONF_REALM: "test_realm",
-    CONF_USERNAME: "test_user@test_realm",
+    CONF_REALM: "Test_Realm",
+    CONF_USERNAME: "test_user@Test_Realm",
 }
 
 
