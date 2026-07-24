@@ -10,13 +10,13 @@ from homeassistant.helpers.entity import Entity
 from .client import PoolsideClient, PoolsideCommandError, PoolsideConnectionError
 from .const import (
     ACTUAL_POWER_STATE_FIELD,
+    DISABLED_REASONS_FIELD,
     DOMAIN,
     LOGGER,
     POWER_STATE_FIELD,
     STATUS_FIELD,
     UNKNOWN_POWER_STATE,
     SiteMode,
-    StatusState,
 )
 from .models import PoolsideControl, PoolsideGroup
 
@@ -124,17 +124,32 @@ class PoolsideEntity(PoolsideGroupEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True if connected and the control isn't disabled or winterized.
+        """Return True if connected and the control isn't hard-disabled.
 
         INSTALLER mode takes the whole site out of service from the user's
         point of view, so every control goes unavailable while it lasts.
+        A control is otherwise only out of service when the controller
+        reports a DisabledReasons entry for it; Status=DISABLED alone is
+        deliberately ignored - it's a suggestion that activating the control
+        will turn something else off, not a lockout.
         """
         return (
             super().available
             and self._client.site_mode != SiteMode.INSTALLER
             and not self._control.winterized
-            and self._power_state() != StatusState.DISABLED
+            and not self._disabled_reasons()
         )
+
+    def _disabled_reasons(self) -> list[str]:
+        """Return the hard reasons this control is out of service.
+
+        "WINTERIZED", "FREEZE_PROTECT", or the UUID of the pool cover
+        holding it closed; empty when the control is operable.
+        """
+        value = self._confirmed_json(DISABLED_REASONS_FIELD)
+        if not isinstance(value, list):
+            return []
+        return [str(reason) for reason in value]
 
     def _power_state(self) -> Any:
         """Return this control's on/off/disabled state, ground truth first.

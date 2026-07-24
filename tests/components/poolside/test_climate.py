@@ -271,14 +271,58 @@ async def test_writes_allowed_in_normal_mode(
 
 
 @pytest.mark.usefixtures("setup_integration")
-async def test_disabled_control_is_unavailable(
+async def test_bare_disabled_status_keeps_control_operable(
     hass: HomeAssistant,
     fake_client: FakePoolsideClient,
 ) -> None:
-    """A control reporting Status=DISABLED becomes unavailable."""
+    """Status=DISABLED alone is only a suggestion; the control stays operable.
+
+    It means activating this control will turn something else off (e.g. the
+    spa is using the shared pump), not that it's locked out.
+    """
     fake_client.set_status(HEATER_UUID, "Status", "DISABLED")
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    fake_client.async_set_desired_state.assert_awaited_with(
+        HEATER_UUID, Status="ON", ControlMode="HEAT"
+    )
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        pytest.param("WINTERIZED", id="winterized"),
+        pytest.param("FREEZE_PROTECT", id="freeze-protect"),
+        pytest.param("cover-uuid-1", id="pool-cover"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_disabled_reasons_make_control_unavailable(
+    hass: HomeAssistant,
+    fake_client: FakePoolsideClient,
+    reason: str,
+) -> None:
+    """Any DisabledReasons entry takes the control out of service until cleared."""
+    fake_client.set_status(HEATER_UUID, "DisabledReasons", f'["{reason}"]')
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    fake_client.set_status(HEATER_UUID, "DisabledReasons", "[]")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF

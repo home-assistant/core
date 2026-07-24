@@ -196,6 +196,13 @@ ACTUAL_POWER_STATE_FIELD = "ActualPowerState"
 # data", not as a real value, so lookups fall through to the next field.
 UNKNOWN_POWER_STATE = "UNKNOWN"
 
+# Pushed keyed by the control's own UUID: the hard reasons a control is out
+# of service, as a list of strings - "WINTERIZED", "FREEZE_PROTECT", or the
+# UUID of the pool cover holding it closed. A control whose Status is merely
+# DISABLED *without* any reason listed here is still operable: that Status is
+# a suggestion that activating it will turn something else off.
+DISABLED_REASONS_FIELD = "DisabledReasons"
+
 # Per-control desired-state fields. Not (yet, as far as observed) pushed by
 # Device.setStatus; tracked optimistically from our own successful
 # Device.setDesiredState2 writes instead.
