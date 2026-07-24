@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "community": "SNMPv1 Community",
+                    "username": "SNMPv3 Username",
+                    "auth_key": "SNMPv3 Auth Key",
+                    "priv_key": "SNMPv3 Priv Key"
+                }
+            }
+        }
+    }
+}
