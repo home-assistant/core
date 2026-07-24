@@ -25,12 +25,28 @@ from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
+DEFAULT_SSL_PORT = 8883
 
 _LOGGER = logging.getLogger(__name__)
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 ENTRY_TITLE_FORMAT = "Victron OS {installation_id} ({host}:{port})"
+
+
+def build_title(
+    installation_id: str, host: str, port: int, friendly_name: str | None = None
+) -> str:
+    """Build the title for the config entry."""
+    return friendly_name or ENTRY_TITLE_FORMAT.format(
+        installation_id=installation_id, host=host, port=port
+    )
+
+
+def default_port_for(use_ssl: bool) -> int:
+    """Return the default port for the selected transport."""
+    return DEFAULT_SSL_PORT if use_ssl else DEFAULT_PORT
+
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -146,11 +162,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
 
                 self._abort_if_unique_id_configured()
-                title = ENTRY_TITLE_FORMAT.format(
-                    installation_id=installation_id,
-                    host=data[CONF_HOST],
-                    port=data[CONF_PORT],
-                )
+                title = build_title(installation_id, data[CONF_HOST], data[CONF_PORT])
                 return self.async_create_entry(title=title, data=data)
 
         _LOGGER.debug("Showing form with errors: %s", errors)
@@ -167,6 +179,10 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery."""
+        mqtt_on_lan = str(discovery_info.upnp.get("X_MqttOnLan", "")).strip()
+        if mqtt_on_lan != "1":
+            return self.async_abort(reason="mqtt_on_lan_disabled")
+
         self.hostname = str(urlparse(discovery_info.ssdp_location).hostname)
         self.serial = discovery_info.upnp["serialNumber"]
         self.installation_id = discovery_info.upnp["X_VrmPortalId"]
@@ -176,29 +192,12 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.installation_id)
         self._abort_if_unique_id_configured()
 
+        assert self.installation_id is not None
         self.context["title_placeholders"] = {
-            "name": self.friendly_name or self.hostname
+            "name": build_title(
+                self.installation_id, self.hostname, DEFAULT_PORT, self.friendly_name
+            ),
         }
-
-        # Verify connectivity before showing the confirmation dialog
-        try:
-            ssdp_conf = {
-                CONF_HOST: self.hostname,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_SERIAL: self.serial,
-                CONF_INSTALLATION_ID: self.installation_id,
-            }
-            await validate_input(ssdp_conf)
-        except AuthenticationError:
-            return await self.async_step_ssdp_auth()
-        except CannotConnectError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected error validating SSDP discovery for Victron GX"
-            )
-            return self.async_abort(reason="unknown")
-
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
@@ -209,25 +208,47 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.installation_id is not None
 
         if user_input is not None:
+            data = {
+                CONF_HOST: self.hostname,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_SERIAL: self.serial,
+                CONF_INSTALLATION_ID: self.installation_id,
+                CONF_MODEL: self.model_name,
+                CONF_SSL: False,
+            }
+            try:
+                await validate_input(data)
+            except AuthenticationError:
+                return await self.async_step_ssdp_auth()
+            except CannotConnectError:
+                return self.async_abort(reason="cannot_connect")
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error validating SSDP discovery for Victron GX"
+                )
+                return self.async_abort(reason="unknown")
+
             return self.async_create_entry(
-                title=ENTRY_TITLE_FORMAT.format(
-                    installation_id=self.installation_id,
-                    host=self.hostname,
-                    port=DEFAULT_PORT,
+                title=build_title(
+                    self.installation_id,
+                    self.hostname,
+                    DEFAULT_PORT,
+                    self.friendly_name,
                 ),
-                data={
-                    CONF_HOST: self.hostname,
-                    CONF_PORT: DEFAULT_PORT,
-                    CONF_SERIAL: self.serial,
-                    CONF_INSTALLATION_ID: self.installation_id,
-                    CONF_MODEL: self.model_name,
-                },
+                data=data,
             )
 
         self._set_confirm_only()
         return self.async_show_form(
             step_id="ssdp_confirm",
-            description_placeholders={"name": self.friendly_name or self.hostname},
+            description_placeholders={
+                "name": build_title(
+                    self.installation_id,
+                    self.hostname,
+                    DEFAULT_PORT,
+                    self.friendly_name,
+                )
+            },
         )
 
     async def async_step_ssdp_auth(
@@ -246,7 +267,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             data: dict[str, Any] = {
                 CONF_HOST: self.hostname,
-                CONF_PORT: DEFAULT_PORT,
+                CONF_PORT: default_port_for(user_input.get(CONF_SSL, False)),
                 CONF_SERIAL: self.serial,
                 CONF_INSTALLATION_ID: self.installation_id,
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
@@ -268,10 +289,11 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=ENTRY_TITLE_FORMAT.format(
-                        installation_id=self.installation_id,
-                        host=self.hostname,
-                        port=DEFAULT_PORT,
+                    title=build_title(
+                        self.installation_id,
+                        self.hostname,
+                        data[CONF_PORT],
+                        self.friendly_name,
                     ),
                     data=data,
                 )
@@ -315,10 +337,11 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(reason="different_device")
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    title=ENTRY_TITLE_FORMAT.format(
-                        installation_id=installation_id,
-                        host=user_input[CONF_HOST],
-                        port=user_input[CONF_PORT],
+                    title=build_title(
+                        installation_id,
+                        user_input[CONF_HOST],
+                        user_input[CONF_PORT],
+                        self.friendly_name,
                     ),
                     data_updates=data,
                 )
