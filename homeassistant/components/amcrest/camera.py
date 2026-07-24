@@ -98,6 +98,10 @@ class AmcrestCam(Camera):
         self._channel = device.channel
         self._token = self._auth = device.authentication
         self._control_light = device.control_light
+        if device.serial_number is not None:
+            self._attr_unique_id = (
+                f"{device.serial_number}-{self._resolution}-{self._channel}"
+            )
         self._is_recording: bool = False
         self._motion_detection_enabled: bool = False
         self._brand: str | None = None
@@ -313,13 +317,6 @@ class AmcrestCam(Camera):
                     self._model = resp
                 else:
                     self._model = "unknown"
-            if self._attr_unique_id is None:
-                serial_number = (await self._api.async_serial_number).strip()
-                if serial_number:
-                    self._attr_unique_id = (
-                        f"{serial_number}-{self._resolution}-{self._channel}"
-                    )
-                    _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             if self._rtsp_url is None:
                 self._rtsp_url = await self._api.async_rtsp_url(typeno=self._resolution)
 
