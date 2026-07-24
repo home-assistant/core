@@ -55,6 +55,7 @@ from .helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    restore_state,
     storage,
 )
 from .helpers.debounce import Debouncer
@@ -2280,6 +2281,7 @@ class ConfigEntries:
 
         dev_reg.async_clear_config_entry(entry_id, entry.domain)
         ent_reg.async_clear_config_entry(entry_id)
+        restore_state.async_clear_config_entry(self.hass, entry_id)
 
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
