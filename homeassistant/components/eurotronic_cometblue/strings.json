@@ -47,5 +47,63 @@
         "name": "Setpoint offset"
       }
     }
+  },
+  "services": {
+    "get_schedule": {
+      "description": "Retrieves the configured heating time ranges of one or multiple devices.",
+      "name": "Get schedule"
+    },
+    "set_holiday": {
+      "description": "Set holiday/away mode on device.",
+      "fields": {
+        "from": {
+          "description": "Start of the away mode.",
+          "name": "From"
+        },
+        "temperature": {
+          "description": "Temperature during away mode.",
+          "name": "Temperature"
+        },
+        "to": {
+          "description": "End of the away mode.",
+          "name": "To"
+        }
+      },
+      "name": "Set holiday (away mode)"
+    },
+    "set_schedule": {
+      "description": "Sets the configured heating time ranges of one or multiple devices. Days not included in the service call will be left unchanged.",
+      "fields": {
+        "friday": {
+          "description": "Heating time periods for Friday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::friday%]"
+        },
+        "monday": {
+          "description": "Heating time periods for Monday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::monday%]"
+        },
+        "saturday": {
+          "description": "Heating time periods for Saturday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::saturday%]"
+        },
+        "sunday": {
+          "description": "Heating time periods for Sunday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::sunday%]"
+        },
+        "thursday": {
+          "description": "Heating time periods for Thursday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::thursday%]"
+        },
+        "tuesday": {
+          "description": "Heating time periods for Tuesday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::tuesday%]"
+        },
+        "wednesday": {
+          "description": "Heating time periods for Wednesday. Up to 4 heat times can be set.",
+          "name": "[%key:common::time::wednesday%]"
+        }
+      },
+      "name": "Set schedule"
+    }
   }
 }
