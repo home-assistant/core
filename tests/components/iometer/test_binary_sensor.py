@@ -1,26 +1,27 @@
 """Test the IOmeter binary sensors."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock
+import json
+from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
+from iometer import Status
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.iometer.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_platform
+from . import get_status_callback, setup_platform
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensors(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_iometer_client: AsyncMock,
+    mock_iometer_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -34,10 +35,9 @@ async def test_binary_sensors(
 async def test_connection_status_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_iometer_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
+    mock_iometer_client: MagicMock,
 ) -> None:
-    """Test connection status sensor."""
+    """Test connection status sensor updates via SSE."""
     await setup_platform(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
     assert (
@@ -47,15 +47,9 @@ async def test_connection_status_sensors(
         == STATE_ON
     )
 
-    freezer.tick(delta=timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    status = mock_iometer_client.get_current_status.return_value
-    status.device.core.connection_status = "disconnected"
-
-    freezer.tick(delta=timedelta(minutes=1))
-    async_fire_time_changed(hass)
+    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    status_data["device"]["core"]["connectionStatus"] = "disconnected"
+    get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
     assert (
@@ -70,10 +64,9 @@ async def test_connection_status_sensors(
 async def test_attachment_status_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_iometer_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
+    mock_iometer_client: MagicMock,
 ) -> None:
-    """Test connection status sensor."""
+    """Test attachment status sensor updates via SSE."""
     await setup_platform(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
     assert (
@@ -83,15 +76,9 @@ async def test_attachment_status_sensors(
         == STATE_ON
     )
 
-    freezer.tick(delta=timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    status = mock_iometer_client.get_current_status.return_value
-    status.device.core.attachment_status = "detached"
-
-    freezer.tick(delta=timedelta(minutes=1))
-    async_fire_time_changed(hass)
+    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    status_data["device"]["core"]["attachmentStatus"] = "detached"
+    get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
     assert (
@@ -103,13 +90,12 @@ async def test_attachment_status_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_attachment_status_sensors_unkown(
+async def test_attachment_status_sensors_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_iometer_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
+    mock_iometer_client: MagicMock,
 ) -> None:
-    """Test connection status sensor."""
+    """Test attachment status sensor shows unknown state via SSE."""
     await setup_platform(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
     assert (
@@ -119,15 +105,9 @@ async def test_attachment_status_sensors_unkown(
         == STATE_ON
     )
 
-    freezer.tick(delta=timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    status = mock_iometer_client.get_current_status.return_value
-    status.device.core.attachment_status = None
-
-    freezer.tick(delta=timedelta(minutes=1))
-    async_fire_time_changed(hass)
+    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    del status_data["device"]["core"]["attachmentStatus"]
+    get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
     assert (
