@@ -1,5 +1,7 @@
 """The TP-Link Omada integration."""
 
+import asyncio
+from datetime import datetime, timedelta
 import logging
 
 from tplink_omada_client import OmadaSite
@@ -13,14 +15,16 @@ from tplink_omada_client.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
+from .coordinator import async_cleanup_client_trackers, async_cleanup_devices
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,13 +72,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, entry, site_client)
-    await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
 
-    _remove_old_devices(hass, entry, controller.devices_coordinator.data)
+    _cleanup_task: asyncio.Task[None] | None = None
+    _first_cleanup_call = True
+
+    async def _async_cleanup_task() -> None:
+        nonlocal _first_cleanup_call
+        await async_cleanup_devices(
+            hass,
+            controller,
+        )
+        if not _first_cleanup_call:
+            # Skip refresh on first run — data is already fresh from initialize_first_refresh()
+            await controller.known_clients_coordinator.async_refresh()
+        _first_cleanup_call = False
+        await async_cleanup_client_trackers(
+            hass,
+            controller,
+        )
+
+    @callback
+    def _schedule_cleanup(_now: datetime | None = None) -> None:
+        nonlocal _cleanup_task
+        if _cleanup_task is not None and not _cleanup_task.done():
+            return
+        _cleanup_task = entry.async_create_background_task(
+            hass,
+            _async_cleanup_task(),
+            "tplink_omada cleanup",
+        )
+
+    await controller.initialize_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def _cancel_cleanup() -> None:
+        if _cleanup_task is not None and not _cleanup_task.done():
+            _cleanup_task.cancel()
+
+    _schedule_cleanup()
+    entry.async_on_unload(_cancel_cleanup)
+    entry.async_on_unload(
+        async_track_time_interval(hass, _schedule_cleanup, timedelta(hours=1))
+    )
 
     return True
 

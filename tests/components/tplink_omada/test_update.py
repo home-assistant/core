@@ -83,7 +83,7 @@ async def test_firmware_download_in_progress(
 
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Rebuild device list with fwDownload set to True for the switch
     updated_devices = await _rebuild_device_list_with_update(
@@ -94,7 +94,7 @@ async def test_firmware_download_in_progress(
     # Trigger coordinator update
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify update entity shows in progress
     entity = hass.states.get(entity_id)

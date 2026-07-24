@@ -34,8 +34,7 @@ async def async_setup_entry(
             OmadaClientScannerEntity(
                 site_id, client.mac, client.name, controller.clients_coordinator
             )
-            async for client in controller.omada_client.get_known_clients()
-            if isinstance(client, OmadaWirelessClient)
+            for client in (controller.known_clients_coordinator.data or {}).values()
         ]
     )
 
