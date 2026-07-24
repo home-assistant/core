@@ -25,6 +25,7 @@ from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -41,6 +42,8 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -59,6 +62,8 @@ from .const import (
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_THINKING_LEVEL,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_MODEL,
@@ -438,6 +443,7 @@ async def google_generative_ai_config_option_schema(
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
         }
     )
+
     if subentry_type != "tts":
         schema.update(
             {
@@ -456,6 +462,35 @@ async def google_generative_ai_config_option_schema(
                     description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                     default=RECOMMENDED_MAX_TOKENS,
                 ): int,
+                vol.Optional(
+                    CONF_THINKING_BUDGET,
+                    description={"suggested_value": options.get(CONF_THINKING_BUDGET)},
+                    default=RECOMMENDED_THINKING_BUDGET,
+                ): vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(
+                            min=-1, max=24576, step=1, mode=NumberSelectorMode.BOX
+                        )
+                    ),
+                    vol.Coerce(int),
+                ),
+                vol.Optional(
+                    CONF_THINKING_LEVEL,
+                    description={"suggested_value": options.get(CONF_THINKING_LEVEL)},
+                    default=RECOMMENDED_THINKING_LEVEL,
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key=CONF_THINKING_LEVEL,
+                        options=[
+                            "auto",
+                            "minimal",
+                            "low",
+                            "medium",
+                            "high",
+                        ],
+                    )
+                ),
                 vol.Optional(
                     CONF_HARASSMENT_BLOCK_THRESHOLD,
                     description={
