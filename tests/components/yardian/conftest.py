@@ -84,5 +84,8 @@ def sensor_platform_only() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def mock_ui_refresh_delay() -> Generator[None]:
     """Patch the Switch refresh delay to 0 seconds to speed up tests."""
-    with patch("homeassistant.components.yardian.switch.SWITCH_REFRESH_DELAY", 0):
+    with (
+        patch("homeassistant.components.yardian.switch.SWITCH_ON_REFRESH_DELAY", 0),
+        patch("homeassistant.components.yardian.switch.SWITCH_OFF_REFRESH_DELAY", 0),
+    ):
         yield
