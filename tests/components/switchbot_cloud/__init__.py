@@ -57,6 +57,14 @@ STANDING_FAN_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
+BATTERY_CIRCULATOR_FAN_2_PRO_INFO = Device(
+    version="V1.0",
+    deviceId="device-id-1",
+    deviceName="device-1",
+    deviceType="Battery Circulator Fan 2 Pro",
+    hubDeviceId="test-hub-id",
+)
+
 
 METER_INFO = Device(
     version="V1.0",
