@@ -62,6 +62,14 @@
       },
       "active_warning_codes": {
         "name": "Active warnings"
+      },
+      "lock_state": {
+        "name": "Socket lock"
+      }
+    },
+    "button": {
+      "socket_unlock": {
+        "name": "Unlock socket"
       }
     },
     "number": {
@@ -158,6 +166,9 @@
       },
       "force_single_phase": {
         "name": "Force single phase"
+      },
+      "socket_lock": {
+        "name": "Keep socket locked"
       }
     },
     "update": {
