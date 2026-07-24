@@ -1,0 +1,35 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration uses local push (mDNS/zeroconf discovery + UDP data
+      stream) and does not poll devices.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      The config flow only confirms user intent; no connection is made until
+      after the entry is created.  A pre-configure connection test is not
+      possible without hardware present.
+  test-before-setup: done
+  unique-config-entry: done
