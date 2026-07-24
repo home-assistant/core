@@ -31,44 +31,17 @@ class SSLCipherList(StrEnum):
 
 SSL_CIPHER_LISTS = {
     SSLCipherList.INTERMEDIATE: (
-        "ECDHE-ECDSA-CHACHA20-POLY1305:"
-        "ECDHE-RSA-CHACHA20-POLY1305:"
         "ECDHE-ECDSA-AES128-GCM-SHA256:"
         "ECDHE-RSA-AES128-GCM-SHA256:"
         "ECDHE-ECDSA-AES256-GCM-SHA384:"
         "ECDHE-RSA-AES256-GCM-SHA384:"
-        "DHE-RSA-AES128-GCM-SHA256:"
-        "DHE-RSA-AES256-GCM-SHA384:"
-        "ECDHE-ECDSA-AES128-SHA256:"
-        "ECDHE-RSA-AES128-SHA256:"
-        "ECDHE-ECDSA-AES128-SHA:"
-        "ECDHE-RSA-AES256-SHA384:"
-        "ECDHE-RSA-AES128-SHA:"
-        "ECDHE-ECDSA-AES256-SHA384:"
-        "ECDHE-ECDSA-AES256-SHA:"
-        "ECDHE-RSA-AES256-SHA:"
-        "DHE-RSA-AES128-SHA256:"
-        "DHE-RSA-AES128-SHA:"
-        "DHE-RSA-AES256-SHA256:"
-        "DHE-RSA-AES256-SHA:"
-        "ECDHE-ECDSA-DES-CBC3-SHA:"
-        "ECDHE-RSA-DES-CBC3-SHA:"
-        "EDH-RSA-DES-CBC3-SHA:"
-        "AES128-GCM-SHA256:"
-        "AES256-GCM-SHA384:"
-        "AES128-SHA256:"
-        "AES256-SHA256:"
-        "AES128-SHA:"
-        "AES256-SHA:"
-        "DES-CBC3-SHA:"
-        "!DSS"
+        "ECDHE-ECDSA-CHACHA20-POLY1305:"
+        "ECDHE-RSA-CHACHA20-POLY1305"
     ),
     SSLCipherList.MODERN: (
         "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
         "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
-        "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
-        "ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
-        "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
+        "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
     ),
     SSLCipherList.INSECURE: "DEFAULT:@SECLEVEL=0",
 }
@@ -191,17 +164,19 @@ def server_context_modern() -> ssl.SSLContext:
     """Return an SSL context following the Mozilla recommendations.
 
     TLS configuration follows the best-practice guidelines specified here:
-    https://wiki.mozilla.org/Security/Server_Side_TLS
+    https://docs.tlsref.org/server-side-tls.html
     Modern guidelines are followed.
     """
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.minimum_version = ssl.TLSVersion.TLSv1_3
 
     context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
-    context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.MODERN])
+    # set_ciphers() cannot configure TLS 1.3 suites; OpenSSL's upstream
+    # defaults are exactly the Mozilla modern suites (the system OpenSSL
+    # config may add other AEAD TLS 1.3 suites)
 
     return context
 
@@ -210,14 +185,13 @@ def server_context_intermediate() -> ssl.SSLContext:
     """Return an SSL context following the Mozilla recommendations.
 
     TLS configuration follows the best-practice guidelines specified here:
-    https://wiki.mozilla.org/Security/Server_Side_TLS
+    https://docs.tlsref.org/server-side-tls.html
     Intermediate guidelines are followed.
     """
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
 
-    context.options |= (
-        ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
-    )
+    context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 

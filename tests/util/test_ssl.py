@@ -1,5 +1,7 @@
 """Test Home Assistant ssl utility functions."""
 
+import ssl
+
 from homeassistant.util.ssl import (
     SSL_ALPN_HTTP11,
     SSL_ALPN_HTTP11_HTTP2,
@@ -11,6 +13,8 @@ from homeassistant.util.ssl import (
     create_no_verify_ssl_context,
     get_default_context,
     get_default_no_verify_context,
+    server_context_intermediate,
+    server_context_modern,
 )
 
 
@@ -188,3 +192,60 @@ def test_client_context_default_no_alpn() -> None:
 
     assert default_ctx is not http1_ctx
     assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
+
+
+def test_server_context_modern() -> None:
+    """Modern server profile should only allow TLS 1.3 per Mozilla guidelines."""
+    context = server_context_modern()
+    assert context.minimum_version == ssl.TLSVersion.TLSv1_3
+
+    tls13_ciphers = [
+        cipher["name"]
+        for cipher in context.get_ciphers()
+        if cipher["protocol"] == "TLSv1.3"
+    ]
+    # Exact equality is not portable: system OpenSSL config (e.g. Fedora/RHEL
+    # crypto-policies) may add other AEAD TLS 1.3 suites such as CCM.
+    assert {
+        "TLS_AES_128_GCM_SHA256",
+        "TLS_AES_256_GCM_SHA384",
+        "TLS_CHACHA20_POLY1305_SHA256",
+    } <= set(tls13_ciphers)
+
+
+def test_server_context_intermediate() -> None:
+    """Intermediate server profile should follow the Mozilla guidelines."""
+    context = server_context_intermediate()
+    assert context.minimum_version == ssl.TLSVersion.TLSv1_2
+
+    tls13_ciphers = [
+        cipher["name"]
+        for cipher in context.get_ciphers()
+        if cipher["protocol"] == "TLSv1.3"
+    ]
+    # Same as modern: TLS 1.3 suites come from OpenSSL defaults / system config.
+    assert {
+        "TLS_AES_128_GCM_SHA256",
+        "TLS_AES_256_GCM_SHA384",
+        "TLS_CHACHA20_POLY1305_SHA256",
+    } <= set(tls13_ciphers)
+
+    # set_ciphers() selects this ordered Mozilla intermediate list. System
+    # OpenSSL policy may disable some of the suites, so require: non-empty,
+    # no unexpected names, and preserved relative order among those present.
+    expected_tls12 = [
+        "ECDHE-ECDSA-AES128-GCM-SHA256",
+        "ECDHE-RSA-AES128-GCM-SHA256",
+        "ECDHE-ECDSA-AES256-GCM-SHA384",
+        "ECDHE-RSA-AES256-GCM-SHA384",
+        "ECDHE-ECDSA-CHACHA20-POLY1305",
+        "ECDHE-RSA-CHACHA20-POLY1305",
+    ]
+    tls12_ciphers = [
+        cipher["name"]
+        for cipher in context.get_ciphers()
+        if cipher["protocol"] == "TLSv1.2"
+    ]
+    assert tls12_ciphers
+    assert set(tls12_ciphers) <= set(expected_tls12)
+    assert tls12_ciphers == [c for c in expected_tls12 if c in tls12_ciphers]
