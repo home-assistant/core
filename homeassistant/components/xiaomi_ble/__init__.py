@@ -2,9 +2,10 @@
 
 from functools import partial
 import logging
-from typing import cast
+from typing import Any, cast
 
 from xiaomi_ble import EncryptionScheme, SensorUpdate, XiaomiBluetoothDeviceData
+from xiaomi_ble.devices import S400_MODELS
 
 from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
@@ -12,10 +13,13 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
 )
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothEntityKey,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -32,6 +36,9 @@ from .types import XiaomiBLEConfigEntry
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
+DATA_S400_CONFIRMED_AT_MIGRATION = "s400_confirmed_at_migration"
 
 
 def process_service_info(
@@ -118,6 +125,316 @@ def format_discovered_event_class(address: str) -> str:
     return f"{DOMAIN}_discovered_event_class_{address}"
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entries to the current version.
+
+    Version 1.2 swaps the S400 impedance unique IDs while preserving
+    entity history. Detect the model from the S400-only impedance key,
+    falling back to the device registry when only the legacy key
+    exists. Rename low to high first to avoid a unique-ID collision.
+    """
+    if entry.version == 1 and entry.minor_version == 1:
+        data_updates: dict[str, Any] = {}
+        address = entry.unique_id
+        if address is not None:
+            entity_registry = er.async_get(hass)
+
+            old_low_id = f"{address}-impedance_low"
+            new_high_id = f"{address}-impedance_high"
+            low_entity_id = entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, old_low_id
+            )
+            is_s400 = low_entity_id is not None
+
+            old_legacy_id = f"{address}-impedance"
+            legacy_entity_id = entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, old_legacy_id
+            )
+
+            if not is_s400:
+                device_registry = dr.async_get(hass)
+                device_entry = device_registry.async_get_device(
+                    identifiers={(BLUETOOTH_DOMAIN, address)}
+                )
+                is_s400 = device_entry is not None and device_entry.model in S400_MODELS
+
+            if is_s400:
+                # Persisted independently of any specific entity, which
+                # the user could delete (before or after this runs)
+                # along with the only other proof this happened -- see
+                # _purge_stale_sensor_restore_keys.
+                data_updates[DATA_S400_CONFIRMED_AT_MIGRATION] = True
+
+                if low_entity_id:
+                    _LOGGER.debug("S400 migration: %s -> %s", old_low_id, new_high_id)
+                    entity_registry.async_update_entity(
+                        low_entity_id,
+                        new_unique_id=new_high_id,
+                        original_name="Impedance High",
+                    )
+
+                new_low_id = f"{address}-impedance_low"
+                if legacy_entity_id:
+                    _LOGGER.debug("S400 migration: %s -> %s", old_legacy_id, new_low_id)
+                    entity_registry.async_update_entity(
+                        legacy_entity_id,
+                        new_unique_id=new_low_id,
+                        original_name="Impedance Low",
+                    )
+
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | data_updates, minor_version=2
+        )
+
+    return True
+
+
+def _async_is_known_s400(
+    hass: HomeAssistant,
+    address: str,
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator | None = None,
+) -> bool:
+    """Return whether registry, restore data, or model identifies an S400."""
+    entity_registry = er.async_get(hass)
+    if any(
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"{address}-{key}")
+        is not None
+        for key in ("impedance_low", "impedance_high")
+    ):
+        return True
+
+    if coordinator is not None:
+        sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
+        if sensor_restore_data is not None:
+            descriptions = sensor_restore_data.get("entity_descriptions", {})
+            if any(
+                PassiveBluetoothEntityKey(key=key, device_id=None).to_string()
+                in descriptions
+                for key in ("impedance_low", "impedance_high")
+            ):
+                return True
+
+    device_entry = dr.async_get(hass).async_get_device(
+        identifiers={(BLUETOOTH_DOMAIN, address)}
+    )
+    return device_entry is not None and device_entry.model in S400_MODELS
+
+
+def _async_purge_stale_s400_impedance_restore_cache(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator,
+) -> None:
+    """Drop stale, mislabeled S400 impedance values from the restore cache.
+
+    The bluetooth passive-processor restore cache is keyed purely by the
+    entity_key string the library emits, independent of the entity
+    registry -- so a value cached under the old, buggy "impedance_low"
+    mapping (250 kHz) would otherwise be restored into the entity that
+    now correctly means "impedance_low" (50 kHz). Must run exactly once
+    per config entry, before live advertisements repopulate the cache
+    with correctly labeled data that must not be discarded afterwards.
+
+    Known limitation: the "done" marker is persisted through the config
+    entry store (saved ~1s after a change), while this in-memory edit to
+    coordinator.restore_data only reaches disk via the bluetooth
+    integration's own passive-processor storage, saved every 15 minutes
+    or at a graceful shutdown. Home Assistant exposes no API to force an
+    immediate, coupled save of both, so a crash in that window can
+    persist the marker without the purge. The next startup would then
+    skip purging and briefly restore the stale value -- self-correcting
+    on the next scale reading, same as the ordinary purge outcome.
+
+    Only marks "done" once conclusively classified (confirmed S400, or a
+    known device confirmed as something else): an address with no
+    evidence either way yet (e.g. no device row) is left retryable, so a
+    later setup that finally has enough evidence still gets to purge.
+    """
+    if entry.data.get(DATA_S400_IMPEDANCE_CACHE_PURGED):
+        return
+
+    address = entry.unique_id
+    if address is None:
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
+        )
+        return
+
+    if _async_is_known_s400(hass, address, coordinator):
+        _purge_stale_sensor_restore_keys(hass, entry, coordinator)
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
+        )
+        return
+
+    device_entry = dr.async_get(hass).async_get_device(
+        identifiers={(BLUETOOTH_DOMAIN, address)}
+    )
+    if (
+        device_entry is not None
+        and device_entry.model is not None
+        and device_entry.model not in S400_MODELS
+    ):
+        # Confirmed something else: never going to need purging.
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
+        )
+    # else: no device row yet, genuinely unknown -- stay retryable.
+
+
+def _purge_stale_sensor_restore_keys(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator,
+) -> None:
+    """Drop the stale "impedance" and "impedance_low" restore-cache entries.
+
+    The generic "impedance" key's presence proves stale, pre-fix data --
+    only the old library ever wrote it. A device with no such residue,
+    but confirmed as S400 during the 1.1 migration
+    (DATA_S400_CONFIRMED_AT_MIGRATION, persisted then, independent of
+    any entity that may since be deleted -- either before or after that
+    point), is also presumed stale-only: no live, corrected data could
+    have reached the cache before that determination was made, so any
+    "impedance_low" residue still found now must predate it. Falls back
+    to migration provenance on an "impedance_high" entity's
+    previous_unique_id for entries migrated before this marker existed.
+    None of these signals present means nothing to purge -- e.g. a
+    fresh S400 from day one, which never went through that migration at
+    all, whose "impedance_low" already holds a real, correctly labeled
+    value that must be left alone.
+    """
+    sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
+    if sensor_restore_data is None:
+        return
+
+    legacy_key = PassiveBluetoothEntityKey(key="impedance", device_id=None).to_string()
+    low_key = PassiveBluetoothEntityKey(key="impedance_low", device_id=None).to_string()
+
+    has_legacy_residue = legacy_key in sensor_restore_data.get(
+        "entity_data", {}
+    ) or legacy_key in sensor_restore_data.get("entity_descriptions", {})
+
+    confirmed_stale = entry.data.get(DATA_S400_CONFIRMED_AT_MIGRATION, False)
+    if not confirmed_stale:
+        address = entry.unique_id
+        if address is not None:
+            entity_registry = er.async_get(hass)
+            high_entity_id = entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{address}-impedance_high"
+            )
+            high_entity = (
+                entity_registry.async_get(high_entity_id)
+                if high_entity_id is not None
+                else None
+            )
+            confirmed_stale = (
+                high_entity is not None
+                and high_entity.previous_unique_id == f"{address}-impedance_low"
+            )
+
+    if not has_legacy_residue and not confirmed_stale:
+        return
+
+    stale_keys = (legacy_key, low_key) if has_legacy_residue else (low_key,)
+    restore_buckets: tuple[tuple[str, dict[str, Any]], ...] = (
+        ("entity_data", sensor_restore_data["entity_data"]),
+        ("entity_descriptions", sensor_restore_data["entity_descriptions"]),
+        ("entity_names", sensor_restore_data["entity_names"]),
+    )
+    for stale_key in stale_keys:
+        for bucket_name, bucket in restore_buckets:
+            if bucket.pop(stale_key, None) is not None:
+                _LOGGER.debug(
+                    "Purged stale S400 impedance restore cache entry: %s.%s",
+                    bucket_name,
+                    stale_key,
+                )
+
+
+def _async_recover_interrupted_s400_migration(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator,
+) -> None:
+    """Recover the legacy impedance rename when the target is unoccupied.
+
+    The low-to-high step cannot be safely recovered because an occupied low ID may
+    represent either legacy or already-correct data.
+    """
+    if entry.version != 1 or entry.minor_version < 2:
+        return
+
+    address = entry.unique_id
+    if address is None:
+        return
+
+    entity_registry = er.async_get(hass)
+    old_legacy_id = f"{address}-impedance"
+    legacy_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, old_legacy_id
+    )
+    if legacy_entity_id is None or not _async_is_known_s400(hass, address, coordinator):
+        return
+
+    low_id = f"{address}-impedance_low"
+    if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id) is None:
+        _LOGGER.debug("S400 migration recovery: %s -> %s", old_legacy_id, low_id)
+        entity_registry.async_update_entity(
+            legacy_entity_id, new_unique_id=low_id, original_name="Impedance Low"
+        )
+
+
+def _async_purge_phantom_s400_impedance_entity(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Remove a phantom legacy S400 impedance entity, if one reappeared.
+
+    Bluetooth passive entities restore their last known value from their
+    own cache, independent of the entity registry (see
+    _async_purge_stale_s400_impedance_restore_cache), which can recreate
+    an empty "-impedance" entity on instances that had the pre-fix
+    generic sensor. It never holds real history, so it's safe to remove
+    on sight -- but only once _async_recover_interrupted_s400_migration
+    has had a chance to run first, since a lingering "-impedance" entity
+    is otherwise indistinguishable from one whose rename was interrupted
+    by a crash and is still awaiting recovery.
+
+    Requires low_entity.previous_unique_id == legacy_unique_id as the
+    sole proof: an "-impedance_high" entity existing is not enough, since
+    the corrected library can create one natively from live data,
+    independent of any rename, which would otherwise misidentify a
+    legitimate, still-un-recovered legacy entity as a phantom.
+    """
+    if entry.version != 1 or entry.minor_version < 2:
+        return
+
+    address = entry.unique_id
+    if address is None:
+        return
+
+    entity_registry = er.async_get(hass)
+    legacy_unique_id = f"{address}-impedance"
+
+    low_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{address}-impedance_low"
+    )
+    low_entity = (
+        entity_registry.async_get(low_entity_id) if low_entity_id is not None else None
+    )
+    renamed_entity_exists = (
+        low_entity is not None and low_entity.previous_unique_id == legacy_unique_id
+    )
+    if not renamed_entity_exists:
+        return
+
+    if entity_id := entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, legacy_unique_id
+    ):
+        _LOGGER.debug("Removing phantom S400 legacy impedance entity: %s", entity_id)
+        entity_registry.async_remove(entity_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Xiaomi BLE device from a config entry."""
     address = entry.unique_id
@@ -163,6 +480,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await data.async_poll(connectable_device)
 
     device_registry = dr.async_get(hass)
+
     coordinator = XiaomiActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
@@ -180,7 +498,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry=entry,
     )
     entry.runtime_data = coordinator
+    # Must run before the cache purge below: recovery needs to see the
+    # restore cache's own evidence before that purge clears it.
+    _async_recover_interrupted_s400_migration(hass, entry, coordinator)
+    # Must run before async_forward_entry_setups: that call is what makes
+    # the sensor platform register its processor and consume
+    # coordinator.restore_data, so any stale entries need to be gone first.
+    _async_purge_stale_s400_impedance_restore_cache(hass, entry, coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # The sensor platform may have just recreated a phantom legacy
+    # "impedance" entity from a stale bluetooth passive-processor restore
+    # cache (see _async_purge_phantom_s400_impedance_entity). Clean it up
+    # now that platform setup has had a chance to (re)create it.
+    _async_purge_phantom_s400_impedance_entity(hass, entry)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
     return True

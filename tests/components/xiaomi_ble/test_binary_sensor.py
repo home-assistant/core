@@ -3,8 +3,11 @@
 from datetime import timedelta
 import time
 
+import pytest
+
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    BluetoothServiceInfoBleak,
 )
 from homeassistant.components.xiaomi_ble.const import CONF_SLEEPY_DEVICE, DOMAIN
 from homeassistant.const import (
@@ -16,7 +19,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import make_advertisement
+from . import (
+    MISCALE_S400_PACKET2_SERVICE_INFO,
+    MISCALE_S400_SERVICE_INFO,
+    MISCALE_V1_SERVICE_INFO,
+    MISCALE_V2_SERVICE_INFO,
+    make_advertisement,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
@@ -465,3 +474,81 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     assert opening_sensor.state == STATE_ON
 
     assert entry.data[CONF_SLEEPY_DEVICE] is True
+
+
+@pytest.mark.parametrize(
+    (
+        "unique_id",
+        "entry_data",
+        "service_info",
+        "entity_id",
+        "expected_state",
+        "expected_name",
+    ),
+    [
+        (
+            "50:FB:19:1B:B5:DC",
+            {},
+            MISCALE_V1_SERVICE_INFO,
+            "binary_sensor.mi_smart_scale_b5dc_stabilized",
+            STATE_ON,
+            "Mi Smart Scale (B5DC) Stabilized",
+        ),
+        (
+            "50:FB:19:1B:B5:DC",
+            {},
+            MISCALE_V2_SERVICE_INFO,
+            "binary_sensor.mi_body_composition_scale_b5dc_stabilized",
+            STATE_ON,
+            "Mi Body Composition Scale (B5DC) Stabilized",
+        ),
+        (
+            "8C:D0:B2:F6:BE:EF",
+            {"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+            MISCALE_S400_SERVICE_INFO,
+            "binary_sensor.body_composition_scale_beef_stabilized",
+            STATE_OFF,
+            "Body Composition Scale BEEF Stabilized",
+        ),
+        (
+            "8C:D0:B2:F6:BE:EF",
+            {"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+            MISCALE_S400_PACKET2_SERVICE_INFO,
+            "binary_sensor.body_composition_scale_beef_stabilized",
+            STATE_ON,
+            "Body Composition Scale BEEF Stabilized",
+        ),
+    ],
+    ids=[
+        "miscale_v1",
+        "miscale_v2",
+        "miscale_s400_false_packet1",
+        "miscale_s400_true_packet2",
+    ],
+)
+async def test_stabilized_binary_sensor(
+    hass: HomeAssistant,
+    unique_id: str,
+    entry_data: dict[str, str],
+    service_info: BluetoothServiceInfoBleak,
+    entity_id: str,
+    expected_state: str,
+    expected_name: str,
+) -> None:
+    """Test the stabilized binary sensor across MiScale V1, V2, and S400."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=entry_data)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, service_info)
+    await hass.async_block_till_done()
+
+    stabilized_sensor = hass.states.get(entity_id)
+    assert stabilized_sensor.state == expected_state
+    assert stabilized_sensor.attributes[ATTR_FRIENDLY_NAME] == expected_name
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
