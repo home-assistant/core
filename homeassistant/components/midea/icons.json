@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "header_exist": {
+        "default": "mdi:air-filter"
+      }
+    }
+  }
+}
