@@ -170,6 +170,9 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
 
+        self.api.on_notification_event.append(self.notification_event_handler)
+        self.api.on_notification_event.freeze()
+
     @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -355,6 +358,12 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def media_states(self) -> dict[str, AmazonMediaState]:
         """Media state of devices."""
         return self._media_states
+
+    async def notification_event_handler(
+        self, devices: dict[str, AmazonDevice]
+    ) -> None:
+        """Handle pushed notification/timer/alarm/reminder events."""
+        self.async_set_updated_data(devices)
 
     async def volume_state_event_handler(
         self, volume_states: dict[str, AmazonVolumeState]
