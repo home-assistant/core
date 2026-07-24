@@ -97,6 +97,11 @@
       "wan_connect_ipv6": {
         "name": "Port {port_name} Internet connected (IPv6)"
       }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
     }
   },
   "services": {

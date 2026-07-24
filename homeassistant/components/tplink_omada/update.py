@@ -2,6 +2,10 @@
 
 from typing import Any, override
 
+from tplink_omada_client.definitions import (
+    OmadaHardwareUpdateInfo,
+    OmadaSoftwareUpdateInfo,
+)
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
@@ -14,9 +18,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OmadaConfigEntry
-from .coordinator import OmadaFirmwareUpdateCoordinator
-from .entity import OmadaDeviceEntity
+from . import OmadaConfigEntry, config_entry_owns_controller_entities
+from .coordinator import OmadaControllerCoordinator, OmadaFirmwareUpdateCoordinator
+from .entity import OmadaControllerEntity, OmadaDeviceEntity
 
 PARALLEL_UPDATES = 0
 
@@ -26,7 +30,7 @@ async def async_setup_entry(
     config_entry: OmadaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switches."""
+    """Set up update entities."""
     controller = config_entry.runtime_data
 
     devices = controller.devices_coordinator.data
@@ -35,10 +39,106 @@ async def async_setup_entry(
         hass, config_entry, controller.omada_client, controller.devices_coordinator
     )
 
-    async_add_entities(
+    entities: list[UpdateEntity] = []
+    if config_entry_owns_controller_entities(hass, config_entry):
+        entities.append(OmadaControllerUpdate(controller.controller_coordinator))
+    entities.extend(
         OmadaDeviceUpdate(coordinator, device) for device in devices.values()
     )
+
+    async_add_entities(entities)
     await coordinator.async_request_refresh()
+
+
+class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
+    """Firmware/software update status for an Omada controller."""
+
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_translation_key = "firmware"
+
+    def __init__(self, coordinator: OmadaControllerCoordinator) -> None:
+        """Initialize the controller update entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.runtime_data.controller_id}_firmware"
+        )
+
+    @property
+    def _update_info(self) -> OmadaHardwareUpdateInfo | OmadaSoftwareUpdateInfo | None:
+        """Return the best controller update data to expose."""
+        updates = self.coordinator.data.updates
+        if updates.hardware and updates.hardware.upgrade:
+            return updates.hardware
+        if updates.software and updates.software.upgrade:
+            return updates.software
+        return updates.hardware or updates.software
+
+    @property
+    def _hardware_update(self) -> OmadaHardwareUpdateInfo | None:
+        """Return controller hardware firmware update data."""
+        updates = self.coordinator.data.updates
+        hardware = updates.hardware
+        software = updates.software
+        if hardware and hardware.upgrade:
+            return hardware
+        if software and software.upgrade:
+            return None
+        return hardware
+
+    @property
+    @override
+    def supported_features(self) -> UpdateEntityFeature:
+        """Flag supported features."""
+        features = UpdateEntityFeature.RELEASE_NOTES
+        if self._hardware_update:
+            features |= UpdateEntityFeature.INSTALL
+        return features
+
+    @property
+    @override
+    def installed_version(self) -> str | None:
+        """Return the installed controller version."""
+        if self._update_info:
+            return self._update_info.current_version
+        return self.coordinator.data.info.controller_version
+
+    @property
+    @override
+    def latest_version(self) -> str | None:
+        """Return the latest controller version."""
+        if self._update_info:
+            return self._update_info.latest_version
+        return self.coordinator.data.info.controller_version
+
+    @override
+    def release_notes(self) -> str | None:
+        """Get the release notes for the latest controller update."""
+        return self._update_info.release_notes if self._update_info else None
+
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install a controller hardware firmware update."""
+        firmware = self._hardware_update
+        if firmware is None:
+            raise HomeAssistantError("No controller firmware update is available")
+
+        try:
+            await self.coordinator.omada_client.upgrade_controller_firmware(
+                version or firmware.latest_version
+            )
+        except RequestFailed as ex:
+            raise HomeAssistantError(
+                "Controller firmware update request rejected"
+            ) from ex
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                "Unable to send controller firmware update request."
+                " Check the controller is online."
+            ) from ex
+        finally:
+            await self.coordinator.async_request_refresh()
 
 
 class OmadaDeviceUpdate(
@@ -53,6 +153,7 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_translation_key = "firmware"
 
     def __init__(
         self,
