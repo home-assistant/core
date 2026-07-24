@@ -377,7 +377,5 @@ async def test_precision_and_temp_step_independent(hass: HomeAssistant) -> None:
 
     state = hass.states.get("climate.my_thermostat")
     assert state is not None
-    # current_temperature rounded to tenths precision
     assert state.attributes["current_temperature"] == 20.3
-    # slider step is halves, independent of precision
     assert state.attributes["target_temp_step"] == 0.5
