@@ -136,6 +136,464 @@
         }
       }
     },
+    "event": {
+      "alarm_clock_elapsed": {
+        "name": "[%key:component::home_connect::entity::sensor::alarm_clock_elapsed::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "bean_container_empty": {
+        "name": "[%key:component::home_connect::entity::sensor::bean_container_empty::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "calc_n_clean_in_10_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::calc_n_clean_in10cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "calc_n_clean_in_15_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::calc_n_clean_in15cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "calc_n_clean_in_20_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::calc_n_clean_in20cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "calc_n_clean_in_5_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::calc_n_clean_in5cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "descaling_in_10_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::descaling_in_10_cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "descaling_in_15_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::descaling_in_15_cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "descaling_in_20_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::descaling_in_20_cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "descaling_in_5_cups": {
+        "name": "[%key:component::home_connect::entity::sensor::descaling_in_5_cups::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_calc_n_clean_blockage": {
+        "name": "[%key:component::home_connect::entity::sensor::device_calc_n_clean_blockage::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_calc_n_clean_overdue": {
+        "name": "[%key:component::home_connect::entity::sensor::device_calc_n_clean_overdue::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_cleaning_overdue": {
+        "name": "[%key:component::home_connect::entity::sensor::device_cleaning_overdue::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_descaling_blockage": {
+        "name": "[%key:component::home_connect::entity::sensor::device_descaling_blockage::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_descaling_overdue": {
+        "name": "[%key:component::home_connect::entity::sensor::device_descaling_overdue::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_should_be_calc_n_cleaned": {
+        "name": "[%key:component::home_connect::entity::sensor::device_should_be_calc_n_cleaned::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_should_be_cleaned": {
+        "name": "[%key:component::home_connect::entity::sensor::device_should_be_cleaned::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "device_should_be_descaled": {
+        "name": "[%key:component::home_connect::entity::sensor::device_should_be_descaled::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "docking_station_not_found": {
+        "name": "[%key:component::home_connect::entity::sensor::docking_station_not_found::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "drip_tray_full": {
+        "name": "[%key:component::home_connect::entity::sensor::drip_tray_full::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "drying_process_finished": {
+        "name": "[%key:component::home_connect::entity::sensor::drying_process_finished::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "empty_dust_box_and_clean_filter": {
+        "name": "[%key:component::home_connect::entity::sensor::empty_dust_box_and_clean_filter::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "freezer_door_alarm": {
+        "name": "[%key:component::home_connect::entity::sensor::freezer_door_alarm::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "freezer_temperature_alarm": {
+        "name": "[%key:component::home_connect::entity::sensor::freezer_temperature_alarm::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "grease_filter_max_saturation_nearly_reached": {
+        "name": "[%key:component::home_connect::entity::sensor::grease_filter_max_saturation_nearly_reached::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "grease_filter_max_saturation_reached": {
+        "name": "[%key:component::home_connect::entity::sensor::grease_filter_max_saturation_reached::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "keep_milk_tank_cool": {
+        "name": "[%key:component::home_connect::entity::sensor::keep_milk_tank_cool::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "poor_i_dos_1_fill_level": {
+        "name": "[%key:component::home_connect::entity::sensor::poor_i_dos_1_fill_level::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "poor_i_dos_2_fill_level": {
+        "name": "[%key:component::home_connect::entity::sensor::poor_i_dos_2_fill_level::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "preheat_finished": {
+        "name": "[%key:component::home_connect::entity::sensor::preheat_finished::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "program_aborted": {
+        "name": "[%key:component::home_connect::entity::sensor::program_aborted::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "program_finished": {
+        "name": "[%key:component::home_connect::entity::sensor::program_finished::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "refrigerator_door_alarm": {
+        "name": "[%key:component::home_connect::entity::sensor::refrigerator_door_alarm::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "regular_preheat_finished": {
+        "name": "[%key:component::home_connect::entity::sensor::regular_preheat_finished::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "[%key:component::home_connect::entity::sensor::rinse_aid_nearly_empty::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "robot_is_stuck": {
+        "name": "[%key:component::home_connect::entity::sensor::robot_is_stuck::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "salt_nearly_empty": {
+        "name": "[%key:component::home_connect::entity::sensor::salt_nearly_empty::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      },
+      "water_tank_empty": {
+        "name": "[%key:component::home_connect::entity::sensor::water_tank_empty::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "confirmed": "[%key:component::home_connect::common::confirmed%]",
+              "off": "[%key:common::state::off%]",
+              "present": "[%key:component::home_connect::common::present%]"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_conditioner": {
         "state_attributes": {
