@@ -2078,6 +2078,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ws66i/ @ssaenger
 /homeassistant/components/wsdot/ @ucodery
 /tests/components/wsdot/ @ucodery
+/homeassistant/components/wybot/ @bassrock
+/tests/components/wybot/ @bassrock
 /homeassistant/components/wyoming/ @synesthesiam
 /tests/components/wyoming/ @synesthesiam
 /homeassistant/components/xbox/ @tr4nt0r
