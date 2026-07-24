@@ -6,7 +6,6 @@ import logging
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "srp_energy"
-DEFAULT_NAME = "Home"
 
 CONF_IS_TOU = "is_tou"
 
