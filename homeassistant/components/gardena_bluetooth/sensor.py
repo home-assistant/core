@@ -210,10 +210,40 @@ DESCRIPTIONS = (
         char=EventHistory.error,
         get=lambda x: (
             x.error_code.name.lower()
-            if x and isinstance(x.error_code, EventHistory.error.enum)
+            if x is not None and isinstance(x.error_code, EventHistory.error.enum)
             else None
         ),
         options=[member.name.lower() for member in EventHistory.error.enum],
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key="aqua_contour_activation_reason",
+        translation_key="activation_reason",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        char=AquaContourWatering.activation_reason,
+        get=lambda x: (
+            x.name.lower()
+            if isinstance(x, AquaContourWatering.activation_reason.enum)
+            else None
+        ),
+        options=[
+            member.name.lower() for member in AquaContourWatering.activation_reason.enum
+        ],
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key="aqua_contour_skipped_reason",
+        translation_key="skipped_reason",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        char=AquaContourWatering.skipped_reason,
+        get=lambda x: (
+            x.name.lower()
+            if isinstance(x, AquaContourWatering.skipped_reason.enum)
+            else None
+        ),
+        options=[
+            member.name.lower() for member in AquaContourWatering.skipped_reason.enum
+        ],
     ),
     GardenaBluetoothSensorEntityDescription(
         key="aqua_contour_error_timestamp",
