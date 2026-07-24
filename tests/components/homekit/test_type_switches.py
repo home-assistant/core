@@ -36,6 +36,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntityFeature,
 )
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
@@ -284,6 +285,39 @@ async def test_valve_set_state(
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
+
+
+@pytest.mark.parametrize(
+    ("valve_type", "category", "homekit_valve_type"),
+    [
+        pytest.param(TYPE_FAUCET, 29, 3, id="faucet"),
+        pytest.param(TYPE_SHOWER, 30, 2, id="shower"),
+        pytest.param(TYPE_SPRINKLER, 28, 1, id="sprinkler"),
+        pytest.param(TYPE_VALVE, 29, 0, id="generic"),
+    ],
+)
+async def test_valve_type(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    valve_type: str,
+    category: int,
+    homekit_valve_type: int,
+) -> None:
+    """Test native valve HomeKit type configuration."""
+    entity_id = f"valve.{valve_type}"
+    hass.states.async_set(entity_id, STATE_CLOSED)
+
+    acc = Valve(
+        hass,
+        hk_driver,
+        "Valve",
+        entity_id,
+        5,
+        {CONF_TYPE: valve_type},
+    )
+
+    assert acc.category == category
+    assert acc.char_valve_type.value == homekit_valve_type
 
 
 async def test_vacuum_set_state_with_returnhome_and_start_support(
@@ -906,15 +940,18 @@ async def test_valve_with_duration_characteristics(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test valve with set duration and remaining duration characteristics."""
-    entity_id = "switch.sprinkler"
+    entity_id = "valve.sprinkler"
 
     # Test with duration and end time entities linked
-    hass.states.async_set(entity_id, STATE_OFF)
-    hass.states.async_set("input_number.valve_duration", "900")
+    hass.states.async_set(entity_id, STATE_CLOSED)
+    hass.states.async_set(
+        "number.valve_duration",
+        "900",
+        {"min": 60, "max": 10800, "step": 60},
+    )
     hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
     await hass.async_block_till_done()
 
-    # Using Valve instead of ValveSwitch
     acc = Valve(
         hass,
         hk_driver,
@@ -922,12 +959,30 @@ async def test_valve_with_duration_characteristics(
         entity_id,
         5,
         {
-            "linked_valve_duration": "input_number.valve_duration",
+            "type": "sprinkler",
+            "linked_valve_duration": "number.valve_duration",
             "linked_valve_end_time": "sensor.valve_end_time",
         },
     )
     acc.run()
     await hass.async_block_till_done()
+
+    assert acc.category == 28  # Sprinkler
+    assert acc.char_valve_type.value == 1  # Irrigation
+    assert acc.char_set_duration.value == 900
+    assert acc.char_set_duration.properties["minValue"] == 60
+    assert acc.char_set_duration.properties["maxValue"] == 10800
+    assert acc.char_set_duration.properties["minStep"] == 60
+
+    call_set_value = async_mock_service(
+        hass, NUMBER_DOMAIN, INPUT_NUMBER_SERVICE_SET_VALUE
+    )
+    acc.char_set_duration.client_update_value(300)
+    await hass.async_block_till_done()
+    assert call_set_value[0].data == {
+        "entity_id": "number.valve_duration",
+        "value": 300,
+    }
 
     with freeze_time(dt_util.utcnow()):
         hass.states.async_set(

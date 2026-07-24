@@ -18,7 +18,6 @@ from homeassistant.components.input_number import (
     CONF_MAX as INPUT_NUMBER_CONF_MAX,
     CONF_MIN as INPUT_NUMBER_CONF_MIN,
     CONF_STEP as INPUT_NUMBER_CONF_STEP,
-    DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
@@ -401,8 +400,9 @@ class ValveBase(HomeAccessory):
     def set_duration(self, value: int) -> None:
         """Set default duration for how long the valve should remain open."""
         _LOGGER.debug("%s: Set default run time to %s", self.entity_id, value)
+        assert self.linked_duration_entity
         self.async_call_service(
-            INPUT_NUMBER_DOMAIN,
+            split_entity_id(self.linked_duration_entity)[0],
             INPUT_NUMBER_SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: self.linked_duration_entity,
@@ -502,13 +502,28 @@ class ValveSwitch(ValveBase):
 class Valve(ValveBase):
     """Generate a Valve accessory from a HomeAssistant valve."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict[str, Any],
+        *args: Any,
+    ) -> None:
         """Initialize a Valve accessory object."""
         super().__init__(
-            TYPE_VALVE,
+            config.get(CONF_TYPE, TYPE_VALVE),
             VALVE_OPEN_STATES,
             SERVICE_OPEN_VALVE,
             SERVICE_CLOSE_VALVE,
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
             *args,
         )
 
