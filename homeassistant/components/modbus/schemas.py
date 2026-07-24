@@ -8,6 +8,12 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.number import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+    DEVICE_CLASSES_SCHEMA as NUMBER_DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -105,6 +111,8 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_MSG_WAIT,
     CONF_NAN_VALUE,
+    CONF_NUMBER_STEP,
+    CONF_NUMBERS,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_SCALE,
@@ -155,9 +163,12 @@ from .validators import (
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
     ensure_and_check_conflicting_scales_and_offsets,
+    finite_float,
     hvac_fixedsize_reglist_validator,
     nan_validator,
     not_zero_value,
+    number_min_max_validator,
+    number_unsupported_params_validator,
     register_int_list_validator,
     struct_validator,
 )
@@ -453,6 +464,56 @@ SENSOR_SCHEMA = vol.All(
     ),
 )
 
+NUMBER_SCHEMA = vol.All(
+    BASE_STRUCT_SCHEMA.extend(
+        {
+            vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+                [CALL_TYPE_REGISTER_HOLDING]
+            ),
+            vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+                [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_X_REGISTER_HOLDINGS]
+            ),
+            vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
+                [
+                    DataType.INT16,
+                    DataType.INT32,
+                    DataType.INT64,
+                    DataType.UINT16,
+                    DataType.UINT32,
+                    DataType.UINT64,
+                    DataType.FLOAT16,
+                    DataType.FLOAT32,
+                    DataType.FLOAT64,
+                ]
+            ),
+            vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_SCALE): vol.All(
+                vol.Coerce(float),
+                finite_float,
+                lambda v: not_zero_value(v, "Scale cannot be zero."),
+            ),
+            vol.Optional(CONF_OFFSET): vol.All(vol.Coerce(float), finite_float),
+            vol.Optional(CONF_MIN_VALUE, default=DEFAULT_MIN_VALUE): vol.All(
+                vol.Coerce(float), finite_float
+            ),
+            vol.Optional(CONF_MAX_VALUE, default=DEFAULT_MAX_VALUE): vol.All(
+                vol.Coerce(float), finite_float
+            ),
+            vol.Optional(CONF_NUMBER_STEP, default=DEFAULT_STEP): vol.All(
+                vol.Coerce(float),
+                finite_float,
+                vol.Range(
+                    min=0, min_included=False, msg="Step must be greater than 0."
+                ),
+            ),
+        }
+    ),
+    number_unsupported_params_validator,
+    struct_validator,
+    number_min_max_validator,
+)
+
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -483,6 +544,7 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
+        vol.Optional(CONF_NUMBERS): vol.All(cv.ensure_list, [NUMBER_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.All(SENSOR_SCHEMA, struct_validator)]
         ),
@@ -532,6 +594,7 @@ PLATFORM_SCHEMAS: dict[Platform, VolSchemaType] = {
     Platform.COVER: COVERS_SCHEMA,
     Platform.FAN: FAN_SCHEMA,
     Platform.LIGHT: LIGHT_SCHEMA,
+    Platform.NUMBER: NUMBER_SCHEMA,
     Platform.SENSOR: vol.All(SENSOR_SCHEMA, struct_validator),
     Platform.SWITCH: SWITCH_SCHEMA,
 }

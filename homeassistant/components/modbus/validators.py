@@ -2,6 +2,7 @@
 
 from collections import namedtuple
 import logging
+import math
 import struct
 from typing import Any
 
@@ -28,6 +29,8 @@ from .const import (
     CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_FAN_MODE_VALUES,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -202,6 +205,58 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def number_unsupported_params_validator(config: dict[str, Any]) -> dict[str, Any]:
+    """Reject count/structure keys not supported by number entities."""
+    name = config[CONF_NAME]
+    for key in (CONF_COUNT, CONF_STRUCTURE):
+        if config.get(key) is not None:
+            raise vol.Invalid(f"{name}: `{key}` is not supported for number entities")
+    return config
+
+
+def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
+    """Check min/max are consistent and can be encoded for the number entity."""
+    name = config[CONF_NAME]
+    min_value = config[CONF_MIN_VALUE]
+    max_value = config[CONF_MAX_VALUE]
+    if min_value > max_value:
+        raise vol.Invalid(
+            f"{name}: `{CONF_MIN_VALUE}: {min_value}` cannot be"
+            f" greater than `{CONF_MAX_VALUE}: {max_value}`"
+        )
+
+    data_type = config[CONF_DATA_TYPE]
+    scale = config.get(CONF_SCALE, DEFAULT_SCALE)
+    offset = config.get(CONF_OFFSET, DEFAULT_OFFSET)
+    value_is_int = data_type in (
+        DataType.INT16,
+        DataType.INT32,
+        DataType.INT64,
+        DataType.UINT16,
+        DataType.UINT32,
+        DataType.UINT64,
+    )
+    for limit_key, limit_value in (
+        (CONF_MIN_VALUE, min_value),
+        (CONF_MAX_VALUE, max_value),
+    ):
+        error_prefix = (
+            f"{name}: `{limit_key}: {limit_value}` cannot be represented with"
+            f" `{CONF_DATA_TYPE}: {data_type}`, `{CONF_SCALE}: {scale}`"
+            f" and `{CONF_OFFSET}: {offset}` -->"
+        )
+        raw: float | int = (limit_value - offset) / scale
+        if not math.isfinite(raw):
+            raise vol.Invalid(f"{error_prefix} transformed limit is not finite")
+        try:
+            if value_is_int:
+                raw = round(raw)
+            struct.pack(config[CONF_STRUCTURE], raw)
+        except (OverflowError, struct.error) as err:
+            raise vol.Invalid(f"{error_prefix} {err!s}") from err
+    return config
+
+
 def hvac_fixedsize_reglist_validator(value: Any) -> list:
     """Check the number of registers for target temp and coerce to a list."""
     if isinstance(value, int):
@@ -262,6 +317,13 @@ def not_zero_value(val: float, errMsg: str) -> float:
     if val == 0:
         raise vol.Invalid(errMsg)
     return val
+
+
+def finite_float(value: float) -> float:
+    """Reject non-finite float values (NaN, inf)."""
+    if not math.isfinite(value):
+        raise vol.Invalid(f"Value must be a finite number, got {value}")
+    return value
 
 
 def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
