@@ -643,6 +643,30 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "MOTION_*",
     },
     {
+        "connectable": False,
+        "domain": "okokscale",
+        "manufacturer_id": 4554,
+    },
+    {
+        "connectable": False,
+        "domain": "okokscale",
+        "manufacturer_data_start": [
+            2,
+            4,
+        ],
+        "manufacturer_id": 61695,
+    },
+    {
+        "connectable": False,
+        "domain": "okokscale",
+        "manufacturer_id": 8394,
+    },
+    {
+        "connectable": False,
+        "domain": "okokscale",
+        "local_name": "80:F4:16:*",
+    },
+    {
         "connectable": True,
         "domain": "opendisplay",
         "manufacturer_id": 9286,
