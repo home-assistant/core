@@ -1,11 +1,9 @@
 """Allow users to set and activate scenes."""
 
-from __future__ import annotations
-
 import functools as ft
 import importlib
 import logging
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
 import voluptuous as vol
 
@@ -102,6 +100,7 @@ class BaseScene(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the scene."""
         if self.__last_activated is None:
@@ -118,6 +117,7 @@ class BaseScene(RestoreEntity):
         """Update the activation timestamp."""
         self.__last_activated = dt_util.utcnow().isoformat()
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the scene is added to hass."""
         await super().async_internal_added_to_hass()
@@ -148,6 +148,7 @@ class Scene(BaseScene):
     """A scene is a group of entities and the states we want them to be."""
 
     @final
+    @override
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate scene.
 

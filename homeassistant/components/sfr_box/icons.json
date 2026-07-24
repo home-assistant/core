@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "voip_hook_status": {
+        "default": "mdi:phone-hangup",
+        "state": {
+          "on": "mdi:phone-in-talk"
+        }
+      }
+    }
+  }
+}

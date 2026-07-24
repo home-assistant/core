@@ -2,19 +2,19 @@
 # name: test_climate
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20,
-      'friendly_name': 'Test',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 24,
-      'min_temp': 4,
-      'supported_features': <ClimateEntityFeature: 1>,
-      'target_temp_step': 0.5,
-      'temperature': 20,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 24,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 4,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.test',
+    'entity_id': 'climate.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -28,12 +28,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 24,
-      'min_temp': 4,
-      'target_temp_step': 0.5,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 24,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 4,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,7 +42,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.test',
+    'entity_id': 'climate.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,

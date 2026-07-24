@@ -1,7 +1,5 @@
 """Support for AdGuard Home."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError

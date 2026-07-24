@@ -1,10 +1,8 @@
 """The OpenGarage integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import opengarage
 
@@ -43,6 +41,7 @@ class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=5),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data."""
         data = await self.open_garage_connection.update_state()

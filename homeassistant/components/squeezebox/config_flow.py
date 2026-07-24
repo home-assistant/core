@@ -1,11 +1,9 @@
 """Config flow for Squeezebox integration."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -78,6 +76,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -177,6 +176,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_SERVER_LIST): vol.In(_options)}),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -289,12 +289,16 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="edit_integration_discovered",
             description_placeholders={
-                "desc": f"LMS Host: {self.chosen_server[CONF_HOST]}, Port: {self.chosen_server[CONF_PORT]}"
+                "desc": (
+                    f"LMS Host: {self.chosen_server[CONF_HOST]},"
+                    f" Port: {self.chosen_server[CONF_PORT]}"
+                )
             },
             data_schema=SHORT_EDIT_SCHEMA,
             errors=errors,
         )
 
+    @override
     async def async_step_integration_discovery(
         self, _discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
@@ -316,6 +320,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.chosen_server = _discovery_info
         return await self.async_step_edit_integration_discovered()
 
+    @override
     async def async_step_dhcp(
         self, _discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -332,7 +337,10 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if TYPE_CHECKING:
             assert self.unique_id
-        # if we have detected this player, do nothing. if not, there must be a server out there for us to configure, so start the normal user flow (which tries to autodetect server)
+        # if we have detected this player, do nothing. if not,
+        # there must be a server out there for us to configure,
+        # so start the normal user flow (which tries to
+        # autodetect server)
         if registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
             # this player is already known, so do nothing other than mark as configured
             raise AbortFlow("already_configured")

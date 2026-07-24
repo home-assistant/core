@@ -21,6 +21,7 @@ async def mock_config_fixture(hass: HomeAssistant, data, options):
         options=options,
         entry_id="test",
         version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

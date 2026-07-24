@@ -1,7 +1,5 @@
 """Pytest fixtures and shared setup for the WiiM integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -61,6 +59,11 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.http_api_url = "http://192.168.1.100:8080"
         mock.presentation_url = "http://192.168.1.100:8080/web_interface"
         mock.available = True
+
+        def set_available(available: bool) -> None:
+            mock.available = available
+
+        mock.set_available = MagicMock(side_effect=set_available)
         mock.model = "WiiM Pro"
         mock.volume = 50
         mock.is_muted = False

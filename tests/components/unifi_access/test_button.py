@@ -1,7 +1,5 @@
 """Tests for the UniFi Access button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 

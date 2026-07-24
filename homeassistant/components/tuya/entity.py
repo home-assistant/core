@@ -1,17 +1,15 @@
 """Tuya Home Assistant Base Device Model."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .const import LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .util import get_device_info
 
 
 class TuyaEntity(Entity):
@@ -26,8 +24,9 @@ class TuyaEntity(Entity):
         device_manager: Manager,
         description: EntityDescription,
     ) -> None:
-        """Init TuyaHaEntity."""
-        self._attr_unique_id = f"tuya.{device.id}{description.key}"
+        """Init TuyaEntity."""
+        self._attr_device_info = get_device_info(device)
+        self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
         device.set_up = True
@@ -35,21 +34,12 @@ class TuyaEntity(Entity):
         self.device_manager = device_manager
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.id)},
-            manufacturer="Tuya",
-            name=self.device.name,
-            model=self.device.product_name,
-            model_id=self.device.product_id,
-        )
-
-    @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return self.device.online
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.async_on_remove(

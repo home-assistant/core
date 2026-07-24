@@ -1,6 +1,7 @@
 """Support for Palazzetti sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,7 +21,10 @@ from .entity import PalazzettiEntity
 
 @dataclass(frozen=True, kw_only=True)
 class PropertySensorEntityDescription(SensorEntityDescription):
-    """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
+    """Describes a Palazzetti sensor entity.
+
+    Read from a `PalazzettiClient` property.
+    """
 
     client_property: str
     property_map: dict[StateType, str] | None = None
@@ -109,6 +113,7 @@ class PalazzettiSensor(PalazzettiEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state value of the sensor."""
 

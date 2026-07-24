@@ -1,9 +1,8 @@
 """Support for select entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import IntEnum
+from typing import override
 
 from gardena_bluetooth.const import (
     AquaContour,
@@ -13,6 +12,7 @@ from gardena_bluetooth.const import (
 from gardena_bluetooth.parse import CharacteristicInt
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -61,6 +61,7 @@ DESCRIPTIONS = (
         translation_key="operation_mode",
         char=AquaContour.operation_mode,
         option_to_number=_enum_to_int(AquaContour.operation_mode.enum),
+        entity_category=EntityCategory.CONFIG,
     ),
     GardenaBluetoothSelectEntityDescription(
         translation_key="active_position",
@@ -97,6 +98,7 @@ class GardenaBluetoothSelectEntity(GardenaBluetoothDescriptorEntity, SelectEntit
     entity_description: GardenaBluetoothSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         char = self.entity_description.char
@@ -105,6 +107,7 @@ class GardenaBluetoothSelectEntity(GardenaBluetoothDescriptorEntity, SelectEntit
             return None
         return self.entity_description.number_to_option.get(value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         char = self.entity_description.char

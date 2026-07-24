@@ -14,7 +14,8 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-ENTITY_IR_TRANSMITTER = "infrared.ir_blaster_infrared_transmitter"
+ENTITY_IR_EMITTER = "infrared.ir_blaster_infrared_emitter"
+ENTITY_IR_RECEIVER = "infrared.ir_blaster_infrared_receiver"
 
 
 @pytest.fixture
@@ -227,7 +228,8 @@ async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             "name": "Living Room Fan",
-            "infrared_entity_id": ENTITY_IR_TRANSMITTER,
+            "infrared_entity_id": ENTITY_IR_EMITTER,
+            "infrared_receiver_entity_id": ENTITY_IR_RECEIVER,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -237,7 +239,10 @@ async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
         if s.subentry_type == "infrared_fan"
     ][0]
     assert config_entry.subentries[subentry_id] == config_entries.ConfigSubentry(
-        data={"infrared_entity_id": ENTITY_IR_TRANSMITTER},
+        data={
+            "infrared_entity_id": ENTITY_IR_EMITTER,
+            "infrared_receiver_entity_id": ENTITY_IR_RECEIVER,
+        },
         subentry_id=subentry_id,
         subentry_type="infrared_fan",
         title="Living Room Fan",
@@ -246,8 +251,10 @@ async def test_infrared_fan_subentry_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("no_platforms")
-async def test_infrared_fan_subentry_flow_no_emitters(hass: HomeAssistant) -> None:
-    """Test infrared fan subentry flow aborts when no emitters are available."""
+async def test_infrared_fan_subentry_flow_no_infrared_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test infrared fan subentry aborts with no infrared entities."""
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -259,4 +266,4 @@ async def test_infrared_fan_subentry_flow_no_emitters(hass: HomeAssistant) -> No
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_emitters"
+    assert result["reason"] == "no_infrared_entities"

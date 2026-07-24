@@ -25,8 +25,13 @@ async def test_network_system_health(hass: HomeAssistant) -> None:
             info[key] = await val
 
     assert info == {
-        "adapters": "eth0 (disabled), lo0 (disabled), eth1 (enabled, default, auto), vtun0 (disabled)",
+        "adapters": (
+            "eth0 (disabled), lo0 (disabled),"
+            " eth1 (enabled, default, auto), vtun0 (disabled)"
+        ),
         "announce_addresses": "192.168.1.5",
-        "ipv4_addresses": "eth0 (), lo0 (127.0.0.1/8), eth1 (192.168.1.5/23), vtun0 (169.254.3.2/16)",
+        "ipv4_addresses": (
+            "eth0 (), lo0 (127.0.0.1/8), eth1 (192.168.1.5/23), vtun0 (169.254.3.2/16)"
+        ),
         "ipv6_addresses": "eth0 (2001:db8::/8), lo0 (), eth1 (), vtun0 ()",
     }

@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -50,7 +50,8 @@ async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
             b'{"addons":[],"backup_id":"abcd12ef","date":"2025-01-09T20:14:35.457323+01:00",'
             b'"database_included":true,"extra_metadata":{"instance_id":"36b3b7e984da43fc89f7bafb2645fa36",'
             b'"with_automatic_settings":true},"folders":[],"homeassistant_included":true,'
-            b'"homeassistant_version":"2025.2.0.dev0","name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
+            b'"homeassistant_version":"2025.2.0.dev0",'
+            b'"name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
         )
     if filename == f"{BASE_FILENAME}.tar":
         return MockStreamReaderChunked(b"backup data")
@@ -65,7 +66,8 @@ async def _mock_download_file_meta_ok_tar_missing(
             b'{"addons":[],"backup_id":"abcd12ef","date":"2025-01-09T20:14:35.457323+01:00",'
             b'"database_included":true,"extra_metadata":{"instance_id":"36b3b7e984da43fc89f7bafb2645fa36",'
             b'"with_automatic_settings":true},"folders":[],"homeassistant_included":true,'
-            b'"homeassistant_version":"2025.2.0.dev0","name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
+            b'"homeassistant_version":"2025.2.0.dev0",'
+            b'"name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
         )
     if filename == f"{BASE_FILENAME}.tar":
         raise SynologyDSMAPIErrorException("api", "900", [{"code": 408}])
@@ -91,6 +93,7 @@ def mock_dsm_with_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -144,6 +147,7 @@ def mock_dsm_without_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.hardware = mock_dsm_hardware()
         dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
@@ -750,15 +754,18 @@ async def test_agents_delete_not_existing(
     [
         (
             SynologyDSMAPIErrorException("api", "100", "Unknown error"),
-            "{'api': 'api', 'code': '100', 'reason': 'Unknown', 'details': 'Unknown error'}",
+            "{'api': 'api', 'code': '100', 'reason': 'Unknown',"
+            " 'details': 'Unknown error'}",
         ),
         (
             SynologyDSMAPIErrorException("api", "900", [{"code": 407}]),
-            "{'api': 'api', 'code': '900', 'reason': 'Unknown', 'details': [{'code': 407}]",
+            "{'api': 'api', 'code': '900', 'reason': 'Unknown',"
+            " 'details': [{'code': 407}]",
         ),
         (
             SynologyDSMAPIErrorException("api", "900", [{"code": 417}]),
-            "{'api': 'api', 'code': '900', 'reason': 'Unknown', 'details': [{'code': 417}]",
+            "{'api': 'api', 'code': '900', 'reason': 'Unknown',"
+            " 'details': [{'code': 417}]",
         ),
     ],
 )

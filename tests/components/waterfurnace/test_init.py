@@ -103,7 +103,7 @@ async def test_migrate_unique_id_auth_failure(
     assert old_entry.unique_id == "TEST_GWID_12345"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -117,7 +117,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_reload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -125,15 +125,16 @@ async def test_reload_entry(
 ) -> None:
     """Test reloading a config entry."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 3
+    assert mock_waterfurnace_client.login.call_count == 2
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 6
+    assert mock_waterfurnace_client.login.call_count == 4
 
 
+@pytest.mark.usefixtures("seed_statistics")
 async def test_setup_creates_energy_coordinator(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -146,7 +147,7 @@ async def test_setup_creates_energy_coordinator(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 3
+    assert mock_waterfurnace_client.login.call_count == 2
     assert mock_waterfurnace_client.read_with_retry.call_count == 1
     assert mock_waterfurnace_client.get_energy_data.call_count == 1
 

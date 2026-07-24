@@ -1,12 +1,11 @@
 """Test the Nina config flow."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock
 
 from pynina import ApiError, Warning
+import pytest
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,
@@ -77,9 +76,8 @@ async def test_step_user_unexpected_exception(
     assert result["reason"] == "unknown"
 
 
-async def test_step_user(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_nina_class: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_user(hass: HomeAssistant, mock_nina_class: AsyncMock) -> None:
     """Test starting a flow by user with valid values."""
     result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -127,9 +125,9 @@ async def test_step_user_already_configured(
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_init(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
@@ -174,9 +172,9 @@ async def test_options_flow_init(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_with_no_selection(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
@@ -238,9 +236,9 @@ async def test_options_flow_with_no_selection(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_connection_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
@@ -258,9 +256,9 @@ async def test_options_flow_connection_error(
     assert result["reason"] == "no_fetch"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_unexpected_exception(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],

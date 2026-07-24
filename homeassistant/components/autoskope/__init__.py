@@ -1,14 +1,12 @@
 """The Autoskope integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from autoskope_client.api import AutoskopeApi
 from autoskope_client.models import CannotConnect, InvalidAuth
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DEFAULT_HOST
@@ -31,8 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) ->
     try:
         await api.connect()
     except InvalidAuth as err:
-        # Raise ConfigEntryError until reauth flow is implemented (then ConfigEntryAuthFailed)
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             "Authentication failed, please check credentials"
         ) from err
     except CannotConnect as err:

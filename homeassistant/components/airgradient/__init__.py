@@ -1,7 +1,5 @@
 """The Airgradient integration."""
 
-from __future__ import annotations
-
 from airgradient import AirGradientClient
 
 from homeassistant.const import CONF_HOST, Platform

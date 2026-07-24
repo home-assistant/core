@@ -52,7 +52,7 @@ async def test_invalid_coil(
     snapshot: SnapshotAssertion,
     freezer_ticker: Any,
 ) -> None:
-    """That update coordinator correctly marks entities unavailable with missing coils."""
+    """Test coordinator marks entities unavailable with missing coils."""
     entity_id = "number.heating_offset_climate_system_1_40031"
     coil_id = 40031
 

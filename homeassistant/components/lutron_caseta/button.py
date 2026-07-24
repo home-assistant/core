@@ -1,8 +1,6 @@
 """Support for pico and keypad buttons."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
@@ -82,11 +80,13 @@ class LutronCasetaButton(LutronCasetaEntity, ButtonEntity):
         self._attr_name = full_name
         self._attr_device_info = device_info
 
+    @override
     async def async_press(self) -> None:
         """Send a button press event."""
         await self._smartbridge.tap_button(self.device_id)
 
     @property
+    @override
     def serial(self):
         """Buttons shouldn't have serial numbers, Return None."""
         return None

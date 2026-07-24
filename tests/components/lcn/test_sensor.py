@@ -105,7 +105,7 @@ async def test_pushed_ledlogicop_status_change(
         ),
         (
             SENSOR_LED6,
-            "request_status_led_and_logic_ops",
+            "request_status_leds_and_logic_ops",
             ModStatusLedsAndLogicOps(
                 LcnAddr(0, 7, False), [LedStatus.OFF] * 12, [LogicOpStatus.NONE] * 4
             ),

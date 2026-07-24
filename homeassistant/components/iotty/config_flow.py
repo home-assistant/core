@@ -1,8 +1,7 @@
 """Config flow for iotty."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -17,6 +16,7 @@ class OAuth2FlowHandler(
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)

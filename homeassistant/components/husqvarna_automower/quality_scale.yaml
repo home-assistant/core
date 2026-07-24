@@ -9,6 +9,9 @@ rules:
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -19,6 +22,9 @@ rules:
     comment: |
       The integration only has an entity service, registered in the platform.
   common-modules: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -62,7 +68,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow:
     status: exempt

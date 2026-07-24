@@ -1,7 +1,5 @@
 """Tests for the Blue Current integration."""
 
-from __future__ import annotations
-
 from asyncio import Event, Future
 from dataclasses import dataclass
 from typing import Any

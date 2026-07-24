@@ -1,12 +1,10 @@
 """Component providing support to the Ring Door Bell camera."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING, Any, Generic, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -46,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):
+class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
     exists_fn: Callable[[RingDoorBell], bool]
@@ -123,13 +121,15 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_supported_features |= CameraEntityFeature.STREAM
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
         self._device = self._get_coordinator_data().get_video_device(
             self._device.device_api_id
         )
+
         history_data = self._device.last_history
-        if history_data:
+        if history_data and self._device.has_subscription:
             self._last_event = history_data[0]
             # will call async_update to update the attributes and get the
             # video url from the api
@@ -143,6 +143,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self.async_write_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -150,17 +151,21 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             "last_video_id": self._last_video_id,
         }
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        # For live_view cameras, get a fresh snapshot
-        if self.entity_description.key == "live_view":
-            return await self._async_get_fresh_snapshot()
+        if self._video_url is None:
+            if not self._device.has_subscription:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="no_subscription",
+                )
+            return None
 
-        # For last_recording cameras, use the cached video frame
         key = (width, height)
-        if not (image := self._images.get(key)) and self._video_url is not None:
+        if not (image := self._images.get(key)):
             image = await ffmpeg.async_get_image(
                 self.hass,
                 self._video_url,
@@ -173,11 +178,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
 
         return image
 
-    @exception_wrap
-    async def _async_get_fresh_snapshot(self) -> bytes | None:
-        """Get a fresh snapshot from the camera."""
-        return await self._device.async_get_snapshot()
-
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
@@ -199,6 +200,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         finally:
             await stream.close()
 
+    @override
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
@@ -224,6 +226,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             offer_sdp, session_id, message_wrapper, keep_alive_timeout=None
         )
 
+    @override
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
@@ -241,10 +244,12 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         )
 
     @callback
+    @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
         self._device.sync_close_webrtc_stream(session_id)
 
+    @override
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
         if (
@@ -294,10 +299,12 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._attr_motion_detection_enabled = new_state
         self.async_write_ha_state()
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         await self._async_set_motion_detection_enabled(True)
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         await self._async_set_motion_detection_enabled(False)

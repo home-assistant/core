@@ -1,14 +1,11 @@
 """Matter to Home Assistant adapter."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import BridgedNode
 from matter_server.common.models import EventType, ServerInfoMessage
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -16,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
-from .helpers import get_device_id
+from .helpers import MatterConfigEntry, get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -38,7 +35,7 @@ class MatterAdapter:
         self,
         hass: HomeAssistant,
         matter_client: MatterClient,
-        config_entry: ConfigEntry,
+        config_entry: MatterConfigEntry,
     ) -> None:
         """Initialize the adapter."""
         self.matter_client = matter_client
@@ -91,7 +88,9 @@ class MatterAdapter:
                 node.endpoints[data["endpoint_id"]],
             )
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
-            if device := device_registry.async_get_device(identifiers={identifier}):
+            if device := device_registry.async_get_device_by_identifier(
+                identifier, self.config_entry.entry_id
+            ):
                 device_registry.async_remove_device(device.id)
 
         def node_removed_callback(event: EventType, node_id: int) -> None:

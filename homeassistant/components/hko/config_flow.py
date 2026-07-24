@@ -1,10 +1,8 @@
 """Config flow for Hong Kong Observatory integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 import logging
-from typing import Any
+from typing import Any, override
 
 from hko import HKO, LOCATIONS, HKOError
 import voluptuous as vol
@@ -38,6 +36,7 @@ class HKOConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

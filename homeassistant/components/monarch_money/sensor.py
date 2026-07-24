@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
 
@@ -159,6 +160,7 @@ class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     entity_description: MonarchMoneyCashflowSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.summary_fn(self.summary_data)
@@ -170,13 +172,15 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     entity_description: MonarchMoneyAccountSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.account_data)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
-        """Return the picture of the account as provided by monarch money if it exists."""
+        """Return the picture of the account if it exists."""
         if self.entity_description.picture_fn is not None:
             return self.entity_description.picture_fn(self.account_data)
         return None

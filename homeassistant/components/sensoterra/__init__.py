@@ -1,7 +1,5 @@
 """The Sensoterra integration."""
 
-from __future__ import annotations
-
 from sensoterra.customerapi import CustomerApi
 
 from homeassistant.const import CONF_TOKEN, Platform

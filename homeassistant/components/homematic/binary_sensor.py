@@ -1,6 +1,6 @@
 """Support for HomeMatic binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -59,6 +59,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
     """Representation of a binary HomeMatic device."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         if not self.available:
@@ -66,6 +67,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
         return bool(self._hm_get_state())
 
     @property
+    @override
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor from DEVICE_CLASSES."""
         # If state is MOTION (Only RemoteMotion working)
@@ -73,6 +75,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
             return BinarySensorDeviceClass.MOTION
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__)
 
+    @override
     def _init_data_struct(self) -> None:
         """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct
@@ -86,10 +89,12 @@ class HMBatterySensor(HMDevice, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if battery is low."""
         return bool(self._hm_get_state())
 
+    @override
     def _init_data_struct(self) -> None:
         """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct

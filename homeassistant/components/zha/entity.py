@@ -1,12 +1,10 @@
 """Entity for Zigbee Home Automation."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 from zha.mixins import LogMixin
@@ -27,7 +25,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
-from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
+from .helpers import (
+    SIGNAL_REMOVE_ENTITIES,
+    SIGNAL_REMOVE_ENTITY,
+    EntityData,
+    convert_zha_error_to_ha_error,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +81,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self._attr_translation_placeholders = meta.translation_placeholders
 
     @cached_property
+    @override
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity.
 
@@ -113,11 +117,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         return super().name
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return self.entity_data.entity.available
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         zha_device_info = self.entity_data.device_proxy.device_info
@@ -144,6 +150,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self.debug("Handling event from entity: %s", event)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.remove_future = self.hass.loop.create_future()
@@ -161,6 +168,16 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 self.hass,
                 remove_signal,
                 partial(self.async_remove, force_remove=True),
+            )
+        )
+        self._unsubs.append(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"{SIGNAL_REMOVE_ENTITY}_"
+                    f"{self.entity_data.entity.PLATFORM}_{self.unique_id}"
+                ),
+                self.async_remove,
             )
         )
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
@@ -184,15 +201,17 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         # provides a more generic hook to utilize HA to do this), we directly restore
         # them.
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)
+        self.entity_data.device_proxy.gateway_proxy.remove_entity_reference(self)
         await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_update(self) -> None:
         """Update the entity."""
         await self.entity_data.entity.async_update()
@@ -200,6 +219,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
+        if not _LOGGER.isEnabledFor(level):
+            # Avoid building the prefixed message and args tuple for disabled
+            # levels; this runs for every entity event via _handle_entity_events.
+            return
         msg = f"%s: {msg}"
         args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

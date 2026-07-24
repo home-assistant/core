@@ -94,7 +94,7 @@ async def test_heartbeat_unload(hass: HomeAssistant) -> None:
 
 
 async def test_heartbeat_do_not_unload(hass: HomeAssistant) -> None:
-    """Test that the heartbeat is not deactivated until the last config entry is removed."""
+    """Test heartbeat is not deactivated until the last config entry is removed."""
     device_a = get_device("Office")
     device_b = get_device("Bedroom")
 

@@ -1,12 +1,10 @@
 """Support for KNX sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.devices import Device as XknxDevice, Sensor as XknxSensor
@@ -171,6 +169,7 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
 
     _device: XknxSensor
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         if (
@@ -185,6 +184,7 @@ class _KnxSensor(RestoreSensor, _KnxEntityBase):
             self._attr_extra_state_attributes.update(last_state.attributes)
         await super().async_added_to_hass()
 
+    @override
     def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._attr_native_value = self._device.resolve_state()
@@ -305,11 +305,13 @@ class KNXSystemSensor(SensorEntity):
         self._attr_unique_id = f"_{knx.entry.entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.knx)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -320,6 +322,7 @@ class KNXSystemSensor(SensorEntity):
         """Call after device was updated."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
         self.knx.xknx.connection_manager.register_connection_state_changed_cb(

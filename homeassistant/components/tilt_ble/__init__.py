@@ -1,7 +1,5 @@
 """The tilt_ble integration."""
 
-from __future__ import annotations
-
 import logging
 
 from tilt_ble import TiltBluetoothDeviceData

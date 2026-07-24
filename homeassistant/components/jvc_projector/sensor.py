@@ -1,8 +1,7 @@
 """Sensor platform for JVC Projector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from jvcprojector import Command, command as cmd
 
@@ -133,6 +132,7 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
             self._options_map = coordinator.get_options_map(self.command.name)
 
     @property
+    @override
     def options(self) -> list[str] | None:
         """Return a set of possible options."""
         if self.device_class == SensorDeviceClass.ENUM:
@@ -140,6 +140,7 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the native value."""
         value = self.coordinator.data.get(self.command.name)

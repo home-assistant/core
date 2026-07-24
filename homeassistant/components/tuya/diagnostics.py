@@ -1,7 +1,5 @@
 """Diagnostics support for Tuya."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.helpers.diagnostics import customer_device_as_dict
@@ -12,8 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import TuyaConfigEntry
 from .const import DOMAIN, DPCode
+from .coordinator import TuyaConfigEntry
 
 _REDACTED_DPCODES = {
     DPCode.ALARM_MESSAGE,

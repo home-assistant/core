@@ -1,0 +1,103 @@
+# serializer version: 1
+# name: test_all_entities[siren.test_reolink_cam_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.test_reolink_cam_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Siren',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <SirenEntityFeature: 27>,
+    'translation_key': 'siren',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_siren',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[siren.test_reolink_cam_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 27>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.test_reolink_cam_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[siren.test_reolink_name_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.test_reolink_name_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Siren',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <SirenEntityFeature: 9>,
+    'translation_key': 'siren',
+    'unique_id': 'ABC1234567D89EFG_siren',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[siren.test_reolink_name_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_name Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 9>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.test_reolink_name_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

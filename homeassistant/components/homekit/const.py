@@ -1,7 +1,5 @@
 """Constants used be the HomeKit component."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_DEVICES
 from homeassistant.util.signal_type import SignalTypeFormat
 
@@ -130,6 +128,9 @@ TYPE_VALVE = "valve"
 TYPE_FAN = "fan"
 TYPE_AIR_PURIFIER = "air_purifier"
 
+TYPE_HEATER_COOLER = "heater_cooler"
+TYPE_THERMOSTAT = "thermostat"
+
 # #### Categories ####
 CATEGORY_RECEIVER = 34
 
@@ -147,6 +148,7 @@ SERV_DOORBELL = "Doorbell"
 SERV_FANV2 = "Fanv2"
 SERV_FILTER_MAINTENANCE = "FilterMaintenance"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"
+SERV_HEATER_COOLER = "HeaterCooler"
 SERV_HUMIDIFIER_DEHUMIDIFIER = "HumidifierDehumidifier"
 SERV_HUMIDITY_SENSOR = "HumiditySensor"
 SERV_INPUT_SOURCE = "InputSource"
@@ -195,6 +197,7 @@ CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = "CurrentAmbientLightLevel"
 CHAR_CURRENT_AIR_PURIFIER_STATE = "CurrentAirPurifierState"
 CHAR_CURRENT_DOOR_STATE = "CurrentDoorState"
 CHAR_CURRENT_FAN_STATE = "CurrentFanState"
+CHAR_CURRENT_HEATER_COOLER_STATE = "CurrentHeaterCoolerState"
 CHAR_CURRENT_HEATING_COOLING = "CurrentHeatingCoolingState"
 CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER = "CurrentHumidifierDehumidifierState"
 CHAR_CURRENT_POSITION = "CurrentPosition"
@@ -247,6 +250,7 @@ CHAR_STREAMING_STRATUS = "StreamingStatus"
 CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_AIR_PURIFIER_STATE = "TargetAirPurifierState"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
+CHAR_TARGET_HEATER_COOLER_STATE = "TargetHeaterCoolerState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
 CHAR_TARGET_FAN_STATE = "TargetFanState"

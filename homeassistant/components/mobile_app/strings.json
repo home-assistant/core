@@ -18,5 +18,19 @@
       "title": "Title"
     }
   },
+  "exceptions": {
+    "device_not_connected_for_local_push_notifications": {
+      "message": "Device {device_name} is not connected for local push notifications"
+    },
+    "error_sending_notification": {
+      "message": "Error sending notification to {device_name}"
+    },
+    "rate_limit_exceeded_sending_notification": {
+      "message": "Rate limit exceeded sending notification to {device_name}"
+    },
+    "timeout_sending_notification": {
+      "message": "Timeout sending notification to {device_name}"
+    }
+  },
   "title": "Mobile App"
 }

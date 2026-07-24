@@ -1,9 +1,7 @@
 """Config flow for the Sunricher DALI integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from PySrDaliGateway import DaliGateway
 from PySrDaliGateway.discovery import DaliGatewayDiscovery
@@ -40,6 +38,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_gateways: dict[str, DaliGateway] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -135,6 +134,7 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

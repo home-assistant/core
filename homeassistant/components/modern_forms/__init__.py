@@ -1,16 +1,15 @@
 """The Modern Forms integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
-import logging
 from typing import Any, Concatenate
 
 from aiomodernforms import ModernFormsConnectionError, ModernFormsError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
 from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
 
@@ -21,7 +20,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ModernFormsConfigEntry) -> bool:
@@ -55,7 +53,7 @@ def modernforms_exception_handler[
     """Decorate Modern Forms calls to handle Modern Forms exceptions.
 
     A decorator that wraps the passed in function, catches Modern Forms errors,
-    and handles the availability of the device in the data coordinator.
+    and raises translated HomeAssistantError exceptions.
     """
 
     async def handler(
@@ -66,11 +64,17 @@ def modernforms_exception_handler[
             self.coordinator.async_update_listeners()
 
         except ModernFormsConnectionError as error:
-            _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
 
         except ModernFormsError as error:
-            _LOGGER.error("Invalid response from API: %s", error)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            ) from error
 
     return handler

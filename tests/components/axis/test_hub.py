@@ -149,7 +149,7 @@ async def test_device_unavailable(
     mock_rtsp_event(
         topic="tns1:AudioSource/tnsaxis:TriggerLevel",
         data_type="triggered",
-        data_value="10",
+        data_value="0",
         source_name="channel",
         source_idx="1",
     )
@@ -190,7 +190,7 @@ async def test_device_trigger_reauth_flow(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         mock_flow_init.assert_called_once()
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_shutdown(config_entry_data: MappingProxyType[str, Any]) -> None:
@@ -235,4 +235,4 @@ async def test_get_axis_api_errors(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    assert config_entry.state == state
+    assert config_entry.state is state

@@ -1,11 +1,9 @@
 """DataUpdateCoordinator for flipr integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from flipr_api import FliprAPIRestClient
 from flipr_api.exceptions import FliprError
@@ -56,6 +54,7 @@ class BaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 class FliprDataUpdateCoordinator(BaseDataUpdateCoordinator[dict[str, Any]]):
     """Class to hold Flipr data retrieval."""
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         try:
@@ -71,6 +70,7 @@ class FliprDataUpdateCoordinator(BaseDataUpdateCoordinator[dict[str, Any]]):
 class FliprHubDataUpdateCoordinator(BaseDataUpdateCoordinator[dict[str, Any]]):
     """Class to hold Flipr hub data retrieval."""
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         try:

@@ -519,21 +519,20 @@ def events(hass: HomeAssistant):
 async def mock_block_device(model: str = MODEL_1):
     """Mock block (Gen1, CoAP) device."""
     with patch("aioshelly.block_device.BlockDevice.create") as block_device_mock:
+        _update_listener = None
 
-        def update():
-            block_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, BlockUpdateType.COAP_PERIODIC
-            )
+        def _update():
+            _update_listener({}, BlockUpdateType.COAP_PERIODIC)
 
-        def update_reply():
-            block_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, BlockUpdateType.COAP_REPLY
-            )
+        def _update_reply():
+            _update_listener({}, BlockUpdateType.COAP_REPLY)
 
-        def online():
-            block_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, BlockUpdateType.ONLINE
-            )
+        def _online():
+            _update_listener({}, BlockUpdateType.ONLINE)
+
+        def _subscribe_updates(listener):
+            nonlocal _update_listener
+            _update_listener = listener
 
         device = Mock(
             spec=BlockDevice,
@@ -550,11 +549,14 @@ async def mock_block_device(model: str = MODEL_1):
         )
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device
-        block_device_mock.return_value.mock_update = Mock(side_effect=update)
+        block_device_mock.return_value.mock_update = Mock(side_effect=_update)
         block_device_mock.return_value.mock_update_reply = Mock(
-            side_effect=update_reply
+            side_effect=_update_reply
         )
-        block_device_mock.return_value.mock_online = Mock(side_effect=online)
+        block_device_mock.return_value.mock_online = Mock(side_effect=_online)
+        block_device_mock.return_value.subscribe_updates = Mock(
+            side_effect=_subscribe_updates
+        )
 
         yield block_device_mock.return_value
 
@@ -622,31 +624,26 @@ async def mock_rpc_device():
         patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock,
         patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
     ):
+        _update_listener = None
 
-        def update():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.STATUS
-            )
+        def _update():
+            _update_listener({}, RpcUpdateType.STATUS)
 
-        def event():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.EVENT
-            )
+        def _event():
+            _update_listener({}, RpcUpdateType.EVENT)
 
-        def online():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.ONLINE
-            )
+        def _online():
+            _update_listener({}, RpcUpdateType.ONLINE)
 
-        def disconnected():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.DISCONNECTED
-            )
+        def _disconnected():
+            _update_listener({}, RpcUpdateType.DISCONNECTED)
 
-        def initialized():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.INITIALIZED
-            )
+        def _initialized():
+            _update_listener({}, RpcUpdateType.INITIALIZED)
+
+        def _subscribe_updates(listener):
+            nonlocal _update_listener
+            _update_listener = listener
 
         current_pos = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
 
@@ -657,13 +654,16 @@ async def mock_rpc_device():
 
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
-        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
-        rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
-        rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
-        rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
-        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
+        rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=_event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=_online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=_initialized)
         rpc_device_mock.return_value.update_cover_status = AsyncMock(
             side_effect=update_cover_status
+        )
+        rpc_device_mock.return_value.subscribe_updates = Mock(
+            side_effect=_subscribe_updates
         )
 
         yield rpc_device_mock.return_value
@@ -749,31 +749,26 @@ async def mock_sleepy_rpc_device():
     Initialize the device when initialize() method is called.
     """
     with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
+        _update_listener = None
 
-        def update():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.STATUS
-            )
+        def _update():
+            _update_listener({}, RpcUpdateType.STATUS)
 
-        def event():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.EVENT
-            )
+        def _event():
+            _update_listener({}, RpcUpdateType.EVENT)
 
-        def online():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.ONLINE
-            )
+        def _online():
+            _update_listener({}, RpcUpdateType.ONLINE)
 
-        def disconnected():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.DISCONNECTED
-            )
+        def _disconnected():
+            _update_listener({}, RpcUpdateType.DISCONNECTED)
 
-        def initialized():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.INITIALIZED
-            )
+        def _initialized():
+            _update_listener({}, RpcUpdateType.INITIALIZED)
+
+        def _subscribe_updates(listener):
+            nonlocal _update_listener
+            _update_listener = listener
 
         def _initialize():
             initialize_sleepy_rpc_device(device)
@@ -782,11 +777,14 @@ async def mock_sleepy_rpc_device():
         device.initialize = AsyncMock(side_effect=_initialize)
         rpc_device_mock.return_value = device
 
-        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
-        rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
-        rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
-        rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
-        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
+        rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
+        rpc_device_mock.return_value.mock_event = Mock(side_effect=_event)
+        rpc_device_mock.return_value.mock_online = Mock(side_effect=_online)
+        rpc_device_mock.return_value.mock_initialized = Mock(side_effect=_initialized)
+        rpc_device_mock.return_value.subscribe_updates = Mock(
+            side_effect=_subscribe_updates
+        )
 
         yield rpc_device_mock.return_value
 

@@ -1,0 +1,11 @@
+{
+  "overview": {
+    "lastUpdateTime": "2025-01-01 12:00:00",
+    "lifeTimeData": { "energy": 100000.0, "revenue": 10.0 },
+    "lastYearData": { "energy": 50000.0 },
+    "lastMonthData": { "energy": 10000.0 },
+    "lastDayData": { "energy": 250.0 },
+    "currentPower": { "power": 1234.5 },
+    "measuredBy": "INVERTER"
+  }
+}

@@ -1,8 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from typing import override
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
@@ -69,6 +68,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entity_registry = er.async_get(hass)
 
@@ -175,36 +176,43 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         return CONDITIONS[condition]
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         return self._get_current_property(TMRW_ATTR_TEMPERATURE)
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the raw pressure."""
         return self._get_current_property(TMRW_ATTR_PRESSURE)
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the humidity."""
         return self._get_current_property(TMRW_ATTR_HUMIDITY)
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the raw wind speed."""
         return self._get_current_property(TMRW_ATTR_WIND_SPEED)
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         return self._get_current_property(TMRW_ATTR_WIND_DIRECTION)
 
     @property
+    @override
     def ozone(self) -> float | None:
         """Return the O3 (ozone) level."""
         return self._get_current_property(TMRW_ATTR_OZONE)
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the condition."""
         return self._translate_condition(
@@ -213,6 +221,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         )
 
     @property
+    @override
     def native_visibility(self) -> float | None:
         """Return the raw visibility."""
         return self._get_current_property(TMRW_ATTR_VISIBILITY)
@@ -300,11 +309,13 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         return forecasts
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast(DAILY)
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(HOURLY)

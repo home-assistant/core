@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -74,7 +75,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
-            int(round(data.status.device.core.battery_level))
+            round(data.status.device.core.battery_level)
             if data.status.device.core.battery_level is not None
             else None
         ),
@@ -161,6 +162,7 @@ class IOmeterSensor(IOmeterEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.identifier}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)

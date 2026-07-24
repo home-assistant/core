@@ -1,13 +1,11 @@
 """Support for functionality to keep track of the sun."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -52,6 +50,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
     """Set up from a config entry."""
+    # Remove deprecated solar_rising sensor entity (removed in 2026.1)
+    ent_reg = er.async_get(hass)
+    if entity_id := ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{entry.entry_id}-solar_rising"
+    ):
+        ent_reg.async_remove(entity_id)
+
     sun = Sun(hass)
     component = EntityComponent[Sun](_LOGGER, DOMAIN, hass)
     await component.async_add_entities([sun])

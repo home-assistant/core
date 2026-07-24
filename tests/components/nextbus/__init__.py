@@ -17,7 +17,11 @@ async def assert_setup_sensor(
     route_title: str = VALID_ROUTE_TITLE,
 ) -> MockConfigEntry:
     """Set up the sensor and assert it's been created."""
-    unique_id = f"{config[DOMAIN][CONF_AGENCY]}_{config[DOMAIN][CONF_ROUTE]}_{config[DOMAIN][CONF_STOP]}"
+    unique_id = (
+        f"{config[DOMAIN][CONF_AGENCY]}"
+        f"_{config[DOMAIN][CONF_ROUTE]}"
+        f"_{config[DOMAIN][CONF_STOP]}"
+    )
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config[DOMAIN],

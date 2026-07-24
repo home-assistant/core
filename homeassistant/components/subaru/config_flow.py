@@ -1,10 +1,8 @@
 """Config flow for Subaru integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from subarulink import (
     Controller as SubaruAPI,
@@ -15,12 +13,7 @@ from subarulink import (
 from subarulink.const import COUNTRY_CAN, COUNTRY_USA
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
@@ -32,6 +25,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import CONF_UPDATE_ENABLED, DOMAIN
+from .coordinator import SubaruConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 CONF_CONTACT_METHOD = "contact_method"
@@ -49,6 +43,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         self.config_data: dict[str, Any] = {CONF_PIN: None}
         self.controller: SubaruAPI | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -102,8 +97,9 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SubaruConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -114,7 +110,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         data: contains values provided by the user.
         """
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        now = datetime.now()
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         if not data.get(CONF_DEVICE_ID):
             data[CONF_DEVICE_ID] = int(now.timestamp())
         date = now.strftime("%Y-%m-%d")

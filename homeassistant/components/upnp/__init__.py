@@ -1,7 +1,5 @@
 """UPnP/IGD integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 
@@ -51,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     async def device_discovered(
         headers: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             return
 
         nonlocal discovery_info
@@ -94,14 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
 
     # Unsubscribe services on unload.
     entry.async_on_unload(device.async_unsubscribe_services)
-
-    # Update force_poll on options update.
-    async def update_listener(hass: HomeAssistant, entry: UpnpConfigEntry):
-        """Handle options update."""
-        force_poll = entry.options.get(CONFIG_ENTRY_FORCE_POLL, False)
-        await device.async_set_force_poll(force_poll)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Track the original UDN such that existing sensors do not change their unique_id.
     if CONFIG_ENTRY_ORIGINAL_UDN not in entry.data:

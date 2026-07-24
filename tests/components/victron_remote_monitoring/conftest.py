@@ -8,10 +8,10 @@ import pytest
 from victron_vrm.models.aggregations import ForecastAggregations
 
 from homeassistant.components.victron_remote_monitoring.const import (
-    CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
 )
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

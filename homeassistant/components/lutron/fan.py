@@ -1,8 +1,6 @@
 """Lutron fan platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pylutron import Output
 
@@ -48,6 +46,7 @@ class LutronFan(LutronDevice, FanEntity):
     _lutron_device: Output
     _prev_percentage: int | None = None
 
+    @override
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage > 0:
@@ -55,6 +54,7 @@ class LutronFan(LutronDevice, FanEntity):
         self._lutron_device.level = percentage
         self.schedule_update_ha_state()
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,
@@ -73,14 +73,17 @@ class LutronFan(LutronDevice, FanEntity):
             new_percentage = self._prev_percentage
         self.set_percentage(new_percentage)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         self.set_percentage(0)
 
+    @override
     def _request_state(self) -> None:
         """Request the state from the device."""
         _ = self._lutron_device.level
 
+    @override
     def _update_attrs(self) -> None:
         """Update the state attributes."""
         level = int(self._lutron_device.last_level())

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from aioazuredevops.client import DevOpsClient
 from aioazuredevops.helper import (
@@ -134,7 +134,8 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
             work_item_ids := await self.client.get_work_item_ids(
                 self.organization,
                 project_name,
-                # Filter out completed and removed work items so we only get active work items
+                # Filter out completed and removed work items
+                # so we only get active work items
                 states=work_item_types_states_filter(
                     work_item_types,
                     ignored_categories=IGNORED_CATEGORIES,
@@ -160,6 +161,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
             ignored_categories=IGNORED_CATEGORIES,
         )
 
+    @override
     async def _async_update_data(self) -> AzureDevOpsData:
         """Fetch data from Azure DevOps."""
         # Get the builds from the project

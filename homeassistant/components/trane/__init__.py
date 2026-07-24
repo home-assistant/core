@@ -1,7 +1,5 @@
 """Integration for Trane Local thermostats."""
 
-from __future__ import annotations
-
 from steamloop import (
     AuthenticationError,
     SteamloopConnectionError,

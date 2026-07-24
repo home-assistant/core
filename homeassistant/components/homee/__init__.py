@@ -54,10 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     try:
         await homee.get_access_token()
     except HomeeConnectionFailedException as exc:
-        raise ConfigEntryNotReady(f"Connection to Homee failed: {exc.reason}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+        ) from exc
     except HomeeAuthFailedException as exc:
         raise ConfigEntryAuthFailed(
-            f"Authentication to Homee failed: {exc.reason}"
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
         ) from exc
 
     hass.loop.create_task(homee.run())
@@ -79,9 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, dr.format_mac(homee.settings.mac_address))
-        },
+        connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
         identifiers={(DOMAIN, homee.settings.uid)},
         manufacturer="homee",
         name=homee.settings.homee_name,
@@ -103,18 +105,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
         )
         if not is_node_present:
             _LOGGER.info("Removing device %s", device.name)
-            device_registry.async_update_device(
-                device_id=device.id,
-                remove_config_entry_id=entry.entry_id,
-            )
+            device_registry.async_remove_device(device.id)
 
     # Remove device at runtime when node is removed in homee
     async def _remove_node_callback(node: HomeeNode, add: bool) -> None:
         """Call when a node is removed."""
         if add:
             return
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{entry.runtime_data.settings.uid}-{node.id}")}
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry.runtime_data.settings.uid}-{node.id}"), entry.entry_id
         )
         if device:
             _LOGGER.info("Removing device %s", device.name)

@@ -1,8 +1,6 @@
 """Config flow for Nina integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pynina import ApiError, Nina
 import voluptuous as vol
@@ -130,6 +128,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         for name in CONST_REGIONS:
             self.regions[name] = {}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -189,6 +188,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:

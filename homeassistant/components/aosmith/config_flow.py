@@ -1,10 +1,8 @@
 """Config flow for A. O. Smith integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from py_aosmith import AOSmithAPIClient, AOSmithInvalidCredentialsException
 import voluptuous as vol
@@ -42,6 +40,7 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

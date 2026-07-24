@@ -1,9 +1,7 @@
 """Config flow to configure the Obihai integration."""
 
-from __future__ import annotations
-
 from socket import gaierror, gethostbyname
-from typing import Any
+from typing import Any, override
 
 from pyobihai import PyObihai
 import voluptuous as vol
@@ -45,7 +43,8 @@ async def async_validate_creds(
             user_input[CONF_PASSWORD],
         )
 
-    # Don't bother authenticating if we've already determined the credentials are invalid
+    # Don't bother authenticating if we've already determined
+    # the credentials are invalid
     return None
 
 
@@ -56,6 +55,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     discovery_schema: vol.Schema | None = None
     _dhcp_discovery_info: DhcpServiceInfo | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -93,6 +93,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

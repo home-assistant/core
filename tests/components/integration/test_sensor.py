@@ -170,7 +170,8 @@ async def test_state(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state.state == STATE_UNAVAILABLE
 
-    # 1 hour after last update, power sensor is back to normal at 2 KiloWatts and stays for 1 hour += 2kWh
+    # 1 hour after last update, power sensor is back to normal
+    # at 2 KiloWatts and stays for 1 hour += 2kWh
     now += timedelta(seconds=3600)
     with freeze_time(now):
         hass.states.async_set(
@@ -979,7 +980,7 @@ async def test_on_valid_source_expect_update_on_time(
 async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
     hass: HomeAssistant,
 ) -> None:
-    """Test whether time based integration updates the integral on a valid zero source."""
+    """Test time based integration updates integral on valid zero source."""
     start_time = dt_util.utcnow()
 
     with freeze_time(start_time) as freezer:
@@ -1012,7 +1013,7 @@ async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
 async def test_on_unvailable_source_expect_no_update_on_time(
     hass: HomeAssistant,
 ) -> None:
-    """Test whether time based integration handles unavailability of the source properly."""
+    """Test time based integration handles source unavailability."""
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
@@ -1072,7 +1073,7 @@ async def test_on_statechanges_source_expect_no_update_on_time(
 async def test_on_no_max_sub_interval_expect_no_timebased_updates(
     hass: HomeAssistant,
 ) -> None:
-    """Test whether integratal is not updated by time when max_sub_interval is not configured."""
+    """Test integral not updated by time without max_sub_interval."""
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:

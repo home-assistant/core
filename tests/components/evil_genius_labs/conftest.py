@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.evil_genius_labs.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -40,7 +41,7 @@ def product_fixture() -> dict[str, str]:
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Evil genius labs config entry."""
-    entry = MockConfigEntry(domain="evil_genius_labs", data={"host": "192.168.1.113"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.113"})
     entry.add_to_hass(hass)
     return entry
 
@@ -73,6 +74,6 @@ async def setup_evil_genius_labs(
             platforms,
         ),
     ):
-        assert await async_setup_component(hass, "evil_genius_labs", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield

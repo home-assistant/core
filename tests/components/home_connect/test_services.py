@@ -17,12 +17,19 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components import home_connect
+from homeassistant.components.home_connect.const import (
+    DOMAIN,
+    PROGRAM_ENUM_OPTIONS,
+    TRANSLATION_KEYS_PROGRAMS_MAP,
+)
+from homeassistant.components.home_connect.services import PROGRAM_OPTIONS
 from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry
 
@@ -68,7 +75,9 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
             "device_id": "DEVICE_ID",
             "affects_to": "active_program",
             "program": "consumer_products_coffee_maker_program_beverage_coffee",
-            "consumer_products_coffee_maker_option_bean_amount": "consumer_products_coffee_maker_enum_type_bean_amount_normal",
+            "consumer_products_coffee_maker_option_bean_amount": (
+                "consumer_products_coffee_maker_enum_type_bean_amount_normal"
+            ),
         },
         "blocking": True,
     },
@@ -78,7 +87,9 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
         "service_data": {
             "device_id": "DEVICE_ID",
             "affects_to": "active_program",
-            "consumer_products_coffee_maker_option_coffee_milk_ratio": "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent",
+            "consumer_products_coffee_maker_option_coffee_milk_ratio": (
+                "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent"
+            ),
         },
         "blocking": True,
     },
@@ -93,6 +104,47 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
         "blocking": True,
     },
 ]
+
+
+def test_services_yaml_set_program_and_options_program_keys() -> None:
+    """Test that all program keys in services.yaml exist in the translation map."""
+    services = load_yaml_dict(f"{home_connect.__path__[0]}/services.yaml")
+    yaml_programs = set(
+        services["set_program_and_options"]["fields"]["program"]["selector"]["select"][
+            "options"
+        ]
+    )
+
+    assert yaml_programs <= set(TRANSLATION_KEYS_PROGRAMS_MAP.keys())
+
+
+def test_services_yaml_set_program_and_options_option_keys() -> None:
+    """Test that all program keys in services.yaml exist in the translation map."""
+    services = load_yaml_dict(f"{home_connect.__path__[0]}/services.yaml")
+    groups = services["set_program_and_options"]["fields"]
+    groups.pop("device_id")
+    groups.pop("affects_to")
+    groups.pop("program")
+    for group in groups.values():
+        for option, option_data in group["fields"].items():
+            assert option in PROGRAM_ENUM_OPTIONS or option in PROGRAM_OPTIONS, (
+                f"{option} is missing from both"
+                " PROGRAM_ENUM_OPTIONS and PROGRAM_OPTIONS"
+            )
+            if option in PROGRAM_ENUM_OPTIONS:
+                enum_values = set(PROGRAM_ENUM_OPTIONS[option][1])
+                assert enum_values == set(
+                    option_data["selector"]["select"]["options"]
+                ), (
+                    f"Options for {option} do not match between"
+                    " services.yaml and constants.py"
+                )
+                assert "example" in option_data, (
+                    f"Example value for {option} is missing"
+                )
+                assert option_data["example"] in enum_values, (
+                    f"Example value for {option} is not a valid option"
+                )
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)

@@ -1,31 +1,29 @@
 """Numeric derivative of data coming from a source sensor over time."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
+from typing import override
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     DEVICE_CLASS_UNITS,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     Platform,
     UnitOfTime,
 )
@@ -187,6 +185,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
     _attr_translation_key = "derivative"
     _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -243,7 +242,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if not source_state:
             return
 
-        source_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
+        source_class_raw = source_state.attributes.get(
+            EntityStateAttribute.DEVICE_CLASS
+        )
         source_class: SensorDeviceClass | None = None
         if isinstance(source_class_raw, str):
             try:
@@ -252,7 +253,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 source_class = None
         if self._string_unit_prefix is not None and self._string_unit_time is not None:
             original_unit = self._attr_native_unit_of_measurement
-            source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            source_unit = source_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
             if (
                 (
                     source_class
@@ -276,7 +279,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
             if original_unit != self._attr_native_unit_of_measurement:
                 _LOGGER.debug(
-                    "%s: Derivative sensor switched UoM from %s to %s, resetting state to 0",
+                    "%s: Derivative sensor switched UoM from"
+                    " %s to %s, resetting state to 0",
                     self.entity_id,
                     original_unit,
                     self._attr_native_unit_of_measurement,
@@ -328,7 +332,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         )
 
     def _handle_invalid_source_state(self, state: State | None) -> bool:
-        # Check the source state for unknown/unavailable condition. If unusable, write unknown/unavailable state and return false.
+        # Check the source state for unknown/unavailable condition.
+        # If unusable, write unknown/unavailable state and return false.
         if not state or state.state == STATE_UNAVAILABLE:
             self._attr_available = False
             self.async_write_ha_state()
@@ -364,8 +369,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
         last_state = await self.async_get_last_state()
         if last_state:
-            self._attr_device_class = last_state.attributes.get(ATTR_DEVICE_CLASS)
+            self._attr_device_class = last_state.attributes.get(
+                EntityStateAttribute.DEVICE_CLASS
+            )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -377,10 +385,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         def schedule_max_sub_interval_exceeded(source_state: State | None) -> None:
             """Schedule calculation using the source state and max_sub_interval.
 
-            The callback reference is stored for possible cancellation if the source state
-            reports a change before max_sub_interval has passed.
-            If the callback is executed, meaning there was no state change reported, the
-            source_state is assumed constant and calculation is done using its value.
+            The callback reference is stored for possible
+            cancellation if the source state reports a change
+            before max_sub_interval has passed.
+            If the callback is executed, meaning there was no
+            state change reported, the source_state is assumed
+            constant and calculation is done using its value.
             """
             if (
                 self._max_sub_interval is not None
@@ -395,14 +405,17 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     """Calculate derivative based on time and reschedule."""
 
                     _LOGGER.debug(
-                        "%s: Recalculating derivative due to max_sub_interval time elapsed",
+                        "%s: Recalculating derivative due to"
+                        " max_sub_interval time elapsed",
                         self.entity_id,
                     )
                     self._prune_state_list(now)
                     derivative = self._calc_derivative_from_state_list(now)
                     self._write_native_value(derivative)
 
-                    # If derivative is now zero, don't schedule another timeout callback, as it will have no effect
+                    # If derivative is now zero, don't schedule
+                    # another timeout callback, as it will have
+                    # no effect
                     if derivative != 0:
                         schedule_max_sub_interval_exceeded(source_state)
 
@@ -484,7 +497,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     old_value = self._last_valid_state_time[0]
                     old_timestamp = self._last_valid_state_time[1]
                 else:
-                    # Sensor becomes valid for the first time, just keep the restored value
+                    # Sensor becomes valid for the first time,
+                    # just keep the restored value
                     self.async_write_ha_state()
                     return
 
@@ -526,11 +540,12 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     "%s: Could not calculate derivative: %s", self.entity_id, err
                 )
 
-            # For total inreasing sensors, the value is expected to continuously increase.
+            # For total increasing sensors, the value is
+            # expected to continuously increase.
             # A negative derivative for a total increasing sensor likely indicates the
             # sensor has been reset. To prevent inaccurate data, discard this sample.
             if (
-                new_state.attributes.get(ATTR_STATE_CLASS)
+                new_state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
                 == SensorStateClass.TOTAL_INCREASING
                 and new_derivative < 0
             ):
@@ -547,8 +562,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 new_timestamp,
             )
 
-            # If outside of time window just report derivative (is the same as modeling it in the window),
-            # otherwise take the weighted average with the previous derivatives
+            # If outside of time window just report derivative
+            # (is the same as modeling it in the window),
+            # otherwise take the weighted average with the
+            # previous derivatives
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:

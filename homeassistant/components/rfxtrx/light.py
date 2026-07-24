@@ -1,13 +1,16 @@
 """Support for RFXtrx lights."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ColorMode,
+    LightEntity,
+    LightEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -63,6 +66,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     _attr_brightness: int = 0
     _device: rfxtrxmod.LightingDevice
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFXtrx device state (ON/OFF)."""
         await super().async_added_to_hass()
@@ -71,9 +75,12 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
             old_state = await self.async_get_last_state()
             if old_state is not None:
                 self._attr_is_on = old_state.state == STATE_ON
-                if brightness := old_state.attributes.get(ATTR_BRIGHTNESS):
+                if brightness := old_state.attributes.get(
+                    LightEntityStateAttribute.BRIGHTNESS
+                ):
                     self._attr_brightness = int(brightness)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -87,6 +94,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._async_send(self._device.send_off)
@@ -94,6 +102,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
         self._attr_brightness = 0
         self.async_write_ha_state()
 
+    @override
     def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
         assert isinstance(event, rfxtrxmod.ControlEvent)
@@ -108,6 +117,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
             self._attr_is_on = brightness > 0
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:

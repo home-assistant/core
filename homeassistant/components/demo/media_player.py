@@ -1,9 +1,7 @@
 """Demo implementation of the media player."""
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -124,46 +122,55 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         self._attr_sound_mode = DEFAULT_SOUND_MODE
         self._attr_device_class = device_class
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._attr_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self) -> None:
         """Turn the media player off."""
         self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._attr_is_volume_muted = mute
         self.schedule_update_ha_state()
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set the volume level, range 0..1."""
         self._attr_volume_level = volume
         self.schedule_update_ha_state()
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._attr_state = MediaPlayerState.PLAYING
         self.schedule_update_ha_state()
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._attr_state = MediaPlayerState.PAUSED
         self.schedule_update_ha_state()
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
+    @override
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         self._attr_shuffle = shuffle
         self.schedule_update_ha_state()
 
+    @override
     def select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         self._attr_sound_mode = sound_mode
@@ -191,11 +198,13 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         self._progress_updated_at = dt_util.utcnow()
 
     @property
+    @override
     def media_image_url(self) -> str:
         """Return the image url of current playing media."""
         return f"https://img.youtube.com/vi/{self.media_content_id}/hqdefault.jpg"
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._progress is None:
@@ -211,6 +220,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         return position
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid.
 
@@ -220,6 +230,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
             return self._progress_updated_at
         return None
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -227,6 +238,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         self._attr_media_content_id = media_id
         self.schedule_update_ha_state()
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._progress = self.media_position
@@ -279,32 +291,38 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self._attr_repeat = RepeatMode.OFF
 
     @property
+    @override
     def media_title(self) -> str:
         """Return the title of current playing media."""
         return self.tracks[self._cur_track][1] if self.tracks else ""
 
     @property
+    @override
     def media_artist(self) -> str:
         """Return the artist of current playing media (Music track only)."""
         return self.tracks[self._cur_track][0] if self.tracks else ""
 
     @property
+    @override
     def media_track(self) -> int:
         """Return the track number of current media (Music track only)."""
         return self._cur_track + 1
 
+    @override
     def media_previous_track(self) -> None:
         """Send previous track command."""
         if self._cur_track > 0:
             self._cur_track -= 1
             self.schedule_update_ha_state()
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         if self._cur_track < len(self.tracks) - 1:
             self._cur_track += 1
             self.schedule_update_ha_state()
 
+    @override
     def clear_playlist(self) -> None:
         """Clear players playlist."""
         self.tracks = []
@@ -312,16 +330,19 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
 
+    @override
     def set_repeat(self, repeat: RepeatMode) -> None:
         """Enable/disable repeat mode."""
         self._attr_repeat = repeat
         self.schedule_update_ha_state()
 
+    @override
     def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         self._attr_group_members = [self.entity_id, *group_members]
         self.schedule_update_ha_state()
 
+    @override
     def unjoin_player(self) -> None:
         """Remove this player from any group."""
         self._attr_group_members = []
@@ -353,27 +374,32 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         self._attr_source = "dvd"
 
     @property
+    @override
     def media_title(self) -> str:
         """Return the title of current playing media."""
         return f"Chapter {self._cur_episode}"
 
     @property
+    @override
     def media_episode(self) -> str:
         """Return the episode of current playing media (TV Show only)."""
         return str(self._cur_episode)
 
+    @override
     def media_previous_track(self) -> None:
         """Send previous track command."""
         if self._cur_episode > 1:
             self._cur_episode -= 1
             self.schedule_update_ha_state()
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         if self._cur_episode < self._episode_count:
             self._cur_episode += 1
             self.schedule_update_ha_state()
 
+    @override
     def select_source(self, source: str) -> None:
         """Set the input source."""
         self._attr_source = source
@@ -381,10 +407,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
 
 class DemoBrowsePlayer(AbstractDemoPlayer):
-    """A Demo media player that supports browse."""
+    """A Demo media player that supports browse and search."""
 
-    _attr_supported_features = BROWSE_PLAYER_SUPPORT
+    _attr_supported_features = BROWSE_PLAYER_SUPPORT | SEARCH_PLAYER_SUPPORT
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -393,6 +420,13 @@ class DemoBrowsePlayer(AbstractDemoPlayer):
         """Implement the websocket media browsing helper."""
 
         return await media_source.async_browse_media(self.hass, media_content_id)
+
+    @override
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Implement the websocket media search helper by delegating to media source."""
+        return await media_source.async_search_media(
+            self.hass, query.media_content_id, query
+        )
 
 
 class DemoGroupPlayer(AbstractDemoPlayer):
@@ -410,6 +444,7 @@ class DemoSearchPlayer(AbstractDemoPlayer):
 
     _attr_supported_features = SEARCH_PLAYER_SUPPORT
 
+    @override
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Demo implementation of search media."""
         return SearchMedia(

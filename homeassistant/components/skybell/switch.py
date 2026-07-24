@@ -1,15 +1,12 @@
 """Switch support for the Skybell HD Doorbell."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import SkybellConfigEntry
 from .entity import SkybellEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
@@ -30,13 +27,13 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SkybellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SkyBell switch."""
     async_add_entities(
         SkybellSwitch(coordinator, description)
-        for coordinator in hass.data[DOMAIN][entry.entry_id]
+        for coordinator in entry.runtime_data
         for description in SWITCH_TYPES
     )
 
@@ -44,15 +41,18 @@ async def async_setup_entry(
 class SkybellSwitch(SkybellEntity, SwitchEntity):
     """A switch implementation for Skybell devices."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._device.async_set_setting(self.entity_description.key, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._device.async_set_setting(self.entity_description.key, False)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if entity is on."""
         return cast(bool, getattr(self._device, self.entity_description.key))

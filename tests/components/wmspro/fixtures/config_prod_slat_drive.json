@@ -1,0 +1,230 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 45319,
+      "animationType": 3,
+      "names": ["Lamellen", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 108546,
+      "animationType": 6,
+      "names": ["Licht Traverse", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 8,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 6
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 192974,
+      "animationType": 6,
+      "names": ["Licht Pfosten", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 8,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 6
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 253507,
+      "animationType": 5,
+      "names": ["Heizstrahler 1", "", "", ""],
+      "actions": [
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 7
+        },
+        {
+          "id": 21,
+          "actionType": 5,
+          "actionDescription": 10
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 264616,
+      "animationType": 6,
+      "names": ["Dimmen Heizstrahler 1", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 9,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 7
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 390958,
+      "animationType": 5,
+      "names": ["Heizstrahler 2", "", "", ""],
+      "actions": [
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 7
+        },
+        {
+          "id": 21,
+          "actionType": 5,
+          "actionDescription": 10
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 419551,
+      "animationType": 6,
+      "names": ["Dimmen Heizstrahler 2", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 9,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 7
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 480806,
+      "animationType": 1,
+      "names": ["Senkrecht-Markise", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 0,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 47875,
+      "name": "Terrasse",
+      "destinations": [
+        45319, 108546, 192974, 253507, 264616, 390958, 419551, 480806
+      ],
+      "scenes": []
+    }
+  ],
+  "scenes": []
+}

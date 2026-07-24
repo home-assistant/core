@@ -259,6 +259,7 @@
   dict({
     'device': dict({
       'area_id': None,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': list([
       ]),
@@ -314,7 +315,6 @@
               'media_player.test_player_2',
             ]),
             'is_volume_muted': False,
-            'last_non_buffering_state': 'idle',
             'media_album_id': '1',
             'media_album_name': 'Album',
             'media_artist': 'Artist',

@@ -1,12 +1,12 @@
 # serializer version: 1
-# name: test_event_snapshot[event.test_mower_1_message-entry]
+# name: test_event_snapshot[event.garden_test_mower_1_message-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
         'alarm_mower_stopped',
@@ -138,7 +138,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.test_mower_1_message',
+    'entity_id': 'event.garden_test_mower_1_message',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -161,12 +161,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_event_snapshot[event.test_mower_1_message-state]
+# name: test_event_snapshot[event.garden_test_mower_1_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date_time': HAFakeDatetime(2025, 7, 13, 15, 30, tzinfo=datetime.timezone.utc),
-      'event_type': 'wheel_motor_overloaded_rear_left',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'wheel_motor_overloaded_rear_left',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
         'alarm_mower_stopped',
@@ -290,13 +290,13 @@
         'wrong_pin_code',
         'zone_generator_problem',
       ]),
-      'friendly_name': 'Test Mower 1 Message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Message',
       'latitude': 49.0,
       'longitude': 10.0,
       'severity': <Severity.ERROR: 'error'>,
     }),
     'context': <ANY>,
-    'entity_id': 'event.test_mower_1_message',
+    'entity_id': 'event.garden_test_mower_1_message',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

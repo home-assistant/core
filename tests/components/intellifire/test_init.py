@@ -1,8 +1,10 @@
 """Test the IntelliFire config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 from intellifire4py.const import IntelliFireApiMode
+import pytest
 
 from homeassistant.components.intellifire import CONF_USER_ID
 from homeassistant.components.intellifire.const import (
@@ -68,7 +70,9 @@ async def test_migration_v1_1_error(hass: HomeAssistant, mock_apis_single_fp) ->
             CONF_HOST: "11.168.2.218",
             CONF_USERNAME: "grumpypanda@china.cn",
             CONF_PASSWORD: "you-stole-my-pandas",
-            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+            CONF_USER_ID: (
+                "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456"
+            ),
         },
     )
 
@@ -114,7 +118,9 @@ async def test_migration_v1_2_to_v1_3_defaults(
             CONF_WEB_CLIENT_ID: "FA2B1C3045601234D0AE17D72F8E975",
             CONF_API_KEY: "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
             CONF_AUTH_COOKIE: "B984F21A6378560019F8A1CDE41B6782",
-            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+            CONF_USER_ID: (
+                "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456"
+            ),
         },
         options={},
         unique_id="3FB284769E4736F30C8973A7ED358123",
@@ -147,7 +153,9 @@ async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -
             CONF_WEB_CLIENT_ID: "FA2B1C3045601234D0AE17D72F8E975",
             CONF_API_KEY: "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
             CONF_AUTH_COOKIE: "B984F21A6378560019F8A1CDE41B6782",
-            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+            CONF_USER_ID: (
+                "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456"
+            ),
         },
         options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
         unique_id="3FB284769E4736F30C8973A7ED358123",
@@ -159,22 +167,28 @@ async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_connectivity_bad(
+@pytest.mark.parametrize(
+    "setup_error",
+    [aiohttp.ClientConnectionError, ConnectionError, TimeoutError],
+)
+async def test_connectivity_error_during_setup_retries(
     hass: HomeAssistant,
-    mock_config_entry_current,
-    mock_apis_single_fp,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp: tuple[AsyncMock, AsyncMock, MagicMock],
+    setup_error: type[Exception],
 ) -> None:
-    """Test a timeout error on the setup flow."""
+    """Test a connection error during setup retries the config entry."""
 
     with patch(
         "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
         new_callable=AsyncMock,
-        side_effect=TimeoutError,
+        side_effect=setup_error,
     ):
         mock_config_entry_current.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
 
         await hass.async_block_till_done()
+        assert mock_config_entry_current.state is ConfigEntryState.SETUP_RETRY
         assert len(hass.states.async_all()) == 0
 
 
@@ -183,7 +197,7 @@ async def test_update_options_change_read_mode_only(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test that changing only read mode triggers set_read_mode but not set_control_mode."""
+    """Test changing read mode triggers set_read_mode only."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
@@ -217,7 +231,7 @@ async def test_update_options_change_control_mode_only(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test that changing only control mode triggers set_control_mode but not set_read_mode."""
+    """Test changing control mode triggers set_control_mode only."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
@@ -285,7 +299,7 @@ async def test_update_options_no_change(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test that no mode change triggers neither set method but refresh is still called."""
+    """Test no mode change skips set methods but still refreshes."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
@@ -342,3 +356,32 @@ async def test_update_options_no_change(
     mock_fp.set_control_mode.assert_not_called()
     # But async_request_refresh should still be called
     coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_coordinator_performs_poll(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that the library only polls when instructed by the coordinator.
+
+    The library auto-polls by default; ensure the coordinator disables that
+    and drives polling explicitly via perform_poll().
+    """
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    with patch(
+        "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
+        new_callable=AsyncMock,
+        return_value=mock_fp,
+    ) as mock_build:
+        mock_config_entry_current.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify the fireplace was constructed with library background polling disabled
+        mock_build.assert_awaited_once()
+        assert mock_build.call_args.kwargs.get("polling_enabled") is False
+
+        # Verify the coordinator drove exactly one poll during initial refresh
+        mock_fp.perform_poll.assert_awaited_once()

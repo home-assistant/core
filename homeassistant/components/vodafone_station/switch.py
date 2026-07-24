@@ -1,10 +1,8 @@
 """Support for switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from json.decoder import JSONDecodeError
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiovodafone.const import WIFI_DATA, WifiBand, WifiType
 from aiovodafone.exceptions import (
@@ -126,15 +124,18 @@ class VodafoneSwitchEntity(CoordinatorEntity[VodafoneStationRouter], SwitchEntit
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._set_wifi_status(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._set_wifi_status(False)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
         return bool(

@@ -1,10 +1,8 @@
 """Matter lock."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.common.errors import MatterError
@@ -15,7 +13,6 @@ from homeassistant.components.lock import (
     LockEntityDescription,
     LockEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -34,7 +31,7 @@ from .const import (
     LOGGER,
 )
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .lock_helpers import (
     DoorLockFeature,
     GetLockCredentialStatusResult,
@@ -70,11 +67,11 @@ DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.LOCK, async_add_entities)
 
 
@@ -91,6 +88,7 @@ class MatterLock(MatterEntity, LockEntity):
     _platform_translation_key = "lock"
     _attr_changed_by = "Unknown"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         await super().async_added_to_hass()
@@ -135,6 +133,7 @@ class MatterLock(MatterEntity, LockEntity):
                 self.async_write_ha_state()
 
     @property
+    @override
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         if self.get_matter_attribute_value(
@@ -154,6 +153,7 @@ class MatterLock(MatterEntity, LockEntity):
 
         return None
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
         if not self._attr_is_locked:
@@ -172,6 +172,7 @@ class MatterLock(MatterEntity, LockEntity):
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
         if self._attr_is_locked:
@@ -199,6 +200,7 @@ class MatterLock(MatterEntity, LockEntity):
                 timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         # optimistically signal opening to state machine
@@ -217,6 +219,7 @@ class MatterLock(MatterEntity, LockEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update the entity from the device."""
         # always calculate the features as they can dynamically change

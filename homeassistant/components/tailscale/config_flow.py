@@ -1,9 +1,7 @@
 """Config flow to configure the Tailscale integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from tailscale import Tailscale, TailscaleAuthenticationError, TailscaleError
 import voluptuous as vol
@@ -34,6 +32,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

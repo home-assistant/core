@@ -13,7 +13,10 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers.service import (
+    async_extract_config_entry_ids,
+    async_register_admin_service,
+)
 
 from .const import DOMAIN
 from .coordinator import FritzConfigEntry
@@ -118,7 +121,8 @@ async def _async_dial(service_call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Fritz integration."""
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_GUEST_WIFI_PW,
         _async_set_guest_wifi_password,

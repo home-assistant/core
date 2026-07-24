@@ -1,7 +1,5 @@
 """Base entity for Open Router."""
 
-from __future__ import annotations
-
 import base64
 from collections.abc import AsyncGenerator, Callable
 import json
@@ -90,9 +88,13 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf"}
+    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     tool_spec = FunctionDefinition(
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=schema,
     )
     if tool.description:
         tool_spec["description"] = tool.description

@@ -1,9 +1,7 @@
 """Demo platform that offers fake update entities."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -150,6 +148,7 @@ class DemoUpdate(UpdateEntity):
         if support_release_notes:
             self._attr_supported_features |= UpdateEntityFeature.RELEASE_NOTES
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -168,6 +167,7 @@ class DemoUpdate(UpdateEntity):
         )
         self.async_write_ha_state()
 
+    @override
     def release_notes(self) -> str | None:
         """Return the release notes."""
         return (

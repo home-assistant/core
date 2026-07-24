@@ -61,6 +61,12 @@ async def test_snapshots(
             {"on": False},
         ),
         (
+            "switch.wled_rgb_light_freeze",
+            "segment",
+            {"segment_id": 0, "freeze": True},
+            {"segment_id": 0, "freeze": False},
+        ),
+        (
             "switch.wled_rgb_light_reverse",
             "segment",
             {"segment_id": 0, "reverse": True},
@@ -152,8 +158,11 @@ async def test_switch_dynamically_handle_segments(
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+    assert not hass.states.get("switch.wled_rgb_light_segment_1_freeze")
     assert not hass.states.get("switch.wled_rgb_light_segment_1_reverse")
 
     # Test adding a segment dynamically...
@@ -166,10 +175,18 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
-    assert (segment1 := hass.states.get("switch.wled_rgb_light_segment_1_reverse"))
-    assert segment1.state == STATE_ON
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+    assert (
+        segment1_freeze := hass.states.get("switch.wled_rgb_light_segment_1_freeze")
+    )
+    assert segment1_freeze.state == STATE_ON
+    assert (
+        segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
+    )
+    assert segment1_reverse.state == STATE_ON
 
     # Test remove segment again...
     mock_wled.update.return_value = return_value
@@ -177,7 +194,16 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
-    assert (segment1 := hass.states.get("switch.wled_rgb_light_segment_1_reverse"))
-    assert segment1.state == STATE_UNAVAILABLE
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+
+    assert (
+        segment1_freeze := hass.states.get("switch.wled_rgb_light_segment_1_freeze")
+    )
+    assert segment1_freeze.state == STATE_UNAVAILABLE
+    assert (
+        segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
+    )
+    assert segment1_reverse.state == STATE_UNAVAILABLE

@@ -5,12 +5,13 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.unifi.const import CONF_SITE_ID
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     CONF_HOST,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
@@ -338,3 +340,27 @@ async def test_power_cycle_availability(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_payload", [DEVICE_RESTART])
+async def test_button_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            "press",
+            {"entity_id": "button.switch_restart"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"

@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3_DEFAULT_AWAY_TEMP, Eq3OperationMode
@@ -93,17 +93,20 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
 
         await self.entity_description.toggle_func(self._thermostat)(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
 
         await self.entity_description.toggle_func(self._thermostat)(False)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
 

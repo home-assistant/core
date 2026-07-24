@@ -1,8 +1,7 @@
 """Data update coordinator for Homevolt integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homevolt import (
     Homevolt,
@@ -44,6 +43,7 @@ class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Homevolt]):
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> Homevolt:
         """Fetch data from the Homevolt API."""
         try:

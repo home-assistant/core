@@ -80,7 +80,10 @@ async def setup_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Load the Ambient Network integration with the provided OpenAPI and config entry."""
+    """Load the Ambient Network integration.
+
+    Uses the provided OpenAPI and config entry.
+    """
 
     config_entry.add_to_hass(hass)
     assert (

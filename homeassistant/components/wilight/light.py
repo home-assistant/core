@@ -1,8 +1,6 @@
 """Support for WiLight lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pywilight.const import ITEM_LIGHT, LIGHT_COLOR, LIGHT_DIMMER, LIGHT_ON_OFF
 from pywilight.wilight_device import PyWiLightDevice
@@ -13,13 +11,11 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import WiLightDevice
-from .parent_device import WiLightParent
+from .parent_device import WiLightConfigEntry
 
 
 def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> list[LightEntity]:
@@ -42,11 +38,11 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> list[LightE
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiLightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight lights from a config entry."""
-    parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
+    parent = entry.runtime_data
 
     # Handle a discovered WiLight device.
     assert parent.api
@@ -62,14 +58,17 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._status.get("on")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)
@@ -83,15 +82,18 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(self._status.get("brightness", 0))
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._status.get("on")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on,set brightness if needed."""
         # Dimmer switches use a range of [0, 255] to control
@@ -102,6 +104,7 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
         else:
             await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)
@@ -135,11 +138,13 @@ class WiLightLightColor(WiLightDevice, LightEntity):
     _attr_supported_color_modes = {ColorMode.HS}
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(self._status.get("brightness", 0))
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         return (
@@ -148,10 +153,12 @@ class WiLightLightColor(WiLightDevice, LightEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._status.get("on")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on,set brightness if needed."""
         # Brightness use a range of [0, 255] to control
@@ -172,6 +179,7 @@ class WiLightLightColor(WiLightDevice, LightEntity):
         else:
             await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)

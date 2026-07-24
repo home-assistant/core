@@ -1,16 +1,14 @@
 """Validate the energy preferences provide valid data."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping, Sequence
 import dataclasses
 import functools
 
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -233,13 +231,13 @@ def _async_validate_stat_common(
     if check_negative and current_value is not None and current_value < 0:
         issues.add_issue(hass, "entity_negative_state", entity_id, current_value)
 
-    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
     if device_class not in allowed_device_classes:
         issues.add_issue(
             hass, "entity_unexpected_device_class", entity_id, device_class
         )
     else:
-        unit = state.attributes.get("unit_of_measurement")
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
         if device_class and unit not in allowed_units.get(device_class, []):
             issues.add_issue(hass, unit_error, entity_id, unit)
@@ -274,7 +272,9 @@ def _async_validate_usage_stat(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
+    state_class = state.attributes.get(
+        sensor.SensorEntityCapabilityAttribute.STATE_CLASS
+    )
 
     allowed_state_classes = [
         sensor.SensorStateClass.MEASUREMENT,
@@ -312,7 +312,7 @@ def _async_validate_price_entity(
         issues.add_issue(hass, "entity_state_non_numeric", entity_id, state.state)
         return
 
-    unit = state.attributes.get("unit_of_measurement")
+    unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     if unit is None or not unit.endswith(allowed_units):
         issues.add_issue(hass, unit_error, entity_id, unit)
@@ -345,7 +345,9 @@ def _async_validate_power_stat(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
+    state_class = state.attributes.get(
+        sensor.SensorEntityCapabilityAttribute.STATE_CLASS
+    )
 
     if state_class != sensor.SensorStateClass.MEASUREMENT:
         issues.add_issue(hass, "entity_unexpected_state_class", entity_id, state_class)
@@ -374,7 +376,9 @@ def _async_validate_cost_stat(
         issues.add_issue(hass, "entity_not_defined", stat_id)
         return
 
-    state_class = state.attributes.get("state_class")
+    state_class = state.attributes.get(
+        sensor.SensorEntityCapabilityAttribute.STATE_CLASS
+    )
 
     supported_state_classes = [
         sensor.SensorStateClass.MEASUREMENT,

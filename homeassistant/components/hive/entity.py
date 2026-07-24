@@ -1,8 +1,6 @@
 """Support for the Hive devices and services."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Hive
 
@@ -32,6 +30,7 @@ class HiveEntity(Entity):
         )
         self.attributes: dict[str, Any] = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         self.async_on_remove(

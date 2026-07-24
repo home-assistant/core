@@ -1,7 +1,5 @@
 """The Bryant Evolution integration."""
 
-from __future__ import annotations
-
 import logging
 
 from evolutionhttp import BryantEvolutionLocalClient
@@ -48,7 +46,8 @@ async def async_setup_entry(
     for sys_id in (1, 2):
         if not any(sz[0] == sys_id for sz in entry.data[CONF_SYSTEM_ZONE]):
             _LOGGER.debug(
-                "Skipping system %s because it is not configured for this integration: %s",
+                "Skipping system %s because it is not configured"
+                " for this integration: %s",
                 sys_id,
                 entry.data[CONF_SYSTEM_ZONE],
             )

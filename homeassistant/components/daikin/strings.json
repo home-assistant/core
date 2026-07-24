@@ -25,7 +25,7 @@
   "entity": {
     "sensor": {
       "compressor_energy_consumption": {
-        "name": "Compressor energy consumption"
+        "name": "Compressor energy consumption (today)"
       },
       "compressor_estimated_power_consumption": {
         "name": "Compressor estimated power consumption"
@@ -34,13 +34,13 @@
         "name": "Compressor frequency"
       },
       "cool_energy_consumption": {
-        "name": "Cool energy consumption"
+        "name": "Cool energy consumption (last hour)"
       },
       "energy_consumption": {
-        "name": "Energy consumption"
+        "name": "Energy consumption (today)"
       },
       "heat_energy_consumption": {
-        "name": "Heat energy consumption"
+        "name": "Heat energy consumption (last hour)"
       },
       "inside_temperature": {
         "name": "Inside temperature"
@@ -59,6 +59,9 @@
     }
   },
   "exceptions": {
+    "error_communicating": {
+      "message": "Error communicating with Daikin device: {error}"
+    },
     "zone_hvac_mode_unsupported": {
       "message": "Zone temperature can only be changed when the main climate mode is heat or cool."
     },

@@ -1,9 +1,8 @@
 """The QBittorrent coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from qbittorrentapi import (
     APIConnectionError,
@@ -54,6 +53,7 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
             update_interval=timedelta(seconds=30),
         )
 
+    @override
     async def _async_update_data(self) -> SyncMainDataDictionary:
         try:
             data = await self.hass.async_add_executor_job(self.client.sync_maindata)

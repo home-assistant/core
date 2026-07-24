@@ -1,6 +1,6 @@
 """The Honeywell Lyric integration."""
 
-from __future__ import annotations
+from typing import override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -34,6 +34,7 @@ class LyricEntity(CoordinatorEntity[LyricDataUpdateCoordinator]):
         self._update_fan = coordinator.data.update_fan
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._key
@@ -53,6 +54,7 @@ class LyricDeviceEntity(LyricEntity):
     """Defines a Honeywell Lyric device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
         return DeviceInfo(
@@ -82,6 +84,7 @@ class LyricAccessoryEntity(LyricDeviceEntity):
         self._accessory_id = accessory.id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
         return DeviceInfo(

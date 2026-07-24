@@ -1,12 +1,10 @@
 """A sensor that monitors trends in other components."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Mapping
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 import numpy as np
 import voluptuous as vol
@@ -204,6 +202,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
             self.entity_id = sensor_entity_id
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
@@ -215,6 +214,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
             ATTR_SAMPLE_DURATION: self._sample_duration,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Complete device setup after being added to hass."""
 

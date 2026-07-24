@@ -1,9 +1,7 @@
 """Config flow for the Lichess integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiolichess import AioLichess
 from aiolichess.exceptions import AioLichessError, AuthError
@@ -21,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class LichessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Lichess."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

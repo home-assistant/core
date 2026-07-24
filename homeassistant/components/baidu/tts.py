@@ -1,7 +1,7 @@
 """Support for Baidu speech service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aip import AipSpeech
 import voluptuous as vol
@@ -87,16 +87,19 @@ class BaiduTTSProvider(Provider):
         }
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return SUPPORTED_LANGUAGES
 
     @property
+    @override
     def default_options(self) -> dict[str, Any]:
         """Return a dict including default options."""
         return {
@@ -107,10 +110,12 @@ class BaiduTTSProvider(Provider):
         }
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORTED_OPTIONS
 
+    @override
     def get_tts_audio(
         self,
         message: str,

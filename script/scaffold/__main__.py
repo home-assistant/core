@@ -84,7 +84,7 @@ def main() -> int:
         # If it's a new integration and it's not a config flow,
         # create a config flow too.
         if not args.template.startswith("config_flow"):
-            if info.helper:
+            if info.integration_type == "helper":
                 template = "config_flow_helper"
             elif info.oauth2:
                 template = "config_flow_oauth2"
@@ -99,7 +99,8 @@ def main() -> int:
     if args.template != "integration":
         generate.generate(args.template, info)
 
-    # Always output sub commands as the output will contain useful information if a command fails.
+    # Always output sub commands as the output will contain
+    # useful information if a command fails.
     print("Running hassfest to pick up new information.")
     run_process(
         "hassfest",
@@ -110,7 +111,8 @@ def main() -> int:
             "--integration-path",
             str(info.integration_dir),
             "--skip-plugins",
-            "quality_scale",  # Skip quality scale as it will fail for newly generated integrations.
+            # Skip quality scale; it fails for newly generated integrations.
+            "quality_scale",
         ],
         info,
     )
