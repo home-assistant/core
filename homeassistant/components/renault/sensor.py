@@ -52,6 +52,7 @@ class RenaultSensorEntityDescription[T: KamereonVehicleDataAttributes](
     """Class describing Renault sensor entities."""
 
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
+    extra_attributes_lambda: Callable[[RenaultSensor[T]], dict[str, Any]] | None = None
     requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType | datetime]
 
@@ -85,6 +86,14 @@ class RenaultSensor[T: KamereonVehicleDataAttributes](
     def native_value(self) -> StateType | datetime:
         """Return the state of this entity."""
         return self.entity_description.value_lambda(self)
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state attributes."""
+        if self.entity_description.extra_attributes_lambda is None:
+            return None
+        return self.entity_description.extra_attributes_lambda(self)
 
 
 def _get_charge_state_formatted(
@@ -123,6 +132,46 @@ def _get_charging_settings_mode_formatted(
     """Return the charging_settings mode of this entity."""
     charging_mode = entity.coordinator.data.mode
     return charging_mode.lower() if charging_mode else None
+
+
+CHARGE_SCHEDULE_DAYS = (
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+)
+
+
+def _get_charging_settings_schedule_attributes(
+    entity: RenaultSensor[KamereonVehicleChargingSettingsData],
+) -> dict[str, Any]:
+    """Return schedule attributes for charging_settings."""
+    schedules = entity.coordinator.data.schedules
+    if not schedules:
+        return {}
+
+    active_schedules = [schedule for schedule in schedules if schedule.activated]
+    return {
+        "schedule_count": len(schedules),
+        "active_schedule_count": len(active_schedules),
+        "active_schedules": [
+            {
+                "id": schedule.id,
+                **{
+                    day: {
+                        "start_time": day_schedule.startTime,
+                        "duration": day_schedule.duration,
+                    }
+                    for day in CHARGE_SCHEDULE_DAYS
+                    if (day_schedule := getattr(schedule, day)) is not None
+                },
+            }
+            for schedule in active_schedules
+        ],
+    }
 
 
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
@@ -317,6 +366,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="charging_settings_mode",
         coordinator="charging_settings",
         translation_key="charging_settings_mode",
+        extra_attributes_lambda=_get_charging_settings_schedule_attributes,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "always",

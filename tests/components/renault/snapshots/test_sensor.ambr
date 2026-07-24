@@ -6020,6 +6020,71 @@
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_schedule_count': 2,
+      'active_schedules': list([
+        dict({
+          'friday': dict({
+            'duration': 450,
+            'start_time': 'T00:00Z',
+          }),
+          'id': 1,
+          'monday': dict({
+            'duration': 450,
+            'start_time': 'T00:00Z',
+          }),
+          'saturday': dict({
+            'duration': 450,
+            'start_time': 'T00:00Z',
+          }),
+          'sunday': dict({
+            'duration': 450,
+            'start_time': 'T00:00Z',
+          }),
+          'thursday': dict({
+            'duration': 450,
+            'start_time': 'T00:00Z',
+          }),
+          'tuesday': dict({
+            'duration': 450,
+            'start_time': 'T00:00Z',
+          }),
+          'wednesday': dict({
+            'duration': 450,
+            'start_time': 'T00:00Z',
+          }),
+        }),
+        dict({
+          'friday': dict({
+            'duration': 15,
+            'start_time': 'T23:30Z',
+          }),
+          'id': 2,
+          'monday': dict({
+            'duration': 15,
+            'start_time': 'T23:30Z',
+          }),
+          'saturday': dict({
+            'duration': 15,
+            'start_time': 'T23:30Z',
+          }),
+          'sunday': dict({
+            'duration': 15,
+            'start_time': 'T23:30Z',
+          }),
+          'thursday': dict({
+            'duration': 15,
+            'start_time': 'T23:30Z',
+          }),
+          'tuesday': dict({
+            'duration': 15,
+            'start_time': 'T23:30Z',
+          }),
+          'wednesday': dict({
+            'duration': 15,
+            'start_time': 'T23:30Z',
+          }),
+        }),
+      ]),
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 Charging mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
@@ -6028,6 +6093,7 @@
         'delegated',
         'scheduled',
       ]),
+      'schedule_count': 5,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.reg_zoe_50_charging_mode',
