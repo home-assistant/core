@@ -38,7 +38,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, LOGGER, WiimConfigEntry
+from .const import DATA_WIIM, DOMAIN, LOGGER, WiimConfigEntry
 from .entity import WiimBaseEntity
 from .models import WiimData
 
@@ -50,6 +50,7 @@ MEDIA_CONTENT_ID_FAVORITES = (
 MEDIA_CONTENT_ID_PLAYLISTS = (
     f"{MEDIA_TYPE_WIIM_LIBRARY}/{MEDIA_CONTENT_ID_ROOT}/playlists"
 )
+
 
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PLAYING: MediaPlayerState.PLAYING,
@@ -96,11 +97,21 @@ def media_player_exception_wrap[
         except (WiimDeviceException, WiimRequestException, WiimException) as err:
             await self._async_handle_critical_error(err)
             raise HomeAssistantError(
-                f"{func.__name__} failed for {self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": func.__name__,
+                    "entity_id": self.entity_id or self._device.name,
+                },
             ) from err
         except RuntimeError as err:
             raise HomeAssistantError(
-                f"{func.__name__} failed for {self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": func.__name__,
+                    "entity_id": self.entity_id or self._device.name,
+                },
             ) from err
 
         self._update_ha_state_from_sdk_cache()
@@ -266,8 +277,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Update HA state from SDK's cache/HTTP poll attributes.
 
         This is the main method for updating this entity's HA attributes.
-        Crucially, it also handles propagating metadata to
-        followers if this is a leader.
+        Crucially, it also handles propagating metadata to followers if this is a leader.
         """
         LOGGER.debug(
             "Device %s: Updating HA state from SDK cache/HTTP poll",
@@ -650,7 +660,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             await self._async_play_url(target_device, play_item.url)
         elif media_type == MEDIA_TYPE_WIIM_LIBRARY:
             if not media_id.isdigit():
-                raise ServiceValidationError(f"Invalid preset ID: {media_id}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_preset_id",
+                    translation_placeholders={"media_id": media_id},
+                )
 
             preset_number = int(media_id)
             await target_device.play_preset(preset_number)
@@ -671,7 +685,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         elif media_type == MediaType.TRACK:
             if not media_id.isdigit():
                 raise ServiceValidationError(
-                    f"Invalid media_id: {media_id}. Expected a valid track index."
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_track_id",
+                    translation_placeholders={"media_id": media_id},
                 )
 
             track_index = int(media_id)
@@ -680,13 +696,18 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_content_type = MediaType.TRACK
             self._attr_state = MediaPlayerState.PLAYING
         else:
-            raise ServiceValidationError(f"Unsupported media type: {media_type}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={"media_type": str(media_type)},
+            )
 
     async def _async_play_url(self, target_device: WiimDevice, media_id: str) -> None:
         """Play a direct media URL on the target device."""
         if not target_device.supports_http_api:
             raise ServiceValidationError(
-                "Direct URL playback is not supported on this device"
+                translation_domain=DOMAIN,
+                translation_key="direct_url_playback_unsupported",
             )
 
         url = async_process_play_media_url(self.hass, media_id)
@@ -738,7 +759,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id
         ):
             if not self._device.supports_http_api:
-                raise BrowseError("Media sources are not supported on this device")
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="media_sources_unsupported",
+                )
 
             return await media_source.async_browse_media(
                 self.hass,
@@ -861,7 +885,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
-        raise BrowseError(f"Invalid browse path: {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_browse_path",
+            translation_placeholders={"media_content_id": str(media_content_id)},
+        )
 
     @media_player_exception_wrap
     @override
@@ -876,11 +904,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
             follower_udn = self._wiim_data.entity_id_to_udn_map.get(member_entity_id)
             if follower_udn is None:
-                LOGGER.warning(
-                    "Unable to resolve group member entity_id %s to a UDN",
-                    member_entity_id,
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_grouping_entity",
+                    translation_placeholders={"entity_id": member_entity_id},
                 )
-                continue
 
             if follower_udn == target_device.udn:
                 LOGGER.debug(

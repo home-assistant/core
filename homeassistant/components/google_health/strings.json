@@ -6,6 +6,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "api_not_enabled": "The Google Health API is not enabled for your Google Cloud project. Enable it in the [Google Cloud Console]({url}), wait a few minutes for the change to propagate, then try again.",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cannot_connect": "Failed to connect.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
@@ -17,7 +18,9 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "wrong_account": "Wrong account: Please authenticate with the right account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -34,12 +37,39 @@
   },
   "entity": {
     "sensor": {
+      "active_calories": {
+        "name": "Active calories"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "floors": {
+        "name": "Floors"
+      },
       "resting_heart_rate": {
         "name": "Resting heart rate"
+      },
+      "sleep_after_wakeup": {
+        "name": "Time after waking up"
+      },
+      "sleep_asleep": {
+        "name": "Time asleep"
+      },
+      "sleep_awake": {
+        "name": "Time awake"
+      },
+      "sleep_in_bed": {
+        "name": "Time in bed"
+      },
+      "sleep_to_fall_asleep": {
+        "name": "Time to fall asleep"
       },
       "steps": {
         "name": "Steps",
         "unit_of_measurement": "steps"
+      },
+      "total_calories": {
+        "name": "Total calories"
       }
     }
   },

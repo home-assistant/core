@@ -74,7 +74,11 @@ ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
 _LOGGER = logging.getLogger(__name__)
 
-ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+# A deliberately wrong key (base64 of thirty two ASCII zero characters, not
+# zero bytes) used only to elicit the server hello so the device name can be
+# read. Not to be confused with aioesphomeapi.ZERO_NOISE_PSK, the well known
+# all zeros provisioning key.
+PROBE_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 DEFAULT_NAME = "ESPHome"
 
 _BLUETOOTH_SCANNING_MODE_SELECTOR = SelectSelector(
@@ -271,7 +275,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 # to get the device name which will allow us to populate
                 # the device name and hopefully get the encryption key
                 # from the dashboard.
-                self._noise_psk = ZERO_NOISE_PSK
+                self._noise_psk = PROBE_NOISE_PSK
                 response = await self.fetch_device_info()
                 self._noise_psk = None
 

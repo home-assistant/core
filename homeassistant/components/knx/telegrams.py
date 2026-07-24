@@ -8,6 +8,7 @@ import os
 from typing import Any, TypedDict
 
 from knx_telegram_store import (
+    BufferedPostgresStore,
     BufferedSqliteStore,
     KnxTelegramStoreException,
     StoredTelegram,
@@ -21,12 +22,15 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.event import async_call_later, async_track_time_change
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+    KNX_TELEGRAM_BACKEND_POSTGRES,
     KNX_TELEGRAM_DB_PATH_SQLITE,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     SIGNAL_KNX_TELEGRAM,
@@ -47,6 +51,23 @@ EVICT_EXPIRED_HOUR = 3
 # Websocket queries flush on demand (``flush_first=True``), so the only telegrams
 # at risk from a longer interval are those buffered during an ungraceful shutdown.
 FLUSH_INTERVAL_SECONDS = 600
+
+# The buffer drops the oldest telegrams when full. Size it to cover a full
+# flush interval at ~50 telegrams/s, the maximum rate of a KNX TP line, so
+# nothing is dropped while the database is healthy.
+MAX_BUFFER_TELEGRAMS = FLUSH_INTERVAL_SECONDS * 50
+
+# Timeout for the migration probe and store initialization, so an unreachable
+# database cannot block KNX setup until the driver/OS connection timeout expires.
+STORE_INIT_TIMEOUT = 10
+
+# When store initialization times out during startup (busy event loop, cold or large
+# database on low-power hardware), the failure is usually transient. Instead of giving
+# up until the next reload, retry in the background with a capped backoff. This many
+# retries are allowed on top of the initial attempt, i.e. the store is only disabled
+# after STORE_INIT_MAX_RETRIES + 1 consecutive timeouts.
+STORE_INIT_RETRY_BACKOFF = (15, 30, 60, 120, 300, 300)
+STORE_INIT_MAX_RETRIES = len(STORE_INIT_RETRY_BACKOFF)
 
 
 class DecodedTelegramPayload(TypedDict):
@@ -89,19 +110,35 @@ class Telegrams:
         self.project = project
         self.config = config
 
+        self.backend: str = config[CONF_KNX_TELEGRAM_DB_BACKEND]
+        self.dsn: str = str(config.get(CONF_KNX_TELEGRAM_DB_POSTGRES_DSN, ""))
         self.retention_days: int = config[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
 
-        self.store: BufferedSqliteStore | None = None
-        self._uninitialized_store: BufferedSqliteStore | None = None
+        self.store: BufferedSqliteStore | BufferedPostgresStore | None = None
+        self._uninitialized_store: (
+            BufferedSqliteStore | BufferedPostgresStore | None
+        ) = None
         self._evict_expired_unsub: CALLBACK_TYPE | None = None
+        self._store_init_retry_unsub: CALLBACK_TYPE | None = None
+        self._store_init_retry_task: asyncio.Task[None] | None = None
+        self._store_init_attempts = 0
 
-        full_path = hass.config.path(STORAGE_DIR, KNX_TELEGRAM_DB_PATH_SQLITE)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        self._uninitialized_store = BufferedSqliteStore(
-            full_path,
-            retention_days=self.retention_days,
-            flush_interval=FLUSH_INTERVAL_SECONDS,
-        )
+        if self.backend == KNX_TELEGRAM_BACKEND_POSTGRES:
+            self._uninitialized_store = BufferedPostgresStore(
+                self.dsn,
+                retention_days=self.retention_days,
+                flush_interval=FLUSH_INTERVAL_SECONDS,
+                max_buffer_size=MAX_BUFFER_TELEGRAMS,
+            )
+        else:
+            full_path = hass.config.path(STORAGE_DIR, KNX_TELEGRAM_DB_PATH_SQLITE)
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+            self._uninitialized_store = BufferedSqliteStore(
+                full_path,
+                retention_days=self.retention_days,
+                flush_interval=FLUSH_INTERVAL_SECONDS,
+                max_buffer_size=MAX_BUFFER_TELEGRAMS,
+            )
 
         self._xknx_telegram_cb_handle = (
             xknx.telegram_queue.register_telegram_received_cb(
@@ -121,7 +158,8 @@ class Telegrams:
         if self._uninitialized_store is None:
             return
         try:
-            needs_migration = await self._uninitialized_store.needs_migration()
+            async with asyncio.timeout(STORE_INIT_TIMEOUT):
+                needs_migration = await self._uninitialized_store.needs_migration()
             if needs_migration:
                 _LOGGER.warning(
                     "KNX telegram history database schema upgrade/migration is required. "
@@ -129,29 +167,66 @@ class Telegrams:
                 )
                 await self._uninitialized_store.initialize()
             else:
-                _LOGGER.debug("Initializing KNX telegram storage")
-                async with asyncio.timeout(10):
+                _LOGGER.debug(
+                    "Initializing KNX telegram storage backend '%s'",
+                    self.backend,
+                )
+                async with asyncio.timeout(STORE_INIT_TIMEOUT):
                     await self._uninitialized_store.initialize()
-            _LOGGER.info("Successfully initialized KNX telegram storage")
+            _LOGGER.info(
+                "Successfully initialized KNX telegram storage backend '%s'",
+                self.backend,
+            )
+        except asyncio.CancelledError:
+            raise
         except TimeoutError:
-            _LOGGER.error("Timeout initializing KNX telegram storage")
-            await self._abort_store_init()
+            self._store_init_attempts += 1
+            if self._store_init_attempts > STORE_INIT_MAX_RETRIES:
+                _LOGGER.error(
+                    "Timeout initializing KNX telegram storage backend '%s' after "
+                    "%s attempts; giving up until the next reload",
+                    self.backend,
+                    self._store_init_attempts,
+                )
+                await self._abort_store_init()
+                return
+            delay = STORE_INIT_RETRY_BACKOFF[
+                min(self._store_init_attempts - 1, len(STORE_INIT_RETRY_BACKOFF) - 1)
+            ]
+            _LOGGER.warning(
+                "Timeout initializing KNX telegram storage backend '%s' (attempt %s); "
+                "retrying in %s s. Telegram history is temporarily unavailable; the "
+                "KNX connection is unaffected",
+                self.backend,
+                self._store_init_attempts,
+                delay,
+            )
+            # No repair issue here: a single timeout is expected to self-heal via the
+            # retry above. Raising one on every transient blip would be alarming and
+            # not user-actionable; _abort_store_init() raises it once retries are
+            # actually exhausted.
+            self._store_init_retry_unsub = async_call_later(
+                self.hass, delay, self._async_retry_load_history
+            )
             return
         except KnxTelegramStoreException as err:
             _LOGGER.error(
-                "Database error initializing KNX telegram storage: %s",
+                "Database error initializing KNX telegram storage backend '%s': %s",
+                self.backend,
                 err,
             )
             await self._abort_store_init()
             return
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
-                "Error initializing KNX telegram storage: %s",
+                "Error initializing KNX telegram storage backend '%s': %s",
+                self.backend,
                 err,
             )
             await self._abort_store_init()
             return
         async_delete_telegram_storage_issue(self.hass)
+        self._store_init_attempts = 0
         self.store = self._uninitialized_store
         self.store.start()
         self._uninitialized_store = None
@@ -184,6 +259,16 @@ class Telegrams:
                 self.last_ga_telegrams[t_dict["destination"]] = t_dict
         _LOGGER.debug("Hydrated %d unique telegrams from store", len(result))
 
+    async def _async_retry_load_history(self, now: datetime) -> None:
+        """Retry telegram store initialization after a transient timeout."""
+        self._store_init_retry_unsub = None
+        # Relies on eager task start so this task is already "current" here.
+        self._store_init_retry_task = asyncio.current_task()
+        try:
+            await self.load_history()
+        finally:
+            self._store_init_retry_task = None
+
     async def _abort_store_init(self) -> None:
         """Create a repair issue and tear down a store that failed to init."""
         async_create_telegram_storage_issue(self.hass)
@@ -205,6 +290,17 @@ class Telegrams:
 
     async def stop(self) -> None:
         """Stop history store."""
+        if self._store_init_retry_unsub is not None:
+            self._store_init_retry_unsub()
+            self._store_init_retry_unsub = None
+        if self._store_init_retry_task is not None:
+            self._store_init_retry_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._store_init_retry_task
+        if self._uninitialized_store is not None:
+            with contextlib.suppress(Exception):
+                await self._uninitialized_store.close()
+            self._uninitialized_store = None
         if self._evict_expired_unsub is not None:
             self._evict_expired_unsub()
             self._evict_expired_unsub = None

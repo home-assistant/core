@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
     CameraState,
@@ -14,11 +15,33 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_DUO_MODEL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with (
+        patch(
+            "homeassistant.components.reolink.PLATFORMS",
+            [Platform.CAMERA],
+        ),
+        # keep the camera access tokens deterministic for the snapshot
+        patch("random.SystemRandom.getrandbits", return_value=123123123123),
+    ):
+        await setup_integration(hass, config_entry)
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_camera(

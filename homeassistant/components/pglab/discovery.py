@@ -162,7 +162,9 @@ class PGLabDiscovery:
 
         return pglab_device
 
-    def __clean_discovered_device(self, hass: HomeAssistant, device_id: str) -> None:
+    def __clean_discovered_device(
+        self, hass: HomeAssistant, device_id: str, config_entry: PGLabConfigEntry
+    ) -> None:
         """Destroy the device and any entities connected to the device."""
 
         if device_id not in self._discovered:
@@ -180,8 +182,8 @@ class PGLabDiscovery:
 
         # Destroy the device.
         device_registry = dr.async_get(hass)
-        if device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        if device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), config_entry.entry_id
         ):
             device_registry.async_remove_device(device_entry.id)
 
@@ -214,7 +216,7 @@ class PGLabDiscovery:
                 # If there is a valid topic device_id clean
                 # everything relative to the device.
                 if device_id:
-                    self.__clean_discovered_device(hass, device_id)
+                    self.__clean_discovered_device(hass, device_id, config_entry)
 
                 return
 
@@ -252,7 +254,7 @@ class PGLabDiscovery:
 
                 # Something has changed, all previous entities
                 # must be destroyed and re-created.
-                self.__clean_discovered_device(hass, pglab_device.id)
+                self.__clean_discovered_device(hass, pglab_device.id, config_entry)
 
             # Add a new device.
             discovery_info = await create_discover_device_info(

@@ -1042,6 +1042,29 @@ async def test_entity_limit_not_applied_without_config_entry(
     assert hass.states.get("test_domain.ent2") is not None
 
 
+@pytest.mark.parametrize("domain", sorted(entity_platform.ENTITY_LIMIT_EXEMPT_DOMAINS))
+async def test_entity_limit_not_applied_to_exempt_domains(
+    hass: HomeAssistant,
+    domain: str,
+) -> None:
+    """Test protocol integrations are exempt from the entity limit."""
+    config_entry = MockConfigEntry(domain=domain)
+    config_entry.add_to_hass(hass)
+    platform = MockEntityPlatform(hass)
+    platform.config_entry = config_entry
+
+    with patch.object(entity_platform, "MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY", 1):
+        await platform.async_add_entities(
+            [
+                MockEntity(unique_id="1", name="ent1"),
+                MockEntity(unique_id="2", name="ent2"),
+            ]
+        )
+
+    assert hass.states.get("test_domain.ent1") is not None
+    assert hass.states.get("test_domain.ent2") is not None
+
+
 async def test_unique_id_conflict_has_priority_over_disabled_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -2837,56 +2860,3 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
-
-
-@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-@pytest.mark.parametrize(
-    "deprecated_attribute",
-    [
-        "component_translations",
-        "platform_translations",
-        "object_id_component_translations",
-        "object_id_platform_translations",
-        "default_language_platform_translations",
-    ],
-)
-async def test_deprecated_attributes(
-    hass: HomeAssistant,
-    deprecated_attribute: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test setting the device name based on input info."""
-
-    platform = MockPlatform()
-    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
-
-    assert getattr(entity_platform, deprecated_attribute) is getattr(
-        entity_platform.platform_data, deprecated_attribute
-    )
-    assert (
-        f"The deprecated function {deprecated_attribute} was called from "
-        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
-        f"{deprecated_attribute} instead, please report it to the author of the "
-        "'my_integration' custom integration" in caplog.text
-    )
-
-
-@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_deprecated_async_load_translations(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test setting the device name based on input info."""
-
-    platform = MockPlatform()
-    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
-
-    await entity_platform.async_load_translations()
-    assert (
-        "The deprecated function async_load_translations was called from "
-        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
-        "async_load_translations instead, please report it to the author of the "
-        "'my_integration' custom integration" in caplog.text
-    )
