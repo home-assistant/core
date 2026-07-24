@@ -1,8 +1,12 @@
 """Test the Eurotronic Comet Blue integration setup."""
 
+from unittest.mock import patch
+
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eurotronic_cometblue.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -23,3 +27,29 @@ async def test_device_registry(
 
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, FIXTURE_MAC)})
     assert device_entry == snapshot
+
+
+async def test_setup_retries_when_device_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test logging when no device is found."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.eurotronic_cometblue.async_ble_device_from_address",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.eurotronic_cometblue.async_address_reachability_diagnostics",
+            return_value="mock reachability reason",
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert "aa:bb:cc:dd:ee:ff: mock reachability reason" in caplog.text
