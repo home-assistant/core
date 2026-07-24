@@ -1,0 +1,171 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register any custom actions or services.
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: todo
+    comment: >-
+      The DataUpdateCoordinator is defined inline inside async_setup_entry in
+      binary_sensor.py rather than in a dedicated coordinator.py.
+      The sensor.py should also use the dedicated coordinator.
+
+      Nice to have: a shared base entity in entity.py.
+  config-flow-test-coverage:
+    status: todo
+    comment: >-
+      A test verifying that the config flow prevents duplicate entries is
+      missing. This is related to the missing unique-config-entry
+      implementation.
+      All tests should end in CREATE_ENTRY or ABORT to test that the flow is
+      able to recover.
+  config-flow:
+    status: todo
+    comment: >-
+      The config flow is functional but does not use data_description in
+      strings.json to give users context for the input fields (host,
+      username, password).
+
+      Todos that are not blocking `done`:
+      - Move to a sub entry flow for adding stations (single config flow
+        for auth, sub entry for every station)
+      - Remove `host` as there is no expected use case for
+        other-than-default hosts
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide any custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: The integration documentation does not include a removal instructions section.
+  entity-event-setup:
+    status: exempt
+    comment: The integration entities do not subscribe to any events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: todo
+    comment: >-
+      async_setup_entry in __init__.py forwards to platforms without verifying
+      connectivity first. No ConfigEntryNotReady or ConfigEntryAuthFailed is
+      raised on connection failure.
+  unique-config-entry:
+    status: todo
+    comment: >-
+      The config flow does not call async_set_unique_id() or
+      _abort_if_unique_id_configured(). The "already_configured" abort string
+      exists in strings.json but is never triggered.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not provide any custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: >-
+      sensor.py defines PARALLEL_UPDATES = 0, but binary_sensor.py is missing
+      the PARALLEL_UPDATES constant entirely.
+  reauthentication-flow:
+    status: todo
+    comment: >-
+      The integration requires username and password credentials but does not
+      implement async_step_reauth.
+  test-coverage:
+    status: todo
+    comment: >-
+      Only the config flow is tested (test_config_flow.py). There are no tests
+      for sensor.py or binary_sensor.py, so coverage is well below 95%.
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: No diagnostics.py module exists.
+  discovery-update-info:
+    status: exempt
+    comment: >-
+      The integration connects to a cloud API (HVV GTI) that has no network
+      discovery mechanism.
+  discovery:
+    status: exempt
+    comment: >-
+      The HVV GTI API requires user-supplied credentials and cannot be
+      auto-discovered.
+  docs-data-update:
+    status: todo
+    comment: >-
+      The documentation does not describe polling intervals (1 minute for
+      departures, 1 hour for elevator status).
+  docs-examples:
+    status: todo
+    comment: The documentation does not include blueprints or usage examples.
+  docs-known-limitations:
+    status: todo
+    comment: The documentation does not include a Known Limitations section.
+  docs-supported-devices:
+    status: exempt
+    comment: >-
+      The integration connects to a cloud transit data service and does not
+      integrate physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: todo
+    comment: The documentation does not include a troubleshooting section.
+  docs-use-cases:
+    status: todo
+    comment: The documentation does not include use-case examples.
+  dynamic-devices:
+    status: todo
+    comment: >-
+      binary_sensor.py only adds elevator entities at initial setup. There is
+      no coordinator listener to dynamically add entities for elevators that
+      appear in subsequent coordinator refreshes.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations:
+    status: todo
+    comment: >-
+      binary_sensor.py sets _attr_name to a hardcoded English string
+      ("Elevator {label}", "Unknown elevator") constructed in
+      get_elevator_entities_from_station_information, rather than using a
+      translation key. The sensor entity correctly uses _attr_translation_key.
+  exception-translations:
+    status: todo
+    comment: >-
+      No exceptions use translation_domain or translation_key. There is no
+      "exceptions" section in strings.json.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: No async_step_reconfigure is implemented in config_flow.py.
+  repair-issues:
+    status: todo
+    comment: >-
+      If a configured station no longer exists in the GTI API, or if the
+      saved line filters reference lines that have been removed, the
+      integration should surface a repair issue to guide the user to
+      reconfigure.
+  stale-devices:
+    status: todo
+    comment: >-
+      There is no async_remove_config_entry_device implementation. Elevator
+      entities persist in the registry even if the station's elevator
+      configuration changes.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
