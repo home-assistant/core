@@ -640,18 +640,14 @@ async def test_new_user_flow_replaces_stale_user_flow(
     hass: HomeAssistant,
 ) -> None:
     """A fresh user flow replaces an earlier one left open (e.g. after refresh)."""
-    with patch(
-        "homeassistant.components.izone.discovery.discovery_service_active",
-        return_value=False,
-    ):
-        first = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert first["step_id"] == "user"
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert first["step_id"] == "user"
 
-        second = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
     assert second["type"] is FlowResultType.FORM
     assert second["step_id"] == "user"
@@ -900,15 +896,9 @@ async def test_user_flow_can_search_again_after_empty_discovery(
 async def test_user_manual_host_success(hass: HomeAssistant) -> None:
     """Manual host entry probes the bridge and continues to confirm."""
     controller = create_mock_controller("000000001", "192.0.2.55")
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.async_discover_by_host",
-            new=AsyncMock(return_value=endpoint_from_controller(controller)),
-        ),
-        patch(
-            "homeassistant.components.izone.discovery.discovery_service_active",
-            return_value=False,
-        ),
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(return_value=endpoint_from_controller(controller)),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -930,13 +920,7 @@ async def test_user_manual_host_success(hass: HomeAssistant) -> None:
 async def test_user_blank_host_submits_search(hass: HomeAssistant) -> None:
     """Leaving the host blank triggers broadcast discovery."""
     controller = create_mock_controller("000000001", "192.0.2.1")
-    with (
-        patch_discovered_controllers(controller),
-        patch(
-            "homeassistant.components.izone.discovery.discovery_service_active",
-            return_value=False,
-        ),
-    ):
+    with patch_discovered_controllers(controller):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -955,16 +939,12 @@ async def test_user_manual_host_required_when_enter_host_selected(
     hass: HomeAssistant,
 ) -> None:
     """Enter host without an address shows a field error."""
-    with patch(
-        "homeassistant.components.izone.discovery.discovery_service_active",
-        return_value=False,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], _user_manual_host_input("")
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_manual_host_input("")
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -973,15 +953,9 @@ async def test_user_manual_host_required_when_enter_host_selected(
 
 async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
     """Unreachable manual host returns to the user form with an error."""
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.async_discover_by_host",
-            new=AsyncMock(return_value=None),
-        ),
-        patch(
-            "homeassistant.components.izone.discovery.discovery_service_active",
-            return_value=False,
-        ),
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1164,15 +1138,9 @@ async def test_user_manual_host_aborts_when_discovery_bind_fails(
 
 async def test_user_manual_host_unpaired_aborts(hass: HomeAssistant) -> None:
     """Unpaired bridge placeholder aborts manual host setup."""
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.async_discover_by_host",
-            new=AsyncMock(side_effect=pizone.UnpairedBridgeError("unpaired")),
-        ),
-        patch(
-            "homeassistant.components.izone.discovery.discovery_service_active",
-            return_value=False,
-        ),
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(side_effect=pizone.UnpairedBridgeError("unpaired")),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

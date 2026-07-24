@@ -235,17 +235,6 @@ async def async_discover_endpoint(
     return await service.discover_by_uid(uid)
 
 
-@callback
-def discovery_service_active(hass: HomeAssistant) -> bool:
-    """Return True when the shared discovery service is running or starting."""
-    state = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if not isinstance(state, DiscoveryServiceState):
-        return False
-    if state.runtime is not None:
-        return True
-    return state.starting is not None and not state.starting.done()
-
-
 async def async_discover_by_host(
     hass: HomeAssistant, host: str
 ) -> pizone.ControllerEndpoint | None:
