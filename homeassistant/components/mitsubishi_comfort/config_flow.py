@@ -13,7 +13,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_ADDRESSES, DOMAIN
+from .const import CONF_ADDRESSES, CONF_CREDENTIALS, DOMAIN
+from .helpers import build_credentials, is_fully_credentialed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,15 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        # Fields recovered by earlier attempts in this flow, replayed on retry:
+        # the rate-limited Socket.IO password fetch may succeed on one attempt
+        # and return nothing on the next, so no single attempt has to recover
+        # everything.
+        self._cached_credentials: dict[str, dict[str, str]] = {}
+        self._cached_username: str | None = None
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -38,6 +48,11 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # The recovered fields belong to the account entered.
+            if user_input[CONF_USERNAME] != self._cached_username:
+                self._cached_username = user_input[CONF_USERNAME]
+                self._cached_credentials = {}
+
             account = MitsubishiCloudAccount(
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
@@ -47,27 +62,46 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             devices: dict = {}
             try:
                 await account.login()
-                devices = await account.discover_devices()
+                devices = await account.discover_devices(
+                    cached_credentials=self._cached_credentials
+                )
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected error during setup")
+                _LOGGER.exception(
+                    "Unexpected error discovering Mitsubishi Comfort devices"
+                )
                 errors["base"] = "unknown"
+            else:
+                _LOGGER.debug("Discovered %d device(s)", len(devices))
 
             if not errors:
                 await self.async_set_unique_id(account.user_id)
                 self._abort_if_unique_id_configured()
 
+                # Persist the fields discovered here for async_setup_entry to
+                # replay via discover_devices(cached_credentials=...): the
+                # slow, rate-limited Socket.IO call then runs only for
+                # passwords still missing.
+                credentials = build_credentials(devices)
+                if credentials:
+                    self._cached_credentials = credentials
                 if not devices:
                     errors["base"] = "no_devices"
+                elif not any(is_fully_credentialed(info) for info in devices.values()):
+                    # The cache may hold partial (MAC-less) records setup cannot
+                    # use; creating the entry with nothing settable-up would
+                    # load zero devices without raising any repair.
+                    errors["base"] = "no_usable_devices"
                 else:
                     return self.async_create_entry(
                         title=f"Mitsubishi Comfort ({user_input[CONF_USERNAME]})",
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_CREDENTIALS: credentials,
                         },
                     )
 
@@ -91,11 +125,13 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         device = dr.async_get(self.hass).async_get_device(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)}
         )
+        if device is None:
+            return self.async_abort(reason="already_configured")
         entry = next(
             (
                 entry
                 for entry in self._async_current_entries(include_ignore=False)
-                if device is not None and entry.entry_id in device.config_entries
+                if entry.entry_id in device.config_entries
             ),
             None,
         )
@@ -104,6 +140,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
         addresses = entry.data.get(CONF_ADDRESSES, {})
         if addresses.get(mac) != discovery_info.ip:
+            _LOGGER.debug("DHCP discovery resolved %s to %s", mac, discovery_info.ip)
             self.hass.config_entries.async_update_entry(
                 entry,
                 data={

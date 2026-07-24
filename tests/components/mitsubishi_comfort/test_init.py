@@ -1,20 +1,38 @@
 """Tests for the Mitsubishi Comfort integration setup."""
 
-from unittest.mock import AsyncMock, MagicMock
+import logging
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
 
-from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import (
+    CONF_ADDRESSES,
+    CONF_CREDENTIALS,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
+
+
+def _cache_entry(ip: str, mac: str = MOCK_MAC) -> DhcpServiceInfo:
+    """Build a DHCP cache entry (the cache stores MACs without separators)."""
+    return DhcpServiceInfo(
+        ip=ip, hostname="kumo", macaddress=mac.replace(":", "").lower()
+    )
 
 
 async def test_setup_entry_success(
@@ -76,6 +94,7 @@ async def test_setup_entry_no_address_loads_and_registers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_cloud_account: AsyncMock,
 ) -> None:
     """Test setup with no known LAN address loads and registers the device.
@@ -84,7 +103,8 @@ async def test_setup_entry_no_address_loads_and_registers(
     resolved address the device cannot be polled, so it creates no entity — but
     it is registered with its MAC so "registered_devices" DHCP discovery can
     supply the IP and reload the entry. Setup must not retry (which would hammer
-    the cloud API) since retrying can never resolve the address.
+    the cloud API) since retrying can never resolve the address. The missing
+    address is surfaced as a repair issue rather than failing silently.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -101,11 +121,114 @@ async def test_setup_entry_no_address_loads_and_registers(
     assert device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC))}
     )
+    issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+    assert issue
+    assert issue.is_fixable
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.data == {"entry_id": entry.entry_id}
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "cache", "expected_addresses", "expect_issue"),
+    [
+        pytest.param(
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            [_cache_entry(MOCK_ADDRESS)],
+            {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            False,
+            id="seeds_missing_address",
+        ),
+        pytest.param(
+            {
+                CONF_USERNAME: MOCK_USERNAME,
+                CONF_PASSWORD: MOCK_PASSWORD,
+                CONF_ADDRESSES: {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            },
+            [_cache_entry("192.168.1.222")],
+            {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            False,
+            id="stored_address_wins",
+        ),
+        pytest.param(
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            [_cache_entry("192.168.1.60", mac="99:99:99:99:99:99")],
+            {},
+            True,
+            id="ignores_unowned_mac",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_integration")
+async def test_setup_entry_dhcp_cache_seeding(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    entry_data: dict[str, Any],
+    cache: list[DhcpServiceInfo],
+    expected_addresses: dict[str, str],
+    expect_issue: bool,
+) -> None:
+    """Test setup consults the DHCP discovery cache for missing addresses.
+
+    A device sighted before it was registered never re-fires
+    registered_devices discovery, so setup looks the sighting cache up instead
+    of waiting for a new sighting. Stored addresses are never overwritten by
+    the cache (live discovery handles genuine IP changes), and sightings of
+    MACs the account does not own are ignored.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="user-12345")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.async_discovered_service_info",
+        return_value=cache,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data.get(CONF_ADDRESSES, {}) == expected_addresses
+    issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+    assert (issue is not None) is expect_issue
+
+
+async def test_setup_entry_caches_and_replays_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test credentials are persisted on the entry and replayed to discovery."""
+    mock_account, _ = mock_setup_integration
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The first setup has nothing to replay and persists the discovered
+    # credentials for the next one.
+    assert mock_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
+    credentials = {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": MOCK_MAC,
+        }
+    }
+    assert mock_config_entry.data[CONF_CREDENTIALS] == credentials
+
+    # A reload replays the persisted credentials so discovery can skip the
+    # rate-limited Socket.IO fetch.
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_account.discover_devices.call_args.kwargs["cached_credentials"] == (
+        credentials
+    )
 
 
 async def test_setup_entry_resolves_address_from_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
 ) -> None:
@@ -124,16 +247,56 @@ async def test_setup_entry_resolves_address_from_entry(
     assert mock_config_entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == (
         MOCK_ADDRESS
     )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"missing_address_{mock_config_entry.entry_id}"
+    )
+
+
+async def test_setup_entry_prunes_stale_addresses(
+    hass: HomeAssistant,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test a stored address for a device no longer on the account is dropped."""
+    stale_mac = dr.format_mac("99:99:99:99:99:99")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_ADDRESSES: {
+                dr.format_mac(MOCK_MAC): MOCK_ADDRESS,
+                stale_mac: "192.168.1.99",
+            },
+        },
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_ADDRESSES] == {dr.format_mac(MOCK_MAC): MOCK_ADDRESS}
 
 
 async def test_setup_entry_skips_incomplete_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_device_info: DeviceInfo,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup skips incomplete devices and creates complete ones."""
+    """Test setup skips devices the cloud returned incomplete data for.
+
+    Without a password and cryptoSerial the local API cannot be authenticated,
+    and without a MAC the device cannot be keyed in the address cache, so the
+    device is skipped (no coordinator, no entity) and the gap is logged. Any
+    recovered field is still cached — discover_devices() consumes them
+    independently, and the password in particular may never be returned by
+    the throttled Socket.IO fetch again.
+    """
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
         label="Bedroom",
@@ -143,19 +306,59 @@ async def test_setup_entry_skips_incomplete_devices(
         password="",
         crypto_serial="",
     )
+    no_mac_info = DeviceInfo(
+        serial="SERIAL003",
+        label="Attic",
+        address="",
+        mac="",
+        unit_type="ductless",
+        password="dGVzdHBhc3M=",
+        crypto_serial="0102030405060708090a",
+    )
     mock_account, _ = mock_setup_integration
     mock_account.discover_devices.return_value = {
         "SERIAL001": mock_device_info,
         "SERIAL002": incomplete_info,
+        "SERIAL003": no_mac_info,
     }
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.mitsubishi_comfort"
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002") is None
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL003") is None
+    assert (
+        "The cloud returned incomplete local connection data for 2 device(s):"
+        " Attic, Bedroom" in caplog.text
+    )
+    assert mock_config_entry.data[CONF_CREDENTIALS] == {
+        "SERIAL001": {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": MOCK_MAC,
+        },
+        "SERIAL002": {
+            "password": "",
+            "crypto_serial": "",
+            "mac": "11:22:33:44:55:66",
+        },
+        "SERIAL003": {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": "",
+        },
+    }
+    # Incomplete devices are not addressless: an issue for them would open a
+    # fix flow with zero fields.
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"missing_address_{mock_config_entry.entry_id}"
+    )
 
 
 async def test_unload_entry(
@@ -174,3 +377,235 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_registers_mac_less_devices_separately(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test MAC-less devices get their own registry entries, sans connection.
+
+    Connections are globally indexed, so registering an empty MAC would merge
+    every MAC-less device into the first one's registry entry.
+    """
+    mock_account, _ = mock_setup_integration
+    mock_account.discover_devices.return_value = {
+        "SERIAL002": DeviceInfo(
+            serial="SERIAL002",
+            label="Bedroom",
+            address="",
+            mac="",
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+        "SERIAL003": DeviceInfo(
+            serial="SERIAL003",
+            label="Attic",
+            address="",
+            mac="",
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    bedroom = device_registry.async_get_device(identifiers={(DOMAIN, "SERIAL002")})
+    attic = device_registry.async_get_device(identifiers={(DOMAIN, "SERIAL003")})
+    assert bedroom is not None
+    assert attic is not None
+    assert bedroom.id != attic.id
+    assert not bedroom.connections
+    assert not attic.connections
+
+
+async def test_failed_unload_keeps_missing_address_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a failed platform unload keeps the actionable repair issue.
+
+    A failed unload leaves the entry active with its addressless devices, so
+    deleting the issue first would strip the only UI path to fix them.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"missing_address_{entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_setup_retry_raises_issue_from_cached_credentials(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a cloud-down setup still offers the fix flow from stored data.
+
+    The issue is not persistent and unload deletes it, so a restart or reload
+    that cannot reach the cloud must reconcile it from the entry data alone.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_CREDENTIALS: {
+                MOCK_SERIAL: {
+                    "password": "dGVzdHBhc3M=",
+                    "crypto_serial": "0102030405060708090a",
+                    "mac": MOCK_MAC,
+                }
+            },
+        },
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+    mock_cloud_account.login.side_effect = DeviceConnectionError("cloud down")
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+
+
+async def test_setup_retry_clears_stale_issue_when_all_addressed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a cloud-down setup clears an issue whose devices got addresses."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_ADDRESSES: {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            CONF_CREDENTIALS: {
+                MOCK_SERIAL: {
+                    "password": "dGVzdHBhc3M=",
+                    "crypto_serial": "0102030405060708090a",
+                    "mac": MOCK_MAC,
+                },
+                # A MAC-only record cannot be probed, so it must not count
+                # as addressless.
+                "SERIAL002": {
+                    "password": "",
+                    "crypto_serial": "",
+                    "mac": "11:22:33:44:55:66",
+                },
+            },
+        },
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+    issue_id = f"missing_address_{entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="missing_address",
+        data={"entry_id": entry.entry_id},
+    )
+    mock_cloud_account.login.side_effect = DeviceConnectionError("cloud down")
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_remove_never_loaded_entry_clears_missing_address_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+    mock_device_info: DeviceInfo,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing an entry stuck in setup retry clears the repair issue.
+
+    Removal never calls async_unload_entry for an entry that failed setup, so
+    without the remove hook the issue would outlive the entry.
+    """
+    mock_account, mock_device = mock_setup_integration
+    mock_account.discover_devices.return_value = {
+        MOCK_SERIAL: mock_device_info,
+        "SERIAL002": DeviceInfo(
+            serial="SERIAL002",
+            label="Bedroom",
+            address="",
+            mac="11:22:33:44:55:66",
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+    }
+    mock_device.update_status.side_effect = DeviceConnectionError("boom")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"missing_address_{mock_config_entry.entry_id}"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_unload_entry_clears_missing_address_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test unloading clears the missing-address repair issue.
+
+    Without the cleanup, removing the integration would leave a stale issue for
+    a device that never had a resolved LAN address.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"missing_address_{entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
