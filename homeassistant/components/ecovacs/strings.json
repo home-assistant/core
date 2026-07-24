@@ -76,11 +76,17 @@
       "reset_lifespan_station_filter": {
         "name": "Reset station filter lifespan"
       },
+      "reset_lifespan_trimmer_brush": {
+        "name": "Reset edge trimmer brush lifespan"
+      },
       "reset_lifespan_unit_care": {
         "name": "Reset unit care lifespan"
       },
       "reset_lifespan_uv_sanitizer": {
         "name": "Reset UV sanitizer lifespan"
+      },
+      "reset_lifespan_weed_rope": {
+        "name": "Reset edge trimmer line lifespan"
       },
       "station_action_clean_base": {
         "name": "Clean base"
@@ -197,11 +203,17 @@
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
       },
+      "lifespan_trimmer_brush": {
+        "name": "Edge trimmer brush lifespan"
+      },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
       },
       "lifespan_uv_sanitizer": {
         "name": "UV sanitizer lifespan"
+      },
+      "lifespan_weed_rope": {
+        "name": "Edge trimmer line lifespan"
       },
       "network_ip": {
         "name": "IP address"

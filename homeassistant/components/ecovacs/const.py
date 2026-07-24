@@ -23,8 +23,10 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.ROUND_MOP,
     LifeSpan.SIDE_BRUSH,
     LifeSpan.STATION_FILTER,
+    LifeSpan.TRIMMER_BRUSH,
     LifeSpan.UNIT_CARE,
     LifeSpan.UV_SANITIZER,
+    LifeSpan.WEED_ROPE,
 )
 
 SUPPORTED_STATION_ACTIONS = (
