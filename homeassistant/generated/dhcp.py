@@ -34,6 +34,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "70B3D52A0*",
     },
     {
+        "domain": "airtouch3",
+        "hostname": "*aritouch3*",
+    },
+    {
         "domain": "airzone",
         "macaddress": "E84F25*",
     },
