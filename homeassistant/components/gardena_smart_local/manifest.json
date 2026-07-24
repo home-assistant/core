@@ -1,0 +1,12 @@
+{
+  "domain": "gardena_smart_local",
+  "name": "GARDENA smart local",
+  "codeowners": ["@cloudless-garden"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/gardena_smart_local",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["gardena-smart-local-api==0.1.0"],
+  "zeroconf": ["_gardena-smart._tcp.local."]
+}
