@@ -103,7 +103,6 @@ async def async_get_device_info(
     host: str,
 ) -> tuple[str, int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
-    # Try the websocket ssl and non-ssl ports
     for port in WEBSOCKET_PORTS:
         bridge = SamsungTVBridge.get_bridge(hass, METHOD_WEBSOCKET, host, port)
         if info := await bridge.async_device_info():
@@ -112,7 +111,6 @@ async def async_get_device_info(
                 port,
                 info,
             )
-            # Check the encrypted port if the model requires encryption
             if model_requires_encryption(info.get("device", {}).get("modelName")):
                 encrypted_bridge = SamsungTVEncryptedBridge(
                     hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
@@ -127,13 +125,11 @@ async def async_get_device_info(
                     )
             return RESULT_SUCCESS, port, METHOD_WEBSOCKET, info
 
-    # Try legacy port
     bridge = SamsungTVBridge.get_bridge(hass, METHOD_LEGACY, host, LEGACY_PORT)
     result = await bridge.async_try_connect()
     if result in SUCCESSFUL_RESULTS:
         return result, LEGACY_PORT, METHOD_LEGACY, await bridge.async_device_info()
 
-    # Failed to get info
     return result, None, None, None
 
 
@@ -366,7 +362,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
     def _send_key(self, key: str) -> None:
         """Send a key using legacy protocol."""
         try:
-            # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
@@ -401,7 +396,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Close remote object."""
         try:
             if self._remote is not None:
-                # Close the current remote connection
                 self._remote.close()
             self._remote = None
         except OSError:
@@ -437,7 +431,6 @@ class SamsungTVWSBaseBridge[
     async def _async_send_commands(self, commands: list[_CommandT]) -> None:
         """Send the commands using websocket protocol."""
         try:
-            # recreate connection if connection was dead
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
@@ -458,7 +451,6 @@ class SamsungTVWSBaseBridge[
     async def _async_get_remote(self) -> _RemoteT | None:
         """Create or return a remote control instance."""
         if (remote := self._remote) and remote.is_alive():
-            # If we have one then try to use it
             return remote
 
         async with self._remote_lock:
@@ -475,7 +467,6 @@ class SamsungTVWSBaseBridge[
         """Close remote object."""
         try:
             if self._remote is not None:
-                # Close the current remote connection
                 await self._remote.close()
             self._remote = None
         except OSError as err:
@@ -502,11 +493,11 @@ class SamsungTVWSBridge(
         self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
 
-    def _get_device_spec(self, key: str) -> Any | None:
+    def _get_device_spec(self, key: str) -> str | None:
         """Check if a flag exists in latest device info."""
         if not ((info := self._device_info) and (device := info.get("device"))):
             return None
-        return device.get(key)
+        return cast(str | None, device.get(key))
 
     @override
     async def async_is_on(self) -> bool:
@@ -667,10 +658,11 @@ class SamsungTVWSBridge(
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
                 LOGGER.debug("Failed to get remote for %s: %s", self.host, repr(err))
                 self._remote = None
-            else:
+
+            # All exception handlers set self._remote to None above
+            if self._remote is not None:
                 LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
                 if self._device_info is None:
-                    # Initialise device info on first connect
                     await self.async_device_info()
                 if self.token != self._remote.token:
                     LOGGER.warning(
