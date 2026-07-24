@@ -221,6 +221,10 @@ async def test_webhook_event_for_disabled_home_ignored(
     assert "Error processing webhook" not in caplog.text
     assert not [rec for rec in caplog.records if rec.levelno >= logging.ERROR]
 
+    # Account level lifecycle pushes pass the filter even with a home_id set
+    await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
+    assert config_entry.runtime_data.webhook
+
 
 @pytest.mark.usefixtures("netatmo_auth")
 async def test_disabling_home_reloads_entry(
