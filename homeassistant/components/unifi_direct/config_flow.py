@@ -6,39 +6,89 @@ from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_HOSTS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import DEFAULT_NAME, DEFAULT_SSH_PORT, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        vol.Required(CONF_HOSTS): selector.ObjectSelector(
+            selector.ObjectSelectorConfig(
+                multiple=True,
+                translation_key=CONF_HOSTS,
+                fields={
+                    CONF_HOST: {
+                        "required": True,
+                        "selector": selector.TextSelector(
+                            selector.TextSelectorConfig()
+                        ),
+                    },
+                    CONF_USERNAME: {
+                        "required": True,
+                        "selector": selector.TextSelector(
+                            selector.TextSelectorConfig()
+                        ),
+                    },
+                    CONF_PASSWORD: {
+                        "required": True,
+                        "selector": selector.TextSelector(
+                            selector.TextSelectorConfig(
+                                type=selector.TextSelectorType.PASSWORD
+                            )
+                        ),
+                    },
+                    CONF_PORT: {
+                        "selector": selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=1,
+                                max=65535,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        )
+                    },
+                },
+            )
+        )
     }
 )
 
 
+def _has_duplicate_hosts(host_configs: list[dict[str, Any]]) -> bool:
+    """Return if the configured hosts contain duplicates."""
+    hosts = [host_config[CONF_HOST] for host_config in host_configs]
+    return len(hosts) != len(set(hosts))
+
+
 def validate_connection_data(data: dict[str, Any]) -> None:
     """Validate that we can connect to the UniFi AP with the provided configuration."""
-    try:
-        ap = UniFiAP(
-            target=data[CONF_HOST],
-            username=data[CONF_USERNAME],
-            password=data[CONF_PASSWORD],
-            port=data[CONF_PORT],
-        )
-        ap.get_clients()
-    except (UniFiAPConnectionException, UniFiAPDataException) as err:
-        raise CannotConnect("Failed to connect to UniFi AP") from err
+    for host_config in data.get(CONF_HOSTS, []):
+        try:
+            ap = UniFiAP(
+                target=host_config[CONF_HOST],
+                username=host_config[CONF_USERNAME],
+                password=host_config[CONF_PASSWORD],
+                port=host_config.get(CONF_PORT, DEFAULT_SSH_PORT),
+            )
+            ap.get_clients()
+        except (UniFiAPConnectionException, UniFiAPDataException) as err:
+            raise CannotConnect(
+                f"Failed to connect to UniFi AP at {host_config[CONF_HOST]}",
+                host=host_config[CONF_HOST],
+            ) from err
 
 
 class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UniFi Direct."""
 
-    VERSION = 1
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @override
     async def async_step_user(
@@ -46,42 +96,107 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            try:
-                await self.hass.async_add_executor_job(
-                    validate_connection_data, user_input
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            host_configs = user_input.get(CONF_HOSTS, [])
+            if not host_configs or _has_duplicate_hosts(host_configs):
+                errors["base"] = "invalid_config"
             else:
-                return self.async_create_entry(
-                    title=f"{DEFAULT_NAME} ({user_input[CONF_HOST]})",
-                    data=user_input,
-                )
+                entry_data = {CONF_HOSTS: host_configs}
+                self._async_abort_entries_match(entry_data)
+                try:
+                    await self.hass.async_add_executor_job(
+                        validate_connection_data, entry_data
+                    )
+                except CannotConnect as err:
+                    errors["base"] = "cannot_connect"
+                    description_placeholders = {"host": err.host}
+                else:
+                    return self.async_create_entry(
+                        title=f"{DEFAULT_NAME} ({', '.join(host[CONF_HOST] for host in host_configs)})",
+                        data=entry_data,
+                    )
 
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing config from configuration.yaml."""
-        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
+        host_config = {
+            CONF_HOST: import_data.get(CONF_HOST),
+            CONF_USERNAME: import_data.get(CONF_USERNAME, ""),
+            CONF_PASSWORD: import_data.get(CONF_PASSWORD, ""),
+            CONF_PORT: cv.port(import_data.get(CONF_PORT, DEFAULT_SSH_PORT)),
+        }
+
+        entry_data = {CONF_HOSTS: [host_config]}
+        self._async_abort_entries_match(entry_data)
 
         try:
-            await self.hass.async_add_executor_job(
-                validate_connection_data, import_data
-            )
+            await self.hass.async_add_executor_job(validate_connection_data, entry_data)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
-            title=f"{DEFAULT_NAME} ({import_data[CONF_HOST]})",
-            data=import_data,
+            title=f"{DEFAULT_NAME} ({host_config[CONF_HOST]})",
+            data=entry_data,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert config_entry is not None
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
+        if user_input is not None:
+            host_configs = user_input.get(CONF_HOSTS, [])
+            if not host_configs or _has_duplicate_hosts(host_configs):
+                errors["base"] = "invalid_config"
+            else:
+                entry_data = {CONF_HOSTS: host_configs}
+                try:
+                    await self.hass.async_add_executor_job(
+                        validate_connection_data, entry_data
+                    )
+                except CannotConnect as err:
+                    errors["base"] = "cannot_connect"
+                    description_placeholders = {"host": err.host}
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        config_entry,
+                        data=entry_data,
+                        title=f"{DEFAULT_NAME} ({', '.join(host[CONF_HOST] for host in host_configs)})",
+                    )
+                    await self.hass.config_entries.async_reload(config_entry.entry_id)
+                    return self.async_abort(reason="reconfigure_successful")
+
+        initial_data = (
+            user_input if user_input is not None else config_entry.data.copy()
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, initial_data
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
 
 class CannotConnect(Exception):
     """Custom exception for failing to connect to the UniFiAP."""
+
+    def __init__(self, message: str, host: str) -> None:
+        """Initialize the exception."""
+        super().__init__(message)
+        self.host = host

@@ -4,11 +4,19 @@ from unifi_ap import UniFiAPConnectionException
 
 from homeassistant import config_entries
 from homeassistant.components.unifi_direct.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_HOSTS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_device_tracker_entities_created(
@@ -40,6 +48,57 @@ async def test_device_tracker_entities_created(
     )
 
 
+async def test_device_tracker_deduplicates_multiple_ap_clients(
+    hass: HomeAssistant,
+    mock_unifiap,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test multiple APs from one entry create a single entity per client MAC."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UniFi AP (192.168.1.2, 192.168.1.3)",
+        version=2,
+        data={
+            CONF_HOSTS: [
+                {
+                    CONF_HOST: "192.168.1.2",
+                    CONF_USERNAME: "admin",
+                    CONF_PASSWORD: "password",
+                    CONF_PORT: 22,
+                },
+                {
+                    CONF_HOST: "192.168.1.3",
+                    CONF_USERNAME: "admin",
+                    CONF_PASSWORD: "password",
+                    CONF_PORT: 22,
+                },
+            ]
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entries = [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.domain == "device_tracker" and entry.platform == "unifi_direct"
+    ]
+    assert len(entries) == 3
+
+    entity_ids = {entry.entity_id for entry in entries}
+    assert any(
+        entry_id.startswith("device_tracker.my_phone") for entry_id in entity_ids
+    )
+    assert any(
+        entry_id.startswith("device_tracker.my_laptop") for entry_id in entity_ids
+    )
+    assert any(
+        entry_id.startswith("device_tracker.my_desktop") for entry_id in entity_ids
+    )
+
+
 async def test_setup_scanner_legacy_platform_imports_config_entry(
     hass: HomeAssistant,
     mock_unifiap,
@@ -61,7 +120,16 @@ async def test_setup_scanner_legacy_platform_imports_config_entry(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data == config
+    assert entries[0].data == {
+        CONF_HOSTS: [
+            {
+                CONF_HOST: "192.168.1.2",
+                CONF_USERNAME: "admin",
+                CONF_PASSWORD: "password",
+                CONF_PORT: 22,
+            }
+        ]
+    }
     assert entries[0].source == config_entries.SOURCE_IMPORT
 
 
@@ -76,9 +144,7 @@ async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
         CONF_PORT: 22,
     }
 
-    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
-        "fail"
-    )
+    mock_unifiap._set_get_clients_side_effect(UniFiAPConnectionException("fail"))
 
     assert await async_setup_component(
         hass,
