@@ -1,0 +1,118 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_host_in_ssdp": "The discovered device did not report a host address.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to SmartHub",
+      "host_not_found": "Host name not found, try with IP",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the Habitron SmartHub at {name}?",
+        "title": "Discovered Habitron SmartHub"
+      },
+      "user": {
+        "data": {
+          "habitron_host": "Host name or IP of SmartHub",
+          "websock_token": "Token for websocket authentication"
+        },
+        "data_description": {
+          "habitron_host": "DNS name or IPv4 address of the SmartHub. Use \"local\" if Home Assistant runs on the SmartCenter itself.",
+          "websock_token": "Optional long-lived access token, only required when SC Touch and Assist run on a remote Home Assistant instance."
+        },
+        "title": "Setup communication"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "airquality": {
+        "name": "Air quality"
+      },
+      "analog_sensor": {
+        "name": "Analog"
+      },
+      "cpu_frequency": {
+        "name": "CPU frequency"
+      },
+      "cpu_load": {
+        "name": "CPU load"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "disk_usage": {
+        "name": "Disk usage"
+      },
+      "ekey_finger": {
+        "name": "Finger value"
+      },
+      "ekey_finger_name": {
+        "name": "Finger name",
+        "state": {
+          "left_index": "Left index finger",
+          "left_middle": "Left middle finger",
+          "left_pinky": "Left little finger",
+          "left_ring": "Left ring finger",
+          "left_thumb": "Left thumb",
+          "right_index": "Right index finger",
+          "right_middle": "Right middle finger",
+          "right_pinky": "Right little finger",
+          "right_ring": "Right ring finger",
+          "right_thumb": "Right thumb"
+        }
+      },
+      "ekey_id": {
+        "name": "Identifier value"
+      },
+      "ekey_user_name": {
+        "name": "Identifier name"
+      },
+      "logic_state": {
+        "name": "Cnt{number}: {name}"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "module_status": {
+        "name": "Status"
+      },
+      "power_temp": {
+        "name": "Power temperature"
+      },
+      "time_out": {
+        "name": "Timeout"
+      },
+      "wind": {
+        "name": "Wind"
+      }
+    }
+  },
+  "exceptions": {
+    "connect_error": {
+      "message": "Error connecting to SmartHub: {error}"
+    },
+    "connect_refused": {
+      "message": "Connection refused to SmartHub: {error}"
+    },
+    "connect_timeout": {
+      "message": "Timeout while connecting to SmartHub."
+    },
+    "update_network_error": {
+      "message": "Network error fetching status from SmartHub: {error}"
+    },
+    "update_timeout": {
+      "message": "Timeout fetching system status from SmartHub."
+    }
+  },
+  "issues": {
+    "router_system_error": {
+      "description": "The router on {name} reported a system error. Please check the router and its communication lines; the issue clears automatically once the router responds again.",
+      "title": "Router system error on {name}"
+    }
+  }
+}

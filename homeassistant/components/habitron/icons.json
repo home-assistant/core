@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "airquality": {
+        "default": "mdi:air-filter"
+      },
+      "analog_sensor": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "ekey_finger": {
+        "default": "mdi:fingerprint"
+      },
+      "ekey_id": {
+        "default": "mdi:fingerprint"
+      },
+      "logic_state": {
+        "default": "mdi:counter"
+      },
+      "module_status": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "0": "mdi:lan-check"
+        }
+      },
+      "time_out": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "wind": {
+        "default": "mdi:weather-windy-variant"
+      }
+    }
+  }
+}

@@ -1224,6 +1224,9 @@ ha-xthings-cloud==1.0.5
 # homeassistant.components.habitica
 habiticalib==0.4.7
 
+# homeassistant.components.habitron
+habitron_client==2.0.12
+
 # homeassistant.components.bluetooth
 habluetooth==6.26.5
 
