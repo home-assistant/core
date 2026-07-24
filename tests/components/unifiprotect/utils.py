@@ -23,6 +23,8 @@ from uiprotect.data import (
     ProtectModelWithId,
     PublicBootstrap,
     Sensor,
+    SmartDetectAudioType,
+    SmartDetectObjectType,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
@@ -35,6 +37,7 @@ from uiprotect.data.public_devices import (
     PublicSensor,
     PublicSensorLeakSettings,
     PublicSensorMotionSettingsRead,
+    PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
     SensorFeatureCapability,
@@ -62,6 +65,7 @@ class MockUFPFixture:
     devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    events_ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -408,18 +412,41 @@ _HDR_DISPLAY_TO_PUBLIC = {
 }
 
 
+_ALL_OBJECT_TYPES = [t for t in SmartDetectObjectType if t.audio_type is None]
+_ALL_AUDIO_TYPES = list(SmartDetectAudioType)
+
+
 def make_public_camera(
     camera: Camera,
     *,
     state: DeviceState | None = None,
+    is_motion_detected: bool = False,
+    is_smart_currently_detected: bool = False,
+    is_person_currently_detected: bool = False,
+    is_vehicle_currently_detected: bool = False,
+    is_animal_currently_detected: bool = False,
+    is_audio_currently_detected: bool = False,
+    is_smoke_currently_detected: bool = False,
+    is_cmonx_currently_detected: bool = False,
+    is_siren_currently_detected: bool = False,
+    is_baby_cry_currently_detected: bool = False,
+    is_speaking_currently_detected: bool = False,
+    is_bark_currently_detected: bool = False,
+    is_car_alarm_currently_detected: bool = False,
+    is_car_horn_currently_detected: bool = False,
+    is_glass_break_currently_detected: bool = False,
+    object_types: list[SmartDetectObjectType] | None = None,
+    audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
     """Build a public-API camera mirroring a private camera's migrated fields.
 
-    ``mic_volume`` and ``hdr_type`` default to values derived from the private
-    fixture so the public mirror matches it; pass an override to assert a value
-    the private object would not produce.
+    The stream tiers/mic/HDR back the migrated stream and select entities; the
+    ``is_*`` flags back the migrated ``ufp_public_value`` detection paths and the
+    ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
+    gates (default: all types enabled). ``mic_volume`` and ``hdr_type`` default to
+    values derived from the private fixture so the public mirror matches it.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -430,6 +457,43 @@ def make_public_camera(
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.is_motion_detected = is_motion_detected
+    public.is_smart_currently_detected = is_smart_currently_detected
+    public.is_person_currently_detected = is_person_currently_detected
+    public.is_vehicle_currently_detected = is_vehicle_currently_detected
+    public.is_animal_currently_detected = is_animal_currently_detected
+    public.is_audio_currently_detected = is_audio_currently_detected
+    public.is_smoke_currently_detected = is_smoke_currently_detected
+    public.is_cmonx_currently_detected = is_cmonx_currently_detected
+    public.is_siren_currently_detected = is_siren_currently_detected
+    public.is_baby_cry_currently_detected = is_baby_cry_currently_detected
+    public.is_speaking_currently_detected = is_speaking_currently_detected
+    public.is_bark_currently_detected = is_bark_currently_detected
+    public.is_car_alarm_currently_detected = is_car_alarm_currently_detected
+    public.is_car_horn_currently_detected = is_car_horn_currently_detected
+    public.is_glass_break_currently_detected = is_glass_break_currently_detected
+    public.smart_detect_settings = PublicSmartDetectSettings(
+        object_types=_ALL_OBJECT_TYPES if object_types is None else object_types,
+        audio_types=_ALL_AUDIO_TYPES if audio_types is None else audio_types,
+    )
+    # A Mock(spec) does not evaluate properties, so mirror the PublicCamera
+    # parity properties the migrated detection sensors gate on using the
+    # library's own logic.
+    for name in (
+        "is_person_detection_on",
+        "is_vehicle_detection_on",
+        "is_animal_detection_on",
+        "is_smoke_detection_on",
+        "is_co_detection_on",
+        "is_siren_detection_on",
+        "is_baby_cry_detection_on",
+        "is_speaking_detection_on",
+        "is_bark_detection_on",
+        "is_car_alarm_detection_on",
+        "is_car_horn_detection_on",
+        "is_glass_break_detection_on",
+    ):
+        setattr(public, name, getattr(PublicCamera, name).fget(public))
     public.hdr_type = (
         _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
         if hdr_type is None
