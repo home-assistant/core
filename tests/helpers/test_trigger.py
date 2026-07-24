@@ -4277,6 +4277,122 @@ async def _arm_off_to_on_trigger(
     )
 
 
+async def _arm_off_to_on_trigger_with_diagnostics(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+    behavior: str,
+    calls: list[dict[str, Any]],
+    did_not_trigger_reports: list[NotTriggeredInfo],
+) -> CALLBACK_TYPE:
+    """Set up _OffToOnTrigger with both an action and a did_not_trigger reporter."""
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"off_to_on": _OffToOnTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    trigger_config = {
+        CONF_PLATFORM: "test.off_to_on",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"])
+
+    @callback
+    def did_not_trigger(
+        run_variables: dict[str, Any],
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        did_not_trigger_reports.append(info)
+
+    validated_config = await async_validate_trigger_config(hass, [trigger_config])
+    return await async_initialize_triggers(
+        hass,
+        validated_config,
+        action,
+        domain="test",
+        name="test_off_to_on",
+        log_cb=log.log,
+        did_not_trigger=did_not_trigger,
+    )
+
+
+async def test_entity_trigger_reports_did_not_trigger_behavior_all(
+    hass: HomeAssistant,
+) -> None:
+    """Behavior 'all' reports when not every targeted entity matches."""
+    entity_1 = "test.entity_1"
+    entity_2 = "test.entity_2"
+    hass.states.async_set(entity_1, STATE_OFF)
+    hass.states.async_set(entity_2, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    unsub = await _arm_off_to_on_trigger_with_diagnostics(
+        hass, [entity_1, entity_2], BEHAVIOR_ALL, calls, did_not_trigger_reports
+    )
+
+    # Only one of the two targets is on, so the trigger does not fire.
+    hass.states.async_set(entity_1, STATE_ON)
+    await hass.async_block_till_done()
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("not_all_targets_matched", {"matches": 1, "included": 2})
+    ]
+    did_not_trigger_reports.clear()
+
+    # Now both targets are on, so the trigger fires and reports nothing further.
+    hass.states.async_set(entity_2, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert did_not_trigger_reports == []
+
+    unsub()
+
+
+async def test_entity_trigger_reports_did_not_trigger_behavior_first(
+    hass: HomeAssistant,
+) -> None:
+    """Behavior 'first' reports when the number of matches isn't exactly one."""
+    entity_1 = "test.entity_1"
+    entity_2 = "test.entity_2"
+    hass.states.async_set(entity_1, STATE_OFF)
+    hass.states.async_set(entity_2, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    unsub = await _arm_off_to_on_trigger_with_diagnostics(
+        hass, [entity_1, entity_2], BEHAVIOR_FIRST, calls, did_not_trigger_reports
+    )
+
+    # The first target turns on: exactly one match, so the trigger fires.
+    hass.states.async_set(entity_1, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert did_not_trigger_reports == []
+    calls.clear()
+
+    # The second target turns on while the first is still on: two matches, no fire.
+    hass.states.async_set(entity_2, STATE_ON)
+    await hass.async_block_till_done()
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("behavior_first_not_satisfied", {"matches": 2})
+    ]
+
+    unsub()
+
+
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_async_initialize_triggers_home_assistant_start_deprecated(
     hass: HomeAssistant,
