@@ -1,0 +1,63 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: Service registered on setup; removed when last entry unloads.
+  appropriate-polling:
+    status: done
+    comment: WebSocket push primary; 30s HTTP poll fallback.
+  brands:
+    status: done
+    comment: Icons prepared; core_integrations brands PR with Core merge.
+  common-modules:
+    status: done
+    comment: coordinator.py holds API client and DataUpdateCoordinator.
+  config-flow: done
+  config-flow-test-coverage:
+    status: done
+    comment: tests/components/lanbon/test_config_flow.py
+  dependency-transparency:
+    status: done
+    comment: No PyPI deps; aiohttp via Home Assistant.
+  docs-actions:
+    status: done
+    comment: set_channel_name documented in home-assistant.io draft.
+  docs-conditions:
+    status: exempt
+    comment: No conditions.
+  docs-high-level-description:
+    status: done
+  docs-installation-instructions:
+    status: done
+  docs-removal-instructions:
+    status: done
+  docs-triggers:
+    status: exempt
+    comment: No triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: done
+    comment: LanbonRuntimeData on ConfigEntry.runtime_data.
+  test-before-configure:
+    status: done
+    comment: config_flow validates via GET /api/v1/info.
+  test-before-setup:
+    status: done
+    comment: async_config_entry_first_refresh on setup.
+  unique-config-entry:
+    status: done
+    comment: unique_id = host MAC.
+
+  # Silver (later)
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: todo
+  test-coverage: todo

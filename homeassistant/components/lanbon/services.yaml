@@ -1,0 +1,12 @@
+set_channel_name:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: lanbon
+          domain: switch
+    name:
+      required: true
+      selector:
+        text:
