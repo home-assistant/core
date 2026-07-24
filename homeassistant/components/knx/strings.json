@@ -987,6 +987,79 @@
         "type_selection": {
           "header": "Select entity type"
         },
+        "weather": {
+          "description": "The KNX weather platform is used as an interface to KNX weather stations.",
+          "knx": {
+            "ga_air_pressure": {
+              "description": "Group address for reading the current air pressure.",
+              "label": "Air pressure"
+            },
+            "ga_brightness_east": {
+              "description": "Group address for reading the current brightness to the east.",
+              "label": "Brightness east"
+            },
+            "ga_brightness_north": {
+              "description": "Group address for reading the current brightness to the north.",
+              "label": "Brightness north"
+            },
+            "ga_brightness_south": {
+              "description": "Group address for reading the current brightness to the south.",
+              "label": "Brightness south"
+            },
+            "ga_brightness_west": {
+              "description": "Group address for reading the current brightness to the west.",
+              "label": "Brightness west"
+            },
+            "ga_day_night": {
+              "description": "Group address for reading whether it is day or night.",
+              "label": "Day/Night"
+            },
+            "ga_frost_alarm": {
+              "description": "Group address for reading whether the frost alarm is active.",
+              "label": "Frost alarm"
+            },
+            "ga_humidity": {
+              "description": "Group address for reading the current humidity.",
+              "label": "Humidity"
+            },
+            "ga_rain_alarm": {
+              "description": "Group address for reading whether the rain alarm is active.",
+              "label": "Rain alarm"
+            },
+            "ga_temperature": {
+              "description": "Group address for reading the current outside temperature.",
+              "label": "Temperature"
+            },
+            "ga_wind_alarm": {
+              "description": "Group address for reading whether the wind alarm is active.",
+              "label": "Wind alarm"
+            },
+            "ga_wind_bearing": {
+              "description": "Group address for reading the current wind bearing.",
+              "label": "Wind bearing"
+            },
+            "ga_wind_speed": {
+              "description": "Group address for reading the current wind speed.",
+              "label": "Wind speed"
+            },
+            "invert_day_night": {
+              "description": "By default `0` is interpreted as day and `1` as night (DPT 1.024). Enable to invert this.",
+              "label": "Invert day/night"
+            },
+            "section_alarms": {
+              "description": "Binary states used to determine the weather condition.",
+              "title": "Alarms"
+            },
+            "section_brightness": {
+              "description": "Brightness readings used to determine the weather condition.",
+              "title": "Brightness"
+            },
+            "section_day_night": {
+              "description": "Day and night state used to determine the weather condition.",
+              "title": "Day/Night"
+            }
+          }
+        },
         "yaml": {
           "mode_hint": "This is an internal representation of the entity configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
           "yaml_error": "There are YAML errors and it cannot be parsed. Switching to the visual editor may cause pending changes to be lost."

@@ -2584,3 +2584,299 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[weather]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_temperature',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': True,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 1,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_humidity',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 7,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_air_pressure',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 6,
+            }),
+            dict({
+              'main': 14,
+              'sub': 58,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_wind_speed',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 5,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_wind_bearing',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 3,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_brightness',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_brightness_east',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 4,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_brightness_south',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 4,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_brightness_west',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 4,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_brightness_north',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 4,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_day_night',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_day_night',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': 24,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'invert_day_night',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_alarms',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_rain_alarm',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_frost_alarm',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_wind_alarm',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
