@@ -1,50 +1,72 @@
 """Config flow for Tesla Powerwall integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+from aiohttp import CookieJar
 from tesla_powerwall import (
     AccessDeniedError,
+    ApiError,
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
-    SiteInfo,
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.components import dhcp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
-from .const import DOMAIN
+from .const import CONFIG_ENTRY_COOKIE, DOMAIN
+from .helpers import is_api_404
 
 _LOGGER = logging.getLogger(__name__)
 
 
 ENTRY_FAILURE_STATES = {
-    config_entries.ConfigEntryState.SETUP_ERROR,
-    config_entries.ConfigEntryState.SETUP_RETRY,
+    ConfigEntryState.SETUP_ERROR,
+    ConfigEntryState.SETUP_RETRY,
 }
 
 
-def _login_and_fetch_site_info(
+async def _login_and_fetch_site_info(
     power_wall: Powerwall, password: str
-) -> tuple[SiteInfo, str]:
-    """Login to the powerwall and fetch the base info."""
+) -> tuple[str | None, str | None]:
+    """Login to the powerwall and return (title, gateway_din).
+
+    On the restricted PW3-style surface, ``/api/powerwalls`` returns 404. Both
+    ``None`` results signal that the caller should synthesize a title and unique
+    id from the host.
+    """
     if password is not None:
-        power_wall.login(password)
-    return power_wall.get_site_info(), power_wall.get_gateway_din()
+        await power_wall.login(password)
+
+    try:
+        gateway_din = await power_wall.get_gateway_din()
+    except ApiError as err:
+        if not is_api_404(err):
+            raise
+        return None, None
+    site_info = await power_wall.get_site_info()
+    return site_info.site_name, gateway_din
 
 
-def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
+async def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
     """Check if the powerwall is reachable."""
     try:
-        Powerwall(ip_address).login(password)
+        async with Powerwall(ip_address) as power_wall:
+            await power_wall.login(password)
     except AccessDeniedError:
         return True
     except PowerwallUnreachableError:
@@ -53,30 +75,42 @@ def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
 
 
 async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, str]
-) -> dict[str, str]:
+    hass: HomeAssistant, data: dict[str, str]
+) -> dict[str, str | None]:
     """Validate the user input allows us to connect.
 
     Data has the keys from schema with values provided by the user.
     """
+    session = async_create_clientsession(
+        hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
+    )
+    async with Powerwall(data[CONF_IP_ADDRESS], http_session=session) as power_wall:
+        password = data[CONF_PASSWORD]
 
-    power_wall = Powerwall(data[CONF_IP_ADDRESS])
-    password = data[CONF_PASSWORD]
+        try:
+            title, gateway_din = await _login_and_fetch_site_info(power_wall, password)
+        except MissingAttributeError as err:
+            # Only log the exception without the traceback
+            _LOGGER.error(str(err))
+            raise WrongVersion from err
 
-    try:
-        site_info, gateway_din = await hass.async_add_executor_job(
-            _login_and_fetch_site_info, power_wall, password
-        )
-    except MissingAttributeError as err:
-        # Only log the exception without the traceback
-        _LOGGER.error(str(err))
-        raise WrongVersion from err
+        ip_address = data[CONF_IP_ADDRESS]
+        if gateway_din is None:
+            # PW3-style restricted gateway — no DIN exposed via HTTP. We have no
+            # stable hardware identifier to use as a unique id, so leave it unset
+            # and rely on IP-based dedup. Because the entry has no unique id, DHCP
+            # discovery cannot match it and instead aborts (see async_step_dhcp)
+            # to avoid setting up a duplicate.
+            return {
+                "title": f"Powerwall {ip_address}",
+                "unique_id": None,
+            }
+        assert title is not None
+        # Return info that you want to store in the config entry.
+        return {"title": title, "unique_id": gateway_din.upper()}
 
-    # Return info that you want to store in the config entry.
-    return {"title": site_info.site_name, "unique_id": gateway_din.upper()}
 
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tesla Powerwall."""
 
     VERSION = 1
@@ -85,11 +119,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the powerwall flow."""
         self.ip_address: str | None = None
         self.title: str | None = None
-        self.reauth_entry: config_entries.ConfigEntry | None = None
+        self.password: str | None = None
 
-    async def _async_powerwall_is_offline(
-        self, entry: config_entries.ConfigEntry
-    ) -> bool:
+    async def _async_powerwall_is_offline(self, entry: ConfigEntry) -> bool:
         """Check if the power wall is offline.
 
         We define offline by the config entry
@@ -102,11 +134,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return bool(
             entry.state in ENTRY_FAILURE_STATES
             or not async_last_update_was_successful(self.hass, entry)
-        ) and not await self.hass.async_add_executor_job(
-            _powerwall_is_reachable, ip_address, password
-        )
+        ) and not await _powerwall_is_reachable(ip_address, password)
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip
         gateway_din = discovery_info.hostname.upper()
@@ -118,26 +151,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if self.hass.config_entries.async_update_entry(
                         entry, unique_id=gateway_din
                     ):
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
             if entry.unique_id == gateway_din:
                 if await self._async_powerwall_is_offline(entry):
                     if self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_IP_ADDRESS: self.ip_address}
                     ):
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
+        # A restricted PW3-style gateway is stored without a unique id because no
+        # DIN is exposed over HTTP. We never stored its DIN, so we cannot match a
+        # discovery against it (e.g. after its IP changed). If such an entry
+        # exists we abort rather than risk setting up a duplicate of a powerwall
+        # that is already configured.
+        if any(
+            entry.unique_id is None
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            return self.async_abort(reason="already_configured")
         # Still need to abort for ignored entries
         self._abort_if_unique_id_configured()
         self.context["title_placeholders"] = {
             "name": gateway_din,
             "ip_address": self.ip_address,
         }
-        errors, info = await self._async_try_connect(
+        errors, info, _ = await self._async_try_connect(
             {CONF_IP_ADDRESS: self.ip_address, CONF_PASSWORD: gateway_din[-5:]}
         )
         if errors:
@@ -148,41 +187,55 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         assert info is not None
         self.title = info["title"]
+        self.password = gateway_din[-5:]
+        if info["unique_id"] is None:
+            # Restricted gateway reached via DHCP. The hostname we stored as the
+            # flow unique id is not a real DIN (e.g. PW3 advertises a TeslaPW_*
+            # name unrelated to the DIN), so drop it and store the entry without
+            # a unique id, consistent with the manual restricted path.
+            await self.async_set_unique_id(None)
         return await self.async_step_confirm_discovery()
 
     async def _async_try_connect(
         self, user_input: dict[str, Any]
-    ) -> tuple[dict[str, Any] | None, dict[str, str] | None]:
+    ) -> tuple[dict[str, str] | None, dict[str, str | None] | None, dict[str, str]]:
         """Try to connect to the powerwall."""
         info = None
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         try:
             info = await validate_input(self.hass, user_input)
-        except PowerwallUnreachableError:
+        except (PowerwallUnreachableError, TimeoutError) as ex:
+            _LOGGER.debug("Cannot connect to powerwall", exc_info=ex)
             errors[CONF_IP_ADDRESS] = "cannot_connect"
-        except WrongVersion:
+            description_placeholders = {"error": str(ex) or type(ex).__name__}
+        except WrongVersion as ex:
             errors["base"] = "wrong_version"
-        except AccessDeniedError:
+            description_placeholders = {"error": str(ex) or type(ex).__name__}
+        except AccessDeniedError as ex:
+            _LOGGER.debug("Access denied to powerwall", exc_info=ex)
             errors[CONF_PASSWORD] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+            description_placeholders = {"error": str(ex) or type(ex).__name__}
+        except Exception as ex:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+            description_placeholders = {"error": str(ex)}
 
-        return errors, info
+        return errors, info, description_placeholders
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm a discovered powerwall."""
         assert self.ip_address is not None
-        assert self.unique_id is not None
+        assert self.title is not None
+        assert self.password is not None
         if user_input is not None:
-            assert self.title is not None
             return self.async_create_entry(
                 title=self.title,
                 data={
                     CONF_IP_ADDRESS: self.ip_address,
-                    CONF_PASSWORD: self.unique_id[-5:],
+                    CONF_PASSWORD: self.password,
                 },
             )
 
@@ -199,15 +252,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            errors, info = await self._async_try_connect(user_input)
+            errors, info, description_placeholders = await self._async_try_connect(
+                user_input
+            )
             if not errors:
                 assert info is not None
+                assert info["title"] is not None
                 if info["unique_id"]:
                     await self.async_set_unique_id(
                         info["unique_id"], raise_on_progress=False
@@ -215,6 +273,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured(
                         updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
                     )
+                else:
+                    # Restricted gateway: a DHCP discovery may have pre-set the
+                    # flow unique id from the hostname, which is not a real DIN.
+                    # Clear it so the entry is stored without a unique id.
+                    await self.async_set_unique_id(None)
                 self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -227,39 +290,44 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth confirmation."""
-        assert self.reauth_entry is not None
         errors: dict[str, str] | None = {}
+        description_placeholders: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            entry_data = self.reauth_entry.data
-            errors, _ = await self._async_try_connect(
-                {CONF_IP_ADDRESS: entry_data[CONF_IP_ADDRESS], **user_input}
+            errors, _, description_placeholders = await self._async_try_connect(
+                {CONF_IP_ADDRESS: reauth_entry.data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.reauth_entry, data={**entry_data, **user_input}
+                # We have a new valid connection, old cookie is no longer valid
+                user_input[CONFIG_ENTRY_COOKIE] = None
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates={**user_input, CONFIG_ENTRY_COOKIE: None}
                 )
-                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
+        self.context["title_placeholders"] = {
+            "name": reauth_entry.title,
+            "ip_address": reauth_entry.data[CONF_IP_ADDRESS],
+        }
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
 
-class WrongVersion(exceptions.HomeAssistantError):
+class WrongVersion(HomeAssistantError):
     """Error indicating we cannot interact with the powerwall software version."""

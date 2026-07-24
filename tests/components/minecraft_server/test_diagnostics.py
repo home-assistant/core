@@ -1,10 +1,15 @@
 """Tests for Minecraft Server diagnostics."""
+
 from unittest.mock import patch
 
-from mcstatus import BedrockServer, JavaServer
-from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
+from mcstatus import BedrockServer, JavaServer, LegacyServer
+from mcstatus.responses import (
+    BedrockStatusResponse,
+    JavaStatusResponse,
+    LegacyStatusResponse,
+)
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
@@ -12,6 +17,7 @@ from .const import (
     TEST_BEDROCK_STATUS_RESPONSE,
     TEST_HOST,
     TEST_JAVA_STATUS_RESPONSE,
+    TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
 
@@ -25,30 +31,44 @@ from tests.typing import ClientSessionGenerator
     [
         ("java_mock_config_entry", JavaServer, TEST_JAVA_STATUS_RESPONSE),
         ("bedrock_mock_config_entry", BedrockServer, TEST_BEDROCK_STATUS_RESPONSE),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
+        ),
     ],
 )
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    server: JavaServer | BedrockServer,
-    status_response: JavaStatusResponse | BedrockStatusResponse,
+    server: JavaServer | BedrockServer | LegacyServer,
+    status_response: JavaStatusResponse | BedrockStatusResponse | LegacyStatusResponse,
     request: pytest.FixtureRequest,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching of the config entry diagnostics."""
 
-    # Use 'request' fixture to access 'mock_config_entry' fixture, as it cannot be used directly in 'parametrize'.
+    # Use 'request' fixture to access 'mock_config_entry' fixture,
+    # as it cannot be used directly in 'parametrize'.
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 
+    if server.__name__ == "BedrockServer":
+        lookup_function_name = "lookup"
+    else:
+        lookup_function_name = "async_lookup"
+
     # Setup mock entry.
-    with patch(
-        f"mcstatus.server.{server.__name__}.lookup",
-        return_value=server(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        f"mcstatus.server.{server.__name__}.async_status",
-        return_value=status_response,
+    with (
+        patch(
+            f"mcstatus.server.{server.__name__}.{lookup_function_name}",
+            return_value=server(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            f"mcstatus.server.{server.__name__}.async_status",
+            return_value=status_response,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

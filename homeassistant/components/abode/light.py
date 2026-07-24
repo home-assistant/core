@@ -1,55 +1,53 @@
 """Support for Abode Security System lights."""
-from __future__ import annotations
 
 from math import ceil
-from typing import Any
+from typing import Any, override
 
-from jaraco.abode.devices.light import Light as AbodeLT
-from jaraco.abode.helpers import constants as CONST
+from jaraco.abode.devices.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeDevice, AbodeSystem
-from .const import DOMAIN
+from . import AbodeConfigEntry
+from .entity import AbodeDevice
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AbodeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode light devices."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = entry.runtime_data
 
     async_add_entities(
         AbodeLight(data, device)
-        for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT)
+        for device in data.abode.get_devices(generic_type="light")
     )
 
 
 class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
-    _device: AbodeLT
+    _device: Light
     _attr_name = None
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if ATTR_COLOR_TEMP in kwargs and self._device.is_color_capable:
-            self._device.set_color_temp(
-                int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
-            )
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and self._device.is_color_capable:
+            self._device.set_color_temp(kwargs[ATTR_COLOR_TEMP_KELVIN])
             return
 
         if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
@@ -64,16 +62,19 @@ class AbodeLight(AbodeDevice, LightEntity):
 
         self._device.switch_on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._device.switch_off()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self._device.is_on)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         if self._device.is_dimmable and self._device.has_brightness:
@@ -84,13 +85,15 @@ class AbodeLight(AbodeDevice, LightEntity):
         return None
 
     @property
-    def color_temp(self) -> int | None:
+    @override
+    def color_temp_kelvin(self) -> int | None:
         """Return the color temp of the light."""
         if self._device.has_color:
-            return color_temperature_kelvin_to_mired(self._device.color_temp)
+            return int(self._device.color_temp)
         return None
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the color of the light."""
         _hs = None
@@ -99,7 +102,8 @@ class AbodeLight(AbodeDevice, LightEntity):
         return _hs
 
     @property
-    def color_mode(self) -> str | None:
+    @override
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._device.is_dimmable and self._device.is_color_capable:
             if self.hs_color is not None:
@@ -110,7 +114,8 @@ class AbodeLight(AbodeDevice, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    @override
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         if self._device.is_dimmable and self._device.is_color_capable:
             return {ColorMode.COLOR_TEMP, ColorMode.HS}

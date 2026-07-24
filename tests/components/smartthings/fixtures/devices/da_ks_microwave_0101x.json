@@ -1,0 +1,176 @@
+{
+  "items": [
+    {
+      "deviceId": "2bad3237-4886-e699-1b90-4a51a3d55c8a",
+      "name": "Samsung Microwave",
+      "label": "Microwave",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-KS-MICROWAVE-0101X",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "586e4602-34ab-4a22-993e-5f616b04604f",
+      "ownerId": "b603d7e8-6066-4e10-8102-afa752a63816",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "deviceTypeName": "oic.d.microwave",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "ovenSetpoint",
+              "version": 1
+            },
+            {
+              "id": "ovenMode",
+              "version": 1
+            },
+            {
+              "id": "ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "doorControl",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.hoodFanSpeed",
+              "version": 1
+            },
+            {
+              "id": "samsungce.definedRecipe",
+              "version": 1
+            },
+            {
+              "id": "samsungce.doorState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceDefaults",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.microwavePower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenModeSpecification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Microwave",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "hood",
+          "label": "hood",
+          "capabilities": [
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.hoodFanSpeed",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2022-03-23T15:59:10.704Z",
+      "profile": {
+        "id": "e5db3b6f-cad6-3caa-9775-9c9cae20f4a4"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.microwave",
+        "name": "Samsung Microwave",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP2X_DA-KS-MICROWAVE-0101X|40436241|50040100011411000200000000000000",
+        "platformVersion": "DAWIT 3.0",
+        "platformOS": "TizenRT 2.0 + IPv6",
+        "hwVersion": "MediaTek",
+        "firmwareVersion": "AKS-WW-TP2-20-MICROWAVE-OTR_40230125",
+        "vendorId": "DA-KS-MICROWAVE-0101X",
+        "vendorResourceClientServerVersion": "MediaTek Release 2.220916.2",
+        "lastSignupTime": "2022-04-17T15:33:11.063457Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

@@ -1,26 +1,18 @@
 """Config flow for Frontier Silicon Media Player integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
-from afsapi import (
-    AFSAPI,
-    ConnectionError as FSConnectionError,
-    InvalidPinException,
-    NotImplementedException,
-)
+from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, InvalidPinError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
-    CONF_PIN,
     CONF_WEBFSAPI_URL,
     DEFAULT_PIN,
     DEFAULT_PORT,
@@ -52,18 +44,18 @@ def hostname_from_url(url: str) -> str:
     return str(urlparse(url).hostname)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Frontier Silicon Media Player."""
 
     VERSION = 1
 
     _name: str
     _webfsapi_url: str
-    _reauth_entry: config_entries.ConfigEntry | None = None  # Only used in reauth flows
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step of manual configuration."""
         errors = {}
 
@@ -75,10 +67,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
             except FSConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception as exception:  # pylint: disable=broad-except
-                _LOGGER.exception(exception)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                self._async_abort_entries_match({CONF_WEBFSAPI_URL: self._webfsapi_url})
                 return await self._async_step_device_config_if_needed()
 
         data_schema = self.add_suggested_values_to_schema(
@@ -88,7 +81,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    @override
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Process entity discovered via SSDP."""
 
         device_url = discovery_info.ssdp_location
@@ -100,27 +96,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if device_hostname == hostname_from_url(entry.data[CONF_WEBFSAPI_URL]):
                 return self.async_abort(reason="already_configured")
 
-        speaker_name = discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME)
-        self.context["title_placeholders"] = {"name": speaker_name}
+        if speaker_name := discovery_info.ssdp_headers.get(SSDP_ATTR_SPEAKER_NAME):
+            # If we have a name, use it as flow title
+            self.context["title_placeholders"] = {"name": speaker_name}
 
         try:
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.debug(exception)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
         # try to login with default pin
         afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
         try:
             await afsapi.get_friendly_name()
-        except InvalidPinException:
+        except InvalidPinError:
             return self.async_abort(reason="invalid_auth")
 
         try:
             unique_id = await afsapi.get_radio_id()
-        except NotImplementedException:
+        except FSNotImplementedError:
             unique_id = None
 
         await self.async_set_unique_id(unique_id)
@@ -132,10 +129,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def _async_step_device_config_if_needed(self) -> FlowResult:
+    async def _async_step_device_config_if_needed(self) -> ConfigFlowResult:
         """Most users will not have changed the default PIN on their radio.
 
-        We try to use this default PIN, and only if this fails ask for it via `async_step_device_config`
+        We try to use this default PIN, and only if this fails
+        ask for it via `async_step_device_config`
         """
 
         try:
@@ -143,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
 
             self._name = await afsapi.get_friendly_name()
-        except InvalidPinException:
+        except InvalidPinError:
             # Ask for a PIN
             return await self.async_step_device_config()
 
@@ -151,7 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             unique_id = await afsapi.get_radio_id()
-        except NotImplementedException:
+        except FSNotImplementedError:
             unique_id = None
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -160,8 +158,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Allow the user to confirm adding the device. Used when the default PIN could successfully be used."""
+    ) -> ConfigFlowResult:
+        """Allow the user to confirm adding the device.
+
+        Used when the default PIN could successfully be used.
+        """
 
         if user_input is not None:
             return await self._async_create_entry()
@@ -171,19 +172,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders={"name": self._name}
         )
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._webfsapi_url = config[CONF_WEBFSAPI_URL]
-
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
+        self._webfsapi_url = entry_data[CONF_WEBFSAPI_URL]
         return await self.async_step_device_config()
 
     async def async_step_device_config(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle device configuration step.
 
         We ask for the PIN in this step.
@@ -203,23 +201,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except FSConnectionError:
             errors["base"] = "cannot_connect"
-        except InvalidPinException:
+        except InvalidPinError:
             errors["base"] = "invalid_auth"
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self._reauth_entry:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
-                    data={CONF_PIN: user_input[CONF_PIN]},
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_PIN: user_input[CONF_PIN]},
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             try:
                 unique_id = await afsapi.get_radio_id()
-            except NotImplementedException:
+            except FSNotImplementedError:
                 unique_id = None
             await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()

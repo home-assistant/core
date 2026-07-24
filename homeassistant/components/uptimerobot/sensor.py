@@ -1,71 +1,73 @@
 """UptimeRobot sensor platform."""
-from __future__ import annotations
 
-from typing import TypedDict
+from typing import override
+
+from pyuptimerobot import UptimeRobotMonitor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import UptimeRobotDataUpdateCoordinator
+from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+from .utils import new_device_listener
 
-
-class StatusValue(TypedDict):
-    """Sensor details."""
-
-    value: str
-    icon: str
-
-
-SENSORS_INFO = {
-    0: StatusValue(value="pause", icon="mdi:television-pause"),
-    1: StatusValue(value="not_checked_yet", icon="mdi:television"),
-    2: StatusValue(value="up", icon="mdi:television-shimmer"),
-    8: StatusValue(value="seems_down", icon="mdi:television-off"),
-    9: StatusValue(value="down", icon="mdi:television-off"),
-}
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: UptimeRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UptimeRobot sensors."""
-    coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        UptimeRobotSensor(
-            coordinator,
-            SensorEntityDescription(
-                key=str(monitor.id),
-                entity_category=EntityCategory.DIAGNOSTIC,
-                device_class=SensorDeviceClass.ENUM,
-                options=["down", "not_checked_yet", "pause", "seems_down", "up"],
-                translation_key="monitor_status",
-            ),
-            monitor=monitor,
-        )
-        for monitor in coordinator.data
-    )
+    coordinator = entry.runtime_data
+
+    def _add_new_entities(new_monitors: list[UptimeRobotMonitor]) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            UptimeRobotSensor(
+                coordinator,
+                SensorEntityDescription(
+                    key=str(monitor.id),
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    device_class=SensorDeviceClass.ENUM,
+                    options=[
+                        "down",
+                        "not_checked_yet",
+                        "pause",
+                        "seems_down",
+                        "started",
+                        "up",
+                    ],
+                    translation_key="monitor_status",
+                ),
+            )
+            for monitor in new_monitors
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    entry.async_on_unload(new_device_listener(coordinator, _add_new_entities))
 
 
 class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     """Representation of a UptimeRobot sensor."""
 
     @property
-    def native_value(self) -> str:
+    @override
+    def native_value(self) -> str | None:
         """Return the status of the monitor."""
-        return SENSORS_INFO[self.monitor.status]["value"]
+        if not self._monitor.status:
+            return None
 
-    @property
-    def icon(self) -> str:
-        """Return the status of the monitor."""
-        return SENSORS_INFO[self.monitor.status]["icon"]
+        status = self._monitor.status.lower()
+        # The API returns "paused"
+        # but the entity state will be "pause" to avoid a breaking change
+        return {"paused": "pause"}.get(status, status)

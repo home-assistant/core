@@ -1,9 +1,7 @@
 """Support for Home Assistant Cloud binary sensors."""
-from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from hass_nabucasa import Cloud
 
@@ -11,29 +9,25 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .client import CloudClient
-from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
+from .const import DATA_CLOUD, DISPATCHER_REMOTE_UPDATE
 
 WAIT_UNTIL_CHANGE = 3
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the cloud binary sensors."""
-    if discovery_info is None:
-        return
-    cloud = hass.data[DOMAIN]
-
+    """Set up the Home Assistant Cloud binary sensors."""
+    cloud = hass.data[DATA_CLOUD]
     async_add_entities([CloudRemoteBinary(cloud)])
 
 
@@ -43,24 +37,26 @@ class CloudRemoteBinary(BinarySensorEntity):
     _attr_name = "Remote UI"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_should_poll = False
-    _attr_unique_id = "cloud-remote-ui-connectivity"
+    _attr_unique_id = "cloud-remote-ui-connectivity"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Initialize the binary sensor."""
         self.cloud = cloud
-        self._unsub_dispatcher: Callable[[], None] | None = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.cloud.remote.is_connected
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.cloud.remote.certificate is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
 
@@ -69,12 +65,8 @@ class CloudRemoteBinary(BinarySensorEntity):
             await asyncio.sleep(WAIT_UNTIL_CHANGE)
             self.async_write_ha_state()
 
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DISPATCHER_REMOTE_UPDATE, async_state_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCHER_REMOTE_UPDATE, async_state_update
+            )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Register update dispatcher."""
-        if self._unsub_dispatcher is not None:
-            self._unsub_dispatcher()
-            self._unsub_dispatcher = None

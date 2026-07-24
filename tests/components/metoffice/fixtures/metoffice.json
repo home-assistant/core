@@ -1,0 +1,4156 @@
+{
+  "all_sites": {
+    "Locations": {
+      "Location": [
+        {
+          "elevation": "47.0",
+          "id": "354107",
+          "latitude": "53.3986",
+          "longitude": "-2.9256",
+          "name": "Wavertree",
+          "region": "nw",
+          "unitaryAuthArea": "Merseyside"
+        },
+        {
+          "elevation": "5.0",
+          "id": "322380",
+          "latitude": "52.7561",
+          "longitude": "0.4019",
+          "name": "King's Lynn",
+          "region": "ee",
+          "unitaryAuthArea": "Norfolk"
+        }
+      ]
+    }
+  },
+  "wavertree_daily": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-2.9256, 53.3986, 47]
+        },
+        "properties": {
+          "location": {
+            "name": "Wavertree"
+          },
+          "requestPointDistance": 1975.3601,
+          "modelRunDate": "2024-11-23T12:00Z",
+          "timeSeries": [
+            {
+              "time": "2024-11-22T00:00Z",
+              "midday10MWindSpeed": 6.38,
+              "midnight10MWindSpeed": 2.78,
+              "midday10MWindDirection": 261,
+              "midnight10MWindDirection": 155,
+              "midday10MWindGust": 9.77,
+              "midnight10MWindGust": 8.75,
+              "middayVisibility": 29980,
+              "midnightVisibility": 18024,
+              "middayRelativeHumidity": 73.47,
+              "midnightRelativeHumidity": 86.1,
+              "middayMslp": 100790,
+              "midnightMslp": 101020,
+              "nightSignificantWeatherCode": 12,
+              "dayMaxScreenTemperature": 7.17,
+              "nightMinScreenTemperature": 2,
+              "dayUpperBoundMaxTemp": 7.78,
+              "nightUpperBoundMinTemp": 3.84,
+              "dayLowerBoundMaxTemp": 4.64,
+              "nightLowerBoundMinTemp": 1.18,
+              "nightMinFeelsLikeTemp": -3.07,
+              "dayUpperBoundMaxFeelsLikeTemp": 4.39,
+              "nightUpperBoundMinFeelsLikeTemp": -1.33,
+              "dayLowerBoundMaxFeelsLikeTemp": 2.49,
+              "nightLowerBoundMinFeelsLikeTemp": -4.04,
+              "nightProbabilityOfPrecipitation": 95,
+              "nightProbabilityOfSnow": 5,
+              "nightProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfRain": 93,
+              "nightProbabilityOfHeavyRain": 90,
+              "nightProbabilityOfHail": 20,
+              "nightProbabilityOfSferics": 9
+            },
+            {
+              "time": "2024-11-23T00:00Z",
+              "midday10MWindSpeed": 7.87,
+              "midnight10MWindSpeed": 7.44,
+              "midday10MWindDirection": 176,
+              "midnight10MWindDirection": 171,
+              "midday10MWindGust": 15.43,
+              "midnight10MWindGust": 14.08,
+              "middayVisibility": 5106,
+              "midnightVisibility": 39734,
+              "middayRelativeHumidity": 95.13,
+              "midnightRelativeHumidity": 86.99,
+              "middayMslp": 98750,
+              "midnightMslp": 98490,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 12,
+              "nightSignificantWeatherCode": 12,
+              "dayMaxScreenTemperature": 12.56,
+              "nightMinScreenTemperature": 11.46,
+              "dayUpperBoundMaxTemp": 14.48,
+              "nightUpperBoundMinTemp": 13.92,
+              "dayLowerBoundMaxTemp": 11.63,
+              "nightLowerBoundMinTemp": 10.7,
+              "dayMaxFeelsLikeTemp": 9.81,
+              "nightMinFeelsLikeTemp": 9.53,
+              "dayUpperBoundMaxFeelsLikeTemp": 12.68,
+              "nightUpperBoundMinFeelsLikeTemp": 11.39,
+              "dayLowerBoundMaxFeelsLikeTemp": 9.81,
+              "nightLowerBoundMinFeelsLikeTemp": 9.53,
+              "dayProbabilityOfPrecipitation": 65,
+              "nightProbabilityOfPrecipitation": 74,
+              "dayProbabilityOfSnow": 3,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 65,
+              "nightProbabilityOfRain": 74,
+              "dayProbabilityOfHeavyRain": 41,
+              "nightProbabilityOfHeavyRain": 73,
+              "dayProbabilityOfHail": 3,
+              "nightProbabilityOfHail": 15,
+              "dayProbabilityOfSferics": 2,
+              "nightProbabilityOfSferics": 12
+            },
+            {
+              "time": "2024-11-24T00:00Z",
+              "midday10MWindSpeed": 6.65,
+              "midnight10MWindSpeed": 7.33,
+              "midday10MWindDirection": 203,
+              "midnight10MWindDirection": 211,
+              "midday10MWindGust": 11.85,
+              "midnight10MWindGust": 13.11,
+              "middayVisibility": 36358,
+              "midnightVisibility": 51563,
+              "middayRelativeHumidity": 70.26,
+              "midnightRelativeHumidity": 72.97,
+              "middayMslp": 98748,
+              "midnightMslp": 98712,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 7,
+              "nightSignificantWeatherCode": 7,
+              "dayMaxScreenTemperature": 12.7,
+              "nightMinScreenTemperature": 8.21,
+              "dayUpperBoundMaxTemp": 15.19,
+              "nightUpperBoundMinTemp": 10.67,
+              "dayLowerBoundMaxTemp": 11.87,
+              "nightLowerBoundMinTemp": 7.03,
+              "dayMaxFeelsLikeTemp": 9.17,
+              "nightMinFeelsLikeTemp": 4.84,
+              "dayUpperBoundMaxFeelsLikeTemp": 12.63,
+              "nightUpperBoundMinFeelsLikeTemp": 7.25,
+              "dayLowerBoundMaxFeelsLikeTemp": 9.17,
+              "nightLowerBoundMinFeelsLikeTemp": 3.81,
+              "dayProbabilityOfPrecipitation": 26,
+              "nightProbabilityOfPrecipitation": 23,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 26,
+              "nightProbabilityOfRain": 23,
+              "dayProbabilityOfHeavyRain": 13,
+              "nightProbabilityOfHeavyRain": 16,
+              "dayProbabilityOfHail": 0,
+              "nightProbabilityOfHail": 3,
+              "dayProbabilityOfSferics": 3,
+              "nightProbabilityOfSferics": 2
+            },
+            {
+              "time": "2024-11-25T00:00Z",
+              "midday10MWindSpeed": 8.52,
+              "midnight10MWindSpeed": 8.12,
+              "midday10MWindDirection": 251,
+              "midnight10MWindDirection": 262,
+              "midday10MWindGust": 14.49,
+              "midnight10MWindGust": 13.33,
+              "middayVisibility": 32255,
+              "midnightVisibility": 36209,
+              "middayRelativeHumidity": 68.89,
+              "midnightRelativeHumidity": 72.82,
+              "middayMslp": 99488,
+              "midnightMslp": 100481,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 3,
+              "nightSignificantWeatherCode": 2,
+              "dayMaxScreenTemperature": 9.81,
+              "nightMinScreenTemperature": 7.71,
+              "dayUpperBoundMaxTemp": 10.98,
+              "nightUpperBoundMinTemp": 9.31,
+              "dayLowerBoundMaxTemp": 8.42,
+              "nightLowerBoundMinTemp": 4.42,
+              "dayMaxFeelsLikeTemp": 5.33,
+              "nightMinFeelsLikeTemp": 4.19,
+              "dayUpperBoundMaxFeelsLikeTemp": 7.12,
+              "nightUpperBoundMinFeelsLikeTemp": 5.29,
+              "dayLowerBoundMaxFeelsLikeTemp": 4.86,
+              "nightLowerBoundMinFeelsLikeTemp": 3.1,
+              "dayProbabilityOfPrecipitation": 5,
+              "nightProbabilityOfPrecipitation": 6,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 5,
+              "nightProbabilityOfRain": 6,
+              "dayProbabilityOfHeavyRain": 3,
+              "nightProbabilityOfHeavyRain": 5,
+              "dayProbabilityOfHail": 0,
+              "nightProbabilityOfHail": 1,
+              "dayProbabilityOfSferics": 1,
+              "nightProbabilityOfSferics": 1
+            },
+            {
+              "time": "2024-11-26T00:00Z",
+              "midday10MWindSpeed": 5.68,
+              "midnight10MWindSpeed": 3.17,
+              "midday10MWindDirection": 265,
+              "midnight10MWindDirection": 74,
+              "midday10MWindGust": 9.58,
+              "midnight10MWindGust": 5.42,
+              "middayVisibility": 34027,
+              "midnightVisibility": 12383,
+              "middayRelativeHumidity": 70.41,
+              "midnightRelativeHumidity": 89.82,
+              "middayMslp": 101293,
+              "midnightMslp": 101390,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 3,
+              "nightSignificantWeatherCode": 7,
+              "dayMaxScreenTemperature": 8.72,
+              "nightMinScreenTemperature": 3.76,
+              "dayUpperBoundMaxTemp": 10.14,
+              "nightUpperBoundMinTemp": 7.47,
+              "dayLowerBoundMaxTemp": 6.46,
+              "nightLowerBoundMinTemp": -0.43,
+              "dayMaxFeelsLikeTemp": 5.9,
+              "nightMinFeelsLikeTemp": 1.31,
+              "dayUpperBoundMaxFeelsLikeTemp": 7.37,
+              "nightUpperBoundMinFeelsLikeTemp": 4.37,
+              "dayLowerBoundMaxFeelsLikeTemp": 3.99,
+              "nightLowerBoundMinFeelsLikeTemp": -3.09,
+              "dayProbabilityOfPrecipitation": 6,
+              "nightProbabilityOfPrecipitation": 44,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 1,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 1,
+              "dayProbabilityOfRain": 6,
+              "nightProbabilityOfRain": 44,
+              "dayProbabilityOfHeavyRain": 5,
+              "nightProbabilityOfHeavyRain": 24,
+              "dayProbabilityOfHail": 1,
+              "nightProbabilityOfHail": 2,
+              "dayProbabilityOfSferics": 1,
+              "nightProbabilityOfSferics": 1
+            },
+            {
+              "time": "2024-11-27T00:00Z",
+              "midday10MWindSpeed": 5.15,
+              "midnight10MWindSpeed": 3.29,
+              "midday10MWindDirection": 8,
+              "midnight10MWindDirection": 31,
+              "midday10MWindGust": 8.94,
+              "midnight10MWindGust": 5.54,
+              "middayVisibility": 25011,
+              "midnightVisibility": 31513,
+              "middayRelativeHumidity": 81.23,
+              "midnightRelativeHumidity": 86.67,
+              "middayMslp": 101439,
+              "midnightMslp": 102175,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 10,
+              "nightSignificantWeatherCode": 0,
+              "dayMaxScreenTemperature": 6.66,
+              "nightMinScreenTemperature": 2.36,
+              "dayUpperBoundMaxTemp": 11.14,
+              "nightUpperBoundMinTemp": 7.25,
+              "dayLowerBoundMaxTemp": 3.03,
+              "nightLowerBoundMinTemp": -3.02,
+              "dayMaxFeelsLikeTemp": 3.31,
+              "nightMinFeelsLikeTemp": 0.18,
+              "dayUpperBoundMaxFeelsLikeTemp": 9.03,
+              "nightUpperBoundMinFeelsLikeTemp": 3.85,
+              "dayLowerBoundMaxFeelsLikeTemp": 1.04,
+              "nightLowerBoundMinFeelsLikeTemp": -7.6,
+              "dayProbabilityOfPrecipitation": 43,
+              "nightProbabilityOfPrecipitation": 9,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 3,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 43,
+              "nightProbabilityOfRain": 8,
+              "dayProbabilityOfHeavyRain": 24,
+              "nightProbabilityOfHeavyRain": 7,
+              "dayProbabilityOfHail": 1,
+              "nightProbabilityOfHail": 1,
+              "dayProbabilityOfSferics": 3,
+              "nightProbabilityOfSferics": 1
+            },
+            {
+              "time": "2024-11-28T00:00Z",
+              "midday10MWindSpeed": 3.51,
+              "midnight10MWindSpeed": 5.57,
+              "midday10MWindDirection": 104,
+              "midnight10MWindDirection": 131,
+              "midday10MWindGust": 6.21,
+              "midnight10MWindGust": 9.21,
+              "middayVisibility": 28173,
+              "midnightVisibility": 33839,
+              "middayRelativeHumidity": 85.35,
+              "midnightRelativeHumidity": 86.07,
+              "middayMslp": 102512,
+              "midnightMslp": 102382,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 7,
+              "nightSignificantWeatherCode": 7,
+              "dayMaxScreenTemperature": 5.73,
+              "nightMinScreenTemperature": 3.79,
+              "dayUpperBoundMaxTemp": 9.42,
+              "nightUpperBoundMinTemp": 8.18,
+              "dayLowerBoundMaxTemp": 1.26,
+              "nightLowerBoundMinTemp": -1.91,
+              "dayMaxFeelsLikeTemp": 2.95,
+              "nightMinFeelsLikeTemp": 1.63,
+              "dayUpperBoundMaxFeelsLikeTemp": 7.21,
+              "nightUpperBoundMinFeelsLikeTemp": 4.13,
+              "dayLowerBoundMaxFeelsLikeTemp": -0.81,
+              "nightLowerBoundMinFeelsLikeTemp": -5.94,
+              "dayProbabilityOfPrecipitation": 9,
+              "nightProbabilityOfPrecipitation": 9,
+              "dayProbabilityOfSnow": 2,
+              "nightProbabilityOfSnow": 1,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 9,
+              "nightProbabilityOfRain": 9,
+              "dayProbabilityOfHeavyRain": 3,
+              "nightProbabilityOfHeavyRain": 3,
+              "dayProbabilityOfHail": 0,
+              "nightProbabilityOfHail": 0,
+              "dayProbabilityOfSferics": 0,
+              "nightProbabilityOfSferics": 0
+            },
+            {
+              "time": "2024-11-29T00:00Z",
+              "midday10MWindSpeed": 6.39,
+              "midnight10MWindSpeed": 5.59,
+              "midday10MWindDirection": 137,
+              "midnight10MWindDirection": 151,
+              "midday10MWindGust": 10.72,
+              "midnight10MWindGust": 9.21,
+              "middayVisibility": 34870,
+              "midnightVisibility": 31318,
+              "middayRelativeHumidity": 83.78,
+              "midnightRelativeHumidity": 87.71,
+              "middayMslp": 101985,
+              "midnightMslp": 101688,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 7,
+              "nightSignificantWeatherCode": 7,
+              "dayMaxScreenTemperature": 8.21,
+              "nightMinScreenTemperature": 7.04,
+              "dayUpperBoundMaxTemp": 12.62,
+              "nightUpperBoundMinTemp": 10.76,
+              "dayLowerBoundMaxTemp": 4.15,
+              "nightLowerBoundMinTemp": -1.9,
+              "dayMaxFeelsLikeTemp": 4.88,
+              "nightMinFeelsLikeTemp": 4.95,
+              "dayUpperBoundMaxFeelsLikeTemp": 10.74,
+              "nightUpperBoundMinFeelsLikeTemp": 9.04,
+              "dayLowerBoundMaxFeelsLikeTemp": 0.63,
+              "nightLowerBoundMinFeelsLikeTemp": -6.49,
+              "dayProbabilityOfPrecipitation": 11,
+              "nightProbabilityOfPrecipitation": 13,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 11,
+              "nightProbabilityOfRain": 13,
+              "dayProbabilityOfHeavyRain": 4,
+              "nightProbabilityOfHeavyRain": 6,
+              "dayProbabilityOfHail": 1,
+              "nightProbabilityOfHail": 0,
+              "dayProbabilityOfSferics": 0,
+              "nightProbabilityOfSferics": 1
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": [
+      {
+        "daySignificantWeatherCode": {
+          "type": "Parameter",
+          "description": "Day Significant Weather Code",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "https://datahub.metoffice.gov.uk/",
+              "type": "1"
+            }
+          }
+        },
+        "midnightRelativeHumidity": {
+          "type": "Parameter",
+          "description": "Relative Humidity at Local Midnight",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightProbabilityOfHeavyRain": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Rain During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "midnight10MWindSpeed": {
+          "type": "Parameter",
+          "description": "10m Wind Speed at Local Midnight",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "nightUpperBoundMinFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Night Minimum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightUpperBoundMinTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Night Minimum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "midnightVisibility": {
+          "type": "Parameter",
+          "description": "Visibility at Local Midnight",
+          "unit": {
+            "label": "metres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m"
+            }
+          }
+        },
+        "dayUpperBoundMaxFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Day Maximum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfRain": {
+          "type": "Parameter",
+          "description": "Probability of Rain During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "midday10MWindDirection": {
+          "type": "Parameter",
+          "description": "10m Wind Direction at Local Midday",
+          "unit": {
+            "label": "degrees",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "deg"
+            }
+          }
+        },
+        "nightLowerBoundMinFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Night Minimum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfHail": {
+          "type": "Parameter",
+          "description": "Probability of Hail During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "middayMslp": {
+          "type": "Parameter",
+          "description": "Mean Sea Level Pressure at Local Midday",
+          "unit": {
+            "label": "pascals",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Pa"
+            }
+          }
+        },
+        "dayProbabilityOfHeavySnow": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Snow During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightProbabilityOfPrecipitation": {
+          "type": "Parameter",
+          "description": "Probability of Precipitation During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayProbabilityOfHail": {
+          "type": "Parameter",
+          "description": "Probability of Hail During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayProbabilityOfRain": {
+          "type": "Parameter",
+          "description": "Probability of Rain During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "midday10MWindSpeed": {
+          "type": "Parameter",
+          "description": "10m Wind Speed at Local Midday",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "midday10MWindGust": {
+          "type": "Parameter",
+          "description": "10m Wind Gust Speed at Local Midday",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "middayVisibility": {
+          "type": "Parameter",
+          "description": "Visibility at Local Midday",
+          "unit": {
+            "label": "metres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m"
+            }
+          }
+        },
+        "midnight10MWindGust": {
+          "type": "Parameter",
+          "description": "10m Wind Gust Speed at Local Midnight",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "midnightMslp": {
+          "type": "Parameter",
+          "description": "Mean Sea Level Pressure at Local Midnight",
+          "unit": {
+            "label": "pascals",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Pa"
+            }
+          }
+        },
+        "dayProbabilityOfSferics": {
+          "type": "Parameter",
+          "description": "Probability of Sferics During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightSignificantWeatherCode": {
+          "type": "Parameter",
+          "description": "Night Significant Weather Code",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "https://datahub.metoffice.gov.uk/",
+              "type": "1"
+            }
+          }
+        },
+        "dayProbabilityOfPrecipitation": {
+          "type": "Parameter",
+          "description": "Probability of Precipitation During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayProbabilityOfHeavyRain": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Rain During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayMaxScreenTemperature": {
+          "type": "Parameter",
+          "description": "Day Maximum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightMinScreenTemperature": {
+          "type": "Parameter",
+          "description": "Night Minimum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "midnight10MWindDirection": {
+          "type": "Parameter",
+          "description": "10m Wind Direction at Local Midnight",
+          "unit": {
+            "label": "degrees",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "deg"
+            }
+          }
+        },
+        "maxUvIndex": {
+          "type": "Parameter",
+          "description": "Day Maximum UV Index",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "1"
+            }
+          }
+        },
+        "dayProbabilityOfSnow": {
+          "type": "Parameter",
+          "description": "Probability of Snow During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightProbabilityOfSnow": {
+          "type": "Parameter",
+          "description": "Probability of Snow During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayLowerBoundMaxTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Day Maximum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfHeavySnow": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Snow During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayLowerBoundMaxFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Day Maximum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "dayUpperBoundMaxTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Day Maximum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "dayMaxFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Day Maximum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "middayRelativeHumidity": {
+          "type": "Parameter",
+          "description": "Relative Humidity at Local Midday",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightLowerBoundMinTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Night Minimum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightMinFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Night Minimum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfSferics": {
+          "type": "Parameter",
+          "description": "Probability of Sferics During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "wavertree_hourly": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-2.9256, 53.3986, 47]
+        },
+        "properties": {
+          "location": {
+            "name": "Wavertree"
+          },
+          "requestPointDistance": 1975.3601,
+          "modelRunDate": "2024-11-23T12:00Z",
+          "timeSeries": [
+            {
+              "time": "2024-11-23T12:00Z",
+              "screenTemperature": 9.28,
+              "maxScreenAirTemp": 9.28,
+              "minScreenAirTemp": 8.14,
+              "screenDewPointTemperature": 8.54,
+              "feelsLikeTemperature": 5.75,
+              "windSpeed10m": 7.87,
+              "windDirectionFrom10m": 176,
+              "windGustSpeed10m": 15.43,
+              "max10mWindGust": 19.04,
+              "visibility": 5106,
+              "screenRelativeHumidity": 95.13,
+              "mslp": 98750,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.53,
+              "totalPrecipAmount": 0.25,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 61
+            },
+            {
+              "time": "2024-11-23T13:00Z",
+              "screenTemperature": 9.93,
+              "maxScreenAirTemp": 9.93,
+              "minScreenAirTemp": 9.28,
+              "screenDewPointTemperature": 8.97,
+              "feelsLikeTemperature": 6.8,
+              "windSpeed10m": 7.06,
+              "windDirectionFrom10m": 178,
+              "windGustSpeed10m": 15.48,
+              "max10mWindGust": 18.1,
+              "visibility": 11368,
+              "screenRelativeHumidity": 93.78,
+              "mslp": 98683,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.82,
+              "totalPrecipAmount": 0.52,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 65
+            },
+            {
+              "time": "2024-11-23T14:00Z",
+              "screenTemperature": 11.13,
+              "maxScreenAirTemp": 11.14,
+              "minScreenAirTemp": 9.93,
+              "screenDewPointTemperature": 9.99,
+              "feelsLikeTemperature": 8.41,
+              "windSpeed10m": 6.35,
+              "windDirectionFrom10m": 179,
+              "windGustSpeed10m": 13.61,
+              "max10mWindGust": 15.05,
+              "visibility": 18523,
+              "screenRelativeHumidity": 92.73,
+              "mslp": 98634,
+              "uvIndex": 1,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 12
+            },
+            {
+              "time": "2024-11-23T15:00Z",
+              "screenTemperature": 11.98,
+              "maxScreenAirTemp": 12.03,
+              "minScreenAirTemp": 11.13,
+              "screenDewPointTemperature": 10.75,
+              "feelsLikeTemperature": 9.81,
+              "windSpeed10m": 5.14,
+              "windDirectionFrom10m": 182,
+              "windGustSpeed10m": 11.14,
+              "max10mWindGust": 13.9,
+              "visibility": 17498,
+              "screenRelativeHumidity": 92.28,
+              "mslp": 98613,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.7,
+              "totalPrecipAmount": 0.09,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 37
+            },
+            {
+              "time": "2024-11-23T16:00Z",
+              "screenTemperature": 12.56,
+              "maxScreenAirTemp": 12.59,
+              "minScreenAirTemp": 11.98,
+              "screenDewPointTemperature": 11.33,
+              "feelsLikeTemperature": 10.83,
+              "windSpeed10m": 4.29,
+              "windDirectionFrom10m": 197,
+              "windGustSpeed10m": 9.96,
+              "max10mWindGust": 10.5,
+              "visibility": 16335,
+              "screenRelativeHumidity": 92.27,
+              "mslp": 98660,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 1.23,
+              "totalPrecipAmount": 0.27,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 36
+            },
+            {
+              "time": "2024-11-23T17:00Z",
+              "screenTemperature": 12.95,
+              "maxScreenAirTemp": 12.99,
+              "minScreenAirTemp": 12.56,
+              "screenDewPointTemperature": 11.75,
+              "feelsLikeTemperature": 11.27,
+              "windSpeed10m": 4.33,
+              "windDirectionFrom10m": 203,
+              "windGustSpeed10m": 9.88,
+              "max10mWindGust": 10.47,
+              "visibility": 18682,
+              "screenRelativeHumidity": 92.39,
+              "mslp": 98710,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 11
+            },
+            {
+              "time": "2024-11-23T18:00Z",
+              "screenTemperature": 13,
+              "maxScreenAirTemp": 13.05,
+              "minScreenAirTemp": 12.9,
+              "screenDewPointTemperature": 11.56,
+              "feelsLikeTemperature": 11.32,
+              "windSpeed10m": 4.31,
+              "windDirectionFrom10m": 177,
+              "windGustSpeed10m": 8.67,
+              "max10mWindGust": 9.95,
+              "visibility": 19530,
+              "screenRelativeHumidity": 91,
+              "mslp": 98710,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 7
+            },
+            {
+              "time": "2024-11-23T19:00Z",
+              "screenTemperature": 13.02,
+              "maxScreenAirTemp": 13.16,
+              "minScreenAirTemp": 13,
+              "screenDewPointTemperature": 11.92,
+              "feelsLikeTemperature": 11.12,
+              "windSpeed10m": 4.85,
+              "windDirectionFrom10m": 177,
+              "windGustSpeed10m": 10.4,
+              "max10mWindGust": 11.01,
+              "visibility": 13803,
+              "screenRelativeHumidity": 93.07,
+              "mslp": 98682,
+              "uvIndex": 0,
+              "significantWeatherCode": 13,
+              "precipitationRate": 5.45,
+              "totalPrecipAmount": 0.51,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 74
+            },
+            {
+              "time": "2024-11-23T20:00Z",
+              "screenTemperature": 13.67,
+              "maxScreenAirTemp": 13.72,
+              "minScreenAirTemp": 13.02,
+              "screenDewPointTemperature": 12.07,
+              "feelsLikeTemperature": 11.23,
+              "windSpeed10m": 6.31,
+              "windDirectionFrom10m": 187,
+              "windGustSpeed10m": 12.77,
+              "max10mWindGust": 13.53,
+              "visibility": 28855,
+              "screenRelativeHumidity": 90.06,
+              "mslp": 98692,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 11
+            },
+            {
+              "time": "2024-11-23T21:00Z",
+              "screenTemperature": 14.02,
+              "maxScreenAirTemp": 14.03,
+              "minScreenAirTemp": 13.67,
+              "screenDewPointTemperature": 11.71,
+              "feelsLikeTemperature": 11.65,
+              "windSpeed10m": 6.11,
+              "windDirectionFrom10m": 178,
+              "windGustSpeed10m": 12.31,
+              "max10mWindGust": 13.07,
+              "visibility": 34707,
+              "screenRelativeHumidity": 86.02,
+              "mslp": 98682,
+              "uvIndex": 0,
+              "significantWeatherCode": 9,
+              "precipitationRate": 0.35,
+              "totalPrecipAmount": 0.11,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 30
+            },
+            {
+              "time": "2024-11-23T22:00Z",
+              "screenTemperature": 13.98,
+              "maxScreenAirTemp": 14.02,
+              "minScreenAirTemp": 13.9,
+              "screenDewPointTemperature": 11.78,
+              "feelsLikeTemperature": 11.43,
+              "windSpeed10m": 6.57,
+              "windDirectionFrom10m": 176,
+              "windGustSpeed10m": 13.29,
+              "max10mWindGust": 14.34,
+              "visibility": 37141,
+              "screenRelativeHumidity": 86.59,
+              "mslp": 98631,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 12
+            },
+            {
+              "time": "2024-11-23T23:00Z",
+              "screenTemperature": 14.28,
+              "maxScreenAirTemp": 14.29,
+              "minScreenAirTemp": 13.98,
+              "screenDewPointTemperature": 12.06,
+              "feelsLikeTemperature": 11.42,
+              "windSpeed10m": 7.38,
+              "windDirectionFrom10m": 176,
+              "windGustSpeed10m": 14.29,
+              "max10mWindGust": 15.45,
+              "visibility": 37580,
+              "screenRelativeHumidity": 86.56,
+              "mslp": 98571,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 10
+            },
+            {
+              "time": "2024-11-24T00:00Z",
+              "screenTemperature": 14.4,
+              "maxScreenAirTemp": 14.44,
+              "minScreenAirTemp": 14.28,
+              "screenDewPointTemperature": 12.25,
+              "feelsLikeTemperature": 11.52,
+              "windSpeed10m": 7.44,
+              "windDirectionFrom10m": 171,
+              "windGustSpeed10m": 14.08,
+              "max10mWindGust": 14.92,
+              "visibility": 39734,
+              "screenRelativeHumidity": 86.99,
+              "mslp": 98492,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 10
+            },
+            {
+              "time": "2024-11-24T01:00Z",
+              "screenTemperature": 14.38,
+              "maxScreenAirTemp": 14.42,
+              "minScreenAirTemp": 14.35,
+              "screenDewPointTemperature": 12.25,
+              "feelsLikeTemperature": 11.62,
+              "windSpeed10m": 7.16,
+              "windDirectionFrom10m": 170,
+              "windGustSpeed10m": 13.92,
+              "max10mWindGust": 14.5,
+              "visibility": 39173,
+              "screenRelativeHumidity": 87.03,
+              "mslp": 98422,
+              "uvIndex": 0,
+              "significantWeatherCode": 9,
+              "precipitationRate": 1.24,
+              "totalPrecipAmount": 0.17,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 40
+            },
+            {
+              "time": "2024-11-24T02:00Z",
+              "screenTemperature": 14.19,
+              "maxScreenAirTemp": 14.38,
+              "minScreenAirTemp": 14.16,
+              "screenDewPointTemperature": 12.49,
+              "feelsLikeTemperature": 11.33,
+              "windSpeed10m": 7.47,
+              "windDirectionFrom10m": 176,
+              "windGustSpeed10m": 14.46,
+              "max10mWindGust": 15.43,
+              "visibility": 31444,
+              "screenRelativeHumidity": 89.63,
+              "mslp": 98351,
+              "uvIndex": 0,
+              "significantWeatherCode": 13,
+              "precipitationRate": 2.07,
+              "totalPrecipAmount": 0.21,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 74
+            },
+            {
+              "time": "2024-11-24T03:00Z",
+              "screenTemperature": 14.44,
+              "maxScreenAirTemp": 14.48,
+              "minScreenAirTemp": 14.19,
+              "screenDewPointTemperature": 12.35,
+              "feelsLikeTemperature": 11.65,
+              "windSpeed10m": 7.25,
+              "windDirectionFrom10m": 187,
+              "windGustSpeed10m": 14.32,
+              "max10mWindGust": 15.51,
+              "visibility": 20239,
+              "screenRelativeHumidity": 87.4,
+              "mslp": 98310,
+              "uvIndex": 0,
+              "significantWeatherCode": 13,
+              "precipitationRate": 2.63,
+              "totalPrecipAmount": 0.34,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 73
+            },
+            {
+              "time": "2024-11-24T04:00Z",
+              "screenTemperature": 14.42,
+              "maxScreenAirTemp": 14.45,
+              "minScreenAirTemp": 14.37,
+              "screenDewPointTemperature": 12.28,
+              "feelsLikeTemperature": 11.68,
+              "windSpeed10m": 7.09,
+              "windDirectionFrom10m": 189,
+              "windGustSpeed10m": 13.8,
+              "max10mWindGust": 15.24,
+              "visibility": 24690,
+              "screenRelativeHumidity": 87.07,
+              "mslp": 98310,
+              "uvIndex": 0,
+              "significantWeatherCode": 9,
+              "precipitationRate": 1.32,
+              "totalPrecipAmount": 0.28,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 50
+            },
+            {
+              "time": "2024-11-24T05:00Z",
+              "screenTemperature": 14.31,
+              "maxScreenAirTemp": 14.42,
+              "minScreenAirTemp": 14.11,
+              "screenDewPointTemperature": 12.17,
+              "feelsLikeTemperature": 11.79,
+              "windSpeed10m": 6.58,
+              "windDirectionFrom10m": 202,
+              "windGustSpeed10m": 12.7,
+              "max10mWindGust": 14.06,
+              "visibility": 25995,
+              "screenRelativeHumidity": 87.01,
+              "mslp": 98330,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.65,
+              "totalPrecipAmount": 0.25,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 47
+            },
+            {
+              "time": "2024-11-24T06:00Z",
+              "screenTemperature": 13.43,
+              "maxScreenAirTemp": 14.31,
+              "minScreenAirTemp": 13.41,
+              "screenDewPointTemperature": 10.33,
+              "feelsLikeTemperature": 10.74,
+              "windSpeed10m": 6.71,
+              "windDirectionFrom10m": 216,
+              "windGustSpeed10m": 12.73,
+              "max10mWindGust": 13.79,
+              "visibility": 27446,
+              "screenRelativeHumidity": 81.67,
+              "mslp": 98396,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 1.04,
+              "totalPrecipAmount": 0.3,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 42
+            },
+            {
+              "time": "2024-11-24T07:00Z",
+              "screenTemperature": 12.48,
+              "maxScreenAirTemp": 13.43,
+              "minScreenAirTemp": 12.47,
+              "screenDewPointTemperature": 9.48,
+              "feelsLikeTemperature": 10.09,
+              "windSpeed10m": 5.72,
+              "windDirectionFrom10m": 214,
+              "windGustSpeed10m": 11.03,
+              "max10mWindGust": 12.54,
+              "visibility": 24289,
+              "screenRelativeHumidity": 81.94,
+              "mslp": 98458,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 1.17,
+              "totalPrecipAmount": 0.16,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 40
+            },
+            {
+              "time": "2024-11-24T08:00Z",
+              "screenTemperature": 11.88,
+              "maxScreenAirTemp": 12.48,
+              "minScreenAirTemp": 11.86,
+              "screenDewPointTemperature": 8.86,
+              "feelsLikeTemperature": 9.53,
+              "windSpeed10m": 5.48,
+              "windDirectionFrom10m": 209,
+              "windGustSpeed10m": 10.3,
+              "max10mWindGust": 11.11,
+              "visibility": 30442,
+              "screenRelativeHumidity": 81.73,
+              "mslp": 98548,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.29,
+              "totalPrecipAmount": 0.08,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 38
+            },
+            {
+              "time": "2024-11-24T09:00Z",
+              "screenTemperature": 11.46,
+              "maxScreenAirTemp": 11.88,
+              "minScreenAirTemp": 11.45,
+              "screenDewPointTemperature": 8.21,
+              "feelsLikeTemperature": 9.06,
+              "windSpeed10m": 5.44,
+              "windDirectionFrom10m": 201,
+              "windGustSpeed10m": 9.99,
+              "max10mWindGust": 10.31,
+              "visibility": 28370,
+              "screenRelativeHumidity": 80.35,
+              "mslp": 98638,
+              "uvIndex": 1,
+              "significantWeatherCode": 10,
+              "precipitationRate": 0.28,
+              "totalPrecipAmount": 0.04,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 26
+            },
+            {
+              "time": "2024-11-24T10:00Z",
+              "screenTemperature": 11.54,
+              "maxScreenAirTemp": 11.56,
+              "minScreenAirTemp": 11.46,
+              "screenDewPointTemperature": 7.52,
+              "feelsLikeTemperature": 9.03,
+              "windSpeed10m": 5.72,
+              "windDirectionFrom10m": 199,
+              "windGustSpeed10m": 10.28,
+              "max10mWindGust": 10.83,
+              "visibility": 29181,
+              "screenRelativeHumidity": 76.29,
+              "mslp": 98696,
+              "uvIndex": 1,
+              "significantWeatherCode": 10,
+              "precipitationRate": 0.28,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 25
+            },
+            {
+              "time": "2024-11-24T11:00Z",
+              "screenTemperature": 11.66,
+              "maxScreenAirTemp": 11.67,
+              "minScreenAirTemp": 11.54,
+              "screenDewPointTemperature": 7.29,
+              "feelsLikeTemperature": 9.17,
+              "windSpeed10m": 5.68,
+              "windDirectionFrom10m": 199,
+              "windGustSpeed10m": 10.06,
+              "max10mWindGust": 11.06,
+              "visibility": 33278,
+              "screenRelativeHumidity": 74.39,
+              "mslp": 98755,
+              "uvIndex": 1,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 6
+            },
+            {
+              "time": "2024-11-24T12:00Z",
+              "screenTemperature": 11.82,
+              "maxScreenAirTemp": 11.84,
+              "minScreenAirTemp": 11.66,
+              "screenDewPointTemperature": 6.61,
+              "feelsLikeTemperature": 8.98,
+              "windSpeed10m": 6.65,
+              "windDirectionFrom10m": 203,
+              "windGustSpeed10m": 11.85,
+              "max10mWindGust": 12.49,
+              "visibility": 36358,
+              "screenRelativeHumidity": 70.26,
+              "mslp": 98748,
+              "uvIndex": 1,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T13:00Z",
+              "screenTemperature": 11.84,
+              "maxScreenAirTemp": 11.87,
+              "minScreenAirTemp": 11.82,
+              "screenDewPointTemperature": 6.06,
+              "feelsLikeTemperature": 8.85,
+              "windSpeed10m": 7.07,
+              "windDirectionFrom10m": 203,
+              "windGustSpeed10m": 12.6,
+              "max10mWindGust": 14.16,
+              "visibility": 38017,
+              "screenRelativeHumidity": 67.6,
+              "mslp": 98757,
+              "uvIndex": 1,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T14:00Z",
+              "screenTemperature": 11.73,
+              "maxScreenAirTemp": 11.84,
+              "minScreenAirTemp": 11.72,
+              "screenDewPointTemperature": 5.74,
+              "feelsLikeTemperature": 8.64,
+              "windSpeed10m": 7.33,
+              "windDirectionFrom10m": 201,
+              "windGustSpeed10m": 13.04,
+              "max10mWindGust": 14.33,
+              "visibility": 36175,
+              "screenRelativeHumidity": 66.62,
+              "mslp": 98737,
+              "uvIndex": 1,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T15:00Z",
+              "screenTemperature": 11.61,
+              "maxScreenAirTemp": 11.73,
+              "minScreenAirTemp": 11.57,
+              "screenDewPointTemperature": 5.89,
+              "feelsLikeTemperature": 8.53,
+              "windSpeed10m": 7.32,
+              "windDirectionFrom10m": 198,
+              "windGustSpeed10m": 13.02,
+              "max10mWindGust": 15,
+              "visibility": 35510,
+              "screenRelativeHumidity": 67.73,
+              "mslp": 98727,
+              "uvIndex": 1,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 4
+            },
+            {
+              "time": "2024-11-24T16:00Z",
+              "screenTemperature": 11.25,
+              "maxScreenAirTemp": 11.61,
+              "minScreenAirTemp": 11.24,
+              "screenDewPointTemperature": 5.8,
+              "feelsLikeTemperature": 8.25,
+              "windSpeed10m": 7.05,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 12.84,
+              "max10mWindGust": 14.78,
+              "visibility": 34357,
+              "screenRelativeHumidity": 68.9,
+              "mslp": 98708,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T17:00Z",
+              "screenTemperature": 11.03,
+              "maxScreenAirTemp": 11.25,
+              "minScreenAirTemp": 11.02,
+              "screenDewPointTemperature": 5.9,
+              "feelsLikeTemperature": 8.03,
+              "windSpeed10m": 7.04,
+              "windDirectionFrom10m": 194,
+              "windGustSpeed10m": 12.69,
+              "max10mWindGust": 14.44,
+              "visibility": 37801,
+              "screenRelativeHumidity": 70.45,
+              "mslp": 98689,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 4
+            },
+            {
+              "time": "2024-11-24T18:00Z",
+              "screenTemperature": 10.86,
+              "maxScreenAirTemp": 11.03,
+              "minScreenAirTemp": 10.8,
+              "screenDewPointTemperature": 5.96,
+              "feelsLikeTemperature": 7.85,
+              "windSpeed10m": 7.04,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 12.82,
+              "max10mWindGust": 14.25,
+              "visibility": 39237,
+              "screenRelativeHumidity": 71.58,
+              "mslp": 98670,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T19:00Z",
+              "screenTemperature": 10.79,
+              "maxScreenAirTemp": 10.86,
+              "minScreenAirTemp": 10.75,
+              "screenDewPointTemperature": 5.92,
+              "feelsLikeTemperature": 7.81,
+              "windSpeed10m": 6.93,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 12.62,
+              "max10mWindGust": 13.94,
+              "visibility": 40795,
+              "screenRelativeHumidity": 71.71,
+              "mslp": 98669,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T20:00Z",
+              "screenTemperature": 10.65,
+              "maxScreenAirTemp": 10.79,
+              "minScreenAirTemp": 10.62,
+              "screenDewPointTemperature": 5.78,
+              "feelsLikeTemperature": 7.7,
+              "windSpeed10m": 6.82,
+              "windDirectionFrom10m": 202,
+              "windGustSpeed10m": 12.52,
+              "max10mWindGust": 13.63,
+              "visibility": 41929,
+              "screenRelativeHumidity": 71.7,
+              "mslp": 98678,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T21:00Z",
+              "screenTemperature": 10.53,
+              "maxScreenAirTemp": 10.65,
+              "minScreenAirTemp": 10.5,
+              "screenDewPointTemperature": 5.84,
+              "feelsLikeTemperature": 7.48,
+              "windSpeed10m": 7.08,
+              "windDirectionFrom10m": 203,
+              "windGustSpeed10m": 12.89,
+              "max10mWindGust": 13.18,
+              "visibility": 44628,
+              "screenRelativeHumidity": 72.53,
+              "mslp": 98677,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-24T22:00Z",
+              "screenTemperature": 10.47,
+              "maxScreenAirTemp": 10.53,
+              "minScreenAirTemp": 10.42,
+              "screenDewPointTemperature": 5.65,
+              "feelsLikeTemperature": 7.32,
+              "windSpeed10m": 7.41,
+              "windDirectionFrom10m": 204,
+              "windGustSpeed10m": 13.4,
+              "max10mWindGust": 13.81,
+              "visibility": 47105,
+              "screenRelativeHumidity": 71.84,
+              "mslp": 98704,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 4
+            },
+            {
+              "time": "2024-11-24T23:00Z",
+              "screenTemperature": 10.32,
+              "maxScreenAirTemp": 10.47,
+              "minScreenAirTemp": 10.26,
+              "screenDewPointTemperature": 5.54,
+              "feelsLikeTemperature": 7.08,
+              "windSpeed10m": 7.7,
+              "windDirectionFrom10m": 207,
+              "windGustSpeed10m": 14.01,
+              "max10mWindGust": 14.01,
+              "visibility": 52166,
+              "screenRelativeHumidity": 72.03,
+              "mslp": 98704,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-25T00:00Z",
+              "screenTemperature": 10.22,
+              "maxScreenAirTemp": 10.32,
+              "minScreenAirTemp": 10.06,
+              "screenDewPointTemperature": 5.64,
+              "feelsLikeTemperature": 7.09,
+              "windSpeed10m": 7.33,
+              "windDirectionFrom10m": 211,
+              "windGustSpeed10m": 13.11,
+              "max10mWindGust": 13.65,
+              "visibility": 51563,
+              "screenRelativeHumidity": 72.97,
+              "mslp": 98712,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 23
+            },
+            {
+              "time": "2024-11-25T01:00Z",
+              "screenTemperature": 9.98,
+              "maxScreenAirTemp": 10.22,
+              "minScreenAirTemp": 9.94,
+              "screenDewPointTemperature": 5.98,
+              "feelsLikeTemperature": 6.88,
+              "windSpeed10m": 7.04,
+              "windDirectionFrom10m": 215,
+              "windGustSpeed10m": 12.51,
+              "max10mWindGust": 12.51,
+              "visibility": 52180,
+              "screenRelativeHumidity": 76.02,
+              "mslp": 98741,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 11
+            },
+            {
+              "time": "2024-11-25T02:00Z",
+              "screenTemperature": 9.59,
+              "maxScreenAirTemp": 9.98,
+              "minScreenAirTemp": 9.53,
+              "screenDewPointTemperature": 5.22,
+              "feelsLikeTemperature": 6.37,
+              "windSpeed10m": 7.14,
+              "windDirectionFrom10m": 222,
+              "windGustSpeed10m": 13.02,
+              "max10mWindGust": 13.02,
+              "visibility": 41536,
+              "screenRelativeHumidity": 74.07,
+              "mslp": 98788,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 7
+            },
+            {
+              "time": "2024-11-25T03:00Z",
+              "screenTemperature": 9.27,
+              "maxScreenAirTemp": 9.59,
+              "minScreenAirTemp": 9.25,
+              "screenDewPointTemperature": 5.16,
+              "feelsLikeTemperature": 6.06,
+              "windSpeed10m": 6.91,
+              "windDirectionFrom10m": 226,
+              "windGustSpeed10m": 12.42,
+              "max10mWindGust": 12.88,
+              "visibility": 38854,
+              "screenRelativeHumidity": 75.45,
+              "mslp": 98816,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-25T04:00Z",
+              "screenTemperature": 9.09,
+              "maxScreenAirTemp": 9.27,
+              "minScreenAirTemp": 9.04,
+              "screenDewPointTemperature": 4.8,
+              "feelsLikeTemperature": 5.8,
+              "windSpeed10m": 7.04,
+              "windDirectionFrom10m": 228,
+              "windGustSpeed10m": 12.56,
+              "max10mWindGust": 12.8,
+              "visibility": 36196,
+              "screenRelativeHumidity": 74.38,
+              "mslp": 98858,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 5
+            },
+            {
+              "time": "2024-11-25T05:00Z",
+              "screenTemperature": 8.82,
+              "maxScreenAirTemp": 9.09,
+              "minScreenAirTemp": 8.81,
+              "screenDewPointTemperature": 4.54,
+              "feelsLikeTemperature": 5.36,
+              "windSpeed10m": 7.26,
+              "windDirectionFrom10m": 232,
+              "windGustSpeed10m": 13.12,
+              "max10mWindGust": 14.39,
+              "visibility": 42056,
+              "screenRelativeHumidity": 74.58,
+              "mslp": 98910,
+              "uvIndex": 0,
+              "significantWeatherCode": 0,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T06:00Z",
+              "screenTemperature": 8.66,
+              "maxScreenAirTemp": 8.88,
+              "minScreenAirTemp": 8.63,
+              "screenDewPointTemperature": 4.28,
+              "feelsLikeTemperature": 5.14,
+              "windSpeed10m": 7.32,
+              "windDirectionFrom10m": 235,
+              "windGustSpeed10m": 13.39,
+              "max10mWindGust": 15.94,
+              "visibility": 41207,
+              "screenRelativeHumidity": 74.14,
+              "mslp": 98961,
+              "uvIndex": 0,
+              "significantWeatherCode": 0,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T07:00Z",
+              "screenTemperature": 8.58,
+              "maxScreenAirTemp": 8.69,
+              "minScreenAirTemp": 8.56,
+              "screenDewPointTemperature": 4.21,
+              "feelsLikeTemperature": 5.01,
+              "windSpeed10m": 7.44,
+              "windDirectionFrom10m": 240,
+              "windGustSpeed10m": 13.28,
+              "max10mWindGust": 14.8,
+              "visibility": 38861,
+              "screenRelativeHumidity": 74.26,
+              "mslp": 99061,
+              "uvIndex": 0,
+              "significantWeatherCode": 0,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T08:00Z",
+              "screenTemperature": 8.42,
+              "maxScreenAirTemp": 8.58,
+              "minScreenAirTemp": 8.42,
+              "screenDewPointTemperature": 3.99,
+              "feelsLikeTemperature": 4.84,
+              "windSpeed10m": 7.46,
+              "windDirectionFrom10m": 243,
+              "windGustSpeed10m": 13.21,
+              "max10mWindGust": 14.59,
+              "visibility": 36897,
+              "screenRelativeHumidity": 73.86,
+              "mslp": 99161,
+              "uvIndex": 0,
+              "significantWeatherCode": 0,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T09:00Z",
+              "screenTemperature": 8.4,
+              "maxScreenAirTemp": 8.42,
+              "minScreenAirTemp": 8.27,
+              "screenDewPointTemperature": 3.83,
+              "feelsLikeTemperature": 4.77,
+              "windSpeed10m": 7.59,
+              "windDirectionFrom10m": 243,
+              "windGustSpeed10m": 13.29,
+              "max10mWindGust": 13.29,
+              "visibility": 36152,
+              "screenRelativeHumidity": 73.17,
+              "mslp": 99252,
+              "uvIndex": 1,
+              "significantWeatherCode": 1,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T10:00Z",
+              "screenTemperature": 8.66,
+              "maxScreenAirTemp": 8.66,
+              "minScreenAirTemp": 8.4,
+              "screenDewPointTemperature": 3.94,
+              "feelsLikeTemperature": 4.96,
+              "windSpeed10m": 8,
+              "windDirectionFrom10m": 245,
+              "windGustSpeed10m": 13.83,
+              "max10mWindGust": 13.83,
+              "visibility": 36320,
+              "screenRelativeHumidity": 72.24,
+              "mslp": 99342,
+              "uvIndex": 1,
+              "significantWeatherCode": 3,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T11:00Z",
+              "screenTemperature": 8.83,
+              "maxScreenAirTemp": 8.83,
+              "minScreenAirTemp": 8.66,
+              "screenDewPointTemperature": 3.7,
+              "feelsLikeTemperature": 5.05,
+              "windSpeed10m": 8.44,
+              "windDirectionFrom10m": 249,
+              "windGustSpeed10m": 14.47,
+              "max10mWindGust": 14.47,
+              "visibility": 32194,
+              "screenRelativeHumidity": 69.92,
+              "mslp": 99424,
+              "uvIndex": 1,
+              "significantWeatherCode": 3,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 3
+            },
+            {
+              "time": "2024-11-25T12:00Z",
+              "screenTemperature": 8.94,
+              "screenDewPointTemperature": 3.65,
+              "feelsLikeTemperature": 5.18,
+              "windSpeed10m": 8.52,
+              "windDirectionFrom10m": 251,
+              "windGustSpeed10m": 14.49,
+              "visibility": 32255,
+              "screenRelativeHumidity": 68.89,
+              "mslp": 99488,
+              "uvIndex": 1,
+              "significantWeatherCode": 3,
+              "precipitationRate": 0,
+              "probOfPrecipitation": 2
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": [
+      {
+        "totalSnowAmount": {
+          "type": "Parameter",
+          "description": "Total Snow Amount Over Previous Hour",
+          "unit": {
+            "label": "millimetres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "mm"
+            }
+          }
+        },
+        "screenTemperature": {
+          "type": "Parameter",
+          "description": "Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "visibility": {
+          "type": "Parameter",
+          "description": "Visibility",
+          "unit": {
+            "label": "metres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m"
+            }
+          }
+        },
+        "windDirectionFrom10m": {
+          "type": "Parameter",
+          "description": "10m Wind From Direction",
+          "unit": {
+            "label": "degrees",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "deg"
+            }
+          }
+        },
+        "precipitationRate": {
+          "type": "Parameter",
+          "description": "Precipitation Rate",
+          "unit": {
+            "label": "millimetres per hour",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "mm/h"
+            }
+          }
+        },
+        "maxScreenAirTemp": {
+          "type": "Parameter",
+          "description": "Maximum Screen Air Temperature Over Previous Hour",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "feelsLikeTemperature": {
+          "type": "Parameter",
+          "description": "Feels Like Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "screenDewPointTemperature": {
+          "type": "Parameter",
+          "description": "Screen Dew Point Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "screenRelativeHumidity": {
+          "type": "Parameter",
+          "description": "Screen Relative Humidity",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "windSpeed10m": {
+          "type": "Parameter",
+          "description": "10m Wind Speed",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "probOfPrecipitation": {
+          "type": "Parameter",
+          "description": "Probability of Precipitation",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "max10mWindGust": {
+          "type": "Parameter",
+          "description": "Maximum 10m Wind Gust Speed Over Previous Hour",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "significantWeatherCode": {
+          "type": "Parameter",
+          "description": "Significant Weather Code",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "https://datahub.metoffice.gov.uk/",
+              "type": "1"
+            }
+          }
+        },
+        "minScreenAirTemp": {
+          "type": "Parameter",
+          "description": "Minimum Screen Air Temperature Over Previous Hour",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "totalPrecipAmount": {
+          "type": "Parameter",
+          "description": "Total Precipitation Amount Over Previous Hour",
+          "unit": {
+            "label": "millimetres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "mm"
+            }
+          }
+        },
+        "mslp": {
+          "type": "Parameter",
+          "description": "Mean Sea Level Pressure",
+          "unit": {
+            "label": "pascals",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Pa"
+            }
+          }
+        },
+        "windGustSpeed10m": {
+          "type": "Parameter",
+          "description": "10m Wind Gust Speed",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "uvIndex": {
+          "type": "Parameter",
+          "description": "UV Index",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "1"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "kingslynn_daily": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.40190000000000003, 52.7561, 5]
+        },
+        "properties": {
+          "location": {
+            "name": "King's Lynn"
+          },
+          "requestPointDistance": 2720.9208,
+          "modelRunDate": "2024-11-23T12:00Z",
+          "timeSeries": [
+            {
+              "time": "2024-11-22T00:00Z",
+              "midday10MWindSpeed": 6.74,
+              "midnight10MWindSpeed": 2.98,
+              "midday10MWindDirection": 288,
+              "midnight10MWindDirection": 188,
+              "midday10MWindGust": 11.32,
+              "midnight10MWindGust": 7.72,
+              "middayVisibility": 25304,
+              "midnightVisibility": 16924,
+              "middayRelativeHumidity": 68.93,
+              "midnightRelativeHumidity": 94.01,
+              "middayMslp": 100530,
+              "midnightMslp": 101290,
+              "nightSignificantWeatherCode": 7,
+              "dayMaxScreenTemperature": 5.24,
+              "nightMinScreenTemperature": -0.4,
+              "dayUpperBoundMaxTemp": 6.17,
+              "nightUpperBoundMinTemp": 1.91,
+              "dayLowerBoundMaxTemp": 4.13,
+              "nightLowerBoundMinTemp": -1.1,
+              "nightMinFeelsLikeTemp": -4.12,
+              "dayUpperBoundMaxFeelsLikeTemp": 2.08,
+              "nightUpperBoundMinFeelsLikeTemp": -1.75,
+              "dayLowerBoundMaxFeelsLikeTemp": 0.48,
+              "nightLowerBoundMinFeelsLikeTemp": -4.12,
+              "nightProbabilityOfPrecipitation": 89,
+              "nightProbabilityOfSnow": 6,
+              "nightProbabilityOfHeavySnow": 2,
+              "nightProbabilityOfRain": 86,
+              "nightProbabilityOfHeavyRain": 84,
+              "nightProbabilityOfHail": 18,
+              "nightProbabilityOfSferics": 9
+            },
+            {
+              "time": "2024-11-23T00:00Z",
+              "midday10MWindSpeed": 9.93,
+              "midnight10MWindSpeed": 8.72,
+              "midday10MWindDirection": 180,
+              "midnight10MWindDirection": 199,
+              "midday10MWindGust": 18,
+              "midnight10MWindGust": 16.6,
+              "middayVisibility": 7478,
+              "midnightVisibility": 42290,
+              "middayRelativeHumidity": 97.5,
+              "midnightRelativeHumidity": 90.27,
+              "middayMslp": 99820,
+              "midnightMslp": 99340,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 15,
+              "nightSignificantWeatherCode": 12,
+              "dayMaxScreenTemperature": 10.16,
+              "nightMinScreenTemperature": 9.3,
+              "dayUpperBoundMaxTemp": 13,
+              "nightUpperBoundMinTemp": 13.01,
+              "dayLowerBoundMaxTemp": 9.51,
+              "nightLowerBoundMinTemp": 9.3,
+              "dayMaxFeelsLikeTemp": 5.14,
+              "nightMinFeelsLikeTemp": 6.38,
+              "dayUpperBoundMaxFeelsLikeTemp": 9.42,
+              "nightUpperBoundMinFeelsLikeTemp": 9.42,
+              "dayLowerBoundMaxFeelsLikeTemp": 5.14,
+              "nightLowerBoundMinFeelsLikeTemp": 6.38,
+              "dayProbabilityOfPrecipitation": 97,
+              "nightProbabilityOfPrecipitation": 95,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 97,
+              "nightProbabilityOfRain": 95,
+              "dayProbabilityOfHeavyRain": 96,
+              "nightProbabilityOfHeavyRain": 93,
+              "dayProbabilityOfHail": 19,
+              "nightProbabilityOfHail": 19,
+              "dayProbabilityOfSferics": 10,
+              "nightProbabilityOfSferics": 11
+            },
+            {
+              "time": "2024-11-24T00:00Z",
+              "midday10MWindSpeed": 10.03,
+              "midnight10MWindSpeed": 6.3,
+              "midday10MWindDirection": 200,
+              "midnight10MWindDirection": 214,
+              "midday10MWindGust": 19,
+              "midnight10MWindGust": 12.27,
+              "middayVisibility": 19911,
+              "midnightVisibility": 44678,
+              "middayRelativeHumidity": 82.47,
+              "midnightRelativeHumidity": 84.49,
+              "middayMslp": 99220,
+              "midnightMslp": 99277,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 12,
+              "nightSignificantWeatherCode": 12,
+              "dayMaxScreenTemperature": 15.66,
+              "nightMinScreenTemperature": 9.75,
+              "dayUpperBoundMaxTemp": 16.88,
+              "nightUpperBoundMinTemp": 10.72,
+              "dayLowerBoundMaxTemp": 13.97,
+              "nightLowerBoundMinTemp": 8.25,
+              "dayMaxFeelsLikeTemp": 11.45,
+              "nightMinFeelsLikeTemp": 7.13,
+              "dayUpperBoundMaxFeelsLikeTemp": 12.2,
+              "nightUpperBoundMinFeelsLikeTemp": 8,
+              "dayLowerBoundMaxFeelsLikeTemp": 10.46,
+              "nightLowerBoundMinFeelsLikeTemp": 5.07,
+              "dayProbabilityOfPrecipitation": 81,
+              "nightProbabilityOfPrecipitation": 86,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 81,
+              "nightProbabilityOfRain": 86,
+              "dayProbabilityOfHeavyRain": 78,
+              "nightProbabilityOfHeavyRain": 82,
+              "dayProbabilityOfHail": 15,
+              "nightProbabilityOfHail": 16,
+              "dayProbabilityOfSferics": 8,
+              "nightProbabilityOfSferics": 8
+            },
+            {
+              "time": "2024-11-25T00:00Z",
+              "midday10MWindSpeed": 6.91,
+              "midnight10MWindSpeed": 5.14,
+              "midday10MWindDirection": 233,
+              "midnight10MWindDirection": 228,
+              "midday10MWindGust": 12.61,
+              "midnight10MWindGust": 9.33,
+              "middayVisibility": 38960,
+              "midnightVisibility": 39029,
+              "middayRelativeHumidity": 70.02,
+              "midnightRelativeHumidity": 84,
+              "middayMslp": 99715,
+              "midnightMslp": 100666,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 1,
+              "nightSignificantWeatherCode": 0,
+              "dayMaxScreenTemperature": 10.94,
+              "nightMinScreenTemperature": 4.7,
+              "dayUpperBoundMaxTemp": 11.7,
+              "nightUpperBoundMinTemp": 7.14,
+              "dayLowerBoundMaxTemp": 9.36,
+              "nightLowerBoundMinTemp": 2.09,
+              "dayMaxFeelsLikeTemp": 7.72,
+              "nightMinFeelsLikeTemp": 1.4,
+              "dayUpperBoundMaxFeelsLikeTemp": 8.79,
+              "nightUpperBoundMinFeelsLikeTemp": 3.27,
+              "dayLowerBoundMaxFeelsLikeTemp": 6.22,
+              "nightLowerBoundMinFeelsLikeTemp": -0.99,
+              "dayProbabilityOfPrecipitation": 3,
+              "nightProbabilityOfPrecipitation": 4,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 3,
+              "nightProbabilityOfRain": 4,
+              "dayProbabilityOfHeavyRain": 1,
+              "nightProbabilityOfHeavyRain": 2,
+              "dayProbabilityOfHail": 0,
+              "nightProbabilityOfHail": 0,
+              "dayProbabilityOfSferics": 0,
+              "nightProbabilityOfSferics": 0
+            },
+            {
+              "time": "2024-11-26T00:00Z",
+              "midday10MWindSpeed": 4.33,
+              "midnight10MWindSpeed": 2.83,
+              "midday10MWindDirection": 241,
+              "midnight10MWindDirection": 179,
+              "midday10MWindGust": 8.23,
+              "midnight10MWindGust": 4.92,
+              "middayVisibility": 40528,
+              "midnightVisibility": 14079,
+              "middayRelativeHumidity": 77.2,
+              "midnightRelativeHumidity": 94.47,
+              "middayMslp": 101355,
+              "midnightMslp": 101517,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 1,
+              "nightSignificantWeatherCode": 9,
+              "dayMaxScreenTemperature": 7.93,
+              "nightMinScreenTemperature": 2.68,
+              "dayUpperBoundMaxTemp": 10.02,
+              "nightUpperBoundMinTemp": 9.62,
+              "dayLowerBoundMaxTemp": 6.28,
+              "nightLowerBoundMinTemp": -1.11,
+              "dayMaxFeelsLikeTemp": 5.22,
+              "nightMinFeelsLikeTemp": 1.74,
+              "dayUpperBoundMaxFeelsLikeTemp": 7.33,
+              "nightUpperBoundMinFeelsLikeTemp": 5.97,
+              "dayLowerBoundMaxFeelsLikeTemp": 4.13,
+              "nightLowerBoundMinFeelsLikeTemp": -3.64,
+              "dayProbabilityOfPrecipitation": 3,
+              "nightProbabilityOfPrecipitation": 52,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 1,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 3,
+              "nightProbabilityOfRain": 52,
+              "dayProbabilityOfHeavyRain": 2,
+              "nightProbabilityOfHeavyRain": 48,
+              "dayProbabilityOfHail": 0,
+              "nightProbabilityOfHail": 10,
+              "dayProbabilityOfSferics": 0,
+              "nightProbabilityOfSferics": 9
+            },
+            {
+              "time": "2024-11-27T00:00Z",
+              "midday10MWindSpeed": 7.99,
+              "midnight10MWindSpeed": 5.7,
+              "midday10MWindDirection": 280,
+              "midnight10MWindDirection": 304,
+              "midday10MWindGust": 14.53,
+              "midnight10MWindGust": 9.97,
+              "middayVisibility": 12470,
+              "midnightVisibility": 31017,
+              "middayRelativeHumidity": 89.2,
+              "midnightRelativeHumidity": 86.45,
+              "middayMslp": 100836,
+              "midnightMslp": 101855,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 10,
+              "nightSignificantWeatherCode": 0,
+              "dayMaxScreenTemperature": 8.41,
+              "nightMinScreenTemperature": 4.04,
+              "dayUpperBoundMaxTemp": 12.97,
+              "nightUpperBoundMinTemp": 8.08,
+              "dayLowerBoundMaxTemp": 4.19,
+              "nightLowerBoundMinTemp": -1.57,
+              "dayMaxFeelsLikeTemp": 4.11,
+              "nightMinFeelsLikeTemp": 1.3,
+              "dayUpperBoundMaxFeelsLikeTemp": 10.56,
+              "nightUpperBoundMinFeelsLikeTemp": 5.08,
+              "dayLowerBoundMaxFeelsLikeTemp": 1.68,
+              "nightLowerBoundMinFeelsLikeTemp": -4.13,
+              "dayProbabilityOfPrecipitation": 49,
+              "nightProbabilityOfPrecipitation": 37,
+              "dayProbabilityOfSnow": 0,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 49,
+              "nightProbabilityOfRain": 37,
+              "dayProbabilityOfHeavyRain": 45,
+              "nightProbabilityOfHeavyRain": 24,
+              "dayProbabilityOfHail": 9,
+              "nightProbabilityOfHail": 2,
+              "dayProbabilityOfSferics": 9,
+              "nightProbabilityOfSferics": 4
+            },
+            {
+              "time": "2024-11-28T00:00Z",
+              "midday10MWindSpeed": 3.52,
+              "midnight10MWindSpeed": 3.01,
+              "midday10MWindDirection": 314,
+              "midnight10MWindDirection": 98,
+              "midday10MWindGust": 6.7,
+              "midnight10MWindGust": 5.08,
+              "middayVisibility": 38659,
+              "midnightVisibility": 12067,
+              "middayRelativeHumidity": 80.63,
+              "midnightRelativeHumidity": 92.04,
+              "middayMslp": 102495,
+              "midnightMslp": 102655,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 7,
+              "nightSignificantWeatherCode": 7,
+              "dayMaxScreenTemperature": 7.26,
+              "nightMinScreenTemperature": 2.84,
+              "dayUpperBoundMaxTemp": 10.28,
+              "nightUpperBoundMinTemp": 7.53,
+              "dayLowerBoundMaxTemp": 4.63,
+              "nightLowerBoundMinTemp": -1.27,
+              "dayMaxFeelsLikeTemp": 5.08,
+              "nightMinFeelsLikeTemp": 1.66,
+              "dayUpperBoundMaxFeelsLikeTemp": 7.29,
+              "nightUpperBoundMinFeelsLikeTemp": 4.94,
+              "dayLowerBoundMaxFeelsLikeTemp": 1.7,
+              "nightLowerBoundMinFeelsLikeTemp": -3.19,
+              "dayProbabilityOfPrecipitation": 7,
+              "nightProbabilityOfPrecipitation": 8,
+              "dayProbabilityOfSnow": 1,
+              "nightProbabilityOfSnow": 1,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 7,
+              "nightProbabilityOfRain": 7,
+              "dayProbabilityOfHeavyRain": 2,
+              "nightProbabilityOfHeavyRain": 2,
+              "dayProbabilityOfHail": 0,
+              "nightProbabilityOfHail": 0,
+              "dayProbabilityOfSferics": 0,
+              "nightProbabilityOfSferics": 0
+            },
+            {
+              "time": "2024-11-29T00:00Z",
+              "midday10MWindSpeed": 4.61,
+              "midnight10MWindSpeed": 4.68,
+              "midday10MWindDirection": 143,
+              "midnight10MWindDirection": 160,
+              "midday10MWindGust": 8.48,
+              "midnight10MWindGust": 8.27,
+              "middayVisibility": 28001,
+              "midnightVisibility": 32845,
+              "middayRelativeHumidity": 83.1,
+              "midnightRelativeHumidity": 90.51,
+              "middayMslp": 102395,
+              "midnightMslp": 102078,
+              "maxUvIndex": 1,
+              "daySignificantWeatherCode": 7,
+              "nightSignificantWeatherCode": 8,
+              "dayMaxScreenTemperature": 8.34,
+              "nightMinScreenTemperature": 5.65,
+              "dayUpperBoundMaxTemp": 13.38,
+              "nightUpperBoundMinTemp": 11.7,
+              "dayLowerBoundMaxTemp": 4.49,
+              "nightLowerBoundMinTemp": -1.92,
+              "dayMaxFeelsLikeTemp": 5.77,
+              "nightMinFeelsLikeTemp": 3.8,
+              "dayUpperBoundMaxFeelsLikeTemp": 11.34,
+              "nightUpperBoundMinFeelsLikeTemp": 9.44,
+              "dayLowerBoundMaxFeelsLikeTemp": 2.35,
+              "nightLowerBoundMinFeelsLikeTemp": -4.87,
+              "dayProbabilityOfPrecipitation": 8,
+              "nightProbabilityOfPrecipitation": 12,
+              "dayProbabilityOfSnow": 1,
+              "nightProbabilityOfSnow": 0,
+              "dayProbabilityOfHeavySnow": 0,
+              "nightProbabilityOfHeavySnow": 0,
+              "dayProbabilityOfRain": 8,
+              "nightProbabilityOfRain": 12,
+              "dayProbabilityOfHeavyRain": 3,
+              "nightProbabilityOfHeavyRain": 2,
+              "dayProbabilityOfHail": 0,
+              "nightProbabilityOfHail": 0,
+              "dayProbabilityOfSferics": 0,
+              "nightProbabilityOfSferics": 0
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": [
+      {
+        "daySignificantWeatherCode": {
+          "type": "Parameter",
+          "description": "Day Significant Weather Code",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "https://datahub.metoffice.gov.uk/",
+              "type": "1"
+            }
+          }
+        },
+        "midnightRelativeHumidity": {
+          "type": "Parameter",
+          "description": "Relative Humidity at Local Midnight",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightProbabilityOfHeavyRain": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Rain During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "midnight10MWindSpeed": {
+          "type": "Parameter",
+          "description": "10m Wind Speed at Local Midnight",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "nightUpperBoundMinFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Night Minimum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightUpperBoundMinTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Night Minimum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "midnightVisibility": {
+          "type": "Parameter",
+          "description": "Visibility at Local Midnight",
+          "unit": {
+            "label": "metres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m"
+            }
+          }
+        },
+        "dayUpperBoundMaxFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Day Maximum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfRain": {
+          "type": "Parameter",
+          "description": "Probability of Rain During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "midday10MWindDirection": {
+          "type": "Parameter",
+          "description": "10m Wind Direction at Local Midday",
+          "unit": {
+            "label": "degrees",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "deg"
+            }
+          }
+        },
+        "nightLowerBoundMinFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Night Minimum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfHail": {
+          "type": "Parameter",
+          "description": "Probability of Hail During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "middayMslp": {
+          "type": "Parameter",
+          "description": "Mean Sea Level Pressure at Local Midday",
+          "unit": {
+            "label": "pascals",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Pa"
+            }
+          }
+        },
+        "dayProbabilityOfHeavySnow": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Snow During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightProbabilityOfPrecipitation": {
+          "type": "Parameter",
+          "description": "Probability of Precipitation During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayProbabilityOfHail": {
+          "type": "Parameter",
+          "description": "Probability of Hail During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayProbabilityOfRain": {
+          "type": "Parameter",
+          "description": "Probability of Rain During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "midday10MWindSpeed": {
+          "type": "Parameter",
+          "description": "10m Wind Speed at Local Midday",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "midday10MWindGust": {
+          "type": "Parameter",
+          "description": "10m Wind Gust Speed at Local Midday",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "middayVisibility": {
+          "type": "Parameter",
+          "description": "Visibility at Local Midday",
+          "unit": {
+            "label": "metres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m"
+            }
+          }
+        },
+        "midnight10MWindGust": {
+          "type": "Parameter",
+          "description": "10m Wind Gust Speed at Local Midnight",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "midnightMslp": {
+          "type": "Parameter",
+          "description": "Mean Sea Level Pressure at Local Midnight",
+          "unit": {
+            "label": "pascals",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Pa"
+            }
+          }
+        },
+        "dayProbabilityOfSferics": {
+          "type": "Parameter",
+          "description": "Probability of Sferics During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightSignificantWeatherCode": {
+          "type": "Parameter",
+          "description": "Night Significant Weather Code",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "https://datahub.metoffice.gov.uk/",
+              "type": "1"
+            }
+          }
+        },
+        "dayProbabilityOfPrecipitation": {
+          "type": "Parameter",
+          "description": "Probability of Precipitation During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayProbabilityOfHeavyRain": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Rain During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayMaxScreenTemperature": {
+          "type": "Parameter",
+          "description": "Day Maximum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightMinScreenTemperature": {
+          "type": "Parameter",
+          "description": "Night Minimum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "midnight10MWindDirection": {
+          "type": "Parameter",
+          "description": "10m Wind Direction at Local Midnight",
+          "unit": {
+            "label": "degrees",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "deg"
+            }
+          }
+        },
+        "maxUvIndex": {
+          "type": "Parameter",
+          "description": "Day Maximum UV Index",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "1"
+            }
+          }
+        },
+        "dayProbabilityOfSnow": {
+          "type": "Parameter",
+          "description": "Probability of Snow During The Day",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightProbabilityOfSnow": {
+          "type": "Parameter",
+          "description": "Probability of Snow During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayLowerBoundMaxTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Day Maximum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfHeavySnow": {
+          "type": "Parameter",
+          "description": "Probability of Heavy Snow During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "dayLowerBoundMaxFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Day Maximum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "dayUpperBoundMaxTemp": {
+          "type": "Parameter",
+          "description": "Upper Bound on Day Maximum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "dayMaxFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Day Maximum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "middayRelativeHumidity": {
+          "type": "Parameter",
+          "description": "Relative Humidity at Local Midday",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "nightLowerBoundMinTemp": {
+          "type": "Parameter",
+          "description": "Lower Bound on Night Minimum Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightMinFeelsLikeTemp": {
+          "type": "Parameter",
+          "description": "Night Minimum Feels Like Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "nightProbabilityOfSferics": {
+          "type": "Parameter",
+          "description": "Probability of Sferics During The Night",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "kingslynn_hourly": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [0.40190000000000003, 52.7561, 5]
+        },
+        "properties": {
+          "location": {
+            "name": "King's Lynn"
+          },
+          "requestPointDistance": 2720.9208,
+          "modelRunDate": "2024-11-23T12:00Z",
+          "timeSeries": [
+            {
+              "time": "2024-11-23T12:00Z",
+              "screenTemperature": 7.87,
+              "maxScreenAirTemp": 7.87,
+              "minScreenAirTemp": 7.48,
+              "screenDewPointTemperature": 7.51,
+              "feelsLikeTemperature": 3.39,
+              "windSpeed10m": 9.93,
+              "windDirectionFrom10m": 180,
+              "windGustSpeed10m": 18,
+              "max10mWindGust": 18.11,
+              "visibility": 7478,
+              "screenRelativeHumidity": 97.5,
+              "mslp": 99820,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.75,
+              "totalPrecipAmount": 0.84,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 67
+            },
+            {
+              "time": "2024-11-23T13:00Z",
+              "screenTemperature": 7.87,
+              "maxScreenAirTemp": 7.9,
+              "minScreenAirTemp": 7.84,
+              "screenDewPointTemperature": 7.1,
+              "feelsLikeTemperature": 3.25,
+              "windSpeed10m": 10.52,
+              "windDirectionFrom10m": 178,
+              "windGustSpeed10m": 19.06,
+              "max10mWindGust": 19.16,
+              "visibility": 8196,
+              "screenRelativeHumidity": 94.78,
+              "mslp": 99680,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.86,
+              "totalPrecipAmount": 0.29,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 57
+            },
+            {
+              "time": "2024-11-23T14:00Z",
+              "screenTemperature": 8.34,
+              "maxScreenAirTemp": 8.34,
+              "minScreenAirTemp": 7.87,
+              "screenDewPointTemperature": 7.32,
+              "feelsLikeTemperature": 4,
+              "windSpeed10m": 10,
+              "windDirectionFrom10m": 182,
+              "windGustSpeed10m": 18.66,
+              "max10mWindGust": 18.98,
+              "visibility": 9417,
+              "screenRelativeHumidity": 93.17,
+              "mslp": 99550,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.23,
+              "totalPrecipAmount": 0.06,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 62
+            },
+            {
+              "time": "2024-11-23T15:00Z",
+              "screenTemperature": 9.11,
+              "maxScreenAirTemp": 9.13,
+              "minScreenAirTemp": 8.34,
+              "screenDewPointTemperature": 8.03,
+              "feelsLikeTemperature": 5.14,
+              "windSpeed10m": 9.45,
+              "windDirectionFrom10m": 183,
+              "windGustSpeed10m": 17.94,
+              "max10mWindGust": 18.36,
+              "visibility": 8865,
+              "screenRelativeHumidity": 92.81,
+              "mslp": 99406,
+              "uvIndex": 1,
+              "significantWeatherCode": 15,
+              "precipitationRate": 1.87,
+              "totalPrecipAmount": 0.48,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 93
+            },
+            {
+              "time": "2024-11-23T16:00Z",
+              "screenTemperature": 10.16,
+              "maxScreenAirTemp": 10.17,
+              "minScreenAirTemp": 9.11,
+              "screenDewPointTemperature": 9.02,
+              "feelsLikeTemperature": 6.38,
+              "windSpeed10m": 9.8,
+              "windDirectionFrom10m": 186,
+              "windGustSpeed10m": 18.67,
+              "max10mWindGust": 19.04,
+              "visibility": 16945,
+              "screenRelativeHumidity": 92.66,
+              "mslp": 99301,
+              "uvIndex": 0,
+              "significantWeatherCode": 15,
+              "precipitationRate": 4.03,
+              "totalPrecipAmount": 1.14,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 95
+            },
+            {
+              "time": "2024-11-23T17:00Z",
+              "screenTemperature": 11.07,
+              "maxScreenAirTemp": 11.08,
+              "minScreenAirTemp": 10.16,
+              "screenDewPointTemperature": 9.94,
+              "feelsLikeTemperature": 7.46,
+              "windSpeed10m": 9.41,
+              "windDirectionFrom10m": 193,
+              "windGustSpeed10m": 18.09,
+              "max10mWindGust": 18.86,
+              "visibility": 9798,
+              "screenRelativeHumidity": 92.69,
+              "mslp": 99270,
+              "uvIndex": 0,
+              "significantWeatherCode": 15,
+              "precipitationRate": 2.26,
+              "totalPrecipAmount": 0.24,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 93
+            },
+            {
+              "time": "2024-11-23T18:00Z",
+              "screenTemperature": 11.94,
+              "maxScreenAirTemp": 11.95,
+              "minScreenAirTemp": 11.07,
+              "screenDewPointTemperature": 10.9,
+              "feelsLikeTemperature": 8.72,
+              "windSpeed10m": 8.19,
+              "windDirectionFrom10m": 200,
+              "windGustSpeed10m": 16.15,
+              "max10mWindGust": 17.4,
+              "visibility": 10545,
+              "screenRelativeHumidity": 93.31,
+              "mslp": 99260,
+              "uvIndex": 0,
+              "significantWeatherCode": 15,
+              "precipitationRate": 2.51,
+              "totalPrecipAmount": 0.88,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 93
+            },
+            {
+              "time": "2024-11-23T19:00Z",
+              "screenTemperature": 13.3,
+              "maxScreenAirTemp": 13.31,
+              "minScreenAirTemp": 11.94,
+              "screenDewPointTemperature": 11.95,
+              "feelsLikeTemperature": 10.09,
+              "windSpeed10m": 8.35,
+              "windDirectionFrom10m": 208,
+              "windGustSpeed10m": 16.37,
+              "max10mWindGust": 16.41,
+              "visibility": 36868,
+              "screenRelativeHumidity": 91.45,
+              "mslp": 99264,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 11
+            },
+            {
+              "time": "2024-11-23T20:00Z",
+              "screenTemperature": 13.56,
+              "maxScreenAirTemp": 13.58,
+              "minScreenAirTemp": 13.3,
+              "screenDewPointTemperature": 12.29,
+              "feelsLikeTemperature": 10.34,
+              "windSpeed10m": 8.42,
+              "windDirectionFrom10m": 205,
+              "windGustSpeed10m": 16.18,
+              "max10mWindGust": 16.75,
+              "visibility": 28041,
+              "screenRelativeHumidity": 91.94,
+              "mslp": 99304,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 27
+            },
+            {
+              "time": "2024-11-23T21:00Z",
+              "screenTemperature": 13.81,
+              "maxScreenAirTemp": 13.82,
+              "minScreenAirTemp": 13.56,
+              "screenDewPointTemperature": 12.5,
+              "feelsLikeTemperature": 10.53,
+              "windSpeed10m": 8.6,
+              "windDirectionFrom10m": 205,
+              "windGustSpeed10m": 16.28,
+              "max10mWindGust": 16.62,
+              "visibility": 29418,
+              "screenRelativeHumidity": 91.67,
+              "mslp": 99363,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 1.07,
+              "totalPrecipAmount": 0.21,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 63
+            },
+            {
+              "time": "2024-11-23T22:00Z",
+              "screenTemperature": 14.07,
+              "maxScreenAirTemp": 14.08,
+              "minScreenAirTemp": 13.81,
+              "screenDewPointTemperature": 12.65,
+              "feelsLikeTemperature": 10.85,
+              "windSpeed10m": 8.42,
+              "windDirectionFrom10m": 204,
+              "windGustSpeed10m": 16.18,
+              "max10mWindGust": 16.85,
+              "visibility": 42192,
+              "screenRelativeHumidity": 91.08,
+              "mslp": 99382,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 14
+            },
+            {
+              "time": "2024-11-23T23:00Z",
+              "screenTemperature": 14.08,
+              "maxScreenAirTemp": 14.12,
+              "minScreenAirTemp": 14.05,
+              "screenDewPointTemperature": 12.78,
+              "feelsLikeTemperature": 10.96,
+              "windSpeed10m": 8.16,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 15.48,
+              "max10mWindGust": 16.29,
+              "visibility": 23225,
+              "screenRelativeHumidity": 91.85,
+              "mslp": 99372,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.89,
+              "totalPrecipAmount": 0.11,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 61
+            },
+            {
+              "time": "2024-11-24T00:00Z",
+              "screenTemperature": 14.21,
+              "maxScreenAirTemp": 14.25,
+              "minScreenAirTemp": 14.08,
+              "screenDewPointTemperature": 12.64,
+              "feelsLikeTemperature": 10.87,
+              "windSpeed10m": 8.72,
+              "windDirectionFrom10m": 199,
+              "windGustSpeed10m": 16.6,
+              "max10mWindGust": 16.69,
+              "visibility": 42290,
+              "screenRelativeHumidity": 90.27,
+              "mslp": 99344,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 24
+            },
+            {
+              "time": "2024-11-24T01:00Z",
+              "screenTemperature": 14.28,
+              "maxScreenAirTemp": 14.3,
+              "minScreenAirTemp": 14.21,
+              "screenDewPointTemperature": 12.72,
+              "feelsLikeTemperature": 10.74,
+              "windSpeed10m": 9.29,
+              "windDirectionFrom10m": 199,
+              "windGustSpeed10m": 17.46,
+              "max10mWindGust": 17.85,
+              "visibility": 33325,
+              "screenRelativeHumidity": 90.21,
+              "mslp": 99303,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 19
+            },
+            {
+              "time": "2024-11-24T02:00Z",
+              "screenTemperature": 14.23,
+              "maxScreenAirTemp": 14.29,
+              "minScreenAirTemp": 14.19,
+              "screenDewPointTemperature": 12.69,
+              "feelsLikeTemperature": 10.54,
+              "windSpeed10m": 9.65,
+              "windDirectionFrom10m": 197,
+              "windGustSpeed10m": 18.14,
+              "max10mWindGust": 19.37,
+              "visibility": 20882,
+              "screenRelativeHumidity": 90.42,
+              "mslp": 99282,
+              "uvIndex": 0,
+              "significantWeatherCode": 13,
+              "precipitationRate": 0.89,
+              "totalPrecipAmount": 0.16,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 70
+            },
+            {
+              "time": "2024-11-24T03:00Z",
+              "screenTemperature": 14.42,
+              "maxScreenAirTemp": 14.43,
+              "minScreenAirTemp": 14.23,
+              "screenDewPointTemperature": 12.72,
+              "feelsLikeTemperature": 10.6,
+              "windSpeed10m": 9.95,
+              "windDirectionFrom10m": 198,
+              "windGustSpeed10m": 18.53,
+              "max10mWindGust": 19.32,
+              "visibility": 32364,
+              "screenRelativeHumidity": 89.41,
+              "mslp": 99242,
+              "uvIndex": 0,
+              "significantWeatherCode": 9,
+              "precipitationRate": 0.1,
+              "totalPrecipAmount": 0.06,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 31
+            },
+            {
+              "time": "2024-11-24T04:00Z",
+              "screenTemperature": 14.51,
+              "maxScreenAirTemp": 14.58,
+              "minScreenAirTemp": 14.42,
+              "screenDewPointTemperature": 12.6,
+              "feelsLikeTemperature": 10.63,
+              "windSpeed10m": 10.05,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 18.86,
+              "max10mWindGust": 19.09,
+              "visibility": 15355,
+              "screenRelativeHumidity": 88.25,
+              "mslp": 99212,
+              "uvIndex": 0,
+              "significantWeatherCode": 9,
+              "precipitationRate": 0.38,
+              "totalPrecipAmount": 0.23,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 40
+            },
+            {
+              "time": "2024-11-24T05:00Z",
+              "screenTemperature": 14.48,
+              "maxScreenAirTemp": 14.52,
+              "minScreenAirTemp": 14.47,
+              "screenDewPointTemperature": 12.37,
+              "feelsLikeTemperature": 10.53,
+              "windSpeed10m": 10.16,
+              "windDirectionFrom10m": 195,
+              "windGustSpeed10m": 18.76,
+              "max10mWindGust": 18.81,
+              "visibility": 29205,
+              "screenRelativeHumidity": 87.08,
+              "mslp": 99183,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 22
+            },
+            {
+              "time": "2024-11-24T06:00Z",
+              "screenTemperature": 14.53,
+              "maxScreenAirTemp": 14.57,
+              "minScreenAirTemp": 14.48,
+              "screenDewPointTemperature": 12.34,
+              "feelsLikeTemperature": 10.54,
+              "windSpeed10m": 10.23,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 18.81,
+              "max10mWindGust": 18.9,
+              "visibility": 25187,
+              "screenRelativeHumidity": 86.67,
+              "mslp": 99182,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 22
+            },
+            {
+              "time": "2024-11-24T07:00Z",
+              "screenTemperature": 14.72,
+              "maxScreenAirTemp": 14.73,
+              "minScreenAirTemp": 14.53,
+              "screenDewPointTemperature": 12.51,
+              "feelsLikeTemperature": 10.69,
+              "windSpeed10m": 10.33,
+              "windDirectionFrom10m": 194,
+              "windGustSpeed10m": 19,
+              "max10mWindGust": 19,
+              "visibility": 31443,
+              "screenRelativeHumidity": 86.55,
+              "mslp": 99173,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 15
+            },
+            {
+              "time": "2024-11-24T08:00Z",
+              "screenTemperature": 14.74,
+              "maxScreenAirTemp": 14.79,
+              "minScreenAirTemp": 14.71,
+              "screenDewPointTemperature": 12.36,
+              "feelsLikeTemperature": 10.7,
+              "windSpeed10m": 10.27,
+              "windDirectionFrom10m": 193,
+              "windGustSpeed10m": 18.91,
+              "max10mWindGust": 19.17,
+              "visibility": 24964,
+              "screenRelativeHumidity": 85.71,
+              "mslp": 99182,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.52,
+              "totalPrecipAmount": 0.04,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 52
+            },
+            {
+              "time": "2024-11-24T09:00Z",
+              "screenTemperature": 14.78,
+              "maxScreenAirTemp": 14.81,
+              "minScreenAirTemp": 14.72,
+              "screenDewPointTemperature": 12.35,
+              "feelsLikeTemperature": 10.63,
+              "windSpeed10m": 10.56,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 19.44,
+              "max10mWindGust": 19.44,
+              "visibility": 16181,
+              "screenRelativeHumidity": 85.33,
+              "mslp": 99173,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.36,
+              "totalPrecipAmount": 0.2,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 53
+            },
+            {
+              "time": "2024-11-24T10:00Z",
+              "screenTemperature": 14.88,
+              "maxScreenAirTemp": 14.91,
+              "minScreenAirTemp": 14.78,
+              "screenDewPointTemperature": 12.28,
+              "feelsLikeTemperature": 10.47,
+              "windSpeed10m": 11.1,
+              "windDirectionFrom10m": 198,
+              "windGustSpeed10m": 20.32,
+              "max10mWindGust": 20.6,
+              "visibility": 22668,
+              "screenRelativeHumidity": 84.58,
+              "mslp": 99192,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.14,
+              "totalPrecipAmount": 0.05,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 42
+            },
+            {
+              "time": "2024-11-24T11:00Z",
+              "screenTemperature": 15.3,
+              "maxScreenAirTemp": 15.33,
+              "minScreenAirTemp": 14.88,
+              "screenDewPointTemperature": 12.49,
+              "feelsLikeTemperature": 11.03,
+              "windSpeed10m": 10.55,
+              "windDirectionFrom10m": 201,
+              "windGustSpeed10m": 19.58,
+              "max10mWindGust": 19.77,
+              "visibility": 26957,
+              "screenRelativeHumidity": 83.56,
+              "mslp": 99220,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.2,
+              "totalPrecipAmount": 0.11,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 44
+            },
+            {
+              "time": "2024-11-24T12:00Z",
+              "screenTemperature": 15.57,
+              "maxScreenAirTemp": 15.69,
+              "minScreenAirTemp": 15.3,
+              "screenDewPointTemperature": 12.54,
+              "feelsLikeTemperature": 11.45,
+              "windSpeed10m": 10.03,
+              "windDirectionFrom10m": 200,
+              "windGustSpeed10m": 19,
+              "max10mWindGust": 19,
+              "visibility": 19911,
+              "screenRelativeHumidity": 82.47,
+              "mslp": 99221,
+              "uvIndex": 1,
+              "significantWeatherCode": 15,
+              "precipitationRate": 0.83,
+              "totalPrecipAmount": 0.18,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 81
+            },
+            {
+              "time": "2024-11-24T13:00Z",
+              "screenTemperature": 15.19,
+              "maxScreenAirTemp": 15.57,
+              "minScreenAirTemp": 15.16,
+              "screenDewPointTemperature": 12.23,
+              "feelsLikeTemperature": 10.93,
+              "windSpeed10m": 10.47,
+              "windDirectionFrom10m": 198,
+              "windGustSpeed10m": 19.58,
+              "max10mWindGust": 19.58,
+              "visibility": 23634,
+              "screenRelativeHumidity": 82.75,
+              "mslp": 99230,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.66,
+              "totalPrecipAmount": 0.15,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 59
+            },
+            {
+              "time": "2024-11-24T14:00Z",
+              "screenTemperature": 15.16,
+              "maxScreenAirTemp": 15.19,
+              "minScreenAirTemp": 15.08,
+              "screenDewPointTemperature": 11.92,
+              "feelsLikeTemperature": 10.99,
+              "windSpeed10m": 10.24,
+              "windDirectionFrom10m": 202,
+              "windGustSpeed10m": 19.19,
+              "max10mWindGust": 19.19,
+              "visibility": 29843,
+              "screenRelativeHumidity": 81.2,
+              "mslp": 99230,
+              "uvIndex": 1,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 12
+            },
+            {
+              "time": "2024-11-24T15:00Z",
+              "screenTemperature": 14.97,
+              "maxScreenAirTemp": 15.16,
+              "minScreenAirTemp": 14.96,
+              "screenDewPointTemperature": 11.65,
+              "feelsLikeTemperature": 10.99,
+              "windSpeed10m": 9.74,
+              "windDirectionFrom10m": 203,
+              "windGustSpeed10m": 18.27,
+              "max10mWindGust": 18.82,
+              "visibility": 23608,
+              "screenRelativeHumidity": 80.72,
+              "mslp": 99239,
+              "uvIndex": 1,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.31,
+              "totalPrecipAmount": 0.07,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 45
+            },
+            {
+              "time": "2024-11-24T16:00Z",
+              "screenTemperature": 14.76,
+              "maxScreenAirTemp": 14.97,
+              "minScreenAirTemp": 14.71,
+              "screenDewPointTemperature": 11.45,
+              "feelsLikeTemperature": 10.96,
+              "windSpeed10m": 9.42,
+              "windDirectionFrom10m": 200,
+              "windGustSpeed10m": 17.72,
+              "max10mWindGust": 17.84,
+              "visibility": 30385,
+              "screenRelativeHumidity": 80.72,
+              "mslp": 99229,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.18,
+              "totalPrecipAmount": 0.16,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 48
+            },
+            {
+              "time": "2024-11-24T17:00Z",
+              "screenTemperature": 14.38,
+              "maxScreenAirTemp": 14.76,
+              "minScreenAirTemp": 14.31,
+              "screenDewPointTemperature": 11.36,
+              "feelsLikeTemperature": 10.87,
+              "windSpeed10m": 8.71,
+              "windDirectionFrom10m": 199,
+              "windGustSpeed10m": 16.39,
+              "max10mWindGust": 17.72,
+              "visibility": 26409,
+              "screenRelativeHumidity": 82.26,
+              "mslp": 99211,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.55,
+              "totalPrecipAmount": 0.51,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 50
+            },
+            {
+              "time": "2024-11-24T18:00Z",
+              "screenTemperature": 14.27,
+              "maxScreenAirTemp": 14.38,
+              "minScreenAirTemp": 14.21,
+              "screenDewPointTemperature": 11.11,
+              "feelsLikeTemperature": 10.84,
+              "windSpeed10m": 8.56,
+              "windDirectionFrom10m": 196,
+              "windGustSpeed10m": 16.09,
+              "max10mWindGust": 16.09,
+              "visibility": 23645,
+              "screenRelativeHumidity": 81.33,
+              "mslp": 99164,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.43,
+              "totalPrecipAmount": 0.15,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 55
+            },
+            {
+              "time": "2024-11-24T19:00Z",
+              "screenTemperature": 14.08,
+              "maxScreenAirTemp": 14.27,
+              "minScreenAirTemp": 14.07,
+              "screenDewPointTemperature": 10.51,
+              "feelsLikeTemperature": 10.35,
+              "windSpeed10m": 9.18,
+              "windDirectionFrom10m": 198,
+              "windGustSpeed10m": 17.08,
+              "max10mWindGust": 17.08,
+              "visibility": 28936,
+              "screenRelativeHumidity": 79.25,
+              "mslp": 99127,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.3,
+              "totalPrecipAmount": 0.18,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 43
+            },
+            {
+              "time": "2024-11-24T20:00Z",
+              "screenTemperature": 13,
+              "maxScreenAirTemp": 14.08,
+              "minScreenAirTemp": 12.95,
+              "screenDewPointTemperature": 10.35,
+              "feelsLikeTemperature": 9.56,
+              "windSpeed10m": 8.42,
+              "windDirectionFrom10m": 215,
+              "windGustSpeed10m": 15.63,
+              "max10mWindGust": 16.07,
+              "visibility": 12200,
+              "screenRelativeHumidity": 84.28,
+              "mslp": 99154,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.97,
+              "totalPrecipAmount": 0.21,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 56
+            },
+            {
+              "time": "2024-11-24T21:00Z",
+              "screenTemperature": 11.88,
+              "maxScreenAirTemp": 13,
+              "minScreenAirTemp": 11.87,
+              "screenDewPointTemperature": 10.08,
+              "feelsLikeTemperature": 9.07,
+              "windSpeed10m": 6.7,
+              "windDirectionFrom10m": 221,
+              "windGustSpeed10m": 12.78,
+              "max10mWindGust": 13.87,
+              "visibility": 10227,
+              "screenRelativeHumidity": 88.76,
+              "mslp": 99182,
+              "uvIndex": 0,
+              "significantWeatherCode": 15,
+              "precipitationRate": 1.04,
+              "totalPrecipAmount": 0.46,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 86
+            },
+            {
+              "time": "2024-11-24T22:00Z",
+              "screenTemperature": 11.28,
+              "maxScreenAirTemp": 11.88,
+              "minScreenAirTemp": 11.24,
+              "screenDewPointTemperature": 9.54,
+              "feelsLikeTemperature": 8.44,
+              "windSpeed10m": 6.56,
+              "windDirectionFrom10m": 218,
+              "windGustSpeed10m": 12.47,
+              "max10mWindGust": 12.47,
+              "visibility": 12135,
+              "screenRelativeHumidity": 89.13,
+              "mslp": 99229,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.45,
+              "totalPrecipAmount": 0.35,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 58
+            },
+            {
+              "time": "2024-11-24T23:00Z",
+              "screenTemperature": 10.8,
+              "maxScreenAirTemp": 11.28,
+              "minScreenAirTemp": 10.78,
+              "screenDewPointTemperature": 8.75,
+              "feelsLikeTemperature": 7.88,
+              "windSpeed10m": 6.7,
+              "windDirectionFrom10m": 212,
+              "windGustSpeed10m": 12.96,
+              "max10mWindGust": 12.96,
+              "visibility": 36419,
+              "screenRelativeHumidity": 87.18,
+              "mslp": 99267,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.3,
+              "totalPrecipAmount": 0.43,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 52
+            },
+            {
+              "time": "2024-11-25T00:00Z",
+              "screenTemperature": 10.58,
+              "maxScreenAirTemp": 10.8,
+              "minScreenAirTemp": 10.56,
+              "screenDewPointTemperature": 8.06,
+              "feelsLikeTemperature": 7.78,
+              "windSpeed10m": 6.3,
+              "windDirectionFrom10m": 214,
+              "windGustSpeed10m": 12.27,
+              "max10mWindGust": 12.27,
+              "visibility": 44678,
+              "screenRelativeHumidity": 84.49,
+              "mslp": 99278,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.25,
+              "totalPrecipAmount": 0.31,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 43
+            },
+            {
+              "time": "2024-11-25T01:00Z",
+              "screenTemperature": 10.49,
+              "maxScreenAirTemp": 10.58,
+              "minScreenAirTemp": 10.48,
+              "screenDewPointTemperature": 7.77,
+              "feelsLikeTemperature": 7.63,
+              "windSpeed10m": 6.36,
+              "windDirectionFrom10m": 211,
+              "windGustSpeed10m": 12.3,
+              "max10mWindGust": 12.3,
+              "visibility": 43617,
+              "screenRelativeHumidity": 83.39,
+              "mslp": 99278,
+              "uvIndex": 0,
+              "significantWeatherCode": 12,
+              "precipitationRate": 0.42,
+              "totalPrecipAmount": 0.23,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 54
+            },
+            {
+              "time": "2024-11-25T02:00Z",
+              "screenTemperature": 10.18,
+              "maxScreenAirTemp": 10.49,
+              "minScreenAirTemp": 10.18,
+              "screenDewPointTemperature": 7.81,
+              "feelsLikeTemperature": 7.27,
+              "windSpeed10m": 6.43,
+              "windDirectionFrom10m": 204,
+              "windGustSpeed10m": 12.41,
+              "max10mWindGust": 12.41,
+              "visibility": 35252,
+              "screenRelativeHumidity": 85.21,
+              "mslp": 99287,
+              "uvIndex": 0,
+              "significantWeatherCode": 8,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 23
+            },
+            {
+              "time": "2024-11-25T03:00Z",
+              "screenTemperature": 10.14,
+              "maxScreenAirTemp": 10.18,
+              "minScreenAirTemp": 10.12,
+              "screenDewPointTemperature": 7.49,
+              "feelsLikeTemperature": 7.27,
+              "windSpeed10m": 6.3,
+              "windDirectionFrom10m": 202,
+              "windGustSpeed10m": 12.31,
+              "max10mWindGust": 12.85,
+              "visibility": 47099,
+              "screenRelativeHumidity": 83.6,
+              "mslp": 99279,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 8
+            },
+            {
+              "time": "2024-11-25T04:00Z",
+              "screenTemperature": 10.13,
+              "maxScreenAirTemp": 10.17,
+              "minScreenAirTemp": 10.11,
+              "screenDewPointTemperature": 7.42,
+              "feelsLikeTemperature": 7.26,
+              "windSpeed10m": 6.26,
+              "windDirectionFrom10m": 205,
+              "windGustSpeed10m": 12.08,
+              "max10mWindGust": 12.9,
+              "visibility": 44698,
+              "screenRelativeHumidity": 83.37,
+              "mslp": 99289,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 9
+            },
+            {
+              "time": "2024-11-25T05:00Z",
+              "screenTemperature": 10.09,
+              "maxScreenAirTemp": 10.13,
+              "minScreenAirTemp": 10.06,
+              "screenDewPointTemperature": 7.42,
+              "feelsLikeTemperature": 7.26,
+              "windSpeed10m": 6.12,
+              "windDirectionFrom10m": 206,
+              "windGustSpeed10m": 11.81,
+              "max10mWindGust": 12.36,
+              "visibility": 43814,
+              "screenRelativeHumidity": 83.54,
+              "mslp": 99299,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 6
+            },
+            {
+              "time": "2024-11-25T06:00Z",
+              "screenTemperature": 9.98,
+              "maxScreenAirTemp": 10.22,
+              "minScreenAirTemp": 9.97,
+              "screenDewPointTemperature": 7.16,
+              "feelsLikeTemperature": 7.23,
+              "windSpeed10m": 5.83,
+              "windDirectionFrom10m": 207,
+              "windGustSpeed10m": 11.26,
+              "max10mWindGust": 11.75,
+              "visibility": 41476,
+              "screenRelativeHumidity": 82.68,
+              "mslp": 99327,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 6
+            },
+            {
+              "time": "2024-11-25T07:00Z",
+              "screenTemperature": 9.89,
+              "maxScreenAirTemp": 9.98,
+              "minScreenAirTemp": 9.87,
+              "screenDewPointTemperature": 7.04,
+              "feelsLikeTemperature": 7.13,
+              "windSpeed10m": 5.82,
+              "windDirectionFrom10m": 211,
+              "windGustSpeed10m": 11.19,
+              "max10mWindGust": 11.19,
+              "visibility": 39207,
+              "screenRelativeHumidity": 82.5,
+              "mslp": 99379,
+              "uvIndex": 0,
+              "significantWeatherCode": 7,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 7
+            },
+            {
+              "time": "2024-11-25T08:00Z",
+              "screenTemperature": 9.76,
+              "maxScreenAirTemp": 9.89,
+              "minScreenAirTemp": 9.76,
+              "screenDewPointTemperature": 6.73,
+              "feelsLikeTemperature": 6.95,
+              "windSpeed10m": 5.85,
+              "windDirectionFrom10m": 215,
+              "windGustSpeed10m": 11.33,
+              "max10mWindGust": 11.33,
+              "visibility": 38949,
+              "screenRelativeHumidity": 81.47,
+              "mslp": 99458,
+              "uvIndex": 1,
+              "significantWeatherCode": 3,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 2
+            },
+            {
+              "time": "2024-11-25T09:00Z",
+              "screenTemperature": 9.74,
+              "maxScreenAirTemp": 9.77,
+              "minScreenAirTemp": 9.74,
+              "screenDewPointTemperature": 6.68,
+              "feelsLikeTemperature": 6.87,
+              "windSpeed10m": 6.07,
+              "windDirectionFrom10m": 218,
+              "windGustSpeed10m": 11.44,
+              "max10mWindGust": 11.44,
+              "visibility": 38081,
+              "screenRelativeHumidity": 81.26,
+              "mslp": 99536,
+              "uvIndex": 1,
+              "significantWeatherCode": 3,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 2
+            },
+            {
+              "time": "2024-11-25T10:00Z",
+              "screenTemperature": 10.07,
+              "maxScreenAirTemp": 10.07,
+              "minScreenAirTemp": 9.74,
+              "screenDewPointTemperature": 6.4,
+              "feelsLikeTemperature": 7.15,
+              "windSpeed10m": 6.35,
+              "windDirectionFrom10m": 223,
+              "windGustSpeed10m": 11.73,
+              "max10mWindGust": 11.73,
+              "visibility": 37260,
+              "screenRelativeHumidity": 78.14,
+              "mslp": 99596,
+              "uvIndex": 1,
+              "significantWeatherCode": 1,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T11:00Z",
+              "screenTemperature": 10.37,
+              "maxScreenAirTemp": 10.42,
+              "minScreenAirTemp": 10.07,
+              "screenDewPointTemperature": 5.91,
+              "feelsLikeTemperature": 7.4,
+              "windSpeed10m": 6.62,
+              "windDirectionFrom10m": 228,
+              "windGustSpeed10m": 12.04,
+              "max10mWindGust": 12.04,
+              "visibility": 37321,
+              "screenRelativeHumidity": 74,
+              "mslp": 99664,
+              "uvIndex": 1,
+              "significantWeatherCode": 1,
+              "precipitationRate": 0,
+              "totalPrecipAmount": 0,
+              "totalSnowAmount": 0,
+              "probOfPrecipitation": 1
+            },
+            {
+              "time": "2024-11-25T12:00Z",
+              "screenTemperature": 10.72,
+              "screenDewPointTemperature": 5.47,
+              "feelsLikeTemperature": 7.72,
+              "windSpeed10m": 6.91,
+              "windDirectionFrom10m": 233,
+              "windGustSpeed10m": 12.61,
+              "visibility": 38960,
+              "screenRelativeHumidity": 70.02,
+              "mslp": 99715,
+              "uvIndex": 1,
+              "significantWeatherCode": 1,
+              "precipitationRate": 0,
+              "probOfPrecipitation": 1
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": [
+      {
+        "totalSnowAmount": {
+          "type": "Parameter",
+          "description": "Total Snow Amount Over Previous Hour",
+          "unit": {
+            "label": "millimetres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "mm"
+            }
+          }
+        },
+        "screenTemperature": {
+          "type": "Parameter",
+          "description": "Screen Air Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "visibility": {
+          "type": "Parameter",
+          "description": "Visibility",
+          "unit": {
+            "label": "metres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m"
+            }
+          }
+        },
+        "windDirectionFrom10m": {
+          "type": "Parameter",
+          "description": "10m Wind From Direction",
+          "unit": {
+            "label": "degrees",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "deg"
+            }
+          }
+        },
+        "precipitationRate": {
+          "type": "Parameter",
+          "description": "Precipitation Rate",
+          "unit": {
+            "label": "millimetres per hour",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "mm/h"
+            }
+          }
+        },
+        "maxScreenAirTemp": {
+          "type": "Parameter",
+          "description": "Maximum Screen Air Temperature Over Previous Hour",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "feelsLikeTemperature": {
+          "type": "Parameter",
+          "description": "Feels Like Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "screenDewPointTemperature": {
+          "type": "Parameter",
+          "description": "Screen Dew Point Temperature",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "screenRelativeHumidity": {
+          "type": "Parameter",
+          "description": "Screen Relative Humidity",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "windSpeed10m": {
+          "type": "Parameter",
+          "description": "10m Wind Speed",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "probOfPrecipitation": {
+          "type": "Parameter",
+          "description": "Probability of Precipitation",
+          "unit": {
+            "label": "percentage",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "%"
+            }
+          }
+        },
+        "max10mWindGust": {
+          "type": "Parameter",
+          "description": "Maximum 10m Wind Gust Speed Over Previous Hour",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "significantWeatherCode": {
+          "type": "Parameter",
+          "description": "Significant Weather Code",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "https://datahub.metoffice.gov.uk/",
+              "type": "1"
+            }
+          }
+        },
+        "minScreenAirTemp": {
+          "type": "Parameter",
+          "description": "Minimum Screen Air Temperature Over Previous Hour",
+          "unit": {
+            "label": "degrees Celsius",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Cel"
+            }
+          }
+        },
+        "totalPrecipAmount": {
+          "type": "Parameter",
+          "description": "Total Precipitation Amount Over Previous Hour",
+          "unit": {
+            "label": "millimetres",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "mm"
+            }
+          }
+        },
+        "mslp": {
+          "type": "Parameter",
+          "description": "Mean Sea Level Pressure",
+          "unit": {
+            "label": "pascals",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "Pa"
+            }
+          }
+        },
+        "windGustSpeed10m": {
+          "type": "Parameter",
+          "description": "10m Wind Gust Speed",
+          "unit": {
+            "label": "metres per second",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "m/s"
+            }
+          }
+        },
+        "uvIndex": {
+          "type": "Parameter",
+          "description": "UV Index",
+          "unit": {
+            "label": "dimensionless",
+            "symbol": {
+              "value": "http://www.opengis.net/def/uom/UCUM/",
+              "type": "1"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

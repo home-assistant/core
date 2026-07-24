@@ -1,4 +1,5 @@
 """Define tests for the AirVisual config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pyairvisual.cloud_api import (
@@ -10,7 +11,6 @@ from pyairvisual.cloud_api import (
 from pyairvisual.errors import AirVisualError
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.airvisual import (
     CONF_CITY,
     CONF_INTEGRATION_TYPE,
@@ -18,9 +18,10 @@ from homeassistant.components.airvisual import (
     INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
     COORDS_CONFIG,
@@ -31,6 +32,8 @@ from .conftest import (
     TEST_LONGITUDE,
     TEST_STATE,
 )
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -80,13 +83,13 @@ async def test_create_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data={"type": integration_type}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == input_form_step
 
     # Test errors that can arise:
@@ -94,14 +97,14 @@ async def test_create_entry(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=config
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"] == errors
 
     # Test that we can recover and finish the flow after errors occur:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_title
     assert result["data"] == {**config, CONF_INTEGRATION_TYPE: integration_type}
 
@@ -111,7 +114,7 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
@@ -119,13 +122,13 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
         context={"source": SOURCE_USER},
         data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "geography_by_coords"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -134,28 +137,22 @@ async def test_options_flow(
 ) -> None:
     """Test config flow options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_SHOW_ON_MAP: False}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_SHOW_ON_MAP: False}
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config_entry, setup_config_entry
+    hass: HomeAssistant, config_entry: MockConfigEntry, setup_config_entry
 ) -> None:
     """Test that the reauth step works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=config_entry.data
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     new_api_key = "defgh67890"
@@ -163,7 +160,7 @@ async def test_step_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: new_api_key}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1

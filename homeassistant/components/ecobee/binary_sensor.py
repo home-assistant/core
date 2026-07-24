@@ -1,25 +1,26 @@
 """Support for Ecobee binary sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import EcobeeConfigEntry
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ecobee binary (occupancy) sensors."""
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     dev = []
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
@@ -41,11 +42,12 @@ class EcobeeBinarySensor(BinarySensorEntity):
     def __init__(self, data, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
         self.data = data
-        self.sensor_name = sensor_name.rstrip()
+        self.sensor_name = sensor_name
         self.index = sensor_index
 
     @property
-    def unique_id(self):
+    @override
+    def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
@@ -53,8 +55,10 @@ class EcobeeBinarySensor(BinarySensorEntity):
                     return f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+        return None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
@@ -87,6 +91,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)

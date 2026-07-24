@@ -1,10 +1,9 @@
 """Account linking via the cloud."""
-from __future__ import annotations
 
-import asyncio
 from datetime import datetime
+from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -12,9 +11,14 @@ from hass_nabucasa import account_link
 
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, event
 
-from .const import DOMAIN
+from .const import DATA_CLOUD, DOMAIN
 
 DATA_SERVICES = "cloud_account_link_services"
 CACHE_TIMEOUT = 3600
@@ -68,9 +72,14 @@ async def _get_services(hass: HomeAssistant) -> list[dict[str, Any]]:
         return services
 
     try:
-        services = await account_link.async_fetch_available_services(hass.data[DOMAIN])
-    except (aiohttp.ClientError, asyncio.TimeoutError):
-        return []
+        services = await account_link.async_fetch_available_services(
+            hass.data[DATA_CLOUD]
+        )
+    except (aiohttp.ClientError, TimeoutError) as err:
+        raise config_entry_oauth2_flow.ImplementationUnavailableError(
+            "Cannot provide OAuth2 implementation for cloud services. "
+            "Failed to fetch from account link server."
+        ) from err
 
     hass.data[DATA_SERVICES] = services
 
@@ -93,19 +102,22 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
         self.service = service
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Home Assistant Cloud"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain that is providing the implementation."""
         return DOMAIN
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         helper = account_link.AuthorizeAccountHelper(
-            self.hass.data[DOMAIN], self.service
+            self.hass.data[DATA_CLOUD], self.service
         )
         authorize_url = await helper.async_get_authorize_url()
 
@@ -114,7 +126,7 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
             try:
                 tokens = await helper.async_get_tokens()
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.info("Timeout fetching tokens for flow %s", flow_id)
             except account_link.AccountLinkException as err:
                 _LOGGER.info(
@@ -125,19 +137,55 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
                     flow_id=flow_id, user_input=tokens
                 )
 
-        self.hass.async_create_task(await_tokens())
+        # It's a background task because it should be cancelled
+        # on shutdown and there's nothing else we can do in
+        # such case. There's also no need to wait for this
+        # during setup.
+        self.hass.async_create_background_task(
+            await_tokens(), name="Awaiting OAuth tokens"
+        )
 
         return authorize_url
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve external data to tokens."""
         # We already passed in tokens
         dict_data: dict = external_data
         return dict_data
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
-        new_token = await account_link.async_fetch_access_token(
-            self.hass.data[DOMAIN], self.service, token["refresh_token"]
-        )
+        try:
+            new_token = await account_link.async_fetch_access_token(
+                self.hass.data[DATA_CLOUD], self.service, token["refresh_token"]
+            )
+        except aiohttp.ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self.service,
+                ) from err
+            if 400 <= err.status <= 499:
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self.service,
+                ) from err
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self.service,
+            ) from err
         return {**token, **new_token}

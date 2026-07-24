@@ -1,12 +1,10 @@
 """Update coordinator for Bravia TV integration."""
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from types import MappingProxyType
-from typing import Any, Concatenate, Final, ParamSpec, TypeVar
+from typing import Any, Concatenate, Final, override
 
 from pybravia import (
     BraviaAuthError,
@@ -19,14 +17,14 @@ from pybravia import (
 )
 
 from homeassistant.components.media_player import MediaType
-from homeassistant.const import CONF_PIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_CLIENT_ID,
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
@@ -35,15 +33,15 @@ from .const import (
     SourceType,
 )
 
-_BraviaTVCoordinatorT = TypeVar("_BraviaTVCoordinatorT", bound="BraviaTVCoordinator")
-_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
+type BraviaTVConfigEntry = ConfigEntry[BraviaTVCoordinator]
 
-def catch_braviatv_errors(
-    func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]]
+
+def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
+    func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
     """Catch Bravia errors."""
 
@@ -56,8 +54,31 @@ def catch_braviatv_errors(
         """Catch Bravia errors and log message."""
         try:
             await func(self, *args, **kwargs)
+        except BraviaNotFound as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error_not_found",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                },
+            ) from err
+        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error_offline",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                },
+            ) from err
         except BraviaError as err:
-            _LOGGER.error("Command error: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                    "error": repr(err),
+                },
+            ) from err
         await self.async_request_refresh()
 
     return wrapper
@@ -66,19 +87,22 @@ def catch_braviatv_errors(
 class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     """Representation of a Bravia TV Coordinator."""
 
+    config_entry: BraviaTVConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: BraviaTVConfigEntry,
         client: BraviaClient,
-        config: MappingProxyType[str, Any],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
-        self.pin = config[CONF_PIN]
-        self.use_psk = config.get(CONF_USE_PSK, False)
-        self.client_id = config.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
-        self.nickname = config.get(CONF_NICKNAME, NICKNAME_PREFIX)
+        self.pin = config_entry.data[CONF_PIN]
+        self.use_psk = config_entry.data.get(CONF_USE_PSK, False)
+        self.client_id = config_entry.data.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
+        self.nickname = config_entry.data.get(CONF_NICKNAME, NICKNAME_PREFIX)
+        self.system_info: dict[str, str] = {}
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
@@ -88,6 +112,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.media_content_type: MediaType | None = None
         self.media_uri: str | None = None
         self.media_duration: int | None = None
+        self.media_position: int | None = None
+        self.media_position_updated_at: datetime | None = None
         self.volume_level: float | None = None
         self.volume_target: str | None = None
         self.volume_muted = False
@@ -98,6 +124,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
             request_refresh_debouncer=Debouncer(
@@ -124,6 +151,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if add_to_list and title not in self.source_list:
                 self.source_list.append(title)
 
+    @override
     async def _async_update_data(self) -> None:
         """Connect and fetch data."""
         try:
@@ -144,6 +172,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
             self.skipped_updates = 0
+            self.update_interval = (
+                timedelta(seconds=120) if power_status == "standby" else SCAN_INTERVAL
+            )
+
+            if not self.system_info:
+                self.system_info = await self.client.get_system_info()
 
             if self.is_on is False:
                 return
@@ -156,17 +190,35 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if self.skipped_updates < 10:
                 self.connected = False
                 self.skipped_updates += 1
-                _LOGGER.debug("Update skipped, Bravia API service is reloading")
+                _LOGGER.debug(
+                    "Update for %s skipped: the Bravia API service is reloading",
+                    self.config_entry.title,
+                )
                 return
-            raise UpdateFailed("Error communicating with device") from err
-        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error_not_found",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                },
+            ) from err
+        except BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff:
             self.is_on = False
             self.connected = False
-            _LOGGER.debug("Update skipped, Bravia TV is off")
+            _LOGGER.debug(
+                "Update for %s skipped: the TV is turned off", self.config_entry.title
+            )
         except BraviaError as err:
             self.is_on = False
             self.connected = False
-            raise UpdateFailed("Error communicating with device") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                    "error": repr(err),
+                },
+            ) from err
 
     async def async_update_volume(self) -> None:
         """Update volume information."""
@@ -186,6 +238,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.media_content_id = None
         self.media_content_type = None
         self.source = None
+        if start_datetime := playing_info.get("startDateTime"):
+            start_datetime = datetime.fromisoformat(start_datetime)
+            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)  # pylint: disable=home-assistant-enforce-naive-now
+            self.media_position = int(
+                (current_datetime - start_datetime).total_seconds()
+            )
+            self.media_position_updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        else:
+            self.media_position = None
+            self.media_position_updated_at = None
         if self.media_uri:
             self.media_content_id = self.media_uri
             if self.media_uri[:8] == "extInput":

@@ -1,49 +1,36 @@
 """Support for Launch Library sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
-from pylaunches.objects.event import Event
-from pylaunches.objects.launch import Launch
+from pylaunches.types import Event, Launch
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_datetime
 
-from . import LaunchLibraryData
 from .const import DOMAIN
+from .coordinator import LaunchLibraryConfigEntry, LaunchLibraryCoordinator
 
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
 
-@dataclass
-class LaunchLibrarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class LaunchLibrarySensorEntityDescription(SensorEntityDescription):
+    """Describes a Next Launch sensor entity."""
 
     value_fn: Callable[[Launch | Event], datetime | int | str | None]
     attributes_fn: Callable[[Launch | Event], dict[str, Any] | None]
-
-
-@dataclass
-class LaunchLibrarySensorEntityDescription(
-    SensorEntityDescription, LaunchLibrarySensorEntityDescriptionMixin
-):
-    """Describes a Next Launch sensor entity."""
 
 
 SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
@@ -51,12 +38,12 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         key="next_launch",
         icon="mdi:rocket-launch",
         translation_key="next_launch",
-        value_fn=lambda nl: nl.name,
+        value_fn=lambda nl: nl["name"],
         attributes_fn=lambda nl: {
-            "provider": nl.launch_service_provider.name,
-            "pad": nl.pad.name,
-            "facility": nl.pad.location.name,
-            "provider_country_code": nl.pad.location.country_code,
+            "provider": nl["launch_service_provider"]["name"],
+            "pad": nl["pad"]["name"],
+            "facility": nl["pad"]["location"]["name"],
+            "provider_country_code": nl["pad"]["location"]["country_code"],
         },
     ),
     LaunchLibrarySensorEntityDescription(
@@ -64,37 +51,37 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         icon="mdi:clock-outline",
         translation_key="launch_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda nl: parse_datetime(nl.net),
+        value_fn=lambda nl: parse_datetime(nl["net"]),
         attributes_fn=lambda nl: {
-            "window_start": nl.window_start,
-            "window_end": nl.window_end,
-            "stream_live": nl.webcast_live,
+            "window_start": nl["window_start"],
+            "window_end": nl["window_end"],
+            "stream_live": nl["window_start"],
         },
     ),
     LaunchLibrarySensorEntityDescription(
         key="launch_probability",
         icon="mdi:dice-multiple",
-        translation_key="next_launch",
+        translation_key="launch_probability",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda nl: None if nl.probability == -1 else nl.probability,
+        value_fn=lambda nl: None if nl["probability"] == -1 else nl["probability"],
         attributes_fn=lambda nl: None,
     ),
     LaunchLibrarySensorEntityDescription(
         key="launch_status",
         icon="mdi:rocket-launch",
-        translation_key="next_launch",
-        value_fn=lambda nl: nl.status.name,
-        attributes_fn=lambda nl: {"reason": nl.holdreason} if nl.inhold else None,
+        translation_key="launch_status",
+        value_fn=lambda nl: nl["status"]["name"],
+        attributes_fn=lambda nl: {"reason": nl.get("holdreason")},
     ),
     LaunchLibrarySensorEntityDescription(
         key="launch_mission",
         icon="mdi:orbit",
         translation_key="launch_mission",
-        value_fn=lambda nl: nl.mission.name,
+        value_fn=lambda nl: nl["mission"]["name"],
         attributes_fn=lambda nl: {
-            "mission_type": nl.mission.type,
-            "target_orbit": nl.mission.orbit.name,
-            "description": nl.mission.description,
+            "mission_type": nl["mission"]["type"],
+            "target_orbit": nl["mission"]["orbit"]["name"],
+            "description": nl["mission"]["description"],
         },
     ),
     LaunchLibrarySensorEntityDescription(
@@ -102,12 +89,12 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         icon="mdi:rocket",
         translation_key="starship_launch",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda sl: parse_datetime(sl.net),
+        value_fn=lambda sl: parse_datetime(sl["net"]),
         attributes_fn=lambda sl: {
-            "title": sl.mission.name,
-            "status": sl.status.name,
-            "target_orbit": sl.mission.orbit.name,
-            "description": sl.mission.description,
+            "title": sl["mission"]["name"],
+            "status": sl["status"]["name"],
+            "target_orbit": sl["mission"]["orbit"]["name"],
+            "description": sl["mission"]["description"],
         },
     ),
     LaunchLibrarySensorEntityDescription(
@@ -115,12 +102,12 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
         icon="mdi:calendar",
         translation_key="starship_event",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda se: parse_datetime(se.date),
+        value_fn=lambda se: parse_datetime(se["date"]),
         attributes_fn=lambda se: {
-            "title": se.name,
-            "location": se.location,
-            "stream": se.video_url,
-            "description": se.description,
+            "title": se["name"],
+            "location": se["location"],
+            "stream": se["video_url"],
+            "description": se["description"],
         },
     ),
 )
@@ -128,12 +115,12 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LaunchLibraryConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
-    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LaunchLibrarySensor(
@@ -146,9 +133,7 @@ async def async_setup_entry(
     )
 
 
-class LaunchLibrarySensor(
-    CoordinatorEntity[DataUpdateCoordinator[LaunchLibraryData]], SensorEntity
-):
+class LaunchLibrarySensor(CoordinatorEntity[LaunchLibraryCoordinator], SensorEntity):
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
@@ -158,7 +143,7 @@ class LaunchLibrarySensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[LaunchLibraryData],
+        coordinator: LaunchLibraryCoordinator,
         entry_id: str,
         description: LaunchLibrarySensorEntityDescription,
         name: str,
@@ -174,6 +159,7 @@ class LaunchLibrarySensor(
         )
 
     @property
+    @override
     def native_value(self) -> datetime | str | int | None:
         """Return the state of the sensor."""
         if self._next_event is None:
@@ -181,6 +167,7 @@ class LaunchLibrarySensor(
         return self.entity_description.value_fn(self._next_event)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the attributes of the sensor."""
         if self._next_event is None:
@@ -188,23 +175,26 @@ class LaunchLibrarySensor(
         return self.entity_description.attributes_fn(self._next_event)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return super().available and self._next_event is not None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.entity_description.key == "starship_launch":
-            events = self.coordinator.data["starship_events"].upcoming.launches
+            events = self.coordinator.data["starship_events"]["upcoming"]["launches"]
         elif self.entity_description.key == "starship_event":
-            events = self.coordinator.data["starship_events"].upcoming.events
+            events = self.coordinator.data["starship_events"]["upcoming"]["events"]
         else:
             events = self.coordinator.data["upcoming_launches"]
 
         self._next_event = next((event for event in (events)), None)
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

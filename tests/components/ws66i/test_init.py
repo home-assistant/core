@@ -1,4 +1,5 @@
 """Test the WS66i 6-Zone Amplifier init file."""
+
 from unittest.mock import patch
 
 from homeassistant.components.ws66i.const import DOMAIN
@@ -70,12 +71,12 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN][config_entry.entry_id]
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch.object(MockWs66i, "close") as method_call:
-        await config_entry.async_unload(hass)
+        await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
 
         assert method_call.called
 
-    assert not hass.data[DOMAIN]
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

@@ -1,12 +1,13 @@
 """Tests for JVC Projector config flow."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
-from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
 import pytest
 
 from homeassistant.components.jvc_projector.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,7 +19,17 @@ from tests.common import MockConfigEntry
 TARGET = "homeassistant.components.jvc_projector.config_flow.JvcProjector"
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.jvc_projector.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_user_config_flow_success(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
@@ -26,7 +37,7 @@ async def test_user_config_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -39,19 +50,19 @@ async def test_user_config_flow_success(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_user_config_flow_bad_connect_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
     """Test errors when connection error occurs."""
-    mock_device.connect.side_effect = JvcProjectorConnectError
+    mock_device.connect.side_effect = JvcProjectorTimeoutError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -59,7 +70,7 @@ async def test_user_config_flow_bad_connect_errors(
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -73,14 +84,14 @@ async def test_user_config_flow_bad_connect_errors(
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_user_config_flow_device_exists_abort(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
@@ -90,11 +101,11 @@ async def test_user_config_flow_device_exists_abort(
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_user_config_flow_bad_host_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
@@ -105,7 +116,7 @@ async def test_user_config_flow_bad_host_errors(
         data={CONF_HOST: "", CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -117,14 +128,14 @@ async def test_user_config_flow_bad_host_errors(
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_user_config_flow_bad_auth_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
@@ -137,7 +148,7 @@ async def test_user_config_flow_bad_auth_errors(
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -151,27 +162,20 @@ async def test_user_config_flow_bad_auth_errors(
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_reauth_config_flow_success(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
     """Test reauth config flow success."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_integration.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -179,7 +183,7 @@ async def test_reauth_config_flow_success(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert mock_integration.data[CONF_HOST] == MOCK_HOST
@@ -187,22 +191,15 @@ async def test_reauth_config_flow_success(
     assert mock_integration.data[CONF_PASSWORD] == MOCK_PASSWORD
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_reauth_config_flow_auth_error(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
     """Test reauth config flow when connect fails."""
     mock_device.connect.side_effect = JvcProjectorAuthError
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_integration.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -210,7 +207,7 @@ async def test_reauth_config_flow_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -218,15 +215,8 @@ async def test_reauth_config_flow_auth_error(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_integration.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -234,7 +224,7 @@ async def test_reauth_config_flow_auth_error(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert mock_integration.data[CONF_HOST] == MOCK_HOST
@@ -242,22 +232,15 @@ async def test_reauth_config_flow_auth_error(
     assert mock_integration.data[CONF_PASSWORD] == MOCK_PASSWORD
 
 
-@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
+@pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
 async def test_reauth_config_flow_connect_error(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
     """Test reauth config flow when connect fails."""
-    mock_device.connect.side_effect = JvcProjectorConnectError
+    mock_device.connect.side_effect = JvcProjectorTimeoutError
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_integration.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -265,7 +248,7 @@ async def test_reauth_config_flow_connect_error(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -273,15 +256,8 @@ async def test_reauth_config_flow_connect_error(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_integration.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -289,7 +265,7 @@ async def test_reauth_config_flow_connect_error(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert mock_integration.data[CONF_HOST] == MOCK_HOST

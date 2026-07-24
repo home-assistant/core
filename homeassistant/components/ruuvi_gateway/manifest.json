@@ -10,6 +10,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/ruuvi_gateway",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": ["aioruuvigateway==0.1.0"]
 }

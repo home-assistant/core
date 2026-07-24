@@ -1,22 +1,49 @@
 """Diagnostics support for BSBLan."""
-from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import HomeAssistantBSBLANData
-from .const import DOMAIN
+from . import BSBLanConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: BSBLanConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: HomeAssistantBSBLANData = hass.data[DOMAIN][entry.entry_id]
-    return {
-        "info": data.info.dict(),
-        "device": data.device.dict(),
-        "state": data.coordinator.data.dict(),
+    data = entry.runtime_data
+
+    # Build diagnostic data from both coordinators
+    diagnostics = {
+        "info": data.info.model_dump(),
+        "device": data.device.model_dump(),
+        "fast_coordinator_data": {
+            "states": {
+                str(circuit): state.model_dump()
+                for circuit, state in data.fast_coordinator.data.states.items()
+            },
+            "sensor": data.fast_coordinator.data.sensor.model_dump(),
+            "dhw": data.fast_coordinator.data.dhw.model_dump()
+            if data.fast_coordinator.data.dhw
+            else None,
+        },
+        "static": {
+            str(circuit): static.model_dump() if static is not None else None
+            for circuit, static in data.static.items()
+        },
+        "available_circuits": data.available_circuits,
     }
+
+    # Add DHW config and schedule from slow coordinator if available
+    if data.slow_coordinator.data:
+        slow_data = {}
+        if data.slow_coordinator.data.dhw_config:
+            slow_data["dhw_config"] = data.slow_coordinator.data.dhw_config.model_dump()
+        if data.slow_coordinator.data.dhw_schedule:
+            slow_data["dhw_schedule"] = (
+                data.slow_coordinator.data.dhw_schedule.model_dump()
+            )
+        if slow_data:
+            diagnostics["slow_coordinator_data"] = slow_data
+
+    return diagnostics

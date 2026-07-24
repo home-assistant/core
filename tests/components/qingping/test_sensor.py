@@ -1,7 +1,7 @@
 """Test the Qingping sensors."""
+
 from datetime import timedelta
 import time
-from unittest.mock import patch
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -16,12 +16,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import LIGHT_AND_SIGNAL_SERVICE_INFO, NO_DATA_SERVICE_INFO
+from . import LIGHT_SERVICE_INFO, NO_DATA_SERVICE_INFO
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 
@@ -37,7 +38,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 0
-    inject_bluetooth_service_info(hass, LIGHT_AND_SIGNAL_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, LIGHT_SERVICE_INFO)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 1
 
@@ -65,7 +66,7 @@ async def test_binary_sensor_restore_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 0
-    inject_bluetooth_service_info(hass, LIGHT_AND_SIGNAL_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, LIGHT_SERVICE_INFO)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 1
 
@@ -82,10 +83,12 @@ async def test_binary_sensor_restore_state(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "advance_warning_level": {
+        "default": "mdi:close-octagon-outline"
+      },
+      "current_warning_level": {
+        "default": "mdi:close-octagon-outline"
+      }
+    }
+  }
+}

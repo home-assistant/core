@@ -1,19 +1,25 @@
 """Tests for the Abode lock device."""
+
+import json
 from unittest.mock import patch
 
+from jaraco.abode.helpers import urls as URL
+from requests_mock import Mocker
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
+
+from tests.common import async_load_fixture
 
 DEVICE_ID = "lock.test_lock"
 
@@ -33,7 +39,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     await setup_platform(hass, LOCK_DOMAIN)
 
     state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_LOCKED
+    assert state.state == LockState.LOCKED
     assert state.attributes.get(ATTR_DEVICE_ID) == "ZW:00000004"
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")
@@ -63,3 +69,23 @@ async def test_unlock(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         mock_unlock.assert_called_once()
+
+
+async def test_retrofit_lock_discovered(
+    hass: HomeAssistant, requests_mock: Mocker
+) -> None:
+    """Test retrofit locks are discovered as lock entities."""
+    devices = json.loads(await async_load_fixture(hass, "devices.json", "abode"))
+    for device in devices:
+        if device["type_tag"] == "device_type.door_lock":
+            device["type_tag"] = "device_type.retrofit_lock"
+            device["type"] = "Retrofit Lock"
+            break
+
+    requests_mock.get(URL.DEVICES, text=json.dumps(devices))
+
+    await setup_platform(hass, LOCK_DOMAIN)
+
+    state = hass.states.get(DEVICE_ID)
+    assert state is not None
+    assert state.state == LockState.LOCKED

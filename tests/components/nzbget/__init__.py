@@ -1,7 +1,8 @@
 """Tests for the NZBGet integration."""
+
 from unittest.mock import patch
 
-from homeassistant.components.nzbget.const import DOMAIN
+from homeassistant.components.nzbget.const import CONF_MORE_OPTIONS, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -34,6 +36,7 @@ USER_INPUT = {
     CONF_PORT: 6789,
     CONF_SSL: False,
     CONF_USERNAME: "",
+    CONF_MORE_OPTIONS: {},
 }
 
 MOCK_VERSION = "21.0"
@@ -58,14 +61,9 @@ MOCK_HISTORY = [
 ]
 
 
-async def init_integration(
-    hass,
-    *,
-    data: dict = ENTRY_CONFIG,
-    options: dict = ENTRY_OPTIONS,
-) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the NZBGet integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -81,17 +79,17 @@ def _patch_async_setup_entry(return_value=True):
     )
 
 
-def _patch_history(return_value=MOCK_HISTORY):
+def _patch_history():
     return patch(
         "homeassistant.components.nzbget.coordinator.NZBGetAPI.history",
-        return_value=return_value,
+        return_value=MOCK_HISTORY,
     )
 
 
-def _patch_status(return_value=MOCK_STATUS):
+def _patch_status():
     return patch(
         "homeassistant.components.nzbget.coordinator.NZBGetAPI.status",
-        return_value=return_value,
+        return_value=MOCK_STATUS,
     )
 
 

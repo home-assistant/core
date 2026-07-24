@@ -1,42 +1,46 @@
 """Binary Sensor platform for Advantage Air integration."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from . import AdvantageAirDataConfigEntry
+from .coordinator import AdvantageAirCoordinator
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
-from .models import AdvantageAirData
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AdvantageAirDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir Binary Sensor platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities: list[BinarySensorEntity] = []
-    if aircons := instance.coordinator.data.get("aircons"):
+    if aircons := coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
-            entities.append(AdvantageAirFilter(instance, ac_key))
+            entities.append(AdvantageAirFilter(coordinator, ac_key))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add motion sensor when motion is enabled
                 if zone["motionConfig"] >= 2:
-                    entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
+                    entities.append(
+                        AdvantageAirZoneMotion(coordinator, ac_key, zone_key)
+                    )
                 # Only add MyZone if it is available
                 if zone["type"] != 0:
-                    entities.append(AdvantageAirZoneMyZone(instance, ac_key, zone_key))
+                    entities.append(
+                        AdvantageAirZoneMyZone(coordinator, ac_key, zone_key)
+                    )
     async_add_entities(entities)
 
 
@@ -47,12 +51,13 @@ class AdvantageAirFilter(AdvantageAirAcEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_name = "Filter"
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
+    def __init__(self, coordinator: AdvantageAirCoordinator, ac_key: str) -> None:
         """Initialize an Advantage Air Filter sensor."""
-        super().__init__(instance, ac_key)
+        super().__init__(coordinator, ac_key)
         self._attr_unique_id += "-filter"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if filter needs cleaning."""
         return self._ac["filterCleanStatus"]
@@ -63,13 +68,16 @@ class AdvantageAirZoneMotion(AdvantageAirZoneEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize an Advantage Air Zone Motion sensor."""
-        super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} motion'
+        super().__init__(coordinator, ac_key, zone_key)
+        self._attr_name = f"{self._zone['name']} motion"
         self._attr_unique_id += "-motion"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if motion is detect."""
         return self._zone["motion"] == 20
@@ -81,13 +89,16 @@ class AdvantageAirZoneMyZone(AdvantageAirZoneEntity, BinarySensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize an Advantage Air Zone MyZone sensor."""
-        super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} myZone'
+        super().__init__(coordinator, ac_key, zone_key)
+        self._attr_name = f"{self._zone['name']} myZone"
         self._attr_unique_id += "-myzone"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this zone is the myZone."""
         return self._zone["number"] == self._ac["myZone"]

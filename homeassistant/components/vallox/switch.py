@@ -1,19 +1,15 @@
 """Support for Vallox ventilation unit switches."""
-from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
-
-from vallox_websocket_api import Vallox
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ValloxDataUpdateCoordinator, ValloxEntity
-from .const import DOMAIN
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
+from .entity import ValloxEntity
 
 
 class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
@@ -27,7 +23,6 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         name: str,
         coordinator: ValloxDataUpdateCoordinator,
         description: ValloxSwitchEntityDescription,
-        client: Vallox,
     ) -> None:
         """Initialize the Vallox switch."""
         super().__init__(name, coordinator)
@@ -35,23 +30,23 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         self.entity_description = description
 
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
-        self._client = client
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         if (
-            value := self.coordinator.data.get_metric(
-                self.entity_description.metric_key
-            )
+            value := self.coordinator.data.get(self.entity_description.metric_key)
         ) is None:
             return None
         return value == 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self._set_value(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self._set_value(False)
@@ -59,27 +54,21 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
     async def _set_value(self, value: bool) -> None:
         """Update the current value."""
         metric_key = self.entity_description.metric_key
-        await self._client.set_values({metric_key: 1 if value else 0})
+        await self.coordinator.client.set_values({metric_key: 1 if value else 0})
         await self.coordinator.async_request_refresh()
 
 
-@dataclass
-class ValloxMetricKeyMixin:
-    """Dataclass to allow defining metric_key without a default value."""
+@dataclass(frozen=True, kw_only=True)
+class ValloxSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Vallox switch entity."""
 
     metric_key: str
-
-
-@dataclass
-class ValloxSwitchEntityDescription(SwitchEntityDescription, ValloxMetricKeyMixin):
-    """Describes Vallox switch entity."""
 
 
 SWITCH_ENTITIES: tuple[ValloxSwitchEntityDescription, ...] = (
     ValloxSwitchEntityDescription(
         key="bypass_locked",
         translation_key="bypass_locked",
-        icon="mdi:arrow-horizontal-lock",
         metric_key="A_CYC_BYPASS_LOCKED",
     ),
 )
@@ -87,18 +76,13 @@ SWITCH_ENTITIES: tuple[ValloxSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ValloxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switches."""
-
-    data = hass.data[DOMAIN][entry.entry_id]
-    client = data["client"]
-    client.set_settable_address("A_CYC_BYPASS_LOCKED", int)
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        [
-            ValloxSwitchEntity(data["name"], data["coordinator"], description, client)
-            for description in SWITCH_ENTITIES
-        ]
+        ValloxSwitchEntity(entry.data[CONF_NAME], coordinator, description)
+        for description in SWITCH_ENTITIES
     )

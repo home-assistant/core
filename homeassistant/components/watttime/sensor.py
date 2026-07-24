@@ -1,31 +1,29 @@
 """Support for WattTime sensors."""
-from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, PERCENTAGE, UnitOfMass
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+    PERCENTAGE,
+    EntityStateAttribute,
+    UnitOfMass,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_BALANCING_AUTHORITY,
-    CONF_BALANCING_AUTHORITY_ABBREV,
-    CONF_SHOW_ON_MAP,
-    DOMAIN,
-)
+from .const import CONF_BALANCING_AUTHORITY, CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN
+from .coordinator import WattTimeConfigEntry, WattTimeCoordinator
 
 ATTR_BALANCING_AUTHORITY = "balancing_authority"
 
@@ -37,14 +35,12 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
         translation_key="marginal_operating_emissions_rate",
-        icon="mdi:blur",
         native_unit_of_measurement=f"{UnitOfMass.POUNDS} CO2/MWh",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT,
         translation_key="relative_marginal_emissions_intensity",
-        icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -52,10 +48,12 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: WattTimeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WattTime sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             RealtimeEmissionsSensor(coordinator, entry, description)
@@ -65,15 +63,15 @@ async def async_setup_entry(
     )
 
 
-class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
+class RealtimeEmissionsSensor(CoordinatorEntity[WattTimeCoordinator], SensorEntity):
     """Define a realtime emissions sensor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        entry: ConfigEntry,
+        coordinator: WattTimeCoordinator,
+        entry: WattTimeConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -88,6 +86,7 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         attrs = {
@@ -99,15 +98,16 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
         # Conversely, we can hide the location on the map by using other keys, like
         # "lati" and "long".
         if self._entry.options.get(CONF_SHOW_ON_MAP) is not False:
-            attrs[ATTR_LATITUDE] = self._entry.data[ATTR_LATITUDE]
-            attrs[ATTR_LONGITUDE] = self._entry.data[ATTR_LONGITUDE]
+            attrs[EntityStateAttribute.LATITUDE] = self._entry.data[CONF_LATITUDE]
+            attrs[EntityStateAttribute.LONGITUDE] = self._entry.data[CONF_LONGITUDE]
         else:
-            attrs["lati"] = self._entry.data[ATTR_LATITUDE]
-            attrs["long"] = self._entry.data[ATTR_LONGITUDE]
+            attrs["lati"] = self._entry.data[CONF_LATITUDE]
+            attrs["long"] = self._entry.data[CONF_LONGITUDE]
 
         return attrs
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return cast(StateType, self.coordinator.data[self.entity_description.key])

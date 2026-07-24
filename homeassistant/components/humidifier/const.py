@@ -1,4 +1,5 @@
 """Provides the constants needed for component."""
+
 from enum import IntFlag, StrEnum
 
 MODE_NORMAL = "normal"
@@ -27,27 +28,36 @@ ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
+ATTR_TARGET_HUMIDITY_STEP = "target_humidity_step"
 
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100
 
 DOMAIN = "humidifier"
 
-# DEVICE_CLASS_* below are deprecated as of 2021.12
-# use the HumidifierDeviceClass enum instead.
-DEVICE_CLASS_HUMIDIFIER = "humidifier"
-DEVICE_CLASS_DEHUMIDIFIER = "dehumidifier"
-
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 
 
+class HumidifierEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for humidifier entities."""
+
+    MIN_HUMIDITY = "min_humidity"
+    MAX_HUMIDITY = "max_humidity"
+    TARGET_HUMIDITY_STEP = "target_humidity_step"
+    AVAILABLE_MODES = "available_modes"
+
+
+class HumidifierEntityStateAttribute(StrEnum):
+    """State attributes for humidifier entities."""
+
+    ACTION = "action"
+    CURRENT_HUMIDITY = "current_humidity"
+    HUMIDITY = "humidity"
+    MODE = "mode"
+
+
 class HumidifierEntityFeature(IntFlag):
-    """Supported features of the alarm control panel entity."""
+    """Supported features of the humidifier entity."""
 
     MODES = 1
-
-
-# The SUPPORT_MODES constant is deprecated as of Home Assistant 2022.5.
-# Please use the HumidifierEntityFeature enum instead.
-SUPPORT_MODES = 1

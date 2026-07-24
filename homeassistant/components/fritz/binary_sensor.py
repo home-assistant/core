@@ -1,32 +1,30 @@
 """AVM FRITZ!Box connectivity sensor."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import (
-    AvmWrapper,
-    ConnectionInfo,
-    FritzBoxBaseCoordinatorEntity,
-    FritzEntityDescription,
-)
-from .const import DOMAIN
+from .coordinator import FritzConfigEntry
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
+from .models import ConnectionInfo
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
-@dataclass
+
+@dataclass(frozen=True, kw_only=True)
 class FritzBinarySensorEntityDescription(
     BinarySensorEntityDescription, FritzEntityDescription
 ):
@@ -54,11 +52,13 @@ SENSOR_TYPES: tuple[FritzBinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box binary sensors")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     connection_info = await avm_wrapper.async_get_connection_info()
 
@@ -68,7 +68,7 @@ async def async_setup_entry(
         if description.is_suitable(connection_info)
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):
@@ -77,6 +77,7 @@ class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):
     entity_description: FritzBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if isinstance(

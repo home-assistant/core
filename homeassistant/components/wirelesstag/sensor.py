@@ -1,25 +1,29 @@
 """Sensor support for Wireless Sensor Tags platform."""
-from __future__ import annotations
 
 import logging
+from typing import override
 
 import voluptuous as vol
+from wirelesstagpy import SensorTag
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor
+from . import WirelessTagPlatform
+from .const import DOMAIN, SIGNAL_TAG_UPDATE, WIRELESSTAG_DATA
+from .entity import WirelessTagBaseSensor
+from .util import async_migrate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +63,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 SENSOR_KEYS: list[str] = list(SENSOR_TYPES)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]
@@ -68,14 +72,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
-    platform = hass.data[WIRELESSTAG_DOMAIN]
+    platform = hass.data[WIRELESSTAG_DATA]
     sensors = []
     tags = platform.tags
     for tag in tags.values():
@@ -83,9 +87,10 @@ def setup_platform(
             if key not in tag.allowed_sensor_types:
                 continue
             description = SENSOR_TYPES[key]
+            async_migrate_unique_id(hass, tag, Platform.SENSOR, description.key)
             sensors.append(WirelessTagSensor(platform, tag, description))
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
@@ -93,23 +98,27 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
 
     entity_description: SensorEntityDescription
 
-    def __init__(self, api, tag, description):
+    def __init__(
+        self,
+        api: WirelessTagPlatform,
+        tag: SensorTag,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize a WirelessTag sensor."""
         super().__init__(api, tag)
 
         self._sensor_type = description.key
         self.entity_description = description
-        self._name = self._tag.name
-        self._attr_unique_id = f"{self.tag_id}_{self._sensor_type}"
+        self._attr_name = self._tag.name
+        self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
 
         # I want to see entity_id as:
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self.entity_id = (
-            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
-        )
+        self.entity_id = f"sensor.{DOMAIN}_{self.underscored_name}_{self._sensor_type}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -126,16 +135,19 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self.name.lower().replace(" ", "_")
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor.unit
 
     @property
+    @override
     def principal_value(self):
         """Return sensor current value."""
         return self._sensor.value
@@ -146,7 +158,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self._tag.sensor[self._sensor_type]
 
     @callback
-    def _update_tag_info_callback(self, new_tag):
+    def _update_tag_info_callback(self, new_tag: SensorTag) -> None:
         """Handle push notification sent by tag manager."""
         _LOGGER.debug("Entity to update state: %s with new tag: %s", self, new_tag)
         self._tag = new_tag

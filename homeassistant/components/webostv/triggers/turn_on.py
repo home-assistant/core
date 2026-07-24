@@ -1,5 +1,4 @@
-"""webOS Smart TV device turn on trigger."""
-from __future__ import annotations
+"""LG webOS TV device turn on trigger."""
 
 import voluptuous as vol
 

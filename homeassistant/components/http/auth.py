@@ -1,38 +1,47 @@
 """Authentication for HTTP component."""
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from ipaddress import ip_address
 import logging
 import secrets
 import time
 from typing import Any, Final
 
 from aiohttp import hdrs
-from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web import (
+    Application,
+    HTTPInternalServerError,
+    Request,
+    StreamResponse,
+    middleware,
+)
 import jwt
 from jwt import api_jws
 from yarl import URL
 
 from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
-from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.http import current_request
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.storage import Store
-from homeassistant.util.network import is_local
 
-from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
-from .request_context import current_request
+from .auth_util import async_user_not_allowed_do_auth
+from .const import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+    is_supervisor_unix_socket_request,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
-SAFE_QUERY_PARAMS: Final = ["height", "width"]
+SAFE_QUERY_PARAMS: Final = frozenset(("height", "width"))
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
@@ -46,13 +55,18 @@ def async_sign_path(
     expiration: timedelta,
     *,
     refresh_token_id: str | None = None,
+    use_content_user: bool = False,
 ) -> str:
     """Sign a path for temporary access without auth header."""
     if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     if refresh_token_id is None:
-        if connection := websocket_api.current_connection.get():
+        if use_content_user:
+            refresh_token_id = hass.data[STORAGE_KEY]
+        elif (
+            connection := websocket_api.current_connection.get()
+        ) and connection.refresh_token_id:
             refresh_token_id = connection.refresh_token_id
         elif (
             request := current_request.get()
@@ -80,43 +94,10 @@ def async_sign_path(
     return f"{url.path}?{url.query_string}"
 
 
-@callback
-def async_user_not_allowed_do_auth(
-    hass: HomeAssistant, user: User, request: Request | None = None
-) -> str | None:
-    """Validate that user is not allowed to do auth things."""
-    if not user.is_active:
-        return "User is not active"
-
-    if not user.local_only:
-        return None
-
-    # User is marked as local only, check if they are allowed to do auth
-    if request is None:
-        request = current_request.get()
-
-    if not request:
-        return "No request available to validate local access"
-
-    if "cloud" in hass.config.components:
-        # pylint: disable-next=import-outside-toplevel
-        from hass_nabucasa import remote
-
-        if remote.is_cloud_request.get():
-            return "User is local only"
-
-    try:
-        remote_address = ip_address(request.remote)  # type: ignore[arg-type]
-    except ValueError:
-        return "Invalid remote IP"
-
-    if is_local(remote_address):
-        return None
-
-    return "User cannot authenticate remotely"
-
-
-async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(  # noqa: C901
+    hass: HomeAssistant,
+    app: Application,
+) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
@@ -138,7 +119,8 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
 
     hass.data[STORAGE_KEY] = refresh_token.id
 
-    async def async_validate_auth_header(request: Request) -> bool:
+    @callback
+    def async_validate_auth_header(request: Request) -> bool:
         """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
@@ -154,7 +136,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if auth_type != "Bearer":
             return False
 
-        refresh_token = await hass.auth.async_validate_access_token(auth_val)
+        refresh_token = hass.auth.async_validate_access_token(auth_val)
 
         if refresh_token is None:
             return False
@@ -166,7 +148,8 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
-    async def async_validate_signed_request(request: Request) -> bool:
+    @callback
+    def async_validate_signed_request(request: Request) -> bool:
         """Validate a signed request."""
         if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
             return False
@@ -192,14 +175,52 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if claims["params"] != params:
             return False
 
-        refresh_token = await hass.auth.async_get_refresh_token(claims["iss"])
+        refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
 
         if refresh_token is None:
+            return False
+
+        if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
             return False
 
         request[KEY_HASS_USER] = refresh_token.user
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
+
+    supervisor_user_id: str | None = None
+
+    async def async_authenticate_supervisor_unix_socket(request: Request) -> bool:
+        """Authenticate a request from a Unix socket as the Supervisor user.
+
+        The Unix Socket is dedicated and only available to Supervisor. To
+        avoid the extra overhead and round trips for the authentication and
+        refresh tokens, we directly authenticate requests from the socket as
+        the Supervisor user.
+        """
+        nonlocal supervisor_user_id
+
+        # Fast path: use cached user ID
+        if supervisor_user_id is not None:
+            if user := await hass.auth.async_get_user(supervisor_user_id):
+                request[KEY_HASS_USER] = user
+                return True
+            supervisor_user_id = None
+
+        # Slow path: find the Supervisor user by name
+        for user in await hass.auth.async_get_users():
+            if user.system_generated and user.name == HASSIO_USER_NAME:
+                supervisor_user_id = user.id
+                # Not setting KEY_HASS_REFRESH_TOKEN_ID since Supervisor user
+                # doesn't use refresh tokens.
+                request[KEY_HASS_USER] = user
+                return True
+
+        # The Unix socket should not be serving before the hassio integration
+        # has created the Supervisor user. If we get here, something is wrong.
+        _LOGGER.error(
+            "Supervisor user not found; cannot authenticate Unix socket request"
+        )
+        raise HTTPInternalServerError
 
     @middleware
     async def auth_middleware(
@@ -208,7 +229,11 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         """Authenticate as middleware."""
         authenticated = False
 
-        if hdrs.AUTHORIZATION in request.headers and await async_validate_auth_header(
+        if is_supervisor_unix_socket_request(request):
+            authenticated = await async_authenticate_supervisor_unix_socket(request)
+            auth_type = "supervisor unix socket"
+
+        elif hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
             request
         ):
             authenticated = True
@@ -217,9 +242,9 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         # We first start with a string check to avoid parsing query params
         # for every request.
         elif (
-            request.method == "GET"
+            request.method in ["GET", "HEAD"]
             and SIGN_QUERY_PARAM in request.query_string
-            and await async_validate_signed_request(request)
+            and async_validate_signed_request(request)
         ):
             authenticated = True
             auth_type = "signed request"
@@ -227,7 +252,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
-                request.remote,
+                request.remote or "unknown remote",
                 request.path,
                 auth_type,
             )

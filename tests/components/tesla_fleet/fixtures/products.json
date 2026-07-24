@@ -1,0 +1,131 @@
+{
+  "response": [
+    {
+      "id": 1234,
+      "user_id": 1234,
+      "vehicle_id": 1234,
+      "vin": "LRWXF7EK4KC700000",
+      "color": null,
+      "access_type": "OWNER",
+      "display_name": "Test",
+      "option_codes": null,
+      "cached_data": null,
+      "granular_access": { "hide_private": false },
+      "tokens": ["abc", "def"],
+      "state": "asleep",
+      "in_service": false,
+      "id_s": "1234",
+      "calendar_enabled": true,
+      "api_version": 71,
+      "backseat_token": null,
+      "backseat_token_updated_at": null,
+      "ble_autopair_enrolled": false,
+      "vehicle_config": {
+        "aux_park_lamps": "Eu",
+        "badge_version": 1,
+        "can_accept_navigation_requests": true,
+        "can_actuate_trunks": true,
+        "car_special_type": "base",
+        "car_type": "model3",
+        "charge_port_type": "CCS",
+        "cop_user_set_temp_supported": false,
+        "dashcam_clip_save_supported": true,
+        "default_charge_to_max": false,
+        "driver_assist": "TeslaAP3",
+        "ece_restrictions": false,
+        "efficiency_package": "M32021",
+        "eu_vehicle": true,
+        "exterior_color": "DeepBlue",
+        "exterior_trim": "Black",
+        "exterior_trim_override": "",
+        "has_air_suspension": false,
+        "has_ludicrous_mode": false,
+        "has_seat_cooling": false,
+        "headlamp_type": "Global",
+        "interior_trim_type": "White2",
+        "key_version": 2,
+        "motorized_charge_port": true,
+        "paint_color_override": "0,9,25,0.7,0.04",
+        "performance_package": "Base",
+        "plg": true,
+        "pws": true,
+        "rear_drive_unit": "PM216MOSFET",
+        "rear_seat_heaters": 1,
+        "rear_seat_type": 0,
+        "rhd": true,
+        "roof_color": "RoofColorGlass",
+        "seat_type": null,
+        "spoiler_type": "None",
+        "sun_roof_installed": null,
+        "supports_qr_pairing": false,
+        "third_row_seats": "None",
+        "timestamp": 1705701487912,
+        "trim_badging": "74d",
+        "use_range_badging": true,
+        "utc_offset": 36000,
+        "webcam_selfie_supported": true,
+        "webcam_supported": true,
+        "wheel_type": "Pinwheel18CapKit"
+      },
+      "command_signing": "allowed",
+      "release_notes_supported": true
+    },
+    {
+      "energy_site_id": 123456,
+      "resource_type": "battery",
+      "site_name": "Energy Site",
+      "id": "ABC123",
+      "gateway_id": "ABC123",
+      "asset_site_id": "c0ffee",
+      "warp_site_number": "GA123456",
+      "energy_left": 23286.105263157893,
+      "total_pack_energy": 40804,
+      "percentage_charged": 57.068192488868476,
+      "battery_type": "ac_powerwall",
+      "backup_capable": true,
+      "battery_power": 14990,
+      "go_off_grid_test_banner_enabled": null,
+      "storm_mode_enabled": true,
+      "powerwall_onboarding_settings_set": true,
+      "powerwall_tesla_electric_interested_in": null,
+      "vpp_tour_enabled": null,
+      "sync_grid_alert_enabled": true,
+      "breaker_alert_enabled": true,
+      "components": {
+        "battery": true,
+        "battery_type": "ac_powerwall",
+        "solar": true,
+        "solar_type": "pv_panel",
+        "grid": true,
+        "load_meter": true,
+        "market_type": "residential",
+        "wall_connectors": [
+          {
+            "device_id": "abc-123",
+            "din": "123-abc",
+            "is_active": true
+          },
+          {
+            "device_id": "bcd-234",
+            "din": "234-bcd",
+            "is_active": true
+          }
+        ]
+      },
+      "features": {
+        "rate_plan_manager_no_pricing_constraint": true
+      }
+    },
+    {
+      "energy_site_id": 98765,
+      "components": {
+        "battery": false,
+        "solar": false,
+        "grid": false,
+        "load_meter": false,
+        "market_type": "residential"
+      }
+    }
+  ],
+  "count": 3
+}

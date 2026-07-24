@@ -1,6 +1,7 @@
 """Provides the Fully Kiosk Browser DataUpdateCoordinator."""
+
 import asyncio
-from typing import Any, cast
+from typing import Any, cast, override
 
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
@@ -13,28 +14,34 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_PORT, LOGGER, UPDATE_INTERVAL
 
+type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
+
 
 class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Fully Kiosk Browser data."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: FullyKioskConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: FullyKioskConfigEntry) -> None:
         """Initialize."""
+        self.use_ssl = entry.data.get(CONF_SSL, False)
         self.fully = FullyKiosk(
             async_get_clientsession(hass),
             entry.data[CONF_HOST],
             DEFAULT_PORT,
             entry.data[CONF_PASSWORD],
-            use_ssl=entry.data[CONF_SSL],
-            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            use_ssl=self.use_ssl,
+            verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
         )
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=entry.data[CONF_HOST],
             update_interval=UPDATE_INTERVAL,
         )
-        self.use_ssl = entry.data[CONF_SSL]
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:

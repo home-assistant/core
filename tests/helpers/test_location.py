@@ -1,4 +1,5 @@
 """Tests Home Assistant location helpers."""
+
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import location
@@ -23,6 +24,12 @@ def test_has_location_with_states_with_valid_location() -> None:
     state = State(
         "hello.world", "invalid", {ATTR_LATITUDE: 123.12, ATTR_LONGITUDE: 123.12}
     )
+    assert location.has_location(state)
+
+
+def test_has_location_with_states_with_int_location() -> None:
+    """Test that integer coordinates are valid."""
+    state = State("hello.world", "valid", {ATTR_LATITUDE: 123, ATTR_LONGITUDE: 45})
     assert location.has_location(state)
 
 

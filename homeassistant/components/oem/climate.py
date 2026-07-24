@@ -1,14 +1,13 @@
 """OpenEnergyMonitor Thermostat Support."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -24,11 +23,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
@@ -56,7 +55,7 @@ def setup_platform(
 
     try:
         therm = Thermostat(host, port=port, username=username, password=password)
-    except (ValueError, AssertionError, requests.RequestException):
+    except ValueError, AssertionError, requests.RequestException:
         return
 
     add_entities((ThermostatDevice(therm, name),), True)
@@ -66,21 +65,24 @@ class ThermostatDevice(ClimateEntity):
     """Interface class for the oemthermostat module."""
 
     _attr_hvac_modes = SUPPORT_HVAC
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, thermostat, name):
         """Initialize the device."""
-        self._name = name
+        self._attr_name = name
         self.thermostat = thermostat
 
         # set up internal state varS
         self._state = None
-        self._temperature = None
-        self._setpoint = None
         self._mode = None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
@@ -93,11 +95,7 @@ class ThermostatDevice(ClimateEntity):
         return HVACMode.OFF
 
     @property
-    def name(self):
-        """Return the name of this Thermostat."""
-        return self._name
-
-    @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
@@ -106,16 +104,7 @@ class ThermostatDevice(ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._setpoint
-
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.AUTO:
@@ -125,6 +114,7 @@ class ThermostatDevice(ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             self.thermostat.mode = 0
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -132,7 +122,7 @@ class ThermostatDevice(ClimateEntity):
 
     def update(self) -> None:
         """Update local state."""
-        self._setpoint = self.thermostat.setpoint
-        self._temperature = self.thermostat.temperature
+        self._attr_target_temperature = self.thermostat.setpoint
+        self._attr_current_temperature = self.thermostat.temperature
         self._state = self.thermostat.state
         self._mode = self.thermostat.mode

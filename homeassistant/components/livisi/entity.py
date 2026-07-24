@@ -1,19 +1,17 @@
 """Code to handle a Livisi switches."""
-from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-from aiolivisi.const import CAPABILITY_MAP
+from livisi.const import CAPABILITY_MAP
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LIVISI_REACHABILITY_CHANGE
-from .coordinator import LivisiDataUpdateCoordinator
+from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
 
 
 class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
@@ -23,7 +21,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
         *,
@@ -48,7 +46,8 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
 
         # For livisi climate entities, the device should have the room name from
         # the livisi setup, as each livisi room gets exactly one VRCC device. The entity
-        # name will always be some localized value of "Climate", so the full element name
+        # name will always be some localized value of
+        # "Climate", so the full element name
         # in homeassistent will be in the form of "Bedroom Climate"
         if use_room_as_device_name and room_name is not None:
             self._attr_name = name
@@ -64,6 +63,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
         )
         super().__init__(coordinator)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback for reachability."""
         await super().async_added_to_hass()

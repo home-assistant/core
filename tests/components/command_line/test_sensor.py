@@ -1,12 +1,11 @@
 """The tests for the Command line sensor platform."""
-from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import subprocess
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
@@ -16,10 +15,12 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+
+from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
 
@@ -105,7 +106,7 @@ async def test_template_render(
         hass,
         dt_util.utcnow() + timedelta(minutes=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -123,7 +124,9 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
                 {
                     "sensor": {
                         "name": "Test",
-                        "command": 'echo "{{ states.sensor.input_sensor.state }}" "3 4"',
+                        "command": (
+                            'echo "{{ states.sensor.input_sensor.state }}" "3 4"'
+                        ),
                     }
                 }
             ]
@@ -131,22 +134,18 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"Works\n",
-    ) as check_output:
+    with mock_asyncio_subprocess_run(b"Works\n") as mock_subprocess_run:
         # Give time for template to load
         async_fire_time_changed(
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert len(check_output.mock_calls) == 1
-        check_output.assert_called_with(
+        assert len(mock_subprocess_run.mock_calls) == 1
+        mock_subprocess_run.assert_called_with(
             'echo "sensor_value" "3 4"',
-            shell=True,  # noqa: S604 # shell by design
-            timeout=15,
+            stdout=-1,
             close_fds=False,
         )
 
@@ -247,8 +246,12 @@ async def test_return_code(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key", "key_three"],
                     }
@@ -278,8 +281,12 @@ async def test_update_with_json_attrs(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key", "key_three"],
                         "value_template": '{{ value_json["key"] }}',
@@ -409,8 +416,12 @@ async def test_update_with_json_attrs_bad_json(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": [
                             "key",
@@ -446,8 +457,12 @@ async def test_update_with_missing_json_attrs(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key"],
                     }
@@ -466,6 +481,46 @@ async def test_update_with_unnecessary_json_attrs(
     assert entity_state.attributes["key"] == "some_json_value"
     assert entity_state.attributes["another_key"] == "another_json_value"
     assert "key_three" not in entity_state.attributes
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": 'echo \
+                            {\
+                                \\"top_level\\": {\
+                                    \\"second_level\\": {\
+                                        \\"key\\": \\"some_json_value\\",\
+                                        \\"another_key\\": \\"another_json_value\\",\
+                                        \\"key_three\\": \\"value_three\\"\
+                                    }\
+                                }\
+                            }',
+                        "json_attributes": ["key", "another_key", "key_three"],
+                        "json_attributes_path": "$.top_level.second_level",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_update_with_json_attrs_with_json_attrs_path(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Test json_attributes_path selects a different root."""
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"
+    assert "top_level" not in entity_state.attributes
+    assert "second_level" not in entity_state.attributes
 
 
 @pytest.mark.parametrize(
@@ -556,8 +611,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Sensor Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Sensor Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -569,8 +624,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Sensor Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Sensor Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 
@@ -657,7 +712,9 @@ async def test_scrape_sensor_device_timestamp(
                         "name": "Test",
                         "command": "echo January 17, 2022",
                         "device_class": "date",
-                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
                     }
                 }
             ]
@@ -678,10 +735,7 @@ async def test_template_not_error_when_data_is_none(
 ) -> None:
     """Test command sensor with template not logging error when data is None."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=subprocess.CalledProcessError,
-    ):
+    with mock_asyncio_subprocess_run(returncode=1):
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -692,7 +746,9 @@ async def test_template_not_error_when_data_is_none(
                             "name": "Test",
                             "command": "failed command",
                             "unit_of_measurement": "MB",
-                            "value_template": "{{ (value.split('\t')[0]|int(0)/1000)|round(3) }}",
+                            "value_template": (
+                                "{{ (value.split('\t')[0]|int(0)/1000)|round(3) }}"
+                            ),
                         }
                     }
                 ]
@@ -708,3 +764,267 @@ async def test_template_not_error_when_data_is_none(
         "Template variable error: 'None' has no attribute 'split' when rendering"
         not in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": 'echo { \\"key\\": \\"value\\" }',
+                        "availability": '{{ "sensor.input1" | has_value }}',
+                        "icon": 'mdi:{{ states("sensor.input1") }}',
+                        "json_attributes": ["key"],
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_availability_json_attributes_without_value_template(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability."""
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "unknown"
+    assert entity_state.attributes["key"] == "value"
+    assert entity_state.attributes["icon"] == "mdi:on"
+
+    hass.states.async_set("sensor.input1", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"Not A Number"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Unable to parse output as JSON" not in caplog.text
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+    assert "key" not in entity_state.attributes
+    assert "icon" not in entity_state.attributes
+
+    hass.states.async_set("sensor.input1", "on")
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"Not A Number"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Unable to parse output as JSON" in caplog.text
+
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    with mock_asyncio_subprocess_run(b'{ "key": "value" }'):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "unknown"
+    assert entity_state.attributes["key"] == "value"
+    assert entity_state.attributes["icon"] == "mdi:on"
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo January 17, 2022",
+                        "device_class": "date",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
+                        "availability": '{{ states("sensor.input1")=="on" }}',
+                        "icon": (
+                            "mdi:o{{ 'n' if states('sensor.input1')=='on' else 'ff' }}"
+                        ),
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_availability_with_value_template(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test availability."""
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "2022-01-17"
+    assert entity_state.attributes["icon"] == "mdi:on"
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"January 17, 2022"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+    assert "icon" not in entity_state.attributes
+
+
+async def test_template_render_with_availability_syntax_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test availability template render with syntax errors."""
+    assert await setup.async_setup_component(
+        hass,
+        "command_line",
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                        "availability": "{{ what_the_heck == 2 }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.input_sensor", "1")
+    await hass.async_block_till_done()
+
+    # Give time for template to load
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "1"
+
+    assert (
+        "Error rendering availability template for sensor.test:"
+        " UndefinedError: 'what_the_heck' is undefined" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                        "availability": "{{ value|is_number}}",
+                        "unit_of_measurement": " ",
+                        "state_class": "measurement",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_command_template_render_with_availability(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Test command template is rendered properly with availability."""
+    hass.states.async_set("sensor.input_sensor", "sensor_value")
+
+    # Give time for template to load
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input_sensor", "1")
+
+    # Give time for template to load
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "1"
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo 0",
+                        "value_template": "{{ x - 1 }}",
+                        "availability": "{{ value == '50' }}",
+                    },
+                }
+            ]
+        }
+    ],
+)
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for sensor.test: 'x' is undefined"
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"51\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error not in caplog.text
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"50\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error in caplog.text

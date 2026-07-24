@@ -1,10 +1,8 @@
 """Support for Z-Wave fans."""
-from __future__ import annotations
 
 import math
-from typing import Any, cast
+from typing import Any, cast, override
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
 from zwave_js_server.const.command_class.multilevel_switch import SET_TO_PREVIOUS_VALUE
 from zwave_js_server.const.command_class.thermostat import (
@@ -18,23 +16,22 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntity,
     FanEntityFeature,
-    NotValidPresetModeError,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanValueMapping, FanValueMappingDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -45,11 +42,11 @@ ATTR_FAN_STATE = "fan_state"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Fan from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_fan(info: ZwaveDiscoveryInfo) -> None:
@@ -78,10 +75,14 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the fan."""
         super().__init__(config_entry, driver, info)
@@ -91,6 +92,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
         self._use_optimistic_state: bool = False
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -102,6 +104,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
         await self._async_set_value(self._target_value, zwave_speed)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -126,11 +129,13 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             self._use_optimistic_state = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._async_set_value(self._target_value, 0)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on (speed above 0)."""
         if self._use_optimistic_state:
@@ -142,6 +147,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         return bool(self.info.primary_value.value > 0)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self.info.primary_value.value is None:
@@ -152,6 +158,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         )
 
     @property
+    @override
     def percentage_step(self) -> float:
         """Return the step size for percentage."""
         return 1
@@ -161,7 +168,7 @@ class ValueMappingZwaveFan(ZwaveFan):
     """A Zwave fan with a value mapping data (e.g., 1-24 is low)."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the fan."""
         super().__init__(config_entry, driver, info)
@@ -169,11 +176,13 @@ class ValueMappingZwaveFan(ZwaveFan):
             FanValueMappingDataTemplate, self.info.platform_data_template
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         zwave_speed = self.percentage_to_zwave_speed(percentage)
         await self._async_set_value(self._target_value, zwave_speed)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         for zwave_value, mapped_preset_mode in self.fan_value_mapping.presets.items():
@@ -181,17 +190,14 @@ class ValueMappingZwaveFan(ZwaveFan):
                 await self._async_set_value(self._target_value, zwave_value)
                 return
 
-        raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode:"
-            f" {self.preset_modes}"
-        )
-
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
         return super().available and self.has_fan_value_mapping
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self.info.primary_value.value is None:
@@ -204,6 +210,7 @@ class ValueMappingZwaveFan(ZwaveFan):
         return self.zwave_speed_to_percentage(self.info.primary_value.value)
 
     @property
+    @override
     def percentage_step(self) -> float:
         """Return the step size for percentage."""
         # This is the same implementation as the base fan type, but
@@ -212,6 +219,7 @@ class ValueMappingZwaveFan(ZwaveFan):
         return 100 / self.speed_count
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Return the available preset modes."""
         if not self.has_fan_value_mapping:
@@ -220,6 +228,7 @@ class ValueMappingZwaveFan(ZwaveFan):
         return list(self.fan_value_mapping.presets.values())
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (value := self.info.primary_value.value) is None:
@@ -247,14 +256,20 @@ class ValueMappingZwaveFan(ZwaveFan):
         return fan_value_mapping
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(self.fan_value_mapping.speeds)
 
     @property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags = FanEntityFeature.SET_SPEED
+        flags = (
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
+        )
         if self.has_fan_value_mapping and self.fan_value_mapping.presets:
             flags |= FanEntityFeature.PRESET_MODE
 
@@ -265,22 +280,12 @@ class ValueMappingZwaveFan(ZwaveFan):
         if percentage == 0:
             return 0
 
-        # Since the percentage steps are computed with rounding, we have to
-        # search to find the appropriate speed.
-        for speed_range in self.fan_value_mapping.speeds:
-            (_, max_speed) = speed_range
-            step_percentage = self.zwave_speed_to_percentage(max_speed)
-
-            # zwave_speed_to_percentage will only return None if
-            # `self.fan_value_mapping.speeds` doesn't contain the
-            # specified speed. This can't happen here, because
-            # the input is coming from the same data structure.
-            assert step_percentage
-
-            if percentage <= step_percentage:
-                break
-
-        return max_speed
+        speed_level = math.ceil(
+            percentage_to_ranged_value((1, self.speed_count), percentage)
+        )
+        min_speed, max_speed = self.fan_value_mapping.speeds[speed_level - 1]
+        # Use the midpoint rather than the range maximum for robustness.
+        return (min_speed + max_speed) // 2
 
     def zwave_speed_to_percentage(self, zwave_speed: int) -> int | None:
         """Convert a Zwave speed to a percentage.
@@ -291,15 +296,9 @@ class ValueMappingZwaveFan(ZwaveFan):
         if zwave_speed == 0:
             return 0
 
-        percentage = 0.0
-        for speed_range in self.fan_value_mapping.speeds:
-            (min_speed, max_speed) = speed_range
-            percentage += self.percentage_step
+        for index, (min_speed, max_speed) in enumerate(self.fan_value_mapping.speeds):
             if min_speed <= zwave_speed <= max_speed:
-                # This choice of rounding function is to provide consistency with how
-                # the UI handles steps e.g., for a 3-speed fan, you get steps at 33,
-                # 67, and 100.
-                return round(percentage)
+                return ranged_value_to_percentage((1, self.speed_count), index + 1)
 
         # The specified Z-Wave device value doesn't map to a defined speed.
         return None
@@ -313,7 +312,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     _fan_state: ZwaveValue | None = None
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the thermostat fan."""
         super().__init__(config_entry, driver, info)
@@ -331,6 +330,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
             add_to_watched_value_ids=True,
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -342,6 +342,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
             raise HomeAssistantError("Unhandled action turn_on")
         await self._async_set_value(self._fan_off, False)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if not self._fan_off:
@@ -349,6 +350,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         await self._async_set_value(self._fan_off, True)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         if (value := get_value_of_zwave_value(self._fan_off)) is None:
@@ -356,6 +358,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         return not cast(bool, value)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
         value = get_value_of_zwave_value(self._fan_mode)
@@ -363,6 +366,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
             return None
         return cast(str, self._fan_mode.metadata.states[str(value)])
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
 
@@ -378,6 +382,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         await self._async_set_value(self._fan_mode, new_state)
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         if not self._fan_mode.metadata.states:
@@ -385,9 +390,16 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         return list(self._fan_mode.metadata.states.values())
 
     @property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        return FanEntityFeature.PRESET_MODE
+        if not self._fan_off:
+            return FanEntityFeature.PRESET_MODE
+        return (
+            FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+        )
 
     @property
     def fan_state(self) -> str | None:
@@ -402,6 +414,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         return cast(str, self._fan_state.metadata.states[str(value)])
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the optional state attributes."""
         attrs = {}

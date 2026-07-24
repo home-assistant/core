@@ -1,32 +1,35 @@
 """Support for binary sensors using Tellstick Net."""
+
+from typing import override
+
 from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .. import tellduslive
-from .entry import TelldusLiveEntity
+from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from .entity import TelldusLiveEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_binary_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[tellduslive.DOMAIN]
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
+        client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSensor(client, device_id)])
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(
-            binary_sensor.DOMAIN, tellduslive.DOMAIN
-        ),
+        TELLDUS_DISCOVERY_NEW.format(binary_sensor.DOMAIN, DOMAIN),
         async_discover_binary_sensor,
     )
 
@@ -37,6 +40,7 @@ class TelldusLiveSensor(TelldusLiveEntity, BinarySensorEntity):
     _attr_name = None
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.device.is_on

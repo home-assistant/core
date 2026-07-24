@@ -1,5 +1,6 @@
 """Support for KEBA charging station sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -63,7 +64,7 @@ async def async_setup_platform(
             keba,
             "session_energy",
             SensorEntityDescription(
-                key="E pres",
+                key="E pres",  # codespell:ignore pres
                 name="Session Energy",
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 device_class=SensorDeviceClass.ENERGY,
@@ -105,6 +106,7 @@ class KebaSensor(SensorEntity):
         self._attributes: dict[str, str] = {}
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the binary sensor."""
         return self._attributes
@@ -128,6 +130,7 @@ class KebaSensor(SensorEntity):
         """Schedule a state update."""
         self.async_schedule_update_ha_state(True)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

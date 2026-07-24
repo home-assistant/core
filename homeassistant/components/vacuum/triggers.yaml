@@ -1,0 +1,22 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: vacuum
+  fields:
+    behavior:
+      required: true
+      default: each
+      selector:
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+returned_to_dock: *trigger_common
+errored: *trigger_common
+paused_cleaning: *trigger_common
+started_cleaning: *trigger_common
+started_returning: *trigger_common

@@ -1,9 +1,10 @@
 """Test the IPMA integration."""
+
 from unittest.mock import patch
 
 from pyipma import IPMAException
 
-from homeassistant.components.ipma import DOMAIN
+from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import HomeAssistant
@@ -40,7 +41,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
         return_value=MockLocation(),
     ):
         config_entry = MockConfigEntry(
-            domain="ipma",
+            domain=DOMAIN,
             data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
         )
         config_entry.add_to_hass(hass)

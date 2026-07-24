@@ -1,4 +1,5 @@
 """Constants for Nuki."""
+
 DOMAIN = "nuki"
 
 # Attributes
@@ -12,3 +13,6 @@ DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 20
 
 ERROR_STATES = (0, 254, 255)
+
+# Encrypt token, instead of using a plaintext token
+CONF_ENCRYPT_TOKEN = "encrypt_token"

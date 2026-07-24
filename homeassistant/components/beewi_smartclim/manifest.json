@@ -1,9 +1,0 @@
-{
-  "domain": "beewi_smartclim",
-  "name": "BeeWi SmartClim BLE sensor",
-  "codeowners": ["@alemuro"],
-  "documentation": "https://www.home-assistant.io/integrations/beewi_smartclim",
-  "iot_class": "local_polling",
-  "loggers": ["beewi_smartclim"],
-  "requirements": ["beewi-smartclim==0.0.10"]
-}

@@ -1,4 +1,5 @@
 """Configure tests for the Google Mail integration."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 import time
 from typing import Any
@@ -8,6 +9,7 @@ from httplib2 import Response
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -15,10 +17,10 @@ from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 BUILD = "homeassistant.components.google_mail.api.build"
 CLIENT_ID = "1234"
@@ -31,7 +33,10 @@ SCOPES = [
 ]
 SENSOR = "sensor.example_gmail_com_vacation_end_date"
 TITLE = "example@gmail.com"
-TOKEN = "homeassistant.components.google_mail.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+TOKEN = (
+    "homeassistant.components.google_mail"
+    ".api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+)
 
 
 @pytest.fixture(name="scopes")
@@ -43,7 +48,7 @@ def mock_scopes() -> list[str]:
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -98,7 +103,7 @@ async def mock_setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -111,7 +116,10 @@ async def mock_setup_integration(
             "httplib2.Http.request",
             return_value=(
                 Response({}),
-                bytes(load_fixture("google_mail/get_vacation.json"), encoding="UTF-8"),
+                bytes(
+                    await async_load_fixture(hass, "get_vacation.json", DOMAIN),
+                    encoding="UTF-8",
+                ),
             ),
         ):
             assert await async_setup_component(hass, DOMAIN, {})

@@ -1,5 +1,4 @@
-"""Config flow for NEW_NAME integration."""
-from __future__ import annotations
+"""Config flow for the NEW_NAME integration."""
 
 from collections.abc import Mapping
 from typing import Any, cast

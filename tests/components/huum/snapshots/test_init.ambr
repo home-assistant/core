@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_device_entry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'huum',
+        'AABBCC112233',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Huum',
+    'model': 'UKU WiFi',
+    'model_id': None,
+    'name': 'Huum sauna',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

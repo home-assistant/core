@@ -1,7 +1,6 @@
 """Support for LiteJet lights."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from pylitejet import LiteJet, LiteJetError
 
@@ -12,12 +11,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import LiteJetConfigEntry
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
 ATTR_NUMBER = "number"
@@ -25,12 +24,12 @@ ATTR_NUMBER = "number"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LiteJetConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
-    system: LiteJet = hass.data[DOMAIN]
+    system = config_entry.runtime_data
 
     entities = []
     for index in system.loads():
@@ -51,7 +50,7 @@ class LiteJetLight(LightEntity):
     _attr_name = None
 
     def __init__(
-        self, config_entry: ConfigEntry, system: LiteJet, index: int, name: str
+        self, config_entry: LiteJetConfigEntry, system: LiteJet, index: int, name: str
     ) -> None:
         """Initialize a LiteJet light."""
         self._config_entry = config_entry
@@ -67,12 +66,14 @@ class LiteJetLight(LightEntity):
             via_device=(DOMAIN, f"{config_entry.entry_id}_mcp"),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_load_activated(self._index, self._on_load_changed)
         self._lj.on_load_deactivated(self._index, self._on_load_changed)
         self._lj.on_connected_changed(self._on_connected_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_load_changed)
@@ -86,6 +87,7 @@ class LiteJetLight(LightEntity):
         """Handle connected changes."""
         self.schedule_update_ha_state(True)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
 
@@ -96,7 +98,7 @@ class LiteJetLight(LightEntity):
             try:
                 await self._lj.activate_load(self._index)
             except LiteJetError as exc:
-                raise HomeAssistantError() from exc
+                raise HomeAssistantError from exc
             return
 
         # If either attribute is specified then Home Assistant must
@@ -108,15 +110,16 @@ class LiteJetLight(LightEntity):
         try:
             await self._lj.activate_load_at(self._index, brightness, int(transition))
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if ATTR_TRANSITION in kwargs:
             try:
                 await self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
             except LiteJetError as exc:
-                raise HomeAssistantError() from exc
+                raise HomeAssistantError from exc
             return
 
         # If transition attribute is not specified then the simple
@@ -125,7 +128,7 @@ class LiteJetLight(LightEntity):
         try:
             await self._lj.deactivate_load(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc
 
     async def async_update(self) -> None:
         """Retrieve the light's brightness from the LiteJet system."""

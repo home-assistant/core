@@ -1,9 +1,8 @@
 """Support for the Escea Fireplace."""
-from __future__ import annotations
 
 from collections.abc import Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from pescea import Controller
 
@@ -20,7 +19,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
@@ -31,7 +30,6 @@ from .const import (
     DOMAIN,
     ESCEA_FIREPLACE,
     ESCEA_MANUFACTURER,
-    ICON,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +45,7 @@ _HA_FAN_TO_ESCEA = {v: k for k, v in _ESCEA_FAN_TO_HA.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize an Escea Controller."""
     discovery_service = hass.data[DATA_DISCOVERY_SERVICE]
@@ -78,11 +76,14 @@ class ControllerEntity(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_icon = ICON
+    _attr_translation_key = "fireplace"
     _attr_precision = PRECISION_WHOLE
     _attr_should_poll = False
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -107,6 +108,7 @@ class ControllerEntity(ClimateEntity):
 
         self._attr_available = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call on adding to hass.
 
@@ -171,21 +173,25 @@ class ControllerEntity(ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         return HVACMode.HEAT if self._controller.is_on else HVACMode.OFF
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._controller.current_temp
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._controller.desired_temp
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return _ESCEA_FAN_TO_HA[self._controller.fan]
@@ -199,24 +205,29 @@ class ControllerEntity(ClimateEntity):
         else:
             self.set_available(True)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
             await self.wrap_and_catch(self._controller.set_desired_temp(temp))
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self.wrap_and_catch(self._controller.set_fan(_HA_FAN_TO_ESCEA[fan_mode]))
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self.wrap_and_catch(self._controller.set_on(hvac_mode == HVACMode.HEAT))
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.wrap_and_catch(self._controller.set_on(True))
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self.wrap_and_catch(self._controller.set_on(False))

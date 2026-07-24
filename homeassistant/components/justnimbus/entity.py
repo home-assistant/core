@@ -1,5 +1,6 @@
 """Base Entity for JustNimbus sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -27,9 +28,11 @@ class JustNimbusEntity(
             identifiers={(DOMAIN, device_id)},
             name="JustNimbus Sensor",
             manufacturer="JustNimbus",
+            sw_version=coordinator.data.api_version,
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return device availability."""
         return super().available and self.coordinator.data is not None

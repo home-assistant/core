@@ -1,14 +1,12 @@
 """Sensor for Last.fm account status."""
-from __future__ import annotations
 
 import hashlib
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -20,17 +18,17 @@ from .const import (
     DOMAIN,
     STATE_NOT_SCROBBLING,
 )
-from .coordinator import LastFMDataUpdateCoordinator, LastFMUserData
+from .coordinator import LastFMConfigEntry, LastFMDataUpdateCoordinator, LastFMUserData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LastFMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize the entries."""
 
-    coordinator: LastFMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         (
             LastFmSensor(coordinator, username, entry.entry_id)
@@ -43,7 +41,7 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
     """A class for the Last.fm account."""
 
     _attr_attribution = "Data provided by Last.fm"
-    _attr_icon = "mdi:radio-fm"
+    _attr_translation_key = "lastfm"
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -71,11 +69,13 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return self.coordinator.data.get(self._username)
 
     @property
+    @override
     def available(self) -> bool:
         """If user not found in coordinator, entity is unavailable."""
         return super().available and self.user_data is not None
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return user avatar."""
         if self.user_data and self.user_data.image is not None:
@@ -83,6 +83,7 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return None
 
     @property
+    @override
     def native_value(self) -> str:
         """Return value of sensor."""
         if self.user_data and self.user_data.now_playing is not None:
@@ -90,6 +91,7 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         return STATE_NOT_SCROBBLING
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
         play_count = None

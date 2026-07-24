@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_event_htmlentities[feed_atom_htmlentities]
+  ReadOnlyDict({
+    'content': 'Contenido en español',
+    'description': 'Resumen en español',
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'feedreader',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+      'feedreader',
+    ]),
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
+    'link': 'http://example.org/2003/12/13/atom03',
+    'title': 'Título',
+  })
+# ---
+# name: test_event_htmlentities[feed_htmlentities]
+  ReadOnlyDict({
+    'content': 'Contenido 1 en español',
+    'description': 'Descripción 1',
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'feedreader',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+      'feedreader',
+    ]),
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
+    'link': 'http://www.example.com/link/1',
+    'title': 'Título 1',
+  })
+# ---

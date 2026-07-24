@@ -1,21 +1,24 @@
 """Test the Matter integration init."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
-from matter_server.client.models.node import MatterNode
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import InterfaceMethod, PartialBackupOptions
+from matter_server.client.exceptions import (
+    CannotConnect,
+    NotConnected,
+    ServerVersionTooNew,
+    ServerVersionTooOld,
+)
 from matter_server.common.errors import MatterError
-from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models import MatterNodeData
 import pytest
 
-from homeassistant.components.hassio import HassioAPIError
+from homeassistant.components.matter import _derive_ble_proxy_url
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -24,21 +27,58 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
+from .common import (
+    FIXTURES,
+    create_node_from_fixture,
+    load_and_parse_node_fixture,
+    setup_integration_with_node_fixture,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_component
 from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")
-def connect_timeout_fixture() -> Generator[int, None, None]:
+def connect_timeout_fixture() -> Generator[int]:
     """Mock the connect timeout."""
     with patch("homeassistant.components.matter.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
 
 
+@pytest.fixture(name="ble_proxy_connect_timeout")
+def ble_proxy_connect_timeout_fixture() -> Generator[int]:
+    """Shorten the BLE proxy connect timeout."""
+    with patch(
+        "homeassistant.components.matter.BLE_PROXY_CONNECT_TIMEOUT", new=0
+    ) as timeout:
+        yield timeout
+
+
+@pytest.fixture(name="mock_bluetooth_loaded")
+def mock_bluetooth_loaded_fixture(hass: HomeAssistant) -> None:
+    """Mark the bluetooth integration as loaded for the BLE proxy gate."""
+    mock_component(hass, "bluetooth")
+
+
+@pytest.fixture(name="mock_ble_proxy")
+def mock_ble_proxy_fixture() -> Generator[tuple[MagicMock, MagicMock]]:
+    """Stub the BLE proxy created inside async_setup_entry.
+
+    Yields `(proxy, factory)` so tests can assert both the proxy lifecycle
+    (`connect`/`disconnect`) and the arguments passed to `create_matter_ble_proxy`.
+    """
+    proxy = MagicMock()
+    proxy.connect = AsyncMock()
+    proxy.disconnect = AsyncMock()
+    with patch(
+        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
+        return_value=proxy,
+    ) as factory:
+        yield proxy, factory
+
+
 @pytest.fixture(name="listen_ready_timeout")
-def listen_ready_timeout_fixture() -> Generator[int, None, None]:
+def listen_ready_timeout_fixture() -> Generator[int]:
     """Mock the listen ready timeout."""
     with patch(
         "homeassistant.components.matter.LISTEN_READY_TIMEOUT", new=0
@@ -46,28 +86,40 @@ def listen_ready_timeout_fixture() -> Generator[int, None, None]:
         yield timeout
 
 
+def test_fixture_list() -> None:
+    """Test validity of the fixture list."""
+    # Ensure it is sorted - makes it easier to identify duplicate entries or
+    # locate specific fixtures
+    assert sorted(FIXTURES) == FIXTURES, "Fixture list is not sorted"
+    # Ensure all fixtures have a unique node id
+    node_ids = set()
+    for fixture in FIXTURES:
+        node_data = load_and_parse_node_fixture(fixture)
+        if (node_id := node_data["node_id"]) in node_ids:
+            pytest.fail(
+                f"Duplicate node ID {node_id} found in fixture {fixture}, "
+                f"please use: {next(i for i in range(1, 1000) if i not in node_ids)}"
+            )
+        node_ids.add(node_id)
+
+
 async def test_entry_setup_unload(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
     """Test the integration set up and unload."""
-    node_data = load_and_parse_node_fixture("onoff-light")
-    node = MatterNode(
-        dataclass_from_dict(
-            MatterNodeData,
-            node_data,
-        )
-    )
+    node = create_node_from_fixture("mock_onoff_light")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
-    entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert matter_client.connect.call_count == 1
-    assert entry.state == ConfigEntryState.LOADED
+    assert matter_client.set_default_fabric_label.call_count == 1
+    assert entry.state is ConfigEntryState.LOADED
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state != STATE_UNAVAILABLE
@@ -75,14 +127,12 @@ async def test_entry_setup_unload(
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert matter_client.disconnect.call_count == 1
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_home_assistant_stop(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -107,6 +157,26 @@ async def test_connect_failed(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_set_default_fabric_label_failed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test failure during client connection."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    matter_client.set_default_fabric_label.side_effect = NotConnected()
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert matter_client.connect.call_count == 1
+    assert matter_client.set_default_fabric_label.call_count == 1
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -209,30 +279,27 @@ async def test_listen_failure_config_entry_loaded(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     listen_block.set()
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert matter_client.disconnect.call_count == 1
 
 
 async def test_raise_addon_task_in_progress(
-    hass: HomeAssistant,
-    addon_not_installed: AsyncMock,
-    install_addon: AsyncMock,
-    start_addon: AsyncMock,
+    hass: HomeAssistant, install_addon: AsyncMock, start_addon: AsyncMock
 ) -> None:
     """Test raise ConfigEntryNotReady if an add-on task is in progress."""
     install_event = asyncio.Event()
 
     install_addon_original_side_effect = install_addon.side_effect
 
-    async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
+    async def install_addon_side_effect(slug: str) -> None:
         """Mock install add-on."""
         await install_event.wait()
-        await install_addon_original_side_effect(hass, slug)
+        await install_addon_original_side_effect(slug)
 
     install_addon.side_effect = install_addon_side_effect
 
@@ -258,6 +325,7 @@ async def test_raise_addon_task_in_progress(
     await asyncio.sleep(0.05)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_ready"
     assert install_addon.call_count == 1
     assert start_addon.call_count == 0
 
@@ -290,15 +358,15 @@ async def test_start_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_running"
     assert addon_info.call_count == 1
     assert install_addon.call_count == 0
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
 
 
 async def test_install_addon(
     hass: HomeAssistant,
-    addon_not_installed: AsyncMock,
     addon_store_info: AsyncMock,
     install_addon: AsyncMock,
     start_addon: AsyncMock,
@@ -318,11 +386,12 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert addon_store_info.call_count == 3
+    assert entry.error_reason_translation_key == "addon_not_installed"
+    assert addon_store_info.call_count == 2
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
 
 
 async def test_addon_info_failure(
@@ -333,7 +402,7 @@ async def test_addon_info_failure(
     start_addon: AsyncMock,
 ) -> None:
     """Test failure to get add-on info for Matter add-on during entry setup."""
-    addon_info.side_effect = HassioAPIError("Boom")
+    addon_info.side_effect = SupervisorError("Boom")
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -361,12 +430,30 @@ async def test_addon_info_failure(
         "backup_calls",
         "update_addon_side_effect",
         "create_backup_side_effect",
+        "connect_side_effect",
     ),
     [
-        ("1.0.0", True, 1, 1, None, None),
-        ("1.0.0", False, 0, 0, None, None),
-        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
-        ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
+        ("1.0.0", True, 1, 1, None, None, ServerVersionTooOld("Invalid version")),
+        ("1.0.0", True, 0, 0, None, None, ServerVersionTooNew("Invalid version")),
+        ("1.0.0", False, 0, 0, None, None, ServerVersionTooOld("Invalid version")),
+        (
+            "1.0.0",
+            True,
+            1,
+            1,
+            SupervisorError("Boom"),
+            None,
+            ServerVersionTooOld("Invalid version"),
+        ),
+        (
+            "1.0.0",
+            True,
+            0,
+            1,
+            None,
+            SupervisorError("Boom"),
+            ServerVersionTooOld("Invalid version"),
+        ),
     ],
 )
 async def test_update_addon(
@@ -385,13 +472,14 @@ async def test_update_addon(
     backup_calls: int,
     update_addon_side_effect: Exception | None,
     create_backup_side_effect: Exception | None,
-):
+    connect_side_effect: Exception,
+) -> None:
     """Test update the Matter add-on during entry setup."""
-    addon_info.return_value["version"] = addon_version
-    addon_info.return_value["update_available"] = update_available
+    addon_info.return_value.version = addon_version
+    addon_info.return_value.update_available = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
-    matter_client.connect.side_effect = InvalidServerVersion("Invalid version")
+    matter_client.connect.side_effect = connect_side_effect
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -410,15 +498,32 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize(
+    (
+        "connect_side_effect",
+        "issue_raised",
+    ),
+    [
+        (
+            ServerVersionTooOld("Invalid version"),
+            "server_version_version_too_old",
+        ),
+        (
+            ServerVersionTooNew("Invalid version"),
+            "server_version_version_too_new",
+        ),
+    ],
+)
 async def test_issue_registry_invalid_version(
     hass: HomeAssistant,
     matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    connect_side_effect: Exception,
+    issue_raised: str,
 ) -> None:
     """Test issue registry for invalid version."""
     original_connect_side_effect = matter_client.connect.side_effect
-    matter_client.connect.side_effect = InvalidServerVersion("Invalid version")
+    matter_client.connect.side_effect = connect_side_effect
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -432,10 +537,9 @@ async def test_issue_registry_invalid_version(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_reg = ir.async_get(hass)
     entry_state = entry.state
     assert entry_state is ConfigEntryState.SETUP_RETRY
-    assert issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
 
     matter_client.connect.side_effect = original_connect_side_effect
 
@@ -443,18 +547,209 @@ async def test_issue_registry_invalid_version(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_reg.async_get_issue(DOMAIN, "invalid_server_version")
+    assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+
+def _mock_network_interface(
+    *, enabled: bool, connected: bool, ipv6_method: InterfaceMethod | None
+) -> MagicMock:
+    """Build a mock Supervisor network interface."""
+    interface = MagicMock()
+    interface.enabled = enabled
+    interface.connected = connected
+    interface.ipv6 = None if ipv6_method is None else MagicMock(method=ipv6_method)
+    return interface
+
+
+@pytest.mark.parametrize(
+    ("interfaces", "issue_expected"),
+    [
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ],
+            True,
+            id="ipv6_disabled",
+        ),
+        pytest.param(
+            [_mock_network_interface(enabled=True, connected=True, ipv6_method=None)],
+            True,
+            id="no_ipv6_config",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                )
+            ],
+            False,
+            id="ipv6_auto",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.STATIC
+                )
+            ],
+            False,
+            id="ipv6_static",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                ),
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                ),
+            ],
+            False,
+            id="ipv6_enabled_on_secondary_interface",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=False, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ],
+            False,
+            id="no_connected_interface",
+        ),
+    ],
+)
+async def test_ipv6_disabled_repair(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    interfaces: list[MagicMock],
+    issue_expected: bool,
+) -> None:
+    """Test repair issue when IPv6 is disabled in Supervisor network settings."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(interfaces=interfaces)
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+    assert (issue is not None) is issue_expected
+
+
+async def test_ipv6_repair_not_raised_without_supervisor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair is skipped when not running on Supervisor."""
+    with patch(
+        "homeassistant.components.matter.get_supervisor_client"
+    ) as get_supervisor_client:
+        entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    get_supervisor_client.assert_not_called()
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_supervisor_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair handles Supervisor errors gracefully."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(side_effect=SupervisorError("boom"))
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_resolves_on_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair is removed once IPv6 is enabled again."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ]
+        )
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+        supervisor_client.network.info.return_value = MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                )
+            ]
+        )
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
 @pytest.mark.parametrize(
     ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
-        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
+        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
     ],
 )
 async def test_stop_addon(
-    hass,
+    hass: HomeAssistant,
     matter_client: MagicMock,
     addon_installed: AsyncMock,
     addon_running: AsyncMock,
@@ -462,7 +757,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
-):
+) -> None:
     """Test stop the Matter add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
     entry = MockConfigEntry(
@@ -487,9 +782,9 @@ async def test_stop_addon(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == entry_state
+    assert entry.state is entry_state
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
 
 
 async def test_remove_entry(
@@ -528,15 +823,15 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_matter_server_1.0.0", "addons": ["core_matter_server"]},
-        partial=True,
+        PartialBackupOptions(
+            name="addon_core_matter_server_1.0.0", addons={"core_matter_server"}
+        ),
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_matter_server")
+    assert uninstall_addon.call_args == call("core_matter_server")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -546,17 +841,17 @@ async def test_remove_entry(
     # test add-on stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    stop_addon.side_effect = HassioAPIError()
+    stop_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Matter Server add-on" in caplog.text
+    assert "Failed to stop the Matter Server app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -565,22 +860,22 @@ async def test_remove_entry(
     # test create backup failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    create_backup.side_effect = HassioAPIError()
+    create_backup.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_matter_server_1.0.0", "addons": ["core_matter_server"]},
-        partial=True,
+        PartialBackupOptions(
+            name="addon_core_matter_server_1.0.0", addons={"core_matter_server"}
+        ),
     )
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a backup of the Matter Server add-on" in caplog.text
+    assert "Failed to create a backup of the Matter Server app" in caplog.text
     create_backup.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -589,27 +884,25 @@ async def test_remove_entry(
     # test add-on uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    uninstall_addon.side_effect = HassioAPIError()
+    uninstall_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_matter_server")
+    assert stop_addon.call_args == call("core_matter_server")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_matter_server_1.0.0", "addons": ["core_matter_server"]},
-        partial=True,
+        PartialBackupOptions(
+            name="addon_core_matter_server_1.0.0", addons={"core_matter_server"}
+        ),
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_matter_server")
+    assert uninstall_addon.call_args == call("core_matter_server")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to uninstall the Matter Server add-on" in caplog.text
+    assert "Failed to uninstall the Matter Server app" in caplog.text
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -633,15 +926,7 @@ async def test_remove_config_entry_device(
     assert hass.states.get(entity_id)
 
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -650,8 +935,6 @@ async def test_remove_config_entry_device(
     assert not hass.states.get(entity_id)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device_no_node(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -670,16 +953,242 @@ async def test_remove_config_entry_device_no_node(
     )
 
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
     assert response["success"]
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
+
+
+@pytest.mark.parametrize(
+    ("matter_ws_url", "expected"),
+    [
+        ("ws://localhost:5580/ws", "ws://localhost:5580/ble"),
+        ("wss://example.com/ws", "wss://example.com/ble"),
+        ("ws://localhost:5580/", "ws://localhost:5580/ble"),
+        ("ws://localhost:5580", "ws://localhost:5580/ble"),
+        ("ws://ws.example.com:5580/ws", "ws://ws.example.com:5580/ble"),
+        ("ws://localhost:5580/custom/ws", "ws://localhost:5580/custom/ble"),
+        ("ws://localhost:5580/api", None),
+        ("ws://localhost:5580/matter", None),
+    ],
+)
+def test_derive_ble_proxy_url(matter_ws_url: str, expected: str | None) -> None:
+    """Derived /ble URL preserves scheme/host/port and only swaps the trailing path.
+
+    Returns None when the path does not match the expected `/ws` shape.
+    """
+    assert _derive_ble_proxy_url(matter_ws_url) == expected
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_setup_when_enabled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy is created with the derived `/ble` URL and connected."""
+    proxy, factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    factory.assert_called_once_with(hass, "ws://localhost:5580/ble")
+    proxy.connect.assert_awaited_once()
+    assert entry.runtime_data.ble_proxy is proxy
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    proxy.disconnect.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_disconnects_on_setup_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy + matter_client are disconnected when setup raises after connect."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.matter.MatterAdapter.setup_nodes",
+        AsyncMock(side_effect=RuntimeError("boom")),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    proxy.connect.assert_awaited_once()
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_disconnect_on_hass_stop(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy is disconnected when Home Assistant stops."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    proxy.disconnect.assert_not_awaited()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_disconnect_failure_does_not_break_hass_stop(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """A BLE proxy disconnect failure must not prevent matter_client.disconnect()."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+    proxy.disconnect.side_effect = RuntimeError("boom")
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
+async def test_ble_proxy_skipped_when_disabled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """BLE proxy is not constructed when ble_proxy_enabled is False/missing.
+
+    With ble_proxy_enabled False the lazy `from .ble_proxy import ...` is never
+    executed, so we only assert the runtime_data side-effect, not the import.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+
+
+@pytest.mark.parametrize(
+    "connect_error",
+    [ConnectionError("boom"), OSError("boom"), RuntimeError("boom")],
+)
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_connect_failure_does_not_block_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+    connect_error: Exception,
+) -> None:
+    """Setup succeeds with ble_proxy=None when the proxy connect raises."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+    proxy.connect.side_effect = connect_error
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+    proxy.disconnect.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("ble_proxy_connect_timeout", "mock_bluetooth_loaded")
+async def test_ble_proxy_connect_timeout_does_not_block_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """Setup succeeds with ble_proxy=None when proxy connect times out."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    async def hang() -> None:
+        await asyncio.Event().wait()
+
+    proxy.connect.side_effect = hang
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+
+
+async def test_ble_proxy_skipped_when_bluetooth_not_loaded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """BLE proxy is skipped (with a warning) when the bluetooth integration is not loaded."""
+    proxy, factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    factory.assert_not_called()
+    proxy.connect.assert_not_awaited()
+    assert entry.runtime_data.ble_proxy is None
+    assert "bluetooth integration is not loaded" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_bluetooth_loaded")
+async def test_ble_proxy_skipped_when_url_underivable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """BLE proxy is skipped (with a warning) when the WS URL has a non-`/ws` path."""
+    proxy, factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/api"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    factory.assert_not_called()
+    proxy.connect.assert_not_awaited()
+    assert entry.runtime_data.ble_proxy is None
+    assert "BLE proxy will not be used" in caplog.text

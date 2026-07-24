@@ -1,17 +1,15 @@
 """Config flow for solax integration."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from solax import real_time_api
 from solax.discovery import DiscoveryError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
@@ -39,12 +37,13 @@ async def validate_api(data) -> str:
     return response.serial_number
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Solax."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
         if user_input is None:
@@ -54,9 +53,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             serial_number = await validate_api(user_input)
-        except (ConnectionError, DiscoveryError):
+        except ConnectionError, DiscoveryError:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

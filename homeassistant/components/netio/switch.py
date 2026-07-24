@@ -1,17 +1,19 @@
 """The Netio switch component."""
-from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynetio import Netio
 import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,7 +23,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,7 +36,7 @@ CONF_OUTLETS = "outlets"
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = "admin"
-Device = namedtuple("Device", ["netio", "entities"])
+Device = namedtuple("Device", ["netio", "entities"])  # noqa: PYI024
 DEVICES: dict[str, Device] = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -43,7 +45,7 @@ REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 
 URL_API_NETIO_EP = "/api/netio/{host}"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -105,7 +107,7 @@ class NetioApiView(HomeAssistantView):
         states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
 
         for i in range(1, 5):
-            out = "output%d" % i
+            out = f"output{i}"
             states.append(data.get(f"{out}_state") == STATE_ON)
             consumptions.append(float(data.get(f"{out}_consumption", 0)))
             cumulated_consumptions.append(
@@ -144,19 +146,23 @@ class NetioSwitch(SwitchEntity):
         self.netio = netio
 
     @property
+    @override
     def name(self):
         """Return the device's name."""
         return self._name
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return not hasattr(self, "telnet")
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         self._set(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         self._set(False)
@@ -164,12 +170,14 @@ class NetioSwitch(SwitchEntity):
     def _set(self, value):
         val = list("uuuu")
         val[int(self.outlet) - 1] = "1" if value else "0"
-        self.netio.get("port list %s" % "".join(val))
+        val = "".join(val)
+        self.netio.get(f"port list {val}")
         self.netio.states[int(self.outlet) - 1] = value
         self.schedule_update_ha_state()
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return the switch's status."""
         return self.netio.states[int(self.outlet) - 1]
 

@@ -1,21 +1,24 @@
 """Support for Free Mobile SMS platform."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any, override
 
 from freesms import FreeClient
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_ACCESS_TOKEN): cv.string}
 )
 
@@ -36,7 +39,8 @@ class FreeSMSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.free_client = FreeClient(username, access_token)
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Free Mobile user cell."""
         resp = self.free_client.send_sms(message)
 

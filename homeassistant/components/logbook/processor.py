@@ -1,23 +1,24 @@
 """Event parser and human readable log generator."""
-from __future__ import annotations
 
-from collections.abc import Callable, Generator, Sequence
-from contextlib import suppress
-from dataclasses import dataclass
+from collections.abc import Callable, Collection, Generator, Mapping, Sequence
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 import logging
-from typing import Any
+import time
+from typing import TYPE_CHECKING, Any
 
+from lru import LRU
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
+from sqlalchemy.orm import Session
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
+    decode_attributes_from_source,
     extract_event_type_ids,
     extract_metadata_ids,
-    process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import (
@@ -36,7 +37,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.collection import chunked_or_all
+from homeassistant.util.event_type import EventType
 
 from .const import (
     ATTR_MESSAGE,
@@ -51,6 +54,8 @@ from .const import (
     CONTEXT_STATE,
     CONTEXT_USER_ID,
     DOMAIN,
+    EXPOSED_STATE_ATTRIBUTES,
+    LOGBOOK_ENTRY_ATTRIBUTES,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_ICON,
@@ -61,11 +66,36 @@ from .const import (
     LOGBOOK_ENTRY_WHEN,
 )
 from .helpers import is_sensor_continuous
-from .models import EventAsRow, LazyEventPartialState, LogbookConfig, async_event_to_row
+from .models import (
+    ATTRIBUTES_POS,
+    CONTEXT_ID_BIN_POS,
+    CONTEXT_ONLY_POS,
+    CONTEXT_PARENT_ID_BIN_POS,
+    CONTEXT_POS,
+    CONTEXT_USER_ID_BIN_POS,
+    ENTITY_ID_POS,
+    EVENT_TYPE_POS,
+    ICON_POS,
+    ROW_ID_POS,
+    STATE_POS,
+    TIME_FIRED_TS_POS,
+    EventAsRow,
+    LazyEventPartialState,
+    LogbookConfig,
+    async_event_to_row,
+)
 from .queries import statement_for_request
-from .queries.common import PSEUDO_EVENT_STATE_CHANGED
+from .queries.common import (
+    PSEUDO_EVENT_STATE_CHANGED,
+    select_context_user_ids_for_context_ids,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Bound for the parent-context user-id cache — only needs to bridge the
+# historical→live handoff, so the in-flight set is realistically ~tens with
+# peak bursts of ~100. Ceiling bounds memory in pathological cases.
+MAX_CONTEXT_USER_IDS_CACHE = 256
 
 
 @dataclass(slots=True)
@@ -74,13 +104,22 @@ class LogbookRun:
 
     context_lookup: dict[bytes | None, Row | EventAsRow | None]
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ]
     event_cache: EventCache
     entity_name_cache: EntityNameCache
     include_entity_name: bool
-    format_time: Callable[[Row | EventAsRow], Any]
+    timestamp: bool
     memoize_new_contexts: bool = True
+    # True when this run will switch to a live stream; gates population of
+    # context_user_ids (wasted work for one-shot REST/get_events callers).
+    for_live_stream: bool = False
+    # context_id -> user_id for parent context attribution; persisted across
+    # batches so child rows can inherit user_id from a parent seen earlier.
+    context_user_ids: LRU[bytes, bytes] = field(
+        default_factory=lambda: LRU(MAX_CONTEXT_USER_IDS_CACHE)
+    )
 
 
 class EventProcessor:
@@ -89,17 +128,18 @@ class EventProcessor:
     def __init__(
         self,
         hass: HomeAssistant,
-        event_types: tuple[str, ...],
+        event_types: Collection[EventType[Any] | str],
         entity_ids: list[str] | None = None,
         device_ids: list[str] | None = None,
         context_id: str | None = None,
         timestamp: bool = False,
         include_entity_name: bool = True,
+        for_live_stream: bool = False,
     ) -> None:
         """Init the event stream."""
-        assert not (
-            context_id and (entity_ids or device_ids)
-        ), "can't pass in both context_id and (entity_ids or device_ids)"
+        assert not (context_id and (entity_ids or device_ids)), (
+            "can't pass in both context_id and (entity_ids or device_ids)"
+        )
         self.hass = hass
         self.ent_reg = er.async_get(hass)
         self.event_types = event_types
@@ -108,16 +148,14 @@ class EventProcessor:
         self.context_id = context_id
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         self.filters: Filters | None = logbook_config.sqlalchemy_filter
-        format_time = (
-            _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
-        )
         self.logbook_run = LogbookRun(
             context_lookup={None: None},
             external_events=logbook_config.external_events,
             event_cache=EventCache({}),
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
-            format_time=format_time,
+            timestamp=timestamp,
+            for_live_stream=for_live_stream,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
 
@@ -165,110 +203,248 @@ class EventProcessor:
                 self.filters,
                 self.context_id,
             )
-            return self.humanify(
-                execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            rows = execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            query_parent_user_ids: dict[bytes, bytes] | None = None
+            if self.entity_ids or self.device_ids:
+                # Filtered queries exclude parent call_service rows for
+                # unrelated targets, so child contexts lose user attribution
+                # without a pre-pass. all_stmt already includes them.
+                rows = list(rows)
+                query_parent_user_ids = self._fetch_parent_user_ids(
+                    session, rows, instance.max_bind_vars
+                )
+            return self.humanify(rows, query_parent_user_ids)
+
+    def _fetch_parent_user_ids(
+        self,
+        session: Session,
+        rows: list[Row],
+        max_bind_vars: int,
+    ) -> dict[bytes, bytes] | None:
+        """Resolve parent-context user_ids for rows in a filtered query.
+
+        Done in Python rather than as a SQL union branch because the
+        context_parent_id_bin column is sparsely populated — scanning the
+        States table for non-null parents costs ~40% of the overall query
+        on real datasets. Here we collect only the parent ids we actually
+        need and fetch them via an indexed point-lookup on context_id_bin.
+        """
+        cache = self.logbook_run.context_user_ids
+        pending: set[bytes] = {
+            parent_id
+            for row in rows
+            if (parent_id := row[CONTEXT_PARENT_ID_BIN_POS]) and parent_id not in cache
+        }
+        if not pending:
+            return None
+        query_parent_user_ids: dict[bytes, bytes] = {}
+        # The lambda statement unions events and states, so each id appears
+        # in two IN clauses — halve the chunk size to stay under the
+        # database's max bind variable count.
+        for pending_chunk in chunked_or_all(pending, max_bind_vars // 2):
+            # Schema allows NULL but the query's WHERE clauses exclude it;
+            # explicit checks satisfy the type checker.
+            query_parent_user_ids.update(
+                {
+                    parent_id: user_id
+                    for parent_id, user_id in execute_stmt_lambda_element(
+                        session,
+                        select_context_user_ids_for_context_ids(pending_chunk),
+                        orm_rows=False,
+                    )
+                    if parent_id is not None and user_id is not None
+                }
             )
+        if self.logbook_run.for_live_stream:
+            cache.update(query_parent_user_ids)
+        return query_parent_user_ids
 
     def humanify(
-        self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result
-    ) -> list[dict[str, str]]:
+        self,
+        rows: Generator[EventAsRow] | Sequence[Row] | Result,
+        query_parent_user_ids: dict[bytes, bytes] | None = None,
+    ) -> list[dict[str, Any]]:
         """Humanify rows."""
         return list(
             _humanify(
+                self.hass,
                 rows,
                 self.ent_reg,
                 self.logbook_run,
                 self.context_augmenter,
+                query_parent_user_ids,
             )
         )
 
 
+def _exposed_state_attributes(
+    row: Row | EventAsRow, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Return the allowlisted state attributes for a state change row."""
+    attributes: Mapping[str, Any] | None
+    if type(row) is EventAsRow:
+        attributes = row[ATTRIBUTES_POS]
+    else:
+        attributes = decode_attributes_from_source(row[ATTRIBUTES_POS], attr_cache)
+    if not attributes:
+        return {}
+    return {
+        name: attributes[name]
+        for name in EXPOSED_STATE_ATTRIBUTES
+        if name in attributes
+    }
+
+
 def _humanify(
-    rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
+    hass: HomeAssistant,
+    rows: Generator[EventAsRow] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
-) -> Generator[dict[str, Any], None, None]:
+    query_parent_user_ids: dict[bytes, bytes] | None,
+) -> Generator[dict[str, Any]]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
     context_lookup = logbook_run.context_lookup
     external_events = logbook_run.external_events
-    event_cache = logbook_run.event_cache
-    entity_name_cache = logbook_run.entity_name_cache
+    event_cache_get = logbook_run.event_cache.get
+    entity_name_cache_get = logbook_run.entity_name_cache.get
     include_entity_name = logbook_run.include_entity_name
-    format_time = logbook_run.format_time
+    timestamp = logbook_run.timestamp
     memoize_new_contexts = logbook_run.memoize_new_contexts
-    memoize_context = context_lookup.setdefault
+    get_context = context_augmenter.get_context
+    context_id_bin: bytes
+    data: dict[str, Any]
+    # Decode each shared attribute set only once per run.
+    attr_cache: dict[str, dict[str, Any]] = {}
+
+    context_user_ids = logbook_run.context_user_ids
+    # Skip the LRU write on one-shot runs — the LogbookRun is discarded.
+    populate_context_user_ids = logbook_run.for_live_stream
 
     # Process rows
     for row in rows:
-        context_id_bin: bytes = row.context_id_bin
-        if memoize_new_contexts:
-            memoize_context(context_id_bin, row)
-        if row.context_only:
+        context_id_bin = row[CONTEXT_ID_BIN_POS]
+        if memoize_new_contexts and context_id_bin not in context_lookup:
+            context_lookup[context_id_bin] = row
+        if (
+            populate_context_user_ids
+            and (context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS])
+            and context_id_bin not in context_user_ids
+        ):
+            context_user_ids[context_id_bin] = context_user_id_bin
+        if row[CONTEXT_ONLY_POS]:
             continue
-        event_type = row.event_type
-
+        event_type = row[EVENT_TYPE_POS]
         if event_type == EVENT_CALL_SERVICE:
             continue
+
         if event_type is PSEUDO_EVENT_STATE_CHANGED:
-            entity_id = row.entity_id
-            assert entity_id is not None
+            entity_id = row[ENTITY_ID_POS]
+            if TYPE_CHECKING:
+                assert entity_id is not None
             # Skip continuous sensors
             if (
                 is_continuous := continuous_sensors.get(entity_id)
             ) is None and split_entity_id(entity_id)[0] == SENSOR_DOMAIN:
-                is_continuous = is_sensor_continuous(ent_reg, entity_id)
+                is_continuous = is_sensor_continuous(hass, ent_reg, entity_id)
                 continuous_sensors[entity_id] = is_continuous
             if is_continuous:
                 continue
 
             data = {
-                LOGBOOK_ENTRY_WHEN: format_time(row),
-                LOGBOOK_ENTRY_STATE: row.state,
+                LOGBOOK_ENTRY_STATE: row[STATE_POS],
                 LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
             if include_entity_name:
-                data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id)
-            if icon := row.icon:
+                data[LOGBOOK_ENTRY_NAME] = entity_name_cache_get(entity_id)
+            if icon := row[ICON_POS]:
                 data[LOGBOOK_ENTRY_ICON] = icon
-
-            context_augmenter.augment(data, row, context_id_bin)
-            yield data
+            if exposed := _exposed_state_attributes(row, attr_cache):
+                data[LOGBOOK_ENTRY_ATTRIBUTES] = exposed
 
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]
             try:
-                data = describe_event(event_cache.get(row))
-            except Exception:  # pylint: disable=broad-except
+                data = describe_event(event_cache_get(row))
+            except Exception:
                 _LOGGER.exception(
                     "Error with %s describe event for %s", domain, event_type
                 )
                 continue
-            data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, row, context_id_bin)
-            yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
-            event = event_cache.get(row)
+            event = event_cache_get(row)
             if not (event_data := event.data):
                 continue
             entry_domain = event_data.get(ATTR_DOMAIN)
             entry_entity_id = event_data.get(ATTR_ENTITY_ID)
             if entry_domain is None and entry_entity_id is not None:
-                with suppress(IndexError):
-                    entry_domain = split_entity_id(str(entry_entity_id))[0]
+                entry_domain = split_entity_id(str(entry_entity_id))[0]
             data = {
-                LOGBOOK_ENTRY_WHEN: format_time(row),
                 LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
                 LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, row, context_id_bin)
-            yield data
+
+        else:
+            continue
+
+        row_time_fired_ts = row[TIME_FIRED_TS_POS]
+        # Explicit None check: 0.0 is a valid epoch.
+        time_fired_ts: float = (
+            row_time_fired_ts if row_time_fired_ts is not None else time.time()
+        )
+        if timestamp:
+            when: str | float = time_fired_ts
+        else:
+            when = process_timestamp_to_utc_isoformat(
+                dt_util.utc_from_timestamp(time_fired_ts)
+            )
+        data[LOGBOOK_ENTRY_WHEN] = when
+
+        if context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS]:
+            data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(context_user_id_bin)
+
+        # Augment context if its available but not if the context is the same as the row
+        # or if the context is the parent of the row
+        if (context_row := get_context(context_id_bin, row)) and not (
+            (row is context_row or _rows_ids_match(row, context_row))
+            and (
+                not (context_parent := row[CONTEXT_PARENT_ID_BIN_POS])
+                or not (context_row := get_context(context_parent, context_row))
+                or row is context_row
+                or _rows_ids_match(row, context_row)
+            )
+        ):
+            context_augmenter.augment(data, context_row)
+
+        # Fall back to the parent context for child contexts that inherit
+        # user attribution (e.g., generic_thermostat -> switch turn_on).
+        # Read from context_lookup directly instead of get_context() to
+        # avoid the origin_event fallback which would return the *child*
+        # row's origin event, not the parent's.
+        if CONTEXT_USER_ID not in data and (
+            context_parent_id_bin := row[CONTEXT_PARENT_ID_BIN_POS]
+        ):
+            parent_user_id_bin: bytes | None = context_user_ids.get(
+                context_parent_id_bin
+            )
+            if parent_user_id_bin is None and query_parent_user_ids is not None:
+                parent_user_id_bin = query_parent_user_ids.get(context_parent_id_bin)
+            if (
+                parent_user_id_bin is None
+                and (parent_row := context_lookup.get(context_parent_id_bin))
+                is not None
+            ):
+                parent_user_id_bin = parent_row[CONTEXT_USER_ID_BIN_POS]
+            if parent_user_id_bin:
+                data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(parent_user_id_bin)
+
+        yield data
 
 
 class ContextAugmenter:
@@ -282,52 +458,28 @@ class ContextAugmenter:
         self.event_cache = logbook_run.event_cache
         self.include_entity_name = logbook_run.include_entity_name
 
-    def _get_context_row(
-        self, context_id_bin: bytes | None, row: Row | EventAsRow
+    def get_context(
+        self, context_id_bin: bytes | None, row: Row | EventAsRow | None
     ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
         if context_id_bin is not None and (
             context_row := self.context_lookup.get(context_id_bin)
         ):
             return context_row
-        if (context := getattr(row, "context", None)) is not None and (
-            origin_event := context.origin_event
-        ) is not None:
+        if (
+            type(row) is EventAsRow
+            and (context := row[CONTEXT_POS]) is not None
+            and (origin_event := context.origin_event) is not None
+        ):
             return async_event_to_row(origin_event)
         return None
 
-    def augment(
-        self, data: dict[str, Any], row: Row | EventAsRow, context_id_bin: bytes | None
-    ) -> None:
+    def augment(self, data: dict[str, Any], context_row: Row | EventAsRow) -> None:
         """Augment data from the row and cache."""
-        if context_user_id_bin := row.context_user_id_bin:
-            data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(context_user_id_bin)
-
-        if not (context_row := self._get_context_row(context_id_bin, row)):
-            return
-
-        if _rows_match(row, context_row):
-            # This is the first event with the given ID. Was it directly caused by
-            # a parent event?
-            context_parent_id_bin = row.context_parent_id_bin
-            if (
-                not context_parent_id_bin
-                or (
-                    context_row := self._get_context_row(
-                        context_parent_id_bin, context_row
-                    )
-                )
-                is None
-            ):
-                return
-            # Ensure the (parent) context_event exists and is not the root cause of
-            # this log entry.
-            if _rows_match(row, context_row):
-                return
-        event_type = context_row.event_type
+        event_type = context_row[EVENT_TYPE_POS]
         # State change
-        if context_entity_id := context_row.entity_id:
-            data[CONTEXT_STATE] = context_row.state
+        if context_entity_id := context_row[ENTITY_ID_POS]:
+            data[CONTEXT_STATE] = context_row[STATE_POS]
             data[CONTEXT_ENTITY_ID] = context_entity_id
             if self.include_entity_name:
                 data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
@@ -353,7 +505,7 @@ class ContextAugmenter:
         event = self.event_cache.get(context_row)
         try:
             described = describe_event(event)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error with %s describe event for %s", domain, event_type)
             return
         if name := described.get(LOGBOOK_ENTRY_NAME):
@@ -370,23 +522,9 @@ class ContextAugmenter:
             data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(attr_entity_id)
 
 
-def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
+def _rows_ids_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
-    return bool(
-        row is other_row or (row_id := row.row_id) and row_id == other_row.row_id
-    )
-
-
-def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
-    """Convert the row timed_fired to isoformat."""
-    return process_timestamp_to_utc_isoformat(
-        dt_util.utc_from_timestamp(row.time_fired_ts) or dt_util.utcnow()
-    )
-
-
-def _row_time_fired_timestamp(row: Row | EventAsRow) -> float:
-    """Convert the row timed_fired to timestamp."""
-    return row.time_fired_ts or process_datetime_to_timestamp(dt_util.utcnow())
+    return bool((row_id := row[ROW_ID_POS]) and row_id == other_row[ROW_ID_POS])
 
 
 class EntityNameCache:
@@ -425,7 +563,7 @@ class EventCache:
 
     def get(self, row: EventAsRow | Row) -> LazyEventPartialState:
         """Get the event from the row."""
-        if isinstance(row, EventAsRow):
+        if type(row) is EventAsRow:  # - this is never subclassed
             return LazyEventPartialState(row, self._event_data_cache)
         if event := self.event_cache.get(row):
             return event

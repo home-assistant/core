@@ -1,16 +1,19 @@
 """UniFi Network services."""
+
 from collections.abc import Mapping
 from typing import Any
 
+import aiounifi
 from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 SERVICE_REMOVE_CLIENTS = "remove_clients"
@@ -41,18 +44,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     for service in SUPPORTED_SERVICES:
         hass.services.async_register(
-            UNIFI_DOMAIN,
+            DOMAIN,
             service,
             async_call_unifi_service,
             schema=SERVICE_TO_SCHEMA.get(service),
         )
-
-
-@callback
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload UniFi Network services."""
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_remove(UNIFI_DOMAIN, service)
 
 
 async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
@@ -61,7 +57,10 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
     device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
 
     if device_entry is None:
-        return
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="reconnect_client_device_not_found",
+        )
 
     mac = ""
     for connection in device_entry.connections:
@@ -70,33 +69,42 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
             break
 
     if mac == "":
-        return
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="reconnect_client_no_mac",
+        )
 
-    for controller in hass.data[UNIFI_DOMAIN].values():
+    for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if (
-            not controller.available
-            or (client := controller.api.clients.get(mac)) is None
+            (not (hub := config_entry.runtime_data).available)
+            or (client := hub.api.clients.get(mac)) is None
             or client.is_wired
         ):
             continue
 
-        await controller.api.request(ClientReconnectRequest.create(mac))
+        try:
+            await hub.api.request(ClientReconnectRequest.create(mac))
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reconnect_client_request_failed",
+            ) from err
 
 
 async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
-    """Remove select clients from controller.
+    """Remove select clients from UniFi Network.
 
     Validates based on:
     - Total time between first seen and last seen is less than 15 minutes.
     - Neither IP, hostname nor name is configured.
     """
-    for controller in hass.data[UNIFI_DOMAIN].values():
-        if not controller.available:
+    for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if not (hub := config_entry.runtime_data).available:
             continue
 
         clients_to_remove = []
 
-        for client in controller.api.clients_all.values():
+        for client in hub.api.clients_all.values():
             if (
                 client.last_seen
                 and client.first_seen
@@ -110,4 +118,10 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
             clients_to_remove.append(client.mac)
 
         if clients_to_remove:
-            await controller.api.request(ClientRemoveRequest.create(clients_to_remove))
+            try:
+                await hub.api.request(ClientRemoveRequest.create(clients_to_remove))
+            except aiounifi.AiounifiException as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="remove_clients_request_failed",
+                ) from err

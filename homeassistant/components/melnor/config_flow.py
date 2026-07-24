@@ -1,21 +1,18 @@
 """Config flow for melnor."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, MANUFACTURER_DATA_START, MANUFACTURER_ID
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MelnorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for melnor."""
 
     VERSION = 1
@@ -25,7 +22,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_address: str
         self._discovered_addresses: list[str] = []
 
-    def _create_entry(self, address: str) -> FlowResult:
+    def _create_entry(self, address: str) -> ConfigFlowResult:
         """Create an entry for a discovered device."""
 
         return self.async_create_entry(
@@ -37,7 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered device."""
 
         if user_input is not None:
@@ -48,9 +45,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._discovered_address},
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
 
         address = discovery_info.address
@@ -65,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the step to pick discovered device."""
 
         if user_input is not None:
@@ -76,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self._create_entry(address)
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(
             self.hass, connectable=True
         ):
@@ -106,9 +104,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(addresses)}),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         return await self.async_step_pick_device()

@@ -1,8 +1,7 @@
 """Helpers to setup multi-factor auth module."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -10,27 +9,11 @@ import voluptuous_serialize
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.data_entry_flow import FlowContext
+from homeassistant.helpers import config_validation as cv
+from homeassistant.util.hass_dict import HassKey
 
-WS_TYPE_SETUP_MFA = "auth/setup_mfa"
-SCHEMA_WS_SETUP_MFA = vol.All(
-    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {
-            vol.Required("type"): WS_TYPE_SETUP_MFA,
-            vol.Exclusive("mfa_module_id", "module_or_flow_id"): str,
-            vol.Exclusive("flow_id", "module_or_flow_id"): str,
-            vol.Optional("user_input"): object,
-        }
-    ),
-    cv.has_at_least_one_key("mfa_module_id", "flow_id"),
-)
-
-WS_TYPE_DEPOSE_MFA = "auth/depose_mfa"
-SCHEMA_WS_DEPOSE_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_DEPOSE_MFA, vol.Required("mfa_module_id"): str}
-)
-
-DATA_SETUP_FLOW_MGR = "auth_mfa_setup_flow_manager"
+DATA_SETUP_FLOW_MGR: HassKey[MfaFlowManager] = HassKey("auth_mfa_setup_flow_manager")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,11 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 class MfaFlowManager(data_entry_flow.FlowManager):
     """Manage multi factor authentication flows."""
 
+    @override
     async def async_create_flow(  # type: ignore[override]
         self,
         handler_key: str,
         *,
-        context: dict[str, Any],
+        context: FlowContext | None,
         data: dict[str, Any],
     ) -> data_entry_flow.FlowHandler:
         """Create a setup flow. handler is a mfa module."""
@@ -53,28 +37,42 @@ class MfaFlowManager(data_entry_flow.FlowManager):
         user_id = data.pop("user_id")
         return await mfa_module.async_setup_flow(user_id)
 
+    @override
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
-        """Complete an mfs setup flow."""
+        """Complete an mfa setup flow.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
         _LOGGER.debug("flow_result: %s", result)
         return result
 
 
-async def async_setup(hass: HomeAssistant) -> None:
+@callback
+def async_setup(hass: HomeAssistant) -> None:
     """Init mfa setup flow manager."""
     hass.data[DATA_SETUP_FLOW_MGR] = MfaFlowManager(hass)
 
-    websocket_api.async_register_command(
-        hass, WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA
-    )
-
-    websocket_api.async_register_command(
-        hass, WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA
-    )
+    websocket_api.async_register_command(hass, websocket_setup_mfa)
+    websocket_api.async_register_command(hass, websocket_depose_mfa)
 
 
 @callback
+@websocket_api.websocket_command(
+    vol.All(
+        vol.Schema(
+            {
+                vol.Required("type"): "auth/setup_mfa",
+                vol.Exclusive("mfa_module_id", "module_or_flow_id"): str,
+                vol.Exclusive("flow_id", "module_or_flow_id"): str,
+                vol.Optional("user_input"): object,
+            }
+        ),
+        cv.has_at_least_one_key("mfa_module_id", "flow_id"),
+    )
+)
 @websocket_api.ws_require_user(allow_system_user=False)
 def websocket_setup_mfa(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
@@ -83,7 +81,7 @@ def websocket_setup_mfa(
 
     async def async_setup_flow(msg: dict[str, Any]) -> None:
         """Return a setup flow for mfa auth module."""
-        flow_manager: MfaFlowManager = hass.data[DATA_SETUP_FLOW_MGR]
+        flow_manager = hass.data[DATA_SETUP_FLOW_MGR]
 
         if (flow_id := msg.get("flow_id")) is not None:
             result = await flow_manager.async_configure(flow_id, msg.get("user_input"))
@@ -113,6 +111,9 @@ def websocket_setup_mfa(
 
 
 @callback
+@websocket_api.websocket_command(
+    {vol.Required("type"): "auth/depose_mfa", vol.Required("mfa_module_id"): str}
+)
 @websocket_api.ws_require_user(allow_system_user=False)
 def websocket_depose_mfa(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
@@ -141,20 +142,15 @@ def websocket_depose_mfa(
     hass.async_create_task(async_depose(msg))
 
 
-def _prepare_result_json(
-    result: data_entry_flow.FlowResult,
-) -> data_entry_flow.FlowResult:
-    """Convert result to JSON."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-        data = result.copy()
-        return data
+def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
+    """Convert result to JSON serializable dict."""
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
+        return dict(result)
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
+        return result  # type: ignore[return-value]
 
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
-        return result
-
-    data = result.copy()
-
-    if (schema := data["data_schema"]) is None:
+    data = dict(result)
+    if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)

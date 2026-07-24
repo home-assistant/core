@@ -1,11 +1,14 @@
 """Support for Pilight binary sensors."""
-from __future__ import annotations
 
 import datetime
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
@@ -20,13 +23,13 @@ from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .. import pilight
+from . import EVENT, EVENT_TYPE
 
 CONF_VARIABLE = "variable"
 CONF_RESET_DELAY_SEC = "reset_delay_sec"
 
 DEFAULT_NAME = "Pilight Binary Sensor"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_VARIABLE): cv.string,
         vol.Required(CONF_PAYLOAD): vol.Schema(dict),
@@ -42,6 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+type _PAYLOAD_SET_TYPE = str | int | float
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -55,12 +60,12 @@ def setup_platform(
             [
                 PilightTriggerSensor(
                     hass=hass,
-                    name=config.get(CONF_NAME),
-                    variable=config.get(CONF_VARIABLE),
-                    payload=config.get(CONF_PAYLOAD),
-                    on_value=config.get(CONF_PAYLOAD_ON),
-                    off_value=config.get(CONF_PAYLOAD_OFF),
-                    rst_dly_sec=config.get(CONF_RESET_DELAY_SEC),
+                    name=config[CONF_NAME],
+                    variable=config[CONF_VARIABLE],
+                    payload=config[CONF_PAYLOAD],
+                    on_value=config[CONF_PAYLOAD_ON],
+                    off_value=config[CONF_PAYLOAD_OFF],
+                    rst_dly_sec=config[CONF_RESET_DELAY_SEC],
                 )
             ]
         )
@@ -69,11 +74,11 @@ def setup_platform(
             [
                 PilightBinarySensor(
                     hass=hass,
-                    name=config.get(CONF_NAME),
-                    variable=config.get(CONF_VARIABLE),
-                    payload=config.get(CONF_PAYLOAD),
-                    on_value=config.get(CONF_PAYLOAD_ON),
-                    off_value=config.get(CONF_PAYLOAD_OFF),
+                    name=config[CONF_NAME],
+                    variable=config[CONF_VARIABLE],
+                    payload=config[CONF_PAYLOAD],
+                    on_value=config[CONF_PAYLOAD_ON],
+                    off_value=config[CONF_PAYLOAD_OFF],
                 )
             ]
         )
@@ -82,29 +87,27 @@ def setup_platform(
 class PilightBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
-    def __init__(self, hass, name, variable, payload, on_value, off_value):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        name: str,
+        variable: str,
+        payload: dict[str, Any],
+        on_value: _PAYLOAD_SET_TYPE,
+        off_value: _PAYLOAD_SET_TYPE,
+    ) -> None:
         """Initialize the sensor."""
-        self._state = False
+        self._attr_is_on = False
         self._hass = hass
-        self._name = name
+        self._attr_name = name
         self._variable = variable
         self._payload = payload
         self._on_value = on_value
         self._off_value = off_value
 
-        hass.bus.listen(pilight.EVENT, self._handle_code)
+        hass.bus.listen(EVENT, self._handle_code)
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._state
-
-    def _handle_code(self, call):
+    def _handle_code(self, call: EVENT_TYPE) -> None:
         """Handle received code by the pilight-daemon.
 
         If the code matches the defined payload
@@ -124,7 +127,7 @@ class PilightBinarySensor(BinarySensorEntity):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
-            self._state = value == self._on_value
+            self._attr_is_on = value == self._on_value
             self.schedule_update_ha_state()
 
 
@@ -132,38 +135,35 @@ class PilightTriggerSensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
     def __init__(
-        self, hass, name, variable, payload, on_value, off_value, rst_dly_sec=30
-    ):
+        self,
+        hass: HomeAssistant,
+        name: str,
+        variable: str,
+        payload: dict[str, Any],
+        on_value: _PAYLOAD_SET_TYPE,
+        off_value: _PAYLOAD_SET_TYPE,
+        rst_dly_sec: int,
+    ) -> None:
         """Initialize the sensor."""
-        self._state = False
+        self._attr_is_on = False
         self._hass = hass
-        self._name = name
+        self._attr_name = name
         self._variable = variable
         self._payload = payload
         self._on_value = on_value
         self._off_value = off_value
         self._reset_delay_sec = rst_dly_sec
-        self._delay_after = None
+        self._delay_after: datetime.datetime | None = None
         self._hass = hass
 
-        hass.bus.listen(pilight.EVENT, self._handle_code)
+        hass.bus.listen(EVENT, self._handle_code)
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._state
-
-    def _reset_state(self, call):
-        self._state = False
+    def _reset_state(self, _: datetime.datetime) -> None:
+        self._attr_is_on = False
         self._delay_after = None
         self.schedule_update_ha_state()
 
-    def _handle_code(self, call):
+    def _handle_code(self, call: EVENT_TYPE) -> None:
         """Handle received code by the pilight-daemon.
 
         If the code matches the defined payload
@@ -183,7 +183,7 @@ class PilightTriggerSensor(BinarySensorEntity):
             if self._variable not in call.data:
                 return
             value = call.data[self._variable]
-            self._state = value == self._on_value
+            self._attr_is_on = value == self._on_value
             if self._delay_after is None:
                 self._delay_after = dt_util.utcnow() + datetime.timedelta(
                     seconds=self._reset_delay_sec

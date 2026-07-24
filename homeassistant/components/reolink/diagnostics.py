@@ -1,0 +1,67 @@
+"""Diagnostics support for Reolink."""
+
+from typing import Any
+
+from homeassistant.core import HomeAssistant
+
+from .util import ReolinkConfigEntry, ReolinkData
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+    reolink_data: ReolinkData = config_entry.runtime_data
+    host = reolink_data.host
+    api = host.api
+
+    ipc_cam: dict[int, dict[str, Any]] = {}
+    for ch in api.channels:
+        ipc_cam[ch] = {}
+        ipc_cam[ch]["model"] = api.camera_model(ch)
+        ipc_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
+        ipc_cam[ch]["firmware version"] = api.camera_sw_version(ch)
+        ipc_cam[ch]["encoding main"] = await api.get_encoding(ch)
+        if (signal := api.wifi_signal(ch)) is not None and api.wifi_connection(ch):
+            ipc_cam[ch]["WiFi signal"] = signal
+
+    chimes: dict[int, dict[str, Any]] = {}
+    for chime in api.chime_list:
+        chimes[chime.dev_id] = {}
+        chimes[chime.dev_id]["channel"] = chime.channel
+        chimes[chime.dev_id]["name"] = chime.name
+        chimes[chime.dev_id]["online"] = chime.online
+        chimes[chime.dev_id]["event_types"] = chime.chime_event_types
+
+    return {
+        "model": api.model,
+        "hardware version": api.hardware_version,
+        "firmware version": api.sw_version,
+        "HTTPS": api.use_https,
+        "HTTP(S) port": api.port,
+        "Baichuan port": api.baichuan.port,
+        "Baichuan only": api.baichuan_only,
+        "Baichuan connection": api.baichuan.connection_type.value,
+        "WiFi connection": api.wifi_connection(),
+        "WiFi signal": api.wifi_signal(),
+        "RTMP enabled": api.rtmp_enabled,
+        "RTSP enabled": api.rtsp_enabled,
+        "ONVIF enabled": api.onvif_enabled,
+        "event connection": host.event_connection,
+        "stream protocol": api.protocol,
+        "is NVR": api.is_nvr,
+        "is Hub": api.is_hub,
+        "is Battery": api.is_battery,
+        "channels": api.channels,
+        "stream channels": api.stream_channels,
+        "IPC cams": ipc_cam,
+        "Chimes": chimes,
+        "Broken cmds": api.broken_cmds,
+        "Baichuan fallbacks": api.baichuan_cmds,
+        "capabilities": api.capabilities,
+        "cmd list": host.update_cmd,
+        "firmware ch list": host.firmware_ch_list,
+        "api versions": api.checked_api_versions,
+        "abilities": api.abilities,
+        "BC_abilities": api.baichuan.abilities,
+    }

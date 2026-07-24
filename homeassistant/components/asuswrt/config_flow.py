@@ -1,20 +1,18 @@
 """Config flow to configure the AsusWrt integration."""
 
-from __future__ import annotations
-
 import logging
 import os
 import socket
-from typing import Any, cast
+from typing import Any, cast, override
 
-from pyasuswrt import AsusWrtError
+from asusrouter import AsusRouterError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -25,7 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -38,6 +36,7 @@ from .bridge import AsusWrtBridge
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
+    CONF_MORE_OPTIONS,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
@@ -59,9 +58,6 @@ ALLOWED_PROTOCOL = [
     PROTOCOL_HTTP,
     PROTOCOL_TELNET,
 ]
-
-PASS_KEY = "pass_key"
-PASS_KEY_MSG = "Only provide password or SSH key file"
 
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_SUCCESS = "success"
@@ -139,24 +135,15 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config_data: dict[str, Any] = {}
 
     @callback
-    def _show_setup_form(self, error: str | None = None) -> FlowResult:
+    def _show_setup_form(self, error: str | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
         user_input = self._config_data
 
-        if self.show_advanced_options:
-            add_schema = {
-                vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
-                vol.Optional(CONF_PORT): cv.port,
-                vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
-            }
-        else:
-            add_schema = {vol.Required(CONF_PASSWORD): str}
-
         schema = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            **add_schema,
+            vol.Optional(CONF_PASSWORD): str,
             vol.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),
@@ -164,6 +151,15 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                 SelectSelectorConfig(
                     options=ALLOWED_PROTOCOL, translation_key="protocols"
                 )
+            ),
+            vol.Required(CONF_MORE_OPTIONS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_PORT): cv.port,
+                        vol.Optional(CONF_SSH_KEY): str,
+                    }
+                ),
+                SectionConfig(collapsed=True),
             ),
         }
 
@@ -174,12 +170,12 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_check_connection(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, str | int]
     ) -> tuple[str, str | None]:
         """Attempt to connect the AsusWrt router."""
 
         api: AsusWrtBridge
-        host: str = user_input[CONF_HOST]
+        host = user_input[CONF_HOST]
         protocol = user_input[CONF_PROTOCOL]
         error: str | None = None
 
@@ -188,7 +184,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api.async_connect()
 
-        except (AsusWrtError, OSError):
+        except AsusRouterError, OSError:
             _LOGGER.error(
                 "Error connecting to the AsusWrt router at %s using protocol %s",
                 host,
@@ -196,7 +192,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             error = RESULT_CONN_ERROR
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with AsusWrt router at %s using protocol %s",
                 host,
@@ -216,7 +212,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         if error is not None:
             return error, None
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Successfully connected to the AsusWrt router at %s using protocol %s",
             host,
             protocol,
@@ -226,9 +222,10 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return RESULT_SUCCESS, unique_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
         # if there's one entry without unique ID, we abort config flow
@@ -239,6 +236,10 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
+        user_input = user_input.copy()
+        more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+        user_input.update(more_options)
+
         self._config_data = user_input
         pwd: str | None = user_input.get(CONF_PASSWORD)
         ssh: str | None = user_input.get(CONF_SSH_KEY)
@@ -248,6 +249,8 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(error="pwd_required")
         if not (pwd or ssh):
             return self._show_setup_form(error="pwd_or_ssh")
+        if pwd and ssh:
+            return self._show_setup_form(error="pwd_and_ssh")
         if ssh and not await self.hass.async_add_executor_job(_is_file, ssh):
             return self._show_setup_form(error="ssh_not_file")
 
@@ -276,7 +279,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_legacy(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow for legacy settings."""
         if user_input is None:
             return self.async_show_form(step_id="legacy", data_schema=LEGACY_SCHEMA)
@@ -284,7 +287,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config_data.update(user_input)
         return await self._async_save_entry()
 
-    async def _async_save_entry(self) -> FlowResult:
+    async def _async_save_entry(self) -> ConfigFlowResult:
         """Save entry data if unique id is valid."""
         return self.async_create_entry(
             title=self._config_data[CONF_HOST],
@@ -293,6 +296,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

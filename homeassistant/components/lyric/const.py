@@ -1,11 +1,12 @@
 """Constants for the Honeywell Lyric integration."""
+
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 
 DOMAIN = "lyric"
 
-OAUTH2_AUTHORIZE = "https://api.honeywell.com/oauth2/authorize"
-OAUTH2_TOKEN = "https://api.honeywell.com/oauth2/token"
+OAUTH2_AUTHORIZE = "https://api.honeywellhome.com/oauth2/authorize"
+OAUTH2_TOKEN = "https://api.honeywellhome.com/oauth2/token"
 
 PRESET_NO_HOLD = "NoHold"
 PRESET_TEMPORARY_HOLD = "TemporaryHold"

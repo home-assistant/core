@@ -1,0 +1,986 @@
+{
+  "collaborative": false,
+  "external_urls": {
+    "spotify": "https://open.spotify.com/playlist/3cEYpjA9oz9GiPac4AsH4n"
+  },
+  "followers": {
+    "href": null,
+    "total": 562
+  },
+  "href": "https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n?locale=en-US%2Cen%3Bq%3D0.5",
+  "id": "3cEYpjA9oz9GiPac4AsH4n",
+  "images": [
+    {
+      "url": "https://i.scdn.co/image/ab67706c0000da848d0ce13d55f634e290f744ba",
+      "height": null,
+      "width": null
+    }
+  ],
+  "primary_color": null,
+  "name": "Spotify Web API Testing playlist",
+  "description": "A playlist for testing pourposes",
+  "type": "playlist",
+  "uri": "spotify:playlist:3cEYpjA9oz9GiPac4AsH4n",
+  "owner": {
+    "href": "https://api.spotify.com/v1/users/jmperezperez",
+    "id": "jmperezperez",
+    "type": "user",
+    "uri": "spotify:user:jmperezperez",
+    "display_name": "JMPerez²",
+    "external_urls": {
+      "spotify": "https://open.spotify.com/user/jmperezperez"
+    }
+  },
+  "public": true,
+  "snapshot_id": "MTgsZWFmNmZiNTIzYTg4ODM0OGQzZWQzOGI4NTdkNTJlMjU0OWFkYTUxMA==",
+  "tracks": {
+    "limit": 100,
+    "next": null,
+    "offset": 0,
+    "previous": null,
+    "href": "https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n/tracks?offset=0&limit=100&locale=en-US%2Cen%3Bq%3D0.5",
+    "total": 5,
+    "items": [
+      {
+        "added_at": "2015-01-15T12:39:22Z",
+        "primary_color": null,
+        "video_thumbnail": {
+          "url": null
+        },
+        "is_local": false,
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/jmperezperez"
+          },
+          "id": "jmperezperez",
+          "type": "user",
+          "uri": "spotify:user:jmperezperez",
+          "href": "https://api.spotify.com/v1/users/jmperezperez"
+        },
+        "track": {
+          "preview_url": "https://p.scdn.co/mp3-preview/04599a1fe12ffac01d2bcb08340f84c0dd2cc335?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "explicit": false,
+          "type": "track",
+          "episode": false,
+          "track": true,
+          "album": {
+            "type": "album",
+            "album_type": "compilation",
+            "href": "https://api.spotify.com/v1/albums/2pANdqPvxInB0YvcDiw4ko",
+            "id": "2pANdqPvxInB0YvcDiw4ko",
+            "images": [
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000b273ce6d0eef0c1ce77e5f95bbbc",
+                "width": 640,
+                "height": 640
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00001e02ce6d0eef0c1ce77e5f95bbbc",
+                "width": 300,
+                "height": 300
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00004851ce6d0eef0c1ce77e5f95bbbc",
+                "width": 64,
+                "height": 64
+              }
+            ],
+            "name": "Progressive Psy Trance Picks Vol.8",
+            "release_date": "2012-04-02",
+            "release_date_precision": "day",
+            "uri": "spotify:album:2pANdqPvxInB0YvcDiw4ko",
+            "artists": [
+              {
+                "external_urls": {
+                  "spotify": "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                },
+                "href": "https://api.spotify.com/v1/artists/0LyfQWJT6nXafLPZqxe9Of",
+                "id": "0LyfQWJT6nXafLPZqxe9Of",
+                "name": "Various Artists",
+                "type": "artist",
+                "uri": "spotify:artist:0LyfQWJT6nXafLPZqxe9Of"
+              }
+            ],
+            "external_urls": {
+              "spotify": "https://open.spotify.com/album/2pANdqPvxInB0YvcDiw4ko"
+            },
+            "total_tracks": 20
+          },
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/6eSdhw46riw2OUHgMwR8B5"
+              },
+              "href": "https://api.spotify.com/v1/artists/6eSdhw46riw2OUHgMwR8B5",
+              "id": "6eSdhw46riw2OUHgMwR8B5",
+              "name": "Odiseo",
+              "type": "artist",
+              "uri": "spotify:artist:6eSdhw46riw2OUHgMwR8B5"
+            }
+          ],
+          "disc_number": 1,
+          "track_number": 10,
+          "duration_ms": 376000,
+          "external_ids": {
+            "isrc": "DEKC41200989"
+          },
+          "external_urls": {
+            "spotify": "https://open.spotify.com/track/4rzfv0JLZfVhOhbSQ8o5jZ"
+          },
+          "href": "https://api.spotify.com/v1/tracks/4rzfv0JLZfVhOhbSQ8o5jZ",
+          "id": "4rzfv0JLZfVhOhbSQ8o5jZ",
+          "name": "Api",
+          "popularity": 2,
+          "uri": "spotify:track:4rzfv0JLZfVhOhbSQ8o5jZ",
+          "is_local": false
+        }
+      },
+      {
+        "added_at": "2015-01-15T12:40:03Z",
+        "primary_color": null,
+        "video_thumbnail": {
+          "url": null
+        },
+        "is_local": false,
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/jmperezperez"
+          },
+          "id": "jmperezperez",
+          "type": "user",
+          "uri": "spotify:user:jmperezperez",
+          "href": "https://api.spotify.com/v1/users/jmperezperez"
+        },
+        "track": {
+          "preview_url": "https://p.scdn.co/mp3-preview/d61fbb7016904624373008ea056d45e6df891071?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "available_markets": [],
+          "explicit": false,
+          "type": "track",
+          "episode": false,
+          "track": true,
+          "album": {
+            "available_markets": [],
+            "type": "album",
+            "album_type": "compilation",
+            "href": "https://api.spotify.com/v1/albums/6nlfkk5GoXRL1nktlATNsy",
+            "id": "6nlfkk5GoXRL1nktlATNsy",
+            "images": [
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000b273aa2ff29970d9a63a49dfaeb2",
+                "width": 640,
+                "height": 640
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00001e02aa2ff29970d9a63a49dfaeb2",
+                "width": 300,
+                "height": 300
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00004851aa2ff29970d9a63a49dfaeb2",
+                "width": 64,
+                "height": 64
+              }
+            ],
+            "name": "Wellness & Dreaming Source",
+            "release_date": "2015-01-09",
+            "release_date_precision": "day",
+            "uri": "spotify:album:6nlfkk5GoXRL1nktlATNsy",
+            "artists": [
+              {
+                "external_urls": {
+                  "spotify": "https://open.spotify.com/artist/0LyfQWJT6nXafLPZqxe9Of"
+                },
+                "href": "https://api.spotify.com/v1/artists/0LyfQWJT6nXafLPZqxe9Of",
+                "id": "0LyfQWJT6nXafLPZqxe9Of",
+                "name": "Various Artists",
+                "type": "artist",
+                "uri": "spotify:artist:0LyfQWJT6nXafLPZqxe9Of"
+              }
+            ],
+            "external_urls": {
+              "spotify": "https://open.spotify.com/album/6nlfkk5GoXRL1nktlATNsy"
+            },
+            "total_tracks": 25
+          },
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/5VQE4WOzPu9h3HnGLuBoA6"
+              },
+              "href": "https://api.spotify.com/v1/artists/5VQE4WOzPu9h3HnGLuBoA6",
+              "id": "5VQE4WOzPu9h3HnGLuBoA6",
+              "name": "Vlasta Marek",
+              "type": "artist",
+              "uri": "spotify:artist:5VQE4WOzPu9h3HnGLuBoA6"
+            }
+          ],
+          "disc_number": 1,
+          "track_number": 21,
+          "duration_ms": 730066,
+          "external_ids": {
+            "isrc": "FR2X41475057"
+          },
+          "external_urls": {
+            "spotify": "https://open.spotify.com/track/5o3jMYOSbaVz3tkgwhELSV"
+          },
+          "href": "https://api.spotify.com/v1/tracks/5o3jMYOSbaVz3tkgwhELSV",
+          "id": "5o3jMYOSbaVz3tkgwhELSV",
+          "name": "Is",
+          "popularity": 0,
+          "uri": "spotify:track:5o3jMYOSbaVz3tkgwhELSV",
+          "is_local": false
+        }
+      },
+      {
+        "added_at": "2015-01-15T12:22:30Z",
+        "primary_color": null,
+        "video_thumbnail": {
+          "url": null
+        },
+        "is_local": false,
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/jmperezperez"
+          },
+          "id": "jmperezperez",
+          "type": "user",
+          "uri": "spotify:user:jmperezperez",
+          "href": "https://api.spotify.com/v1/users/jmperezperez"
+        },
+        "track": {
+          "preview_url": "https://p.scdn.co/mp3-preview/cc680ec0f5fd5ff21f0cd11ac47e10d3cbb92190?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "explicit": false,
+          "type": "track",
+          "episode": false,
+          "track": true,
+          "album": {
+            "type": "album",
+            "album_type": "album",
+            "href": "https://api.spotify.com/v1/albums/4hnqM0JK4CM1phwfq1Ldyz",
+            "id": "4hnqM0JK4CM1phwfq1Ldyz",
+            "images": [
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000b273ee0d0dce888c6c8a70db6e8b",
+                "width": 640,
+                "height": 640
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00001e02ee0d0dce888c6c8a70db6e8b",
+                "width": 300,
+                "height": 300
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00004851ee0d0dce888c6c8a70db6e8b",
+                "width": 64,
+                "height": 64
+              }
+            ],
+            "name": "This Is Happening",
+            "release_date": "2010-05-17",
+            "release_date_precision": "day",
+            "uri": "spotify:album:4hnqM0JK4CM1phwfq1Ldyz",
+            "artists": [
+              {
+                "external_urls": {
+                  "spotify": "https://open.spotify.com/artist/066X20Nz7iquqkkCW6Jxy6"
+                },
+                "href": "https://api.spotify.com/v1/artists/066X20Nz7iquqkkCW6Jxy6",
+                "id": "066X20Nz7iquqkkCW6Jxy6",
+                "name": "LCD Soundsystem",
+                "type": "artist",
+                "uri": "spotify:artist:066X20Nz7iquqkkCW6Jxy6"
+              }
+            ],
+            "external_urls": {
+              "spotify": "https://open.spotify.com/album/4hnqM0JK4CM1phwfq1Ldyz"
+            },
+            "total_tracks": 9
+          },
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/066X20Nz7iquqkkCW6Jxy6"
+              },
+              "href": "https://api.spotify.com/v1/artists/066X20Nz7iquqkkCW6Jxy6",
+              "id": "066X20Nz7iquqkkCW6Jxy6",
+              "name": "LCD Soundsystem",
+              "type": "artist",
+              "uri": "spotify:artist:066X20Nz7iquqkkCW6Jxy6"
+            }
+          ],
+          "disc_number": 1,
+          "track_number": 4,
+          "duration_ms": 401440,
+          "external_ids": {
+            "isrc": "US4GE1000022"
+          },
+          "external_urls": {
+            "spotify": "https://open.spotify.com/track/4Cy0NHJ8Gh0xMdwyM9RkQm"
+          },
+          "href": "https://api.spotify.com/v1/tracks/4Cy0NHJ8Gh0xMdwyM9RkQm",
+          "id": "4Cy0NHJ8Gh0xMdwyM9RkQm",
+          "name": "All I Want",
+          "popularity": 45,
+          "uri": "spotify:track:4Cy0NHJ8Gh0xMdwyM9RkQm",
+          "is_local": false
+        }
+      },
+      {
+        "added_at": "2015-01-15T12:40:35Z",
+        "primary_color": null,
+        "video_thumbnail": {
+          "url": null
+        },
+        "is_local": false,
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/jmperezperez"
+          },
+          "id": "jmperezperez",
+          "type": "user",
+          "uri": "spotify:user:jmperezperez",
+          "href": "https://api.spotify.com/v1/users/jmperezperez"
+        },
+        "track": {
+          "preview_url": "https://p.scdn.co/mp3-preview/d6ecf1f98d0b1fdc8c535de8e2010d0d8b8d040b?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "explicit": false,
+          "type": "track",
+          "episode": false,
+          "track": true,
+          "album": {
+            "type": "album",
+            "album_type": "album",
+            "href": "https://api.spotify.com/v1/albums/2usKFntxa98WHMcyW6xJBz",
+            "id": "2usKFntxa98WHMcyW6xJBz",
+            "images": [
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000b2738b7447ac3daa1da18811cf7b",
+                "width": 640,
+                "height": 640
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00001e028b7447ac3daa1da18811cf7b",
+                "width": 300,
+                "height": 300
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d000048518b7447ac3daa1da18811cf7b",
+                "width": 64,
+                "height": 64
+              }
+            ],
+            "name": "Glenn Horiuchi Trio / Gelenn Horiuchi Quartet: Mercy / Jump Start / Endpoints / Curl Out / Earthworks / Mind Probe / Null Set / Another Space (A)",
+            "release_date": "2011-04-01",
+            "release_date_precision": "day",
+            "uri": "spotify:album:2usKFntxa98WHMcyW6xJBz",
+            "artists": [
+              {
+                "external_urls": {
+                  "spotify": "https://open.spotify.com/artist/272ArH9SUAlslQqsSgPJA2"
+                },
+                "href": "https://api.spotify.com/v1/artists/272ArH9SUAlslQqsSgPJA2",
+                "id": "272ArH9SUAlslQqsSgPJA2",
+                "name": "Glenn Horiuchi Trio",
+                "type": "artist",
+                "uri": "spotify:artist:272ArH9SUAlslQqsSgPJA2"
+              }
+            ],
+            "external_urls": {
+              "spotify": "https://open.spotify.com/album/2usKFntxa98WHMcyW6xJBz"
+            },
+            "total_tracks": 8
+          },
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/272ArH9SUAlslQqsSgPJA2"
+              },
+              "href": "https://api.spotify.com/v1/artists/272ArH9SUAlslQqsSgPJA2",
+              "id": "272ArH9SUAlslQqsSgPJA2",
+              "name": "Glenn Horiuchi Trio",
+              "type": "artist",
+              "uri": "spotify:artist:272ArH9SUAlslQqsSgPJA2"
+            }
+          ],
+          "disc_number": 1,
+          "track_number": 2,
+          "duration_ms": 358760,
+          "external_ids": {
+            "isrc": "USB8U1025969"
+          },
+          "external_urls": {
+            "spotify": "https://open.spotify.com/track/6hvFrZNocdt2FcKGCSY5NI"
+          },
+          "href": "https://api.spotify.com/v1/tracks/6hvFrZNocdt2FcKGCSY5NI",
+          "id": "6hvFrZNocdt2FcKGCSY5NI",
+          "name": "Endpoints",
+          "popularity": 0,
+          "uri": "spotify:track:6hvFrZNocdt2FcKGCSY5NI",
+          "is_local": false
+        }
+      },
+      {
+        "added_at": "2015-01-15T12:41:10Z",
+        "primary_color": null,
+        "video_thumbnail": {
+          "url": null
+        },
+        "is_local": false,
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/jmperezperez"
+          },
+          "id": "jmperezperez",
+          "type": "user",
+          "uri": "spotify:user:jmperezperez",
+          "href": "https://api.spotify.com/v1/users/jmperezperez"
+        },
+        "track": {
+          "preview_url": "https://p.scdn.co/mp3-preview/47b974e463b1e862c7b3c18fa2ceedc513f2106b?cid=c7c59b798aab4892ac040a25f7dd1575",
+          "available_markets": [],
+          "explicit": false,
+          "type": "track",
+          "episode": false,
+          "track": true,
+          "album": {
+            "available_markets": [],
+            "type": "album",
+            "album_type": "album",
+            "href": "https://api.spotify.com/v1/albums/0ivM6kSawaug0j3tZVusG2",
+            "id": "0ivM6kSawaug0j3tZVusG2",
+            "images": [
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000b27304e57d181ff062f8339d6c71",
+                "width": 640,
+                "height": 640
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d00001e0204e57d181ff062f8339d6c71",
+                "width": 300,
+                "height": 300
+              },
+              {
+                "url": "https://i.scdn.co/image/ab67616d0000485104e57d181ff062f8339d6c71",
+                "width": 64,
+                "height": 64
+              }
+            ],
+            "name": "All The Best (Spanish Version)",
+            "release_date": "2007-01-01",
+            "release_date_precision": "day",
+            "uri": "spotify:album:0ivM6kSawaug0j3tZVusG2",
+            "artists": [
+              {
+                "external_urls": {
+                  "spotify": "https://open.spotify.com/artist/2KftmGt9sk1yLjsAoloC3M"
+                },
+                "href": "https://api.spotify.com/v1/artists/2KftmGt9sk1yLjsAoloC3M",
+                "id": "2KftmGt9sk1yLjsAoloC3M",
+                "name": "Zucchero",
+                "type": "artist",
+                "uri": "spotify:artist:2KftmGt9sk1yLjsAoloC3M"
+              }
+            ],
+            "external_urls": {
+              "spotify": "https://open.spotify.com/album/0ivM6kSawaug0j3tZVusG2"
+            },
+            "total_tracks": 18
+          },
+          "artists": [
+            {
+              "external_urls": {
+                "spotify": "https://open.spotify.com/artist/2KftmGt9sk1yLjsAoloC3M"
+              },
+              "href": "https://api.spotify.com/v1/artists/2KftmGt9sk1yLjsAoloC3M",
+              "id": "2KftmGt9sk1yLjsAoloC3M",
+              "name": "Zucchero",
+              "type": "artist",
+              "uri": "spotify:artist:2KftmGt9sk1yLjsAoloC3M"
+            }
+          ],
+          "disc_number": 1,
+          "track_number": 18,
+          "duration_ms": 176093,
+          "external_ids": {
+            "isrc": "ITUM70701043"
+          },
+          "external_urls": {
+            "spotify": "https://open.spotify.com/track/2E2znCPaS8anQe21GLxcvJ"
+          },
+          "href": "https://api.spotify.com/v1/tracks/2E2znCPaS8anQe21GLxcvJ",
+          "id": "2E2znCPaS8anQe21GLxcvJ",
+          "name": "You Are So Beautiful",
+          "popularity": 0,
+          "uri": "spotify:track:2E2znCPaS8anQe21GLxcvJ",
+          "is_local": false
+        }
+      },
+      {
+        "added_at": "2024-11-28T11:20:58Z",
+        "added_by": {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/1112264649"
+          },
+          "href": "https://api.spotify.com/v1/users/1112264649",
+          "id": "1112264649",
+          "type": "user",
+          "uri": "spotify:user:1112264649"
+        },
+        "is_local": false,
+        "primary_color": null,
+        "track": {
+          "explicit": false,
+          "audio_preview_url": "https://podz-content.spotifycdn.com/audio/clips/06lRxUmh8UNVTByuyxLYqh/clip_132296_192296.mp3",
+          "description": "Patreon: https://www.patreon.com/safetythirdMerch: https://safetythird.shopYouTube: https://www.youtube.com/@safetythird/Advertising Inquiries: https://redcircle.com/brandsPrivacy & Opt-Out: https://redcircle.com/privacy",
+          "duration_ms": 3690161,
+          "episode": true,
+          "external_urls": {
+            "spotify": "https://open.spotify.com/episode/3o0RYoo5iOMKSmEbunsbvW"
+          },
+          "href": "https://api.spotify.com/v1/episodes/3o0RYoo5iOMKSmEbunsbvW",
+          "html_description": "<p>Patreon: https://www.patreon.com/safetythird</p><p>Merch: https://safetythird.shop</p><p>YouTube: https://www.youtube.com/&#64;safetythird/</p><br /><br />Advertising Inquiries: <a href=\"https://redcircle.com/brands\" rel=\"nofollow\">https://redcircle.com/brands</a><br /><br />Privacy &amp; Opt-Out: <a href=\"https://redcircle.com/privacy\" rel=\"nofollow\">https://redcircle.com/privacy</a>",
+          "id": "3o0RYoo5iOMKSmEbunsbvW",
+          "images": [
+            {
+              "height": 640,
+              "url": "https://i.scdn.co/image/ab6765630000ba8ac7bedd27a4413b1abf926d8a",
+              "width": 640
+            },
+            {
+              "height": 300,
+              "url": "https://i.scdn.co/image/ab67656300005f1fc7bedd27a4413b1abf926d8a",
+              "width": 300
+            },
+            {
+              "height": 64,
+              "url": "https://i.scdn.co/image/ab6765630000f68dc7bedd27a4413b1abf926d8a",
+              "width": 64
+            }
+          ],
+          "is_externally_hosted": false,
+          "language": "en-US",
+          "languages": ["en-US"],
+          "name": "My Squirrel Has Brain Damage - Safety Third 119",
+          "release_date": "2024-07-26",
+          "release_date_precision": "day",
+          "available_markets": [
+            "AR",
+            "AU",
+            "AT",
+            "BE",
+            "BO",
+            "BR",
+            "BG",
+            "CA",
+            "CL",
+            "CO",
+            "CR",
+            "CY",
+            "CZ",
+            "DK",
+            "DO",
+            "DE",
+            "EC",
+            "EE",
+            "SV",
+            "FI",
+            "FR",
+            "GR",
+            "GT",
+            "HN",
+            "HK",
+            "HU",
+            "IS",
+            "IE",
+            "IT",
+            "LV",
+            "LT",
+            "LU",
+            "MY",
+            "MT",
+            "MX",
+            "NL",
+            "NZ",
+            "NI",
+            "NO",
+            "PA",
+            "PY",
+            "PE",
+            "PH",
+            "PL",
+            "PT",
+            "SG",
+            "SK",
+            "ES",
+            "SE",
+            "CH",
+            "TW",
+            "TR",
+            "UY",
+            "US",
+            "GB",
+            "AD",
+            "LI",
+            "MC",
+            "ID",
+            "JP",
+            "TH",
+            "VN",
+            "RO",
+            "IL",
+            "ZA",
+            "SA",
+            "AE",
+            "BH",
+            "QA",
+            "OM",
+            "KW",
+            "EG",
+            "MA",
+            "DZ",
+            "TN",
+            "LB",
+            "JO",
+            "PS",
+            "IN",
+            "BY",
+            "KZ",
+            "MD",
+            "UA",
+            "AL",
+            "BA",
+            "HR",
+            "ME",
+            "MK",
+            "RS",
+            "SI",
+            "KR",
+            "BD",
+            "PK",
+            "LK",
+            "GH",
+            "KE",
+            "NG",
+            "TZ",
+            "UG",
+            "AG",
+            "AM",
+            "BS",
+            "BB",
+            "BZ",
+            "BT",
+            "BW",
+            "BF",
+            "CV",
+            "CW",
+            "DM",
+            "FJ",
+            "GM",
+            "GE",
+            "GD",
+            "GW",
+            "GY",
+            "HT",
+            "JM",
+            "KI",
+            "LS",
+            "LR",
+            "MW",
+            "MV",
+            "ML",
+            "MH",
+            "FM",
+            "NA",
+            "NR",
+            "NE",
+            "PW",
+            "PG",
+            "PR",
+            "WS",
+            "SM",
+            "ST",
+            "SN",
+            "SC",
+            "SL",
+            "SB",
+            "KN",
+            "LC",
+            "VC",
+            "SR",
+            "TL",
+            "TO",
+            "TT",
+            "TV",
+            "VU",
+            "AZ",
+            "BN",
+            "BI",
+            "KH",
+            "CM",
+            "TD",
+            "KM",
+            "GQ",
+            "SZ",
+            "GA",
+            "GN",
+            "KG",
+            "LA",
+            "MO",
+            "MR",
+            "MN",
+            "NP",
+            "RW",
+            "TG",
+            "UZ",
+            "ZW",
+            "BJ",
+            "MG",
+            "MU",
+            "MZ",
+            "AO",
+            "CI",
+            "DJ",
+            "ZM",
+            "CD",
+            "CG",
+            "IQ",
+            "LY",
+            "TJ",
+            "VE",
+            "ET",
+            "XK"
+          ],
+          "show": {
+            "available_markets": [
+              "AR",
+              "AU",
+              "AT",
+              "BE",
+              "BO",
+              "BR",
+              "BG",
+              "CA",
+              "CL",
+              "CO",
+              "CR",
+              "CY",
+              "CZ",
+              "DK",
+              "DO",
+              "DE",
+              "EC",
+              "EE",
+              "SV",
+              "FI",
+              "FR",
+              "GR",
+              "GT",
+              "HN",
+              "HK",
+              "HU",
+              "IS",
+              "IE",
+              "IT",
+              "LV",
+              "LT",
+              "LU",
+              "MY",
+              "MT",
+              "MX",
+              "NL",
+              "NZ",
+              "NI",
+              "NO",
+              "PA",
+              "PY",
+              "PE",
+              "PH",
+              "PL",
+              "PT",
+              "SG",
+              "SK",
+              "ES",
+              "SE",
+              "CH",
+              "TW",
+              "TR",
+              "UY",
+              "US",
+              "GB",
+              "AD",
+              "LI",
+              "MC",
+              "ID",
+              "JP",
+              "TH",
+              "VN",
+              "RO",
+              "IL",
+              "ZA",
+              "SA",
+              "AE",
+              "BH",
+              "QA",
+              "OM",
+              "KW",
+              "EG",
+              "MA",
+              "DZ",
+              "TN",
+              "LB",
+              "JO",
+              "PS",
+              "IN",
+              "BY",
+              "KZ",
+              "MD",
+              "UA",
+              "AL",
+              "BA",
+              "HR",
+              "ME",
+              "MK",
+              "RS",
+              "SI",
+              "KR",
+              "BD",
+              "PK",
+              "LK",
+              "GH",
+              "KE",
+              "NG",
+              "TZ",
+              "UG",
+              "AG",
+              "AM",
+              "BS",
+              "BB",
+              "BZ",
+              "BT",
+              "BW",
+              "BF",
+              "CV",
+              "CW",
+              "DM",
+              "FJ",
+              "GM",
+              "GE",
+              "GD",
+              "GW",
+              "GY",
+              "HT",
+              "JM",
+              "KI",
+              "LS",
+              "LR",
+              "MW",
+              "MV",
+              "ML",
+              "MH",
+              "FM",
+              "NA",
+              "NR",
+              "NE",
+              "PW",
+              "PG",
+              "PR",
+              "WS",
+              "SM",
+              "ST",
+              "SN",
+              "SC",
+              "SL",
+              "SB",
+              "KN",
+              "LC",
+              "VC",
+              "SR",
+              "TL",
+              "TO",
+              "TT",
+              "TV",
+              "VU",
+              "AZ",
+              "BN",
+              "BI",
+              "KH",
+              "CM",
+              "TD",
+              "KM",
+              "GQ",
+              "SZ",
+              "GA",
+              "GN",
+              "KG",
+              "LA",
+              "MO",
+              "MR",
+              "MN",
+              "NP",
+              "RW",
+              "TG",
+              "UZ",
+              "ZW",
+              "BJ",
+              "MG",
+              "MU",
+              "MZ",
+              "AO",
+              "CI",
+              "DJ",
+              "ZM",
+              "CD",
+              "CG",
+              "IQ",
+              "LY",
+              "TJ",
+              "VE",
+              "ET",
+              "XK"
+            ],
+            "copyrights": [],
+            "description": "Safety Third is a weekly show hosted by William Osman, NileRed, The Backyard Scientist, Allen Pan, and a couple other YouTube \"Scientists\". Sometimes we have guests, sometimes it's just us, but always: safety is our number three priority.",
+            "explicit": true,
+            "external_urls": {
+              "spotify": "https://open.spotify.com/show/1Y9ExMgMxoBVrgrfU7u0nD"
+            },
+            "href": "https://api.spotify.com/v1/shows/1Y9ExMgMxoBVrgrfU7u0nD",
+            "html_description": "<p>Safety Third is a weekly show hosted by William Osman, NileRed, The Backyard Scientist, Allen Pan, and a couple other YouTube &#34;Scientists&#34;. Sometimes we have guests, sometimes it&#39;s just us, but always: safety is our number three priority.</p>",
+            "id": "1Y9ExMgMxoBVrgrfU7u0nD",
+            "images": [
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab6765630000ba8ac7bedd27a4413b1abf926d8a",
+                "width": 640
+              },
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67656300005f1fc7bedd27a4413b1abf926d8a",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab6765630000f68dc7bedd27a4413b1abf926d8a",
+                "width": 64
+              }
+            ],
+            "is_externally_hosted": false,
+            "languages": ["en-US"],
+            "media_type": "audio",
+            "name": "Safety Third",
+            "publisher": "Safety Third ",
+            "total_episodes": 120,
+            "type": "show",
+            "uri": "spotify:show:1Y9ExMgMxoBVrgrfU7u0nD"
+          },
+          "track": false,
+          "type": "episode",
+          "uri": "spotify:episode:3o0RYoo5iOMKSmEbunsbvW"
+        },
+        "video_thumbnail": {
+          "url": null
+        }
+      }
+    ]
+  }
+}

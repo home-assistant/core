@@ -1,5 +1,5 @@
 """Mobile app websocket API."""
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from functools import wraps
 from typing import Any
@@ -26,7 +26,8 @@ def _ensure_webhook_access(func):
     @callback
     @wraps(func)
     def with_webhook_access(hass, connection, msg):
-        # Validate that the webhook ID is registered to the user of the websocket connection
+        # Validate that the webhook ID is registered to
+        # the user of the websocket connection
         config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(msg["webhook_id"])
 
         if config_entry is None:
@@ -110,9 +111,6 @@ async def handle_push_notification_channel(
         """Handle teardown."""
         if registered_channels.get(webhook_id) == channel:
             registered_channels.pop(webhook_id)
-
-        # Remove subscription from connection if still exists
-        connection.subscriptions.pop(msg["id"], None)
 
     channel = registered_channels[webhook_id] = PushChannel(
         hass,

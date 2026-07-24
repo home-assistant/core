@@ -1,4 +1,5 @@
 """Tests for instance ID helper."""
+
 from json import JSONDecodeError
 from typing import Any
 from unittest.mock import patch
@@ -40,9 +41,11 @@ async def test_get_id_migrate(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Migrate existing file."""
-    with patch(
-        "homeassistant.util.json.load_json", return_value={"uuid": "1234"}
-    ), patch("os.path.isfile", return_value=True), patch("os.remove") as mock_remove:
+    with (
+        patch("homeassistant.util.json.load_json", return_value={"uuid": "1234"}),
+        patch("os.path.isfile", return_value=True),
+        patch("os.remove") as mock_remove,
+    ):
         uuid = await instance_id.async_get(hass)
 
     assert uuid == "1234"
@@ -58,10 +61,14 @@ async def test_get_id_migrate_fail(
     hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Migrate existing file with error."""
-    with patch(
-        "homeassistant.util.json.load_json",
-        side_effect=JSONDecodeError("test_error", "test", 1),
-    ), patch("os.path.isfile", return_value=True), patch("os.remove") as mock_remove:
+    with (
+        patch(
+            "homeassistant.util.json.load_json",
+            side_effect=JSONDecodeError("test_error", "test", 1),
+        ),
+        patch("os.path.isfile", return_value=True),
+        patch("os.remove") as mock_remove,
+    ):
         uuid = await instance_id.async_get(hass)
 
     assert uuid is not None
@@ -76,3 +83,15 @@ async def test_get_id_migrate_fail(
         "Could not read hass instance ID from 'core.uuid' or '.uuid', a "
         "new instance ID will be generated" in caplog.text
     )
+
+
+async def test_async_recreate(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test recreating instance ID."""
+    uuid1 = await instance_id.async_get(hass)
+    uuid2 = await instance_id.async_recreate(hass)
+    assert uuid1 != uuid2
+
+    # Assert it's stored
+    assert hass_storage["core.uuid"]["data"]["uuid"] == uuid2

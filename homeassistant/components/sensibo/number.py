@@ -1,9 +1,8 @@
 """Number platform for Sensibo integration."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysensibo.model import SensiboDevice
 
@@ -12,31 +11,23 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass
-class SensiboEntityDescriptionMixin:
-    """Mixin values for Sensibo entities."""
+@dataclass(frozen=True, kw_only=True)
+class SensiboNumberEntityDescription(NumberEntityDescription):
+    """Class describing Sensibo Number entities."""
 
     remote_key: str
     value_fn: Callable[[SensiboDevice], float | None]
-
-
-@dataclass
-class SensiboNumberEntityDescription(
-    NumberEntityDescription, SensiboEntityDescriptionMixin
-):
-    """Class describing Sensibo Number entities."""
 
 
 DEVICE_NUMBER_TYPES = (
@@ -57,7 +48,7 @@ DEVICE_NUMBER_TYPES = (
         key="calibration_hum",
         translation_key="calibration_humidity",
         device_class=NumberDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         remote_key="humidity",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -70,17 +61,32 @@ DEVICE_NUMBER_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo number platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        SensiboNumber(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_NUMBER_TYPES
-    )
+    added_devices: set[str] = set()
+
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
+
+        if new_devices:
+            async_add_entities(
+                SensiboNumber(coordinator, device_id, description)
+                for device_id in coordinator.data.parsed
+                for description in DEVICE_NUMBER_TYPES
+                if device_id in new_devices
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
@@ -100,10 +106,12 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value from coordinator data."""
         return self.entity_description.value_fn(self.device_data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
         await self.async_send_api_call(key=self.entity_description.key, value=value)

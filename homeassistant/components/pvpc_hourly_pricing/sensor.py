@@ -1,40 +1,70 @@
 """Sensor to collect the reference daily prices of electricity ('PVPC') in Spain."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
+
+from esios_api.const import KEY_INJECTION, KEY_MAG, KEY_OMIE, KEY_PVPC
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ElecPricesDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ElecPricesDataUpdateCoordinator, PVPCConfigEntry
+from .helpers import make_sensor_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="PVPC",
+        key=KEY_PVPC,
         icon="mdi:currency-eur",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=5,
         name="PVPC",
+    ),
+    SensorEntityDescription(
+        key=KEY_INJECTION,
+        icon="mdi:transmission-tower-export",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=5,
+        name="Injection Price",
+    ),
+    SensorEntityDescription(
+        key=KEY_MAG,
+        icon="mdi:bank-transfer",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=5,
+        name="MAG tax",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key=KEY_OMIE,
+        icon="mdi:shopping",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=5,
+        name="OMIE Price",
+        entity_registry_enabled_default=False,
     ),
 )
 _PRICE_SENSOR_ATTRIBUTES_MAP = {
+    "data_id": "data_id",
+    "name": "data_name",
     "tariff": "tariff",
     "period": "period",
     "available_power": "available_power",
@@ -115,11 +145,19 @@ _PRICE_SENSOR_ATTRIBUTES_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PVPCConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the electricity price sensor from config_entry."""
-    coordinator: ElecPricesDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ElecPriceSensor(coordinator, SENSOR_TYPES[0], entry.unique_id)])
+    coordinator = entry.runtime_data
+    sensors = [ElecPriceSensor(coordinator, SENSOR_TYPES[0], entry.unique_id)]
+    if coordinator.api.using_private_api:
+        sensors.extend(
+            ElecPriceSensor(coordinator, sensor_desc, entry.unique_id)
+            for sensor_desc in SENSOR_TYPES[1:]
+        )
+    async_add_entities(sensors)
 
 
 class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], SensorEntity):
@@ -137,7 +175,7 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_attribution = coordinator.api.attribution
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = make_sensor_unique_id(unique_id, description.key)
         self._attr_device_info = DeviceInfo(
             configuration_url="https://api.esios.ree.es",
             entry_type=DeviceEntryType.SERVICE,
@@ -146,9 +184,25 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             name="ESIOS",
         )
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data.availability.get(
+            self.entity_description.key, False
+        )
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+        # Enable API downloads for this sensor
+        self.coordinator.api.update_active_sensors(self.entity_description.key, True)
+        self.async_on_remove(
+            lambda: self.coordinator.api.update_active_sensors(
+                self.entity_description.key, False
+            )
+        )
 
         # Update 'state' value in hour changes
         self.async_on_remove(
@@ -157,10 +211,10 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             )
         )
         _LOGGER.debug(
-            "Setup of price sensor %s (%s) with tariff '%s'",
-            self.name,
+            "Setup of ESIOS sensor %s (%s, unique_id: %s)",
+            self.entity_description.key,
             self.entity_id,
-            self.coordinator.api.tariff,
+            self._attr_unique_id,
         )
 
     @callback
@@ -172,11 +226,13 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.coordinator.api.states.get(self.entity_description.key)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         sensor_attributes = self.coordinator.api.sensor_attributes.get(

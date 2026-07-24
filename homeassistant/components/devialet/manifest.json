@@ -1,0 +1,12 @@
+{
+  "domain": "devialet",
+  "name": "Devialet",
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@fwestenberg"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/devialet",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["devialet==1.5.7"],
+  "zeroconf": ["_devialet-http._tcp.local."]
+}

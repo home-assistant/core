@@ -1,10 +1,9 @@
 """Support for the Transmission BitTorrent client API."""
-from __future__ import annotations
 
 from functools import partial
 import logging
 import re
-from typing import Any
+from typing import Any, Final
 
 import transmission_rpc
 from transmission_rpc.error import (
@@ -12,43 +11,39 @@ from transmission_rpc.error import (
     TransmissionConnectError,
     TransmissionError,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
+    CONF_SSL,
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
-    selector,
 )
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_DELETE_DATA,
-    ATTR_TORRENT,
-    CONF_ENTRY_ID,
-    DEFAULT_DELETE_DATA,
-    DOMAIN,
-    SERVICE_ADD_TORRENT,
-    SERVICE_REMOVE_TORRENT,
-    SERVICE_START_TORRENT,
-    SERVICE_STOP_TORRENT,
-)
-from .coordinator import TransmissionDataUpdateCoordinator
-from .errors import AuthenticationError, CannotConnect, UnknownError
+from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN, MIN_REQUIRED_TRANSMISSION_VERSION
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
+from .helpers import create_version
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.EVENT, Platform.SENSOR, Platform.SWITCH]
 
 MIGRATION_NAME_TO_KEY = {
     # Sensors
@@ -65,40 +60,19 @@ MIGRATION_NAME_TO_KEY = {
     "Turtle Mode": "turtle_mode",
 }
 
-SERVICE_BASE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(),
-    }
-)
 
-SERVICE_ADD_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend({vol.Required(ATTR_TORRENT): cv.string}),
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-SERVICE_REMOVE_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_ID): cv.positive_int,
-            vol.Optional(ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA): cv.boolean,
-        }
-    )
-)
-
-SERVICE_START_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend({vol.Required(CONF_ID): cv.positive_int}),
-)
-
-SERVICE_STOP_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_ID): cv.positive_int,
-        }
-    )
-)
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Transmission component."""
+    async_setup_services(hass)
+    return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Set up the Transmission Component."""
 
     @callback
@@ -109,7 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         if CONF_NAME not in config_entry.data:
             return None
         match = re.search(
-            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
+            f"{config_entry.data[CONF_HOST]}"
+            f"-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
         )
 
@@ -121,123 +96,104 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         api = await get_api(hass, dict(config_entry.data))
-    except CannotConnect as error:
-        raise ConfigEntryNotReady from error
-    except (AuthenticationError, UnknownError) as error:
-        raise ConfigEntryAuthFailed from error
+    except TransmissionAuthError as err:
+        raise ConfigEntryAuthFailed from err
+    except (TransmissionConnectError, TransmissionError) as err:
+        raise ConfigEntryNotReady from err
+
+    version = create_version(api.server_version)
+    if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="version_error",
+            translation_placeholders={
+                "transmission_version": api.server_version,
+                "min_version": MIN_REQUIRED_TRANSMISSION_VERSION,
+            },
+        )
+
+    protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="Transmission",
+        entry_type=DeviceEntryType.SERVICE,
+        sw_version=api.server_version,
+        configuration_url=(
+            f"{protocol}://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+        ),
+    )
 
     coordinator = TransmissionDataUpdateCoordinator(hass, config_entry, api)
     await hass.async_add_executor_job(coordinator.init_torrent_list)
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    async def add_torrent(service: ServiceCall) -> None:
-        """Add new torrent to download."""
-        torrent = service.data[ATTR_TORRENT]
-        if torrent.startswith(
-            ("http", "ftp:", "magnet:")
-        ) or hass.config.is_allowed_path(torrent):
-            await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
-            await coordinator.async_request_refresh()
-        else:
-            _LOGGER.warning("Could not add torrent: unsupported type or no permission")
-
-    async def start_torrent(service: ServiceCall) -> None:
-        """Start torrent."""
-        torrent_id = service.data[CONF_ID]
-        await hass.async_add_executor_job(coordinator.api.start_torrent, torrent_id)
-        await coordinator.async_request_refresh()
-
-    async def stop_torrent(service: ServiceCall) -> None:
-        """Stop torrent."""
-        torrent_id = service.data[CONF_ID]
-        await hass.async_add_executor_job(coordinator.api.stop_torrent, torrent_id)
-        await coordinator.async_request_refresh()
-
-    async def remove_torrent(service: ServiceCall) -> None:
-        """Remove torrent."""
-        torrent_id = service.data[CONF_ID]
-        delete_data = service.data[ATTR_DELETE_DATA]
-        await hass.async_add_executor_job(
-            partial(coordinator.api.remove_torrent, torrent_id, delete_data=delete_data)
-        )
-        await coordinator.async_request_refresh()
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_REMOVE_TORRENT,
-        remove_torrent,
-        schema=SERVICE_REMOVE_TORRENT_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_START_TORRENT,
-        start_torrent,
-        schema=SERVICE_START_TORRENT_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_STOP_TORRENT,
-        stop_torrent,
-        schema=SERVICE_STOP_TORRENT_SCHEMA,
-    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Unload Transmission Entry from config_entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
-    if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
-        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_TORRENT)
-        hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
-        hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
 
-    return unload_ok
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
+    """Migrate an old config entry."""
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version == 1:
+        if config_entry.minor_version < 2:
+            new = {**config_entry.data}
+            new[CONF_PATH] = DEFAULT_PATH
+            new[CONF_SSL] = DEFAULT_SSL
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, version=1, minor_version=2
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True
 
 
 async def get_api(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> transmission_rpc.Client:
     """Get Transmission client."""
+    protocol: Final = "https" if entry[CONF_SSL] else "http"
     host = entry[CONF_HOST]
     port = entry[CONF_PORT]
+    path = entry[CONF_PATH]
     username = entry.get(CONF_USERNAME)
     password = entry.get(CONF_PASSWORD)
 
-    try:
-        api = await hass.async_add_executor_job(
-            partial(
-                transmission_rpc.Client,
-                username=username,
-                password=password,
-                host=host,
-                port=port,
-            )
+    api = await hass.async_add_executor_job(
+        partial(
+            transmission_rpc.Client,
+            username=username,
+            password=password,
+            protocol=protocol,
+            host=host,
+            port=port,
+            path=path,
         )
-        _LOGGER.debug("Successfully connected to %s", host)
-        return api
+    )
 
-    except TransmissionAuthError as error:
-        _LOGGER.error("Credentials for Transmission client are not valid")
-        raise AuthenticationError from error
-    except TransmissionConnectError as error:
-        _LOGGER.error("Connecting to the Transmission client %s failed", host)
-        raise CannotConnect from error
-    except TransmissionError as error:
-        _LOGGER.error(error)
-        raise UnknownError from error
+    _LOGGER.debug("Successfully connected to %s", host)
+    return api

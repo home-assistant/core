@@ -1,12 +1,11 @@
 """Support for GoodWe inverter via UDP."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, override
 
 from goodwe import Inverter, Sensor, SensorKind
 
@@ -16,10 +15,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -27,19 +24,23 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
-from .coordinator import GoodweUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import GoodweConfigEntry, GoodweUpdateCoordinator
+
+# Coordinator handles all data updates, so parallel updates are not needed
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +48,16 @@ _LOGGER = logging.getLogger(__name__)
 BATTERY_SOC = "battery_soc"
 
 # Sensors that are reset to 0 at midnight.
-# The inverter is only powered by the solar panels and not mains power, so it goes dead when the sun goes down.
-# The "_day" sensors are reset to 0 when the inverter wakes up in the morning when the sun comes up and power to the inverter is restored.
-# This makes sure daily values are reset at midnight instead of at sunrise.
-# When the inverter has a battery connected, HomeAssistant will not reset the values but let the inverter reset them by looking at the unavailable state of the inverter.
+# The inverter is only powered by the solar panels and not
+# mains power, so it goes dead when the sun goes down.
+# The "_day" sensors are reset to 0 when the inverter wakes
+# up in the morning when the sun comes up and power to the
+# inverter is restored.
+# This makes sure daily values are reset at midnight instead
+# of at sunrise.
+# When the inverter has a battery connected, HomeAssistant
+# will not reset the values but let the inverter reset them
+# by looking at the unavailable state of the inverter.
 DAILY_RESET = ["e_day", "e_load_day"]
 
 _MAIN_SENSORS = (
@@ -75,16 +82,16 @@ _ICONS: dict[SensorKind, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[
-        [GoodweUpdateCoordinator, str], Any
-    ] = lambda coordinator, sensor: coordinator.sensor_value(sensor)
-    available: Callable[
-        [GoodweUpdateCoordinator], bool
-    ] = lambda coordinator: coordinator.last_update_success
+    value: Callable[[GoodweUpdateCoordinator, str], Any] = lambda coordinator, sensor: (
+        coordinator.sensor_value(sensor)
+    )
+    available: Callable[[GoodweUpdateCoordinator], bool] = lambda coordinator: (
+        coordinator.last_update_success
+    )
 
 
 _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
@@ -125,7 +132,7 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         key="var",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         entity_registry_enabled_default=False,
     ),
     "C": GoodweSensorEntityDescription(
@@ -164,14 +171,14 @@ TEXT_SENSOR = GoodweSensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: GoodweConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GoodWe inverter from a config entry."""
     entities: list[InverterSensor] = []
-    inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
+    inverter = config_entry.runtime_data.inverter
+    coordinator = config_entry.runtime_data.coordinator
+    device_info = config_entry.runtime_data.device_info
 
     # Individual inverter sensors entities
     entities.extend(
@@ -186,6 +193,7 @@ async def async_setup_entry(
 class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
     """Entity representing individual inverter sensor."""
 
+    _attr_has_entity_name = True
     entity_description: GoodweSensorEntityDescription
 
     def __init__(
@@ -198,7 +206,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self._attr_name = sensor.name.strip()
-        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
+        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None
@@ -219,11 +227,13 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         self._stop_reset: Callable[[], None] | None = None
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self.coordinator, self._sensor.id_)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available.
 
@@ -240,7 +250,8 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
 
         Some sensors values like daily produced energy are kept available,
         even when the inverter is in sleep mode and no longer responds to request.
-        In contrast to "total" sensors, these "daily" sensors need to be reset to 0 on midnight.
+        In contrast to "total" sensors, these "daily" sensors
+        need to be reset to 0 on midnight.
         """
         if not self.coordinator.last_update_success:
             self.coordinator.reset_sensor(self._sensor.id_)
@@ -253,6 +264,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
             self.hass, self.async_reset, next_midnight
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Schedule reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET:
@@ -264,6 +276,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
             )
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET and self._stop_reset is not None:

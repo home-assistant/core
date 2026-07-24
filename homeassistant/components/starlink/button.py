@@ -1,48 +1,39 @@
 """Contains buttons exposed by the Starlink integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import StarlinkUpdateCoordinator
+from .coordinator import StarlinkConfigEntry, StarlinkUpdateCoordinator
 from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: StarlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        StarlinkButtonEntity(coordinator, description) for description in BUTTONS
+        StarlinkButtonEntity(config_entry.runtime_data, description)
+        for description in BUTTONS
     )
 
 
-@dataclass
-class StarlinkButtonEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class StarlinkButtonEntityDescription(ButtonEntityDescription):
+    """Describes a Starlink button entity."""
 
     press_fn: Callable[[StarlinkUpdateCoordinator], Awaitable[None]]
-
-
-@dataclass
-class StarlinkButtonEntityDescription(
-    ButtonEntityDescription, StarlinkButtonEntityDescriptionMixin
-):
-    """Describes a Starlink button entity."""
 
 
 class StarlinkButtonEntity(StarlinkEntity, ButtonEntity):
@@ -50,6 +41,7 @@ class StarlinkButtonEntity(StarlinkEntity, ButtonEntity):
 
     entity_description: StarlinkButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         return await self.entity_description.press_fn(self.coordinator)

@@ -1,13 +1,12 @@
 """Support for interfacing with an instance of getchannels.com."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from pychannels import Channels
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -25,7 +24,7 @@ DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
 DEFAULT_PORT = 57000
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -48,12 +47,12 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_SEEK_FORWARD,
-        {},
+        None,
         "seek_forward",
     )
     platform.async_register_entity_service(
         SERVICE_SEEK_BACKWARD,
-        {},
+        None,
         "seek_backward",
     )
     platform.async_register_entity_service(
@@ -140,11 +139,13 @@ class ChannelsPlayer(MediaPlayerEntity):
             self.now_playing_image_url = None
 
     @property
+    @override
     def name(self):
         """Return the name of the player."""
         return self._name
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self.status == "stopped":
@@ -164,22 +165,25 @@ class ChannelsPlayer(MediaPlayerEntity):
         self.update_state(self.client.status())
 
     @property
+    @override
     def source_list(self):
         """List of favorite channels."""
-        sources = [channel["name"] for channel in self.favorite_channels]
-        return sources
+        return [channel["name"] for channel in self.favorite_channels]
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self.muted
 
     @property
+    @override
     def media_content_id(self):
         """Content ID of current playing channel."""
         return self.channel_number
 
     @property
+    @override
     def media_image_url(self):
         """Image url of current playing media."""
         if self.now_playing_image_url:
@@ -190,6 +194,7 @@ class ChannelsPlayer(MediaPlayerEntity):
         return "https://getchannels.com/assets/img/icon-1024.png"
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         if self.state:
@@ -197,38 +202,45 @@ class ChannelsPlayer(MediaPlayerEntity):
 
         return None
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) player."""
         if mute != self.muted:
             response = self.client.toggle_muted()
             self.update_state(response)
 
+    @override
     def media_stop(self) -> None:
         """Send media_stop command to player."""
         self.status = "stopped"
         response = self.client.stop()
         self.update_state(response)
 
+    @override
     def media_play(self) -> None:
         """Send media_play command to player."""
         response = self.client.resume()
         self.update_state(response)
 
+    @override
     def media_pause(self) -> None:
         """Send media_pause command to player."""
         response = self.client.pause()
         self.update_state(response)
 
+    @override
     def media_next_track(self) -> None:
         """Seek ahead."""
         response = self.client.skip_forward()
         self.update_state(response)
 
+    @override
     def media_previous_track(self) -> None:
         """Seek back."""
         response = self.client.skip_backward()
         self.update_state(response)
 
+    @override
     def select_source(self, source: str) -> None:
         """Select a channel to tune to."""
         for channel in self.favorite_channels:
@@ -237,6 +249,7 @@ class ChannelsPlayer(MediaPlayerEntity):
                 self.update_state(response)
                 break
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:

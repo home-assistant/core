@@ -1,9 +1,8 @@
 """Support for Overkiz alarm control panel."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIWidget
@@ -13,41 +12,24 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN
+from . import OverkizDataConfigEntry
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
-class OverkizAlarmDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizAlarmDescription(AlarmControlPanelEntityDescription):
+    """Class to describe an Overkiz alarm control panel."""
 
     supported_features: AlarmControlPanelEntityFeature
-    fn_state: Callable[[Callable[[str], OverkizStateType]], str]
-
-
-@dataclass
-class OverkizAlarmDescription(
-    AlarmControlPanelEntityDescription, OverkizAlarmDescriptionMixin
-):
-    """Class to describe an Overkiz alarm control panel."""
+    fn_state: Callable[[Callable[[str], OverkizStateType]], AlarmControlPanelState]
 
     alarm_disarm: str | None = None
     alarm_disarm_args: OverkizStateType | list[OverkizStateType] = None
@@ -61,88 +43,96 @@ class OverkizAlarmDescription(
     alarm_trigger_args: OverkizStateType | list[OverkizStateType] = None
 
 
-MAP_INTERNAL_STATUS_STATE: dict[str, str] = {
-    OverkizCommandParam.OFF: STATE_ALARM_DISARMED,
-    OverkizCommandParam.ZONE_1: STATE_ALARM_ARMED_HOME,
-    OverkizCommandParam.ZONE_2: STATE_ALARM_ARMED_NIGHT,
-    OverkizCommandParam.TOTAL: STATE_ALARM_ARMED_AWAY,
+MAP_INTERNAL_STATUS_STATE: dict[str, AlarmControlPanelState] = {
+    OverkizCommandParam.OFF: AlarmControlPanelState.DISARMED,
+    OverkizCommandParam.ZONE_1: AlarmControlPanelState.ARMED_HOME,
+    OverkizCommandParam.ZONE_2: AlarmControlPanelState.ARMED_NIGHT,
+    OverkizCommandParam.TOTAL: AlarmControlPanelState.ARMED_AWAY,
 }
 
 
-def _state_tsk_alarm_controller(select_state: Callable[[str], OverkizStateType]) -> str:
+def _state_tsk_alarm_controller(
+    select_state: Callable[[str], OverkizStateType],
+) -> AlarmControlPanelState:
     """Return the state of the device."""
     if (
         cast(str, select_state(OverkizState.INTERNAL_INTRUSION_DETECTED))
         == OverkizCommandParam.DETECTED
     ):
-        return STATE_ALARM_TRIGGERED
+        return AlarmControlPanelState.TRIGGERED
 
     if cast(str, select_state(OverkizState.INTERNAL_CURRENT_ALARM_MODE)) != cast(
         str, select_state(OverkizState.INTERNAL_TARGET_ALARM_MODE)
     ):
-        return STATE_ALARM_PENDING
+        return AlarmControlPanelState.PENDING
 
     return MAP_INTERNAL_STATUS_STATE[
         cast(str, select_state(OverkizState.INTERNAL_TARGET_ALARM_MODE))
     ]
 
 
-MAP_CORE_ACTIVE_ZONES: dict[str, str] = {
-    OverkizCommandParam.A: STATE_ALARM_ARMED_HOME,
-    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": STATE_ALARM_ARMED_NIGHT,
-    f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}": STATE_ALARM_ARMED_AWAY,
+MAP_CORE_ACTIVE_ZONES: dict[str, AlarmControlPanelState] = {
+    OverkizCommandParam.A: AlarmControlPanelState.ARMED_HOME,
+    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": (
+        AlarmControlPanelState.ARMED_NIGHT
+    ),
+    (
+        f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}"
+    ): AlarmControlPanelState.ARMED_AWAY,
 }
 
 
 def _state_stateful_alarm_controller(
-    select_state: Callable[[str], OverkizStateType]
-) -> str:
+    select_state: Callable[[str], OverkizStateType],
+) -> AlarmControlPanelState:
     """Return the state of the device."""
     if state := cast(str, select_state(OverkizState.CORE_ACTIVE_ZONES)):
         # The Stateful Alarm Controller has 3 zones with the following options:
-        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not possible to map this to AlarmControlPanel entity,
-        # only the most important zones are mapped, other zones can only be disarmed.
+        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not
+        # possible to map this to AlarmControlPanel entity, only
+        # the most important zones are mapped, other zones can
+        # only be disarmed.
         if state in MAP_CORE_ACTIVE_ZONES:
             return MAP_CORE_ACTIVE_ZONES[state]
 
-        return STATE_ALARM_ARMED_CUSTOM_BYPASS
+        return AlarmControlPanelState.ARMED_CUSTOM_BYPASS
 
-    return STATE_ALARM_DISARMED
+    return AlarmControlPanelState.DISARMED
 
 
-MAP_MYFOX_STATUS_STATE: dict[str, str] = {
-    OverkizCommandParam.ARMED: STATE_ALARM_ARMED_AWAY,
-    OverkizCommandParam.DISARMED: STATE_ALARM_DISARMED,
-    OverkizCommandParam.PARTIAL: STATE_ALARM_ARMED_NIGHT,
+MAP_MYFOX_STATUS_STATE: dict[str, AlarmControlPanelState] = {
+    OverkizCommandParam.ARMED: AlarmControlPanelState.ARMED_AWAY,
+    OverkizCommandParam.DISARMED: AlarmControlPanelState.DISARMED,
+    OverkizCommandParam.PARTIAL: AlarmControlPanelState.ARMED_NIGHT,
 }
 
 
 def _state_myfox_alarm_controller(
-    select_state: Callable[[str], OverkizStateType]
-) -> str:
+    select_state: Callable[[str], OverkizStateType],
+) -> AlarmControlPanelState:
     """Return the state of the device."""
     if (
         cast(str, select_state(OverkizState.CORE_INTRUSION))
         == OverkizCommandParam.DETECTED
     ):
-        return STATE_ALARM_TRIGGERED
+        return AlarmControlPanelState.TRIGGERED
 
     return MAP_MYFOX_STATUS_STATE[
         cast(str, select_state(OverkizState.MYFOX_ALARM_STATUS))
     ]
 
 
-MAP_ARM_TYPE: dict[str, str] = {
-    OverkizCommandParam.DISARMED: STATE_ALARM_DISARMED,
-    OverkizCommandParam.ARMED_DAY: STATE_ALARM_ARMED_HOME,
-    OverkizCommandParam.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-    OverkizCommandParam.ARMED: STATE_ALARM_ARMED_AWAY,
+MAP_ARM_TYPE: dict[str, AlarmControlPanelState] = {
+    OverkizCommandParam.DISARMED: AlarmControlPanelState.DISARMED,
+    OverkizCommandParam.ARMED_DAY: AlarmControlPanelState.ARMED_HOME,
+    OverkizCommandParam.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+    OverkizCommandParam.ARMED: AlarmControlPanelState.ARMED_AWAY,
 }
 
 
 def _state_alarm_panel_controller(
-    select_state: Callable[[str], OverkizStateType]
-) -> str:
+    select_state: Callable[[str], OverkizStateType],
+) -> AlarmControlPanelState:
     """Return the state of the device."""
     return MAP_ARM_TYPE[
         cast(str, select_state(OverkizState.VERISURE_ALARM_PANEL_MAIN_ARM_TYPE))
@@ -154,7 +144,7 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     # Disabled by default since all Overkiz hubs have this
     # virtual device, but only a few users actually use this.
     OverkizAlarmDescription(
-        key=UIWidget.TSKALARM_CONTROLLER,
+        key=UIWidget.TSK_ALARM_CONTROLLER,
         entity_registry_enabled_default=False,
         supported_features=(
             AlarmControlPanelEntityFeature.ARM_AWAY
@@ -220,34 +210,36 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
 SUPPORTED_DEVICES = {description.key: description for description in ALARM_DESCRIPTIONS}
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz alarm control panel from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    entities: list[OverkizAlarmControlPanel] = []
+    data = entry.runtime_data
 
-    for device in data.platforms[Platform.ALARM_CONTROL_PANEL]:
-        if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
-            device.ui_class
-        ):
-            entities.append(
-                OverkizAlarmControlPanel(
-                    device.device_url,
-                    data.coordinator,
-                    description,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OverkizAlarmControlPanel(
+            device.device_url,
+            data.coordinator,
+            description,
+        )
+        for device in data.platforms[Platform.ALARM_CONTROL_PANEL]
+        if (
+            description := SUPPORTED_DEVICES.get(device.widget)
+            or SUPPORTED_DEVICES.get(device.ui_class)
+        )
+    )
 
 
 class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity):
     """Representation of an Overkiz Alarm Control Panel."""
 
     entity_description: OverkizAlarmDescription
+    _attr_code_arm_required = False
 
     def __init__(
         self,
@@ -261,10 +253,12 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
         self._attr_supported_features = self.entity_description.supported_features
 
     @property
-    def state(self) -> str:
+    @override
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        return self.entity_description.fn_state(self.executor.select_state)
+        return self.entity_description.fn_state(self.device.states.get_value)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         assert self.entity_description.alarm_disarm
@@ -273,6 +267,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_disarm_args,
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         assert self.entity_description.alarm_arm_home
@@ -281,6 +276,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_home_args,
         )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         assert self.entity_description.alarm_arm_night
@@ -289,6 +285,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_night_args,
         )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         assert self.entity_description.alarm_arm_away
@@ -297,6 +294,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_away_args,
         )
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         assert self.entity_description.alarm_trigger

@@ -1,4 +1,5 @@
 """Test the weather websocket API."""
+
 from homeassistant.components.weather import Forecast, WeatherEntityFeature
 from homeassistant.components.weather.const import DOMAIN
 from homeassistant.const import UnitOfTemperature
@@ -32,7 +33,7 @@ async def test_device_class_units(
             "pressure_unit": ["hPa", "inHg", "mbar", "mmHg"],
             "temperature_unit": ["°C", "°F"],
             "visibility_unit": ["km", "mi"],
-            "wind_speed_unit": ["ft/s", "km/h", "kn", "m/s", "mph"],
+            "wind_speed_unit": ["Beaufort", "ft/s", "km/h", "kn", "m/s", "mph"],
         }
     }
 

@@ -1,5 +1,4 @@
 """Fixtures for RDW integration tests."""
-from __future__ import annotations
 
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
@@ -25,34 +24,23 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.rdw.async_setup_entry", return_value=True):
         yield
 
 
 @pytest.fixture
-def mock_rdw_config_flow() -> Generator[None, MagicMock, None]:
+def mock_rdw() -> Generator[MagicMock]:
     """Return a mocked RDW client."""
-    with patch(
-        "homeassistant.components.rdw.config_flow.RDW", autospec=True
-    ) as rdw_mock:
+    with (
+        patch(
+            "homeassistant.components.rdw.coordinator.RDW", autospec=True
+        ) as rdw_mock,
+        patch("homeassistant.components.rdw.config_flow.RDW", new=rdw_mock),
+    ):
         rdw = rdw_mock.return_value
         rdw.vehicle.return_value = Vehicle.from_json(load_fixture("rdw/11ZKZ3.json"))
-        yield rdw
-
-
-@pytest.fixture
-def mock_rdw(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
-    """Return a mocked WLED client."""
-    fixture: str = "rdw/11ZKZ3.json"
-    if hasattr(request, "param") and request.param:
-        fixture = request.param
-
-    vehicle = Vehicle.from_json(load_fixture(fixture))
-    with patch("homeassistant.components.rdw.RDW", autospec=True) as rdw_mock:
-        rdw = rdw_mock.return_value
-        rdw.vehicle.return_value = vehicle
         yield rdw
 
 

@@ -1,67 +1,67 @@
 """PrusaLink sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast, override
 
-from pyprusalink import Conflict, JobInfo, PrinterInfo, PrusaLink
+from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
+from pyprusalink.types import Conflict, PrinterState
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
-
-T = TypeVar("T", PrinterInfo, JobInfo)
-
-
-@dataclass
-class PrusaLinkButtonEntityDescriptionMixin(Generic[T]):
-    """Mixin for required keys."""
-
-    press_fn: Callable[[PrusaLink], Coroutine[Any, Any, None]]
+from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 
-@dataclass
-class PrusaLinkButtonEntityDescription(
-    ButtonEntityDescription, PrusaLinkButtonEntityDescriptionMixin[T], Generic[T]
+@dataclass(frozen=True, kw_only=True)
+class PrusaLinkButtonEntityDescription[
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo)
+](
+    ButtonEntityDescription,
+    PrusaLinkEntityDescription,
 ):
     """Describes PrusaLink button entity."""
 
-    available_fn: Callable[[T], bool] = lambda _: True
+    press_fn: Callable[[PrusaLink], Callable[[int], Coroutine[Any, Any, None]]]
 
 
 BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
-    "printer": (
-        PrusaLinkButtonEntityDescription[PrinterInfo](
+    "status": (
+        PrusaLinkButtonEntityDescription[PrinterStatus](
             key="printer.cancel_job",
             translation_key="cancel_job",
-            icon="mdi:cancel",
-            press_fn=lambda api: cast(Coroutine, api.cancel_job()),
-            available_fn=lambda data: any(
-                data["state"]["flags"][flag]
-                for flag in ("printing", "pausing", "paused")
+            press_fn=lambda api: api.cancel_job,
+            available_fn=lambda data: (
+                data["printer"]["state"]
+                in [PrinterState.PRINTING.value, PrinterState.PAUSED.value]
             ),
         ),
-        PrusaLinkButtonEntityDescription[PrinterInfo](
+        PrusaLinkButtonEntityDescription[PrinterStatus](
             key="job.pause_job",
             translation_key="pause_job",
-            icon="mdi:pause",
-            press_fn=lambda api: cast(Coroutine, api.pause_job()),
-            available_fn=lambda data: (
-                data["state"]["flags"]["printing"]
-                and not data["state"]["flags"]["paused"]
+            press_fn=lambda api: api.pause_job,
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.PRINTING.value
             ),
         ),
-        PrusaLinkButtonEntityDescription[PrinterInfo](
+        PrusaLinkButtonEntityDescription[PrinterStatus](
             key="job.resume_job",
             translation_key="resume_job",
-            icon="mdi:play",
-            press_fn=lambda api: cast(Coroutine, api.resume_job()),
-            available_fn=lambda data: cast(bool, data["state"]["flags"]["paused"]),
+            press_fn=lambda api: api.resume_job,
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.PAUSED.value
+            ),
+        ),
+        PrusaLinkButtonEntityDescription[PrinterStatus](
+            key="job.continue_job",
+            translation_key="continue_job",
+            press_fn=lambda api: api.continue_job,
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.ATTENTION.value
+            ),
         ),
     ),
 }
@@ -69,13 +69,11 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PrusaLinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink buttons based on a config entry."""
-    coordinators: dict[str, PrusaLinkUpdateCoordinator] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinators = entry.runtime_data
 
     entities: list[PrusaLinkEntity] = []
 
@@ -104,25 +102,19 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
-    @property
-    def available(self) -> bool:
-        """Return if sensor is available."""
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.data
-        )
-
+    @override
     async def async_press(self) -> None:
         """Press the button."""
+        job_id = self.coordinator.data["job"]["id"]
+        func = self.entity_description.press_fn(self.coordinator.api)
         try:
-            await self.entity_description.press_fn(self.coordinator.api)
+            await func(job_id)
         except Conflict as err:
             raise HomeAssistantError(
                 "Action conflicts with current printer state"
             ) from err
 
-        coordinators: dict[str, PrusaLinkUpdateCoordinator] = self.hass.data[DOMAIN][
-            self.coordinator.config_entry.entry_id
-        ]
+        coordinators = self.coordinator.config_entry.runtime_data
 
         for coordinator in coordinators.values():
             coordinator.expect_change()

@@ -1,6 +1,5 @@
 """Tests for the SensorPush integration."""
 
-
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
@@ -17,6 +16,7 @@ NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -35,6 +35,7 @@ LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 MMC_T201_1_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -53,6 +54,7 @@ MMC_T201_1_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 JTYJGD03MI_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -71,6 +73,7 @@ JTYJGD03MI_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 YLKG07YL_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -89,6 +92,7 @@ YLKG07YL_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 HHCCJCY10_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -103,6 +107,7 @@ HHCCJCY10_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 MISCALE_V1_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -112,13 +117,16 @@ MISCALE_V1_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-60,
     manufacturer_data={},
     service_data={
-        "0000181d-0000-1000-8000-00805f9b34fb": b"\x22\x9e\x43\xe5\x07\x04\x0b\x10\x13\x01"
+        "0000181d-0000-1000-8000-00805f9b34fb": (
+            b"\x22\x9e\x43\xe5\x07\x04\x0b\x10\x13\x01"
+        )
     },
     service_uuids=["0000181d-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -128,13 +136,16 @@ MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-60,
     manufacturer_data={},
     service_data={
-        "0000181b-0000-1000-8000-00805f9b34fb": b"\x02&\xb2\x07\x05\x04\x0f\x02\x01\xac\x01\x86B"
+        "0000181b-0000-1000-8000-00805f9b34fb": (
+            b"\x02&\xb2\x07\x05\x04\x0f\x02\x01\xac\x01\x86B"
+        )
     },
     service_uuids=["0000181b-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
@@ -151,6 +162,7 @@ MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
+    tx_power=-127,
 )
 
 
@@ -172,4 +184,5 @@ def make_advertisement(
         advertisement=generate_advertisement_data(local_name="Test Device"),
         time=0,
         connectable=connectable,
+        tx_power=-127,
     )

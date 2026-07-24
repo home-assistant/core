@@ -1,17 +1,24 @@
-"""Support for Motion Blinds sensors."""
-from motionblinds import DEVICE_TYPES_WIFI, BlindType
+"""Support for Motionblinds sensors."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from typing import Any, override
+
+from motionblinds import DEVICE_TYPES_WIFI
+from motionblinds.motion_blinds import DEVICE_TYPE_TDBU
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
+from .coordinator import MotionBlindsConfigEntry
 from .entity import MotionCoordinatorEntity
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
@@ -19,17 +26,17 @@ ATTR_BATTERY_VOLTAGE = "battery_voltage"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MotionBlindsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Perform the setup for Motion Blinds."""
+    """Perform the setup for Motionblinds."""
     entities: list[SensorEntity] = []
-    motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    coordinator = config_entry.runtime_data
+    motion_gateway = coordinator.gateway
 
     for blind in motion_gateway.device_list.values():
         entities.append(MotionSignalStrengthSensor(coordinator, blind))
-        if blind.type == BlindType.TopDownBottomUp:
+        if blind.device_type == DEVICE_TYPE_TDBU:
             entities.append(MotionTDBUBatterySensor(coordinator, blind, "Bottom"))
             entities.append(MotionTDBUBatterySensor(coordinator, blind, "Top"))
         elif blind.battery_voltage is not None and blind.battery_voltage > 0:
@@ -48,6 +55,8 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator, blind):
         """Initialize the Motion Battery Sensor."""
@@ -55,12 +64,14 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{blind.mac}-battery"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._blind.battery_level
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_BATTERY_VOLTAGE: self._blind.battery_voltage}
 
@@ -77,6 +88,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         self._attr_translation_key = f"{motor.lower()}_battery"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self._blind.battery_level is None:
@@ -84,7 +96,8 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return self._blind.battery_level[self._motor[0]]
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.battery_voltage is not None:
@@ -108,6 +121,7 @@ class MotionSignalStrengthSensor(MotionCoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{blind.mac}-RSSI"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._blind.RSSI

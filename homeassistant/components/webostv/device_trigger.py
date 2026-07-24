@@ -1,24 +1,20 @@
-"""Provides device automations for control of LG webOS Smart TV."""
-from __future__ import annotations
+"""Provides device automations for control of LG webOS TV."""
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import trigger
-from .const import DOMAIN
-from .helpers import (
-    async_get_client_by_device_entry,
-    async_get_device_entry_by_device_id,
-)
+from . import DOMAIN, trigger
+from .helpers import async_get_device_entry_by_device_id
 from .triggers.turn_on import (
     PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
     async_get_turn_on_trigger,
@@ -42,10 +38,31 @@ async def async_validate_trigger_config(
         device_id = config[CONF_DEVICE_ID]
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
-            if DOMAIN in hass.data:
-                async_get_client_by_device_entry(hass, device)
         except ValueError as err:
-            raise InvalidDeviceAutomationConfig(err) from err
+            raise InvalidDeviceAutomationConfig(
+                translation_domain=DOMAIN,
+                translation_key="device_not_valid",
+                translation_placeholders={"device_id": device_id},
+            ) from err
+
+        for config_entry_id in device.config_entries:
+            if (
+                entry := hass.config_entries.async_get_entry(config_entry_id)
+            ) and entry.domain == DOMAIN:
+                if entry.state is ConfigEntryState.LOADED:
+                    break
+
+                raise InvalidDeviceAutomationConfig(
+                    translation_domain=DOMAIN,
+                    translation_key="device_config_entry_not_loaded",
+                    translation_placeholders={"device_id": device.id},
+                )
+        else:
+            raise InvalidDeviceAutomationConfig(
+                translation_domain=DOMAIN,
+                translation_key="device_not_valid",
+                translation_placeholders={"device_id": device.id},
+            )
 
     return config
 
@@ -54,8 +71,7 @@ async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for device."""
-    triggers = [async_get_turn_on_trigger(device_id)]
-    return triggers
+    return [async_get_turn_on_trigger(device_id)]
 
 
 async def async_attach_trigger(
@@ -77,4 +93,8 @@ async def async_attach_trigger(
             hass, trigger_config, action, trigger_info
         )
 
-    raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="unhandled_trigger_type",
+        translation_placeholders={"trigger_type": trigger_type},
+    )

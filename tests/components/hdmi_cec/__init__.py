@@ -1,13 +1,18 @@
 """Tests for the HDMI-CEC component."""
+
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant.components.hdmi_cec import KeyPressCommand, KeyReleaseCommand
+from homeassistant.components.hdmi_cec import (
+    CecCommand,
+    KeyPressCommand,
+    KeyReleaseCommand,
+)
 
 
 class MockHDMIDevice:
     """Mock of a HDMIDevice."""
 
-    def __init__(self, *, logical_address, **values):
+    def __init__(self, *, logical_address, **values) -> None:
         """Mock of a HDMIDevice."""
         self.set_update_callback = Mock(side_effect=self._set_update_callback)
         self.logical_address = logical_address
@@ -20,6 +25,7 @@ class MockHDMIDevice:
         self.turn_off = Mock()
         self.send_command = Mock()
         self.async_send_command = AsyncMock()
+        self._update = None
 
     def __getattr__(self, name):
         """Get attribute from `_values` if not explicitly set."""
@@ -47,3 +53,12 @@ def assert_key_press_release(fnc, count=0, *, dst, key):
     assert press_arg.dst == dst
     assert isinstance(release_arg, KeyReleaseCommand)
     assert release_arg.dst == dst
+
+
+def assert_cec_command(fnc, *, cmd, dst):
+    """Assert that correct CecCommand was sent."""
+    fnc.assert_called_once()
+    command = fnc.call_args.args[0]
+    assert isinstance(command, CecCommand)
+    assert command.cmd == cmd
+    assert command.dst == dst

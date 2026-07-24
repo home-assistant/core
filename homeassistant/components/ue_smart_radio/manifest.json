@@ -1,7 +1,0 @@
-{
-  "domain": "ue_smart_radio",
-  "name": "Logitech UE Smart Radio",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/ue_smart_radio",
-  "iot_class": "cloud_polling"
-}

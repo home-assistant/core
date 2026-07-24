@@ -1,4 +1,5 @@
 """Tests for entity permissions."""
+
 import pytest
 import voluptuous as vol
 
@@ -9,9 +10,8 @@ from homeassistant.auth.permissions.entities import (
 from homeassistant.auth.permissions.models import PermissionLookup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import RegistryEntry
 
-from tests.common import mock_device_registry, mock_registry
+from tests.common import RegistryEntryWithDefaults, mock_device_registry, mock_registry
 
 
 def test_entities_none() -> None:
@@ -155,13 +155,13 @@ def test_entities_device_id_boolean(hass: HomeAssistant) -> None:
     entity_registry = mock_registry(
         hass,
         {
-            "test_domain.allowed": RegistryEntry(
+            "test_domain.allowed": RegistryEntryWithDefaults(
                 entity_id="test_domain.allowed",
                 unique_id="1234",
                 platform="test_platform",
                 device_id="mock-allowed-dev-id",
             ),
-            "test_domain.not_allowed": RegistryEntry(
+            "test_domain.not_allowed": RegistryEntryWithDefaults(
                 entity_id="test_domain.not_allowed",
                 unique_id="5678",
                 platform="test_platform",
@@ -195,7 +195,7 @@ def test_entities_areas_area_true(hass: HomeAssistant) -> None:
     entity_registry = mock_registry(
         hass,
         {
-            "light.kitchen": RegistryEntry(
+            "light.kitchen": RegistryEntryWithDefaults(
                 entity_id="light.kitchen",
                 unique_id="1234",
                 platform="test_platform",
@@ -204,7 +204,14 @@ def test_entities_areas_area_true(hass: HomeAssistant) -> None:
         },
     )
     device_registry = mock_device_registry(
-        hass, {"mock-dev-id": DeviceEntry(id="mock-dev-id", area_id="mock-area-id")}
+        hass,
+        {
+            "mock-dev-id": DeviceEntry(
+                config_entry_id="mock-config-entry",
+                id="mock-dev-id",
+                area_id="mock-area-id",
+            )
+        },
     )
 
     policy = {"area_ids": {"mock-area-id": {"read": True, "control": True}}}

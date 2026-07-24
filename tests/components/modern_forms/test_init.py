@@ -1,9 +1,9 @@
 """Tests for the Modern Forms integration."""
+
 from unittest.mock import MagicMock, patch
 
 from aiomodernforms import ModernFormsConnectionError
 
-from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -14,7 +14,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @patch(
-    "homeassistant.components.modern_forms.ModernFormsDevice.update",
+    "homeassistant.components.modern_forms.coordinator.ModernFormsDevice.update",
     side_effect=ModernFormsConnectionError,
 )
 async def test_config_entry_not_ready(
@@ -30,11 +30,11 @@ async def test_unload_config_entry(
 ) -> None:
     """Test the Modern Forms configuration entry unloading."""
     entry = await init_integration(hass, aioclient_mock)
-    assert hass.data[DOMAIN]
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data.get(DOMAIN)
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_fan_only_device(

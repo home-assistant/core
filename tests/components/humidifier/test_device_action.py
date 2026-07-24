@@ -1,9 +1,10 @@
 """The tests for Humidifier device actions."""
+
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_action
 from homeassistant.const import STATE_ON, EntityCategory
@@ -21,11 +22,6 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.mark.parametrize(
@@ -94,12 +90,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -232,11 +228,11 @@ async def test_action(
         },
     )
 
-    set_humidity_calls = async_mock_service(hass, "humidifier", "set_humidity")
-    set_mode_calls = async_mock_service(hass, "humidifier", "set_mode")
-    turn_on_calls = async_mock_service(hass, "humidifier", "turn_on")
-    turn_off_calls = async_mock_service(hass, "humidifier", "turn_off")
-    toggle_calls = async_mock_service(hass, "humidifier", "toggle")
+    set_humidity_calls = async_mock_service(hass, DOMAIN, "set_humidity")
+    set_mode_calls = async_mock_service(hass, DOMAIN, "set_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    toggle_calls = async_mock_service(hass, DOMAIN, "toggle")
 
     assert len(set_humidity_calls) == 0
     assert len(set_mode_calls) == 0
@@ -345,7 +341,7 @@ async def test_action_legacy(
         },
     )
 
-    set_mode_calls = async_mock_service(hass, "humidifier", "set_mode")
+    set_mode_calls = async_mock_service(hass, DOMAIN, "set_mode")
 
     hass.bus.async_fire("test_event_set_mode")
     await hass.async_block_till_done()

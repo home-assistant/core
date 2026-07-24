@@ -1,31 +1,29 @@
 """Sensor platform for motionEye."""
-from __future__ import annotations
 
-import logging
-from types import MappingProxyType
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, override
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ACTIONS
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
-from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
-
-_LOGGER = logging.getLogger(__name__)
+from . import get_camera_from_cameras, listen_for_new_cameras
+from .const import TYPE_MOTIONEYE_ACTION_SENSOR
+from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
+from .entity import MotionEyeEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MotionEyeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:
@@ -35,8 +33,8 @@ async def async_setup_entry(
                 MotionEyeActionSensor(
                     entry.entry_id,
                     camera,
-                    entry_data[CONF_CLIENT],
-                    entry_data[CONF_COORDINATOR],
+                    coordinator.client,
+                    coordinator,
                     entry.options,
                 )
             ]
@@ -55,8 +53,8 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         config_entry_id: str,
         camera: dict[str, Any],
         client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, str],
+        coordinator: MotionEyeUpdateCoordinator,
+        options: Mapping[str, str],
     ) -> None:
         """Initialize an action sensor."""
         super().__init__(
@@ -72,11 +70,13 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return len(self._camera.get(KEY_ACTIONS, [])) if self._camera else 0
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Add actions as attribute."""
         if actions := (self._camera.get(KEY_ACTIONS) if self._camera else None):
@@ -84,6 +84,7 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)

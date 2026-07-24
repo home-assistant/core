@@ -1,11 +1,10 @@
 """Test Zamg component init."""
-from unittest.mock import MagicMock
 
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN as ZAMG_DOMAIN
+from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,7 +25,7 @@ from tests.common import MockConfigEntry
         (
             {
                 "domain": WEATHER_DOMAIN,
-                "platform": ZAMG_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{TEST_STATION_NAME}_{TEST_STATION_ID}",
                 "suggested_object_id": f"Zamg {TEST_STATION_NAME}",
                 "disabled_by": None,
@@ -38,7 +37,7 @@ from tests.common import MockConfigEntry
         (
             {
                 "domain": WEATHER_DOMAIN,
-                "platform": ZAMG_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{TEST_STATION_NAME_2}_{TEST_STATION_ID_2}",
                 "suggested_object_id": f"Zamg {TEST_STATION_NAME_2}",
                 "disabled_by": None,
@@ -50,7 +49,7 @@ from tests.common import MockConfigEntry
         (
             {
                 "domain": SENSOR_DOMAIN,
-                "platform": ZAMG_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{TEST_STATION_NAME_2}_{TEST_STATION_ID_2}_temperature",
                 "suggested_object_id": f"Zamg {TEST_STATION_NAME_2}",
                 "disabled_by": None,
@@ -61,9 +60,10 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_migrate_unique_ids(
     hass: HomeAssistant,
-    mock_zamg_coordinator: MagicMock,
+    entity_registry: er.EntityRegistry,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -74,7 +74,6 @@ async def test_migrate_unique_ids(
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
@@ -96,7 +95,7 @@ async def test_migrate_unique_ids(
         (
             {
                 "domain": WEATHER_DOMAIN,
-                "platform": ZAMG_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{TEST_STATION_NAME}_{TEST_STATION_ID}",
                 "suggested_object_id": f"Zamg {TEST_STATION_NAME}",
                 "disabled_by": None,
@@ -107,9 +106,10 @@ async def test_migrate_unique_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_dont_migrate_unique_ids(
     hass: HomeAssistant,
-    mock_zamg_coordinator: MagicMock,
+    entity_registry: er.EntityRegistry,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -120,12 +120,10 @@ async def test_dont_migrate_unique_ids(
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
-
     # create existing entry with new_unique_id
     existing_entity = entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
-        ZAMG_DOMAIN,
+        DOMAIN,
         unique_id=TEST_STATION_ID,
         suggested_object_id=f"Zamg {TEST_STATION_NAME}",
         config_entry=mock_config_entry,
@@ -158,7 +156,7 @@ async def test_dont_migrate_unique_ids(
         (
             {
                 "domain": WEATHER_DOMAIN,
-                "platform": ZAMG_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": TEST_STATION_ID,
                 "suggested_object_id": f"Zamg {TEST_STATION_NAME}",
                 "disabled_by": None,
@@ -167,9 +165,10 @@ async def test_dont_migrate_unique_ids(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_zamg_coordinator")
 async def test_unload_entry(
     hass: HomeAssistant,
-    mock_zamg_coordinator: MagicMock,
+    entity_registry: er.EntityRegistry,
     entitydata: dict,
     unique_id: str,
 ) -> None:
@@ -177,11 +176,9 @@ async def test_unload_entry(
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
-
     entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
-        ZAMG_DOMAIN,
+        DOMAIN,
         unique_id=TEST_STATION_ID,
         suggested_object_id=f"Zamg {TEST_STATION_NAME}",
         config_entry=mock_config_entry,

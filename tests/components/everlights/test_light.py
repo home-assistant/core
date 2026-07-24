@@ -1,4 +1,5 @@
 """The tests for the everlights component."""
+
 from homeassistant.components.everlights import light as everlights
 
 

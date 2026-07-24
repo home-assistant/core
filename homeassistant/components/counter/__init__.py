@@ -1,13 +1,11 @@
 """Component to count within automations."""
-from __future__ import annotations
 
 import logging
-from typing import Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
     CONF_MAXIMUM,
@@ -15,12 +13,13 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import CounterEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ SERVICE_SET_VALUE = "set_value"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
     vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
@@ -59,7 +58,7 @@ STORAGE_FIELDS = {
 }
 
 
-def _none_to_empty_dict(value):
+def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[str, Any]:
     if value is None:
         return {}
     return value
@@ -121,9 +120,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
-    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
-    component.async_register_entity_service(SERVICE_RESET, {}, "async_reset")
+    component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
+    component.async_register_entity_service(SERVICE_DECREMENT, None, "async_decrement")
+    component.async_register_entity_service(SERVICE_RESET, None, "async_reset")
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
         {vol.Required(VALUE): cv.positive_int},
@@ -138,15 +137,18 @@ class CounterStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_UPDATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return info[CONF_NAME]  # type: ignore[no-any-return]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
@@ -165,6 +167,7 @@ class Counter(collection.CollectionEntity, RestoreEntity):
         self._state: int | None = config[CONF_INITIAL]
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Create counter instance from storage."""
         counter = cls(config)
@@ -172,6 +175,7 @@ class Counter(collection.CollectionEntity, RestoreEntity):
         return counter
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Create counter instance from yaml config."""
         counter = cls(config)
@@ -180,40 +184,45 @@ class Counter(collection.CollectionEntity, RestoreEntity):
         return counter
 
     @property
+    @override
     def name(self) -> str | None:
         """Return name of the counter."""
         return self._config.get(CONF_NAME)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
+    @override
     def state(self) -> int | None:
         """Return the current value of the counter."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         ret = {
-            ATTR_EDITABLE: self.editable,
-            ATTR_INITIAL: self._config[CONF_INITIAL],
-            ATTR_STEP: self._config[CONF_STEP],
+            CounterEntityStateAttribute.EDITABLE: self.editable,
+            CounterEntityStateAttribute.INITIAL: self._config[CONF_INITIAL],
+            CounterEntityStateAttribute.STEP: self._config[CONF_STEP],
         }
         if self._config[CONF_MINIMUM] is not None:
-            ret[CONF_MINIMUM] = self._config[CONF_MINIMUM]
+            ret[CounterEntityStateAttribute.MINIMUM] = self._config[CONF_MINIMUM]
         if self._config[CONF_MAXIMUM] is not None:
-            ret[CONF_MAXIMUM] = self._config[CONF_MAXIMUM]
+            ret[CounterEntityStateAttribute.MAXIMUM] = self._config[CONF_MAXIMUM]
         return ret
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique id of the entity."""
-        return self._config[CONF_ID]
+        return self._config[CONF_ID]  # type: ignore[no-any-return]
 
-    def compute_next_state(self, state) -> int:
+    def compute_next_state(self, state: int | None) -> int | None:
         """Keep the state within the range of min/max values."""
         if self._config[CONF_MINIMUM] is not None:
             state = max(self._config[CONF_MINIMUM], state)
@@ -222,6 +231,7 @@ class Counter(collection.CollectionEntity, RestoreEntity):
 
         return state
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
@@ -256,22 +266,26 @@ class Counter(collection.CollectionEntity, RestoreEntity):
         """Set counter to value."""
         if (maximum := self._config.get(CONF_MAXIMUM)) is not None and value > maximum:
             raise ValueError(
-                f"Value {value} for {self.entity_id} exceeding the maximum value of {maximum}"
+                f"Value {value} for {self.entity_id}"
+                f" exceeding the maximum value of {maximum}"
             )
 
         if (minimum := self._config.get(CONF_MINIMUM)) is not None and value < minimum:
             raise ValueError(
-                f"Value {value} for {self.entity_id} exceeding the minimum value of {minimum}"
+                f"Value {value} for {self.entity_id}"
+                f" exceeding the minimum value of {minimum}"
             )
 
         if (step := self._config.get(CONF_STEP)) is not None and value % step != 0:
             raise ValueError(
-                f"Value {value} for {self.entity_id} is not a multiple of the step size {step}"
+                f"Value {value} for {self.entity_id}"
+                f" is not a multiple of the step size {step}"
             )
 
         self._state = value
         self.async_write_ha_state()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Change the counter's settings WS CRUD."""
         self._config = config

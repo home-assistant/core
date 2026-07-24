@@ -1,20 +1,20 @@
 """Support for Transport NSW (AU) to query next leave event."""
-from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any, override
 
 from TransportNSW import TransportNSW
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -43,7 +43,7 @@ ICONS = {
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
@@ -76,28 +76,20 @@ class TransportNSWSensor(SensorEntity):
 
     _attr_attribution = "Data provided by Transport NSW"
     _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, data, stop_id, name):
         """Initialize the sensor."""
         self.data = data
-        self._name = name
+        self._attr_name = name
         self._stop_id = stop_id
-        self._times = self._state = None
-        self._icon = ICONS[None]
+        self._times = None
+        self._attr_icon = ICONS[None]
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times is not None:
             return {
@@ -109,23 +101,14 @@ class TransportNSWSensor(SensorEntity):
                 ATTR_DESTINATION: self._times[ATTR_DESTINATION],
                 ATTR_MODE: self._times[ATTR_MODE],
             }
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return UnitOfTime.MINUTES
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
+        return None
 
     def update(self) -> None:
         """Get the latest data from Transport NSW and update the states."""
         self.data.update()
         self._times = self.data.info
-        self._state = self._times[ATTR_DUE_IN]
-        self._icon = ICONS[self._times[ATTR_MODE]]
+        self._attr_native_value = self._times[ATTR_DUE_IN]
+        self._attr_icon = ICONS[self._times[ATTR_MODE]]
 
 
 def _get_value(value):

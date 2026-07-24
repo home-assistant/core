@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "do_not_disturb_until": {
+        "default": "mdi:clock"
+      }
+    }
+  }
+}

@@ -1,7 +1,6 @@
 """Support for MQTT scenes."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -9,19 +8,18 @@ from homeassistant.components import scene
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PAYLOAD_ON
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN
+from .entity import MqttEntity, async_setup_entity_entry_helper
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
@@ -43,10 +41,10 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT scene through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttScene,
@@ -67,28 +65,30 @@ class MqttScene(
     _entity_id_format = scene.DOMAIN + ".{}"
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
+    @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene.
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            self._config[CONF_COMMAND_TOPIC],
-            self._config[CONF_PAYLOAD_ON],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_ON]
         )

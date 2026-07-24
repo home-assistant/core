@@ -1,78 +1,72 @@
 """The tests for the Traccar device tracker platform."""
-from unittest.mock import AsyncMock, patch
 
-from pytraccar import ReportsEventeModel
+import pytest
 
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.traccar.device_tracker import (
-    PLATFORM_SCHEMA as TRACCAR_PLATFORM_SCHEMA,
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    TrackerEntityStateAttribute,
 )
+from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.traccar import DOMAIN
 from homeassistant.const import (
-    CONF_EVENT,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PLATFORM,
-    CONF_USERNAME,
+    ATTR_BATTERY_LEVEL,
+    CONF_WEBHOOK_ID,
+    STATE_NOT_HOME,
+    EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, mock_restore_cache
+
+DEVICE_ID = "device_1"
+ENTITY_ID = f"{DEVICE_TRACKER_DOMAIN}.{DEVICE_ID}"
 
 
-async def test_import_events_catch_all(hass: HomeAssistant) -> None:
-    """Test importing all events and firing them in HA using their event types."""
-    conf_dict = {
-        DOMAIN: TRACCAR_PLATFORM_SCHEMA(
-            {
-                CONF_PLATFORM: "traccar",
-                CONF_HOST: "fake_host",
-                CONF_USERNAME: "fake_user",
-                CONF_PASSWORD: "fake_pass",
-                CONF_EVENT: ["all_events"],
-            }
-        )
-    }
+@pytest.fixture(autouse=True)
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
+    """Mock device tracker config loading."""
 
-    device = {"id": 1, "name": "abc123"}
-    api_mock = AsyncMock()
-    api_mock.devices = [device]
-    api_mock.get_reports_events.return_value = [
-        ReportsEventeModel(
-            **{
-                "id": 1,
-                "positionId": 1,
-                "geofenceId": 1,
-                "maintenanceId": 1,
-                "deviceId": device["id"],
-                "type": "ignitionOn",
-                "eventTime": dt_util.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "attributes": {},
-            }
-        ),
-        ReportsEventeModel(
-            **{
-                "id": 2,
-                "positionId": 2,
-                "geofenceId": 1,
-                "maintenanceId": 1,
-                "deviceId": device["id"],
-                "type": "ignitionOff",
-                "eventTime": dt_util.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "attributes": {},
-            }
-        ),
-    ]
 
-    events_ignition_on = async_capture_events(hass, "traccar_ignition_on")
-    events_ignition_off = async_capture_events(hass, "traccar_ignition_off")
+async def test_restore_state(hass: HomeAssistant) -> None:
+    """Test that the previous location is restored for a known device."""
+    assert await async_setup_component(hass, DEVICE_TRACKER_DOMAIN, {})
 
-    with patch(
-        "homeassistant.components.traccar.device_tracker.ApiClient",
-        return_value=api_mock,
-    ):
-        assert await async_setup_component(hass, DOMAIN, conf_dict)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_WEBHOOK_ID: "webhook_id"})
+    entry.add_to_hass(hass)
+    dr.async_get(hass).async_get_or_create(  # pylint: disable=home-assistant-tests-registry-fixtures
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, DEVICE_ID)},
+    )
 
-    assert len(events_ignition_on) == 1
-    assert len(events_ignition_off) == 1
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                ENTITY_ID,
+                STATE_NOT_HOME,
+                {
+                    EntityStateAttribute.LATITUDE: 1.0,
+                    EntityStateAttribute.LONGITUDE: 2.0,
+                    TrackerEntityStateAttribute.GPS_ACCURACY: 30,
+                    ATTR_BATTERY_LEVEL: 40,
+                    "altitude": 50,
+                    "bearing": 60,
+                    "speed": 70,
+                },
+            )
+        ],
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[EntityStateAttribute.LATITUDE] == 1.0
+    assert state.attributes[EntityStateAttribute.LONGITUDE] == 2.0
+    assert state.attributes[TrackerEntityStateAttribute.GPS_ACCURACY] == 30
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 40
+    assert state.attributes["altitude"] == 50
+    assert state.attributes["bearing"] == 60
+    assert state.attributes["speed"] == 70

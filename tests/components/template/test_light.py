@@ -1,13 +1,22 @@
 """The tests for the  Template light platform."""
-import pytest
 
-import homeassistant.components.light as light
+from typing import Any
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components import light, template
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
     ColorMode,
     LightEntityFeature,
 )
@@ -18,159 +27,393 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
-from tests.common import assert_setup_component
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_action,
+    async_get_flow_preview_state,
+    async_trigger,
+    make_test_action,
+    make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
+)
 
-# Represent for light's availability
-_STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
+from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
+TEST_STATE_ENTITY_ID = "light.test_state"
+TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
-OPTIMISTIC_ON_OFF_LIGHT_CONFIG = {
-    "turn_on": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_on",
-            "caller": "{{ this.entity_id }}",
-        },
-    },
-    "turn_off": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_off",
-            "caller": "{{ this.entity_id }}",
-        },
-    },
+TEST_LIGHT = TemplatePlatformSetup(
+    light.DOMAIN,
+    "test_light",
+    make_test_trigger(
+        TEST_STATE_ENTITY_ID,
+        TEST_AVAILABILITY_ENTITY,
+    ),
+)
+
+ON_ACTION = make_test_action("turn_on")
+OFF_ACTION = make_test_action("turn_off")
+ON_OFF_ACTIONS = {
+    **ON_ACTION,
+    **OFF_ACTION,
 }
 
 
-OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG = {
-    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-    "set_level": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "set_level",
-            "brightness": "{{brightness}}",
-            "caller": "{{ this.entity_id }}",
-        },
+BRIGHTNESS_DATA = {
+    "brightness": "{{ brightness }}",
+    "brightness_pct": "{{ brightness_pct }}",
+}
+SET_LEVEL_ACTION = make_test_action("set_level", BRIGHTNESS_DATA)
+ON_OFF_SET_LEVEL_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **SET_LEVEL_ACTION,
+}
+
+COLOR_TEMP_ACTION = make_test_action(
+    "set_temperature",
+    {
+        "color_temp": "{{color_temp}}",
+        "color_temp_kelvin": "{{color_temp_kelvin}}",
     },
+)
+ON_OFF_COLOR_TEMP_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **COLOR_TEMP_ACTION,
+}
+
+HS_ACTION = make_test_action(
+    "set_hs",
+    {"s": "{{ s }}", "h": "{{ h }}"},
+)
+ON_OFF_HS_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **HS_ACTION,
+}
+
+RGB_ACTION = make_test_action(
+    "set_rgb",
+    {"r": "{{ r }}", "g": "{{ g }}", "b": "{{ b }}"},
+)
+ON_OFF_RGB_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **RGB_ACTION,
+}
+
+RGBW_ACTION = make_test_action(
+    "set_rgbw",
+    {"r": "{{ r }}", "g": "{{ g }}", "b": "{{ b }}", "w": "{{ w }}"},
+)
+ON_OFF_RGBW_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **RGBW_ACTION,
+}
+
+RGBWW_ACTION = make_test_action(
+    "set_rgbww",
+    {
+        "r": "{{ r }}",
+        "g": "{{ g }}",
+        "b": "{{ b }}",
+        "cw": "{{ cw }}",
+        "ww": "{{ ww }}",
+    },
+)
+ON_OFF_RGBWW_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **RGBWW_ACTION,
+}
+
+XY_ACTION = make_test_action(
+    "set_xy",
+    {
+        "x": "{{ x }}",
+        "y": "{{ y }}",
+    },
+)
+ON_OFF_XY_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **XY_ACTION,
+}
+
+SET_EFFECT_ACTION = make_test_action("set_effect", {"effect": "{{ effect }}"})
+
+TRANSITION_DATA = {"transition": "{{ transition }}"}
+OFF_TRANSITION_ACTION = make_test_action("turn_off", TRANSITION_DATA)
+ON_ACTION_WITH_TRANSITION = {
+    **make_test_action("turn_on", TRANSITION_DATA),
+    **OFF_ACTION,
+    **make_test_action("set_level", {**BRIGHTNESS_DATA, **TRANSITION_DATA}),
 }
 
 
-OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG = {
-    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-    "set_temperature": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "set_temperature",
-            "caller": "{{ this.entity_id }}",
-            "color_temp": "{{color_temp}}",
-        },
-    },
+OFF_ACTION_WITH_TRANSITION = {
+    **ON_ACTION,
+    **make_test_action("turn_off", TRANSITION_DATA),
+    **make_test_action("set_level", {**BRIGHTNESS_DATA, **TRANSITION_DATA}),
 }
 
 
-OPTIMISTIC_HS_COLOR_LIGHT_CONFIG = {
-    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-    "set_color": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "set_color",
-            "caller": "{{ this.entity_id }}",
-            "s": "{{s}}",
-            "h": "{{h}}",
-        },
-    },
+ALL_COLOR_ACTIONS = {
+    **HS_ACTION,
+    **COLOR_TEMP_ACTION,
+    **RGB_ACTION,
+    **RGBW_ACTION,
+    **RGBWW_ACTION,
+    **XY_ACTION,
 }
 
 
-async def async_setup_light(hass, count, light_config):
-    """Do setup of light integration."""
-    config = {"light": {"platform": "template", "lights": light_config}}
+async def _call_and_assert_action(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    service: str,
+    service_data: ConfigType | None = None,
+    expected_data: ConfigType | None = None,
+    expected_action: str | None = None,
+) -> None:
+    """Call a service and validate that it was called properly.
 
-    with assert_setup_component(count, light.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
+    The service is validated when expected_action is omitted.
+    """
+    if expected_action is None:
+        expected_action = service
+    current = len(calls)
+    await hass.services.async_call(
+        light.DOMAIN,
+        service,
+        {**(service_data or {}), ATTR_ENTITY_ID: TEST_LIGHT.entity_id},
+        blocking=True,
+    )
+    assert_action(
+        TEST_LIGHT, calls, current + 1, expected_action, **(expected_data or {})
+    )
 
 
 @pytest.fixture
-async def setup_light(hass, count, light_config):
-    """Do setup of light integration."""
-    await async_setup_light(hass, count, light_config)
-
-
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(
-    ("supported_features", "supported_color_modes"),
-    [(0, [ColorMode.BRIGHTNESS])],
-)
-@pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{states.test['big.fat...']}}",
-            }
-        },
-    ],
-)
-async def test_template_state_invalid(
-    hass: HomeAssistant, supported_features, supported_color_modes, setup_light
+async def setup_light(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    config: dict[str, Any],
 ) -> None:
-    """Test template state with render error."""
-    state = hass.states.get("light.test_template_light")
-    assert state.state == STATE_OFF
-    assert state.attributes["color_mode"] is None
-    assert state.attributes["supported_color_modes"] == supported_color_modes
-    assert state.attributes["supported_features"] == supported_features
+    """Do setup of light integration."""
+    await setup_entity(hass, TEST_LIGHT, style, count, config)
 
 
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(
-    "light_config",
-    [
+@pytest.fixture
+async def setup_state_light(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str,
+    extra_config: ConfigType,
+):
+    """Do setup of light integration."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        ON_OFF_SET_LEVEL_ACTIONS,
+        state_template,
+        extra_config,
+    )
+
+
+@pytest.fixture
+async def setup_single_attribute_light(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    attribute: str,
+    attribute_template: str,
+    extra_config: dict,
+) -> None:
+    """Do setup of light integration."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        {attribute: attribute_template} if attribute and attribute_template else {},
+        "{{ 1 == 1 }}",
+        extra_config,
+    )
+
+
+@pytest.fixture
+async def setup_single_action_light(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    extra_config: dict,
+) -> None:
+    """Do setup of light integration."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        extra_config,
+    )
+
+
+@pytest.fixture
+async def setup_empty_action_light(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    action: str,
+    extra_config: dict,
+) -> None:
+    """Do setup of light integration."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        {"turn_on": [], "turn_off": [], action: []},
+        extra_config=extra_config,
+    )
+
+
+@pytest.fixture
+async def setup_light_with_effects(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    effect_list_template: str,
+    effect_template: str,
+) -> None:
+    """Do setup of light with effects."""
+
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
         {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{ states.light.test_state.state }}",
-            }
+            **SET_EFFECT_ACTION,
+            "effect_list": effect_list_template,
+            "effect": effect_template,
         },
-    ],
+        "{{ true }}",
+        ON_OFF_ACTIONS,
+    )
+
+
+@pytest.fixture
+async def setup_light_with_mireds(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    attribute: str,
+    attribute_template: str,
+) -> None:
+    """Do setup of light that uses mireds."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        {
+            attribute: attribute_template,
+            "temperature": "{{ 200 }}",
+            **make_test_action("set_temperature", {"color_temp": "{{ color_temp }}"}),
+        },
+        "{{ 1==1 }}",
+        ON_OFF_ACTIONS,
+    )
+
+
+@pytest.fixture
+async def setup_light_with_transition_template(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    transition_template: str,
+) -> None:
+    """Do setup of light that uses mireds."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        {
+            **SET_EFFECT_ACTION,
+            "effect_list": "{{ ['Disco', 'Police'] }}",
+            "effect": "{{ None }}",
+            "supports_transition": transition_template,
+        },
+        "{{ 1==1 }}",
+        ON_OFF_ACTIONS,
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "extra_config"),
+    [(1, "{{states.test['big.fat...']}}", {})],
 )
-async def test_template_state_text(hass: HomeAssistant, setup_light) -> None:
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_state_light")
+async def test_template_state_invalid(hass: HomeAssistant) -> None:
+    """Test template state with render error."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "extra_config"),
+    [(1, "{{ states.light.test_state.state }}", {})],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_state_light")
+async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
     set_state = STATE_ON
-    hass.states.async_set("light.test_state", set_state)
-    await hass.async_block_till_done()
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, set_state)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == set_state
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
     set_state = STATE_OFF
-    hass.states.async_set("light.test_state", set_state)
-    await hass.async_block_till_done()
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, set_state)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == set_state
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, {})])
 @pytest.mark.parametrize(
-    ("value_template", "expected_state", "expected_color_mode"),
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("state_template", "expected_state", "expected_color_mode"),
     [
         (
             "{{ 1 == 1 }}",
@@ -184,276 +427,183 @@ async def test_template_state_text(hass: HomeAssistant, setup_light) -> None:
         ),
     ],
 )
-async def test_templatex_state_boolean(
+@pytest.mark.usefixtures("setup_state_light")
+async def test_template_state_boolean(
     hass: HomeAssistant,
-    expected_color_mode,
-    expected_state,
-    count,
-    value_template,
+    expected_color_mode: ColorMode | None,
+    expected_state: str,
 ) -> None:
     """Test the setting of the state with boolean on."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-            "value_template": value_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, expected_state)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == expected_state
     assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{%- if false -%}",
-            }
-        },
-        {
-            "bad name here": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{ 1== 1}}",
-            }
-        },
-        {"test_template_light": "Invalid"},
-    ],
+    ("count", "state_template", "extra_config"), [(0, "{%- if false -%}", {})]
 )
-async def test_template_syntax_error(hass: HomeAssistant, setup_light) -> None:
-    """Test templating syntax error."""
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_state_light")
+async def test_template_config_errors(hass: HomeAssistant) -> None:
+    """Test template light configuration errors."""
     assert hass.states.async_all("light") == []
 
 
 @pytest.mark.parametrize(
-    ("light_config", "count"),
+    ("count", "config"),
+    [(0, {**ON_ACTION, **SET_LEVEL_ACTION})],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_missing_key(hass: HomeAssistant) -> None:
+    """Test missing template."""
+    assert hass.states.async_all("light") == []
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "extra_config"),
+    [(1, "{{ states.light.test_state.state }}", {})],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_state_light")
+async def test_on_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+    """Test on action."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes["color_mode"] is None
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
+
+    await _call_and_assert_action(hass, calls, SERVICE_TURN_ON)
+
+    assert state.state == STATE_OFF
+    assert state.attributes["color_mode"] is None
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("config", "style"),
     [
         (
             {
-                "light_one": {
-                    "value_template": "{{ 1== 1}}",
-                    "turn_on": {
-                        "service": "light.turn_on",
-                        "entity_id": "light.test_state",
-                    },
-                    "set_level": {
-                        "service": "light.turn_on",
-                        "data_template": {
-                            "entity_id": "light.test_state",
-                            "brightness": "{{brightness}}",
-                        },
-                    },
-                }
+                "state": "{{states.light.test_state.state}}",
+                **ON_ACTION_WITH_TRANSITION,
+                "supports_transition": "{{true}}",
             },
-            0,
+            ConfigurationStyle.MODERN,
+        ),
+        (
+            {
+                "state": "{{states.light.test_state.state}}",
+                **ON_ACTION_WITH_TRANSITION,
+                "supports_transition": "{{true}}",
+            },
+            ConfigurationStyle.TRIGGER,
         ),
     ],
 )
-async def test_missing_key(hass: HomeAssistant, count, setup_light) -> None:
-    """Test missing template."""
-    if count:
-        assert hass.states.async_all("light") != []
-    else:
-        assert hass.states.async_all("light") == []
-
-
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{states.light.test_state.state}}",
-            }
-        },
-    ],
-)
-async def test_on_action(hass: HomeAssistant, setup_light, calls) -> None:
-    """Test on action."""
-    hass.states.async_set("light.test_state", STATE_OFF)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test_template_light")
-    assert state.state == STATE_OFF
-    assert state.attributes["color_mode"] is None
-    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == 0
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light"},
-        blocking=True,
-    )
-
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == "light.test_template_light"
-
-    assert state.state == STATE_OFF
-    assert state.attributes["color_mode"] is None
-    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == 0
-
-
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                "value_template": "{{states.light.test_state.state}}",
-                "turn_on": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "transition": "{{transition}}",
-                    },
-                },
-                "turn_off": {
-                    "service": "light.turn_off",
-                    "entity_id": "light.test_state",
-                },
-                "supports_transition_template": "{{true}}",
-                "set_level": {
-                    "service": "light.turn_on",
-                    "data_template": {
-                        "entity_id": "light.test_state",
-                        "brightness": "{{brightness}}",
-                        "transition": "{{transition}}",
-                    },
-                },
-            }
-        },
-    ],
-)
+@pytest.mark.usefixtures("setup_light")
 async def test_on_action_with_transition(
-    hass: HomeAssistant, setup_light, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test on action with transition."""
-    hass.states.async_set("light.test_state", STATE_OFF)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
 
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_OFF
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_TRANSITION: 5},
-        blocking=True,
+    await _call_and_assert_action(
+        hass, calls, SERVICE_TURN_ON, {ATTR_TRANSITION: 5}, {ATTR_TRANSITION: 5}
     )
 
-    assert len(calls) == 1
-    assert calls[0].data["transition"] == 5
-
     assert state.state == STATE_OFF
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "config"), [(1, ON_OFF_SET_LEVEL_ACTIONS)])
 @pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-            }
-        },
-    ],
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
+@pytest.mark.usefixtures("setup_light")
 async def test_on_action_optimistic(
-    hass: HomeAssistant,
-    setup_light,
-    calls,
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test on action with optimistic state."""
-    hass.states.async_set("light.test_state", STATE_OFF)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
 
-    state = hass.states.get("light.test_template_light")
-    assert state.state == STATE_OFF
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light"},
-        blocking=True,
-    )
+    await _call_and_assert_action(hass, calls, SERVICE_TURN_ON)
 
-    state = hass.states.get("light.test_template_light")
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == "light.test_template_light"
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_BRIGHTNESS: 100},
-        blocking=True,
+        {ATTR_BRIGHTNESS: 100},
+        {ATTR_BRIGHTNESS: 100},
+        "set_level",
     )
 
-    state = hass.states.get("light.test_template_light")
-    assert len(calls) == 2
-    assert calls[-1].data["action"] == "set_level"
-    assert calls[-1].data["brightness"] == 100
-    assert calls[-1].data["caller"] == "light.test_template_light"
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{states.light.test_state.state}}",
-            }
-        },
-    ],
+    ("count", "state_template", "extra_config"),
+    [(1, "{{ states.light.test_state.state }}", {})],
 )
-async def test_off_action(hass: HomeAssistant, setup_light, calls) -> None:
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_state_light")
+async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test off action."""
-    hass.states.async_set("light.test_state", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_template_light"},
-        blocking=True,
-    )
+    await _call_and_assert_action(hass, calls, SERVICE_TURN_OFF)
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == "light.test_template_light"
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
@@ -462,140 +612,121 @@ async def test_off_action(hass: HomeAssistant, setup_light, calls) -> None:
 
 @pytest.mark.parametrize("count", [(1)])
 @pytest.mark.parametrize(
-    "light_config",
+    ("config", "style"),
     [
-        {
-            "test_template_light": {
-                "value_template": "{{states.light.test_state.state}}",
-                "turn_on": {
-                    "service": "light.turn_on",
-                    "entity_id": "light.test_state",
-                },
-                "turn_off": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "transition": "{{transition}}",
-                    },
-                },
-                "supports_transition_template": "{{true}}",
-                "set_level": {
-                    "service": "light.turn_on",
-                    "data_template": {
-                        "entity_id": "light.test_state",
-                        "brightness": "{{brightness}}",
-                        "transition": "{{transition}}",
-                    },
-                },
-            }
-        },
+        (
+            {
+                "state": "{{states.light.test_state.state}}",
+                **OFF_ACTION_WITH_TRANSITION,
+                "supports_transition": "{{true}}",
+            },
+            ConfigurationStyle.MODERN,
+        ),
+        (
+            {
+                "state": "{{states.light.test_state.state}}",
+                **OFF_ACTION_WITH_TRANSITION,
+                "supports_transition": "{{true}}",
+            },
+            ConfigurationStyle.TRIGGER,
+        ),
     ],
 )
+@pytest.mark.usefixtures("setup_light")
 async def test_off_action_with_transition(
-    hass: HomeAssistant, setup_light, calls
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test off action with transition."""
-    hass.states.async_set("light.test_state", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_TRANSITION: 2},
-        blocking=True,
+    await _call_and_assert_action(
+        hass, calls, SERVICE_TURN_OFF, {ATTR_TRANSITION: 2}, {ATTR_TRANSITION: 2}
     )
 
-    assert len(calls) == 1
-    assert calls[0].data["transition"] == 2
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "config"), [(1, ON_OFF_SET_LEVEL_ACTIONS)])
 @pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-            }
-        },
-    ],
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_off_action_optimistic(hass: HomeAssistant, setup_light, calls) -> None:
+@pytest.mark.usefixtures("setup_light")
+async def test_off_action_optimistic(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test off action with optimistic state."""
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["color_mode"] is None
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
+
+    await _call_and_assert_action(hass, calls, SERVICE_TURN_OFF)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_OFF
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_template_light"},
-        blocking=True,
-    )
 
-    assert len(calls) == 1
-    state = hass.states.get("light.test_template_light")
-    assert state.state == STATE_OFF
-    assert state.attributes["color_mode"] is None
-    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert state.attributes["supported_features"] == 0
-
-
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{1 == 1}}",
-            }
-        },
-    ],
+    ("count", "state_template", "extra_config"),
+    [(1, "{{ 1 == 1 }}", {})],
 )
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("brightness", "brightness_pct"),
+    [(2, 1), (255, 100), (124, 49), (1, 0), (254, 100)],
+)
+@pytest.mark.usefixtures("setup_state_light")
 async def test_level_action_no_template(
-    hass: HomeAssistant,
-    setup_light,
-    calls,
+    hass: HomeAssistant, brightness: int, brightness_pct: int, calls: list[ServiceCall]
 ) -> None:
     """Test setting brightness with optimistic template."""
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("brightness") is None
 
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_BRIGHTNESS: 124},
-        blocking=True,
+        {ATTR_BRIGHTNESS: brightness},
+        {ATTR_BRIGHTNESS: brightness, ATTR_BRIGHTNESS_PCT: brightness_pct},
+        "set_level",
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_level"
-    assert calls[-1].data["brightness"] == 124
-    assert calls[-1].data["caller"] == "light.test_template_light"
-
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
-    assert state.attributes["brightness"] == 124
+    assert state.attributes["brightness"] == brightness
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_SET_LEVEL_ACTIONS)])
 @pytest.mark.parametrize(
-    ("expected_level", "level_template", "expected_color_mode"),
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "level"),
+        (ConfigurationStyle.TRIGGER, "level"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_level", "attribute_template", "expected_color_mode"),
     [
         (255, "{{255}}", ColorMode.BRIGHTNESS),
         (None, "{{256}}", ColorMode.BRIGHTNESS),
@@ -607,237 +738,265 @@ async def test_level_action_no_template(
             "{{ state_attr('light.nolight', 'brightness') }}",
             ColorMode.BRIGHTNESS,
         ),
+        (None, "{{'one'}}", ColorMode.BRIGHTNESS),
     ],
 )
+@pytest.mark.usefixtures("setup_single_attribute_light")
 async def test_level_template(
     hass: HomeAssistant,
-    expected_level,
-    expected_color_mode,
-    count,
-    level_template,
+    expected_level: Any,
+    expected_color_mode: ColorMode,
 ) -> None:
     """Test the template for the level."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "level_template": level_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("brightness") == expected_level
     assert state.state == STATE_ON
+
     assert state.attributes["color_mode"] == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
 @pytest.mark.parametrize(
-    ("expected_temp", "temperature_template", "expected_color_mode"),
+    ("style", "attribute"),
     [
-        (500, "{{500}}", ColorMode.COLOR_TEMP),
+        (ConfigurationStyle.MODERN, "temperature"),
+        (ConfigurationStyle.TRIGGER, "temperature"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_temp", "attribute_template", "expected_color_mode"),
+    [
+        (2000, "{{500}}", ColorMode.COLOR_TEMP),
         (None, "{{501}}", ColorMode.COLOR_TEMP),
         (None, "{{x - 12}}", ColorMode.COLOR_TEMP),
         (None, "None", ColorMode.COLOR_TEMP),
         (None, "{{ none }}", ColorMode.COLOR_TEMP),
         (None, "", ColorMode.COLOR_TEMP),
+        (None, "{{ 'one' }}", ColorMode.COLOR_TEMP),
     ],
 )
+@pytest.mark.usefixtures("setup_single_attribute_light")
 async def test_temperature_template(
     hass: HomeAssistant,
-    expected_temp,
-    expected_color_mode,
-    count,
-    temperature_template,
+    expected_temp: Any,
+    expected_color_mode: ColorMode,
 ) -> None:
     """Test the template for the temperature."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "temperature_template": temperature_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("color_temp") == expected_temp
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("color_temp_kelvin") == expected_temp
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
 @pytest.mark.parametrize(
-    "light_config",
+    "style",
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG,
-                "value_template": "{{1 == 1}}",
-            }
-        },
+        ConfigurationStyle.MODERN,
+        ConfigurationStyle.TRIGGER,
     ],
 )
+@pytest.mark.usefixtures("setup_single_action_light")
 async def test_temperature_action_no_template(
     hass: HomeAssistant,
-    setup_light,
-    calls,
+    calls: list[ServiceCall],
 ) -> None:
     """Test setting temperature with optimistic template."""
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("color_template") is None
 
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 345},
-        blocking=True,
+        {ATTR_COLOR_TEMP_KELVIN: 2898},
+        {ATTR_COLOR_TEMP_KELVIN: 2898},
+        "set_temperature",
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_temperature"
-    assert calls[-1].data["caller"] == "light.test_template_light"
-    assert calls[-1].data["color_temp"] == 345
-
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
-    assert state.attributes.get("color_temp") == 345
+    assert state.attributes.get("color_temp_kelvin") == 2898
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "light_config",
+    ("count", "attribute_template", "extra_config"),
+    [(1, "Template light", ON_OFF_SET_LEVEL_ACTIONS)],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute", "entity_id"),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "friendly_name": "Template light",
-                "value_template": "{{ 1 == 1 }}",
-            }
-        },
+        (ConfigurationStyle.MODERN, "name", "light.template_light"),
+        (ConfigurationStyle.TRIGGER, "name", "light.template_light"),
     ],
 )
-async def test_friendly_name(hass: HomeAssistant, setup_light) -> None:
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_friendly_name(hass: HomeAssistant, entity_id: str) -> None:
     """Test the accessibility of the friendly_name attribute."""
 
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(entity_id)
     assert state is not None
 
     assert state.attributes.get("friendly_name") == "Template light"
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_SET_LEVEL_ACTIONS)])
 @pytest.mark.parametrize(
-    "light_config",
+    ("style", "attribute"),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "friendly_name": "Template light",
-                "value_template": "{{ 1 == 1 }}",
-                "icon_template": (
-                    "{% if states.light.test_state.state %}mdi:check{% endif %}"
-                ),
-            }
-        },
+        (ConfigurationStyle.MODERN, "icon"),
+        (ConfigurationStyle.TRIGGER, "icon"),
     ],
 )
-async def test_icon_template(hass: HomeAssistant, setup_light) -> None:
+@pytest.mark.parametrize(
+    "attribute_template", ["{% if states.light.test_state.state %}mdi:check{% endif %}"]
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_icon_template(hass: HomeAssistant) -> None:
     """Test icon template."""
-    state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("icon") == ""
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("icon") in ("", None)
 
-    state = hass.states.async_set("light.test_state", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
 
     assert state.attributes["icon"] == "mdi:check"
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_SET_LEVEL_ACTIONS)])
 @pytest.mark.parametrize(
-    "light_config",
+    ("style", "attribute"),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "friendly_name": "Template light",
-                "value_template": "{{ 1 == 1 }}",
-                "entity_picture_template": (
-                    "{% if states.light.test_state.state %}/local/light.png{% endif %}"
-                ),
-            }
-        },
+        (ConfigurationStyle.MODERN, "picture"),
+        (ConfigurationStyle.TRIGGER, "picture"),
     ],
 )
-async def test_entity_picture_template(hass: HomeAssistant, setup_light) -> None:
+@pytest.mark.parametrize(
+    "attribute_template",
+    ["{% if states.light.test_state.state %}/local/light.png{% endif %}"],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_entity_picture_template(hass: HomeAssistant) -> None:
     """Test entity_picture template."""
-    state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("entity_picture") == ""
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("entity_picture") in ("", None)
 
-    state = hass.states.async_set("light.test_state", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test_template_light")
-
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes["entity_picture"] == "/local/light.png"
 
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "light_config",
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    (
+        "extra_config",
+        "attribute",
+        "attribute_value",
+        "expected_action",
+        "expected_data",
+        "expected_color_mode",
+    ),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_HS_COLOR_LIGHT_CONFIG,
-                "value_template": "{{1 == 1}}",
-            }
-        },
+        (
+            ON_OFF_HS_ACTIONS,
+            ATTR_HS_COLOR,
+            (40, 50),
+            "set_hs",
+            {"h": 40, "s": 50},
+            ColorMode.HS,
+        ),
+        (
+            ON_OFF_RGB_ACTIONS,
+            ATTR_RGB_COLOR,
+            (160, 78, 192),
+            "set_rgb",
+            {"r": 160, "g": 78, "b": 192},
+            ColorMode.RGB,
+        ),
+        (
+            ON_OFF_RGBW_ACTIONS,
+            ATTR_RGBW_COLOR,
+            (160, 78, 192, 25),
+            "set_rgbw",
+            {"r": 160, "g": 78, "b": 192, "w": 25},
+            ColorMode.RGBW,
+        ),
+        (
+            ON_OFF_RGBWW_ACTIONS,
+            ATTR_RGBWW_COLOR,
+            (160, 78, 192, 25, 50),
+            "set_rgbww",
+            {"r": 160, "g": 78, "b": 192, "cw": 25, "ww": 50},
+            ColorMode.RGBWW,
+        ),
+        (
+            ON_OFF_XY_ACTIONS,
+            ATTR_XY_COLOR,
+            (0.2, 0.5),
+            "set_xy",
+            {"x": 0.2, "y": 0.5},
+            ColorMode.XY,
+        ),
     ],
 )
-async def test_color_action_no_template(
+@pytest.mark.usefixtures("setup_single_action_light")
+async def test_color_actions_no_template(
     hass: HomeAssistant,
-    setup_light,
-    calls,
+    calls: list[ServiceCall],
+    attribute: str,
+    attribute_value: tuple[int | float, ...],
+    expected_action: str,
+    expected_data: dict[str, int | float],
+    expected_color_mode: ColorMode,
 ) -> None:
-    """Test setting color with optimistic template."""
-    state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("hs_color") is None
+    """Test setting colors with an optimistic template light."""
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get(attribute) is None
 
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (40, 50)},
-        blocking=True,
+        {attribute: attribute_value},
+        expected_data,
+        expected_action,
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_color"
-    assert calls[-1].data["caller"] == "light.test_template_light"
-    assert calls[-1].data["h"] == 40
-    assert calls[-1].data["s"] == 50
-
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == ColorMode.HS
-    assert state.attributes.get("hs_color") == (40, 50)
-    assert state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes.get(attribute) == attribute_value
+    assert state.attributes["supported_color_modes"] == [expected_color_mode]
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_HS_ACTIONS)])
 @pytest.mark.parametrize(
-    ("expected_hs", "color_template", "expected_color_mode"),
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "hs"),
+        (ConfigurationStyle.TRIGGER, "hs"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_hs", "attribute_template", "expected_color_mode"),
     [
         ((360, 100), "{{(360, 100)}}", ColorMode.HS),
+        ((360, 100), "(360, 100)", ColorMode.HS),
         ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
         (None, "{{(361, 100)}}", ColorMode.HS),
         (None, "{{(360, 101)}}", ColorMode.HS),
@@ -845,25 +1004,18 @@ async def test_color_action_no_template(
         (None, "{{x - 12}}", ColorMode.HS),
         (None, "", ColorMode.HS),
         (None, "{{ none }}", ColorMode.HS),
+        (None, "{{('one','two')}}", ColorMode.HS),
     ],
 )
-async def test_color_template(
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_hs_template(
     hass: HomeAssistant,
-    expected_hs,
-    expected_color_mode,
-    count,
-    color_template,
+    expected_hs: tuple[float, float] | None,
+    expected_color_mode: ColorMode,
 ) -> None:
     """Test the template for the color."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_HS_COLOR_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "color_template": color_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("hs_color") == expected_hs
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == expected_color_mode
@@ -871,220 +1023,381 @@ async def test_color_template(
     assert state.attributes["supported_features"] == 0
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_RGB_ACTIONS)])
 @pytest.mark.parametrize(
-    "light_config",
+    ("style", "attribute"),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-                "value_template": "{{1 == 1}}",
-                "set_color": [
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "test.test_state",
-                            "h": "{{h}}",
-                            "s": "{{s}}",
-                        },
-                    },
-                ],
-                "set_temperature": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "color_temp": "{{color_temp}}",
-                    },
-                },
-            }
-        },
+        (ConfigurationStyle.MODERN, "rgb"),
+        (ConfigurationStyle.TRIGGER, "rgb"),
     ],
 )
-async def test_color_and_temperature_actions_no_template(
-    hass: HomeAssistant, setup_light, calls
+@pytest.mark.parametrize(
+    ("expected_rgb", "attribute_template", "expected_color_mode"),
+    [
+        ((160, 78, 192), "{{(160, 78, 192)}}", ColorMode.RGB),
+        ((160, 78, 192), "{{[160, 78, 192]}}", ColorMode.RGB),
+        ((160, 78, 192), "(160, 78, 192)", ColorMode.RGB),
+        ((159, 77, 191), "{{(159.9, 77.9, 191.9)}}", ColorMode.RGB),
+        (None, "{{(256, 100, 100)}}", ColorMode.RGB),
+        (None, "{{(100, 256, 100)}}", ColorMode.RGB),
+        (None, "{{(100, 100, 256)}}", ColorMode.RGB),
+        (None, "{{x - 12}}", ColorMode.RGB),
+        (None, "", ColorMode.RGB),
+        (None, "{{ none }}", ColorMode.RGB),
+        (None, "{{('one','two','tree')}}", ColorMode.RGB),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_rgb_template(
+    hass: HomeAssistant,
+    expected_rgb: tuple[int, int, int] | None,
+    expected_color_mode: ColorMode,
+) -> None:
+    """Test the template for the color."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("rgb_color") == expected_rgb
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.RGB]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_RGBW_ACTIONS)])
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "rgbw"),
+        (ConfigurationStyle.TRIGGER, "rgbw"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_rgbw", "attribute_template", "expected_color_mode"),
+    [
+        ((160, 78, 192, 25), "{{(160, 78, 192, 25)}}", ColorMode.RGBW),
+        ((160, 78, 192, 25), "{{[160, 78, 192, 25]}}", ColorMode.RGBW),
+        ((160, 78, 192, 25), "(160, 78, 192, 25)", ColorMode.RGBW),
+        ((159, 77, 191, 24), "{{(159.9, 77.9, 191.9, 24.9)}}", ColorMode.RGBW),
+        (None, "{{(256, 100, 100, 100)}}", ColorMode.RGBW),
+        (None, "{{(100, 256, 100, 100)}}", ColorMode.RGBW),
+        (None, "{{(100, 100, 256, 100)}}", ColorMode.RGBW),
+        (None, "{{(100, 100, 100, 256)}}", ColorMode.RGBW),
+        (None, "{{x - 12}}", ColorMode.RGBW),
+        (None, "", ColorMode.RGBW),
+        (None, "{{ none }}", ColorMode.RGBW),
+        (None, "{{('one','two','tree','four')}}", ColorMode.RGBW),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_rgbw_template(
+    hass: HomeAssistant,
+    expected_rgbw: tuple[int, int, int, int] | None,
+    expected_color_mode: ColorMode,
+) -> None:
+    """Test the template for the color."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("rgbw_color") == expected_rgbw
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.RGBW]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_RGBWW_ACTIONS)])
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "rgbww"),
+        (ConfigurationStyle.TRIGGER, "rgbww"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_rgbww", "attribute_template", "expected_color_mode"),
+    [
+        ((160, 78, 192, 25, 55), "{{(160, 78, 192, 25, 55)}}", ColorMode.RGBWW),
+        ((160, 78, 192, 25, 55), "(160, 78, 192, 25, 55)", ColorMode.RGBWW),
+        ((160, 78, 192, 25, 55), "{{[160, 78, 192, 25, 55]}}", ColorMode.RGBWW),
+        (
+            (159, 77, 191, 24, 54),
+            "{{(159.9, 77.9, 191.9, 24.9, 54.9)}}",
+            ColorMode.RGBWW,
+        ),
+        (None, "{{(256, 100, 100, 100, 100)}}", ColorMode.RGBWW),
+        (None, "{{(100, 256, 100, 100, 100)}}", ColorMode.RGBWW),
+        (None, "{{(100, 100, 256, 100, 100)}}", ColorMode.RGBWW),
+        (None, "{{(100, 100, 100, 256, 100)}}", ColorMode.RGBWW),
+        (None, "{{(100, 100, 100, 100, 256)}}", ColorMode.RGBWW),
+        (None, "{{x - 12}}", ColorMode.RGBWW),
+        (None, "", ColorMode.RGBWW),
+        (None, "{{ none }}", ColorMode.RGBWW),
+        (None, "{{('one','two','tree','four','five')}}", ColorMode.RGBWW),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_rgbww_template(
+    hass: HomeAssistant,
+    expected_rgbww: tuple[int, int, int, int, int] | None,
+    expected_color_mode: ColorMode,
+) -> None:
+    """Test the template for the color."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("rgbww_color") == expected_rgbww
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.RGBWW]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config", "attribute"), [(1, ON_OFF_XY_ACTIONS, "xy")]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("expected_color", "attribute_template", "expected_color_mode"),
+    [
+        ((0.2, 0.5), "{{(0.2, 0.5)}}", ColorMode.XY),
+        ((0.2, 0.5), "(0.2, 0.5)", ColorMode.XY),
+        ((0.2, 0.5), "{{[0.2, 0.5]}}", ColorMode.XY),
+        (None, "{{(1.1, 0.5)}}", ColorMode.XY),
+        (None, "{{(0.5, 1.1)}}", ColorMode.XY),
+        (None, "{{(-0.1, 0.5)}}", ColorMode.XY),
+        (None, "{{(0.5, -0.1)}}", ColorMode.XY),
+        (None, "{{x - 12}}", ColorMode.XY),
+        (None, "", ColorMode.XY),
+        (None, "{{ none }}", ColorMode.XY),
+        (None, "{{('one','two')}}", ColorMode.XY),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_xy_template(
+    hass: HomeAssistant,
+    expected_color: tuple[float, float] | None,
+    expected_color_mode: ColorMode,
+) -> None:
+    """Test the xy template."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("xy_color") == expected_color
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.XY]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("config", "style"),
+    [
+        (
+            {
+                **ON_OFF_ACTIONS,
+                "state": "{{1 == 1}}",
+                **ALL_COLOR_ACTIONS,
+            },
+            ConfigurationStyle.MODERN,
+        ),
+        (
+            {
+                **ON_OFF_ACTIONS,
+                "state": "{{1 == 1}}",
+                **ALL_COLOR_ACTIONS,
+            },
+            ConfigurationStyle.TRIGGER,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_all_colors_mode_no_template(
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test setting color and color temperature with optimistic template."""
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("hs_color") is None
 
-    # Optimistically set color, light should be in hs_color mode
-    await hass.services.async_call(
-        light.DOMAIN,
+    supported_color_modes = [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+        ColorMode.RGB,
+        ColorMode.RGBW,
+        ColorMode.RGBWW,
+        ColorMode.XY,
+    ]
+
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (40, 50)},
-        blocking=True,
+        {ATTR_HS_COLOR: (40, 50)},
+        {"h": 40, "s": 50},
+        "set_hs",
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["h"] == 40
-    assert calls[-1].data["s"] == 50
-
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes["color_mode"] == ColorMode.HS
-    assert state.attributes["color_temp"] is None
+    assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["hs_color"] == (40, 50)
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
-    # Optimistically set color temp, light should be in color temp mode
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 123},
-        blocking=True,
+        {ATTR_COLOR_TEMP_KELVIN: 8130},
+        {ATTR_COLOR_TEMP_KELVIN: 8130, "color_temp": 123},
+        "set_temperature",
     )
 
-    assert len(calls) == 2
-    assert calls[-1].data["color_temp"] == 123
-
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
-    assert state.attributes["color_temp"] == 123
+    assert state.attributes["color_temp_kelvin"] == 8130
     assert "hs_color" in state.attributes  # Color temp represented as hs_color
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
-    # Optimistically set color, light should again be in hs_color mode
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (10, 20)},
-        blocking=True,
+        {ATTR_RGB_COLOR: (160, 78, 192)},
+        {"r": 160, "g": 78, "b": 192},
+        "set_rgb",
     )
 
-    assert len(calls) == 3
-    assert calls[-1].data["h"] == 10
-    assert calls[-1].data["s"] == 20
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == ColorMode.RGB
+    assert state.attributes["color_temp_kelvin"] is None
+    assert state.attributes["rgb_color"] == (160, 78, 192)
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == 0
 
-    state = hass.states.get("light.test_template_light")
+    await _call_and_assert_action(
+        hass,
+        calls,
+        SERVICE_TURN_ON,
+        {ATTR_RGBW_COLOR: (160, 78, 192, 25)},
+        {"r": 160, "g": 78, "b": 192, "w": 25},
+        "set_rgbw",
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == ColorMode.RGBW
+    assert state.attributes["color_temp_kelvin"] is None
+    assert state.attributes["rgbw_color"] == (160, 78, 192, 25)
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == 0
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        SERVICE_TURN_ON,
+        {ATTR_RGBWW_COLOR: (160, 78, 192, 25, 55)},
+        {"r": 160, "g": 78, "b": 192, "cw": 25, "ww": 55},
+        "set_rgbww",
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == ColorMode.RGBWW
+    assert state.attributes["color_temp_kelvin"] is None
+    assert state.attributes["rgbww_color"] == (160, 78, 192, 25, 55)
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == 0
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        SERVICE_TURN_ON,
+        {ATTR_HS_COLOR: (10, 20)},
+        {"h": 10, "s": 20},
+        "set_hs",
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes["color_mode"] == ColorMode.HS
-    assert state.attributes["color_temp"] is None
+    assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["hs_color"] == (10, 20)
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
-    # Optimistically set color temp, light should again be in color temp mode
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 234},
-        blocking=True,
+        {ATTR_COLOR_TEMP_KELVIN: 4273},
+        {ATTR_COLOR_TEMP_KELVIN: 4273, "color_temp": 234},
+        "set_temperature",
     )
 
-    assert len(calls) == 4
-    assert calls[-1].data["color_temp"] == 234
-
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
-    assert state.attributes["color_temp"] == 234
+    assert state.attributes["color_temp_kelvin"] == 4273
     assert "hs_color" in state.attributes  # Color temp represented as hs_color
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == 0
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        SERVICE_TURN_ON,
+        {ATTR_XY_COLOR: (0.2, 0.5)},
+        {"x": 0.2, "y": 0.5},
+        "set_xy",
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == ColorMode.XY
+    assert state.attributes["xy_color"] == (0.2, 0.5)
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "light_config",
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("effect_list_template", "effect_template", "effect", "expected"),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{true}}",
-                "set_effect": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "set_effect",
-                        "caller": "{{ this.entity_id }}",
-                        "entity_id": "test.test_state",
-                        "effect": "{{effect}}",
-                    },
-                },
-                "effect_list_template": "{{ ['Disco', 'Police'] }}",
-                "effect_template": "{{ 'Disco' }}",
-            }
-        },
+        ("{{ ['Disco', 'Police'] }}", "{{ 'Disco' }}", "Disco", "Disco"),
+        ("{{ ['Disco', 'Police'] }}", "{{ 'None' }}", "RGB", None),
     ],
 )
-async def test_effect_action_valid_effect(
-    hass: HomeAssistant, setup_light, calls
+@pytest.mark.usefixtures("setup_light_with_effects")
+async def test_effect_action(
+    hass: HomeAssistant, effect: str, expected: Any, calls: list[ServiceCall]
 ) -> None:
     """Test setting valid effect with template."""
-    state = hass.states.get("light.test_template_light")
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
 
-    await hass.services.async_call(
-        light.DOMAIN,
+    await _call_and_assert_action(
+        hass,
+        calls,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_EFFECT: "Disco"},
-        blocking=True,
+        {ATTR_EFFECT: effect},
+        {ATTR_EFFECT: effect},
+        "set_effect",
     )
 
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_effect"
-    assert calls[-1].data["caller"] == "light.test_template_light"
-    assert calls[-1].data["effect"] == "Disco"
-
-    state = hass.states.get("light.test_template_light")
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
-    assert state.attributes.get("effect") == "Disco"
+    assert state.attributes.get("effect") == expected
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "effect_template"), [(1, "{{ None }}")])
 @pytest.mark.parametrize(
-    "light_config",
-    [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "value_template": "{{true}}",
-                "set_effect": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "effect": "{{effect}}",
-                    },
-                },
-                "effect_list_template": "{{ ['Disco', 'Police'] }}",
-                "effect_template": "{{ None }}",
-            }
-        },
-    ],
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_effect_action_invalid_effect(
-    hass: HomeAssistant, setup_light, calls
-) -> None:
-    """Test setting invalid effect with template."""
-    state = hass.states.get("light.test_template_light")
-    assert state is not None
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_EFFECT: "RGB"},
-        blocking=True,
-    )
-
-    assert len(calls) == 1
-    assert calls[0].data["effect"] == "RGB"
-
-    state = hass.states.get("light.test_template_light")
-    assert state is not None
-    assert state.attributes.get("effect") is None
-
-
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     ("expected_effect_list", "effect_list_template"),
     [
@@ -1104,32 +1417,25 @@ async def test_effect_action_invalid_effect(
         (None, ""),
     ],
 )
+@pytest.mark.usefixtures("setup_light_with_effects")
 async def test_effect_list_template(
-    hass: HomeAssistant, expected_effect_list, count, effect_list_template
+    hass: HomeAssistant, expected_effect_list: list[str] | None
 ) -> None:
     """Test the template for the effect list."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "set_effect": {
-                "service": "test.automation",
-                "data_template": {
-                    "entity_id": "test.test_state",
-                    "effect": "{{effect}}",
-                },
-            },
-            "effect_template": "{{ None }}",
-            "effect_list_template": effect_list_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
     assert state.attributes.get("effect_list") == expected_effect_list
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("count", "effect_list_template"),
+    [(1, "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}")],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
 @pytest.mark.parametrize(
     ("expected_effect", "effect_template"),
     [
@@ -1140,110 +1446,88 @@ async def test_effect_list_template(
         ("Strobe color", "{{ 'Strobe color' }}"),
     ],
 )
+@pytest.mark.usefixtures("setup_light_with_effects")
 async def test_effect_template(
-    hass: HomeAssistant, expected_effect, count, effect_template
+    hass: HomeAssistant, expected_effect: str | None
 ) -> None:
     """Test the template for the effect."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "set_effect": {
-                "service": "test.automation",
-                "data_template": {
-                    "entity_id": "test.test_state",
-                    "effect": "{{effect}}",
-                },
-            },
-            "effect_list_template": (
-                "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}"
-            ),
-            "effect_template": effect_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
     assert state.attributes.get("effect") == expected_effect
 
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("expected_min_mireds", "min_mireds_template"),
+    ("style", "attribute"),
     [
-        (118, "{{118}}"),
-        (153, "{{x - 12}}"),
-        (153, "None"),
-        (153, "{{ none }}"),
-        (153, ""),
-        (153, "{{ 'a' }}"),
+        (ConfigurationStyle.MODERN, "min_mireds"),
+        (ConfigurationStyle.TRIGGER, "min_mireds"),
     ],
 )
+@pytest.mark.parametrize(
+    ("expected_max_kelvin", "attribute_template"),
+    [
+        (8474, "{{118}}"),
+        (6535, "{{x - 12}}"),
+        (6535, "None"),
+        (6535, "{{ none }}"),
+        (6535, ""),
+        (6535, "{{ 'a' }}"),
+    ],
+)
+@pytest.mark.usefixtures("setup_light_with_mireds")
 async def test_min_mireds_template(
-    hass: HomeAssistant, expected_min_mireds, count, min_mireds_template
+    hass: HomeAssistant, expected_max_kelvin: int
 ) -> None:
     """Test the template for the min mireds."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "set_temperature": {
-                "service": "light.turn_on",
-                "data_template": {
-                    "entity_id": "light.test_state",
-                    "color_temp": "{{color_temp}}",
-                },
-            },
-            "temperature_template": "{{200}}",
-            "min_mireds_template": min_mireds_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
-    assert state.attributes.get("min_mireds") == expected_min_mireds
+    assert state.attributes.get("max_color_temp_kelvin") == expected_max_kelvin
 
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("expected_max_mireds", "max_mireds_template"),
+    ("style", "attribute"),
     [
-        (488, "{{488}}"),
-        (500, "{{x - 12}}"),
-        (500, "None"),
-        (500, "{{ none }}"),
-        (500, ""),
-        (500, "{{ 'a' }}"),
+        (ConfigurationStyle.MODERN, "max_mireds"),
+        (ConfigurationStyle.TRIGGER, "max_mireds"),
     ],
 )
+@pytest.mark.parametrize(
+    ("expected_min_kelvin", "attribute_template"),
+    [
+        (2049, "{{488}}"),
+        (2000, "{{x - 12}}"),
+        (2000, "None"),
+        (2000, "{{ none }}"),
+        (2000, ""),
+        (2000, "{{ 'a' }}"),
+    ],
+)
+@pytest.mark.usefixtures("setup_light_with_mireds")
 async def test_max_mireds_template(
-    hass: HomeAssistant, expected_max_mireds, count, max_mireds_template
+    hass: HomeAssistant,
+    expected_min_kelvin: int,
 ) -> None:
     """Test the template for the max mireds."""
-    light_config = {
-        "test_template_light": {
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-            "value_template": "{{ 1 == 1 }}",
-            "set_temperature": {
-                "service": "light.turn_on",
-                "data_template": {
-                    "entity_id": "light.test_state",
-                    "color_temp": "{{color_temp}}",
-                },
-            },
-            "temperature_template": "{{200}}",
-            "max_mireds_template": max_mireds_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
-    assert state.attributes.get("max_mireds") == expected_max_mireds
+    assert state.attributes.get("min_color_temp_kelvin") == expected_min_kelvin
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
 @pytest.mark.parametrize(
-    ("expected_supports_transition", "supports_transition_template"),
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "supports_transition"),
+        (ConfigurationStyle.TRIGGER, "supports_transition"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_supports_transition", "attribute_template"),
     [
         (True, "{{true}}"),
         (True, "{{1 == 1}}"),
@@ -1253,30 +1537,15 @@ async def test_max_mireds_template(
         (False, "None"),
     ],
 )
+@pytest.mark.usefixtures("setup_single_attribute_light")
 async def test_supports_transition_template(
     hass: HomeAssistant,
-    expected_supports_transition,
-    count,
-    supports_transition_template,
+    expected_supports_transition: bool,
 ) -> None:
     """Test the template for the supports transition."""
-    light_config = {
-        "test_template_light": {
-            "value_template": "{{ 1 == 1 }}",
-            "turn_on": {"service": "light.turn_on", "entity_id": "light.test_state"},
-            "turn_off": {"service": "light.turn_off", "entity_id": "light.test_state"},
-            "set_temperature": {
-                "service": "light.turn_on",
-                "data_template": {
-                    "entity_id": "light.test_state",
-                    "color_temp": "{{color_temp}}",
-                },
-            },
-            "supports_transition_template": supports_transition_template,
-        }
-    }
-    await async_setup_light(hass, count, light_config)
-    state = hass.states.get("light.test_template_light")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
 
     expected_value = 1
 
@@ -1289,75 +1558,338 @@ async def test_supports_transition_template(
     ) != expected_value
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "light_config",
+    ("count", "transition_template"), [(1, "{{ states('sensor.test') }}")]
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_light_with_transition_template")
+async def test_supports_transition_template_updates(hass: HomeAssistant) -> None:
+    """Test the template for the supports transition dynamically."""
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+
+    hass.states.async_set("sensor.test", 0)
+    await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features == LightEntityFeature.EFFECT
+
+    hass.states.async_set("sensor.test", 1)
+    await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    supported_features = state.attributes.get("supported_features")
+    assert (
+        supported_features == LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+    )
+
+    hass.states.async_set("sensor.test", 0)
+    await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features == LightEntityFeature.EFFECT
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config", "attribute_template"),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "availability_template": (
-                    "{{ is_state('availability_boolean.state', 'on') }}"
-                ),
-            }
-        },
+        (
+            1,
+            ON_OFF_SET_LEVEL_ACTIONS,
+            "{{ is_state('binary_sensor.availability', 'on') }}",
+        )
     ],
 )
-async def test_available_template_with_entities(
-    hass: HomeAssistant, setup_light
-) -> None:
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
     # When template returns true..
-    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_ON)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_ON)
     await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
     # Device State should not be unavailable
-    assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_LIGHT.entity_id).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
-    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_OFF)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
     await hass.async_block_till_done()
 
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+
     # device state should be unavailable
-    assert hass.states.get("light.test_template_light").state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_LIGHT.entity_id).state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "light_config",
+    ("count", "extra_config", "attribute_template"),
     [
-        {
-            "test_template_light": {
-                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "availability_template": "{{ x - 12 }}",
-            }
-        },
+        (
+            1,
+            ON_OFF_SET_LEVEL_ACTIONS,
+            "{{ x - 12 }}",
+        )
     ],
 )
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "availability"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, setup_light, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that an invalid availability keeps the device available."""
-    assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_LIGHT.entity_id).state != STATE_UNAVAILABLE
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize("config", [ON_OFF_ACTIONS])
 @pytest.mark.parametrize(
-    "light_config",
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_unique_id(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
+) -> None:
+    """Test unique_id option only creates one light per id."""
+    await setup_and_test_unique_id(hass, TEST_LIGHT, style, config)
+
+
+@pytest.mark.parametrize("config", [ON_OFF_ACTIONS])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_nested_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a template unique_id propagates to light unique_ids."""
+    await setup_and_test_nested_unique_id(
+        hass, TEST_LIGHT, style, entity_registry, config
+    )
+
+
+@pytest.mark.parametrize(("count", "extra_config"), [(1, {})])
+@pytest.mark.parametrize(
+    "style",
     [
-        {
-            "test_template_light_01": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-                "unique_id": "not-so-unique-anymore",
-            },
-            "test_template_light_02": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-                "unique_id": "not-so-unique-anymore",
-            },
-        },
+        ConfigurationStyle.MODERN,
     ],
 )
-async def test_unique_id(hass: HomeAssistant, setup_light) -> None:
-    """Test unique_id option only creates one light per id."""
-    assert len(hass.states.async_all("light")) == 1
+@pytest.mark.parametrize(
+    ("action", "color_mode"),
+    [
+        ("set_level", ColorMode.BRIGHTNESS),
+        ("set_temperature", ColorMode.COLOR_TEMP),
+        ("set_hs", ColorMode.HS),
+        ("set_rgb", ColorMode.RGB),
+        ("set_rgbw", ColorMode.RGBW),
+        ("set_rgbww", ColorMode.RGBWW),
+    ],
+)
+@pytest.mark.usefixtures("setup_empty_action_light")
+async def test_empty_color_mode_action_config(
+    hass: HomeAssistant, color_mode: ColorMode
+) -> None:
+    """Test empty actions for color mode actions."""
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["supported_color_modes"] == [color_mode]
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_LIGHT.entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_LIGHT.entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(("count"), [1])
+@pytest.mark.parametrize(
+    ("style", "extra_config"),
+    [
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "effect_list": "{{ ['a'] }}",
+                "effect": "{{ 'a' }}",
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_empty_action_light")
+@pytest.mark.parametrize("action", ["set_effect"])
+async def test_effect_with_empty_action(hass: HomeAssistant) -> None:
+    """Test empty set_effect action."""
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["supported_features"] == LightEntityFeature.EFFECT
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "state": "{{ is_state('light.test_state', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_optimistic_option(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_LIGHT.entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_ON
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "state": "{{ is_state('light.test_state', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "expected"),
+    [
+        (ConfigurationStyle.MODERN, STATE_OFF),
+        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_not_optimistic(hass: HomeAssistant, expected: str) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        light.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_LIGHT.entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.state == expected
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a light from a config entry."""
+
+    hass.states.async_set(
+        "sensor.test_sensor",
+        "on",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ states('sensor.test_sensor') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "template_type": light.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        light.DOMAIN,
+        {
+            "name": "My template",
+            "state": "{{ 'on' }}",
+            "turn_on": [],
+            "turn_off": [],
+        },
+    )
+
+    assert state["state"] == STATE_ON

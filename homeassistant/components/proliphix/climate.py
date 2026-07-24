@@ -1,13 +1,12 @@
 """Support for Proliphix NT10e Thermostats."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import proliphix
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -22,13 +21,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_FAN = "fan"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -61,37 +60,36 @@ class ProliphixThermostat(ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    def __init__(self, pdp):
+    def __init__(self, pdp: proliphix.PDP) -> None:
         """Initialize the thermostat."""
         self._pdp = pdp
-        self._name = None
+        self._attr_name = None
 
     def update(self) -> None:
         """Update the data from the thermostat."""
         self._pdp.update()
-        self._name = self._pdp.name
+        self._attr_name = self._pdp.name
 
     @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {ATTR_FAN: self._pdp.fan_state}
 
     @property
-    def current_temperature(self):
+    @override
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._pdp.cur_temp
 
     @property
-    def target_temperature(self):
+    @override
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._pdp.setback
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current state of the thermostat."""
         state = self._pdp.hvac_state
@@ -104,6 +102,7 @@ class ProliphixThermostat(ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current state of the thermostat."""
         if self._pdp.is_heating:
@@ -113,10 +112,12 @@ class ProliphixThermostat(ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return available HVAC modes."""
         return []
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:

@@ -1,23 +1,23 @@
 """Support for StarLine lock."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import StarlineConfigEntry
 from .account import StarlineAccount, StarlineDevice
-from .const import DOMAIN
 from .entity import StarlineEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: StarlineConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the StarLine lock."""
-    account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
+    account = entry.runtime_data
     entities = []
     for device in account.api.devices.values():
         if device.support_state:
@@ -37,11 +37,13 @@ class StarlineLock(StarlineEntity, LockEntity):
         super().__init__(account, device, "lock")
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the lock.
 
@@ -63,21 +65,17 @@ class StarlineLock(StarlineEntity, LockEntity):
         return self._device.alarm_state
 
     @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return (
-            "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"
-        )
-
-    @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self._device.car_state.get("arm")
 
+    @override
     def lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", True)
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", False)

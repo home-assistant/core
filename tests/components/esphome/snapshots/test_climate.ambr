@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_climate_entity_attributes[climate-entity-attributes]
+  ReadOnlyDict({
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 30,
+    <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+    <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+      'low',
+      'high',
+      'fan1',
+      'fan2',
+    ]),
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test my climate',
+    <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
+    <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+      <HVACMode.COOL: 'cool'>,
+      <HVACMode.HEAT: 'heat'>,
+      <HVACMode.AUTO: 'auto'>,
+      <HVACMode.OFF: 'off'>,
+    ]),
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+    <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+    <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+      'away',
+      'activity',
+      'preset1',
+      'preset2',
+    ]),
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
+    <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'both',
+    <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+      'both',
+      'off',
+    ]),
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 2,
+    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20,
+  })
+# ---

@@ -1,25 +1,28 @@
 """Support for ZoneMinder switches."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zoneminder.monitor import Monitor, MonitorState
 from zoneminder.zm import ZoneMinder
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as ZONEMINDER_DOMAIN
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_ON): cv.string,
         vol.Required(CONF_COMMAND_OFF): cv.string,
@@ -38,15 +41,16 @@ def setup_platform(
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
-    switches = []
+    switches: list[ZMSwitchMonitors] = []
     zm_client: ZoneMinder
-    for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
+    for zm_client in hass.data[DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
-            _LOGGER.warning("Could not fetch monitors from ZoneMinder")
-            return
-
-        for monitor in monitors:
-            switches.append(ZMSwitchMonitors(monitor, on_state, off_state))
+            raise PlatformNotReady(
+                "Switch could not fetch any monitors from ZoneMinder"
+            )
+        switches.extend(
+            ZMSwitchMonitors(monitor, on_state, off_state) for monitor in monitors
+        )
     add_entities(switches)
 
 
@@ -68,14 +72,17 @@ class ZMSwitchMonitors(SwitchEntity):
         self._state = self._monitor.function == self._on_state
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._monitor.function = self._on_state
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._monitor.function = self._off_state

@@ -1,0 +1,16 @@
+{
+  "http": {
+    "0": {
+      "title": "Home Assistant (mydoorbird_doorbell)",
+      "value": "http://127.0.0.1:8123/api/doorbird/mydoorbird_doorbell?token=01J2F4B97Y7P1SARXEJ6W07EKD"
+    },
+    "1": {
+      "title": "Home Assistant (mydoorbird_motion)",
+      "value": "http://127.0.0.1:8123/api/doorbird/mydoorbird_motion?token=01J2F4B97Y7P1SARXEJ6W07EKD"
+    },
+    "2": {
+      "title": "externally added event",
+      "value": "http://127.0.0.1/"
+    }
+  }
+}

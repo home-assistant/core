@@ -1,8 +1,10 @@
 """Test reproduce state for Timer."""
+
 import pytest
 
 from homeassistant.components.timer import (
     ATTR_DURATION,
+    DOMAIN,
     SERVICE_CANCEL,
     SERVICE_PAUSE,
     SERVICE_START,
@@ -27,9 +29,9 @@ async def test_reproducing_states(
         "timer.entity_active_attr", STATUS_ACTIVE, {ATTR_DURATION: "00:01:00"}
     )
 
-    start_calls = async_mock_service(hass, "timer", SERVICE_START)
-    pause_calls = async_mock_service(hass, "timer", SERVICE_PAUSE)
-    cancel_calls = async_mock_service(hass, "timer", SERVICE_CANCEL)
+    start_calls = async_mock_service(hass, DOMAIN, SERVICE_START)
+    pause_calls = async_mock_service(hass, DOMAIN, SERVICE_PAUSE)
+    cancel_calls = async_mock_service(hass, DOMAIN, SERVICE_CANCEL)
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(

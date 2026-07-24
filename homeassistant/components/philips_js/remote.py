@@ -1,9 +1,8 @@
 """Remote control support for Apple TV."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -11,24 +10,23 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 
-from . import LOGGER, PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
+from . import LOGGER
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: PhilipsTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities([PhilipsTVRemote(coordinator)])
 
 
@@ -47,6 +45,7 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
         self._attr_unique_id = coordinator.unique_id
         self._turn_on = PluggableAction(self.async_write_ha_state)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to hass."""
         await super().async_added_to_hass()
@@ -59,12 +58,14 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return bool(
             self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None)
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._tv.on and self._tv.powerstate:
@@ -73,6 +74,7 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
             await self._turn_on.async_run(self.hass, self._context)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._tv.on:
@@ -81,6 +83,7 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
         else:
             LOGGER.debug("Tv was already turned off")
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]

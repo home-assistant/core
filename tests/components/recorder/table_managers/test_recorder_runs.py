@@ -1,9 +1,11 @@
 """Test recorder runs table manager."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.core import HomeAssistant
@@ -12,13 +14,19 @@ from homeassistant.util import dt as dt_util
 from tests.typing import RecorderInstanceGenerator
 
 
-async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_run_history(hass: HomeAssistant) -> None:
     """Test the run history gives the correct run."""
     instance = recorder.get_instance(hass)
     now = dt_util.utcnow()
     three_days_ago = now - timedelta(days=3)
     two_days_ago = now - timedelta(days=2)
     one_day_ago = now - timedelta(days=1)
+
+    # Test that the first run falls back to the current run
+    assert process_timestamp(
+        instance.recorder_runs_manager.first.start
+    ) == process_timestamp(instance.recorder_runs_manager.current.start)
 
     with instance.get_session() as session:
         session.add(RecorderRuns(start=three_days_ago, created=three_days_ago))
@@ -28,32 +36,7 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
         instance.recorder_runs_manager.load_from_db(session)
 
     assert (
-        process_timestamp(
-            instance.recorder_runs_manager.get(
-                three_days_ago + timedelta(microseconds=1)
-            ).start
-        )
-        == three_days_ago
-    )
-    assert (
-        process_timestamp(
-            instance.recorder_runs_manager.get(
-                two_days_ago + timedelta(microseconds=1)
-            ).start
-        )
-        == two_days_ago
-    )
-    assert (
-        process_timestamp(
-            instance.recorder_runs_manager.get(
-                one_day_ago + timedelta(microseconds=1)
-            ).start
-        )
-        == one_day_ago
-    )
-    assert (
-        process_timestamp(instance.recorder_runs_manager.get(now).start)
-        == instance.recorder_runs_manager.recording_start
+        process_timestamp(instance.recorder_runs_manager.first.start) == three_days_ago
     )
 
 

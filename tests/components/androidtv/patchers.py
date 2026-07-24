@@ -1,6 +1,10 @@
 """Define patches used for androidtv tests."""
+
+import os.path
+from typing import Any
 from unittest.mock import patch
 
+from androidtv.adb_manager.adb_manager_async import DeviceAsync
 from androidtv.constants import CMD_DEVICE_PROPERTIES, CMD_MAC_ETH0, CMD_MAC_WLAN0
 
 from homeassistant.components.androidtv.const import (
@@ -8,6 +12,8 @@ from homeassistant.components.androidtv.const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
 )
+
+_original_isfile = os.path.isfile
 
 ADB_SERVER_HOST = "127.0.0.1"
 KEY_PYTHON = "python"
@@ -23,7 +29,7 @@ PROPS_DEV_MAC = "ether ab:cd:ef:gh:ij:kl brd"
 class AdbDeviceTcpAsyncFake:
     """A fake of the `adb_shell.adb_device_async.AdbDeviceTcpAsync` class."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a fake `adb_shell.adb_device_async.AdbDeviceTcpAsync` instance."""
         self.available = False
 
@@ -35,13 +41,16 @@ class AdbDeviceTcpAsyncFake:
         """Try to connect to a device."""
         raise NotImplementedError
 
-    async def shell(self, cmd, *args, **kwargs):
+    async def shell(self, cmd, *args, **kwargs) -> bytes | str | None:
         """Send an ADB shell command."""
         return None
 
 
 class ClientAsyncFakeSuccess:
-    """A fake of the `ClientAsync` class when the connection and shell commands succeed."""
+    """A fake of the `ClientAsync` class.
+
+    Used when the connection and shell commands succeed.
+    """
 
     def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT) -> None:
         """Initialize a `ClientAsyncFakeSuccess` instance."""
@@ -61,8 +70,11 @@ class ClientAsyncFakeFail:
         """Initialize a `ClientAsyncFakeFail` instance."""
         self._devices = []
 
-    async def device(self, serial):
-        """Mock the `ClientAsync.device` method when the device is not connected via ADB."""
+    async def device(self, serial) -> DeviceAsync | None:
+        """Mock the `ClientAsync.device` method.
+
+        Used when the device is not connected via ADB.
+        """
         self._devices = []
         return None
 
@@ -80,7 +92,7 @@ class DeviceAsyncFake:
 
 
 def patch_connect(success):
-    """Mock the `adb_shell.adb_device_async.AdbDeviceTcpAsync` and `ClientAsync` classes."""
+    """Mock the AdbDeviceTcpAsync and `ClientAsync` classes."""
 
     async def connect_success_python(self, *args, **kwargs):
         """Mock the `AdbDeviceTcpAsyncFake.connect` method when it succeeds."""
@@ -115,7 +127,10 @@ def patch_shell(response=None, error=False, mac_eth=False, exc=None):
     """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods."""
 
     async def shell_success(self, cmd, *args, **kwargs):
-        """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods when they are successful."""
+        """Mock the AdbDeviceTcpAsyncFake and DeviceAsyncFake shell methods.
+
+        Used when they are successful.
+        """
         self.shell_cmd = cmd
         if cmd == CMD_DEVICE_PROPERTIES:
             return PROPS_DEV_INFO
@@ -182,7 +197,9 @@ def patch_androidtv_update(
 
 def isfile(filepath):
     """Mock `os.path.isfile`."""
-    return filepath.endswith("adbkey")
+    if str(filepath).endswith("adbkey"):
+        return True
+    return _original_isfile(filepath)
 
 
 PATCH_SCREENCAP = patch(

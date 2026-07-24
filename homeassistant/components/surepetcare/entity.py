@@ -1,7 +1,7 @@
 """Entity for Surepetcare."""
-from __future__ import annotations
 
 from abc import abstractmethod
+from typing import override
 
 from surepy.entities import SurepyEntity
 
@@ -9,8 +9,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SurePetcareDataCoordinator
 from .const import DOMAIN
+from .coordinator import SurePetcareDataCoordinator
 
 
 class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):
@@ -49,6 +49,7 @@ class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):
         """Update the state and attributes."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and update the state."""
         self._update_attr(self.coordinator.data[self._id])

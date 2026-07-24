@@ -1,5 +1,10 @@
 """The tests for notify_events."""
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, DOMAIN
+
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    DOMAIN as NOTIFY_DOMAIN,
+)
 from homeassistant.components.notify_events.notify import (
     ATTR_LEVEL,
     ATTR_PRIORITY,
@@ -12,10 +17,10 @@ from tests.common import async_mock_service
 
 async def test_send_msg(hass: HomeAssistant) -> None:
     """Test notify.events service."""
-    notify_calls = async_mock_service(hass, DOMAIN, "events")
+    notify_calls = async_mock_service(hass, NOTIFY_DOMAIN, "events")
 
     await hass.services.async_call(
-        DOMAIN,
+        NOTIFY_DOMAIN,
         "events",
         {
             ATTR_MESSAGE: "message content",
@@ -31,7 +36,7 @@ async def test_send_msg(hass: HomeAssistant) -> None:
     assert len(notify_calls) == 1
     call = notify_calls[-1]
 
-    assert call.domain == DOMAIN
+    assert call.domain == NOTIFY_DOMAIN
     assert call.service == "events"
     assert call.data.get(ATTR_MESSAGE) == "message content"
     assert call.data.get(ATTR_DATA).get(ATTR_TOKEN) == "XYZ"

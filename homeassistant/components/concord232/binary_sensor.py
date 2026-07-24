@@ -1,8 +1,8 @@
 """Support for exposing Concord232 elements as sensors."""
-from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any, override
 
 from concord232 import client as concord232_client
 import requests
@@ -10,16 +10,16 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,14 +28,13 @@ CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Alarm"
-DEFAULT_PORT = "5007"
-DEFAULT_SSL = False
+DEFAULT_PORT = 5007
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
             cv.ensure_list, [cv.positive_int]
@@ -55,10 +54,10 @@ def setup_platform(
 ) -> None:
     """Set up the Concord232 binary sensor platform."""
 
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    exclude = config[CONF_EXCLUDE_ZONES]
-    zone_types = config[CONF_ZONE_TYPES]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
+    exclude: list[int] = config[CONF_EXCLUDE_ZONES]
+    zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
     sensors = []
 
     try:
@@ -79,11 +78,10 @@ def setup_platform(
     client.zones.sort(key=lambda zone: zone["number"])
 
     for zone in client.zones:
-        _LOGGER.info("Loading Zone found: %s", zone["name"])
+        _LOGGER.debug("Loading Zone found: %s", zone["name"])
         if zone["number"] not in exclude:
             sensors.append(
                 Concord232ZoneSensor(
-                    hass,
                     client,
                     zone,
                     zone_types.get(zone["number"], get_opening_type(zone)),
@@ -109,26 +107,27 @@ def get_opening_type(zone):
 class Concord232ZoneSensor(BinarySensorEntity):
     """Representation of a Concord232 zone as a sensor."""
 
-    def __init__(self, hass, client, zone, zone_type):
+    def __init__(
+        self,
+        client: concord232_client.Client,
+        zone: dict[str, Any],
+        zone_type: BinarySensorDeviceClass,
+    ) -> None:
         """Initialize the Concord232 binary sensor."""
-        self._hass = hass
         self._client = client
         self._zone = zone
         self._number = zone["number"]
-        self._zone_type = zone_type
+        self._attr_device_class = zone_type
 
     @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
-
-    @property
-    def name(self):
+    @override
+    def name(self) -> str:
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return bool(self._zone["state"] != "Normal")
@@ -144,5 +143,5 @@ class Concord232ZoneSensor(BinarySensorEntity):
 
         if hasattr(self._client, "zones"):
             self._zone = next(
-                (x for x in self._client.zones if x["number"] == self._number), None
+                x for x in self._client.zones if x["number"] == self._number
             )

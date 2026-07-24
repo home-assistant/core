@@ -1,4 +1,5 @@
 """Tests for Minio Hass related code."""
+
 import asyncio
 import json
 from unittest.mock import MagicMock, call, patch
@@ -7,15 +8,14 @@ import pytest
 
 from homeassistant.components.minio import (
     CONF_ACCESS_KEY,
-    CONF_HOST,
     CONF_LISTEN,
     CONF_LISTEN_BUCKET,
-    CONF_PORT,
     CONF_SECRET_KEY,
     CONF_SECURE,
     DOMAIN,
     QueueListener,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
@@ -74,8 +74,6 @@ async def test_minio_services(
 
     await hass.async_start()
     await hass.async_block_till_done()
-
-    assert "Setup of domain minio took" in caplog.text
 
     # Call services
     await hass.services.async_call(
@@ -139,8 +137,6 @@ async def test_minio_listen(
 
     await hass.async_start()
     await hass.async_block_till_done()
-
-    assert "Setup of domain minio took" in caplog.text
 
     while not events:
         await asyncio.sleep(0)

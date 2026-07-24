@@ -1,0 +1,57 @@
+"""Test __init__ error handling."""
+
+from unittest.mock import AsyncMock
+
+from pynintendoauth.exceptions import InvalidOAuthConfigurationException
+
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry
+
+
+async def test_invalid_authentication(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_authenticator: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test handling of invalid authentication."""
+    mock_nintendo_authenticator.async_complete_login.side_effect = ValueError
+    await setup_integration(hass, mock_config_entry)
+
+    # Ensure no entities are created
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entries) == 0
+    # Ensure the config entry is marked as error
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_authenticator: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the reauth flow is triggered."""
+    mock_nintendo_authenticator.async_complete_login.side_effect = (
+        InvalidOAuthConfigurationException(
+            status_code=401, message="Authentication failed"
+        )
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    # Ensure no entities are created
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entries) == 0
+    # Ensure the config entry is marked as needing reauth
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    assert mock_config_entry.error_reason_translation_key == "auth_expired"

@@ -46,16 +46,19 @@ def _patch_discovery(device=None, no_device=False):
 
 def _patch_elk(elk=None):
     def _elk(*args, **kwargs):
-        return elk if elk else mock_elk()
+        return elk or mock_elk()
 
     @contextmanager
     def _patcher():
-        with patch(
-            "homeassistant.components.elkm1.config_flow.Elk",
-            new=_elk,
-        ), patch(
-            "homeassistant.components.elkm1.config_flow.Elk",
-            new=_elk,
+        with (
+            patch(
+                "homeassistant.components.elkm1.config_flow.Elk",
+                new=_elk,
+            ),
+            patch(
+                "homeassistant.components.elkm1.config_flow.Elk",
+                new=_elk,
+            ),
         ):
             yield
 

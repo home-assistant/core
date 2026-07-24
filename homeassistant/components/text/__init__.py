@@ -1,52 +1,58 @@
 """Component to allow setting text as platforms."""
-from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from enum import StrEnum
 import logging
 import re
-from typing import Any, final
+from typing import Any, final, override
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MAX_LENGTH_STATE_STATE
+from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
-    ATTR_MODE,
     ATTR_PATTERN,
     ATTR_VALUE,
     DOMAIN,
     SERVICE_SET_VALUE,
+    TextEntityCapabilityAttribute,
 )
-
-SCAN_INTERVAL = timedelta(seconds=30)
-
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
-__all__ = ["DOMAIN", "TextEntity", "TextEntityDescription", "TextMode"]
+DATA_COMPONENT: HassKey[EntityComponent[TextEntity]] = HassKey(DOMAIN)
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+
+
+__all__ = [
+    "DOMAIN",
+    "TextEntity",
+    "TextEntityCapabilityAttribute",
+    "TextEntityDescription",
+    "TextMode",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Text entities."""
-    component = hass.data[DOMAIN] = EntityComponent[TextEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TextEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -70,25 +76,25 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
         )
     if len(value) > entity.max:
         raise ValueError(
-            f"Value {value} for {entity.entity_id} is too long (maximum length {entity.max})"
+            f"Value {value} for {entity.entity_id}"
+            f" is too long (maximum length {entity.max})"
         )
     if entity.pattern_cmp and not entity.pattern_cmp.match(value):
         raise ValueError(
-            f"Value {value} for {entity.entity_id} doesn't match pattern {entity.pattern}"
+            f"Value {value} for {entity.entity_id}"
+            f" doesn't match pattern {entity.pattern}"
         )
     await entity.async_set_value(value)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TextEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TextEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class TextMode(StrEnum):
@@ -98,8 +104,7 @@ class TextMode(StrEnum):
     TEXT = "text"
 
 
-@dataclass
-class TextEntityDescription(EntityDescription):
+class TextEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes text entities."""
 
     native_min: int = 0
@@ -108,11 +113,25 @@ class TextEntityDescription(EntityDescription):
     pattern: str | None = None
 
 
-class TextEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "mode",
+    "native_value",
+    "native_min",
+    "native_max",
+    "pattern",
+}
+
+
+class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Text entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN}
+        {
+            TextEntityCapabilityAttribute.MAX,
+            TextEntityCapabilityAttribute.MIN,
+            TextEntityCapabilityAttribute.MODE,
+            TextEntityCapabilityAttribute.PATTERN,
+        }
     )
 
     entity_description: TextEntityDescription
@@ -125,17 +144,19 @@ class TextEntity(Entity):
     __pattern_cmp: re.Pattern | None = None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            ATTR_MODE: self.mode,
-            ATTR_MIN: self.min,
-            ATTR_MAX: self.max,
-            ATTR_PATTERN: self.pattern,
+            TextEntityCapabilityAttribute.MODE: self.mode,
+            TextEntityCapabilityAttribute.MIN: self.min,
+            TextEntityCapabilityAttribute.MAX: self.max,
+            TextEntityCapabilityAttribute.PATTERN: self.pattern,
         }
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if self.native_value is None:
@@ -157,7 +178,7 @@ class TextEntity(Entity):
             )
         return self.native_value
 
-    @property
+    @cached_property
     def mode(self) -> TextMode:
         """Return the mode of the entity."""
         if hasattr(self, "_attr_mode"):
@@ -166,7 +187,7 @@ class TextEntity(Entity):
             return self.entity_description.mode
         return TextMode.TEXT
 
-    @property
+    @cached_property
     def native_min(self) -> int:
         """Return the minimum length of the value."""
         if hasattr(self, "_attr_native_min"):
@@ -181,7 +202,7 @@ class TextEntity(Entity):
         """Return the minimum length of the value."""
         return max(self.native_min, 0)
 
-    @property
+    @cached_property
     def native_max(self) -> int:
         """Return the maximum length of the value."""
         if hasattr(self, "_attr_native_max"):
@@ -207,7 +228,7 @@ class TextEntity(Entity):
             self.__pattern_cmp = re.compile(self.pattern)
         return self.__pattern_cmp
 
-    @property
+    @cached_property
     def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
         if hasattr(self, "_attr_pattern"):
@@ -216,14 +237,14 @@ class TextEntity(Entity):
             return self.entity_description.pattern
         return None
 
-    @property
+    @cached_property
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
         return self._attr_native_value
 
     def set_value(self, value: str) -> None:
         """Change the value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
@@ -238,6 +259,7 @@ class TextExtraStoredData(ExtraStoredData):
     native_min: int
     native_max: int
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the text data."""
         return asdict(self)
@@ -259,6 +281,7 @@ class RestoreText(TextEntity, RestoreEntity):
     """Mixin class for restoring previous text state."""
 
     @property
+    @override
     def extra_restore_state_data(self) -> TextExtraStoredData:
         """Return text specific state data to be restored."""
         return TextExtraStoredData(

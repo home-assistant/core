@@ -1,9 +1,8 @@
 """Support for the Unitymedia Horizon HD Recorder."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from horimote import Client, keys
 from horimote.exceptions import AuthenticationError
@@ -11,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -20,7 +19,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,7 +32,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -64,7 +63,7 @@ def setup_platform(
         _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
         raise PlatformNotReady from msg
 
-    _LOGGER.info("Connection to %s at %s established", name, host)
+    _LOGGER.debug("Connection to %s at %s established", name, host)
 
     add_entities([HorizonDevice(client, name, keys)], True)
 
@@ -89,6 +88,7 @@ class HorizonDevice(MediaPlayerEntity):
         self._keys = remote_keys
 
     @property
+    @override
     def name(self):
         """Return the name of the remote."""
         return self._name
@@ -104,31 +104,37 @@ class HorizonDevice(MediaPlayerEntity):
         except OSError:
             self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_on(self) -> None:
         """Turn the device on."""
         if self.state == MediaPlayerState.OFF:
             self._send_key(self._keys.POWER)
 
+    @override
     def turn_off(self) -> None:
         """Turn the device off."""
         if self.state != MediaPlayerState.OFF:
             self._send_key(self._keys.POWER)
 
+    @override
     def media_previous_track(self) -> None:
         """Channel down."""
         self._send_key(self._keys.CHAN_DOWN)
         self._attr_state = MediaPlayerState.PLAYING
 
+    @override
     def media_next_track(self) -> None:
         """Channel up."""
         self._send_key(self._keys.CHAN_UP)
         self._attr_state = MediaPlayerState.PLAYING
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._send_key(self._keys.PAUSE)
         self._attr_state = MediaPlayerState.PLAYING
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._send_key(self._keys.PAUSE)
@@ -142,6 +148,7 @@ class HorizonDevice(MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState.PAUSED
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -150,6 +157,7 @@ class HorizonDevice(MediaPlayerEntity):
             try:
                 self._select_channel(int(media_id))
                 self._attr_state = MediaPlayerState.PLAYING
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ValueError:
                 _LOGGER.error("Invalid channel: %s", media_id)
         else:

@@ -1,17 +1,22 @@
 """Config flow for Rainforest Eagle integration."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.data_entry_flow import FlowResult
 
-from . import data
-from .const import CONF_CLOUD_ID, CONF_HARDWARE_ADDRESS, CONF_INSTALL_CODE, DOMAIN
+from .const import (
+    CONF_CLOUD_ID,
+    CONF_HARDWARE_ADDRESS,
+    CONF_INSTALL_CODE,
+    DOMAIN,
+    TYPE_EAGLE_100,
+    TYPE_EAGLE_200,
+)
+from .data import CannotConnect, InvalidAuth, async_get_type
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,14 +36,15 @@ def create_schema(user_input: dict[str, Any] | None) -> vol.Schema:
     )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rainforest Eagle."""
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -49,25 +55,52 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            eagle_type, hardware_address = await data.async_get_type(
+            eagle_type, hardware_address = await async_get_type(
                 self.hass,
                 user_input[CONF_CLOUD_ID],
                 user_input[CONF_INSTALL_CODE],
                 user_input[CONF_HOST],
             )
-        except data.CannotConnect:
+        except CannotConnect:
             errors["base"] = "cannot_connect"
-        except data.InvalidAuth:
+        except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            user_input[CONF_TYPE] = eagle_type
-            user_input[CONF_HARDWARE_ADDRESS] = hardware_address
-            return self.async_create_entry(
-                title=user_input[CONF_CLOUD_ID], data=user_input
-            )
+            # Verify it is a known device, first
+            if not eagle_type:
+                errors["base"] = "unknown_device_type"
+            elif eagle_type == TYPE_EAGLE_100:
+                user_input[CONF_TYPE] = eagle_type
+
+                # For EAGLE-100, there is no hardware address
+                # to select, so set it to None and move on
+                user_input[CONF_HARDWARE_ADDRESS] = None
+            elif eagle_type == TYPE_EAGLE_200:
+                user_input[CONF_TYPE] = eagle_type
+
+                # For EAGLE-200, a connected meter's hardware
+                # address is required to create the entry
+                if not hardware_address:
+                    # hardware_address will be None if there are
+                    # no meters at all or if none are
+                    # currently Connected
+                    errors["base"] = "no_meters_connected"
+                else:
+                    user_input[CONF_HARDWARE_ADDRESS] = hardware_address
+            else:
+                # This is a device that isn't supported, yet,
+                # but was detected by async_get_type
+                errors["base"] = "unsupported_device_type"
+
+            # All information gathering is done, so if there
+            # are no errors at this point, create the entry
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_CLOUD_ID], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=create_schema(user_input), errors=errors

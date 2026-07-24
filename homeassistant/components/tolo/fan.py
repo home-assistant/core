@@ -1,25 +1,22 @@
 """TOLO Sauna fan controls."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-from homeassistant.components.fan import FanEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import ToloConfigEntry, ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ToloConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up fan controls for TOLO Sauna."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([ToloFan(coordinator, entry)])
 
 
@@ -27,20 +24,23 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
     """Sauna fan control."""
 
     _attr_translation_key = "fan"
+    _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
     def __init__(
-        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
+        self, coordinator: ToloSaunaUpdateCoordinator, entry: ToloConfigEntry
     ) -> None:
         """Initialize TOLO fan entity."""
         super().__init__(coordinator, entry)
 
-        self._attr_unique_id = f"{entry.entry_id}_fan"
+        self._attr_unique_id = f"{entry.entry_id}_fan"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if sauna fan is running."""
         return self.coordinator.data.status.fan_on
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,
@@ -50,6 +50,7 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         """Turn on sauna fan."""
         self.coordinator.client.set_fan_on(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off sauna fan."""
         self.coordinator.client.set_fan_on(False)

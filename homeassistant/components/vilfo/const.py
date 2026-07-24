@@ -1,5 +1,4 @@
 """Constants for the Vilfo Router integration."""
-from __future__ import annotations
 
 DOMAIN = "vilfo"
 

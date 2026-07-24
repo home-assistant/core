@@ -1,5 +1,4 @@
 """Reproduce an Switch state."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable

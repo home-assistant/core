@@ -1,17 +1,20 @@
 """Sensor platform support for wiffi devices."""
+
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, LIGHT_LUX, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WiffiEntity
+from . import WiffiConfigEntry
 from .const import CREATE_ENTITY_SIGNAL
+from .entity import WiffiEntity
 from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
     WIFFI_UOM_LUX,
@@ -39,12 +42,12 @@ UOM_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: WiffiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform for a new integration.
 
-    Called by the HA framework after async_forward_entry_setup has been called
+    Called by the HA framework after async_forward_entry_setups has been called
     during initialization of a new integration (= wiffi).
     """
 
@@ -85,11 +88,13 @@ class NumberEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
-    def available(self):
+    @override
+    def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_native_value is not None
 
     @callback
+    @override
     def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 
@@ -115,11 +120,13 @@ class StringEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
-    def available(self):
+    @override
+    def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_native_value is not None
 
     @callback
+    @override
     def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 

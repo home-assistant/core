@@ -1,7 +1,8 @@
 """Tests for the Atag climate platform."""
+
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.atag.climate import DOMAIN, PRESET_MAP
+from homeassistant.components.atag.climate import PRESET_MAP
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -15,12 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -29,7 +25,7 @@ from . import UID, init_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-CLIMATE_ID = f"{Platform.CLIMATE}.{DOMAIN}"
+CLIMATE_ID = "climate.atag_thermostat_atag"
 
 
 async def test_climate(
@@ -42,7 +38,7 @@ async def test_climate(
 
     assert entity_registry.async_is_registered(CLIMATE_ID)
     entity = entity_registry.async_get(CLIMATE_ID)
-    assert entity.unique_id == f"{UID}-{Platform.CLIMATE}"
+    assert entity.unique_id == f"{UID}-climate"
     assert hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
@@ -103,10 +99,10 @@ async def test_update_failed(
     entry = await init_integration(hass, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
     assert hass.states.get(CLIMATE_ID).state == HVACMode.HEAT
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     with patch("pyatag.AtagOne.update", side_effect=TimeoutError) as updater:
         await coordinator.async_refresh()
         await hass.async_block_till_done()
         updater.assert_called_once()
         assert not coordinator.last_update_success
-        assert coordinator.data.id == UID
+        assert coordinator.atag.id == UID

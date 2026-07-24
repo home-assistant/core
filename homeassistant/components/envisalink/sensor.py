@@ -1,7 +1,9 @@
 """Support for Envisalink sensors (shows panel info)."""
-from __future__ import annotations
 
 import logging
+from typing import Any, override
+
+from pyenvisalink import EnvisalinkAlarmPanel
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
@@ -11,12 +13,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_PARTITIONNAME,
+    CONF_PARTITIONS,
     DATA_EVL,
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
-    EnvisalinkDevice,
 )
+from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,13 +33,12 @@ async def async_setup_platform(
     """Perform the setup for Envisalink sensor entities."""
     if not discovery_info:
         return
-    configured_partitions = discovery_info["partitions"]
+    configured_partitions: dict[int, dict[str, Any]] = discovery_info[CONF_PARTITIONS]
 
     entities = []
-    for part_num in configured_partitions:
-        entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
+    for part_num, part_config in configured_partitions.items():
+        entity_config_data = PARTITION_SCHEMA(part_config)
         entity = EnvisalinkSensor(
-            hass,
             entity_config_data[CONF_PARTITIONNAME],
             part_num,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
@@ -48,17 +50,25 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
+class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
     """Representation of an Envisalink keypad."""
 
-    def __init__(self, hass, partition_name, partition_number, info, controller):
+    _attr_icon = "mdi:alarm"
+
+    def __init__(
+        self,
+        partition_name: str,
+        partition_number: int,
+        info: dict[str, Any],
+        controller: EnvisalinkAlarmPanel,
+    ) -> None:
         """Initialize the sensor."""
-        self._icon = "mdi:alarm"
         self._partition_number = partition_number
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -73,17 +83,14 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
         )
 
     @property
-    def icon(self):
-        """Return the icon if any."""
-        return self._icon
-
-    @property
+    @override
     def native_value(self):
         """Return the overall state."""
         return self._info["status"]["alpha"]
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._info["status"]
 

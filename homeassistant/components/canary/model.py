@@ -1,5 +1,4 @@
 """Constants for the Canary integration."""
-from __future__ import annotations
 
 from collections.abc import ValuesView
 from typing import TypedDict

@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "watching": {
+        "default": "mdi:television-play"
+      }
+    }
+  },
+  "services": {
+    "play_media_shuffle": {
+      "service": "mdi:shuffle-variant"
+    }
+  }
+}

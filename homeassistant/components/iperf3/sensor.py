@@ -1,5 +1,6 @@
 """Support for Iperf3 sensors."""
-from __future__ import annotations
+
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -9,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_VERSION, DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES
+from . import ATTR_VERSION, DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
 ATTR_PROTOCOL = "Protocol"
 ATTR_REMOTE_HOST = "Remote Server"
@@ -28,14 +29,14 @@ async def async_setup_platform(
 
     entities = [
         Iperf3Sensor(iperf3_host, description)
-        for iperf3_host in hass.data[IPERF3_DOMAIN].values()
+        for iperf3_host in hass.data[DOMAIN].values()
         for description in SENSOR_TYPES
         if description.key in discovery_info[CONF_MONITORED_CONDITIONS]
     ]
     async_add_entities(entities, True)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
@@ -49,7 +50,8 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
         self._attr_name = f"{description.name} {iperf3_data.host}"
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_PROTOCOL: self._iperf3_data.protocol,
@@ -58,6 +60,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
             ATTR_VERSION: self._iperf3_data.data[ATTR_VERSION],
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

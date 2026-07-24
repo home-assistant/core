@@ -1,11 +1,9 @@
 """MediaPlayer platform for Roon integration."""
-from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from roonapi import split_media_path
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -15,27 +13,22 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
+from . import RoonConfigEntry
 from .const import DOMAIN
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_TRANSFER = "transfer"
-
-ATTR_TRANSFER = "transfer_id"
 
 REPEAT_MODE_MAPPING_TO_HA = {
     "loop": RepeatMode.ALL,
@@ -50,20 +43,12 @@ REPEAT_MODE_MAPPING_TO_ROON = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RoonConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roon MediaPlayer from Config Entry."""
-    roon_server = hass.data[DOMAIN][config_entry.entry_id]
+    roon_server = config_entry.runtime_data
     media_players = set()
-
-    # Register entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_TRANSFER,
-        {vol.Required(ATTR_TRANSFER): cv.entity_id},
-        "async_transfer",
-    )
 
     @callback
     def async_update_media_player(player_data):
@@ -71,7 +56,7 @@ async def async_setup_entry(
         dev_id = player_data["dev_id"]
         if dev_id not in media_players:
             # new player!
-            media_player = RoonDevice(roon_server, player_data)
+            media_player = RoonDevice(roon_server, player_data, config_entry.entry_id)
             media_players.add(dev_id)
             async_add_entities([media_player])
         else:
@@ -105,7 +90,7 @@ class RoonDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
     )
 
-    def __init__(self, server, player_data):
+    def __init__(self, server, player_data, entry_id):
         """Initialize Roon device object."""
         self._remove_signal_status = None
         self._server = server
@@ -124,8 +109,10 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_volume_level = 0
         self._volume_fixed = True
         self._volume_incremental = False
+        self._entry_id = entry_id
         self.update_data(player_data)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.async_on_remove(
@@ -144,6 +131,7 @@ class RoonDevice(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def group_members(self):
         """Return the grouped players."""
 
@@ -151,6 +139,7 @@ class RoonDevice(MediaPlayerEntity):
         return [self._server.entity_id(roon_name) for roon_name in roon_names]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
         if self.unique_id is None:
@@ -165,7 +154,7 @@ class RoonDevice(MediaPlayerEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._server.roon_id),
+            via_device=(DOMAIN, self._entry_id),
         )
 
     def update_data(self, player_data=None):
@@ -207,20 +196,21 @@ class RoonDevice(MediaPlayerEntity):
         try:
             volume_max = volume_data["max"]
             volume_min = volume_data["min"]
+
             raw_level = convert(volume_data["value"], float, 0)
 
             volume_range = volume_max - volume_min
             volume_percentage_factor = volume_range / 100
 
             level = (raw_level - volume_min) / volume_percentage_factor
-            volume["level"] = convert(level, int, 0) / 100
+            volume["level"] = round(level) / 100
         except KeyError:
             pass
 
         return volume
 
     def _parse_now_playing(self, player_data):
-        """Parse now playing data to determine title, artist, position, duration and artwork."""
+        """Parse now playing data for title, artist, position, etc."""
         now_playing = {
             "title": None,
             "artist": None,
@@ -231,12 +221,13 @@ class RoonDevice(MediaPlayerEntity):
         }
         now_playing_data = None
 
+        media_position = convert(player_data.get("seek_position"), int, 0)
+
         try:
             now_playing_data = player_data["now_playing"]
             media_title = now_playing_data["three_line"]["line1"]
             media_artist = now_playing_data["three_line"]["line2"]
             media_album_name = now_playing_data["three_line"]["line3"]
-            media_position = convert(now_playing_data["seek_position"], int, 0)
             media_duration = convert(now_playing_data.get("length"), int, 0)
             image_id = now_playing_data.get("image_key")
         except KeyError:
@@ -267,9 +258,10 @@ class RoonDevice(MediaPlayerEntity):
                     break
         # determine player state
         if not new_state:
-            if self.player_data["state"] == "playing":
-                new_state = MediaPlayerState.PLAYING
-            elif self.player_data["state"] == "loading":
+            if (
+                self.player_data["state"] == "playing"
+                or self.player_data["state"] == "loading"
+            ):
                 new_state = MediaPlayerState.PLAYING
             elif self.player_data["state"] == "stopped":
                 new_state = MediaPlayerState.IDLE
@@ -321,19 +313,28 @@ class RoonDevice(MediaPlayerEntity):
         return self._output_id
 
     @property
+    @override
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media (Music track only)."""
         return self.media_artist
+
+    @property
+    @override
+    def media_content_type(self) -> str:
+        """Return the media type."""
+        return MediaType.MUSIC
 
     @property
     def supports_standby(self):
         """Return power state of source controls."""
         return self._supports_standby
 
+    @override
     def media_play(self) -> None:
         """Send play command to device."""
         self._server.roonapi.playback_control(self.output_id, "play")
 
+    @override
     def media_pause(self) -> None:
         """Send pause command to device."""
         self._server.roonapi.playback_control(self.output_id, "pause")
@@ -342,18 +343,22 @@ class RoonDevice(MediaPlayerEntity):
         """Toggle play command to device."""
         self._server.roonapi.playback_control(self.output_id, "playpause")
 
+    @override
     def media_stop(self) -> None:
         """Send stop command to device."""
         self._server.roonapi.playback_control(self.output_id, "stop")
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command to device."""
         self._server.roonapi.playback_control(self.output_id, "next")
 
+    @override
     def media_previous_track(self) -> None:
         """Send previous track command to device."""
         self._server.roonapi.playback_control(self.output_id, "previous")
 
+    @override
     def media_seek(self, position: float) -> None:
         """Send seek command to device."""
         self._server.roonapi.seek(self.output_id, position)
@@ -361,11 +366,13 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_media_position = round(position)
         self.schedule_update_ha_state()
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
         volume = volume * 100
         self._server.roonapi.set_volume_percent(self.output_id, volume)
 
+    @override
     def mute_volume(self, mute=True):
         """Send mute/unmute to device."""
         self._server.roonapi.mute(self.output_id, mute)
@@ -373,17 +380,18 @@ class RoonDevice(MediaPlayerEntity):
     def volume_up(self) -> None:
         """Send new volume_level to device."""
         if self._volume_incremental:
-            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative_step")
+            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, 3)
 
     def volume_down(self) -> None:
         """Send new volume_level to device."""
         if self._volume_incremental:
-            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative_step")
+            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, -3)
 
+    @override
     def turn_on(self) -> None:
         """Turn on device (if supported)."""
         if not (self.supports_standby and "source_controls" in self.player_data):
@@ -396,6 +404,7 @@ class RoonDevice(MediaPlayerEntity):
                 )
                 return
 
+    @override
     def turn_off(self) -> None:
         """Turn off device (if supported)."""
         if not (self.supports_standby and "source_controls" in self.player_data):
@@ -407,16 +416,19 @@ class RoonDevice(MediaPlayerEntity):
                 self._server.roonapi.standby(self.output_id, source["control_key"])
                 return
 
+    @override
     def set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle state."""
         self._server.roonapi.shuffle(self.output_id, shuffle)
 
+    @override
     def set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if repeat not in REPEAT_MODE_MAPPING_TO_ROON:
             raise ValueError(f"Unsupported repeat mode: {repeat}")
         self._server.roonapi.repeat(self.output_id, REPEAT_MODE_MAPPING_TO_ROON[repeat])
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -437,6 +449,7 @@ class RoonDevice(MediaPlayerEntity):
                     path_list,
                 )
 
+    @override
     def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
@@ -480,6 +493,7 @@ class RoonDevice(MediaPlayerEntity):
             [self._output_id] + [sync_available[name] for name in names]
         )
 
+    @override
     def unjoin_player(self) -> None:
         """Remove this player from any group."""
 
@@ -519,6 +533,7 @@ class RoonDevice(MediaPlayerEntity):
             self._server.roonapi.transfer_zone, self._zone_id, transfer_id
         )
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

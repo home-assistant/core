@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "bin_full": {
+        "default": "mdi:delete-variant"
+      }
+    },
+    "sensor": {
+      "average_mission_time": {
+        "default": "mdi:clock"
+      },
+      "battery_cycles": {
+        "default": "mdi:counter"
+      },
+      "canceled_missions": {
+        "default": "mdi:counter"
+      },
+      "dock_tank_level": {
+        "default": "mdi:water"
+      },
+      "failed_missions": {
+        "default": "mdi:counter"
+      },
+      "last_mission": {
+        "default": "mdi:calendar-clock"
+      },
+      "scrubs_count": {
+        "default": "mdi:counter"
+      },
+      "successful_missions": {
+        "default": "mdi:counter"
+      },
+      "tank_level": {
+        "default": "mdi:water"
+      },
+      "total_cleaned_area": {
+        "default": "mdi:texture-box"
+      },
+      "total_cleaning_time": {
+        "default": "mdi:clock"
+      },
+      "total_missions": {
+        "default": "mdi:counter"
+      }
+    }
+  }
+}

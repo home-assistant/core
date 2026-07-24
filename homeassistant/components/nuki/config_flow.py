@@ -1,19 +1,20 @@
 """Config flow to configure the Nuki integration."""
+
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_ENCRYPT_TOKEN, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .helpers import CannotConnect, InvalidAuth, parse_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,26 +27,34 @@ USER_SCHEMA = vol.Schema(
     }
 )
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOKEN): str,
+        vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
+    }
+)
 
 
-async def validate_input(hass, data):
+def _get_bridge_info(data: dict[str, Any]) -> dict[str, Any]:
+    """Get Nuki bridge info."""
+    bridge = NukiBridge(
+        data[CONF_HOST],
+        data[CONF_TOKEN],
+        data[CONF_PORT],
+        data.get(CONF_ENCRYPT_TOKEN, True),
+        DEFAULT_TIMEOUT,
+    )
+    return bridge.info()
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from USER_SCHEMA with values provided by the user.
     """
 
     try:
-        bridge = await hass.async_add_executor_job(
-            NukiBridge,
-            data[CONF_HOST],
-            data[CONF_TOKEN],
-            data[CONF_PORT],
-            True,
-            DEFAULT_TIMEOUT,
-        )
-
-        info = await hass.async_add_executor_job(bridge.info)
+        info = await hass.async_add_executor_job(_get_bridge_info, data)
     except InvalidCredentialsException as err:
         raise InvalidAuth from err
     except RequestException as err:
@@ -54,19 +63,25 @@ async def validate_input(hass, data):
     return info
 
 
-class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Nuki config flow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Nuki config flow."""
-        self.discovery_schema = {}
-        self._data = {}
+        self.discovery_schema: vol.Schema | None = None
+        self._data: Mapping[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Nuki bridge."""
         await self.async_set_unique_id(discovery_info.hostname[12:].upper())
 
@@ -82,13 +97,17 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_validate()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._data = entry_data
 
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Dialog that inform the user that reauth is required."""
         errors = {}
         if user_input is None:
@@ -100,6 +119,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: self._data[CONF_HOST],
             CONF_PORT: self._data[CONF_PORT],
             CONF_TOKEN: user_input[CONF_TOKEN],
+            CONF_ENCRYPT_TOKEN: user_input[CONF_ENCRYPT_TOKEN],
         }
 
         try:
@@ -108,7 +128,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
@@ -128,18 +148,27 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
         )
 
-    async def async_step_validate(self, user_input=None):
+    async def async_step_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle init step of a flow."""
+
+        data_schema = self.discovery_schema or USER_SCHEMA
 
         errors = {}
         if user_input is not None:
+            data_schema = USER_SCHEMA.extend(
+                {
+                    vol.Optional(CONF_ENCRYPT_TOKEN, default=True): bool,
+                }
+            )
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -149,7 +178,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=bridge_id, data=user_input)
 
-        data_schema = self.discovery_schema or USER_SCHEMA
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
+            errors=errors,
+            description_placeholders={"sample_ip": "192.168.1.25"},
         )

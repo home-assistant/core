@@ -1,10 +1,10 @@
 """Platform for the KEF Wireless Speakers."""
-from __future__ import annotations
 
 from datetime import timedelta
 from functools import partial
 import ipaddress
 import logging
+from typing import Any, override
 
 from aiokef import AsyncKefSpeaker
 from aiokef.aiokef import DSP_OPTION_MAPPING
@@ -12,7 +12,7 @@ from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -58,7 +58,7 @@ SERVICE_UPDATE_DSP = "update_dsp"
 
 DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TYPE): vol.In(["LS50", "LSX"]),
@@ -78,11 +78,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_ip_mode(host):
     """Get the 'mode' used to retrieve the MAC address."""
     try:
-        if ipaddress.ip_address(host).version == 6:
-            return "ip6"
-        return "ip"
+        ip_address = ipaddress.ip_address(host)
     except ValueError:
         return "hostname"
+
+    if ip_address.version == 6:
+        return "ip6"
+    return "ip"
 
 
 async def async_setup_platform(
@@ -118,7 +120,7 @@ async def async_setup_platform(
 
     mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
-    if mac is None:
+    if mac is None or mac == "00:00:00:00:00:00":
         raise PlatformNotReady("Cannot get the ip address of kef speaker.")
 
     unique_id = f"kef-{mac}"
@@ -158,7 +160,7 @@ async def async_setup_platform(
         },
         "set_mode",
     )
-    platform.async_register_entity_service(SERVICE_UPDATE_DSP, {}, "update_dsp")
+    platform.async_register_entity_service(SERVICE_UPDATE_DSP, None, "update_dsp")
 
     def add_service(name, which, option):
         options = DSP_OPTION_MAPPING[which]
@@ -262,28 +264,34 @@ class KefMediaPlayer(MediaPlayerEntity):
             _LOGGER.debug("Error in `update`: %s", err)
             self._attr_state = None
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._speaker.turn_off()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if not self._supports_on:
-            raise NotImplementedError()
+            raise NotImplementedError
         await self._speaker.turn_on()
 
+    @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._speaker.increase_volume()
 
+    @override
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
         await self._speaker.decrease_volume()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._speaker.set_volume(volume)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (True) or unmute (False) media player."""
         if mute:
@@ -291,6 +299,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         else:
             await self._speaker.unmute()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list is not None and source in self.source_list:
@@ -298,18 +307,22 @@ class KefMediaPlayer(MediaPlayerEntity):
         else:
             raise ValueError(f"Unknown input source: {source}.")
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._speaker.set_play_pause()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._speaker.set_play_pause()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._speaker.prev_track()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._speaker.next_track()
@@ -331,19 +344,22 @@ class KefMediaPlayer(MediaPlayerEntity):
             **mode._asdict(),
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to DSP updates."""
         self._update_dsp_task_remover = async_track_time_interval(
             self.hass, self.update_dsp, DSP_SCAN_INTERVAL
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe to DSP updates."""
         self._update_dsp_task_remover()
         self._update_dsp_task_remover = None
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the DSP settings of the KEF device."""
         return self._dsp or {}
 

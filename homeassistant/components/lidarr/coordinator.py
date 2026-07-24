@@ -1,9 +1,9 @@
 """Data update coordinator for the Lidarr integration."""
-from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar, cast, override
 
 from aiopyarr import LidarrAlbum, LidarrQueue, LidarrRootFolder, exceptions
 from aiopyarr.lidarr_client import LidarrClient
@@ -16,17 +16,32 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum)
+
+@dataclass(kw_only=True, slots=True)
+class LidarrData:
+    """Lidarr data type."""
+
+    disk_space: DiskSpaceDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+    wanted: WantedDataUpdateCoordinator
+    albums: AlbumsDataUpdateCoordinator
 
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
+T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum | int)
+
+type LidarrConfigEntry = ConfigEntry[LidarrData]
+
+
+class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Lidarr integration."""
 
-    config_entry: ConfigEntry
+    config_entry: LidarrConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: LidarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: LidarrClient,
     ) -> None:
@@ -34,13 +49,14 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
-        self.system_version: str | None = None
 
+    @override
     async def _async_update_data(self) -> T:
         """Get the latest data from Lidarr."""
         try:
@@ -64,6 +80,7 @@ class DiskSpaceDataUpdateCoordinator(
 ):
     """Disk space update coordinator for Lidarr."""
 
+    @override
     async def _fetch_data(self) -> list[LidarrRootFolder]:
         """Fetch the data."""
         return cast(
@@ -74,6 +91,7 @@ class DiskSpaceDataUpdateCoordinator(
 class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
     """Queue update coordinator."""
 
+    @override
     async def _fetch_data(self) -> LidarrQueue:
         """Fetch the album count in queue."""
         return await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
@@ -82,6 +100,7 @@ class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
 class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator[str]):
     """Status update coordinator for Lidarr."""
 
+    @override
     async def _fetch_data(self) -> str:
         """Fetch the data."""
         return (await self.api_client.async_get_system_status()).version
@@ -90,9 +109,19 @@ class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator[str]):
 class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrAlbum]):
     """Wanted update coordinator."""
 
+    @override
     async def _fetch_data(self) -> LidarrAlbum:
         """Fetch the wanted data."""
         return cast(
             LidarrAlbum,
             await self.api_client.async_get_wanted(page_size=DEFAULT_MAX_RECORDS),
         )
+
+
+class AlbumsDataUpdateCoordinator(LidarrDataUpdateCoordinator[int]):
+    """Albums update coordinator."""
+
+    @override
+    async def _fetch_data(self) -> int:
+        """Fetch the album data."""
+        return len(cast(list[LidarrAlbum], await self.api_client.async_get_albums()))

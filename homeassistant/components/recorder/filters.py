@@ -1,8 +1,7 @@
 """Provide pre-made queries on top of the recorder component."""
-from __future__ import annotations
 
 from collections.abc import Callable, Collection, Iterable
-from typing import Any
+from typing import Any, override
 
 from sqlalchemy import Column, Text, cast, not_, or_
 from sqlalchemy.sql.elements import ColumnElement
@@ -12,7 +11,7 @@ from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType
 
-from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States, StatesMeta
+from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, StatesMeta
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
@@ -100,6 +99,7 @@ class Filters:
         self._included_domains = included_domains or []
         self._included_entity_globs = included_entity_globs or []
 
+    @override
     def __repr__(self) -> str:
         """Return human readable excludes/includes."""
         return (
@@ -158,7 +158,8 @@ class Filters:
         # - All entities included
         if not have_include and not have_exclude:
             raise RuntimeError(
-                "No filter configuration provided, check has_config before calling this method."
+                "No filter configuration provided, check"
+                " has_config before calling this method."
             )
 
         # Case 2 - Only includes
@@ -197,25 +198,12 @@ class Filters:
         # - Otherwise, entity matches domain exclude: exclude
         # - Otherwise: include
         if self._excluded_domains or self._excluded_entity_globs:
-            return (not_(or_(*excludes)) | i_entities).self_group()  # type: ignore[no-any-return, no-untyped-call]
+            return (not_(or_(*excludes)) | i_entities).self_group()
 
         # Case 6 - No Domain and/or glob includes or excludes
         # - Entity listed in entities include: include
         # - Otherwise: exclude
         return i_entities
-
-    def states_entity_filter(self) -> ColumnElement:
-        """Generate the States.entity_id filter query.
-
-        This is no longer used except by the legacy queries.
-        """
-
-        def _encoder(data: Any) -> Any:
-            """Nothing to encode for states since there is no json."""
-            return data
-
-        # The type annotation should be improved so the type ignore can be removed
-        return self._generate_filter_for_columns((States.entity_id,), _encoder)  # type: ignore[arg-type]
 
     def states_metadata_entity_filter(self) -> ColumnElement:
         """Generate the StatesMeta.entity_id filter query."""
@@ -244,7 +232,8 @@ class Filters:
             ),
             # Needs https://github.com/bdraco/home-assistant/commit/bba91945006a46f3a01870008eb048e4f9cbb1ef
             self._generate_filter_for_columns(
-                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder  # type: ignore[arg-type]
+                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT),  # type: ignore[arg-type]
+                _encoder,
             ).self_group(),
         )
 

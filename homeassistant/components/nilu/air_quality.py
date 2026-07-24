@@ -1,8 +1,8 @@
 """Sensor for checking the air quality around Norway."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from niluclient import (
     CO,
@@ -22,7 +22,10 @@ from niluclient import (
 )
 import voluptuous as vol
 
-from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
+    AirQualityEntity,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -30,7 +33,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -85,7 +88,7 @@ CONF_ALLOWED_AREAS = [
     "Ålesund",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {
         vol.Inclusive(
             CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
@@ -186,66 +189,79 @@ class NiluSensor(AirQualityEntity):
             self._attrs[CONF_LONGITUDE] = api_data.data.longitude
 
     @property
+    @override
     def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return self._attrs
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def air_quality_index(self) -> str | None:
         """Return the Air Quality Index (AQI)."""
         return self._max_aqi
 
     @property
+    @override
     def carbon_monoxide(self) -> str | None:
         """Return the CO (carbon monoxide) level."""
         return self.get_component_state(CO)
 
     @property
+    @override
     def carbon_dioxide(self) -> str | None:
         """Return the CO2 (carbon dioxide) level."""
         return self.get_component_state(CO2)
 
     @property
+    @override
     def nitrogen_oxide(self) -> str | None:
         """Return the N2O (nitrogen oxide) level."""
         return self.get_component_state(NOX)
 
     @property
+    @override
     def nitrogen_monoxide(self) -> str | None:
         """Return the NO (nitrogen monoxide) level."""
         return self.get_component_state(NO)
 
     @property
+    @override
     def nitrogen_dioxide(self) -> str | None:
         """Return the NO2 (nitrogen dioxide) level."""
         return self.get_component_state(NO2)
 
     @property
+    @override
     def ozone(self) -> str | None:
         """Return the O3 (ozone) level."""
         return self.get_component_state(OZONE)
 
     @property
+    @override
     def particulate_matter_2_5(self) -> str | None:
         """Return the particulate matter 2.5 level."""
         return self.get_component_state(PM25)
 
     @property
+    @override
     def particulate_matter_10(self) -> str | None:
         """Return the particulate matter 10 level."""
         return self.get_component_state(PM10)
 
     @property
+    @override
     def particulate_matter_0_1(self) -> str | None:
         """Return the particulate matter 0.1 level."""
         return self.get_component_state(PM1)
 
     @property
+    @override
     def sulphur_dioxide(self) -> str | None:
         """Return the SO2 (sulphur dioxide) level."""
         return self.get_component_state(SO2)

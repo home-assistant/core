@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "communication_quality": {
+        "default": "mdi:wifi"
+      },
+      "purity": {
+        "default": "mdi:molecule-co2"
+      },
+      "valvetappet": {
+        "default": "mdi:gauge"
+      }
+    },
+    "switch": {
+      "routing": {
+        "default": "mdi:wifi"
+      }
+    }
+  }
+}

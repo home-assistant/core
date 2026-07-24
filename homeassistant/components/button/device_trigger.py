@@ -1,5 +1,4 @@
 """Provides device triggers for Button."""
-from __future__ import annotations
 
 import voluptuous as vol
 

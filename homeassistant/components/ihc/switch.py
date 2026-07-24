@@ -1,7 +1,6 @@
 """Support for IHC switches."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from ihcsdk.ihccontroller import IHCController
 
@@ -11,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OFF_ID, CONF_ON_ID, DOMAIN, IHC_CONTROLLER
-from .ihcdevice import IHCDevice
+from .entity import IHCEntity
 from .util import async_pulse, async_set_bool
 
 
@@ -42,7 +41,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class IHCSwitch(IHCDevice, SwitchEntity):
+class IHCSwitch(IHCEntity, SwitchEntity):
     """Representation of an IHC switch."""
 
     def __init__(
@@ -60,6 +59,7 @@ class IHCSwitch(IHCDevice, SwitchEntity):
         self._ihc_off_id = ihc_off_id
         self._ihc_on_id = ihc_on_id
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._ihc_on_id:
@@ -67,6 +67,7 @@ class IHCSwitch(IHCDevice, SwitchEntity):
         else:
             await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._ihc_off_id:
@@ -74,6 +75,7 @@ class IHCSwitch(IHCDevice, SwitchEntity):
         else:
             await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
 
+    @override
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""
         self._attr_is_on = value

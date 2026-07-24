@@ -1,0 +1,94 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "empty_input_source_list": "[%key:component::onkyo::options::error::empty_input_source_list%]",
+      "empty_listening_mode_list": "[%key:component::onkyo::options::error::empty_listening_mode_list%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "configure_receiver": {
+        "data": {
+          "input_sources": "[%key:component::onkyo::options::step::init::data::input_sources%]",
+          "listening_modes": "[%key:component::onkyo::options::step::init::data::listening_modes%]",
+          "volume_resolution": "Volume resolution"
+        },
+        "data_description": {
+          "input_sources": "[%key:component::onkyo::options::step::init::data_description::input_sources%]",
+          "listening_modes": "[%key:component::onkyo::options::step::init::data_description::listening_modes%]",
+          "volume_resolution": "Number of steps it takes for the receiver to go from the lowest to the highest possible volume."
+        },
+        "description": "Configure {name}"
+      },
+      "eiscp_discovery": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "Select the receiver to configure."
+        }
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the receiver."
+        }
+      },
+      "user": {
+        "menu_options": {
+          "eiscp_discovery": "Onkyo discovery",
+          "manual": "Manual entry"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_sound_mode": {
+      "message": "Cannot select sound mode \"{invalid_sound_mode}\" for entity: {entity_id}."
+    },
+    "invalid_source": {
+      "message": "Cannot select input source \"{invalid_source}\" for entity: {entity_id}."
+    }
+  },
+  "options": {
+    "error": {
+      "empty_input_source_list": "Input source list cannot be empty",
+      "empty_listening_mode_list": "Listening mode list cannot be empty"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "input_sources": "Input sources",
+          "listening_modes": "Listening modes",
+          "max_volume": "Maximum volume limit (%)"
+        },
+        "data_description": {
+          "input_sources": "List of input sources supported by the receiver.",
+          "listening_modes": "List of listening modes supported by the receiver.",
+          "max_volume": "Maximum volume limit as a percentage. This will associate Home Assistant's maximum volume to this value on the receiver, i.e., if you set this to 50%, then setting the volume to 100% in Home Assistant will cause the volume on the receiver to be set to 50% of its maximum value."
+        }
+      },
+      "names": {
+        "sections": {
+          "input_sources": {
+            "description": "Mappings of receiver's input sources to their names.",
+            "name": "Input source names"
+          },
+          "listening_modes": {
+            "description": "Mappings of receiver's listening modes to their names.",
+            "name": "Listening mode names"
+          }
+        }
+      }
+    }
+  }
+}

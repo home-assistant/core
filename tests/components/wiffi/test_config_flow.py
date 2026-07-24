@@ -1,10 +1,11 @@
 """Test the wiffi integration config flow."""
+
 import errno
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.wiffi.const import DOMAIN
 from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
@@ -76,7 +77,7 @@ async def test_form(hass: HomeAssistant, dummy_tcp_server) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == config_entries.SOURCE_USER
 
@@ -84,7 +85,7 @@ async def test_form(hass: HomeAssistant, dummy_tcp_server) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_addr_in_use(hass: HomeAssistant, addr_in_use) -> None:
@@ -97,7 +98,7 @@ async def test_form_addr_in_use(hass: HomeAssistant, addr_in_use) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "addr_in_use"
 
 
@@ -113,7 +114,7 @@ async def test_form_start_server_failed(
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "start_server_failed"
 
 
@@ -126,13 +127,13 @@ async def test_option_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_TIMEOUT: 9}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_TIMEOUT] == 9

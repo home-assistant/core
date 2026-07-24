@@ -7,13 +7,8 @@ from homeassistant.components.recorder.filters import (
     extract_include_exclude_filter_conf,
     merge_include_exclude_filters,
 )
-from homeassistant.helpers.entityfilter import (
-    CONF_DOMAINS,
-    CONF_ENTITIES,
-    CONF_ENTITY_GLOBS,
-    CONF_EXCLUDE,
-    CONF_INCLUDE,
-)
+from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
+from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 
 EMPTY_INCLUDE_FILTER = {
     CONF_INCLUDE: {
@@ -143,16 +138,17 @@ async def test_an_empty_filter_raises() -> None:
     assert not filters.has_config
     with pytest.raises(
         RuntimeError,
-        match="No filter configuration provided, check has_config before calling this method",
+        match=(
+            "No filter configuration provided, check"
+            " has_config before calling this method"
+        ),
     ):
         filters.states_metadata_entity_filter()
     with pytest.raises(
         RuntimeError,
-        match="No filter configuration provided, check has_config before calling this method",
-    ):
-        filters.states_entity_filter()
-    with pytest.raises(
-        RuntimeError,
-        match="No filter configuration provided, check has_config before calling this method",
+        match=(
+            "No filter configuration provided, check"
+            " has_config before calling this method"
+        ),
     ):
         filters.events_entity_filter()

@@ -1,5 +1,4 @@
 """Helpers to deal with permissions."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
@@ -9,8 +8,8 @@ from .const import SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
 
-LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], ValueType | None]
-SubCatLookupType = dict[str, LookupFunc]
+type LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], ValueType | None]
+type SubCatLookupType = dict[str, LookupFunc]
 
 
 def lookup_all(

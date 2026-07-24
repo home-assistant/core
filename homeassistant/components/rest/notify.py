@@ -1,9 +1,8 @@
 """RESTful platform for notify component."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import httpx
 import voluptuous as vol
@@ -13,7 +12,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -30,7 +29,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -44,7 +43,7 @@ DEFAULT_MESSAGE_PARAM_NAME = "message"
 DEFAULT_METHOD = "GET"
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(
@@ -146,6 +145,7 @@ class RestNotificationService(BaseNotificationService):
         self._auth = auth
         self._verify_ssl = verify_ssl
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data = {self._message_param_name: message}
@@ -171,7 +171,6 @@ class RestNotificationService(BaseNotificationService):
                     }
                 if not isinstance(value, Template):
                     return value
-                value.hass = self._hass
                 return value.async_render(kwargs, parse_result=False)
 
             if self._data:

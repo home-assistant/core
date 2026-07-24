@@ -1,5 +1,4 @@
 """The Energy integration."""
-from __future__ import annotations
 
 from homeassistant.components import frontend
 from homeassistant.const import Platform
@@ -28,7 +27,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     frontend.async_register_built_in_panel(hass, DOMAIN, DOMAIN, "mdi:lightning-bolt")
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config),
+        eager_start=True,
     )
     hass.data[DOMAIN] = {
         "cost_sensors": {},

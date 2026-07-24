@@ -1,12 +1,9 @@
 """Network client device class."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any
 
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import ATTR_DEVICE_TRACKER
 

@@ -1,15 +1,22 @@
 """Support for the yandex speechkit tts  service."""
+
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+    TtsAudioType,
+)
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +70,7 @@ DEFAULT_VOICE = "zahar"
 DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
@@ -99,22 +106,30 @@ class YandexSpeechKitProvider(Provider):
         self.name = "YandexTTS"
 
     @property
-    def default_language(self):
+    @override
+    def default_language(self) -> str:
         """Return the default language."""
         return self._language
 
     @property
-    def supported_languages(self):
+    @override
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def supported_options(self):
+    @override
+    def supported_options(self) -> list[str]:
         """Return list of supported options."""
         return SUPPORTED_OPTIONS
 
-    async def async_get_tts_audio(self, message, language, options):
+    @override
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from yandex."""
+        if TYPE_CHECKING:
+            assert self.hass
         websession = async_get_clientsession(self.hass)
         actual_language = language
 
@@ -139,7 +154,7 @@ class YandexSpeechKitProvider(Provider):
                     return (None, None)
                 data = await request.read()
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except TimeoutError, aiohttp.ClientError:
             _LOGGER.error("Timeout for yandex speech kit API")
             return (None, None)
 

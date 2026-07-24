@@ -1,0 +1,54 @@
+{
+  "ssdp_usn": "uuid:055d4a80-005a-1000-b872-84a4668d8423::urn:samsung.com:service:MainTVAgent2:1",
+  "ssdp_st": "urn:samsung.com:service:MainTVAgent2:1",
+  "upnp": {
+    "deviceType": "urn:samsung.com:device:MainTVServer2:1",
+    "friendlyName": "[TV]Samsung LED55",
+    "manufacturer": "Samsung Electronics",
+    "manufacturerURL": "http://www.samsung.com",
+    "modelDescription": "Samsung DTV MainTVServer2",
+    "modelName": "UE55H6400",
+    "modelNumber": "1.0",
+    "modelURL": "http://www.samsung.com",
+    "serialNumber": "20100621",
+    "UDN": "uuid:055d4a80-005a-1000-b872-84a4668d8423",
+    "UPC": "123456789012",
+    "deviceID": "ZPCNHA5IWYRV6",
+    "ProductCap": "Y2013",
+    "serviceList": {
+      "service": {
+        "serviceType": "urn:samsung.com:service:MainTVAgent2:1",
+        "serviceId": "urn:samsung.com:serviceId:MainTVAgent2",
+        "controlURL": "/smp_4_",
+        "eventSubURL": "/smp_5_",
+        "SCPDURL": "/smp_3_"
+      }
+    }
+  },
+  "ssdp_location": "http://10.10.12.34:7676/smp_2_",
+  "ssdp_nt": null,
+  "ssdp_udn": "uuid:055d4a80-005a-1000-b872-84a4668d8423",
+  "ssdp_ext": "",
+  "ssdp_server": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0",
+  "ssdp_headers": {
+    "CACHE-CONTROL": "max-age:1800",
+    "Date": "Thu, 01 Jan 1970 00:06:48 GMT",
+    "EXT": "",
+    "LOCATION": "http://10.10.12.34:7676/smp_2_",
+    "SERVER": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0",
+    "ST": "urn:samsung.com:service:MainTVAgent2:1",
+    "USN": "uuid:055d4a80-005a-1000-b872-84a4668d8423::urn:samsung.com:service:MainTVAgent2:1",
+    "Content-Length": "0",
+    "_host": "10.10.12.34",
+    "_udn": "uuid:055d4a80-005a-1000-b872-84a4668d8423",
+    "_location_original": "http://10.10.12.34:7676/smp_2_",
+    "location": "http://10.10.12.34:7676/smp_2_",
+    "_timestamp": "2025-04-30T07:30:24.160549",
+    "_remote_addr": ["10.10.12.34", 58482],
+    "_port": 58482,
+    "_local_addr": ["0.0.0.0", 0],
+    "_source": "search"
+  },
+  "ssdp_all_locations": ["http://10.10.12.34:7676/smp_2_"],
+  "x_homeassistant_matching_domains": ["samsungtv"]
+}

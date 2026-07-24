@@ -1,9 +1,8 @@
 """Constants for weather."""
-from __future__ import annotations
 
 from collections.abc import Callable
-from enum import IntFlag
-from typing import Final
+from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.const import (
     UnitOfLength,
@@ -12,12 +11,18 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import WeatherEntity
 
 
 class WeatherEntityFeature(IntFlag):
@@ -46,7 +51,33 @@ ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
 ATTR_WEATHER_CLOUD_COVERAGE = "cloud_coverage"
 ATTR_WEATHER_UV_INDEX = "uv_index"
 
+
+class WeatherEntityStateAttribute(StrEnum):
+    """State attributes for weather entities."""
+
+    TEMPERATURE = "temperature"
+    APPARENT_TEMPERATURE = "apparent_temperature"
+    DEW_POINT = "dew_point"
+    TEMPERATURE_UNIT = "temperature_unit"
+    HUMIDITY = "humidity"
+    OZONE = "ozone"
+    CLOUD_COVERAGE = "cloud_coverage"
+    UV_INDEX = "uv_index"
+    PRESSURE = "pressure"
+    PRESSURE_UNIT = "pressure_unit"
+    WIND_BEARING = "wind_bearing"
+    WIND_GUST_SPEED = "wind_gust_speed"
+    WIND_SPEED = "wind_speed"
+    WIND_SPEED_UNIT = "wind_speed_unit"
+    VISIBILITY = "visibility"
+    VISIBILITY_UNIT = "visibility_unit"
+    PRECIPITATION_UNIT = "precipitation_unit"
+
+
 DOMAIN: Final = "weather"
+DATA_COMPONENT: HassKey[EntityComponent[WeatherEntity]] = HassKey(DOMAIN)
+
+INTENT_GET_WEATHER = "HassGetWeather"
 
 VALID_UNITS_PRESSURE: set[str] = {
     UnitOfPressure.HPA,
@@ -67,6 +98,7 @@ VALID_UNITS_VISIBILITY: set[str] = {
     UnitOfLength.MILES,
 }
 VALID_UNITS_WIND_SPEED: set[str] = {
+    UnitOfSpeed.BEAUFORT,
     UnitOfSpeed.FEET_PER_SECOND,
     UnitOfSpeed.KILOMETERS_PER_HOUR,
     UnitOfSpeed.KNOTS,

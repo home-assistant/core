@@ -1,18 +1,19 @@
 """Fixtures for Discovergy integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pydiscovergy import Discovergy
 from pydiscovergy.models import Reading
 import pytest
 
-from homeassistant.components.discovergy import DOMAIN
+from homeassistant.components.discovergy.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .const import GET_METERS, LAST_READING, LAST_READING_GAS
+
 from tests.common import MockConfigEntry
-from tests.components.discovergy.const import GET_METERS, LAST_READING, LAST_READING_GAS
 
 
 def _meter_last_reading(meter_id: str) -> Reading:
@@ -25,16 +26,21 @@ def _meter_last_reading(meter_id: str) -> Reading:
 
 
 @pytest.fixture(name="discovergy")
-def mock_discovergy() -> Generator[AsyncMock, None, None]:
+def mock_discovergy() -> Generator[AsyncMock]:
     """Mock the pydiscovergy client."""
-    mock = AsyncMock(spec=Discovergy)
-    mock.meters.return_value = GET_METERS
-    mock.meter_last_reading.side_effect = _meter_last_reading
-
-    with patch(
-        "homeassistant.components.discovergy.pydiscovergy.Discovergy",
-        return_value=mock,
+    with (
+        patch(
+            "homeassistant.components.discovergy.Discovergy",
+            autospec=True,
+        ) as mock_discovergy,
+        patch(
+            "homeassistant.components.discovergy.config_flow.Discovergy",
+            new=mock_discovergy,
+        ),
     ):
+        mock = mock_discovergy.return_value
+        mock.meters.return_value = GET_METERS
+        mock.meter_last_reading.side_effect = _meter_last_reading
         yield mock
 
 

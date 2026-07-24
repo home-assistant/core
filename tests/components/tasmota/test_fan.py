@@ -1,4 +1,5 @@
 """The tests for the Tasmota fan platform."""
+
 import copy
 import json
 from unittest.mock import patch
@@ -22,6 +23,8 @@ from .test_common import (
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
     help_test_availability_when_connection_lost,
+    help_test_deep_sleep_availability,
+    help_test_deep_sleep_availability_when_connection_lost,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
     help_test_discovery_update_unchanged,
@@ -58,7 +61,12 @@ async def test_controlling_state_via_mqtt(
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     assert state.attributes["percentage"] is None
-    assert state.attributes["supported_features"] == fan.SUPPORT_SET_SPEED
+    assert (
+        state.attributes["supported_features"]
+        == fan.FanEntityFeature.SET_SPEED
+        | fan.FanEntityFeature.TURN_OFF
+        | fan.FanEntityFeature.TURN_ON
+    )
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"FanSpeed":1}')
@@ -118,7 +126,7 @@ async def test_sending_mqtt_commands(
     # Turn the fan on and verify MQTT message is sent
     await common.async_turn_on(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -129,35 +137,35 @@ async def test_sending_mqtt_commands(
     # Turn the fan off and verify MQTT message is sent
     await common.async_turn_off(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 15)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "1", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "1", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 50)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 90)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False, message_expiry_interval=None
     )
 
     # Test the last known fan speed is restored
@@ -171,7 +179,7 @@ async def test_sending_mqtt_commands(
     # Then turn the fan off and get a fan state update
     await common.async_turn_off(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"FanSpeed":0}')
@@ -180,10 +188,11 @@ async def test_sending_mqtt_commands(
     assert state.attributes["percentage"] == 0
     mqtt_mock.async_publish.reset_mock()
 
-    # Finally, turn the fan on again and verify MQTT message is sent with last known speed
+    # Finally, turn the fan on again and verify MQTT message is sent
+    # with last known speed
     await common.async_turn_on(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -232,6 +241,20 @@ async def test_availability_when_connection_lost(
     )
 
 
+async def test_deep_sleep_availability_when_connection_lost(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
+    """Test availability after MQTT disconnection."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["if"] = 1
+    await help_test_deep_sleep_availability_when_connection_lost(
+        hass, mqtt_client_mock, mqtt_mock, Platform.FAN, config, object_id="tasmota"
+    )
+
+
 async def test_availability(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
 ) -> None:
@@ -239,6 +262,17 @@ async def test_availability(
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["if"] = 1
     await help_test_availability(
+        hass, mqtt_mock, Platform.FAN, config, object_id="tasmota"
+    )
+
+
+async def test_deep_sleep_availability(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test availability."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["if"] = 1
+    await help_test_deep_sleep_availability(
         hass, mqtt_mock, Platform.FAN, config, object_id="tasmota"
     )
 

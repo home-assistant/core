@@ -1,36 +1,52 @@
 """Config flow for Universal Devices ISY/IoX integration."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse, urlunparse
 
+import aiohttp
 from aiohttp import CookieJar
 from pyisy import ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.configuration import Configuration
 from pyisy.connection import Connection
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.components import dhcp, ssdp
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import (
     CONF_IGNORE_STRING,
     CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
-    CONF_TLS_VER,
     CONF_VAR_SENSOR_STRING,
     DEFAULT_IGNORE_STRING,
     DEFAULT_RESTORE_LIGHT_STATE,
     DEFAULT_SENSOR_STRING,
-    DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     HTTP_PORT,
     HTTPS_PORT,
@@ -41,6 +57,7 @@ from .const import (
     SCHEME_HTTPS,
     UDN_UUID_PREFIX,
 )
+from .models import IsyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,15 +69,13 @@ def _data_schema(schema_input: dict[str, str]) -> vol.Schema:
             vol.Required(CONF_HOST, default=schema_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_TLS_VER, default=DEFAULT_TLS_VERSION): vol.In([1.1, 1.2]),
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         },
         extra=vol.ALLOW_EXTRA,
     )
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -68,7 +83,7 @@ async def validate_input(
     user = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
     host = urlparse(data[CONF_HOST])
-    tls_version = data.get(CONF_TLS_VER)
+    verify_ssl = data[CONF_VERIFY_SSL]
 
     if host.scheme == SCHEME_HTTP:
         https = False
@@ -79,7 +94,7 @@ async def validate_input(
     elif host.scheme == SCHEME_HTTPS:
         https = True
         port = host.port or HTTPS_PORT
-        session = aiohttp_client.async_get_clientsession(hass)
+        session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
         _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         raise InvalidHost
@@ -91,7 +106,7 @@ async def validate_input(
         user,
         password,
         use_https=https,
-        tls_ver=tls_version,
+        verify_ssl=verify_ssl,
         webroot=host.path,
         websession=session,
     )
@@ -102,6 +117,10 @@ async def validate_input(
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
     except ISYConnectionError as error:
+        # pyisy chains the underlying aiohttp error via __cause__; ClientSSLError
+        # covers both protocol mismatch and certificate verification failures.
+        if isinstance(error.__cause__, aiohttp.ClientSSLError):
+            raise SslError from error
         raise CannotConnect from error
 
     try:
@@ -118,27 +137,30 @@ async def validate_input(
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Universal Devices ISY/IoX."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the ISY/IoX config flow."""
         self.discovered_conf: dict[str, str] = {}
-        self._existing_entry: config_entries.ConfigEntry | None = None
+        self._existing_entry: IsyConfigEntry | None = None
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: IsyConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         info: dict[str, str] = {}
@@ -147,11 +169,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except SslError:
+                errors["base"] = "ssl_error"
             except InvalidHost:
                 errors["base"] = "invalid_host"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -166,6 +190,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_data_schema(self.discovered_conf),
             errors=errors,
+            description_placeholders={
+                "sample_ip": "http://192.168.10.100:80",
+            },
         )
 
     async def _async_set_unique_id_or_update(
@@ -175,7 +202,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(isy_mac)
         if not existing_entry:
             return
-        if existing_entry.source == config_entries.SOURCE_IGNORE:
+        if existing_entry.source == SOURCE_IGNORE:
             raise AbortFlow("already_configured")
         parsed_url = urlparse(existing_entry.data[CONF_HOST])
         if parsed_url.hostname != ip_address:
@@ -202,10 +229,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         raise AbortFlow("already_configured")
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
-        if friendly_name.startswith("polisy") or friendly_name.startswith("eisy"):
+        if friendly_name.startswith(("polisy", "eisy")):
             url = f"http://{discovery_info.ip}:8080"
         else:
             url = f"http://{discovery_info.ip}"
@@ -223,13 +253,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    @override
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX Device."""
-        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
         url = discovery_info.ssdp_location
         assert isinstance(url, str)
         parsed_url = urlparse(url)
-        mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        mac = discovery_info.upnp[ATTR_UPNP_UDN]
         mac = mac.removeprefix(UDN_UUID_PREFIX)
         url = url.removesuffix(ISY_URL_POSTFIX)
 
@@ -250,14 +283,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth."""
         self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth input."""
         errors = {}
         assert self._existing_entry is not None
@@ -273,20 +308,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, new_data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except SslError:
+                errors["base"] = "ssl_error"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             else:
-                cfg_entries = self.hass.config_entries
-                cfg_entries.async_update_entry(existing_entry, data=new_data)
-                await cfg_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    self._existing_entry, data=new_data
+                )
 
         self.context["title_placeholders"] = {
             CONF_NAME: existing_entry.title,
             CONF_HOST: existing_data[CONF_HOST],
         }
         return self.async_show_form(
-            description_placeholders={CONF_HOST: existing_data[CONF_HOST]},
+            description_placeholders={
+                CONF_HOST: existing_data[CONF_HOST],
+                "sample_ip": "http://192.168.10.100:80",
+            },
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
@@ -300,16 +339,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for ISY/IoX."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -335,16 +370,26 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=options_schema)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=options_schema,
+            description_placeholders={
+                "sample_ip": "http://192.168.10.100:80",
+            },
+        )
 
 
-class InvalidHost(exceptions.HomeAssistantError):
+class InvalidHost(HomeAssistantError):
     """Error to indicate the host value is invalid."""
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class SslError(HomeAssistantError):
+    """Error to indicate a TLS/SSL handshake failure."""
+
+
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

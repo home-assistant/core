@@ -1,1 +1,1 @@
-"""Tests for the unifi_direct component."""
+"""Tests for the UniFi AP Direct integration."""

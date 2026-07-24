@@ -3,19 +3,16 @@
 from dataclasses import asdict
 from typing import Any
 
-from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import StarlinkUpdateCoordinator
+from .coordinator import StarlinkConfigEntry
 
 TO_REDACT = {"id", "latitude", "longitude", "altitude"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, config_entry: StarlinkConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for Starlink config entries."""
-    coordinator: StarlinkUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    return async_redact_data(asdict(coordinator.data), TO_REDACT)
+    return async_redact_data(asdict(config_entry.runtime_data.data), TO_REDACT)

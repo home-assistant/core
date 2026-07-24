@@ -1,22 +1,25 @@
 """Config flow for Adax integration."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import adax
 import adax_local
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_UNIQUE_ID,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     ACCOUNT_ID,
@@ -31,12 +34,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Adax."""
 
     VERSION = 2
 
-    async def async_step_user(self, user_input=None):
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         data_schema = vol.Schema(
             {
@@ -59,10 +65,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_local()
         return await self.async_step_cloud()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the local step."""
         data_schema = vol.Schema(
-            {vol.Required(WIFI_SSID): str, vol.Required(WIFI_PSWD): str}
+            {
+                vol.Required(WIFI_SSID): str,
+                vol.Required(WIFI_PSWD): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD,
+                        autocomplete="current-password",
+                    ),
+                ),
+            }
         )
         if user_input is None:
             return self.async_show_form(
@@ -70,7 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=data_schema,
             )
 
-        wifi_ssid = user_input[WIFI_SSID].replace(" ", "")
+        wifi_ssid = user_input[WIFI_SSID]
         wifi_pswd = user_input[WIFI_PSWD].replace(" ", "")
         configurator = adax_local.AdaxConfig(wifi_ssid, wifi_pswd)
 
@@ -106,7 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the cloud step."""
         data_schema = vol.Schema(
             {vol.Required(ACCOUNT_ID): int, vol.Required(CONF_PASSWORD): str}
@@ -126,7 +142,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async_get_clientsession(self.hass), account_id, password
         )
         if token is None:
-            _LOGGER.info("Adax: Failed to login to retrieve token")
+            _LOGGER.debug("Adax: Failed to login to retrieve token")
             errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="cloud",

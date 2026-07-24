@@ -1,5 +1,5 @@
 """The SensorPro integration."""
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 
@@ -25,14 +25,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address = entry.unique_id
     assert address is not None
     data = SensorProBluetoothDeviceData()
-    coordinator = hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = PassiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address=address,
-        mode=BluetoothScanningMode.PASSIVE,
-        update_method=data.update,
+    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
+        PassiveBluetoothProcessorCoordinator(
+            hass,
+            _LOGGER,
+            address=address,
+            mode=BluetoothScanningMode.PASSIVE,
+            update_method=data.update,
+        )
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(

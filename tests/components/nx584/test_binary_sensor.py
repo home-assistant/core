@@ -1,4 +1,6 @@
 """The tests for the nx584 sensor platform."""
+
+from typing import Any
 from unittest import mock
 
 from nx584 import client as nx584_client
@@ -27,6 +29,7 @@ def fake_zones():
 
     Returns:
         list: List of fake zones
+
     """
     return [
         {"name": "front", "number": 1},
@@ -44,6 +47,7 @@ def client(fake_zones):
 
     Yields:
         MagicMock: Client Mock
+
     """
     with mock.patch.object(nx584_client, "Client") as _mock_client:
         client = nx584_client.Client.return_value
@@ -96,7 +100,9 @@ def test_nx584_sensor_setup_full_config(
     assert mock_watcher.called
 
 
-async def _test_assert_graceful_fail(hass, config):
+async def _test_assert_graceful_fail(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
     """Test the failing."""
     assert not await async_setup_component(hass, "nx584", config)
 
@@ -111,7 +117,9 @@ async def _test_assert_graceful_fail(hass, config):
         ({"zone_types": {"notazone": "motion"}}),
     ],
 )
-async def test_nx584_sensor_setup_bad_config(hass: HomeAssistant, config) -> None:
+async def test_nx584_sensor_setup_bad_config(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
     """Test the setup with bad configuration."""
     await _test_assert_graceful_fail(hass, config)
 
@@ -198,6 +206,27 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
+    """Test the processing of zone events updates bypass state."""
+    zone = {"number": 1, "name": "foo", "state": True, "bypassed": False}
+    zones = {1: nx584.NX584ZoneSensor(zone, "motion")}
+    watcher = nx584.NX584Watcher(None, zones)
+
+    watcher._process_zone_event(
+        {"zone": 1, "zone_state": False, "zone_flags": ["Bypass"]}
+    )
+
+    assert zone["bypassed"]
+    assert not zone["state"]
+
+    watcher._process_zone_event({"zone": 1, "zone_state": True, "zone_flags": []})
+
+    assert not zone["bypassed"]
+    assert zone["state"]
+    assert mock_update.call_count == 2
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
 def test_nx584_watcher_process_zone_event_missing_zone(mock_update) -> None:
     """Test the processing of zone events with missing zones."""
     watcher = nx584.NX584Watcher(None, {})
@@ -213,8 +242,8 @@ def test_nx584_watcher_run_with_zone_events() -> None:
         """Return nothing twice, then some events."""
         if empty_me:
             empty_me.pop()
-        else:
-            return fake_events
+            return None
+        return fake_events
 
     client = mock.MagicMock()
     fake_events = [
@@ -246,8 +275,8 @@ def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
         """Fake runner."""
         if empty_me:
             empty_me.pop()
-            raise requests.exceptions.ConnectionError()
-        raise StopMe()
+            raise requests.exceptions.ConnectionError
+        raise StopMe
 
     watcher = nx584.NX584Watcher(None, {})
     with mock.patch.object(watcher, "_run") as mock_inner:

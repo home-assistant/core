@@ -1,34 +1,29 @@
 """Support for the Opple light."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyoppleio.OppleLightDevice import OppleLightDevice
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    PLATFORM_SCHEMA,
+    ATTR_COLOR_TEMP_KELVIN,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "opple light"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -57,57 +52,29 @@ class OppleLight(LightEntity):
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_min_color_temp_kelvin = 3000  # 333 Mireds
+    _attr_max_color_temp_kelvin = 5700  # 175 Mireds
 
     def __init__(self, name, host):
         """Initialize an Opple light."""
 
         self._device = OppleLightDevice(host)
 
-        self._name = name
-        self._is_on = None
-        self._brightness = None
-        self._color_temp = None
+        self._attr_name = name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if light is available."""
         return self._device.is_online
 
     @property
+    @override
     def unique_id(self):
         """Return unique ID for light."""
         return self._device.mac
 
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._is_on
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def color_temp(self):
-        """Return the color temperature of this light."""
-        return kelvin_to_mired(self._color_temp)
-
-    @property
-    def min_mireds(self):
-        """Return minimum supported color temperature."""
-        return 175
-
-    @property
-    def max_mireds(self):
-        """Return maximum supported color temperature."""
-        return 333
-
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on light %s %s", self._device.ip, kwargs)
@@ -117,10 +84,13 @@ class OppleLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs and self.brightness != kwargs[ATTR_BRIGHTNESS]:
             self._device.brightness = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_COLOR_TEMP in kwargs and self.color_temp != kwargs[ATTR_COLOR_TEMP]:
-            color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            self._device.color_temperature = color_temp
+        if (
+            ATTR_COLOR_TEMP_KELVIN in kwargs
+            and self.color_temp_kelvin != kwargs[ATTR_COLOR_TEMP_KELVIN]
+        ):
+            self._device.color_temperature = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._device.power_on = False
@@ -133,9 +103,9 @@ class OppleLight(LightEntity):
 
         if (
             prev_available == self.available
-            and self._is_on == self._device.power_on
-            and self._brightness == self._device.brightness
-            and self._color_temp == self._device.color_temperature
+            and self._attr_is_on == self._device.power_on
+            and self._attr_brightness == self._device.brightness
+            and self._attr_color_temp_kelvin == self._device.color_temperature
         ):
             return
 
@@ -143,9 +113,9 @@ class OppleLight(LightEntity):
             _LOGGER.debug("Light %s is offline", self._device.ip)
             return
 
-        self._is_on = self._device.power_on
-        self._brightness = self._device.brightness
-        self._color_temp = self._device.color_temperature
+        self._attr_is_on = self._device.power_on
+        self._attr_brightness = self._device.brightness
+        self._attr_color_temp_kelvin = self._device.color_temperature
 
         if not self.is_on:
             _LOGGER.debug("Update light %s success: power off", self._device.ip)
@@ -153,6 +123,6 @@ class OppleLight(LightEntity):
             _LOGGER.debug(
                 "Update light %s success: power on brightness %s color temperature %s",
                 self._device.ip,
-                self._brightness,
-                self._color_temp,
+                self._attr_brightness,
+                self._attr_color_temp_kelvin,
             )

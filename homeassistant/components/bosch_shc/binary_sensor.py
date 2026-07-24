@@ -1,60 +1,59 @@
 """Platform for binarysensor integration."""
-from __future__ import annotations
 
-from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
+from typing import override
+
+from boschshcpy import SHCBatteryDevice, SHCShutterContact
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN
+from . import BoschConfigEntry
 from .entity import SHCEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BoschConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
-    entities: list[BinarySensorEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data
 
-    for binary_sensor in (
-        session.device_helper.shutter_contacts + session.device_helper.shutter_contacts2
-    ):
-        entities.append(
-            ShutterContactSensor(
-                device=binary_sensor,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-            )
+    entities: list[BinarySensorEntity] = [
+        ShutterContactSensor(
+            device=binary_sensor,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
         )
+        for binary_sensor in (
+            session.device_helper.shutter_contacts
+            + session.device_helper.shutter_contacts2
+        )
+    ]
 
-    for binary_sensor in (
-        session.device_helper.motion_detectors
-        + session.device_helper.shutter_contacts
-        + session.device_helper.shutter_contacts2
-        + session.device_helper.smoke_detectors
-        + session.device_helper.thermostats
-        + session.device_helper.twinguards
-        + session.device_helper.universal_switches
-        + session.device_helper.wallthermostats
-        + session.device_helper.water_leakage_detectors
-    ):
-        if binary_sensor.supports_batterylevel:
-            entities.append(
-                BatterySensor(
-                    device=binary_sensor,
-                    parent_id=session.information.unique_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
+    entities.extend(
+        BatterySensor(
+            device=binary_sensor,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for binary_sensor in (
+            session.device_helper.motion_detectors
+            + session.device_helper.shutter_contacts
+            + session.device_helper.shutter_contacts2
+            + session.device_helper.smoke_detectors
+            + session.device_helper.thermostats
+            + session.device_helper.twinguards
+            + session.device_helper.universal_switches
+            + session.device_helper.wallthermostats
+            + session.device_helper.water_leakage_detectors
+        )
+    )
 
     async_add_entities(entities)
 
@@ -78,7 +77,8 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self._device.state == SHCShutterContact.ShutterContactService.State.OPEN
 
@@ -94,7 +94,8 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.serial}_battery"
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
             self._device.batterylevel != SHCBatteryDevice.BatteryLevelService.State.OK

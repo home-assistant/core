@@ -1,4 +1,7 @@
 """Support for AlarmDecoder devices."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -15,16 +18,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DEVICE_BAUD,
     CONF_DEVICE_PATH,
-    DATA_AD,
-    DATA_REMOVE_STOP_LISTENER,
-    DATA_REMOVE_UPDATE_LISTENER,
-    DATA_RESTART,
     DOMAIN,
     PROTOCOL_SERIAL,
     PROTOCOL_SOCKET,
@@ -34,17 +35,39 @@ from .const import (
     SIGNAL_ZONE_FAULT,
     SIGNAL_ZONE_RESTORE,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.SENSOR,
 ]
 
+type AlarmDecoderConfigEntry = ConfigEntry[AlarmDecoderData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class AlarmDecoderData:
+    """Runtime data for the AlarmDecoder class."""
+
+    client: AdExt
+    remove_update_listener: Callable[[], None]
+    remove_stop_listener: Callable[[], None]
+    restart: bool
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AlarmDecoderConfigEntry
+) -> bool:
     """Set up AlarmDecoder config flow."""
     undo_listener = entry.add_update_listener(_update_listener)
 
@@ -53,10 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def stop_alarmdecoder(event):
         """Handle the shutdown of AlarmDecoder."""
-        if not hass.data.get(DOMAIN):
+        if not entry.runtime_data:
             return
         _LOGGER.debug("Shutting down alarmdecoder")
-        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
+        entry.runtime_data.restart = False
         controller.close()
 
     async def open_connection(now=None):
@@ -68,13 +91,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_call_later(hass, timedelta(seconds=5), open_connection)
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")
-        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = True
+        entry.runtime_data.restart = True
 
     def handle_closed_connection(event):
         """Restart after unexpected loss of connection."""
-        if not hass.data[DOMAIN][entry.entry_id][DATA_RESTART]:
+        if not entry.runtime_data.restart:
             return
-        hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
+        entry.runtime_data.restart = False
         _LOGGER.warning("AlarmDecoder unexpectedly lost connection")
         hass.add_job(open_connection)
 
@@ -118,43 +141,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_AD: controller,
-        DATA_REMOVE_UPDATE_LISTENER: undo_listener,
-        DATA_REMOVE_STOP_LISTENER: remove_stop_listener,
-        DATA_RESTART: False,
-    }
+    entry.runtime_data = AlarmDecoderData(
+        controller, undo_listener, remove_stop_listener, False
+    )
 
     await open_connection()
+
+    await controller.is_init()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AlarmDecoderConfigEntry
+) -> bool:
     """Unload a AlarmDecoder entry."""
-    hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
+    data = entry.runtime_data
+    data.restart = False
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if not unload_ok:
         return False
 
-    hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_UPDATE_LISTENER]()
-    hass.data[DOMAIN][entry.entry_id][DATA_REMOVE_STOP_LISTENER]()
-    await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_AD].close)
-
-    if hass.data[DOMAIN][entry.entry_id]:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
+    data.remove_update_listener()
+    data.remove_stop_listener()
+    await hass.async_add_executor_job(data.client.close)
 
     return True
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _update_listener(hass: HomeAssistant, entry: AlarmDecoderConfigEntry) -> None:
     """Handle options update."""
     _LOGGER.debug("AlarmDecoder options updated: %s", entry.as_dict()["options"])
     await hass.config_entries.async_reload(entry.entry_id)

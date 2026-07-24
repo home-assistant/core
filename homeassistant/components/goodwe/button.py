@@ -1,59 +1,52 @@
 """GoodWe PV inverter selection settings entities."""
+
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from goodwe import Inverter, InverterError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
+from .coordinator import GoodweConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class GoodweButtonEntityDescriptionRequired:
-    """Required attributes of GoodweButtonEntityDescription."""
+@dataclass(frozen=True, kw_only=True)
+class GoodweButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Goodwe button entities."""
 
     action: Callable[[Inverter], Awaitable[None]]
-
-
-@dataclass
-class GoodweButtonEntityDescription(
-    ButtonEntityDescription, GoodweButtonEntityDescriptionRequired
-):
-    """Class describing Goodwe button entities."""
 
 
 SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
     translation_key="synchronize_clock",
-    icon="mdi:clock-check-outline",
     entity_category=EntityCategory.CONFIG,
-    action=lambda inv: inv.write_setting("time", datetime.now()),
+    action=lambda inv: inv.write_setting("time", datetime.now()),  # pylint: disable=home-assistant-enforce-naive-now
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: GoodweConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the inverter button entities from a config entry."""
-    inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
+    inverter = config_entry.runtime_data.inverter
+    device_info = config_entry.runtime_data.device_info
 
     # read current time from the inverter
     try:
         await inverter.read_setting("time")
-    except (InverterError, ValueError):
+    except InverterError, ValueError:
         # Inverter model does not support clock synchronization
         _LOGGER.debug("Could not read inverter current clock time")
     else:
@@ -81,6 +74,7 @@ class GoodweButtonEntity(ButtonEntity):
         self._attr_device_info = device_info
         self._inverter: Inverter = inverter
 
+    @override
     async def async_press(self) -> None:
         """Triggers the button press service."""
         await self.entity_description.action(self._inverter)

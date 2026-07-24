@@ -1,5 +1,4 @@
 """Constants for the DLNA MediaServer integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 import logging

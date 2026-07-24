@@ -1,24 +1,23 @@
 """Support for ReCollect Waste calendars."""
-from __future__ import annotations
 
 import datetime
+from typing import override
 
 from aiorecollect.client import PickupEvent
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 from .entity import ReCollectWasteEntity
 from .util import async_get_pickup_type_names
 
 
 @callback
 def async_get_calendar_event_from_pickup_event(
-    entry: ConfigEntry, pickup_event: PickupEvent
+    entry: RecollectWasteConfigEntry, pickup_event: PickupEvent
 ) -> CalendarEvent:
     """Get a HASS CalendarEvent from an aiorecollect PickupEvent."""
     pickup_type_string = ", ".join(
@@ -34,26 +33,24 @@ def async_get_calendar_event_from_pickup_event(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RecollectWasteConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
-    coordinator: DataUpdateCoordinator[list[PickupEvent]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
-
-    async_add_entities([ReCollectWasteCalendar(coordinator, entry)])
+    async_add_entities([ReCollectWasteCalendar(entry.runtime_data, entry)])
 
 
 class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
     """Define a ReCollect Waste calendar."""
 
-    _attr_icon = "mdi:delete-empty"
     _attr_name = None
+    _attr_translation_key = "calendar"
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[PickupEvent]],
-        entry: ConfigEntry,
+        coordinator: ReCollectWasteDataUpdateCoordinator,
+        entry: RecollectWasteConfigEntry,
     ) -> None:
         """Initialize the ReCollect Waste entity."""
         super().__init__(coordinator, entry)
@@ -62,18 +59,20 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
             current_event = next(
                 event
                 for event in self.coordinator.data
-                if event.date >= datetime.date.today()
+                if event.date >= dt_util.now().date()
             )
         except StopIteration:
             self._event = None
@@ -84,6 +83,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,

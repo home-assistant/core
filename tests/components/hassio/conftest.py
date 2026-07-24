@@ -1,22 +1,27 @@
 """Fixtures for Hass.io."""
+
+from collections.abc import AsyncGenerator, Generator
+from dataclasses import replace
 import os
 import re
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from aiohasupervisor.models import AddonsStats, AddonState, InstalledAddonComplete
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.hassio.handler import HassIO, HassioAPIError
-from homeassistant.core import CoreState
+from homeassistant.components.hassio.const import DATA_HASSIO_SUPERVISOR_USER
+from homeassistant.components.hassio.handler import HassIO
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.setup import async_setup_component
 
 from . import SUPERVISOR_TOKEN
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def disable_security_filter():
+def disable_security_filter() -> Generator[None]:
     """Disable the security filter to ensure the integration is secure."""
     with patch(
         "homeassistant.components.http.security_filter.FILTERS",
@@ -26,60 +31,32 @@ def disable_security_filter():
 
 
 @pytest.fixture
-def hassio_env():
-    """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        Mock(side_effect=HassioAPIError()),
-    ):
-        yield
-
-
-@pytest.fixture
-def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
-    """Create mock hassio http client."""
-    with patch(
-        "homeassistant.components.hassio.HassIO.update_hass_api",
-        return_value={"result": "ok"},
-    ) as hass_api, patch(
-        "homeassistant.components.hassio.HassIO.update_hass_timezone",
-        return_value={"result": "ok"},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        side_effect=HassioAPIError(),
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_ingress_panels",
-        return_value={"panels": []},
-    ), patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup"
-    ), patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates"
-    ):
-        hass.state = CoreState.starting
-        hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
-
-    return hass_api.call_args[0][1]
-
-
-@pytest.fixture
-def hassio_client(hassio_stubs, hass, hass_client):
+async def hassio_client(
+    hassio_stubs: None, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Return a Hass.io HTTP client."""
-    return hass.loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 @pytest.fixture
-def hassio_noauth_client(hassio_stubs, hass, aiohttp_client):
+async def hassio_noauth_client(
+    hassio_stubs: None, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> TestClient:
     """Return a Hass.io HTTP client without auth."""
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
-async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
+async def hassio_client_supervisor(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hassio_stubs: None,
+) -> TestClient:
     """Return an authenticated HTTP client."""
-    access_token = hass.auth.async_create_access_token(hassio_stubs)
+    hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    assert hassio_user.refresh_tokens
+    refresh_token = next(iter(hassio_user.refresh_tokens.values()))
+    access_token = hass.auth.async_create_access_token(refresh_token)
     return await aiohttp_client(
         hass.http.app,
         headers={"Authorization": f"Bearer {access_token}"},
@@ -87,7 +64,24 @@ async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
 
 
 @pytest.fixture
-async def hassio_handler(hass, aioclient_mock):
+def hass_supervisor_ws_client(
+    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant,
+) -> WebSocketGenerator:
+    """Return a websocket client authenticated as the Supervisor user."""
+
+    async def create_client() -> WebSocketGenerator:
+        hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+        assert hassio_user.refresh_tokens
+        refresh_token = next(iter(hassio_user.refresh_tokens.values()))
+        access_token = hass.auth.async_create_access_token(refresh_token)
+        return await hass_ws_client(hass, access_token=access_token)
+
+    return create_client
+
+
+@pytest.fixture
+async def hassio_handler(hass: HomeAssistant) -> AsyncGenerator[HassIO]:
     """Create mock hassio handler."""
     with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")
@@ -95,203 +89,94 @@ async def hassio_handler(hass, aioclient_mock):
 
 @pytest.fixture
 def all_setup_requests(
-    aioclient_mock: AiohttpClientMocker, request: pytest.FixtureRequest
-):
+    request: pytest.FixtureRequest,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+    addon_changelog: AsyncMock,
+    addon_stats: AsyncMock,
+    jobs_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    homeassistant_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    addons_list: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    homeassistant_stats: AsyncMock,
+    supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     include_addons = hasattr(request, "param") and request.param.get(
         "include_addons", False
     )
 
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {
-                "supervisor": "222",
-                "homeassistant": "0.110.0",
-                "hassos": "1.2.3",
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/store",
-        json={
-            "result": "ok",
-            "data": {"addons": [], "repositories": []},
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        json={
-            "result": "ok",
-            "data": {
-                "version_latest": "1.0.0",
-                "version": "1.0.0",
-                "update_available": False,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "auto_update": True,
-                "addons": [
-                    {
-                        "name": "test",
-                        "slug": "test",
-                        "update_available": False,
-                        "version": "1.0.0",
-                        "version_latest": "1.0.0",
-                        "repository": "core",
-                        "state": "started",
-                        "icon": False,
-                    },
-                    {
-                        "name": "test2",
-                        "slug": "test2",
-                        "update_available": False,
-                        "version": "1.0.0",
-                        "version_latest": "1.0.0",
-                        "repository": "core",
-                        "state": "started",
-                        "icon": False,
-                    },
-                ]
-                if include_addons
-                else [],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
+    if include_addons:
+        addons_list.return_value[0] = replace(
+            addons_list.return_value[0],
+            version="1.0.0",
+            version_latest="1.0.0",
+            update_available=False,
+        )
+        addons_list.return_value[1] = replace(
+            addons_list.return_value[1],
+            version="1.0.0",
+            version_latest="1.0.0",
+            state=AddonState.STARTED,
+        )
+    else:
+        addons_list.return_value = []
 
-    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={
-            "result": "ok",
-            "data": {
-                "name": "test",
-                "slug": "test",
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "repository": "core",
-                "state": "started",
-                "icon": False,
-                "url": "https://github.com/home-assistant/addons/test",
-                "auto_update": True,
-            },
-        },
-    )
-    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={
-            "result": "ok",
-            "data": {
-                "name": "test2",
-                "slug": "test2",
-                "update_available": False,
-                "version": "1.0.0",
-                "version_latest": "1.0.0",
-                "repository": "core",
-                "state": "started",
-                "icon": False,
-                "url": "https://github.com",
-                "auto_update": False,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.8,
-                "memory_usage": 51941376,
-                "memory_limit": 3977146368,
-                "memory_percent": 1.31,
-                "network_rx": 31338284,
-                "network_tx": 15692900,
-                "blk_read": 740077568,
-                "blk_write": 6004736,
-            },
-        },
-    )
+    addon_installed.return_value.update_available = False
+    addon_installed.return_value.version = "1.0.0"
+    addon_installed.return_value.version_latest = "1.0.0"
+    addon_installed.return_value.repository = "core"
+    addon_installed.return_value.state = AddonState.STARTED
+    addon_installed.return_value.icon = False
+
+    def mock_addon_info(slug: str):
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
+        if slug == "test":
+            addon.name = "test"
+            addon.slug = "test"
+            addon.url = "https://github.com/home-assistant/addons/test"
+            addon.auto_update = True
+        else:
+            addon.name = "test2"
+            addon.slug = "test2"
+            addon.url = "https://github.com"
+            addon.auto_update = False
+
+        return addon
+
+    addon_installed.side_effect = mock_addon_info
+
+    async def mock_addon_stats(addon: str) -> AddonsStats:
+        """Mock addon stats for test and test2."""
+        if addon == "test2":
+            return AddonsStats(
+                cpu_percent=0.8,
+                memory_usage=51941376,
+                memory_limit=3977146368,
+                memory_percent=1.31,
+                network_rx=31338284,
+                network_tx=15692900,
+                blk_read=740077568,
+                blk_write=6004736,
+            )
+        return AddonsStats(
+            cpu_percent=0.99,
+            memory_usage=182611968,
+            memory_limit=3977146368,
+            memory_percent=4.59,
+            network_rx=362570232,
+            network_tx=82374138,
+            blk_read=46010945536,
+            blk_write=15051526144,
+        )
+
+    addon_stats.side_effect = mock_addon_stats

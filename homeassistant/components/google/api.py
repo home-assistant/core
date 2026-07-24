@@ -1,10 +1,8 @@
 """Client library for talking to Google APIs."""
 
-from __future__ import annotations
-
 import datetime
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 from gcal_sync.auth import AbstractAuth
@@ -17,7 +15,6 @@ from oauth2client.client import (
 )
 
 from homeassistant.components.application_credentials import AuthImplementation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import (
@@ -26,13 +23,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_CALENDAR_ACCESS,
-    DATA_CONFIG,
-    DEFAULT_FEATURE_ACCESS,
-    DOMAIN,
-    FeatureAccess,
-)
+from .const import CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS, FeatureAccess
+from .store import GoogleConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +44,7 @@ class InvalidCredential(OAuthError):
 class GoogleHybridAuth(AuthImplementation):
     """OAuth implementation that supports both Web Auth (base class) and Device Auth."""
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
         if DEVICE_AUTH_CREDS not in external_data:
@@ -161,27 +154,11 @@ class DeviceFlow:
             self._listener()
 
 
-def get_feature_access(
-    hass: HomeAssistant, config_entry: ConfigEntry | None = None
-) -> FeatureAccess:
+def get_feature_access(config_entry: GoogleConfigEntry) -> FeatureAccess:
     """Return the desired calendar feature access."""
-    if (
-        config_entry
-        and config_entry.options
-        and CONF_CALENDAR_ACCESS in config_entry.options
-    ):
+    if config_entry.options and CONF_CALENDAR_ACCESS in config_entry.options:
         return FeatureAccess[config_entry.options[CONF_CALENDAR_ACCESS]]
-
-    # This may be called during config entry setup without integration setup running when there
-    # is no google entry in configuration.yaml
-    return cast(
-        FeatureAccess,
-        (
-            hass.data.get(DOMAIN, {})
-            .get(DATA_CONFIG, {})
-            .get(CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS)
-        ),
-    )
+    return DEFAULT_FEATURE_ACCESS
 
 
 async def async_create_device_flow(
@@ -219,6 +196,7 @@ class ApiAuthImpl(AbstractAuth):
         super().__init__(websession)
         self._session = session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
@@ -242,6 +220,7 @@ class AccessTokenAuthImpl(AbstractAuth):
         super().__init__(websession)
         self._access_token = access_token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the access token."""
         return self._access_token

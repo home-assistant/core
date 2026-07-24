@@ -1,5 +1,7 @@
 """Support for Broadlink climate devices."""
-from typing import Any
+
+from enum import IntEnum
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
@@ -11,31 +13,45 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, DOMAINS_AND_TYPES
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
 
+class SensorMode(IntEnum):
+    """Thermostat sensor modes."""
+
+    INNER_SENSOR_CONTROL = 0
+    OUTER_SENSOR_CONTROL = 1
+    INNER_SENSOR_CONTROL_OUTER_LIMIT = 2
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink climate entities."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
     if device.api.type in DOMAINS_AND_TYPES[Platform.CLIMATE]:
         async_add_entities([BroadlinkThermostat(device)])
 
 
-class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
+class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
     """Representation of a Broadlink Hysen climate entity."""
 
     _attr_has_entity_name = True
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF, HVACMode.AUTO]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -44,7 +60,9 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
         super().__init__(device)
         self._attr_unique_id = device.unique_id
         self._attr_hvac_mode = None
+        self.sensor_mode = SensorMode.INNER_SENSOR_CONTROL
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -53,8 +71,11 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update data."""
+        if (sensor := data.get("sensor")) is not None:
+            self.sensor_mode = SensorMode(sensor)
         if data.get("power"):
             if data.get("auto_mode"):
                 self._attr_hvac_mode = HVACMode.AUTO
@@ -68,10 +89,13 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
-
-        self._attr_current_temperature = data.get("room_temp")
+        if self.sensor_mode is SensorMode.OUTER_SENSOR_CONTROL:
+            self._attr_current_temperature = data.get("external_temp")
+        else:
+            self._attr_current_temperature = data.get("room_temp")
         self._attr_target_temperature = data.get("thermostat_temp")
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -79,7 +103,9 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity):
         else:
             await self._device.async_request(self._device.api.set_power, 1)
             mode = 0 if hvac_mode == HVACMode.HEAT else 1
-            await self._device.async_request(self._device.api.set_mode, mode, 0)
+            await self._device.async_request(
+                self._device.api.set_mode, mode, 0, self.sensor_mode.value
+            )
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()

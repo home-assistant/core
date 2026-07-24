@@ -1,9 +1,16 @@
 """Test KNX number."""
-from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
+
+from homeassistant.components.knx.const import (
+    CONF_RESPOND_TO_READ,
+    CONF_STATE_ADDRESS,
+    KNX_ADDRESS,
+)
 from homeassistant.components.knx.schema import TextSchema
-from homeassistant.const import CONF_NAME
+from homeassistant.components.text import TextMode
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, State
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import mock_restore_cache
@@ -98,3 +105,74 @@ async def test_text_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) ->
     )
     state = hass.states.get("text.test")
     assert state.state == "hallo"
+
+
+async def test_text_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX text with state_address restores state until bus read completes."""
+    test_address = "1/1/1"
+    test_state_address = "2/2/2"
+    fake_state = State("text.test", "test test")
+    mock_restore_cache(hass, (fake_state,))
+
+    await knx.setup_integration(
+        {
+            TextSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: test_address,
+                CONF_STATE_ADDRESS: test_state_address,
+            }
+        }
+    )
+    # StateUpdater initialize state - restored value is used before response is received
+    await knx.assert_read(test_state_address)
+    state = hass.states.get("text.test")
+    assert state.state == "test test"
+
+    # bus reports a different value than restored - state updates to the real value
+    await knx.receive_response(
+        test_state_address,
+        (0x68, 0x61, 0x6C, 0x6C, 0x6F, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0),
+    )
+    state = hass.states.get("text.test")
+    assert state.state == "hallo"
+
+
+async def test_text_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a text."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.TEXT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_text": {"write": "1/1/1", "dpt": "16.000"},
+            "mode": TextMode.PASSWORD,
+            "sync_state": True,
+        },
+    )
+    await hass.services.async_call(
+        "text",
+        "set_value",
+        {"entity_id": "text.test", "value": "hallo"},
+        blocking=True,
+    )
+    await knx.assert_write(
+        "1/1/1",
+        (0x68, 0x61, 0x6C, 0x6C, 0x6F, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0),
+    )
+    knx.assert_state("text.test", "hallo", mode=TextMode.PASSWORD)
+
+
+async def test_text_ui_load(knx: KNXTestKit) -> None:
+    """Test loading a text from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_text.json")
+
+    await knx.assert_read("2/2/2")
+    await knx.receive_response(
+        "2/2/2",
+        (0x68, 0x61, 0x6C, 0x6C, 0x6F, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0),
+    )
+    knx.assert_state("text.test", "hallo", mode=TextMode.TEXT)

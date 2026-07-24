@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "fritzbox_callmonitor": {
+        "default": "mdi:phone",
+        "state": {
+          "dialing": "mdi:phone-outgoing",
+          "ringing": "mdi:phone-incoming",
+          "talking": "mdi:phone-in-talk"
+        }
+      }
+    }
+  }
+}

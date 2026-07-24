@@ -1,4 +1,5 @@
 """Test the Tilt config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -18,7 +19,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TILT_GREEN_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch(
         "homeassistant.components.tilt_ble.async_setup_entry", return_value=True
@@ -26,7 +27,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tilt Green"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "F6:0F:28:F2:1F:CB"
@@ -39,7 +40,7 @@ async def test_async_step_bluetooth_not_tilt(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=NOT_TILT_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
 
 
@@ -49,12 +50,49 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
 async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
+    with (
+        patch(
+            "homeassistant.components.tilt_ble.config_flow.async_discovered_service_info",
+            return_value=[TILT_GREEN_SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.tilt_ble.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
+    with patch(
+        "homeassistant.components.tilt_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "F6:0F:28:F2:1F:CB"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Tilt Green"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "F6:0F:28:F2:1F:CB"
+
+
+async def test_async_step_user_replaces_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info can replace an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TILT_GREEN_SERVICE_INFO.address,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.tilt_ble.config_flow.async_discovered_service_info",
         return_value=[TILT_GREEN_SERVICE_INFO],
@@ -63,7 +101,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch(
         "homeassistant.components.tilt_ble.async_setup_entry", return_value=True
@@ -72,7 +110,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={"address": "F6:0F:28:F2:1F:CB"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tilt Green"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "F6:0F:28:F2:1F:CB"
@@ -88,7 +126,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     entry = MockConfigEntry(
@@ -104,7 +142,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
             result["flow_id"],
             user_input={"address": "F6:0F:28:F2:1F:CB"},
         )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -126,7 +164,7 @@ async def test_async_step_user_with_found_devices_already_setup(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -143,7 +181,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TILT_GREEN_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -154,7 +192,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TILT_GREEN_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_init(
@@ -162,7 +200,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TILT_GREEN_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -175,7 +213,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TILT_GREEN_SERVICE_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
@@ -186,7 +224,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.tilt_ble.async_setup_entry", return_value=True
@@ -195,7 +233,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
             result["flow_id"],
             user_input={"address": "F6:0F:28:F2:1F:CB"},
         )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tilt Green"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "F6:0F:28:F2:1F:CB"

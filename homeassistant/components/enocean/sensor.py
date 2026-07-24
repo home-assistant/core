@@ -1,14 +1,14 @@
 """Support for EnOcean sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
-from enocean.utils import combine_hex
+from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntityDescription,
@@ -25,11 +25,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .device import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -44,25 +44,17 @@ SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
 
-@dataclass
-class EnOceanSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnOceanSensorEntityDescription(SensorEntityDescription):
+    """Describes EnOcean sensor entity."""
 
     unique_id: Callable[[list[int]], str | None]
-
-
-@dataclass
-class EnOceanSensorEntityDescription(
-    SensorEntityDescription, EnOceanSensorEntityDescriptionMixin
-):
-    """Describes EnOcean sensor entity."""
 
 
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     name="Temperature",
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    icon="mdi:thermometer",
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_TEMPERATURE}",
@@ -72,7 +64,6 @@ SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     name="Humidity",
     native_unit_of_measurement=PERCENTAGE,
-    icon="mdi:water-percent",
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_HUMIDITY}",
@@ -82,7 +73,6 @@ SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
     native_unit_of_measurement=UnitOfPower.WATT,
-    icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_POWER}",
@@ -91,12 +81,12 @@ SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
 SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_WINDOWHANDLE,
     name="WindowHandle",
-    icon="mdi:window-open-variant",
+    translation_key="window_handle",
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -165,6 +155,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         self._attr_name = f"{description.name} {dev_name}"
         self._attr_unique_id = description.unique_id(dev_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
@@ -175,7 +166,8 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
-    def value_changed(self, packet):
+    @override
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
 
 
@@ -186,15 +178,20 @@ class EnOceanPowerSensor(EnOceanSensor):
     - A5-12-01 (Automated Meter Reading, Electricity)
     """
 
-    def value_changed(self, packet):
+    @override
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
-        if packet.rorg != 0xA5:
+        if telegram.rorg != 0xA5:
             return
-        packet.parse_eep(0x12, 0x01)
-        if packet.parsed["DT"]["raw_value"] == 1:
+
+        if (eep := EEP_SPECIFICATIONS.get(EEP(0xA5, 0x12, 0x01))) is None:
+            return
+        msg: EEPMessage = EEPHandler(eep).decode(telegram)
+
+        if "DT" in msg.values and msg.values["DT"].raw == 1:
             # this packet reports the current value
-            raw_val = packet.parsed["MR"]["raw_value"]
-            divisor = packet.parsed["DIV"]["raw_value"]
+            raw_val = msg.values["MR"].raw
+            divisor = msg.values["DIV"].raw
             self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
 
@@ -235,13 +232,14 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self.range_from = range_from
         self.range_to = range_to
 
-    def value_changed(self, packet):
+    @override
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
-        if packet.data[0] != 0xA5:
+        if telegram.rorg != 0xA5:
             return
         temp_scale = self._scale_max - self._scale_min
         temp_range = self.range_to - self.range_from
-        raw_val = packet.data[3]
+        raw_val = telegram.telegram_data[2]
         temperature = temp_scale / temp_range * (raw_val - self.range_from)
         temperature += self._scale_min
         self._attr_native_value = round(temperature, 1)
@@ -257,11 +255,12 @@ class EnOceanHumiditySensor(EnOceanSensor):
     - A5-10-10 to A5-10-14 (Room Operating Panels)
     """
 
-    def value_changed(self, packet):
+    @override
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
-        if packet.rorg != 0xA5:
+        if telegram.rorg != 0xA5:
             return
-        humidity = packet.data[2] * 100 / 250
+        humidity = telegram.telegram_data[1] * 100 / 250
         self._attr_native_value = round(humidity, 1)
         self.schedule_update_ha_state()
 
@@ -273,9 +272,10 @@ class EnOceanWindowHandle(EnOceanSensor):
     - F6-10-00 (Mechanical handle / Hoppe AG)
     """
 
-    def value_changed(self, packet):
+    @override
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the sensor."""
-        action = (packet.data[1] & 0x70) >> 4
+        action = (telegram.telegram_data[0] & 0x70) >> 4
 
         if action == 0x07:
             self._attr_native_value = STATE_CLOSED

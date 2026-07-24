@@ -1,38 +1,40 @@
 """Support for Obihai Sensors."""
-from __future__ import annotations
 
 import datetime
+from typing import override
 
 from requests.exceptions import RequestException
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ObihaiConfigEntry
 from .connectivity import ObihaiConnection
-from .const import DOMAIN, LOGGER, OBIHAI
+from .const import LOGGER, OBIHAI
 
 SCAN_INTERVAL = datetime.timedelta(seconds=5)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ObihaiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Obihai sensor entries."""
 
-    requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
+    requester = entry.runtime_data
 
-    sensors = []
-    for key in requester.services:
-        sensors.append(ObihaiServiceSensors(requester, key))
+    sensors = [ObihaiServiceSensors(requester, key) for key in requester.services]
+
+    sensors.extend(
+        ObihaiServiceSensors(requester, key) for key in requester.call_direction
+    )
 
     if requester.line_services is not None:
-        for key in requester.line_services:
-            sensors.append(ObihaiServiceSensors(requester, key))
-
-    for key in requester.call_direction:
-        sensors.append(ObihaiServiceSensors(requester, key))
+        sensors.extend(
+            ObihaiServiceSensors(requester, key) for key in requester.line_services
+        )
 
     async_add_entities(sensors, update_before_add=True)
 
@@ -52,6 +54,7 @@ class ObihaiServiceSensors(SensorEntity):
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
+    @override
     def icon(self) -> str:
         """Return an icon."""
 
@@ -105,18 +108,18 @@ class ObihaiServiceSensors(SensorEntity):
 
             if not self.requester.available:
                 self.requester.available = True
-                LOGGER.info("Connection restored")
+                LOGGER.warning("Connection restored")
             self._attr_available = True
-
-            return
 
         except RequestException as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, Obihai offline? %s", exc)
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False
         except IndexError as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, bad response: %s", exc)
-
-        self._attr_native_value = None
-        self._attr_available = False
-        self.requester.available = False
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False

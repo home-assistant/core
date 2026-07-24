@@ -1,11 +1,19 @@
 """Tests for the CO2 Signal integration."""
 
-VALID_PAYLOAD = {
-    "status": "ok",
-    "countryCode": "FR",
-    "data": {
-        "carbonIntensity": 45.98623190095805,
-        "fossilFuelPercentage": 5.461182741937103,
-    },
-    "units": {"carbonIntensity": "gCO2eq/kWh"},
-}
+from aioelectricitymaps import HomeAssistantCarbonIntensityResponse
+from aioelectricitymaps.models.home_assistant import (
+    HomeAssistantCarbonIntensityData,
+    HomeAssistantCarbonIntensityUnit,
+)
+
+VALID_RESPONSE = HomeAssistantCarbonIntensityResponse(
+    status="ok",
+    country_code="FR",
+    data=HomeAssistantCarbonIntensityData(
+        carbon_intensity=45.98623190095805,
+        fossil_fuel_percentage=5.461182741937103,
+    ),
+    units=HomeAssistantCarbonIntensityUnit(
+        carbon_intensity="gCO2eq/kWh",
+    ),
+)

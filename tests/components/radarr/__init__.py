@@ -1,4 +1,5 @@
 """Tests for the Radarr component."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -12,7 +13,6 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -97,7 +97,19 @@ def mock_connection(
 
     aioclient_mock.get(
         f"{url}/api/v3/movie",
-        text=load_fixture("radarr/movie.json"),
+        text=load_fixture("radarr/movies.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+
+def mock_calendar(
+    aioclient_mock: AiohttpClientMocker,
+    url: str = URL,
+) -> None:
+    """Mock radarr connection."""
+    aioclient_mock.get(
+        f"{url}/api/v3/calendar",
+        text=load_fixture("radarr/calendar.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -120,6 +132,7 @@ def mock_connection_invalid_auth(
     aioclient_mock.get(f"{url}/api/v3/queue", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/rootfolder", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/system/status", status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(f"{url}/api/v3/calendar", status=HTTPStatus.UNAUTHORIZED)
 
 
 def mock_connection_server_error(
@@ -136,6 +149,9 @@ def mock_connection_server_error(
     aioclient_mock.get(
         f"{url}/api/v3/system/status", status=HTTPStatus.INTERNAL_SERVER_ERROR
     )
+    aioclient_mock.get(
+        f"{url}/api/v3/calendar", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
 
 
 async def setup_integration(
@@ -143,7 +159,7 @@ async def setup_integration(
     aioclient_mock: AiohttpClientMocker,
     url: str = URL,
     api_key: str = API_KEY,
-    unique_id: str = None,
+    unique_id: str | None = None,
     skip_entry_setup: bool = False,
     connection_error: bool = False,
     invalid_auth: bool = False,
@@ -172,10 +188,13 @@ async def setup_integration(
         single_return=single_return,
     )
 
+    mock_calendar(aioclient_mock, url)
+
     if not skip_entry_setup:
+        # async_setup_entry will automatically trigger async_setup
+        # which registers services
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert await async_setup_component(hass, DOMAIN, {})
 
     return entry
 

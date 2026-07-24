@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "fan": {
+      "rabbitair": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]",
+              "pollen": "Pollen"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "air_quality": {
+        "name": "Air quality",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "highest": "Highest",
+          "low": "[%key:common::state::low%]",
+          "lowest": "Lowest",
+          "medium": "[%key:common::state::medium%]"
+        }
+      }
+    }
+  }
+}

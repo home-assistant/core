@@ -1,5 +1,4 @@
 """Support for media metadata handling."""
-from __future__ import annotations
 
 import datetime
 from typing import Any
@@ -43,7 +42,7 @@ DURATION_SECONDS = "duration_in_s"
 POSITION_SECONDS = "position_in_s"
 
 
-def _timespan_secs(timespan: str | None) -> None | int:
+def _timespan_secs(timespan: str | None) -> int | None:
     """Parse a time-span into number of seconds."""
     if timespan in UNAVAILABLE_VALUES:
         return None
@@ -131,7 +130,8 @@ class SonosMedia:
 
         self.artist = track_info.get("artist")
         self.album_name = track_info.get("album")
-        self.title = track_info.get("title")
+        title = track_info.get("title") or ""
+        self.title = title.strip() or None
         self.image_url = track_info.get("album_art")
 
         playlist_position = int(track_info.get("playlist_position", -1))

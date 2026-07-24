@@ -1,19 +1,17 @@
 """Entity representing a Sonos number control."""
-from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
-from .helpers import soco_error
+from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 LEVEL_TYPES = {
@@ -21,12 +19,13 @@ LEVEL_TYPES = {
     "bass": (-10, 10),
     "balance": (-100, 100),
     "treble": (-10, 10),
+    "sub_crossover": (50, 110),
     "sub_gain": (-15, 15),
     "surround_level": (-15, 15),
     "music_surround_level": (-15, 15),
 }
 
-SocoFeatures = list[tuple[str, tuple[int, int]]]
+type SocoFeatures = list[tuple[str, tuple[int, int]]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,8 +66,8 @@ LEVEL_FROM_NUMBER = {"balance": _balance_from_number}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SonosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sonos number platform from a config entry."""
 
@@ -91,7 +90,9 @@ async def async_setup_entry(
             _LOGGER.debug(
                 "Creating %s number control on %s", level_type, speaker.zone_name
             )
-            entities.append(SonosLevelEntity(speaker, level_type, valid_range))
+            entities.append(
+                SonosLevelEntity(speaker, config_entry, level_type, valid_range)
+            )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -105,15 +106,20 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int, int]
+        self,
+        speaker: SonosSpeaker,
+        config_entry: SonosConfigEntry,
+        level_type: str,
+        valid_range: tuple[int, int],
     ) -> None:
         """Initialize the level entity."""
-        super().__init__(speaker)
+        super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-{level_type}"
         self._attr_translation_key = level_type
         self.level_type = level_type
         self._attr_native_min_value, self._attr_native_max_value = valid_range
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
         await self.hass.async_add_executor_job(self.poll_state)
@@ -125,12 +131,14 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         setattr(self.speaker, self.level_type, state)
 
     @soco_error()
+    @override
     def set_native_value(self, value: float) -> None:
         """Set a new value."""
         from_number = LEVEL_FROM_NUMBER.get(self.level_type, int)
         setattr(self.soco, self.level_type, from_number(value))
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value."""
         to_number = LEVEL_TO_NUMBER.get(self.level_type, int)

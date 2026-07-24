@@ -1,14 +1,15 @@
 """Support for Firmata switch output."""
+
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, CONF_PIN_MODE, DOMAIN
+from . import FirmataConfigEntry
+from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, CONF_PIN_MODE
 from .entity import FirmataPinEntity
 from .pin import FirmataBinaryDigitalOutput, FirmataPinUsedException
 
@@ -17,13 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FirmataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Firmata switches."""
     new_entities = []
 
-    board = hass.data[DOMAIN][config_entry.entry_id]
+    board = config_entry.runtime_data
     for switch in board.switches:
         pin = switch[CONF_PIN]
         pin_mode = switch[CONF_PIN_MODE]
@@ -48,20 +49,24 @@ async def async_setup_entry(
 class FirmataSwitch(FirmataPinEntity, SwitchEntity):
     """Representation of a switch on a Firmata board."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a switch."""
         await self._api.start_pin()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._api.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._api.turn_on()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._api.turn_off()

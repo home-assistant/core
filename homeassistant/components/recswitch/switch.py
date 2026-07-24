@@ -1,16 +1,18 @@
 """Support for Ankuoo RecSwitch MS6126 devices."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrecswitch import RSNetwork, RSNetworkError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,7 +22,7 @@ DEFAULT_NAME = "RecSwitch {0}"
 
 DATA_RSN = "RSN"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_MAC): vol.All(cv.string, vol.Upper),
@@ -63,24 +65,29 @@ class RecSwitchSwitch(SwitchEntity):
             self.device_name = DEFAULT_NAME.format(self.mac_address)
 
     @property
+    @override
     def unique_id(self):
         """Return the switch unique ID."""
         return self.mac_address
 
     @property
+    @override
     def name(self):
         """Return the switch name."""
         return self.device_name
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.gpio_state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.async_set_gpio_status(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.async_set_gpio_status(False)

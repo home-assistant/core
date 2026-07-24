@@ -1,5 +1,4 @@
 """The lutron_caseta integration models."""
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Final, TypedDict
@@ -7,7 +6,10 @@ from typing import Any, Final, TypedDict
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
+
+type LutronCasetaConfigEntry = ConfigEntry[LutronCasetaData]
 
 
 @dataclass

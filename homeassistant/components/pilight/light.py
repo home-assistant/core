@@ -1,24 +1,23 @@
 """Support for switching devices via Pilight to on and off."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_LIGHTS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .base_class import SWITCHES_SCHEMA, PilightBaseDevice
 from .const import CONF_DIMLEVEL_MAX, CONF_DIMLEVEL_MIN
+from .entity import SWITCHES_SCHEMA, PilightBaseDevice
 
 LIGHTS_SCHEMA = SWITCHES_SCHEMA.extend(
     {
@@ -27,7 +26,7 @@ LIGHTS_SCHEMA = SWITCHES_SCHEMA.extend(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_LIGHTS): vol.Schema({cv.string: LIGHTS_SCHEMA})}
 )
 
@@ -54,17 +53,19 @@ class PilightLight(PilightBaseDevice, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, hass, name, config):
+    def __init__(self, hass: HomeAssistant, name: str, config: ConfigType) -> None:
         """Initialize a switch."""
         super().__init__(hass, name, config)
-        self._dimlevel_min = config.get(CONF_DIMLEVEL_MIN)
-        self._dimlevel_max = config.get(CONF_DIMLEVEL_MAX)
+        self._dimlevel_min: int = config[CONF_DIMLEVEL_MIN]
+        self._dimlevel_max: int = config[CONF_DIMLEVEL_MAX]
 
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int | None:
         """Return the brightness."""
         return self._brightness
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on by calling pilight.send service with on code."""
         # Update brightness only if provided as an argument.

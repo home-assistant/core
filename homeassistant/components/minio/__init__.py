@@ -1,16 +1,21 @@
 """Minio component."""
-from __future__ import annotations
 
 import logging
 import os
 from queue import Queue
 import threading
+from typing import override
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .minio_helper import MinioEventThread, create_minio_client
@@ -18,8 +23,6 @@ from .minio_helper import MinioEventThread, create_minio_client
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "minio"
-CONF_HOST = "host"
-CONF_PORT = "port"
 CONF_ACCESS_KEY = "access_key"
 CONF_SECRET_KEY = "secret_key"
 CONF_SECURE = "secure"
@@ -72,11 +75,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 BUCKET_KEY_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_BUCKET): cv.template, vol.Required(ATTR_KEY): cv.template}
+    {vol.Required(ATTR_BUCKET): cv.string, vol.Required(ATTR_KEY): cv.string}
 )
 
 BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
-    {vol.Required(ATTR_FILE_PATH): cv.template}
+    {vol.Required(ATTR_FILE_PATH): cv.string}
 )
 
 
@@ -124,16 +127,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         get_minio_endpoint(host, port), access_key, secret_key, secure
     )
 
-    def _render_service_value(service, key):
-        value = service.data[key]
-        value.hass = hass
-        return value.async_render(parse_result=False)
-
     def put_file(service: ServiceCall) -> None:
         """Upload file service."""
-        bucket = _render_service_value(service, ATTR_BUCKET)
-        key = _render_service_value(service, ATTR_KEY)
-        file_path = _render_service_value(service, ATTR_FILE_PATH)
+        bucket = service.data[ATTR_BUCKET]
+        key = service.data[ATTR_KEY]
+        file_path = service.data[ATTR_FILE_PATH]
 
         if not hass.config.is_allowed_path(file_path):
             raise ValueError(f"Invalid file_path {file_path}")
@@ -142,9 +140,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def get_file(service: ServiceCall) -> None:
         """Download file service."""
-        bucket = _render_service_value(service, ATTR_BUCKET)
-        key = _render_service_value(service, ATTR_KEY)
-        file_path = _render_service_value(service, ATTR_FILE_PATH)
+        bucket = service.data[ATTR_BUCKET]
+        key = service.data[ATTR_KEY]
+        file_path = service.data[ATTR_FILE_PATH]
 
         if not hass.config.is_allowed_path(file_path):
             raise ValueError(f"Invalid file_path {file_path}")
@@ -153,8 +151,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def remove_file(service: ServiceCall) -> None:
         """Delete file service."""
-        bucket = _render_service_value(service, ATTR_BUCKET)
-        key = _render_service_value(service, ATTR_KEY)
+        bucket = service.data[ATTR_BUCKET]
+        key = service.data[ATTR_KEY]
 
         minio_client.remove_object(bucket, key)
 
@@ -179,9 +177,10 @@ class QueueListener(threading.Thread):
         self._hass = hass
         self._queue = Queue()
 
+    @override
     def run(self):
         """Listen to queue events, and forward them to Home Assistant event bus."""
-        _LOGGER.info("Running QueueListener")
+        _LOGGER.debug("Running QueueListener")
         while True:
             if (event := self._queue.get()) is None:
                 break
@@ -203,10 +202,10 @@ class QueueListener(threading.Thread):
 
     def stop(self):
         """Stop run by putting None into queue and join the thread."""
-        _LOGGER.info("Stopping QueueListener")
+        _LOGGER.debug("Stopping QueueListener")
         self._queue.put(None)
         self.join()
-        _LOGGER.info("Stopped QueueListener")
+        _LOGGER.debug("Stopped QueueListener")
 
     def start_handler(self, _):
         """Start handler helper method."""

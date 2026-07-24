@@ -1,13 +1,8 @@
 """Constants for Neato integration."""
 
-NEATO_DOMAIN = "neato"
+DOMAIN = "neato"
 
 CONF_VENDOR = "vendor"
-NEATO_CONFIG = "neato_config"
-NEATO_LOGIN = "neato_login"
-NEATO_MAP_DATA = "neato_map_data"
-NEATO_PERSISTENT_MAPS = "neato_persistent_maps"
-NEATO_ROBOTS = "neato_robots"
 
 SCAN_INTERVAL_MINUTES = 1
 

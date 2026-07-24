@@ -1,5 +1,6 @@
 """Base entity for the wallbox integration."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,6 +23,7 @@ class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
     _attr_has_entity_name = True
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Wallbox device."""
         return DeviceInfo(
@@ -33,7 +35,8 @@ class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
             },
             name=f"Wallbox {self.coordinator.data[CHARGER_NAME_KEY]}",
             manufacturer="Wallbox",
-            model=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
+            model=self.coordinator.data[CHARGER_NAME_KEY].split(" SN")[0],
+            model_id=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
             sw_version=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY][
                 CHARGER_CURRENT_VERSION_KEY
             ],

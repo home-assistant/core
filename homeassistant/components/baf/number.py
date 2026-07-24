@@ -1,13 +1,11 @@
 """Support for Big Ass Fans number."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
@@ -15,23 +13,18 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
-from .entity import BAFEntity
-from .models import BAFData
+from . import BAFConfigEntry
+from .const import HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
+from .entity import BAFDescriptionEntity
 
 
-@dataclass
-class BAFNumberDescriptionMixin:
-    """Required values for BAF sensors."""
+@dataclass(frozen=True, kw_only=True)
+class BAFNumberDescription(NumberEntityDescription):
+    """Class describing BAF sensor entities."""
 
     value_fn: Callable[[Device], int | None]
-
-
-@dataclass
-class BAFNumberDescription(NumberEntityDescription, BAFNumberDescriptionMixin):
-    """Class describing BAF sensor entities."""
 
 
 AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
@@ -120,12 +113,11 @@ LIGHT_NUMBER_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BAFConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BAF numbers."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
+    device = entry.runtime_data
     descriptions: list[BAFNumberDescription] = []
     if device.has_fan:
         descriptions.extend(FAN_NUMBER_DESCRIPTIONS)
@@ -136,23 +128,19 @@ async def async_setup_entry(
     async_add_entities(BAFNumber(device, description) for description in descriptions)
 
 
-class BAFNumber(BAFEntity, NumberEntity):
+class BAFNumber(BAFDescriptionEntity, NumberEntity):
     """BAF number."""
 
     entity_description: BAFNumberDescription
 
-    def __init__(self, device: Device, description: BAFNumberDescription) -> None:
-        """Initialize the entity."""
-        self.entity_description = description
-        super().__init__(device)
-        self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
-
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         if (value := self.entity_description.value_fn(self._device)) is not None:
             self._attr_native_value = float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         setattr(self._device, self.entity_description.key, int(value))

@@ -1,6 +1,7 @@
 """Support for SwitchBee entity."""
+
 import logging
-from typing import Generic, TypeVar, cast
+from typing import cast, override
 
 from switchbee import SWITCHBEE_BRAND
 from switchbee.device import DeviceType, SwitchBeeBaseDevice
@@ -11,13 +12,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 
-_DeviceTypeT = TypeVar("_DeviceTypeT", bound=SwitchBeeBaseDevice)
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator], Generic[_DeviceTypeT]):
+class SwitchBeeEntity[_DeviceTypeT: SwitchBeeBaseDevice](
+    CoordinatorEntity[SwitchBeeCoordinator]
+):
     """Representation of a Switchbee entity."""
 
     _attr_has_entity_name = True
@@ -34,7 +34,9 @@ class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator], Generic[_DeviceTy
         self._attr_unique_id = f"{coordinator.unique_id}-{device.id}"
 
 
-class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
+class SwitchBeeDeviceEntity[_DeviceTypeT: SwitchBeeBaseDevice](
+    SwitchBeeEntity[_DeviceTypeT]
+):
     """Representation of a Switchbee device entity."""
 
     def __init__(
@@ -46,7 +48,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         super().__init__(device, coordinator)
         self._is_online: bool = True
         identifier = (
-            device.id if device.type == DeviceType.Thermostat else device.unit_id
+            device.id if device.type is DeviceType.Thermostat else device.unit_id
         )
         self._attr_device_info = DeviceInfo(
             name=device.zone,
@@ -66,12 +68,16 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_online and super().available
 
     def _check_if_became_offline(self) -> None:
-        """Check if the device was online (now offline), log message and mark it as Unavailable."""
+        """Check if the device was online (now offline).
+
+        Log message and mark it as unavailable.
+        """
 
         if self._is_online:
             _LOGGER.warning(
@@ -86,7 +92,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
     def _check_if_became_online(self) -> None:
         """Check if the device was offline (now online) and bring it back."""
         if not self._is_online:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "%s device is now responding",
                 self.name,
             )

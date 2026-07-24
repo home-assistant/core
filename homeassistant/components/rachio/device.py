@@ -1,21 +1,18 @@
 """Adapter to wrap the rachiopy api for home assistant."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from rachiopy import Rachio
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    DOMAIN,
+    KEY_BASE_STATIONS,
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
@@ -30,35 +27,21 @@ from .const import (
     KEY_USERNAME,
     KEY_ZONES,
     LISTEN_EVENT_TYPES,
-    MODEL_GENERATION_1,
-    SERVICE_PAUSE_WATERING,
-    SERVICE_RESUME_WATERING,
-    SERVICE_STOP_WATERING,
     WEBHOOK_CONST_ID,
 )
+from .coordinator import RachioScheduleUpdateCoordinator, RachioUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICES = "devices"
-ATTR_DURATION = "duration"
 PERMISSION_ERROR = "7"
 
-PAUSE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_DEVICES): cv.string,
-        vol.Optional(ATTR_DURATION, default=60): cv.positive_int,
-    }
-)
-
-RESUME_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
-
-STOP_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
+type RachioConfigEntry = ConfigEntry[RachioPerson]
 
 
 class RachioPerson:
     """Represent a Rachio user."""
 
-    def __init__(self, rachio: Rachio, config_entry: ConfigEntry) -> None:
+    def __init__(self, rachio: Rachio, config_entry: RachioConfigEntry) -> None:
         """Create an object from the provided API instance."""
         # Use API token to get user ID
         self.rachio = rachio
@@ -66,64 +49,11 @@ class RachioPerson:
         self.username = None
         self._id: str | None = None
         self._controllers: list[RachioIro] = []
+        self._base_stations: list[RachioBaseStation] = []
 
     async def async_setup(self, hass: HomeAssistant) -> None:
-        """Create rachio devices and services."""
+        """Create rachio devices."""
         await hass.async_add_executor_job(self._setup, hass)
-        can_pause = False
-        for rachio_iro in self._controllers:
-            # Generation 1 controllers don't support pause or resume
-            if rachio_iro.model.split("_")[0] != MODEL_GENERATION_1:
-                can_pause = True
-                break
-
-        all_devices = [rachio_iro.name for rachio_iro in self._controllers]
-
-        def pause_water(service: ServiceCall) -> None:
-            """Service to pause watering on all or specific controllers."""
-            duration = service.data[ATTR_DURATION]
-            devices = service.data.get(ATTR_DEVICES, all_devices)
-            for iro in self._controllers:
-                if iro.name in devices:
-                    iro.pause_watering(duration)
-
-        def resume_water(service: ServiceCall) -> None:
-            """Service to resume watering on all or specific controllers."""
-            devices = service.data.get(ATTR_DEVICES, all_devices)
-            for iro in self._controllers:
-                if iro.name in devices:
-                    iro.resume_watering()
-
-        def stop_water(service: ServiceCall) -> None:
-            """Service to stop watering on all or specific controllers."""
-            devices = service.data.get(ATTR_DEVICES, all_devices)
-            for iro in self._controllers:
-                if iro.name in devices:
-                    iro.stop_watering()
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_STOP_WATERING,
-            stop_water,
-            schema=STOP_SERVICE_SCHEMA,
-        )
-
-        if not can_pause:
-            return
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_PAUSE_WATERING,
-            pause_water,
-            schema=PAUSE_SERVICE_SCHEMA,
-        )
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_RESUME_WATERING,
-            resume_water,
-            schema=RESUME_SERVICE_SCHEMA,
-        )
 
     def _setup(self, hass: HomeAssistant) -> None:
         """Rachio device setup."""
@@ -144,16 +74,20 @@ class RachioPerson:
             raise ConfigEntryNotReady(f"API Error: {data}")
         self.username = data[1][KEY_USERNAME]
         devices: list[dict[str, Any]] = data[1][KEY_DEVICES]
+        base_station_data = rachio.valve.list_base_stations(self._id)
+        base_stations: list[dict[str, Any]] = base_station_data[1][KEY_BASE_STATIONS]
+
         for controller in devices:
             webhooks = rachio.notification.get_device_webhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
-            # or if they are the owner. To work around this problem we fetch the webhooks
+            # or if they are the owner. To work around this problem
+            # we fetch the webhooks
             # before we setup the device so we can skip it instead of failing.
             # webhooks are normally a list, however if there is an error
             # rachio hands us back a dict
             if isinstance(webhooks, dict):
                 if webhooks.get("code") == PERMISSION_ERROR:
-                    _LOGGER.info(
+                    _LOGGER.warning(
                         (
                             "Not adding controller '%s', only controllers owned by '%s'"
                             " may be added"
@@ -173,7 +107,20 @@ class RachioPerson:
             rachio_iro.setup()
             self._controllers.append(rachio_iro)
 
-        _LOGGER.info('Using Rachio API as user "%s"', self.username)
+        base_count = len(base_stations)
+        self._base_stations.extend(
+            RachioBaseStation(
+                rachio,
+                base,
+                RachioUpdateCoordinator(
+                    hass, rachio, self.config_entry, base, base_count
+                ),
+                RachioScheduleUpdateCoordinator(hass, rachio, self.config_entry, base),
+            )
+            for base in base_stations
+        )
+
+        _LOGGER.debug('Using Rachio API as user "%s"', self.username)
 
     @property
     def user_id(self) -> str | None:
@@ -184,6 +131,11 @@ class RachioPerson:
     def controllers(self) -> list[RachioIro]:
         """Get a list of controllers managed by this account."""
         return self._controllers
+
+    @property
+    def base_stations(self) -> list[RachioBaseStation]:
+        """List of smart hose timer base stations."""
+        return self._base_stations
 
     def start_multiple_zones(self, zones) -> None:
         """Start multiple zones."""
@@ -228,7 +180,8 @@ class RachioIro:
         def _deinit_webhooks(_) -> None:
             """Stop getting updates from the Rachio API."""
             if not self._webhooks:
-                # We fetched webhooks when we created the device, however if we call _init_webhooks
+                # We fetched webhooks when we created the device,
+                # however if we call _init_webhooks
                 # again we need to fetch again
                 self._webhooks = self.rachio.notification.get_device_webhook(
                     self.controller_id
@@ -244,10 +197,11 @@ class RachioIro:
         _deinit_webhooks(None)
 
         # Choose which events to listen for and get their IDs
-        event_types = []
-        for event_type in self.rachio.notification.get_webhook_event_type()[1]:
-            if event_type[KEY_NAME] in LISTEN_EVENT_TYPES:
-                event_types.append({"id": event_type[KEY_ID]})
+        event_types = [
+            {"id": event_type[KEY_ID]}
+            for event_type in self.rachio.notification.get_webhook_event_type()[1]
+            if event_type[KEY_NAME] in LISTEN_EVENT_TYPES
+        ]
 
         # Register to listen to these events from the device
         url = self.rachio.webhook_url
@@ -259,6 +213,7 @@ class RachioIro:
         current_webhook_id = new_webhook[1][KEY_ID]
         self.hass.bus.listen(EVENT_HOMEASSISTANT_STOP, _deinit_webhooks)
 
+    @override
     def __str__(self) -> str:
         """Display the controller as a string."""
         return f'Rachio controller "{self.name}"'
@@ -306,7 +261,7 @@ class RachioIro:
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
         self.rachio.device.stop_water(self.controller_id)
-        _LOGGER.info("Stopped watering of all zones on %s", self)
+        _LOGGER.debug("Stopped watering of all zones on %s", self)
 
     def pause_watering(self, duration) -> None:
         """Pause watering on this controller."""
@@ -317,6 +272,35 @@ class RachioIro:
         """Resume paused watering on this controller."""
         self.rachio.device.resume_zone_run(self.controller_id)
         _LOGGER.debug("Resuming watering on %s", self)
+
+
+class RachioBaseStation:
+    """Represent a smart hose timer base station."""
+
+    def __init__(
+        self,
+        rachio: Rachio,
+        data: dict[str, Any],
+        status_coordinator: RachioUpdateCoordinator,
+        schedule_coordinator: RachioScheduleUpdateCoordinator,
+    ) -> None:
+        """Initialize a smart hose timer base station."""
+        self.rachio = rachio
+        self._id = data[KEY_ID]
+        self.status_coordinator = status_coordinator
+        self.schedule_coordinator = schedule_coordinator
+
+    def start_watering(self, valve_id: str, duration: int) -> None:
+        """Start watering on this valve."""
+        self.rachio.valve.start_watering(valve_id, duration)
+
+    def stop_watering(self, valve_id: str) -> None:
+        """Stop watering on this valve."""
+        self.rachio.valve.stop_watering(valve_id)
+
+    def create_skip(self, program_id: str, timestamp: str) -> None:
+        """Create a skip for a scheduled event."""
+        self.rachio.program.create_skip_overrides(program_id, timestamp)
 
 
 def is_invalid_auth_code(http_status_code: int) -> bool:

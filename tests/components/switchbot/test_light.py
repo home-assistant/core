@@ -1,0 +1,726 @@
+"""Test the switchbot lights."""
+
+from collections.abc import Callable
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from switchbot import SwitchbotOperationError
+
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_RGB_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
+
+from . import (
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
+    BULB_SERVICE_INFO,
+    CANDLE_WARMER_LAMP_SERVICE_INFO,
+    CEILING_LIGHT_SERVICE_INFO,
+    FLOOR_LAMP_SERVICE_INFO,
+    PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
+    RGBIC_NEON_LIGHT_SERVICE_INFO,
+    RGBICWW_FLOOR_LAMP_SERVICE_INFO,
+    RGBICWW_STRIP_LIGHT_SERVICE_INFO,
+    STRIP_LIGHT_3_SERVICE_INFO,
+    WOSTRIP_SERVICE_INFO,
+)
+
+from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.bluetooth import inject_bluetooth_service_info
+
+COMMON_PARAMETERS = (
+    "service",
+    "service_data",
+    "mock_method",
+    "expected_args",
+)
+TURN_ON_PARAMETERS = (
+    SERVICE_TURN_ON,
+    {},
+    "turn_on",
+    {},
+)
+TURN_OFF_PARAMETERS = (
+    SERVICE_TURN_OFF,
+    {},
+    "turn_off",
+    {},
+)
+SET_BRIGHTNESS_PARAMETERS = (
+    SERVICE_TURN_ON,
+    {ATTR_BRIGHTNESS: 128},
+    "set_brightness",
+    (round(128 / 255 * 100),),
+)
+SET_RGB_PARAMETERS = (
+    SERVICE_TURN_ON,
+    {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (255, 0, 0)},
+    "set_rgb",
+    (round(128 / 255 * 100), 255, 0, 0),
+)
+SET_COLOR_TEMP_PARAMETERS = (
+    SERVICE_TURN_ON,
+    {ATTR_BRIGHTNESS: 128, ATTR_COLOR_TEMP_KELVIN: 4000},
+    "set_color_temp",
+    (round(128 / 255 * 100), 4000),
+)
+BULB_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
+        SET_COLOR_TEMP_PARAMETERS,
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "breathing"},
+            "set_effect",
+            ("breathing",),
+        ),
+    ],
+)
+CEILING_LIGHT_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_COLOR_TEMP_PARAMETERS,
+    ],
+)
+STRIP_LIGHT_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "halloween"},
+            "set_effect",
+            ("halloween",),
+        ),
+    ],
+)
+FLOOR_LAMP_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
+        SET_COLOR_TEMP_PARAMETERS,
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "halloween"},
+            "set_effect",
+            ("halloween",),
+        ),
+    ],
+)
+
+CANDLE_WARMER_LAMP_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
+    ],
+)
+
+RGBIC_NEON_LIGHT_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
+        (
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "party"},
+            "set_effect",
+            ("party",),
+        ),
+    ],
+)
+
+AIR_PURIFIER_LIGHT_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        (
+            SERVICE_TURN_ON,
+            {},
+            "turn_led_on",
+            (),
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            "turn_led_off",
+            (),
+        ),
+        SET_BRIGHTNESS_PARAMETERS,
+        SET_RGB_PARAMETERS,
+    ],
+)
+
+
+@pytest.mark.parametrize(*BULB_PARAMETERS)
+async def test_bulb_services(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot bulb services."""
+    inject_bluetooth_service_info(hass, BULB_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="bulb")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotBulb",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(*BULB_PARAMETERS)
+async def test_bulb_services_exception(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot bulb services with exception."""
+    inject_bluetooth_service_info(hass, BULB_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="bulb")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    exception = SwitchbotOperationError("Operation failed")
+    error_message = "An error occurred while performing the action: Operation failed"
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotBulb",
+        **{mock_method: AsyncMock(side_effect=exception)},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(*CEILING_LIGHT_PARAMETERS)
+async def test_ceiling_light_services(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot ceiling light services."""
+    inject_bluetooth_service_info(hass, CEILING_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="ceiling_light")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotCeilingLight",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(*CEILING_LIGHT_PARAMETERS)
+async def test_ceiling_light_services_exception(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot ceiling light services with exception."""
+    inject_bluetooth_service_info(hass, CEILING_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="ceiling_light")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    exception = SwitchbotOperationError("Operation failed")
+    error_message = "An error occurred while performing the action: Operation failed"
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotCeilingLight",
+        **{mock_method: AsyncMock(side_effect=exception)},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(*STRIP_LIGHT_PARAMETERS)
+async def test_strip_light_services(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot strip light services."""
+    inject_bluetooth_service_info(hass, WOSTRIP_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="light_strip")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(*STRIP_LIGHT_PARAMETERS)
+async def test_strip_light_services_exception(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot strip light services with exception."""
+    inject_bluetooth_service_info(hass, WOSTRIP_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="light_strip")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    exception = SwitchbotOperationError("Operation failed")
+    error_message = "An error occurred while performing the action: Operation failed"
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip",
+        **{mock_method: AsyncMock(side_effect=exception)},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "service_info", "dev_cls"),
+    [
+        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO, "SwitchbotStripLight3"),
+        ("floor_lamp", FLOOR_LAMP_SERVICE_INFO, "SwitchbotStripLight3"),
+        (
+            "rgbicww_strip_light",
+            RGBICWW_STRIP_LIGHT_SERVICE_INFO,
+            "SwitchbotRgbicLight",
+        ),
+        ("rgbicww_floor_lamp", RGBICWW_FLOOR_LAMP_SERVICE_INFO, "SwitchbotRgbicLight"),
+        (
+            "permanent_outdoor_light",
+            PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
+            "SwitchbotPermanentOutdoorLight",
+        ),
+    ],
+)
+@pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
+async def test_floor_lamp_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    dev_cls: str,
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot floor lamp services."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        f"homeassistant.components.switchbot.light.switchbot.{dev_cls}",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "service_info"),
+    [
+        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO),
+        ("floor_lamp", FLOOR_LAMP_SERVICE_INFO),
+    ],
+)
+@pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
+async def test_floor_lamp_services_exception(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot floor lamp services with exception."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+    exception = SwitchbotOperationError("Operation failed")
+    error_message = "An error occurred while performing the action: Operation failed"
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotStripLight3",
+        **{mock_method: AsyncMock(side_effect=exception)},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(*CANDLE_WARMER_LAMP_PARAMETERS)
+async def test_candle_warmer_lamp_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot candle warmer lamp services."""
+    inject_bluetooth_service_info(hass, CANDLE_WARMER_LAMP_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="candle_warmer_lamp")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotCandleWarmerLamp",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(*CANDLE_WARMER_LAMP_PARAMETERS)
+async def test_candle_warmer_lamp_services_exception(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot candle warmer lamp services with exception."""
+    inject_bluetooth_service_info(hass, CANDLE_WARMER_LAMP_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="candle_warmer_lamp")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+    exception = SwitchbotOperationError("Operation failed")
+    error_message = "An error occurred while performing the action: Operation failed"
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotCandleWarmerLamp",
+        **{mock_method: AsyncMock(side_effect=exception)},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(
+    "sensor_type",
+    ["rgbic_neon_rope_light", "rgbic_neon_wire_rope_light"],
+)
+@pytest.mark.parametrize(*RGBIC_NEON_LIGHT_PARAMETERS)
+async def test_rgbic_neon_light_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    sensor_type: str,
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot RGBIC neon light services."""
+    inject_bluetooth_service_info(hass, RGBIC_NEON_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotRgbicNeonLight",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(*RGBIC_NEON_LIGHT_PARAMETERS)
+async def test_rgbic_neon_light_services_exception(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot RGBIC neon light services with exception."""
+    inject_bluetooth_service_info(hass, RGBIC_NEON_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="rgbic_neon_rope_light")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+    exception = SwitchbotOperationError("Operation failed")
+    error_message = "An error occurred while performing the action: Operation failed"
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotRgbicNeonLight",
+        **{mock_method: AsyncMock(side_effect=exception)},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        (AIR_PURIFIER_JP_SERVICE_INFO, "air_purifier_jp"),
+        (AIR_PURIFIER_TABLE_JP_SERVICE_INFO, "air_purifier_table_jp"),
+        (AIR_PURIFIER_US_SERVICE_INFO, "air_purifier_us"),
+        (AIR_PURIFIER_TABLE_US_SERVICE_INFO, "air_purifier_table_us"),
+    ],
+)
+@pytest.mark.parametrize(*AIR_PURIFIER_LIGHT_PARAMETERS)
+async def test_air_purifier_light_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot air purifier light services."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_light"
+
+    mocked_instance = AsyncMock(return_value=True)
+    mocked_none_instance = AsyncMock(return_value=None)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotAirPurifier",
+        **{mock_method: mocked_instance},
+        get_basic_info=mocked_none_instance,
+        update=mocked_none_instance,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+async def test_air_purifier_light_restore_state(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test restoring state of SwitchBot air purifier light."""
+    inject_bluetooth_service_info(hass, AIR_PURIFIER_JP_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="air_purifier_jp")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_light"
+    mock_restore_cache(hass, [State(entity_id, "on")])
+
+    mocked_info = AsyncMock(
+        return_value=[
+            bytearray(
+                b"\x01\xa7\xe9\x8c\x08\x00\xb2\x01\x96\x00\x00\x00\x00\x01\x00\x17"
+            ),
+            bytearray(b"\x01\x01\x02\x03\x04\x05"),
+            bytearray(b"\x01\x01"),
+        ]
+    )
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotAirPurifier",
+        _get_basic_info_by_multi_commands=mocked_info,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_ON
+
+        assert state.attributes.get(ATTR_BRIGHTNESS) == 13
+        assert state.attributes.get(ATTR_RGB_COLOR) == (2, 3, 4)

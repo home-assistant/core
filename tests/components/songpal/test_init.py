@@ -1,4 +1,5 @@
 """Tests songpal setup."""
+
 from unittest.mock import patch
 
 from homeassistant.components import songpal
@@ -57,12 +58,13 @@ async def test_unload(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     mocked_device = _create_mocked_device()
 
-    with _patch_config_flow_device(mocked_device), _patch_media_player_device(
-        mocked_device
+    with (
+        _patch_config_flow_device(mocked_device),
+        _patch_media_player_device(mocked_device),
     ):
         assert await async_setup_component(hass, songpal.DOMAIN, {}) is True
         await hass.async_block_till_done()
     mocked_device.listen_notifications.assert_called_once()
-    assert await songpal.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     mocked_device.stop_listen_notifications.assert_called_once()

@@ -1,8 +1,5 @@
 """Support for Supla devices."""
-from __future__ import annotations
 
-import asyncio
-from datetime import timedelta
 import logging
 
 from asyncpysupla import SuplaAPI
@@ -10,19 +7,18 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .coordinator import SuplaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "supla"
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"
-
-SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": Platform.COVER,
@@ -97,24 +93,7 @@ async def discover_devices(hass, hass_config):
     component_configs: dict[Platform, dict[str, dict]] = {}
 
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
-
-        async def _fetch_channels():
-            async with asyncio.timeout(SCAN_INTERVAL.total_seconds()):
-                channels = {
-                    channel["id"]: channel
-                    for channel in await server.get_channels(  # noqa: B023
-                        include=["iodevice", "state", "connected"]
-                    )
-                }
-                return channels
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-{server_name}",
-            update_method=_fetch_channels,
-            update_interval=SCAN_INTERVAL,
-        )
+        coordinator = SuplaCoordinator(hass, server, server_name)
 
         await coordinator.async_refresh()
 

@@ -1,5 +1,4 @@
 """Support for Iperf3 network measurement tool."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
@@ -17,13 +16,14 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_HOSTS,
     CONF_MONITORED_CONDITIONS,
+    CONF_PARALLEL,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
     UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -35,7 +35,6 @@ DATA_UPDATED = f"{DOMAIN}_data_updated"
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DURATION = "duration"
-CONF_PARALLEL = "parallel"
 CONF_MANUAL = "manual"
 
 DEFAULT_DURATION = 10

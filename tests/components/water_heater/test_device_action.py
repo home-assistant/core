@@ -1,8 +1,9 @@
 """The tests for Water Heater device actions."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.water_heater import DOMAIN
 from homeassistant.const import EntityCategory
@@ -16,11 +17,6 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_get_actions(
@@ -46,7 +42,7 @@ async def test_get_actions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for action in ["turn_on", "turn_off"]
+        for action in ("turn_on", "turn_off")
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -56,12 +52,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -94,7 +90,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["turn_on", "turn_off"]
+        for action in ("turn_on", "turn_off")
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -151,8 +147,8 @@ async def test_action(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "water_heater", "turn_off")
-    turn_on_calls = async_mock_service(hass, "water_heater", "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()
@@ -205,7 +201,7 @@ async def test_action_legacy(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "water_heater", "turn_off")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()

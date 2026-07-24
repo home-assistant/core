@@ -1,4 +1,5 @@
 """Constants for InfluxDB integration."""
+
 from datetime import timedelta
 import re
 
@@ -15,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_DB_NAME = "database"
 CONF_BUCKET = "bucket"
@@ -33,7 +34,6 @@ CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 CONF_PRECISION = "precision"
 CONF_SSL_CA_CERT = "ssl_ca_cert"
 
-CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
 CONF_QUERIES_FLUX = "queries_flux"
 CONF_GROUP_FUNCTION = "group_function"
@@ -48,7 +48,9 @@ CONF_QUERY = "query"
 CONF_IMPORTS = "imports"
 
 DEFAULT_DATABASE = "home_assistant"
+DEFAULT_HOST = "localhost"
 DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_PORT = 8086
 DEFAULT_SSL_V2 = True
 DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
@@ -130,8 +132,8 @@ RENDERING_QUERY_ERROR_MESSAGE = "Could not render query template: %s."
 RENDERING_WHERE_MESSAGE = "Rendering where: %s."
 RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 
+
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
-    # Connection config for V1 and V2 APIs.
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
         vol.Coerce(str),
         vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
@@ -151,4 +153,15 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
     vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
+}
+
+# Same keys without defaults, used in CONFIG_SCHEMA to validate
+# without injecting default values (so we can detect explicit keys).
+COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS = {
+    (
+        vol.Optional(k.schema)
+        if isinstance(k, vol.Optional) and k.default is not vol.UNDEFINED
+        else k
+    ): v
+    for k, v in COMPONENT_CONFIG_SCHEMA_CONNECTION.items()
 }

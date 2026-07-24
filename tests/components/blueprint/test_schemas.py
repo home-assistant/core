@@ -1,4 +1,5 @@
 """Test schemas."""
+
 import logging
 
 import pytest
@@ -11,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @pytest.mark.parametrize(
     "blueprint",
-    (
+    [
         # Test allow extra
         {
             "trigger": "Test allow extra",
@@ -51,7 +52,25 @@ _LOGGER = logging.getLogger(__name__)
                 },
             }
         },
-    ),
+        # With input sections
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "section_a": {
+                        "input": {"some_placeholder": None},
+                    },
+                    "section_b": {
+                        "name": "Section",
+                        "description": "A section with no inputs",
+                        "input": {},
+                    },
+                    "some_placeholder_2": None,
+                },
+            }
+        },
+    ],
 )
 def test_blueprint_schema(blueprint) -> None:
     """Test different schemas."""
@@ -64,7 +83,7 @@ def test_blueprint_schema(blueprint) -> None:
 
 @pytest.mark.parametrize(
     "blueprint",
-    (
+    [
         # no domain
         {"blueprint": {}},
         # non existing key in blueprint
@@ -93,7 +112,35 @@ def test_blueprint_schema(blueprint) -> None:
                 },
             }
         },
-    ),
+        # Duplicate inputs in sections (1 of 2)
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "section_a": {
+                        "input": {"some_placeholder": None},
+                    },
+                    "section_b": {
+                        "input": {"some_placeholder": None},
+                    },
+                },
+            }
+        },
+        # Duplicate inputs in sections (2 of 2)
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "section_a": {
+                        "input": {"some_placeholder": None},
+                    },
+                    "some_placeholder": None,
+                },
+            }
+        },
+    ],
 )
 def test_blueprint_schema_invalid(blueprint) -> None:
     """Test different schemas."""
@@ -103,11 +150,11 @@ def test_blueprint_schema_invalid(blueprint) -> None:
 
 @pytest.mark.parametrize(
     "bp_instance",
-    (
+    [
         {"path": "hello.yaml"},
         {"path": "hello.yaml", "input": {}},
         {"path": "hello.yaml", "input": {"hello": None}},
-    ),
+    ],
 )
 def test_blueprint_instance_fields(bp_instance) -> None:
     """Test blueprint instance fields."""

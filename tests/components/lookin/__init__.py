@@ -1,12 +1,11 @@
 """Tests for the lookin integration."""
-from __future__ import annotations
 
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from aiolookin import Climate, Device, Remote
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 DEVICE_ID = "98F33163"
 MODULE = "homeassistant.components.lookin"
@@ -30,13 +29,11 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
 
 
 def _mocked_climate() -> Climate:
-    climate = MagicMock(auto_spec=Climate)
-    return climate
+    return MagicMock(auto_spec=Climate)
 
 
 def _mocked_remote() -> Remote:
-    remote = MagicMock(auto_spec=Remote)
-    return remote
+    return MagicMock(auto_spec=Remote)
 
 
 def _mocked_device() -> Device:
@@ -50,6 +47,6 @@ def _patch_get_info(device=None, exception=None):
     async def _get_info(*args, **kwargs):
         if exception:
             raise exception
-        return device if device else _mocked_device()
+        return device or _mocked_device()
 
     return patch(f"{MODULE_CONFIG_FLOW}.LookInHttpProtocol.get_info", new=_get_info)

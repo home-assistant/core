@@ -1,27 +1,19 @@
 """Config flow for Anthem A/V Receivers integration."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import anthemav
 from anthemav.connection import Connection
 from anthemav.device_error import DeviceError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_MODEL,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEVICE_TIMEOUT_SECONDS,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEVICE_TIMEOUT_SECONDS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +40,10 @@ class AnthemAVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(

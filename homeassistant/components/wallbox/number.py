@@ -2,17 +2,14 @@
 
 The number component allows control of charging current.
 """
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     BIDIRECTIONAL_MODEL_PREFIXES,
@@ -20,11 +17,11 @@ from .const import (
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
-    DOMAIN,
 )
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -35,23 +32,16 @@ def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
         in BIDIRECTIONAL_MODEL_PREFIXES
     ):
         return cast(float, (coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY] * -1))
-    return 0
+    return 6
 
 
-@dataclass
-class WallboxNumberEntityDescriptionMixin:
-    """Load entities from different handlers."""
+@dataclass(frozen=True, kw_only=True)
+class WallboxNumberEntityDescription(NumberEntityDescription):
+    """Describes Wallbox number entity."""
 
     max_value_fn: Callable[[WallboxCoordinator], float]
     min_value_fn: Callable[[WallboxCoordinator], float]
     set_value_fn: Callable[[WallboxCoordinator], Callable[[float], Awaitable[None]]]
-
-
-@dataclass
-class WallboxNumberEntityDescription(
-    NumberEntityDescription, WallboxNumberEntityDescriptionMixin
-):
-    """Describes Wallbox number entity."""
 
 
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
@@ -73,31 +63,33 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
         set_value_fn=lambda coordinator: coordinator.async_set_energy_cost,
         native_step=0.01,
     ),
+    CHARGER_MAX_ICP_CURRENT_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_MAX_ICP_CURRENT_KEY,
+        translation_key="maximum_icp_current",
+        max_value_fn=lambda _: 255,
+        min_value_fn=lambda _: 6,
+        set_value_fn=lambda coordinator: coordinator.async_set_icp_current,
+        native_step=1,
+    ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: WallboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox number entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Check if the user has sufficient rights to change values, if so, add number component:
-    try:
-        await coordinator.async_set_charging_current(
-            coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
-        )
-    except InvalidAuth:
-        return
-    except ConnectionError as exc:
-        raise PlatformNotReady from exc
-
+    coordinator: WallboxCoordinator = entry.runtime_data
     async_add_entities(
-        [
-            WallboxNumber(coordinator, entry, description)
-            for ent in coordinator.data
-            if (description := NUMBER_TYPES.get(ent))
-        ]
+        WallboxNumber(coordinator, entry, description)
+        for ent in coordinator.data
+        if (description := NUMBER_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxNumber(WallboxEntity, NumberEntity):
@@ -108,30 +100,37 @@ class WallboxNumber(WallboxEntity, NumberEntity):
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        entry: ConfigEntry,
+        entry: WallboxConfigEntry,
         description: WallboxNumberEntityDescription,
     ) -> None:
         """Initialize a Wallbox number entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._coordinator = coordinator
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum available value."""
         return self.entity_description.max_value_fn(self.coordinator)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum available value."""
         return self.entity_description.min_value_fn(self.coordinator)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value of the entity."""
         return cast(float | None, self._coordinator.data[self.entity_description.key])
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
         await self.entity_description.set_value_fn(self.coordinator)(value)

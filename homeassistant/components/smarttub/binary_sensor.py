@@ -1,20 +1,28 @@
 """Platform for binary sensor integration."""
-from __future__ import annotations
 
-from smarttub import SpaError, SpaReminder
+import logging
+from typing import Any, override
+
+from smarttub import Spa, SpaError, SpaReminder
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity, SmartTubSensorBase
+from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_SENSORS
+from .controller import SmartTubConfigEntry
+from .entity import (
+    SmartTubEntity,
+    SmartTubExternalSensorBase,
+    SmartTubOnboardSensorBase,
+)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -28,24 +36,30 @@ ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"
-RESET_REMINDER_SCHEMA = {
+RESET_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=30, max=365)
     )
 }
-SNOOZE_REMINDER_SCHEMA = {
+SNOOZE_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=10, max=120)
     )
 }
 
+PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmartTubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities for the binary sensors in the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities: list[BinarySensorEntity] = []
     for spa in controller.spas:
@@ -55,6 +69,12 @@ async def async_setup_entry(
             SmartTubReminder(controller.coordinator, spa, reminder)
             for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
+        for sensor in controller.coordinator.data[spa.id][ATTR_SENSORS].values():
+            name = sensor.name.strip("{}")
+            if name.startswith("cover-"):
+                entities.append(
+                    SmartTubCoverSensor(controller.coordinator, spa, sensor)
+                )
 
     async_add_entities(entities)
 
@@ -72,18 +92,25 @@ async def async_setup_entry(
     )
 
 
-class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
-    """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
+class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
+    """A binary sensor indicating whether the spa is online.
+
+    Indicates if it is connected to the cloud.
+    """
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     # This seems to be very noisy and not generally useful, so disable by default.
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "online"
 
-    def __init__(self, coordinator, spa):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Online", "online")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state is True
@@ -93,8 +120,14 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "reminder"
 
-    def __init__(self, coordinator, spa, reminder):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        spa: Spa,
+        reminder: SpaReminder,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
             coordinator,
@@ -103,6 +136,9 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         )
         self.reminder_id = reminder.id
         self._attr_unique_id = f"{spa.id}-reminder-{reminder.id}"
+        self._attr_translation_placeholders = {
+            "reminder_name": reminder.name.title(),
+        }
 
     @property
     def reminder(self) -> SpaReminder:
@@ -110,12 +146,14 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         return self.coordinator.data[self.spa.id][ATTR_REMINDERS][self.reminder_id]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the specified maintenance action needs to be taken."""
         return self.reminder.remaining_days == 0
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
@@ -140,8 +178,11 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     """
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "error"
 
-    def __init__(self, coordinator, spa):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
             coordinator,
@@ -158,12 +199,14 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         return errors[0]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if an error is signaled."""
         return self.error is not None
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if (error := self.error) is None:
             return {}
@@ -176,3 +219,18 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_CREATED_AT: error.created_at.isoformat(),
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
+
+
+class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
+    """Wireless magnetic cover sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.OPENING
+    _attr_translation_key = "cover_sensor"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return False if the cover is closed, True if open."""
+        # magnet is True when the cover is closed, False when open
+        # device class OPENING wants True to mean open, False to mean closed
+        return not self.sensor.magnet

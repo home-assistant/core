@@ -1,9 +1,9 @@
 """Facebook platform for notify component."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import json
 import logging
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -11,12 +11,12 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PAGE_ACCESS_TOKEN = "page_access_token"
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
 )
 
@@ -45,7 +45,8 @@ class FacebookNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.page_access_token = access_token
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send some message."""
         payload = {"access_token": self.page_access_token}
         targets = kwargs.get(ATTR_TARGET)
@@ -75,7 +76,7 @@ class FacebookNotificationService(BaseNotificationService):
                 "recipient": recipient,
                 "message": body_message,
                 "messaging_type": "MESSAGE_TAG",
-                "tag": "ACCOUNT_UPDATE",
+                "tag": "HUMAN_AGENT",
             }
             resp = requests.post(
                 BASE_URL,

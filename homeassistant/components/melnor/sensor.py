@@ -1,10 +1,9 @@
 """Sensor support for Melnor Bluetooth water timer."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from melnor_bluetooth.device import Device, Valve
 
@@ -14,24 +13,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .models import (
-    MelnorBluetoothEntity,
-    MelnorDataUpdateCoordinator,
-    MelnorZoneEntity,
-    get_entities_for_valves,
-)
+from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
+from .entity import MelnorBluetoothEntity, MelnorZoneEntity, get_entities_for_valves
 
 
 def watering_seconds_left(valve: Valve) -> datetime | None:
@@ -54,32 +47,18 @@ def next_cycle(valve: Valve) -> datetime | None:
     return None
 
 
-@dataclass
-class MelnorSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    state_fn: Callable[[Device], Any]
-
-
-@dataclass
-class MelnorZoneSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MelnorZoneSensorEntityDescription(SensorEntityDescription):
+    """Describes Melnor sensor entity."""
 
     state_fn: Callable[[Valve], Any]
 
 
-@dataclass
-class MelnorZoneSensorEntityDescription(
-    SensorEntityDescription, MelnorZoneSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class MelnorSensorEntityDescription(SensorEntityDescription):
     """Describes Melnor sensor entity."""
 
-
-@dataclass
-class MelnorSensorEntityDescription(
-    SensorEntityDescription, MelnorSensorEntityDescriptionMixin
-):
-    """Describes Melnor sensor entity."""
+    state_fn: Callable[[Device], Any]
 
 
 DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
@@ -121,12 +100,12 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneSensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MelnorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
-    coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Device-level sensors
     async_add_entities(
@@ -167,6 +146,7 @@ class MelnorSensorEntity(MelnorBluetoothEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.state_fn(self._device)
@@ -187,6 +167,7 @@ class MelnorZoneSensorEntity(MelnorZoneEntity, SensorEntity):
         super().__init__(coordinator, entity_description, valve)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.state_fn(self._valve)

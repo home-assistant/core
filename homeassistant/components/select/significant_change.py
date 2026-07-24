@@ -1,5 +1,4 @@
 """Helper to test significant Select state changes."""
-from __future__ import annotations
 
 from typing import Any
 

@@ -1,7 +1,6 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -14,12 +13,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .helpers import on_unload
+from .entity import MySensorsChildEntity
 
 DICT_HA_TO_MYS = {
     HVACMode.AUTO: "AutoChangeOver",
@@ -41,13 +40,13 @@ OPERATION_LIST = [HVACMode.OFF, HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors climate."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.CLIMATE,
             discovery_info,
@@ -55,9 +54,7 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.CLIMATE),
@@ -66,15 +63,16 @@ async def async_setup_entry(
     )
 
 
-class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
+class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     _attr_hvac_modes = OPERATION_LIST
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = ClimateEntityFeature(0)
+        features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SPEED in self._values:
             features = features | ClimateEntityFeature.FAN_MODE
@@ -83,11 +81,15 @@ class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
             and set_req.V_HVAC_SETPOINT_HEAT in self._values
         ):
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        else:
+        elif (
+            set_req.V_HVAC_SETPOINT_COOL in self._values
+            or set_req.V_HVAC_SETPOINT_HEAT in self._values
+        ):
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return (
@@ -97,6 +99,7 @@ class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         value: str | None = self._values.get(self.gateway.const.SetReq.V_TEMP)
@@ -108,54 +111,51 @@ class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
         return float_value
 
     @property
+    @override
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
+        """Return the temperature we try to reach.
+
+        Either V_HVAC_SETPOINT_COOL or V_HVAC_SETPOINT_HEAT may be used.
+        """
         set_req = self.gateway.const.SetReq
-        if (
-            set_req.V_HVAC_SETPOINT_COOL in self._values
-            and set_req.V_HVAC_SETPOINT_HEAT in self._values
-        ):
-            return None
         temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
         if temp is None:
             temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
         return float(temp) if temp is not None else None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_HEAT in self._values:
-            temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
-            return float(temp) if temp is not None else None
-
-        return None
+        return float(self._values[set_req.V_HVAC_SETPOINT_COOL])
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_COOL in self._values:
-            temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
-            return float(temp) if temp is not None else None
-
-        return None
+        return float(self._values[set_req.V_HVAC_SETPOINT_HEAT])
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         return self._values.get(self.value_type, HVACMode.HEAT)  # type: ignore[no-any-return]
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return self._values.get(self.gateway.const.SetReq.V_HVAC_SPEED)
 
     @property
+    @override
     def fan_modes(self) -> list[str]:
         """List of available fan modes."""
         return FAN_LIST
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
@@ -183,22 +183,16 @@ class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value, ack=1
             )
-            if self.assumed_state:
-                # Optimistically assume that device has changed state
-                self._values[value_type] = value
-                self.async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that device has changed state
-            self._values[set_req.V_HVAC_SPEED] = fan_mode
-            self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target temperature."""
         self.gateway.set_child_value(
@@ -208,12 +202,9 @@ class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
             DICT_HA_TO_MYS[hvac_mode],
             ack=1,
         )
-        if self.assumed_state:
-            # Optimistically assume that device has changed state
-            self._values[self.value_type] = hvac_mode
-            self.async_write_ha_state()
 
     @callback
+    @override
     def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         super()._async_update()

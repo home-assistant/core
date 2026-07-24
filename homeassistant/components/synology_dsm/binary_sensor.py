@@ -1,7 +1,7 @@
 """Support for Synology DSM binary sensors."""
-from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, override
 
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.storage.storage import SynoStorage
@@ -11,23 +11,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SynoApi
-from .const import DOMAIN
-from .coordinator import SynologyDSMCentralUpdateCoordinator
+from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
     SynologyDSMEntityDescription,
 )
-from .models import SynologyDSMData
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class SynologyDSMBinarySensorEntityDescription(
     BinarySensorEntityDescription, SynologyDSMEntityDescription
 ):
@@ -62,12 +59,16 @@ STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SynologyDSMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Synology NAS binary sensor."""
-    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    data = entry.runtime_data
     api = data.api
     coordinator = data.coordinator_central
+    if TYPE_CHECKING:
+        assert api.storage is not None
 
     entities: list[SynoDSMSecurityBinarySensor | SynoDSMStorageBinarySensor] = [
         SynoDSMSecurityBinarySensor(api, coordinator, description)
@@ -108,19 +109,24 @@ class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     """Representation a Synology Security binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state."""
         return getattr(self._api.security, self.entity_description.key) != "safe"  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.security)
+        return bool(self._api.security) and super().available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
-        return self._api.security.status_by_check  # type: ignore[no-any-return]
+        if TYPE_CHECKING:
+            assert self._api.security is not None
+        return self._api.security.status_by_check
 
 
 class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
@@ -139,6 +145,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
         super().__init__(api, coordinator, description, device_id)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state."""
         return bool(

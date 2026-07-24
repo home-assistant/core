@@ -1,29 +1,17 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
-import pytest
 
+from arcam.fmj.state import State
+
+from homeassistant.components import automation
 from homeassistant.components.arcam_fmj.const import DOMAIN
-import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
+from .conftest import MOCK_ENTITY_ID
 
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(
@@ -66,12 +54,16 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, player_setup, state
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    player_setup,
+    state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get(player_setup)
+    entry = entity_registry.async_get(MOCK_ENTITY_ID)
 
-    state.get_power.return_value = None
+    state_1.get_power.return_value = None
 
     assert await async_setup_component(
         hass,
@@ -101,23 +93,27 @@ async def test_if_fires_on_turn_on_request(
     await hass.services.async_call(
         "media_player",
         "turn_on",
-        {"entity_id": player_setup},
+        {"entity_id": MOCK_ENTITY_ID},
         blocking=True,
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == player_setup
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == MOCK_ENTITY_ID
+    assert service_calls[1].data["id"] == 0
 
 
 async def test_if_fires_on_turn_on_request_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, player_setup, state
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    player_setup,
+    state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get(player_setup)
+    entry = entity_registry.async_get(MOCK_ENTITY_ID)
 
-    state.get_power.return_value = None
+    state_1.get_power.return_value = None
 
     assert await async_setup_component(
         hass,
@@ -147,11 +143,11 @@ async def test_if_fires_on_turn_on_request_legacy(
     await hass.services.async_call(
         "media_player",
         "turn_on",
-        {"entity_id": player_setup},
+        {"entity_id": MOCK_ENTITY_ID},
         blocking=True,
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == player_setup
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == MOCK_ENTITY_ID
+    assert service_calls[1].data["id"] == 0

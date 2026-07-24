@@ -1,8 +1,7 @@
 """The Coordinator for easyEnergy."""
-from __future__ import annotations
 
 from datetime import timedelta
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from easyenergy import (
     EasyEnergy,
@@ -20,6 +19,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 
+type EasyEnergyConfigEntry = ConfigEntry[EasyEnergyDataUpdateCoordinator]
+
 
 class EasyEnergyData(NamedTuple):
     """Class for defining data in dict."""
@@ -32,19 +33,21 @@ class EasyEnergyData(NamedTuple):
 class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
     """Class to manage fetching easyEnergy data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: EasyEnergyConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EasyEnergyConfigEntry) -> None:
         """Initialize global easyEnergy data updater."""
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
 
         self.easyenergy = EasyEnergy(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> EasyEnergyData:
         """Fetch data from easyEnergy."""
         today = dt_util.now().date()
@@ -74,7 +77,10 @@ class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
                     )
 
         except EasyEnergyConnectionError as err:
-            raise UpdateFailed("Error communicating with easyEnergy API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
 
         return EasyEnergyData(
             energy_today=energy_today,

@@ -1,49 +1,92 @@
 """Test Roborock Sensors."""
 
-from roborock.const import (
-    FILTER_REPLACE_TIME,
-    MAIN_BRUSH_REPLACE_TIME,
-    SENSOR_DIRTY_REPLACE_TIME,
-    SIDE_BRUSH_REPLACE_TIME,
-)
+from typing import Any
 
+import pytest
+from roborock.exceptions import RoborockException
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from .conftest import FakeDevice
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.SENSOR]
+
+
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test sensors and check test values are correctly set."""
-    assert len(hass.states.async_all("sensor")) == 28
-    assert hass.states.get("sensor.roborock_s7_maxv_main_brush_time_left").state == str(
-        MAIN_BRUSH_REPLACE_TIME - 74382
-    )
-    assert hass.states.get("sensor.roborock_s7_maxv_side_brush_time_left").state == str(
-        SIDE_BRUSH_REPLACE_TIME - 74382
-    )
-    assert hass.states.get("sensor.roborock_s7_maxv_filter_time_left").state == str(
-        FILTER_REPLACE_TIME - 74382
-    )
-    assert hass.states.get("sensor.roborock_s7_maxv_sensor_time_left").state == str(
-        SENSOR_DIRTY_REPLACE_TIME - 74382
-    )
-    assert hass.states.get("sensor.roborock_s7_maxv_cleaning_time").state == "1176"
-    assert (
-        hass.states.get("sensor.roborock_s7_maxv_total_cleaning_time").state == "74382"
-    )
-    assert hass.states.get("sensor.roborock_s7_maxv_status").state == "charging"
-    assert (
-        hass.states.get("sensor.roborock_s7_maxv_total_cleaning_area").state == "1159.2"
-    )
-    assert hass.states.get("sensor.roborock_s7_maxv_cleaning_area").state == "21.0"
-    assert hass.states.get("sensor.roborock_s7_maxv_vacuum_error").state == "none"
-    assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "100"
-    assert hass.states.get("sensor.roborock_s7_maxv_dock_error").state == "ok"
-    assert (
-        hass.states.get("sensor.roborock_s7_maxv_last_clean_begin").state
-        == "2023-01-01T03:22:10+00:00"
-    )
-    assert (
-        hass.states.get("sensor.roborock_s7_maxv_last_clean_end").state
-        == "2023-01-01T03:43:58+00:00"
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
+
+
+def setup_coordinator_side_effect(
+    fake_devices: list[FakeDevice], side_effect: Any
+) -> None:
+    """Set the query/refresh side effect on all fake devices to simulate failure or delay."""
+    for device in fake_devices:
+        if device.v1_properties is not None:
+            device.v1_properties.status.refresh.side_effect = side_effect
+        if device.dyad is not None:
+            device.dyad.query_values.side_effect = side_effect
+        if device.zeo is not None:
+            device.zeo.query_values.side_effect = side_effect
+        if device.b01_q10_properties is not None:
+            device.b01_q10_properties.refresh.side_effect = side_effect
+        if device.b01_q7_properties is not None:
+            device.b01_q7_properties.query_values.side_effect = side_effect
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (RoborockException("Simulated failure"), STATE_UNAVAILABLE),
+    ],
+)
+async def test_sensors_coordinator_state(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_devices: list[FakeDevice],
+    side_effect: Any,
+    expected_state: str,
+) -> None:
+    """Test sensors state based on coordinator update success or delay."""
+    setup_coordinator_side_effect(fake_devices, side_effect)
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # V1 sensors
+    state = hass.states.get("sensor.roborock_s7_maxv_battery")
+    assert state is not None
+    assert state.state == expected_state
+
+    # A01 (Dyad/Zeo) sensors
+    state = hass.states.get("sensor.dyad_pro_battery")
+    assert state is not None
+    assert state.state == expected_state
+
+    state = hass.states.get("sensor.zeo_one_washing_left")
+    assert state is not None
+    assert state.state == expected_state
+
+    # B01 Q7 sensors
+    state = hass.states.get("sensor.roborock_q7_battery")
+    assert state is not None
+    assert state.state == expected_state
+
+    # B01 Q10 sensors
+    state = hass.states.get("sensor.roborock_q10_s5_battery")
+    assert state is not None
+    assert state.state == expected_state

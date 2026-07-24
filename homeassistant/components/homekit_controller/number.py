@@ -3,7 +3,8 @@
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
-from __future__ import annotations
+
+from typing import override
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
@@ -17,7 +18,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
@@ -25,40 +26,42 @@ from .connection import HKDevice
 from .entity import CharacteristicEntity
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
-    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
-        name="Spray Quantity",
-        icon="mdi:water",
-        entity_category=EntityCategory.CONFIG,
+    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
+        NumberEntityDescription(
+            key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+            name="Spray Quantity",
+            translation_key="spray_quantity",
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,
         name="Elevation",
-        icon="mdi:elevation-rise",
+        translation_key="elevation",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME,
         name="Volume",
-        icon="mdi:volume-high",
+        translation_key="volume",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
         name="Volume",
-        icon="mdi:volume-high",
+        translation_key="volume",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION,
         name="Duration",
-        icon="mdi:timer",
+        translation_key="duration",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY,
         name="Sensitivity",
-        icon="mdi:knob",
+        translation_key="sensitivity",
         entity_category=EntityCategory.CONFIG,
     ),
 }
@@ -67,7 +70,7 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit numbers."""
     hkid: str = config_entry.data["AccessoryPairingID"]
@@ -109,36 +112,43 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         super().__init__(conn, info, char)
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
+    @override
     def native_step(self) -> float:
         """Return the increment/decrement step."""
         return self._char.minStep or DEFAULT_STEP
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current characteristic value."""
         return self._char.value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the characteristic to this value."""
         await self.async_put_characteristics(

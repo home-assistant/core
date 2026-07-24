@@ -1,5 +1,4 @@
 """Utilities for ruuvi_gateway tests."""
-from __future__ import annotations
 
 import time
 from unittest.mock import _patch, patch

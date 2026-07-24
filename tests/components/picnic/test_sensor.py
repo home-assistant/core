@@ -1,4 +1,5 @@
 """The tests for the Picnic sensor platform."""
+
 import copy
 from datetime import timedelta
 import unittest
@@ -9,11 +10,12 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
-from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, DOMAIN
+from homeassistant.components.picnic.const import DOMAIN
 from homeassistant.components.picnic.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
+    CONF_COUNTRY_CODE,
     CURRENCY_EURO,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -98,7 +100,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
     async def asyncSetUp(self):
         """Set up things to be run when tests are started."""
-        self.hass = await async_test_home_assistant(None)
+        self._manager = async_test_home_assistant()
+        self.hass = await self._manager.__aenter__()
         self.entity_registry = er.async_get(self.hass)
 
         # Patch the api client
@@ -121,13 +124,12 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         """Tear down the test setup, stop hass/patchers."""
         await self.hass.async_stop(force=True)
+        await self._manager.__aexit__(None, None, None)
         self.picnic_patcher.stop()
 
     @property
     def _coordinator(self):
-        return self.hass.data[const.DOMAIN][self.config_entry.entry_id][
-            const.CONF_COORDINATOR
-        ]
+        return self.config_entry.runtime_data
 
     def _assert_sensor(self, name, state=None, cls=None, unit=None, disabled=False):
         sensor = self.hass.states.get(name)
@@ -397,7 +399,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Set-up platform with default mock responses
         await self._setup_platform(use_default_responses=True)
 
-        # Provide a delivery position response with different ETA and remove delivery time from response
+        # Provide a delivery position response with different ETA
+        # and remove delivery time from response
         delivery_response = copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
         del delivery_response["delivery_time"]
         delivery_response["status"] = "CURRENT"
@@ -406,7 +409,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             "eta_window": {
                 "start": "2021-03-05T10:19:20.452+00:00",
                 "end": "2021-03-05T10:39:20.452+00:00",
-            }
+            },
+            "eta": 1614941090000,
         }
         await self._coordinator.async_refresh()
 
@@ -422,6 +426,20 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             "sensor.mock_title_expected_end_of_next_delivery",
             "2021-03-05T10:39:20+00:00",
         )
+        self._assert_sensor(
+            "sensor.mock_title_estimated_arrival_of_next_delivery",
+            "2021-03-05T10:44:50+00:00",
+        )
+
+        # The live estimate is cleared again once position data disappears
+        self.picnic_mock().get_delivery_position.return_value = {}
+        async_fire_time_changed(self.hass, dt_util.utcnow() + timedelta(minutes=31))
+        await self.hass.async_block_till_done(wait_background_tasks=True)
+
+        self._assert_sensor(
+            "sensor.mock_title_estimated_arrival_of_next_delivery",
+            STATE_UNKNOWN,
+        )
 
     async def test_sensors_no_data(self):
         """Test sensor states when the api only returns empty objects."""
@@ -435,7 +453,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.picnic_mock().get_delivery_position.side_effect = ValueError
         await self._coordinator.async_refresh()
 
-        # Assert all default-enabled sensors have STATE_UNAVAILABLE because the last update failed
+        # Assert all default-enabled sensors have STATE_UNAVAILABLE
+        # because the last update failed
         assert self._coordinator.last_update_success is False
         self._assert_sensor("sensor.mock_title_cart_total_price", STATE_UNAVAILABLE)
         self._assert_sensor(
@@ -476,7 +495,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.picnic_mock().get_deliveries.return_value = {"error": "message"}
         await self._coordinator.async_refresh()
 
-        # Assert all last-order sensors have STATE_UNAVAILABLE because the delivery info fetch failed
+        # Assert all last-order sensors have STATE_UNAVAILABLE
+        # because the delivery info fetch failed
         assert self._coordinator.last_update_success is True
         self._assert_sensor(
             "sensor.mock_title_max_order_time_of_last_order",
@@ -506,7 +526,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         assert self._coordinator.last_update_success is False
 
     async def test_multiple_active_orders(self):
-        """Test that the sensors get the right values when there are multiple active orders."""
+        """Test sensor values with multiple active orders."""
         # Create 2 undelivered orders
         undelivered_order = copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
         del undelivered_order["delivery_time"]
@@ -565,7 +585,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Setup platform and default mock responses
         await self._setup_platform(use_default_responses=True)
 
-        device_registry = dr.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)  # pylint: disable=home-assistant-tests-registry-fixtures
         picnic_service = device_registry.async_get_device(
             identifiers={(const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"])}
         )
@@ -574,7 +594,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         assert picnic_service.entry_type is dr.DeviceEntryType.SERVICE
 
     async def test_auth_token_is_saved_on_update(self):
-        """Test that auth-token changes in the session object are reflected by the config entry."""
+        """Test auth-token changes are reflected by the config entry."""
         # Setup platform and default mock responses
         await self._setup_platform(use_default_responses=True)
 

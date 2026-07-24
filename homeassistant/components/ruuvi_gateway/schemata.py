@@ -1,5 +1,4 @@
 """Schemata for ruuvi_gateway."""
-from __future__ import annotations
 
 import voluptuous as vol
 

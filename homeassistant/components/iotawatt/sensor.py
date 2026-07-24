@@ -1,9 +1,9 @@
 """Support for IoTaWatt Energy monitor."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from iotawattpy.sensor import Sensor
 
@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfApparentPower,
@@ -25,18 +24,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, VOLT_AMPERE_REACTIVE, VOLT_AMPERE_REACTIVE_HOURS
-from .coordinator import IotawattUpdater
+from .const import VOLT_AMPERE_REACTIVE, VOLT_AMPERE_REACTIVE_HOURS
+from .coordinator import IotawattConfigEntry, IotawattUpdater
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class IotaWattSensorEntityDescription(SensorEntityDescription):
     """Class describing IotaWatt sensor entities."""
 
@@ -45,14 +44,14 @@ class IotaWattSensorEntityDescription(SensorEntityDescription):
 
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     "Amps": IotaWattSensorEntityDescription(
-        "Amps",
+        key="Amps",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
     ),
     "Hz": IotaWattSensorEntityDescription(
-        "Hz",
+        key="Hz",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -60,7 +59,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
         entity_registry_enabled_default=False,
     ),
     "PF": IotaWattSensorEntityDescription(
-        "PF",
+        key="PF",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -68,40 +67,40 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
         entity_registry_enabled_default=False,
     ),
     "Watts": IotaWattSensorEntityDescription(
-        "Watts",
+        key="Watts",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
     "WattHours": IotaWattSensorEntityDescription(
-        "WattHours",
+        key="WattHours",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
     ),
     "VA": IotaWattSensorEntityDescription(
-        "VA",
+        key="VA",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.APPARENT_POWER,
         entity_registry_enabled_default=False,
     ),
     "VAR": IotaWattSensorEntityDescription(
-        "VAR",
+        key="VAR",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
     "VARh": IotaWattSensorEntityDescription(
-        "VARh",
+        key="VARh",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE_HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
     "Volts": IotaWattSensorEntityDescription(
-        "Volts",
+        key="Volts",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -112,11 +111,11 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: IotawattConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensors for passed config_entry in HA."""
-    coordinator: IotawattUpdater = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     created = set()
 
     @callback
@@ -125,7 +124,7 @@ async def async_setup_entry(
         created.add(key)
         data = coordinator.data["sensors"][key]
         description = ENTITY_DESCRIPTION_KEY_MAP.get(
-            data.getUnit(), IotaWattSensorEntityDescription("base_sensor")
+            data.getUnit(), IotaWattSensorEntityDescription(key="base_sensor")
         )
 
         return IotaWattSensor(
@@ -177,11 +176,13 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         return self.coordinator.data["sensors"][self._key]
 
     @property
+    @override
     def name(self) -> str | None:
         """Return name of the entity."""
         return self._sensor_data.getName()
 
     @property
+    @override
     def device_info(self) -> dr.DeviceInfo:
         """Return device info."""
         return dr.DeviceInfo(
@@ -193,6 +194,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._key not in self.coordinator.data["sensors"]:
@@ -210,6 +212,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the extra state attributes of the entity."""
         data = self._sensor_data
@@ -220,6 +223,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         return attrs
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if func := self.entity_description.value:

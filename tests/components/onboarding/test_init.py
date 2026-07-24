@@ -1,8 +1,10 @@
 """Tests for the init."""
+
 from typing import Any
 from unittest.mock import Mock, patch
 
 from homeassistant.components import onboarding
+from homeassistant.components.onboarding import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -20,7 +22,7 @@ async def test_not_setup_views_if_onboarded(
     mock_storage(hass_storage, {"done": onboarding.STEPS})
 
     with patch("homeassistant.components.onboarding.views.async_setup") as mock_setup:
-        assert await async_setup_component(hass, "onboarding", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_setup.mock_calls) == 0
     assert onboarding.DOMAIN not in hass.data
@@ -32,7 +34,7 @@ async def test_setup_views_if_not_onboarded(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.onboarding.views.async_setup",
     ) as mock_setup:
-        assert await async_setup_component(hass, "onboarding", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_setup.mock_calls) == 1
     assert onboarding.DOMAIN in hass.data
@@ -47,10 +49,10 @@ async def test_is_onboarded() -> None:
 
     assert onboarding.async_is_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = True
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], True, {"done": []})
     assert onboarding.async_is_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = {"done": []}
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], False, {"done": []})
     assert not onboarding.async_is_onboarded(hass)
 
 
@@ -61,10 +63,15 @@ async def test_is_user_onboarded() -> None:
 
     assert onboarding.async_is_user_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = True
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], True, {"done": []})
     assert onboarding.async_is_user_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = {"done": []}
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData(
+        [], False, {"done": ["user"]}
+    )
+    assert onboarding.async_is_user_onboarded(hass)
+
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], False, {"done": []})
     assert not onboarding.async_is_user_onboarded(hass)
 
 
@@ -74,10 +81,11 @@ async def test_having_owner_finishes_user_step(
     """If owner user already exists, mark user step as complete."""
     MockUser(is_owner=True).add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.onboarding.views.async_setup"
-    ) as mock_setup, patch.object(onboarding, "STEPS", [onboarding.STEP_USER]):
-        assert await async_setup_component(hass, "onboarding", {})
+    with (
+        patch("homeassistant.components.onboarding.views.async_setup") as mock_setup,
+        patch.object(onboarding, "STEPS", [onboarding.STEP_USER]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_setup.mock_calls) == 0
     assert onboarding.DOMAIN not in hass.data
@@ -90,5 +98,5 @@ async def test_having_owner_finishes_user_step(
 async def test_migration(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test migrating onboarding to new version."""
     hass_storage[onboarding.STORAGE_KEY] = {"version": 1, "data": {"done": ["user"]}}
-    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert onboarding.async_is_onboarded(hass)

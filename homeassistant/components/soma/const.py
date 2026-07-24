@@ -3,4 +3,3 @@
 DOMAIN = "soma"
 HOST = "host"
 PORT = "port"
-API = "api"

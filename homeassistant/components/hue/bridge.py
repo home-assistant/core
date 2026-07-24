@@ -1,5 +1,4 @@
 """Code to handle a Hue bridge."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
@@ -13,11 +12,11 @@ from aiohue.errors import AiohueException, BridgeBusy
 
 from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, Platform
+from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_API_VERSION, DOMAIN
+from .const import DOMAIN
 from .v1.sensor_base import SensorManager
 from .v2.device import async_setup_devices
 from .v2.hue_event import async_setup_hue_events
@@ -35,11 +34,13 @@ PLATFORMS_v2 = [
     Platform.SWITCH,
 ]
 
+type HueConfigEntry = ConfigEntry[HueBridge]
+
 
 class HueBridge:
     """Manages a single Hue bridge."""
 
-    def __init__(self, hass: core.HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: core.HomeAssistant, config_entry: HueConfigEntry) -> None:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
@@ -57,7 +58,7 @@ class HueBridge:
         else:
             self.api = HueBridgeV2(self.host, app_key)
         # store (this) bridge object in hass data
-        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
+        self.config_entry.runtime_data = self
 
     @property
     def host(self) -> str:
@@ -71,11 +72,12 @@ class HueBridge:
 
     async def async_initialize_bridge(self) -> bool:
         """Initialize Connection with the Hue API."""
+        setup_ok = False
         try:
             async with asyncio.timeout(10):
                 await self.api.initialize()
-
-        except (LinkButtonNotPressed, Unauthorized):
+            setup_ok = True
+        except LinkButtonNotPressed, Unauthorized:
             # Usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
@@ -83,7 +85,7 @@ class HueBridge:
             create_config_flow(self.hass, self.host)
             return False
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             client_exceptions.ClientOSError,
             client_exceptions.ServerDisconnectedError,
             client_exceptions.ContentTypeError,
@@ -92,9 +94,12 @@ class HueBridge:
             raise ConfigEntryNotReady(
                 f"Error connecting to the Hue bridge at {self.host}"
             ) from err
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Unknown error connecting to Hue bridge")
             return False
+        finally:
+            if not setup_ok:
+                await self.api.close()
 
         # v1 specific initialization/setup code here
         if self.api_version == 1:
@@ -158,7 +163,7 @@ class HueBridge:
         )
 
         if unload_success:
-            self.hass.data[DOMAIN].pop(self.config_entry.entry_id)
+            delattr(self.config_entry, "runtime_data")
 
         return unload_success
 
@@ -174,7 +179,7 @@ class HueBridge:
         create_config_flow(self.hass, self.host)
 
 
-async def _update_listener(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+async def _update_listener(hass: core.HomeAssistant, entry: HueConfigEntry) -> None:
     """Handle ConfigEntry options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

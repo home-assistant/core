@@ -1,5 +1,4 @@
 """File utility functions."""
-from __future__ import annotations
 
 import logging
 import os
@@ -17,9 +16,7 @@ class WriteError(HomeAssistantError):
 
 
 def write_utf8_file_atomic(
-    filename: str,
-    utf8_data: str,
-    private: bool = False,
+    filename: str, utf8_data: bytes | str, private: bool = False, mode: str = "w"
 ) -> None:
     """Write a file and rename it into place using atomicwrites.
 
@@ -33,8 +30,11 @@ def write_utf8_file_atomic(
     Using this function frequently will significantly
     negatively impact performance.
     """
+    encoding = "utf-8" if "b" not in mode else None
     try:
-        with AtomicWriter(filename, overwrite=True).open() as fdesc:
+        with AtomicWriter(  # type: ignore[call-arg]  # atomicwrites-stubs is outdated, encoding is a valid kwarg
+            filename, mode=mode, overwrite=True, encoding=encoding
+        ).open() as fdesc:
             if not private:
                 os.fchmod(fdesc.fileno(), 0o644)
             fdesc.write(utf8_data)
@@ -44,20 +44,18 @@ def write_utf8_file_atomic(
 
 
 def write_utf8_file(
-    filename: str,
-    utf8_data: str,
-    private: bool = False,
+    filename: str, utf8_data: bytes | str, private: bool = False, mode: str = "w"
 ) -> None:
     """Write a file and rename it into place.
 
     Writes all or nothing.
     """
-
     tmp_filename = ""
+    encoding = "utf-8" if "b" not in mode else None
     try:
         # Modern versions of Python tempfile create this file with mode 0o600
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=os.path.dirname(filename), delete=False
+            mode=mode, encoding=encoding, dir=os.path.dirname(filename), delete=False
         ) as fdesc:
             fdesc.write(utf8_data)
             tmp_filename = fdesc.name

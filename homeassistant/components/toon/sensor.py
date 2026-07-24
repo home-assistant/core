@@ -1,7 +1,7 @@
 """Support for Toon sensors."""
-from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
@@ -18,11 +17,11 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CURRENCY_EUR, DOMAIN, VOLUME_CM3, VOLUME_LMIN
-from .coordinator import ToonDataUpdateCoordinator
-from .models import (
+from .coordinator import ToonConfigEntry, ToonDataUpdateCoordinator
+from .entity import (
     ToonBoilerDeviceEntity,
     ToonDisplayDeviceEntity,
     ToonElectricityMeterDeviceEntity,
@@ -35,10 +34,12 @@ from .models import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ToonConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Toon sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         description.cls(coordinator, description) for description in SENSOR_ENTITIES
@@ -80,10 +81,11 @@ class ToonSensor(ToonEntity, SensorEntity):
         self._attr_unique_id = (
             # This unique ID is a bit ugly and contains unneeded information.
             # It is here for legacy / backward compatible reasons.
-            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{description.key}"
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(self.coordinator.data, self.entity_description.section)
@@ -114,14 +116,14 @@ class ToonDisplayDeviceSensor(ToonSensor, ToonDisplayDeviceEntity):
     """Defines a Display sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSensorRequiredKeysMixin(ToonRequiredKeysMixin):
     """Mixin for sensor required keys."""
 
     cls: type[ToonSensor]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSensorEntityDescription(SensorEntityDescription, ToonSensorRequiredKeysMixin):
     """Describes Toon sensor entity."""
 

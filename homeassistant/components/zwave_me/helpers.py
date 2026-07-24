@@ -1,5 +1,4 @@
 """Helpers for zwave_me config flow."""
-from __future__ import annotations
 
 from zwave_me_ws import ZWaveMe
 

@@ -1,5 +1,4 @@
 """Provides device actions for Z-Wave JS."""
-from __future__ import annotations
 
 from collections import defaultdict
 import re
@@ -29,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .config_validation import VALUE_SCHEMA
+from .config_validation import COMMAND_CLASS_SCHEMA, VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
@@ -121,7 +120,7 @@ SET_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_SET_VALUE,
-        vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
+        vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
@@ -237,15 +236,15 @@ async def async_get_actions(
                 CONF_SUBTYPE: f"Endpoint {endpoint} (All)",
             }
         )
-        for meter_type in endpoint_data[ATTR_METER_TYPE]:
-            actions.append(
-                {
-                    **base_action,
-                    CONF_TYPE: SERVICE_RESET_METER,
-                    ATTR_METER_TYPE: meter_type,
-                    CONF_SUBTYPE: f"Endpoint {endpoint} ({meter_type.name})",
-                }
-            )
+        actions.extend(
+            {
+                **base_action,
+                CONF_TYPE: SERVICE_RESET_METER,
+                ATTR_METER_TYPE: meter_type,
+                CONF_SUBTYPE: f"Endpoint {endpoint} ({meter_type.name})",
+            }
+            for meter_type in endpoint_data[ATTR_METER_TYPE]
+        )
 
     return actions
 
@@ -333,7 +332,7 @@ async def async_get_action_capabilities(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
-                            CommandClass(cc.id).value: cc.name
+                            str(CommandClass(cc.id).value): cc.name
                             for cc in sorted(
                                 node.command_classes, key=lambda cc: cc.name
                             )

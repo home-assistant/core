@@ -1,15 +1,17 @@
 """Clicksend platform for notify component."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_RECIPIENT,
@@ -18,7 +20,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,19 +32,13 @@ TIMEOUT = 5
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_RECIPIENT, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
-            }
-        )
-    )
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_RECIPIENT, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
+    }
 )
 
 
@@ -68,6 +64,7 @@ class ClicksendNotificationService(BaseNotificationService):
         self.recipients: list[str] = config[CONF_RECIPIENT]
         self.sender: str = config[CONF_SENDER]
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data: dict[str, Any] = {"messages": []}

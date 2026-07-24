@@ -1,5 +1,5 @@
 """The lookin integration."""
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -18,7 +18,6 @@ from aiolookin import (
 )
 from aiolookin.models import UDPCommandType, UDPEvent
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -33,7 +32,7 @@ from .const import (
     TYPE_TO_PLATFORM,
 )
 from .coordinator import LookinDataUpdateCoordinator, LookinPushCoordinator
-from .models import LookinData
+from .models import LookinConfigEntry, LookinData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +89,7 @@ class LookinUDPManager:
             self._subscriptions = None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bool:
     """Set up lookin from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
@@ -101,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except (asyncio.TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
+    except (TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
         raise ConfigEntryNotReady from ex
 
     if entry.unique_id != (found_uuid := lookin_device.id.upper()):
@@ -118,12 +117,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     push_coordinator = LookinPushCoordinator(entry.title)
 
     if lookin_device.model >= 2:
-        meteo_coordinator = LookinDataUpdateCoordinator[MeteoSensor](
+        coordinator_class = LookinDataUpdateCoordinator[MeteoSensor]
+        meteo_coordinator = coordinator_class(
             hass,
+            entry,
             push_coordinator,
             name=entry.title,
             update_method=lookin_protocol.get_meteo_sensor,
-            update_interval=METEO_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
+            # Updates are pushed (fallback is polling)
+            update_interval=METEO_UPDATE_INTERVAL,
         )
         await meteo_coordinator.async_config_entry_first_refresh()
 
@@ -138,10 +140,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             updater = _async_remote_updater(lookin_protocol, uuid)
         coordinator = LookinDataUpdateCoordinator(
             hass,
+            entry,
             push_coordinator,
             name=f"{entry.title} {uuid}",
             update_method=updater,
-            update_interval=REMOTE_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
+            # Updates are pushed (fallback is polling)
+            update_interval=REMOTE_UPDATE_INTERVAL,
         )
         await coordinator.async_config_entry_first_refresh()
         device_coordinators[uuid] = coordinator
@@ -168,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-    hass.data[DOMAIN][entry.entry_id] = LookinData(
+    entry.runtime_data = LookinData(
         host=host,
         lookin_udp_subs=lookin_udp_subs,
         lookin_device=lookin_device,
@@ -183,27 +187,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         manager: LookinUDPManager = hass.data[DOMAIN][UDP_MANAGER]
         await manager.async_stop()
     return unload_ok
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: LookinConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove lookin config entry from a device."""
-    data: LookinData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     all_identifiers: set[tuple[str, str]] = {
         (DOMAIN, data.lookin_device.id),
         *((DOMAIN, remote["UUID"]) for remote in data.devices),

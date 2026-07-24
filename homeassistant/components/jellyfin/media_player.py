@@ -1,48 +1,47 @@
 """Support for the Jellyfin media player."""
-from __future__ import annotations
 
-from typing import Any
+import logging
+from typing import Any, override
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
+    BrowseMedia,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
-    MediaPlayerEntityDescription,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
-from .browse_media import build_item_response, build_root_response
+from .browse_media import build_item_response, build_root_response, search_items
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, DOMAIN, LOGGER
-from .coordinator import JellyfinDataUpdateCoordinator
-from .entity import JellyfinEntity
-from .models import JellyfinData
+from .const import CONTENT_TYPE_MAP, LOGGER, MAX_IMAGE_WIDTH
+from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
+from .entity import JellyfinClientEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: JellyfinConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Jellyfin media_player from a config entry."""
-    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
-    coordinator = jellyfin_data.coordinators["sessions"]
+    coordinator = entry.runtime_data
 
     @callback
     def handle_coordinator_update() -> None:
         """Add media player per session."""
         entities: list[MediaPlayerEntity] = []
-        for session_id, session_data in coordinator.data.items():
+        for session_id in coordinator.data:
             if session_id not in coordinator.session_ids:
-                entity: MediaPlayerEntity = JellyfinMediaPlayer(
-                    coordinator, session_id, session_data
-                )
+                entity: MediaPlayerEntity = JellyfinMediaPlayer(coordinator, session_id)
                 LOGGER.debug("Creating media player for session: %s", session_id)
                 coordinator.session_ids.add(session_id)
                 entities.append(entity)
@@ -53,60 +52,29 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
 
 
-class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
+class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     """Represents a Jellyfin Player device."""
 
     def __init__(
         self,
         coordinator: JellyfinDataUpdateCoordinator,
         session_id: str,
-        session_data: dict[str, Any],
     ) -> None:
         """Initialize the Jellyfin Media Player entity."""
-        super().__init__(
-            coordinator,
-            MediaPlayerEntityDescription(
-                key=session_id,
-            ),
+        super().__init__(coordinator, session_id)
+        self._attr_unique_id = f"{coordinator.server_id}-{session_id}"
+
+        self.now_playing: dict[str, Any] | None = self.session_data.get(
+            "NowPlayingItem"
         )
-
-        self.session_id = session_id
-        self.session_data: dict[str, Any] | None = session_data
-        self.device_id: str = session_data["DeviceId"]
-        self.device_name: str = session_data["DeviceName"]
-        self.client_name: str = session_data["Client"]
-        self.app_version: str = session_data["ApplicationVersion"]
-
-        self.capabilities: dict[str, Any] = session_data["Capabilities"]
-        self.now_playing: dict[str, Any] | None = session_data.get("NowPlayingItem")
-        self.play_state: dict[str, Any] | None = session_data.get("PlayState")
-
-        if self.capabilities.get("SupportsPersistentIdentifier", False):
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self.device_id)},
-                manufacturer="Jellyfin",
-                model=self.client_name,
-                name=self.device_name,
-                sw_version=self.app_version,
-                via_device=(DOMAIN, coordinator.server_id),
-            )
-            self._attr_name = None
-        else:
-            self._attr_device_info = None
-            self._attr_has_entity_name = False
-            self._attr_name = self.device_name
+        self.play_state: dict[str, Any] | None = self.session_data.get("PlayState")
 
         self._update_from_session_data()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
-        self.session_data = (
-            self.coordinator.data.get(self.session_id)
-            if self.coordinator.data is not None
-            else None
-        )
-
-        if self.session_data is not None:
+        if self.available:
             self.now_playing = self.session_data.get("NowPlayingItem")
             self.play_state = self.session_data.get("PlayState")
         else:
@@ -136,7 +104,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
         volume_muted = False
         volume_level = None
 
-        if self.session_data is not None:
+        if self.available:
             state = MediaPlayerState.IDLE
             media_position_updated = (
                 parse_datetime(self.session_data["LastPlaybackCheckIn"])
@@ -149,7 +117,9 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             media_content_type = CONTENT_TYPE_MAP.get(self.now_playing["Type"], None)
             media_content_id = self.now_playing["Id"]
             media_title = self.now_playing["Name"]
-            media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
+
+            if "RunTimeTicks" in self.now_playing:
+                media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
 
             if media_content_type == MediaType.EPISODE:
                 media_content_type = MediaType.TVSHOW
@@ -181,7 +151,10 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
 
         self._attr_state = state
         self._attr_is_volume_muted = volume_muted
-        self._attr_volume_level = volume_level
+        # Only update volume_level if the API provides it,
+        # otherwise preserve current value
+        if volume_level is not None:
+            self._attr_volume_level = volume_level
         self._attr_media_content_type = media_content_type
         self._attr_media_content_id = media_content_id
         self._attr_media_title = media_title
@@ -195,9 +168,9 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
         self._attr_media_duration = media_duration
         self._attr_media_position = media_position
         self._attr_media_position_updated_at = media_position_updated
-        self._attr_media_image_remotely_accessible = True
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         # We always need the now playing item.
@@ -205,16 +178,26 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
         if self.now_playing is None:
             return None
 
-        return get_artwork_url(self.coordinator.api_client, self.now_playing, 150)
+        return get_artwork_url(
+            self.coordinator.api_client, self.now_playing, MAX_IMAGE_WIDTH
+        )
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         commands: list[str] = self.capabilities.get("SupportedCommands", [])
-        controllable = self.capabilities.get("SupportsMediaControl", False)
+        _LOGGER.debug(
+            "Supported commands for device %s, client %s, %s",
+            self.device_name,
+            self.client_name,
+            commands,
+        )
         features = MediaPlayerEntityFeature(0)
 
-        if controllable:
+        if "PlayMediaSource" in commands or self.capabilities.get(
+            "SupportsMediaControl", False
+        ):
             features |= (
                 MediaPlayerEntityFeature.BROWSE_MEDIA
                 | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -222,67 +205,91 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.PLAY
                 | MediaPlayerEntityFeature.STOP
                 | MediaPlayerEntityFeature.SEEK
+                | MediaPlayerEntityFeature.SEARCH_MEDIA
+                | MediaPlayerEntityFeature.MEDIA_ENQUEUE
             )
 
-            if "Mute" in commands:
+            if "Mute" in commands and "Unmute" in commands:
                 features |= MediaPlayerEntityFeature.VOLUME_MUTE
 
-            if "VolumeSet" in commands:
+            if "VolumeSet" in commands or "SetVolume" in commands:
                 features |= MediaPlayerEntityFeature.VOLUME_SET
 
         return features
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success and self.session_data is not None
-
+    @override
     def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.coordinator.api_client.jellyfin.remote_seek(
             self.session_id, int(position * 10000000)
         )
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self.coordinator.api_client.jellyfin.remote_pause(self.session_id)
         self._attr_state = MediaPlayerState.PAUSED
+        self.schedule_update_ha_state()
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self.coordinator.api_client.jellyfin.remote_unpause(self.session_id)
         self._attr_state = MediaPlayerState.PLAYING
+        self.schedule_update_ha_state()
 
     def media_play_pause(self) -> None:
         """Send the PlayPause command to the session."""
         self.coordinator.api_client.jellyfin.remote_playpause(self.session_id)
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self.coordinator.api_client.jellyfin.remote_stop(self.session_id)
         self._attr_state = MediaPlayerState.IDLE
+        self.schedule_update_ha_state()
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
+        command = "PlayNow"
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
+        if enqueue == MediaPlayerEnqueue.NEXT:
+            command = "PlayNext"
+        elif enqueue == MediaPlayerEnqueue.ADD:
+            command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id]
+            self.session_id, [media_id], command
         )
 
+    def play_media_shuffle(self, media_content_id: str) -> None:
+        """Play a piece of media on shuffle."""
+        self.coordinator.api_client.jellyfin.remote_play_media(
+            self.session_id, [media_content_id], "PlayShuffle"
+        )
+
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.coordinator.api_client.jellyfin.remote_set_volume(
             self.session_id, int(volume * 100)
         )
+        self._attr_volume_level = volume
+        self.schedule_update_ha_state()
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
             self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
         else:
             self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
+        self._attr_is_volume_muted = mute
+        self.schedule_update_ha_state()
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -290,7 +297,8 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
 
-        The BrowseMedia instance will be used by the "media_player/browse_media" websocket command.
+        The BrowseMedia instance will be used by the
+        "media_player/browse_media" websocket command.
 
         """
         if media_content_id is None or media_content_id == "media-source://jellyfin":
@@ -302,6 +310,16 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             self.hass,
             self.coordinator.api_client,
             self.coordinator.user_id,
-            media_content_type,
             media_content_id,
         )
+
+    @override
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+        result = await search_items(
+            self.hass, self.coordinator.api_client, self.coordinator.user_id, query
+        )
+        return SearchMedia(result=result)

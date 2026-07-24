@@ -1,7 +1,6 @@
 """Support for Velbus light."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from velbusaio.channels import (
     Button as VelbusButton,
@@ -19,29 +18,34 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
-from .const import DOMAIN
+from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+
+BRIGHTNESS_SCALE = (1, 100)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VelbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities: list[Entity] = []
-    for channel in cntrl.get_all("light"):
-        entities.append(VelbusLight(channel))
-    for channel in cntrl.get_all("led"):
-        entities.append(VelbusButtonLight(channel))
+    await entry.runtime_data.scan_task
+    entities: list[Entity] = [
+        VelbusLight(channel)
+        for channel in entry.runtime_data.controller.get_all_light()
+    ]
+    entities.extend(
+        VelbusButtonLight(channel)
+        for channel in entry.runtime_data.controller.get_all_led()
+    )
     async_add_entities(entities)
 
 
@@ -54,16 +58,19 @@ class VelbusLight(VelbusEntity, LightEntity):
     _attr_supported_features = LightEntityFeature.TRANSITION
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._channel.is_on()
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
-        return int((self._channel.get_dimmer_state() * 255) / 100)
+        return value_to_brightness(BRIGHTNESS_SCALE, self._channel.get_dimmer_state())
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -71,7 +78,10 @@ class VelbusLight(VelbusEntity, LightEntity):
             if kwargs[ATTR_BRIGHTNESS] == 0:
                 brightness = 0
             else:
-                brightness = max(int((kwargs[ATTR_BRIGHTNESS] * 100) / 255), 1)
+                brightness = max(
+                    1,
+                    int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])),
+                )
             attr, *args = (
                 "set_dimmer_state",
                 brightness,
@@ -85,6 +95,7 @@ class VelbusLight(VelbusEntity, LightEntity):
         await getattr(self._channel, attr)(*args)
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
         attr, *args = (
@@ -104,6 +115,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_supported_features = LightEntityFeature.FLASH
+    _attr_translation_key = "button_light"
 
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the button light (led)."""
@@ -111,26 +123,24 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         self._attr_name = f"LED {self._channel.get_name()}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._channel.is_on()
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
-        if ATTR_FLASH in kwargs:
-            if kwargs[ATTR_FLASH] == FLASH_LONG:
-                attr, *args = "set_led_state", "slow"
-            elif kwargs[ATTR_FLASH] == FLASH_SHORT:
-                attr, *args = "set_led_state", "fast"
-            else:
-                attr, *args = "set_led_state", "on"
+        if (flash := ATTR_FLASH in kwargs) and kwargs[ATTR_FLASH] == FLASH_LONG:
+            await self._channel.set_led_state("slow")
+        elif flash and kwargs[ATTR_FLASH] == FLASH_SHORT:
+            await self._channel.set_led_state("fast")
         else:
-            attr, *args = "set_led_state", "on"
-        await getattr(self._channel, attr)(*args)
+            await self._channel.set_led_state("on")
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
-        attr, *args = "set_led_state", "off"
-        await getattr(self._channel, attr)(*args)
+        await self._channel.set_led_state("off")

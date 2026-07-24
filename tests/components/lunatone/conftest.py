@@ -1,0 +1,174 @@
+"""Fixtures for Lunatone tests."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, PropertyMock, patch
+
+from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
+from lunatone_rest_api_client.models import InfoData, SensorsData
+import pytest
+
+from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
+from homeassistant.components.lunatone.const import DOMAIN
+from homeassistant.const import CONF_URL
+
+from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SENSORS_DATA, UUID, build_devices_data
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lunatone.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_lunatone_devices() -> Generator[AsyncMock]:
+    """Mock a Lunatone devices object."""
+
+    def build_devices_mock(devices: Devices):
+        device_list = []
+        if devices.data is None:
+            return device_list
+        for device_data in devices.data.devices:
+            device = AsyncMock(spec=Device)
+            device.data = device_data
+            device.id = device.data.id
+            device.name = device.data.name
+            device.is_on = device.data.features.switchable.status
+            device.brightness = (
+                device.data.features.dimmable.status
+                if device.data.features.dimmable
+                else None
+            )
+            device.color_temperature = (
+                device.data.features.color_kelvin.status
+                if device.data.features.color_kelvin
+                else None
+            )
+            device.rgb_color = (
+                (
+                    device.data.features.color_rgb.status.red,
+                    device.data.features.color_rgb.status.green,
+                    device.data.features.color_rgb.status.blue,
+                )
+                if device.data.features.color_rgb
+                else None
+            )
+            device.rgbw_color = (
+                (
+                    device.data.features.color_rgb.status.red,
+                    device.data.features.color_rgb.status.green,
+                    device.data.features.color_rgb.status.blue,
+                    device.data.features.color_waf.status.white,
+                )
+                if device.data.features.color_rgb and device.data.features.color_waf
+                else None
+            )
+            device_list.append(device)
+        return device_list
+
+    with patch(
+        "homeassistant.components.lunatone.Devices", autospec=True
+    ) as mock_devices:
+        devices = mock_devices.return_value
+        devices.data = build_devices_data()
+        type(devices).devices = PropertyMock(
+            side_effect=lambda d=devices: build_devices_mock(d)
+        )
+        yield devices
+
+
+@pytest.fixture
+def mock_lunatone_info() -> Generator[AsyncMock]:
+    """Mock a Lunatone info object."""
+    with (
+        patch(
+            "homeassistant.components.lunatone.Info",
+            autospec=True,
+        ) as mock_info,
+        patch(
+            "homeassistant.components.lunatone.config_flow.Info",
+            new=mock_info,
+        ),
+        patch(
+            "homeassistant.components.lunatone.coordinator.Info",
+            new=mock_info,
+        ),
+    ):
+        info = mock_info.return_value
+
+        def _set_data(data: InfoData) -> Info:
+            info.data = data
+            info.name = info.data.name
+            info.product_name = PRODUCT_NAME
+            info.serial_number = info.data.device.serial
+            info.uid = info.data.uid
+            info.version = info.data.version
+            return info
+
+        info.set_data = _set_data
+        info.set_data(INFO_DATA)
+        yield info
+
+
+@pytest.fixture
+def mock_lunatone_dali_broadcast() -> Generator[AsyncMock]:
+    """Mock a Lunatone DALI broadcast object."""
+    with patch(
+        "homeassistant.components.lunatone.DALIBroadcast",
+        autospec=True,
+    ) as mock_dali_broadcast:
+        dali_broadcast = mock_dali_broadcast.return_value
+        dali_broadcast.line = 0
+        yield dali_broadcast
+
+
+@pytest.fixture
+def mock_lunatone_sensors() -> Generator[AsyncMock]:
+    """Mock a Lunatone sensors object."""
+
+    def build_sensors_mock(sensors: Sensors):
+        sensor_list = []
+        if sensors.data is None:
+            return sensor_list
+        for sensor_data in sensors.data.sensors:
+            sensor = AsyncMock(spec=Sensor)
+            sensor.data = sensor_data
+            sensor.id = sensor.data.id
+            sensor.name = sensor.data.name
+            sensor_list.append(sensor)
+        return sensor_list
+
+    with patch(
+        "homeassistant.components.lunatone.Sensors",
+        autospec=True,
+    ) as mock_info:
+        sensors = mock_info.return_value
+
+        def _set_data(data: SensorsData) -> None:
+            sensors.data = data
+            type(sensors).sensors = PropertyMock(
+                side_effect=lambda s=sensors: build_sensors_mock(s)
+            )
+
+        sensors.set_data = _set_data
+        sensors.set_data(SENSORS_DATA)
+        yield sensors
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title=BASE_URL,
+        domain=DOMAIN,
+        data={CONF_URL: BASE_URL},
+        unique_id=UUID.replace("-", ""),
+        version=LunatoneConfigFlow.VERSION,
+        minor_version=LunatoneConfigFlow.MINOR_VERSION,
+    )

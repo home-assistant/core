@@ -1,30 +1,30 @@
 """Support for Verisure sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DEVICE_TYPE_NAME, DOMAIN
-from .coordinator import VerisureDataUpdateCoordinator
+from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VerisureConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
-    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     sensors: list[Entity] = [
         VerisureThermometer(coordinator, serial_number)
@@ -60,6 +60,7 @@ class VerisureThermometer(
         self.serial_number = serial_number
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number]["device"][
@@ -68,20 +69,21 @@ class VerisureThermometer(
         area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model=DEVICE_TYPE_NAME.get(device_type, device_type),
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self.coordinator.data["climate"][self.serial_number]["temperatureValue"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -111,6 +113,7 @@ class VerisureHygrometer(
         self.serial_number = serial_number
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number]["device"][
@@ -119,20 +122,21 @@ class VerisureHygrometer(
         area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model=DEVICE_TYPE_NAME.get(device_type, device_type),
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self.coordinator.data["climate"][self.serial_number]["humidityValue"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (

@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS logbook."""
+
 from zwave_js_server.const import CommandClass
 
 from homeassistant.components.zwave_js.const import (
@@ -14,17 +15,21 @@ from tests.components.logbook.common import MockRow, mock_humanify
 
 
 async def test_humanifying_zwave_js_notification_event(
-    hass: HomeAssistant, client, lock_schlage_be469, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    lock_schlage_be469,
+    integration,
 ) -> None:
     """Test humanifying Z-Wave JS notification events."""
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -67,6 +72,16 @@ async def test_humanifying_zwave_js_notification_event(
                     "command_class_name": "Powerlevel",
                 },
             ),
+            MockRow(
+                ZWAVE_JS_NOTIFICATION_EVENT,
+                {
+                    "device_id": device.id,
+                    "command_class": CommandClass.BATTERY.value,
+                    "command_class_name": "Battery",
+                    "event_type": "battery low",
+                    "urgency": 1,
+                },
+            ),
         ],
     )
 
@@ -95,19 +110,27 @@ async def test_humanifying_zwave_js_notification_event(
     assert events[3]["domain"] == "zwave_js"
     assert events[3]["message"] == "fired Powerlevel CC 'notification' event"
 
+    assert events[4]["name"] == "Touchscreen Deadbolt"
+    assert events[4]["domain"] == "zwave_js"
+    assert events[4]["message"] == "fired Battery CC 'notification' event"
+
 
 async def test_humanifying_zwave_js_value_notification_event(
-    hass: HomeAssistant, client, lock_schlage_be469, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    lock_schlage_be469,
+    integration,
 ) -> None:
     """Test humanifying Z-Wave JS value notification events."""
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

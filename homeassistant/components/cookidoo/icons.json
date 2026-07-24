@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "button": {
+      "todo_clear": {
+        "default": "mdi:cart-off"
+      }
+    },
+    "sensor": {
+      "expiration": {
+        "default": "mdi:account-reactivate"
+      },
+      "subscription": {
+        "default": "mdi:account",
+        "state": {
+          "free": "mdi:account",
+          "regular": "mdi:account-star",
+          "trial": "mdi:account-question"
+        }
+      }
+    },
+    "todo": {
+      "additional_item_list": {
+        "default": "mdi:cart-plus"
+      },
+      "ingredient_list": {
+        "default": "mdi:cart-plus"
+      }
+    }
+  }
+}

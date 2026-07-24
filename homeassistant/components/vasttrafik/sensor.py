@@ -1,5 +1,4 @@
 """Support for Västtrafik public transport."""
-from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
@@ -7,10 +6,13 @@ import logging
 import vasttrafik
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -37,7 +39,7 @@ DEFAULT_DELAY = 0
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_KEY): cv.string,
         vol.Required(CONF_SECRET): cv.string,
@@ -64,10 +66,8 @@ def setup_platform(
 ) -> None:
     """Set up the departure sensor."""
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
-    sensors = []
-
-    for departure in config[CONF_DEPARTURES]:
-        sensors.append(
+    add_entities(
+        (
             VasttrafikDepartureSensor(
                 planner,
                 departure.get(CONF_NAME),
@@ -76,8 +76,10 @@ def setup_platform(
                 departure.get(CONF_LINES),
                 departure.get(CONF_DELAY),
             )
-        )
-    add_entities(sensors, True)
+            for departure in config[CONF_DEPARTURES]
+        ),
+        True,
+    )
 
 
 class VasttrafikDepartureSensor(SensorEntity):
@@ -89,14 +91,12 @@ class VasttrafikDepartureSensor(SensorEntity):
     def __init__(self, planner, name, departure, heading, lines, delay):
         """Initialize the sensor."""
         self._planner = planner
-        self._name = name or departure
+        self._attr_name = name or departure
         self._departure = self.get_station_id(departure)
         self._heading = self.get_station_id(heading) if heading else None
-        self._lines = lines if lines else None
+        self._lines = lines or None
         self._delay = timedelta(minutes=delay)
         self._departureboard = None
-        self._state = None
-        self._attributes = None
 
     def get_station_id(self, location):
         """Get the station ID."""
@@ -106,21 +106,6 @@ class VasttrafikDepartureSensor(SensorEntity):
             station_id = self._planner.location_name(location)[0]["gid"]
             station_info = {"station_name": location, "station_id": station_id}
         return station_info
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def native_value(self):
-        """Return the next departure time."""
-        return self._state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
@@ -141,8 +126,8 @@ class VasttrafikDepartureSensor(SensorEntity):
                 self._departure["station_name"],
                 self._heading["station_name"] if self._heading else "ANY",
             )
-            self._state = None
-            self._attributes = {}
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
         else:
             for departure in self._departureboard:
                 service_journey = departure.get("serviceJourney", {})
@@ -153,13 +138,15 @@ class VasttrafikDepartureSensor(SensorEntity):
                 if not self._lines or line.get("shortName") in self._lines:
                     if "estimatedOtherwisePlannedTime" in departure:
                         try:
-                            self._state = datetime.fromisoformat(
+                            self._attr_native_value = datetime.fromisoformat(
                                 departure["estimatedOtherwisePlannedTime"]
                             ).strftime("%H:%M")
                         except ValueError:
-                            self._state = departure["estimatedOtherwisePlannedTime"]
+                            self._attr_native_value = departure[
+                                "estimatedOtherwisePlannedTime"
+                            ]
                     else:
-                        self._state = None
+                        self._attr_native_value = None
 
                     stop_point = departure.get("stopPoint", {})
 
@@ -177,5 +164,7 @@ class VasttrafikDepartureSensor(SensorEntity):
                         ATTR_DELAY: self._delay.seconds // 60 % 60,
                     }
 
-                    self._attributes = {k: v for k, v in params.items() if v}
+                    self._attr_extra_state_attributes = {
+                        k: v for k, v in params.items() if v
+                    }
                     break

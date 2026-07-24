@@ -1,5 +1,4 @@
 """Provides device automations for Alarm control panel."""
-from __future__ import annotations
 
 from typing import Final
 
@@ -22,19 +21,12 @@ from homeassistant.const import (
     SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
-from .const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-    SUPPORT_ALARM_TRIGGER,
-)
+from . import DOMAIN
+from .const import AlarmControlPanelEntityFeature, AlarmControlPanelEntityStateAttribute
 
 ACTION_TYPES: Final[set[str]] = {
     "arm_away",
@@ -82,16 +74,16 @@ async def async_get_actions(
         }
 
         # Add actions for each entity that belongs to this integration
-        if supported_features & SUPPORT_ALARM_ARM_AWAY:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_AWAY:
             actions.append({**base_action, CONF_TYPE: "arm_away"})
-        if supported_features & SUPPORT_ALARM_ARM_HOME:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_HOME:
             actions.append({**base_action, CONF_TYPE: "arm_home"})
-        if supported_features & SUPPORT_ALARM_ARM_NIGHT:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_NIGHT:
             actions.append({**base_action, CONF_TYPE: "arm_night"})
-        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+        if supported_features & AlarmControlPanelEntityFeature.ARM_VACATION:
             actions.append({**base_action, CONF_TYPE: "arm_vacation"})
         actions.append({**base_action, CONF_TYPE: "disarm"})
-        if supported_features & SUPPORT_ALARM_TRIGGER:
+        if supported_features & AlarmControlPanelEntityFeature.TRIGGER:
             actions.append({**base_action, CONF_TYPE: "trigger"})
 
     return actions
@@ -130,12 +122,16 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-    # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
+    # We need to refer to the state directly because CODE_ARM_REQUIRED is not a
     # capability attribute
     registry = er.async_get(hass)
     entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])
     state = hass.states.get(entity_id) if entity_id else None
-    code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False
+    code_required = (
+        state.attributes.get(AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED)
+        if state
+        else False
+    )
 
     if config[CONF_TYPE] == "trigger" or (
         config[CONF_TYPE] != "disarm" and not code_required

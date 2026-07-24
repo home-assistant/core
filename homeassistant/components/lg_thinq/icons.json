@@ -1,0 +1,470 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "clean_light_reminder": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "eco_friendly_mode": {
+        "default": "mdi:sprout"
+      },
+      "machine_clean_reminder": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "one_touch_filter": {
+        "default": "mdi:air-filter"
+      },
+      "operation_mode": {
+        "default": "mdi:power"
+      },
+      "power_save_enabled": {
+        "default": "mdi:meter-electric"
+      },
+      "remote_control_enabled": {
+        "default": "mdi:remote"
+      },
+      "remote_control_enabled_for_location": {
+        "default": "mdi:remote"
+      },
+      "rinse_refill": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "sabbath_mode": {
+        "default": "mdi:food-off-outline"
+      },
+      "signal_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "water_heater_operation_mode": {
+        "default": "mdi:power"
+      }
+    },
+    "climate": {
+      "climate_air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "high": "mdi:fan-speed-3",
+              "low": "mdi:fan-speed-1",
+              "medium": "mdi:fan-speed-2",
+              "power": "mdi:fan-chevron-up",
+              "slow": "mdi:fan-chevron-down"
+            }
+          }
+        }
+      }
+    },
+    "event": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "notification": {
+        "default": "mdi:message-badge-outline"
+      }
+    },
+    "number": {
+      "fan_speed": {
+        "default": "mdi:wind-power-outline"
+      },
+      "lamp_brightness": {
+        "default": "mdi:alarm-light-outline"
+      },
+      "light_status": {
+        "default": "mdi:television-ambient-light"
+      },
+      "relative_hour_to_start": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_start_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_start_wm": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_start_wm_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop_wm": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop_wm_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "sleep_timer_relative_hour_to_stop": {
+        "default": "mdi:bed-clock"
+      },
+      "sleep_timer_relative_hour_to_stop_for_location": {
+        "default": "mdi:bed-clock"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "wind_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "select": {
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
+      },
+      "cook_mode": {
+        "default": "mdi:chef-hat"
+      },
+      "cook_mode_for_location": {
+        "default": "mdi:chef-hat"
+      },
+      "current_job_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "current_job_mode_dehumidifier": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "current_job_mode_ventilator": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "display_light": {
+        "default": "mdi:brightness-6"
+      },
+      "fresh_air_filter": {
+        "default": "mdi:air-filter"
+      },
+      "hygiene_dry_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "light_brightness": {
+        "default": "mdi:list-status"
+      },
+      "monitoring_enabled": {
+        "default": "mdi:monitor-eye"
+      },
+      "operation_mode": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "operation_mode_for_location": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "wind_angle": {
+        "default": "mdi:rotate-360"
+      },
+      "wind_strength": {
+        "default": "mdi:wind-power-outline"
+      }
+    },
+    "sensor": {
+      "absolute_to_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "absolute_to_start_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "absolute_to_stop": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "absolute_to_stop_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "battery_level": {
+        "default": "mdi:battery-medium"
+      },
+      "beer_remain": {
+        "default": "mdi:glass-mug-variant"
+      },
+      "brightness": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "brightness_for_location": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "carbon_dioxide": {
+        "default": "mdi:molecule-co2"
+      },
+      "cock_state": {
+        "default": "mdi:air-filter"
+      },
+      "current_dish_washing_course": {
+        "default": "mdi:format-list-checks"
+      },
+      "current_job_mode": {
+        "default": "mdi:dots-circle"
+      },
+      "current_job_mode_stick_cleaner": {
+        "default": "mdi:dots-circle"
+      },
+      "current_state": {
+        "default": "mdi:list-status"
+      },
+      "current_state_for_location": {
+        "default": "mdi:list-status"
+      },
+      "current_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "cycle_count": {
+        "default": "mdi:counter"
+      },
+      "cycle_count_for_location": {
+        "default": "mdi:counter"
+      },
+      "day_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "day_target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "duration": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "duration_for_location": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "elapsed_day_state": {
+        "default": "mdi:calendar-range-outline"
+      },
+      "elapsed_day_total": {
+        "default": "mdi:calendar-range-outline"
+      },
+      "energy_usage_last_month": {
+        "default": "mdi:chart-bar"
+      },
+      "energy_usage_this_month": {
+        "default": "mdi:chart-bar"
+      },
+      "energy_usage_yesterday": {
+        "default": "mdi:chart-bar"
+      },
+      "filter_lifetime": {
+        "default": "mdi:air-filter"
+      },
+      "flavor_capsule_1": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_capsule_2": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "fresh_air_filter": {
+        "default": "mdi:air-filter"
+      },
+      "growth_mode": {
+        "default": "mdi:sprout-outline"
+      },
+      "growth_mode_for_location": {
+        "default": "mdi:sprout-outline"
+      },
+      "hop_oil_capsule_1": {
+        "default": "mdi:information-box-outline"
+      },
+      "hop_oil_capsule_2": {
+        "default": "mdi:information-box-outline"
+      },
+      "hop_oil_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "light_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "light_start_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "monitoring_enabled": {
+        "default": "mdi:monitor-eye"
+      },
+      "night_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "night_target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "odor_level": {
+        "default": "mdi:scent"
+      },
+      "personalization_mode": {
+        "default": "mdi:dots-circle"
+      },
+      "power_level": {
+        "default": "mdi:radiator"
+      },
+      "power_level_for_location": {
+        "default": "mdi:radiator"
+      },
+      "recipe_name": {
+        "default": "mdi:information-box-outline"
+      },
+      "relative_to_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_start_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_start_wm": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_start_wm_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop_wm": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop_wm_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "remain": {
+        "default": "mdi:timer-sand"
+      },
+      "remain_for_location": {
+        "default": "mdi:timer-sand"
+      },
+      "rinse_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "running": {
+        "default": "mdi:timer-play-outline"
+      },
+      "running_for_location": {
+        "default": "mdi:timer-play-outline"
+      },
+      "sleep_timer_relative_to_stop": {
+        "default": "mdi:bed-clock"
+      },
+      "sleep_timer_relative_to_stop_for_location": {
+        "default": "mdi:bed-clock"
+      },
+      "softening_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "sterilizing_state": {
+        "default": "mdi:water-alert-outline"
+      },
+      "target": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "target_for_location": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "temperature_state": {
+        "default": "mdi:thermometer"
+      },
+      "temperature_state_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "top_filter_remain_percent": {
+        "default": "mdi:air-filter"
+      },
+      "total": {
+        "default": "mdi:timer-play-outline"
+      },
+      "total_for_location": {
+        "default": "mdi:timer-play-outline"
+      },
+      "total_pollution_level": {
+        "default": "mdi:air-filter"
+      },
+      "used_time": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_1_remain_percent": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_2_remain_percent": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_3_remain_percent": {
+        "default": "mdi:air-filter"
+      },
+      "water_filter_state": {
+        "default": "mdi:air-filter"
+      },
+      "water_type": {
+        "default": "mdi:water"
+      },
+      "wind_volume": {
+        "default": "mdi:wind-power-outline"
+      },
+      "wind_volume_for_location": {
+        "default": "mdi:wind-power-outline"
+      },
+      "wort_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "yeast_info": {
+        "default": "mdi:information-box-outline"
+      }
+    },
+    "switch": {
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
+      },
+      "auto_mode": {
+        "default": "mdi:cogs"
+      },
+      "display_light": {
+        "default": "mdi:lightbulb-on-outline"
+      },
+      "express_fridge": {
+        "default": "mdi:snowflake"
+      },
+      "express_mode": {
+        "default": "mdi:snowflake-variant"
+      },
+      "hot_water_mode": {
+        "default": "mdi:heat-wave"
+      },
+      "humidity_warm_mode": {
+        "default": "mdi:heat-wave"
+      },
+      "hygiene_dry_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "mood_lamp_state": {
+        "default": "mdi:lamp"
+      },
+      "operation_power": {
+        "default": "mdi:power"
+      },
+      "optimal_humidity": {
+        "default": "mdi:water-percent"
+      },
+      "power_save_enabled": {
+        "default": "mdi:hydro-power"
+      },
+      "rapid_freeze": {
+        "default": "mdi:snowflake"
+      },
+      "sleep_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "uv_nano": {
+        "default": "mdi:air-filter"
+      },
+      "warm_mode": {
+        "default": "mdi:heat-wave"
+      }
+    }
+  }
+}

@@ -1,94 +1,91 @@
 """The ONVIF integration."""
-import asyncio
-from contextlib import suppress
+
+from contextlib import AsyncExitStack, suppress
 from http import HTTPStatus
 import logging
 
-from httpx import RequestError
+import aiohttp
 from onvif.exceptions import ONVIFError
 from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_ENABLE_WEBHOOKS,
     CONF_SNAPSHOT_AUTH,
     DEFAULT_ARGUMENTS,
     DEFAULT_ENABLE_WEBHOOKS,
-    DOMAIN,
 )
-from .device import ONVIFDevice
+from .device import ONVIFConfigEntry, ONVIFDevice
 
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> bool:
     """Set up ONVIF from a config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     if not entry.options:
         await async_populate_options(hass, entry)
 
     device = ONVIFDevice(hass, entry)
+    camera_address = f"{device.host}:{device.port}"
 
-    try:
-        await device.async_setup()
-        if not entry.data.get(CONF_SNAPSHOT_AUTH):
-            await async_populate_snapshot_auth(hass, device, entry)
-    except RequestError as err:
-        await device.device.close()
-        raise ConfigEntryNotReady(
-            f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
-        ) from err
-    except Fault as err:
-        await device.device.close()
-        if is_auth_error(err):
-            raise ConfigEntryAuthFailed(
-                f"Auth Failed: {stringify_onvif_error(err)}"
+    async with AsyncExitStack() as stack:
+        # Register cleanup callback for device
+        @stack.push_async_callback
+        async def _cleanup():
+            await _async_stop_device(hass, device)
+
+        try:
+            await device.async_setup()
+            if not entry.data.get(CONF_SNAPSHOT_AUTH):
+                await async_populate_snapshot_auth(hass, device, entry)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            raise ConfigEntryNotReady(
+                f"Could not connect to camera {camera_address}: {err}"
             ) from err
-        raise ConfigEntryNotReady(
-            f"Could not connect to camera: {stringify_onvif_error(err)}"
-        ) from err
-    except ONVIFError as err:
-        await device.device.close()
-        raise ConfigEntryNotReady(
-            f"Could not setup camera {device.device.host}:{device.device.port}: {stringify_onvif_error(err)}"
-        ) from err
-    except TransportError as err:
-        await device.device.close()
-        stringified_onvif_error = stringify_onvif_error(err)
-        if err.status_code in (
-            HTTPStatus.UNAUTHORIZED.value,
-            HTTPStatus.FORBIDDEN.value,
-        ):
-            raise ConfigEntryAuthFailed(
-                f"Auth Failed: {stringified_onvif_error}"
+        except Fault as err:
+            if is_auth_error(err):
+                raise ConfigEntryAuthFailed(
+                    f"Auth Failed: {stringify_onvif_error(err)}"
+                ) from err
+            raise ConfigEntryNotReady(
+                f"Could not connect to camera: {stringify_onvif_error(err)}"
             ) from err
-        raise ConfigEntryNotReady(
-            f"Could not setup camera {device.device.host}:{device.device.port}: {stringified_onvif_error}"
-        ) from err
-    except asyncio.CancelledError as err:
-        # After https://github.com/agronholm/anyio/issues/374 is resolved
-        # this may be able to be removed
-        await device.device.close()
-        raise ConfigEntryNotReady(f"Setup was unexpectedly canceled: {err}") from err
+        except ONVIFError as err:
+            raise ConfigEntryNotReady(
+                f"Could not setup camera {camera_address}: {stringify_onvif_error(err)}"
+            ) from err
+        except TransportError as err:
+            stringified_onvif_error = stringify_onvif_error(err)
+            if err.status_code in (
+                HTTPStatus.UNAUTHORIZED.value,
+                HTTPStatus.FORBIDDEN.value,
+            ):
+                raise ConfigEntryAuthFailed(
+                    f"Auth Failed: {stringified_onvif_error}"
+                ) from err
+            raise ConfigEntryNotReady(
+                f"Could not setup camera {camera_address}: {stringified_onvif_error}"
+            ) from err
 
-    if not device.available:
-        raise ConfigEntryNotReady()
+        if not device.available:
+            raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.unique_id] = device
+        # If we get here, setup was successful - prevent cleanup
+        stack.pop_all()
+
+    entry.runtime_data = device
 
     device.platforms = [Platform.BUTTON, Platform.CAMERA]
 
@@ -97,6 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if device.capabilities.imaging:
         device.platforms += [Platform.SWITCH]
+
+    _async_migrate_camera_entities_unique_ids(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, device.platforms)
 
@@ -107,17 +106,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-
-    device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
-
+async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
+    """Stop the ONVIF device."""
     if device.capabilities.events and device.events.started:
         try:
             await device.events.async_stop()
-        except (ONVIFError, Fault, RequestError, TransportError):
+        except TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError:
             LOGGER.warning("Error while stopping events: %s", device.name)
+    await device.device.close()
 
+
+async def async_unload_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> bool:
+    """Unload a config entry."""
+    device = entry.runtime_data
+    await _async_stop_device(hass, device)
     return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 
 
@@ -136,7 +138,7 @@ async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:
 
 
 async def async_populate_snapshot_auth(
-    hass: HomeAssistant, device: ONVIFDevice, entry: ConfigEntry
+    hass: HomeAssistant, device: ONVIFDevice, entry: ONVIFConfigEntry
 ) -> None:
     """Check if digest auth for snapshots is possible."""
     if auth := await _get_snapshot_auth(device):
@@ -145,7 +147,7 @@ async def async_populate_snapshot_auth(
         )
 
 
-async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_populate_options(hass: HomeAssistant, entry: ONVIFConfigEntry) -> None:
     """Populate default options for device."""
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
@@ -154,3 +156,62 @@ async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> Non
     }
 
     hass.config_entries.async_update_entry(entry, options=options)
+
+
+@callback
+def _async_migrate_camera_entities_unique_ids(
+    hass: HomeAssistant, config_entry: ONVIFConfigEntry, device: ONVIFDevice
+) -> None:
+    """Migrate unique ids of camera entities from profile index to profile token."""
+    entity_reg = er.async_get(hass)
+    entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
+        entity_reg, config_entry.entry_id
+    )
+
+    mac_or_serial = device.info.mac or device.info.serial_number
+    old_uid_start = f"{mac_or_serial}_"
+    new_uid_start = f"{mac_or_serial}#"
+
+    for entity in entities:
+        if entity.domain != Platform.CAMERA:
+            continue
+
+        if (
+            not entity.unique_id.startswith(old_uid_start)
+            and entity.unique_id != mac_or_serial
+        ):
+            continue
+
+        index = 0
+        if entity.unique_id.startswith(old_uid_start):
+            try:
+                index = int(entity.unique_id[len(old_uid_start) :])
+            except ValueError:
+                LOGGER.error(
+                    "Failed to migrate unique id for '%s' as the"
+                    " ONVIF profile index could not be parsed"
+                    " from unique id '%s'",
+                    entity.entity_id,
+                    entity.unique_id,
+                )
+                continue
+        try:
+            token = device.profiles[index].token
+        except IndexError:
+            LOGGER.error(
+                "Failed to migrate unique id for '%s' as the"
+                " ONVIF profile index '%d' parsed from"
+                " unique id '%s' could not be found",
+                entity.entity_id,
+                index,
+                entity.unique_id,
+            )
+            continue
+        new_uid = f"{new_uid_start}{token}"
+        LOGGER.debug(
+            "Migrating unique id for '%s' from '%s' to '%s'",
+            entity.entity_id,
+            entity.unique_id,
+            new_uid,
+        )
+        entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)

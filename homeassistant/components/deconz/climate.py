@@ -1,7 +1,6 @@
 """Support for deCONZ climate devices."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.thermostat import (
@@ -12,7 +11,7 @@ from pydeconz.models.sensor.thermostat import (
 )
 
 from homeassistant.components.climate import (
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -27,14 +26,14 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_LOCKED, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
-from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from . import DeconzConfigEntry
+from .const import ATTR_OFFSET, ATTR_VALVE
+from .entity import DeconzDevice
+from .hub import DeconzHub
 
 DECONZ_FAN_SMART = "smart"
 
@@ -75,35 +74,35 @@ DECONZ_TO_PRESET_MODE = {value: key for key, value in PRESET_MODE_TO_DECONZ.item
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ climate devices."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = config_entry.runtime_data
+    hub.entities[CLIMATE_DOMAIN] = set()
 
     @callback
     def async_add_climate(_: EventType, climate_id: str) -> None:
         """Add climate from deCONZ."""
-        climate = gateway.api.sensors.thermostat[climate_id]
-        async_add_entities([DeconzThermostat(climate, gateway)])
+        climate = hub.api.sensors.thermostat[climate_id]
+        async_add_entities([DeconzThermostat(climate, hub)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_climate,
-        gateway.api.sensors.thermostat,
+        hub.api.sensors.thermostat,
     )
 
 
 class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     """Representation of a deCONZ thermostat."""
 
-    TYPE = DOMAIN
+    TYPE = CLIMATE_DOMAIN
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, device: Thermostat, gateway: DeconzGateway) -> None:
+    def __init__(self, device: Thermostat, hub: DeconzHub) -> None:
         """Set up thermostat device."""
-        super().__init__(device, gateway)
+        super().__init__(device, hub)
 
         self._attr_hvac_modes = [
             HVACMode.HEAT,
@@ -119,7 +118,11 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
             HVAC_MODE_TO_DECONZ[item]: item for item in self._attr_hvac_modes
         }
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
         if device.fan_mode:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
@@ -132,18 +135,20 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     # Fan control
 
     @property
+    @override
     def fan_mode(self) -> str:
         """Return fan operation."""
         if self._device.fan_mode in DECONZ_TO_FAN_MODE:
             return DECONZ_TO_FAN_MODE[self._device.fan_mode]
         return FAN_ON if self._device.state_on else FAN_OFF
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode not in FAN_MODE_TO_DECONZ:
             raise ValueError(f"Unsupported fan mode {fan_mode}")
 
-        await self.gateway.api.sensors.thermostat.set_config(
+        await self.hub.api.sensors.thermostat.set_config(
             id=self._device.resource_id,
             fan_mode=FAN_MODE_TO_DECONZ[fan_mode],
         )
@@ -151,29 +156,30 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     # HVAC control
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if self._device.mode in self._deconz_to_hvac_mode:
             return self._deconz_to_hvac_mode[self._device.mode]
         return HVACMode.HEAT if self._device.state_on else HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode not in self._attr_hvac_modes:
-            raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
 
         if len(self._attr_hvac_modes) == 2:  # Only allow turn on and off thermostat
-            await self.gateway.api.sensors.thermostat.set_config(
+            await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
                 on=hvac_mode != HVACMode.OFF,
             )
         else:
-            await self.gateway.api.sensors.thermostat.set_config(
+            await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
                 mode=HVAC_MODE_TO_DECONZ[hvac_mode],
             )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current hvac operation ie. heat, cool.
 
@@ -191,18 +197,20 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     # Preset control
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return preset mode."""
         if self._device.preset in DECONZ_TO_PRESET_MODE:
             return DECONZ_TO_PRESET_MODE[self._device.preset]
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in PRESET_MODE_TO_DECONZ:
             raise ValueError(f"Unsupported preset mode {preset_mode}")
 
-        await self.gateway.api.sensors.thermostat.set_config(
+        await self.hub.api.sensors.thermostat.set_config(
             id=self._device.resource_id,
             preset=PRESET_MODE_TO_DECONZ[preset_mode],
         )
@@ -210,11 +218,13 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     # Temperature control
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._device.scaled_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         if self._device.mode == ThermostatMode.COOL and self._device.cooling_setpoint:
@@ -225,23 +235,25 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
         if self._device.mode == ThermostatMode.COOL:
-            await self.gateway.api.sensors.thermostat.set_config(
+            await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
                 cooling_setpoint=kwargs[ATTR_TEMPERATURE] * 100,
             )
         else:
-            await self.gateway.api.sensors.thermostat.set_config(
+            await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
                 heating_setpoint=kwargs[ATTR_TEMPERATURE] * 100,
             )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool | int]:
         """Return the state attributes of the thermostat."""
         attr = {}

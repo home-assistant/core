@@ -1,16 +1,19 @@
 """Sensor for retrieving latest GitLab CI job information."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from gitlab import Gitlab, GitlabAuthenticationError, GitlabGetError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -38,7 +41,7 @@ ICON_SAD = "mdi:emoticon-sad"
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_GITLAB_ID): cv.string,
         vol.Required(CONF_TOKEN): cv.string,
@@ -81,6 +84,7 @@ class GitLabSensor(SensorEntity):
         self._attr_name = name
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
         if self.native_value == "success":

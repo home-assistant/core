@@ -1,7 +1,7 @@
 """Support for Ambient Weather Station sensors."""
-from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,37 +9,41 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfIrradiance,
+    UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AmbientStation
-from .const import ATTR_LAST_DATA, DOMAIN, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
+from . import AmbientStationConfigEntry
+from .const import ATTR_LAST_DATA, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 from .entity import AmbientWeatherEntity
 
 TYPE_24HOURRAININ = "24hourrainin"
+TYPE_AQI_PM10_24H_AQIN = "aqi_pm10_24h_aqin"
+TYPE_AQI_PM10_AQIN = "aqi_pm10_aqin"
 TYPE_AQI_PM25 = "aqi_pm25"
 TYPE_AQI_PM25_24H = "aqi_pm25_24h"
+TYPE_AQI_PM25_24H_AQIN = "aqi_pm25_24h_aqin"
+TYPE_AQI_PM25_AQIN = "aqi_pm25_aqin"
 TYPE_AQI_PM25_IN = "aqi_pm25_in"
 TYPE_AQI_PM25_IN_24H = "aqi_pm25_in_24h"
 TYPE_BAROMABSIN = "baromabsin"
 TYPE_BAROMRELIN = "baromrelin"
 TYPE_CO2 = "co2"
+TYPE_CO2_IN_24H_AQIN = "co2_in_24h_aqin"
+TYPE_CO2_IN_AQIN = "co2_in_aqin"
 TYPE_DAILYRAININ = "dailyrainin"
 TYPE_DEWPOINT = "dewPoint"
 TYPE_EVENTRAININ = "eventrainin"
@@ -57,15 +61,23 @@ TYPE_HUMIDITY7 = "humidity7"
 TYPE_HUMIDITY8 = "humidity8"
 TYPE_HUMIDITY9 = "humidity9"
 TYPE_HUMIDITYIN = "humidityin"
+TYPE_LASTLIGHTNING = "lightning_time"
+TYPE_LASTLIGHTNING_DISTANCE = "lightning_distance"
 TYPE_LASTRAIN = "lastRain"
 TYPE_LIGHTNING_PER_DAY = "lightning_day"
 TYPE_LIGHTNING_PER_HOUR = "lightning_hour"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
+TYPE_PM_IN_HUMIDITY_AQIN = "pm_in_humidity_aqin"
+TYPE_PM_IN_TEMP_AQIN = "pm_in_temp_aqin"
+TYPE_PM10_IN_24H_AQIN = "pm10_in_24h_aqin"
+TYPE_PM10_IN_AQIN = "pm10_in_aqin"
 TYPE_PM25 = "pm25"
 TYPE_PM25_24H = "pm25_24h"
 TYPE_PM25_IN = "pm25_in"
 TYPE_PM25_IN_24H = "pm25_in_24h"
+TYPE_PM25_IN_24H_AQIN = "pm25_in_24h_aqin"
+TYPE_PM25_IN_AQIN = "pm25_in_aqin"
 TYPE_SOILHUM1 = "soilhum1"
 TYPE_SOILHUM10 = "soilhum10"
 TYPE_SOILHUM2 = "soilhum2"
@@ -76,8 +88,8 @@ TYPE_SOILHUM6 = "soilhum6"
 TYPE_SOILHUM7 = "soilhum7"
 TYPE_SOILHUM8 = "soilhum8"
 TYPE_SOILHUM9 = "soilhum9"
-TYPE_SOILTEMP1F = "soiltemp1f"
 TYPE_SOILTEMP10F = "soiltemp10f"
+TYPE_SOILTEMP1F = "soiltemp1f"
 TYPE_SOILTEMP2F = "soiltemp2f"
 TYPE_SOILTEMP3F = "soiltemp3f"
 TYPE_SOILTEMP4F = "soiltemp4f"
@@ -142,6 +154,86 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.AQI,
     ),
     SensorEntityDescription(
+        key=TYPE_PM25_IN_AQIN,
+        translation_key="pm25_indoor_aqin",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM25_IN_24H_AQIN,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        translation_key="pm25_indoor_24h_aqin",
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM10_IN_AQIN,
+        translation_key="pm10_indoor_aqin",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM10_IN_24H_AQIN,
+        translation_key="pm10_indoor_24h_aqin",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_CO2_IN_AQIN,
+        translation_key="co2_indoor_aqin",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_CO2_IN_24H_AQIN,
+        translation_key="co2_indoor_24h_aqin",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM_IN_TEMP_AQIN,
+        translation_key="pm_indoor_temp_aqin",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM_IN_HUMIDITY_AQIN,
+        translation_key="pm_indoor_humidity_aqin",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_AQIN,
+        translation_key="pm25_aqi_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_24H_AQIN,
+        translation_key="pm25_aqi_24h_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM10_AQIN,
+        translation_key="pm10_aqi_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM10_24H_AQIN,
+        translation_key="pm10_aqi_24h_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
         key=TYPE_BAROMABSIN,
         translation_key="absolute_pressure",
         native_unit_of_measurement=UnitOfPressure.INHG,
@@ -157,7 +249,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=TYPE_CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -198,105 +290,114 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
         translation_key="humidity_10",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY1,
         translation_key="humidity_1",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY2,
         translation_key="humidity_2",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY3,
         translation_key="humidity_3",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY4,
         translation_key="humidity_4",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY5,
         translation_key="humidity_5",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY6,
         translation_key="humidity_6",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY7,
         translation_key="humidity_7",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY8,
         translation_key="humidity_8",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY9,
         translation_key="humidity_9",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITYIN,
         translation_key="humidity_indoor",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_LASTRAIN,
         translation_key="last_rain",
-        icon="mdi:water",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_DAY,
         translation_key="lightning_strikes_per_day",
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_HOUR,
         translation_key="lightning_strikes_per_hour",
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LASTLIGHTNING,
+        translation_key="last_lightning_strike",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LASTLIGHTNING_DISTANCE,
+        translation_key="last_lightning_strike_distance",
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
@@ -315,95 +416,95 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_PM25_24H,
         translation_key="pm25_24h_average",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN,
         translation_key="pm25_indoor",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN_24H,
         translation_key="pm25_indoor_24h_average",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
     ),
     SensorEntityDescription(
         key=TYPE_PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM10,
         translation_key="soil_humidity_10",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM1,
         translation_key="soil_humidity_1",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM2,
         translation_key="soil_humidity_2",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM3,
         translation_key="soil_humidity_3",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM4,
         translation_key="soil_humidity_4",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM5,
         translation_key="soil_humidity_5",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM6,
         translation_key="soil_humidity_6",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM7,
         translation_key="soil_humidity_7",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM8,
         translation_key="soil_humidity_8",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM9,
         translation_key="soil_humidity_9",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -595,26 +696,27 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_WINDDIR,
         translation_key="wind_direction",
-        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG10M,
         translation_key="wind_direction_average_10m",
-        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG2M,
         translation_key="wind_direction_average_2m",
-        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTDIR,
         translation_key="wind_gust_direction",
-        icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTMPH,
@@ -652,10 +754,12 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AmbientStationConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][entry.entry_id]
+    ambient = entry.runtime_data
 
     async_add_entities(
         AmbientWeatherSensor(ambient, mac_address, station[ATTR_NAME], description)
@@ -668,28 +772,17 @@ async def async_setup_entry(
 class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     """Define an Ambient sensor."""
 
-    def __init__(
-        self,
-        ambient: AmbientStation,
-        mac_address: str,
-        station_name: str,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(ambient, mac_address, station_name, description)
-
-        if description.key == TYPE_SOLARRADIATION_LX:
-            # Since TYPE_SOLARRADIATION and TYPE_SOLARRADIATION_LX will have the same
-            # name in the UI, we influence the entity ID of TYPE_SOLARRADIATION_LX here
-            # to differentiate them:
-            self.entity_id = f"sensor.{station_name}_solar_rad_lx"
-
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
         key = self.entity_description.key
         raw = self._ambient.stations[self._mac_address][ATTR_LAST_DATA][key]
         if key == TYPE_LASTRAIN:
             self._attr_native_value = datetime.strptime(raw, "%Y-%m-%dT%H:%M:%S.%f%z")
+        elif key == TYPE_LASTLIGHTNING:
+            self._attr_native_value = datetime.fromtimestamp(
+                raw / 1000, tz=UTC
+            )  # Ambient uses millisecond epoch
         else:
             self._attr_native_value = raw

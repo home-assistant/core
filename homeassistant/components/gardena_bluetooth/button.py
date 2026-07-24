@@ -1,22 +1,21 @@
 """Support for button entities."""
-from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import override
 
 from gardena_bluetooth.const import Reset
 from gardena_bluetooth.parse import CharacteristicBool
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothDescriptorEntity
+from .coordinator import GardenaBluetoothConfigEntry
+from .entity import GardenaBluetoothDescriptorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class GardenaBluetoothButtonEntityDescription(ButtonEntityDescription):
     """Description of entity."""
 
@@ -30,7 +29,7 @@ class GardenaBluetoothButtonEntityDescription(ButtonEntityDescription):
 
 DESCRIPTIONS = (
     GardenaBluetoothButtonEntityDescription(
-        key=Reset.factory_reset.uuid,
+        key=Reset.factory_reset.unique_id,
         translation_key="factory_reset",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -40,14 +39,16 @@ DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GardenaBluetoothConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button based on a config entry."""
-    coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = [
         GardenaBluetoothButton(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
     async_add_entities(entities)
 
@@ -57,6 +58,7 @@ class GardenaBluetoothButton(GardenaBluetoothDescriptorEntity, ButtonEntity):
 
     entity_description: GardenaBluetoothButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Trigger button action."""
         await self.coordinator.write(self.entity_description.char, True)

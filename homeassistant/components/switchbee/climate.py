@@ -1,7 +1,6 @@
 """Support for SwitchBee climate."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
@@ -22,14 +21,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SwitchBeeCoordinator
+from .coordinator import SwitchBeeConfigEntry, SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
 
 FAN_SB_TO_HASS = {
@@ -73,10 +70,12 @@ SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SwitchBeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBee climate."""
-    coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         SwitchBeeClimateEntity(switchbee_device, coordinator)
         for switchbee_device in coordinator.data.values()
@@ -87,9 +86,6 @@ async def async_setup_entry(
 class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity):
     """Representation of a SwitchBee climate."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
     _attr_fan_modes = SUPPORTED_FAN_MODES
     _attr_target_temperature_step = 1
 
@@ -106,9 +102,17 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.temperature_unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
         self._update_attrs_from_coordinator()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attrs_from_coordinator()
@@ -126,6 +130,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         self._attr_current_temperature = coordinator_device.temperature
         self._attr_target_temperature = coordinator_device.target_temperature
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
@@ -136,10 +141,12 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
                 power=ApiStateCommand.ON, mode=HVAC_MODE_HASS_TO_SB[hvac_mode]
             )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._operate(target_temperature=kwargs[ATTR_TEMPERATURE])
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set AC fan mode."""
         await self._operate(fan=FAN_HASS_TO_SB[fan_mode])
@@ -175,7 +182,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
             await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self.name} state {state}, error: {str(exp)}"
+                f"Failed to set {self.name} state {state}, error: {exp!s}"
             ) from exp
 
         await self.coordinator.async_refresh()

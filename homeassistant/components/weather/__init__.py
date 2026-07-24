@@ -1,11 +1,8 @@
 """Weather component that handles meteorological data for your location."""
-from __future__ import annotations
 
 import abc
-import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
-from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
@@ -19,8 +16,10 @@ from typing import (
     TypeVar,
     cast,
     final,
+    override,
 )
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -41,21 +40,15 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import ABCCachedProperties, Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
-import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     TimestampDataUpdateCoordinator,
 )
-from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -78,14 +71,22 @@ from .const import (  # noqa: F401
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
+    DATA_COMPONENT,
     DOMAIN,
+    INTENT_GET_WEATHER,
     UNIT_CONVERSIONS,
     VALID_UNITS,
     WeatherEntityFeature,
+    WeatherEntityStateAttribute,
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 ATTR_CONDITION_CLASS = "condition_class"
 ATTR_CONDITION_CLEAR_NIGHT = "clear-night"
@@ -103,7 +104,6 @@ ATTR_CONDITION_SNOWY_RAINY = "snowy-rainy"
 ATTR_CONDITION_SUNNY = "sunny"
 ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
-ATTR_FORECAST = "forecast"
 ATTR_FORECAST_IS_DAYTIME: Final = "is_daytime"
 ATTR_FORECAST_CONDITION: Final = "condition"
 ATTR_FORECAST_HUMIDITY: Final = "humidity"
@@ -129,30 +129,30 @@ ATTR_FORECAST_DEW_POINT: Final = "dew_point"
 ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
 ATTR_FORECAST_UV_INDEX: Final = "uv_index"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-SCAN_INTERVAL = timedelta(seconds=30)
-
 ROUNDING_PRECISION = 2
 
-SERVICE_GET_FORECAST: Final = "get_forecast"
+SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
-    "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+    "_ObservationUpdateCoordinatorT",
+    bound=DataUpdateCoordinator[Any],
+    default=DataUpdateCoordinator[dict[str, Any]],
 )
-
-# Note:
-# Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
-# forecast cooordinators optional, bound=TimestampDataUpdateCoordinator[Any] | None
 
 _DailyForecastUpdateCoordinatorT = TypeVar(
-    "_DailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_DailyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=TimestampDataUpdateCoordinator[None],
 )
 _HourlyForecastUpdateCoordinatorT = TypeVar(
-    "_HourlyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_HourlyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=_DailyForecastUpdateCoordinatorT,
 )
 _TwiceDailyForecastUpdateCoordinatorT = TypeVar(
-    "_TwiceDailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+    "_TwiceDailyForecastUpdateCoordinatorT",
+    bound=TimestampDataUpdateCoordinator[Any],
+    default=_DailyForecastUpdateCoordinatorT,
 )
 
 # mypy: disallow-any-generics
@@ -207,13 +207,13 @@ class Forecast(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the weather component."""
-    component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-    component.async_register_legacy_entity_service(
-        SERVICE_GET_FORECAST,
+    component.async_register_entity_service(
+        SERVICE_GET_FORECASTS,
         {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
-        async_get_forecast_service,
+        async_get_forecasts_service,
         required_features=[
             WeatherEntityFeature.FORECAST_DAILY,
             WeatherEntityFeature.FORECAST_HOURLY,
@@ -228,25 +228,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-@dataclass
-class WeatherEntityDescription(EntityDescription):
+class WeatherEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes weather entities."""
 
 
-class PostInitMeta(abc.ABCMeta):
+class PostInitMeta(ABCCachedProperties):
     """Meta class which calls __post_init__ after __new__ and __init__."""
 
-    def __call__(cls, *args: Any, **kwargs: Any) -> Any:
+    @override
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:  # noqa: N805  ruff bug, ruff does not understand this is a metaclass
         """Create an instance."""
         instance: PostInit = super().__call__(*args, **kwargs)
         instance.__post_init__(*args, **kwargs)
@@ -261,16 +259,33 @@ class PostInit(metaclass=PostInitMeta):
         """Finish initializing."""
 
 
-class WeatherEntity(Entity, PostInit):
-    """ABC for weather data."""
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "native_apparent_temperature",
+    "native_temperature",
+    "native_temperature_unit",
+    "native_dew_point",
+    "native_pressure",
+    "native_pressure_unit",
+    "humidity",
+    "native_wind_gust_speed",
+    "native_wind_speed",
+    "native_wind_speed_unit",
+    "wind_bearing",
+    "ozone",
+    "cloud_coverage",
+    "uv_index",
+    "native_visibility",
+    "native_visibility_unit",
+    "native_precipitation_unit",
+    "condition",
+}
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_FORECAST})
+
+class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
+    """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
     _attr_condition: str | None = None
-    # _attr_forecast is deprecated, implement async_forecast_daily,
-    # async_forecast_hourly or async_forecast_twice daily instead
-    _attr_forecast: list[Forecast] | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_cloud_coverage: int | None = None
@@ -296,8 +311,6 @@ class WeatherEntity(Entity, PostInit):
         Literal["daily", "hourly", "twice_daily"],
         list[Callable[[list[JsonValueType] | None], None]],
     ]
-    __weather_reported_legacy_forecast = False
-    __weather_legacy_forecast = False
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -305,81 +318,12 @@ class WeatherEntity(Entity, PostInit):
     _weather_option_precipitation_unit: str | None = None
     _weather_option_wind_speed_unit: str | None = None
 
+    @override
     def __post_init__(self, *args: Any, **kwargs: Any) -> None:
         """Finish initializing."""
         self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
 
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Post initialisation processing."""
-        super().__init_subclass__(**kwargs)
-        if (
-            "forecast" in cls.__dict__
-            and cls.async_forecast_daily is WeatherEntity.async_forecast_daily
-            and cls.async_forecast_hourly is WeatherEntity.async_forecast_hourly
-            and cls.async_forecast_twice_daily
-            is WeatherEntity.async_forecast_twice_daily
-        ):
-            cls.__weather_legacy_forecast = True
-
-    @callback
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__weather_legacy_forecast:
-            self._report_legacy_forecast(hass)
-
-    def _report_legacy_forecast(self, hass: HomeAssistant) -> None:
-        """Log warning and create an issue if the entity imlpements legacy forecast."""
-        if "custom_components" not in type(self).__module__:
-            # Do not report core integrations as they are already fixed or PR is open.
-            return
-
-        report_issue = async_suggest_report_issue(
-            hass,
-            integration_domain=self.platform.platform_name,
-            module=type(self).__module__,
-        )
-        _LOGGER.warning(
-            (
-                "%s::%s implements the `forecast` property or sets "
-                "`self._attr_forecast` in a subclass of WeatherEntity, this is "
-                "deprecated and will be unsupported from Home Assistant 2024.3."
-                " Please %s"
-            ),
-            self.platform.platform_name,
-            self.__class__.__name__,
-            report_issue,
-        )
-
-        translation_placeholders = {"platform": self.platform.platform_name}
-        translation_key = "deprecated_weather_forecast_no_url"
-        issue_tracker = async_get_issue_tracker(
-            hass,
-            integration_domain=self.platform.platform_name,
-            module=type(self).__module__,
-        )
-        if issue_tracker:
-            translation_placeholders["issue_tracker"] = issue_tracker
-            translation_key = "deprecated_weather_forecast_url"
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_weather_forecast_{self.platform.platform_name}",
-            breaks_in_ha_version="2024.3.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=self.platform.platform_name,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=translation_key,
-            translation_placeholders=translation_placeholders,
-        )
-        self.__weather_reported_legacy_forecast = True
-
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -387,22 +331,22 @@ class WeatherEntity(Entity, PostInit):
             return
         self.async_registry_entry_updated()
 
-    @property
+    @cached_property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature in native units."""
-        return self._attr_native_temperature
+        return self._attr_native_apparent_temperature
 
-    @property
+    @cached_property
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
         return self._attr_native_temperature
 
-    @property
+    @cached_property
     def native_temperature_unit(self) -> str | None:
         """Return the native unit of measurement for temperature."""
         return self._attr_native_temperature_unit
 
-    @property
+    @cached_property
     def native_dew_point(self) -> float | None:
         """Return the dew point temperature in native units."""
         return self._attr_native_dew_point
@@ -430,12 +374,12 @@ class WeatherEntity(Entity, PostInit):
 
         return self._default_temperature_unit
 
-    @property
+    @cached_property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
         return self._attr_native_pressure
 
-    @property
+    @cached_property
     def native_pressure_unit(self) -> str | None:
         """Return the native unit of measurement for pressure."""
         return self._attr_native_pressure_unit
@@ -465,22 +409,22 @@ class WeatherEntity(Entity, PostInit):
 
         return self._default_pressure_unit
 
-    @property
+    @cached_property
     def humidity(self) -> float | None:
         """Return the humidity in native units."""
         return self._attr_humidity
 
-    @property
+    @cached_property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
         return self._attr_native_wind_gust_speed
 
-    @property
+    @cached_property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
         return self._attr_native_wind_speed
 
-    @property
+    @cached_property
     def native_wind_speed_unit(self) -> str | None:
         """Return the native unit of measurement for wind speed."""
         return self._attr_native_wind_speed_unit
@@ -510,32 +454,32 @@ class WeatherEntity(Entity, PostInit):
 
         return self._default_wind_speed_unit
 
-    @property
+    @cached_property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return self._attr_wind_bearing
 
-    @property
+    @cached_property
     def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._attr_ozone
 
-    @property
+    @cached_property
     def cloud_coverage(self) -> float | None:
         """Return the Cloud coverage in %."""
         return self._attr_cloud_coverage
 
-    @property
+    @cached_property
     def uv_index(self) -> float | None:
         """Return the UV index."""
         return self._attr_uv_index
 
-    @property
+    @cached_property
     def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
         return self._attr_native_visibility
 
-    @property
+    @cached_property
     def native_visibility_unit(self) -> str | None:
         """Return the native unit of measurement for visibility."""
         return self._attr_native_visibility_unit
@@ -563,23 +507,6 @@ class WeatherEntity(Entity, PostInit):
 
         return self._default_visibility_unit
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast in native units.
-
-        Should not be overridden by integrations. Kept for backwards compatibility.
-        """
-        if (
-            self._attr_forecast is not None
-            and type(self).async_forecast_daily is WeatherEntity.async_forecast_daily
-            and type(self).async_forecast_hourly is WeatherEntity.async_forecast_hourly
-            and type(self).async_forecast_twice_daily
-            is WeatherEntity.async_forecast_twice_daily
-            and not self.__weather_reported_legacy_forecast
-        ):
-            self._report_legacy_forecast(self.hass)
-        return self._attr_forecast
-
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         raise NotImplementedError
@@ -592,7 +519,7 @@ class WeatherEntity(Entity, PostInit):
         """Return the hourly forecast in native units."""
         raise NotImplementedError
 
-    @property
+    @cached_property
     def native_precipitation_unit(self) -> str | None:
         """Return the native unit of measurement for accumulated precipitation."""
         return self._attr_native_precipitation_unit
@@ -633,7 +560,8 @@ class WeatherEntity(Entity, PostInit):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:  # noqa: C901
+    @override
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted.
 
         Attributes are configured from native units to user-configured units.
@@ -650,11 +578,11 @@ class WeatherEntity(Entity, PostInit):
                 value_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                     temperature_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_TEMPERATURE] = round_temperature(
+                data[WeatherEntityStateAttribute.TEMPERATURE] = round_temperature(
                     value_temp, precision
                 )
-            except (TypeError, ValueError):
-                data[ATTR_WEATHER_TEMPERATURE] = temperature
+            except TypeError, ValueError:
+                data[WeatherEntityStateAttribute.TEMPERATURE] = temperature
 
         if (apparent_temperature := self.native_apparent_temperature) is not None:
             from_unit = self.native_temperature_unit or self._default_temperature_unit
@@ -664,11 +592,13 @@ class WeatherEntity(Entity, PostInit):
                 value_apparent_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                     apparent_temperature_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = round_temperature(
-                    value_apparent_temp, precision
+                data[WeatherEntityStateAttribute.APPARENT_TEMPERATURE] = (
+                    round_temperature(value_apparent_temp, precision)
                 )
-            except (TypeError, ValueError):
-                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = apparent_temperature
+            except TypeError, ValueError:
+                data[WeatherEntityStateAttribute.APPARENT_TEMPERATURE] = (
+                    apparent_temperature
+                )
 
         if (dew_point := self.native_dew_point) is not None:
             from_unit = self.native_temperature_unit or self._default_temperature_unit
@@ -678,25 +608,25 @@ class WeatherEntity(Entity, PostInit):
                 value_dew_point = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                     dew_point_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_DEW_POINT] = round_temperature(
+                data[WeatherEntityStateAttribute.DEW_POINT] = round_temperature(
                     value_dew_point, precision
                 )
-            except (TypeError, ValueError):
-                data[ATTR_WEATHER_DEW_POINT] = dew_point
+            except TypeError, ValueError:
+                data[WeatherEntityStateAttribute.DEW_POINT] = dew_point
 
-        data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
+        data[WeatherEntityStateAttribute.TEMPERATURE_UNIT] = self._temperature_unit
 
         if (humidity := self.humidity) is not None:
-            data[ATTR_WEATHER_HUMIDITY] = round(humidity)
+            data[WeatherEntityStateAttribute.HUMIDITY] = round(humidity)
 
         if (ozone := self.ozone) is not None:
-            data[ATTR_WEATHER_OZONE] = ozone
+            data[WeatherEntityStateAttribute.OZONE] = ozone
 
         if (cloud_coverage := self.cloud_coverage) is not None:
-            data[ATTR_WEATHER_CLOUD_COVERAGE] = cloud_coverage
+            data[WeatherEntityStateAttribute.CLOUD_COVERAGE] = cloud_coverage
 
         if (uv_index := self.uv_index) is not None:
-            data[ATTR_WEATHER_UV_INDEX] = uv_index
+            data[WeatherEntityStateAttribute.UV_INDEX] = uv_index
 
         if (pressure := self.native_pressure) is not None:
             from_unit = self.native_pressure_unit or self._default_pressure_unit
@@ -706,14 +636,16 @@ class WeatherEntity(Entity, PostInit):
                 value_pressure = UNIT_CONVERSIONS[ATTR_WEATHER_PRESSURE_UNIT](
                     pressure_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_PRESSURE] = round(value_pressure, ROUNDING_PRECISION)
-            except (TypeError, ValueError):
-                data[ATTR_WEATHER_PRESSURE] = pressure
+                data[WeatherEntityStateAttribute.PRESSURE] = round(
+                    value_pressure, ROUNDING_PRECISION
+                )
+            except TypeError, ValueError:
+                data[WeatherEntityStateAttribute.PRESSURE] = pressure
 
-        data[ATTR_WEATHER_PRESSURE_UNIT] = self._pressure_unit
+        data[WeatherEntityStateAttribute.PRESSURE_UNIT] = self._pressure_unit
 
         if (wind_bearing := self.wind_bearing) is not None:
-            data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
+            data[WeatherEntityStateAttribute.WIND_BEARING] = wind_bearing
 
         if (wind_gust_speed := self.native_wind_gust_speed) is not None:
             from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
@@ -723,11 +655,11 @@ class WeatherEntity(Entity, PostInit):
                 value_wind_gust_speed = UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
                     wind_gust_speed_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_WIND_GUST_SPEED] = round(
+                data[WeatherEntityStateAttribute.WIND_GUST_SPEED] = round(
                     value_wind_gust_speed, ROUNDING_PRECISION
                 )
-            except (TypeError, ValueError):
-                data[ATTR_WEATHER_WIND_GUST_SPEED] = wind_gust_speed
+            except TypeError, ValueError:
+                data[WeatherEntityStateAttribute.WIND_GUST_SPEED] = wind_gust_speed
 
         if (wind_speed := self.native_wind_speed) is not None:
             from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
@@ -737,13 +669,13 @@ class WeatherEntity(Entity, PostInit):
                 value_wind_speed = UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
                     wind_speed_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_WIND_SPEED] = round(
+                data[WeatherEntityStateAttribute.WIND_SPEED] = round(
                     value_wind_speed, ROUNDING_PRECISION
                 )
-            except (TypeError, ValueError):
-                data[ATTR_WEATHER_WIND_SPEED] = wind_speed
+            except TypeError, ValueError:
+                data[WeatherEntityStateAttribute.WIND_SPEED] = wind_speed
 
-        data[ATTR_WEATHER_WIND_SPEED_UNIT] = self._wind_speed_unit
+        data[WeatherEntityStateAttribute.WIND_SPEED_UNIT] = self._wind_speed_unit
 
         if (visibility := self.native_visibility) is not None:
             from_unit = self.native_visibility_unit or self._default_visibility_unit
@@ -753,17 +685,14 @@ class WeatherEntity(Entity, PostInit):
                 value_visibility = UNIT_CONVERSIONS[ATTR_WEATHER_VISIBILITY_UNIT](
                     visibility_f, from_unit, to_unit
                 )
-                data[ATTR_WEATHER_VISIBILITY] = round(
+                data[WeatherEntityStateAttribute.VISIBILITY] = round(
                     value_visibility, ROUNDING_PRECISION
                 )
-            except (TypeError, ValueError):
-                data[ATTR_WEATHER_VISIBILITY] = visibility
+            except TypeError, ValueError:
+                data[WeatherEntityStateAttribute.VISIBILITY] = visibility
 
-        data[ATTR_WEATHER_VISIBILITY_UNIT] = self._visibility_unit
-        data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
-
-        if self.forecast:
-            data[ATTR_FORECAST] = self._convert_forecast(self.forecast)
+        data[WeatherEntityStateAttribute.VISIBILITY_UNIT] = self._visibility_unit
+        data[WeatherEntityStateAttribute.PRECIPITATION_UNIT] = self._precipitation_unit
 
         return data
 
@@ -955,16 +884,18 @@ class WeatherEntity(Entity, PostInit):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the current state."""
         return self.condition
 
-    @property
+    @cached_property
     def condition(self) -> str | None:
         """Return the current condition."""
         return self._attr_condition
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         assert self.registry_entry
@@ -1011,7 +942,6 @@ class WeatherEntity(Entity, PostInit):
         forecast_type: Literal["daily", "hourly", "twice_daily"],
     ) -> None:
         """Start subscription to forecast_type."""
-        return None
 
     @callback
     def _async_subscription_ended(
@@ -1019,7 +949,6 @@ class WeatherEntity(Entity, PostInit):
         forecast_type: Literal["daily", "hourly", "twice_daily"],
     ) -> None:
         """End subscription to forecast_type."""
-        return None
 
     @final
     @callback
@@ -1069,7 +998,8 @@ class WeatherEntity(Entity, PostInit):
                 for fc_twice_daily in native_forecast_list:
                     if fc_twice_daily.get(ATTR_FORECAST_IS_DAYTIME) is None:
                         raise ValueError(
-                            "is_daytime mandatory attribute for forecast_twice_daily is missing"
+                            "is_daytime mandatory attribute"
+                            " for forecast_twice_daily is missing"
                         )
 
             converted_forecast_list = self._convert_forecast(native_forecast_list)
@@ -1084,7 +1014,7 @@ def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
     )
 
 
-async def async_get_forecast_service(
+async def async_get_forecasts_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast."""
@@ -1105,8 +1035,7 @@ async def async_get_forecast_service(
     if native_forecast_list is None:
         converted_forecast_list = []
     else:
-        # pylint: disable-next=protected-access
-        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)  # noqa: SLF001
     return {
         "forecast": converted_forecast_list,
     }
@@ -1130,8 +1059,8 @@ class CoordinatorWeatherEntity(
         *,
         context: Any = None,
         daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
-        hourly_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
-        twice_daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
+        hourly_coordinator: _HourlyForecastUpdateCoordinatorT | None = None,
+        twice_daily_coordinator: _TwiceDailyForecastUpdateCoordinatorT | None = None,
         daily_forecast_valid: timedelta | None = None,
         hourly_forecast_valid: timedelta | None = None,
         twice_daily_forecast_valid: timedelta | None = None,
@@ -1154,6 +1083,7 @@ class CoordinatorWeatherEntity(
             "twice_daily": None,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -1170,6 +1100,7 @@ class CoordinatorWeatherEntity(
             self.unsub_forecast[forecast_type] = None
 
     @callback
+    @override
     def _async_subscription_started(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
@@ -1208,6 +1139,7 @@ class CoordinatorWeatherEntity(
         )
 
     @callback
+    @override
     def _async_subscription_ended(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
@@ -1268,16 +1200,19 @@ class CoordinatorWeatherEntity(
         )
 
     @final
+    @override
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return await self._async_forecast("daily")
 
     @final
+    @override
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return await self._async_forecast("hourly")
 
     @final
+    @override
     async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         return await self._async_forecast("twice_daily")
@@ -1285,19 +1220,12 @@ class CoordinatorWeatherEntity(
 
 class SingleCoordinatorWeatherEntity(
     CoordinatorWeatherEntity[
-        _ObservationUpdateCoordinatorT,
-        TimestampDataUpdateCoordinator[None],
-        TimestampDataUpdateCoordinator[None],
-        TimestampDataUpdateCoordinator[None],
+        _ObservationUpdateCoordinatorT, TimestampDataUpdateCoordinator[None]
     ],
 ):
     """A class for weather entities using a single DataUpdateCoordinators.
 
-    This class is added as a convenience because:
-    - Deriving from CoordinatorWeatherEntity requires specifying all type parameters
-    until we upgrade to Python 3.12 which supports defaults
-    - Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
-    forecast cooordinator type vars optional
+    This class is added as a convenience.
     """
 
     def __init__(
@@ -1309,10 +1237,13 @@ class SingleCoordinatorWeatherEntity(
         super().__init__(coordinator, context=context)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
-        assert self.coordinator.config_entry
-        self.coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(None)
+        if entry := self.coordinator.config_entry:
+            entry.async_create_task(self.hass, self.async_update_listeners(None))
+            return
+        self.hass.async_create_task(
+            self.async_update_listeners(None), f"{self.coordinator.name}"
         )

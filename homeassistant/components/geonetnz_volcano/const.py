@@ -1,11 +1,10 @@
 """Define constants for the GeoNet NZ Volcano integration."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform
 
 DOMAIN = "geonetnz_volcano"
-
-FEED = "feed"
 
 ATTR_ACTIVITY = "activity"
 ATTR_DISTANCE = "distance"

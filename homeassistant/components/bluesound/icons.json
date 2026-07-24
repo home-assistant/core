@@ -1,0 +1,10 @@
+{
+  "services": {
+    "join": {
+      "service": "mdi:link-variant"
+    },
+    "unjoin": {
+      "service": "mdi:link-variant-off"
+    }
+  }
+}

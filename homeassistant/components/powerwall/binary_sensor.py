@@ -1,18 +1,18 @@
 """Support for powerwall binary sensors."""
 
+from typing import TYPE_CHECKING, override
+
 from tesla_powerwall import GridStatus, MeterType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import PowerwallConfigEntry
 from .entity import PowerWallEntity
-from .models import PowerwallRuntimeData
 
 CONNECTED_GRID_STATUSES = {
     GridStatus.TRANSITION_TO_GRID,
@@ -22,22 +22,29 @@ CONNECTED_GRID_STATUSES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PowerwallConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the powerwall sensors."""
-    powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
+    powerwall_data = entry.runtime_data
+    base_info = powerwall_data["base_info"]
+    if base_info.restricted:
+        # Running and Connected sensors require /api/sitemaster which 404s on PW3.
+        sensor_classes: tuple[type[PowerWallEntity], ...] = (
+            PowerWallGridServicesActiveSensor,
+            PowerWallGridStatusSensor,
+            PowerWallChargingStatusSensor,
+        )
+    else:
+        sensor_classes = (
+            PowerWallRunningSensor,
+            PowerWallGridServicesActiveSensor,
+            PowerWallGridStatusSensor,
+            PowerWallConnectedSensor,
+            PowerWallChargingStatusSensor,
+        )
     async_add_entities(
-        [
-            sensor_class(powerwall_data)
-            for sensor_class in (
-                PowerWallRunningSensor,
-                PowerWallGridServicesActiveSensor,
-                PowerWallGridStatusSensor,
-                PowerWallConnectedSensor,
-                PowerWallChargingStatusSensor,
-            )
-        ]
+        [sensor_class(powerwall_data) for sensor_class in sensor_classes]
     )
 
 
@@ -48,14 +55,19 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Uniqueid."""
         return f"{self.base_unique_id}_running"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get the powerwall running state."""
-        return self.data.site_master.is_running
+        site_master = self.data.site_master
+        if TYPE_CHECKING:
+            assert site_master is not None
+        return site_master.is_running
 
 
 class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
@@ -65,14 +77,19 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Uniqueid."""
         return f"{self.base_unique_id}_connected_to_tesla"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get the powerwall connected to tesla state."""
-        return self.data.site_master.is_connected_to_tesla
+        site_master = self.data.site_master
+        if TYPE_CHECKING:
+            assert site_master is not None
+        return site_master.is_connected_to_tesla
 
 
 class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
@@ -82,11 +99,13 @@ class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Uniqueid."""
         return f"{self.base_unique_id}_grid_services_active"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Grid services is active."""
         return self.data.grid_services_active
@@ -99,11 +118,13 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Uniqueid."""
         return f"{self.base_unique_id}_grid_status"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Grid is online."""
         return self.data.grid_status in CONNECTED_GRID_STATUSES
@@ -115,6 +136,7 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
+    @override
     def available(self) -> bool:
         """Powerwall is available."""
         # Return False if no battery is installed
@@ -124,12 +146,18 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Uniqueid."""
-        return f"{self.base_unique_id}_powerwall_charging"
+        return f"{self.base_unique_id}_powerwall_charging"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
+    @override
     def is_on(self) -> bool:
         """Powerwall is charging."""
+        meter = self.data.meters.get_meter(MeterType.BATTERY)
+        # Meter cannot be None because of the available property
+        if TYPE_CHECKING:
+            assert meter is not None
         # is_sending_to returns true for values greater than 100 watts
-        return self.data.meters.get_meter(MeterType.BATTERY).is_sending_to()
+        return meter.is_sending_to()

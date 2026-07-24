@@ -1,5 +1,4 @@
 """The lifx integration discovery."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection, Iterable

@@ -1,40 +1,28 @@
-"""Test AccuWeather diagnostics."""
-from unittest.mock import MagicMock, patch
+"""Tests for the Aladdin Connect diagnostics."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
-from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
+
+from . import init_integration
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-YAML_CONFIG = {"username": "test-user", "password": "test-password"}
 
-
-async def test_entry_diagnostics(
+async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    mock_aladdinconnect_api: MagicMock,
 ) -> None:
-    """Test config entry diagnostics."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
+    """Test diagnostics."""
+    await init_integration(hass, mock_config_entry)
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
     )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-
-    assert result == snapshot
+    assert result == snapshot(
+        exclude=props("created_at", "modified_at", "entry_id", "expires_at")
+    )

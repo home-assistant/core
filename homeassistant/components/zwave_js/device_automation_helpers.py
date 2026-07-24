@@ -1,14 +1,12 @@
 """Provides helpers for Z-Wave JS device automations."""
-from __future__ import annotations
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 
 NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
 
@@ -46,7 +44,7 @@ def async_bypass_dynamic_config_validation(hass: HomeAssistant, device_id: str) 
             config_entry
             for config_entry in hass.config_entries.async_entries(DOMAIN)
             if config_entry.entry_id in device.config_entries
-            and config_entry.state == ConfigEntryState.LOADED
+            and config_entry.state is ConfigEntryState.LOADED
         ),
         None,
     )
@@ -54,5 +52,5 @@ def async_bypass_dynamic_config_validation(hass: HomeAssistant, device_id: str) 
         return True
 
     # The driver may not be ready when the config entry is loaded.
-    client: ZwaveClient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    client = entry.runtime_data.client
     return client.driver is None

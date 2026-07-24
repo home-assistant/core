@@ -1,32 +1,25 @@
 """Select entities for VoIP integration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-from homeassistant.components.assist_pipeline.select import (
+from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import VoipConfigEntry
 from .const import DOMAIN
 from .devices import VoIPDevice
 from .entity import VoIPEntity
 
-if TYPE_CHECKING:
-    from . import DomainData
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: VoipConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP switch entities."""
-    domain_data: DomainData = hass.data[DOMAIN]
+    domain_data = config_entry.runtime_data.domain_data
 
     @callback
     def async_add_device(device: VoIPDevice) -> None:
@@ -51,7 +44,7 @@ class VoipPipelineSelect(VoIPEntity, AssistPipelineSelect):
     def __init__(self, hass: HomeAssistant, device: VoIPDevice) -> None:
         """Initialize a pipeline selector."""
         VoIPEntity.__init__(self, device)
-        AssistPipelineSelect.__init__(self, hass, device.voip_id)
+        AssistPipelineSelect.__init__(self, hass, DOMAIN, device.voip_id)
 
 
 class VoipVadSensitivitySelect(VoIPEntity, VadSensitivitySelect):

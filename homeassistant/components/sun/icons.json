@@ -1,0 +1,91 @@
+{
+  "conditions": {
+    "elevation": {
+      "condition": "mdi:sun-angle"
+    },
+    "is_ascending": {
+      "condition": "mdi:weather-sunset-up"
+    },
+    "is_descending": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_evening_twilight": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_morning_twilight": {
+      "condition": "mdi:weather-sunset-up"
+    },
+    "is_night": {
+      "condition": "mdi:weather-night"
+    },
+    "is_set": {
+      "condition": "mdi:weather-sunny-off"
+    },
+    "is_up": {
+      "condition": "mdi:weather-sunny"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "solar_rising": {
+        "default": "mdi:weather-sunny-off",
+        "state": {
+          "off": "mdi:weather-sunset-down",
+          "on": "mdi:weather-sunset-up"
+        }
+      }
+    },
+    "sensor": {
+      "next_dawn": {
+        "default": "mdi:sun-clock"
+      },
+      "next_dusk": {
+        "default": "mdi:sun-clock"
+      },
+      "next_midnight": {
+        "default": "mdi:sun-clock"
+      },
+      "next_noon": {
+        "default": "mdi:sun-clock"
+      },
+      "next_rising": {
+        "default": "mdi:sun-clock"
+      },
+      "next_setting": {
+        "default": "mdi:sun-clock"
+      },
+      "solar_azimuth": {
+        "default": "mdi:sun-angle"
+      },
+      "solar_elevation": {
+        "default": "mdi:theme-light-dark"
+      }
+    }
+  },
+  "triggers": {
+    "dawn": {
+      "trigger": "mdi:weather-sunset-up"
+    },
+    "dusk": {
+      "trigger": "mdi:weather-sunset-down"
+    },
+    "elevation_changed": {
+      "trigger": "mdi:sun-angle"
+    },
+    "elevation_crossed_threshold": {
+      "trigger": "mdi:sun-angle"
+    },
+    "solar_midnight": {
+      "trigger": "mdi:weather-night"
+    },
+    "solar_noon": {
+      "trigger": "mdi:weather-sunny"
+    },
+    "sunrise": {
+      "trigger": "mdi:weather-sunset-up"
+    },
+    "sunset": {
+      "trigger": "mdi:weather-sunset-down"
+    }
+  }
+}

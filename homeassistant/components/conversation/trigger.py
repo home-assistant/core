@@ -1,28 +1,64 @@
 """Offer sentence based automation rules."""
-from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+import re
 from typing import Any
 
-from hassil.recognize import PUNCTUATION, RecognizeResult
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
+from hassil.recognize import RecognizeResult
+from hassil.util import (
+    PUNCTUATION_END,
+    PUNCTUATION_END_WORD,
+    PUNCTUATION_START,
+    PUNCTUATION_START_WORD,
+)
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
-from . import HOME_ASSISTANT_AGENT, _get_agent_manager
+from .agent_manager import get_agent_manager
 from .const import DOMAIN
-from .default_agent import DefaultAgent
+from .models import ConversationInput
+
+TRIGGER_CALLBACK_TYPE = Callable[
+    [ConversationInput, RecognizeResult], Awaitable[str | None]
+]
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
-        if PUNCTUATION.search(sentence):
+        # Exclude {list_references} which may contain punctuation characters.
+        sentence = _remove_list_references(sentence)
+        if (
+            PUNCTUATION_START.search(sentence)
+            or PUNCTUATION_END.search(sentence)
+            or PUNCTUATION_START_WORD.search(sentence)
+            or PUNCTUATION_END_WORD.search(sentence)
+        ):
             raise vol.Invalid("sentence should not contain punctuation")
 
+    return value
+
+
+def _remove_list_references(sentence: str) -> str:
+    """Remove {list_references} from a sentence for linting."""
+    return re.sub(r"(?<!\\)\{[^{}]*\}", "", sentence)
+
+
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
     return value
 
 
@@ -42,7 +78,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_COMMAND): vol.All(
-            cv.ensure_list, [cv.string], has_one_non_empty_item, has_no_punctuation
+            cv.ensure_list,
+            [cv.string],
+            has_one_non_empty_item,
+            has_no_punctuation,
+            is_valid_sentence,
         ),
     }
 )
@@ -58,10 +98,13 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     sentences = config.get(CONF_COMMAND, [])
 
+    ent_reg = er.async_get(hass)
+
     job = HassJob(action)
 
-    @callback
-    async def call_action(sentence: str, result: RecognizeResult) -> str | None:
+    async def call_action(
+        user_input: ConversationInput, result: RecognizeResult
+    ) -> str | None:
         """Call action with right context."""
 
         # Add slot values as extra trigger data
@@ -69,21 +112,34 @@ async def async_attach_trigger(
             entity_name: {
                 "name": entity_name,
                 "text": entity.text.strip(),  # remove whitespace
-                "value": entity.value.strip()
-                if isinstance(entity.value, str)
-                else entity.value,
+                "value": (
+                    entity.value.strip()
+                    if isinstance(entity.value, str)
+                    else entity.value
+                ),
             }
             for entity_name, entity in result.entities.items()
         }
 
+        satellite_id = user_input.satellite_id
+        device_id = user_input.device_id
+        if (
+            satellite_id is not None
+            and (satellite_entry := ent_reg.async_get(satellite_id)) is not None
+        ):
+            device_id = satellite_entry.device_id
+
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
-            "sentence": sentence,
+            "sentence": user_input.text,
             "details": details,
             "slots": {  # direct access to values
                 entity_name: entity["value"] for entity_name, entity in details.items()
             },
+            "device_id": device_id,
+            "satellite_id": satellite_id,
+            "user_input": user_input.as_dict(),
         }
 
         # Wait for the automation to complete
@@ -91,11 +147,19 @@ async def async_attach_trigger(
             job,
             {"trigger": trigger_input},
         ):
-            await future
+            automation_result = await future
+            if isinstance(
+                automation_result, ScriptRunResult
+            ) and automation_result.conversation_response not in (None, UNDEFINED):
+                return automation_result.conversation_response
 
-        return "Done"
+        # It's important to return None here instead of a string.
+        #
+        # When editing in the UI, a copy of this trigger is registered.
+        # If we return a string from here, there is a race condition between the
+        # two trigger copies for who will provide a response.
+        return None
 
-    default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
-    assert isinstance(default_agent, DefaultAgent)
-
-    return default_agent.register_trigger(sentences, call_action)
+    return get_agent_manager(hass).register_trigger(
+        sentences=sentences, trigger_callback=call_action
+    )

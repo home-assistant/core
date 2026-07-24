@@ -215,31 +215,31 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
     ]
 }
 
-HM_ATTRIBUTE_SUPPORT = {
-    "LOWBAT": ["battery", {0: "High", 1: "Low"}],
-    "LOW_BAT": ["battery", {0: "High", 1: "Low"}],
-    "ERROR": ["error", {0: "No"}],
-    "ERROR_SABOTAGE": ["sabotage", {0: "No", 1: "Yes"}],
-    "SABOTAGE": ["sabotage", {0: "No", 1: "Yes"}],
-    "RSSI_PEER": ["rssi_peer", {}],
-    "RSSI_DEVICE": ["rssi_device", {}],
-    "VALVE_STATE": ["valve", {}],
-    "LEVEL": ["level", {}],
-    "BATTERY_STATE": ["battery", {}],
-    "CONTROL_MODE": [
+HM_ATTRIBUTE_SUPPORT: dict[str, tuple[str, dict[int, str]]] = {
+    "LOWBAT": ("battery", {0: "High", 1: "Low"}),
+    "LOW_BAT": ("battery", {0: "High", 1: "Low"}),
+    "ERROR": ("error", {0: "No"}),
+    "ERROR_SABOTAGE": ("sabotage", {0: "No", 1: "Yes"}),
+    "SABOTAGE": ("sabotage", {0: "No", 1: "Yes"}),
+    "RSSI_PEER": ("rssi_peer", {}),
+    "RSSI_DEVICE": ("rssi_device", {}),
+    "VALVE_STATE": ("valve", {}),
+    "LEVEL": ("level", {}),
+    "BATTERY_STATE": ("battery", {}),
+    "CONTROL_MODE": (
         "mode",
         {0: "Auto", 1: "Manual", 2: "Away", 3: "Boost", 4: "Comfort", 5: "Lowering"},
-    ],
-    "POWER": ["power", {}],
-    "CURRENT": ["current", {}],
-    "VOLTAGE": ["voltage", {}],
-    "OPERATING_VOLTAGE": ["voltage", {}],
-    "WORKING": ["working", {0: "No", 1: "Yes"}],
-    "STATE_UNCERTAIN": ["state_uncertain", {}],
-    "SENDERID": ["last_senderid", {}],
-    "SENDERADDRESS": ["last_senderaddress", {}],
-    "ERROR_ALARM_TEST": ["error_alarm_test", {0: "No", 1: "Yes"}],
-    "ERROR_SMOKE_CHAMBER": ["error_smoke_chamber", {0: "No", 1: "Yes"}],
+    ),
+    "POWER": ("power", {}),
+    "CURRENT": ("current", {}),
+    "VOLTAGE": ("voltage", {}),
+    "OPERATING_VOLTAGE": ("voltage", {}),
+    "WORKING": ("working", {0: "No", 1: "Yes"}),
+    "STATE_UNCERTAIN": ("state_uncertain", {}),
+    "SENDERID": ("last_senderid", {}),
+    "SENDERADDRESS": ("last_senderaddress", {}),
+    "ERROR_ALARM_TEST": ("error_alarm_test", {0: "No", 1: "Yes"}),
+    "ERROR_SMOKE_CHAMBER": ("error_smoke_chamber", {0: "No", 1: "Yes"}),
 }
 
 HM_PRESS_EVENTS = [

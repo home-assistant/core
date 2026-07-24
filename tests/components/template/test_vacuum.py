@@ -1,683 +1,1285 @@
 """The tests for the Template vacuum platform."""
+
+from dataclasses import asdict
+from typing import Any
+
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import setup
+from homeassistant.components import template, vacuum
+from homeassistant.components.template.vacuum import CONF_CLEAN_SEGMENTS, CONF_SEGMENTS
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
+    ATTR_FAN_SPEED,
+    Segment,
+    VacuumActivity,
+    VacuumEntityFeature,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_UNIQUE_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.typing import ConfigType
 
-from tests.common import assert_setup_component
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_action,
+    async_get_flow_preview_state,
+    async_trigger,
+    make_test_action,
+    make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
+)
+
+from tests.common import MockConfigEntry
 from tests.components.vacuum import common
+from tests.typing import WebSocketGenerator
 
-_TEST_VACUUM = "vacuum.test_vacuum"
-_STATE_INPUT_SELECT = "input_select.state"
-_SPOT_CLEANING_INPUT_BOOLEAN = "input_boolean.spot_cleaning"
-_LOCATING_INPUT_BOOLEAN = "input_boolean.locating"
-_FAN_SPEED_INPUT_SELECT = "input_select.fan_speed"
-_BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
+TEST_STATE_ENTITY_ID = "sensor.test_state"
+TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
+TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
-
-@pytest.mark.parametrize(("count", "domain"), [(1, "vacuum")])
-@pytest.mark.parametrize(
-    ("parm1", "parm2", "config"),
-    [
-        (
-            STATE_UNKNOWN,
-            None,
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_vacuum": {"start": {"service": "script.vacuum_start"}}
-                    },
-                }
-            },
-        ),
-        (
-            STATE_CLEANING,
-            100,
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_vacuum": {
-                            "value_template": "{{ 'cleaning' }}",
-                            "battery_level_template": "{{ 100 }}",
-                            "start": {"service": "script.vacuum_start"},
-                        }
-                    },
-                }
-            },
-        ),
-        (
-            STATE_UNKNOWN,
-            None,
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_vacuum": {
-                            "value_template": "{{ 'abc' }}",
-                            "battery_level_template": "{{ 101 }}",
-                            "start": {"service": "script.vacuum_start"},
-                        }
-                    },
-                }
-            },
-        ),
-        (
-            STATE_UNKNOWN,
-            None,
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_vacuum": {
-                            "value_template": "{{ this_function_does_not_exist() }}",
-                            "battery_level_template": "{{ this_function_does_not_exist() }}",
-                            "fan_speed_template": "{{ this_function_does_not_exist() }}",
-                            "start": {"service": "script.vacuum_start"},
-                        }
-                    },
-                }
-            },
-        ),
-    ],
+TEST_VACUUM = TemplatePlatformSetup(
+    vacuum.DOMAIN,
+    "test_vacuum",
+    make_test_trigger(
+        TEST_STATE_ENTITY_ID,
+        TEST_ATTRIBUTE_ENTITY_ID,
+        TEST_AVAILABILITY_ENTITY,
+    ),
 )
-async def test_valid_configs(
-    hass: HomeAssistant, count, parm1, parm2, start_ha
+
+CLEAN_SPOT_ACTION = make_test_action("clean_spot")
+LOCATE_ACTION = make_test_action("locate")
+PAUSE_ACTION = make_test_action("pause")
+RETURN_TO_BASE_ACTION = make_test_action("return_to_base")
+SET_FAN_SPEED_ACTION = make_test_action(
+    "set_fan_speed", {"fan_speed": "{{ fan_speed }}"}
+)
+START_ACTION = make_test_action("start")
+STOP_ACTION = make_test_action("stop")
+CLEAN_SEGMENTS_ACTION = make_test_action(
+    "clean_segments", {"segment_ids": "{{ segment_ids }}"}
+)
+
+TEMPLATE_VACUUM_ACTIONS = {
+    **START_ACTION,
+    **PAUSE_ACTION,
+    **STOP_ACTION,
+    **RETURN_TO_BASE_ACTION,
+    **CLEAN_SPOT_ACTION,
+    **LOCATE_ACTION,
+    **SET_FAN_SPEED_ACTION,
+}
+
+
+def _verify(
+    hass: HomeAssistant,
+    expected_state: str,
+    expected_fan_speed: str | None = None,
 ) -> None:
-    """Test: configs."""
-    assert len(hass.states.async_all("vacuum")) == count
-    _verify(hass, parm1, parm2)
+    """Verify vacuum's state and speed."""
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    attributes = state.attributes
+    assert state.state == expected_state
+    assert attributes.get(ATTR_FAN_SPEED) == expected_fan_speed
 
 
-@pytest.mark.parametrize(("count", "domain"), [(0, "vacuum")])
+@pytest.fixture
+async def setup_vacuum(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    vacuum_config: dict[str, Any],
+) -> None:
+    """Do setup of number integration."""
+    await setup_entity(hass, TEST_VACUUM, style, count, vacuum_config)
+
+
+@pytest.fixture
+async def setup_test_vacuum_with_extra_config(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    vacuum_config: dict[str, Any],
+    extra_config: dict[str, Any],
+) -> None:
+    """Do setup of number integration."""
+    await setup_entity(
+        hass, TEST_VACUUM, style, count, vacuum_config, extra_config=extra_config
+    )
+
+
+@pytest.fixture
+async def setup_state_vacuum(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str,
+):
+    """Do setup of vacuum integration using a state template."""
+    await setup_entity(
+        hass, TEST_VACUUM, style, count, TEMPLATE_VACUUM_ACTIONS, state_template
+    )
+
+
+@pytest.fixture
+async def setup_base_vacuum(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str | None,
+    extra_config: dict,
+):
+    """Do setup of vacuum integration using a state template."""
+    await setup_entity(hass, TEST_VACUUM, style, count, extra_config, state_template)
+
+
+@pytest.fixture
+async def setup_single_attribute_state_vacuum(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str | None,
+    attribute: str,
+    attribute_template: str,
+    extra_config: dict,
+) -> None:
+    """Do setup of vacuum integration testing a single attribute."""
+    config = {attribute: attribute_template} if attribute and attribute_template else {}
+    await setup_entity(
+        hass,
+        TEST_VACUUM,
+        style,
+        count,
+        {**config, **TEMPLATE_VACUUM_ACTIONS},
+        state_template,
+        extra_config,
+    )
+
+
+@pytest.fixture
+async def setup_attributes_state_vacuum(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str | None,
+    attributes: dict,
+) -> None:
+    """Do setup of vacuum integration testing a single attribute."""
+    await setup_entity(
+        hass,
+        TEST_VACUUM,
+        style,
+        count,
+        TEMPLATE_VACUUM_ACTIONS,
+        state_template,
+        attributes=attributes,
+    )
+
+
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "vacuum": {
-                "platform": "template",
-                "vacuums": {"test_vacuum": {"value_template": "{{ 'on' }}"}},
-            }
-        },
-        {
-            "platform": "template",
-            "vacuums": {"test_vacuum": {"start": {"service": "script.vacuum_start"}}},
-        },
-    ],
-)
-async def test_invalid_configs(hass: HomeAssistant, count, start_ha) -> None:
-    """Test: configs."""
-    assert len(hass.states.async_all("vacuum")) == count
-
-
-@pytest.mark.parametrize(
-    ("count", "domain", "config"),
+    ("style", "state_template", "extra_config", "parm1"),
     [
         (
-            1,
-            "vacuum",
+            ConfigurationStyle.MODERN,
+            None,
+            {"start": {"service": "script.vacuum_start"}},
+            STATE_UNKNOWN,
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            None,
+            {"start": {"service": "script.vacuum_start"}},
+            STATE_UNKNOWN,
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            "{{ 'cleaning' }}",
             {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_vacuum": {
-                            "value_template": "{{ states('input_select.state') }}",
-                            "battery_level_template": "{{ states('input_number.battery_level') }}",
-                            "start": {"service": "script.vacuum_start"},
-                        }
-                    },
-                }
+                "start": {"service": "script.vacuum_start"},
             },
-        )
+            VacuumActivity.CLEANING,
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            "{{ 'cleaning' }}",
+            {
+                "start": {"service": "script.vacuum_start"},
+            },
+            VacuumActivity.CLEANING,
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            "{{ 'abc' }}",
+            {
+                "start": {"service": "script.vacuum_start"},
+            },
+            STATE_UNKNOWN,
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            "{{ 'abc' }}",
+            {
+                "start": {"service": "script.vacuum_start"},
+            },
+            STATE_UNKNOWN,
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            "{{ this_function_does_not_exist() }}",
+            {
+                "fan_speed": "{{ this_function_does_not_exist() }}",
+                "start": {"service": "script.vacuum_start"},
+            },
+            STATE_UNAVAILABLE,
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            "{{ this_function_does_not_exist() }}",
+            {
+                "fan_speed": "{{ this_function_does_not_exist() }}",
+                "start": {"service": "script.vacuum_start"},
+            },
+            STATE_UNAVAILABLE,
+        ),
     ],
 )
-async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
-    """Test templates with values from other entities."""
-    _verify(hass, STATE_UNKNOWN, None)
+@pytest.mark.usefixtures("setup_base_vacuum")
+async def test_valid_configs(hass: HomeAssistant, count, parm1) -> None:
+    """Test: configs."""
 
-    hass.states.async_set(_STATE_INPUT_SELECT, STATE_CLEANING)
-    hass.states.async_set(_BATTERY_LEVEL_INPUT_NUMBER, 100)
+    # Ensure trigger entity templates are rendered
+    hass.states.async_set(TEST_STATE_ENTITY_ID, None)
     await hass.async_block_till_done()
-    _verify(hass, STATE_CLEANING, 100)
+
+    assert len(hass.states.async_all("vacuum")) == count
+    _verify(hass, parm1)
+
+
+@pytest.mark.parametrize("count", [0])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("state_template", "extra_config"),
+    [
+        ("{{ 'on' }}", {}),
+        (None, {"nothingburger": {"service": "script.vacuum_start"}}),
+    ],
+)
+@pytest.mark.usefixtures("setup_base_vacuum")
+async def test_invalid_configs(hass: HomeAssistant, count) -> None:
+    """Test: configs."""
+    assert len(hass.states.async_all("vacuum")) == count
 
 
 @pytest.mark.parametrize(
-    ("count", "domain", "config"),
+    ("count", "state_template", "extra_config"),
     [
         (
             1,
-            "vacuum",
+            "{{ states('sensor.test_state') }}",
             {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_template_vacuum": {
-                            "availability_template": "{{ is_state('availability_state.state', 'on') }}",
-                            "start": {"service": "script.vacuum_start"},
-                        }
-                    },
-                }
+                "fan_speeds": ["low", "medium", "high"],
             },
         )
     ],
 )
-async def test_available_template_with_entities(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "fan_speed"),
+        (ConfigurationStyle.TRIGGER, "fan_speed"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        ("{{ 'low' }}", "low"),
+        ("{{ 'medium' }}", "medium"),
+        ("{{ 'high' }}", "high"),
+        ("{{ 'invalid' }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> None:
+    """Test templates with values from other entities."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
+    _verify(hass, STATE_UNKNOWN, expected)
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template", "extra_config", "attribute"),
+    [
+        (
+            1,
+            "{{ 'on' }}",
+            "{% if states.sensor.test_state.state %}mdi:check{% endif %}",
+            {},
+            "icon",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "expected"),
+    [
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
+    """Test icon template."""
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.attributes.get("icon") == expected
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.attributes["icon"] == "mdi:check"
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template", "extra_config", "attribute"),
+    [
+        (
+            1,
+            "{{ 'on' }}",
+            "{% if states.sensor.test_state.state %}local/vacuum.png{% endif %}",
+            {},
+            "picture",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "expected"),
+    [
+        (ConfigurationStyle.MODERN, ""),
+        (ConfigurationStyle.TRIGGER, None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_picture_template(hass: HomeAssistant, expected: int) -> None:
+    """Test picture template."""
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.attributes.get("entity_picture") == expected
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.attributes["entity_picture"] == "local/vacuum.png"
+
+
+@pytest.mark.parametrize("extra_config", [{}])
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template"),
+    [
+        (
+            1,
+            None,
+            "{{ is_state('binary_sensor.availability', 'on') }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
 
     # When template returns true..
-    hass.states.async_set("availability_state.state", STATE_ON)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_ON)
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
-    assert hass.states.get("vacuum.test_template_vacuum").state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_VACUUM.entity_id).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
-    hass.states.async_set("availability_state.state", STATE_OFF)
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
-    assert hass.states.get("vacuum.test_template_vacuum").state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_VACUUM.entity_id).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("extra_config", [{}])
 @pytest.mark.parametrize(
-    ("count", "domain", "config"),
+    ("count", "state_template", "attribute_template"),
     [
         (
             1,
-            "vacuum",
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_template_vacuum": {
-                            "availability_template": "{{ x - 12 }}",
-                            "start": {"service": "script.vacuum_start"},
-                        }
-                    },
-                }
-            },
+            None,
+            "{{ x - 12 }}",
         )
     ],
 )
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid availability keeps the device available."""
-    assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
-    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
+    assert hass.states.get(TEST_VACUUM.entity_id) != STATE_UNAVAILABLE
+    err = "'x' is undefined"
+    assert err in caplog_setup_text or err in caplog.text
 
 
+@pytest.mark.parametrize("style", [ConfigurationStyle.MODERN])
 @pytest.mark.parametrize(
-    ("count", "domain", "config"),
+    ("count", "state_template", "attributes"),
     [
         (
             1,
-            "vacuum",
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_template_vacuum": {
-                            "value_template": "{{ 'cleaning' }}",
-                            "start": {"service": "script.vacuum_start"},
-                            "attribute_templates": {
-                                "test_attribute": "It {{ states.sensor.test_state.state }}."
-                            },
-                        }
-                    },
-                }
-            },
+            "{{ 'cleaning' }}",
+            {"test_attribute": "It {{ states.sensor.test_state.state }}."},
         )
     ],
 )
-async def test_attribute_templates(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("setup_attributes_state_vacuum")
+async def test_attribute_templates(hass: HomeAssistant) -> None:
     """Test attribute_templates template."""
-    state = hass.states.get("vacuum.test_template_vacuum")
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state.attributes["test_attribute"] == "It ."
 
-    hass.states.async_set("sensor.test_state", "Works")
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "Works")
     await hass.async_block_till_done()
-    await async_update_entity(hass, "vacuum.test_template_vacuum")
-    state = hass.states.get("vacuum.test_template_vacuum")
+    await async_update_entity(hass, TEST_VACUUM.entity_id)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state.attributes["test_attribute"] == "It Works."
 
 
 @pytest.mark.parametrize(
-    ("count", "domain", "config"),
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("count", "state_template", "attributes"),
     [
         (
             1,
-            "vacuum",
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "invalid_template": {
-                            "value_template": "{{ states('input_select.state') }}",
-                            "start": {"service": "script.vacuum_start"},
-                            "attribute_templates": {
-                                "test_attribute": "{{ this_function_does_not_exist() }}"
-                            },
-                        }
-                    },
-                }
-            },
+            "{{ states('sensor.test_state') }}",
+            {"test_attribute": "{{ this_function_does_not_exist() }}"},
         )
     ],
 )
+@pytest.mark.usefixtures("setup_attributes_state_vacuum")
 async def test_invalid_attribute_template(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that errors are logged if rendering template fails."""
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "Works")
+    await hass.async_block_till_done()
+
     assert len(hass.states.async_all("vacuum")) == 1
-    assert "test_attribute" in caplog_setup_text
-    assert "TemplateError" in caplog_setup_text
+    err = "'this_function_does_not_exist' is undefined"
+    assert err in caplog_setup_text or err in caplog.text
+
+
+@pytest.mark.parametrize("config", [TEMPLATE_VACUUM_ACTIONS])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_unique_id(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
+) -> None:
+    """Test unique_id option only creates one vacuum per id."""
+    await setup_and_test_unique_id(hass, TEST_VACUUM, style, config)
+
+
+@pytest.mark.parametrize("config", [TEMPLATE_VACUUM_ACTIONS])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_nested_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a template unique_id propagates to vacuum unique_ids."""
+    await setup_and_test_nested_unique_id(
+        hass, TEST_VACUUM, style, entity_registry, config
+    )
 
 
 @pytest.mark.parametrize(
-    ("count", "domain", "config"),
-    [
-        (
-            1,
-            "vacuum",
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_template_vacuum_01": {
-                            "unique_id": "not-so-unique-anymore",
-                            "value_template": "{{ true }}",
-                            "start": {"service": "script.vacuum_start"},
-                        },
-                        "test_template_vacuum_02": {
-                            "unique_id": "not-so-unique-anymore",
-                            "value_template": "{{ false }}",
-                            "start": {"service": "script.vacuum_start"},
-                        },
-                    },
-                }
-            },
-        ),
-    ],
+    ("count", "state_template", "extra_config"), [(1, None, START_ACTION)]
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
-    """Test unique_id option only creates one vacuum per id."""
-    assert len(hass.states.async_all("vacuum")) == 1
-
-
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_base_vacuum")
 async def test_unused_services(hass: HomeAssistant) -> None:
     """Test calling unused services raises."""
-    await _register_basic_vacuum(hass)
-
     # Pause vacuum
     with pytest.raises(HomeAssistantError):
-        await common.async_pause(hass, _TEST_VACUUM)
+        await common.async_pause(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Stop vacuum
     with pytest.raises(HomeAssistantError):
-        await common.async_stop(hass, _TEST_VACUUM)
+        await common.async_stop(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Return vacuum to base
     with pytest.raises(HomeAssistantError):
-        await common.async_return_to_base(hass, _TEST_VACUUM)
+        await common.async_return_to_base(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Spot cleaning
     with pytest.raises(HomeAssistantError):
-        await common.async_clean_spot(hass, _TEST_VACUUM)
+        await common.async_clean_spot(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Locate vacuum
     with pytest.raises(HomeAssistantError):
-        await common.async_locate(hass, _TEST_VACUUM)
+        await common.async_locate(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Set fan's speed
     with pytest.raises(HomeAssistantError):
-        await common.async_set_fan_speed(hass, "medium", _TEST_VACUUM)
+        await common.async_set_fan_speed(hass, "medium", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN, None)
 
 
-async def test_state_services(hass: HomeAssistant, calls) -> None:
-    """Test state services."""
-    await _register_components(hass)
-
-    # Start vacuum
-    await common.async_start(hass, _TEST_VACUUM)
-    await hass.async_block_till_done()
-
-    # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_CLEANING
-    _verify(hass, STATE_CLEANING, None)
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "start"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
-
-    # Pause vacuum
-    await common.async_pause(hass, _TEST_VACUUM)
-    await hass.async_block_till_done()
-
-    # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_PAUSED
-    _verify(hass, STATE_PAUSED, None)
-    assert len(calls) == 2
-    assert calls[-1].data["action"] == "pause"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
-
-    # Stop vacuum
-    await common.async_stop(hass, _TEST_VACUUM)
-    await hass.async_block_till_done()
-
-    # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_IDLE
-    _verify(hass, STATE_IDLE, None)
-    assert len(calls) == 3
-    assert calls[-1].data["action"] == "stop"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
-
-    # Return vacuum to base
-    await common.async_return_to_base(hass, _TEST_VACUUM)
-    await hass.async_block_till_done()
-
-    # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_RETURNING
-    _verify(hass, STATE_RETURNING, None)
-    assert len(calls) == 4
-    assert calls[-1].data["action"] == "return_to_base"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
-
-
-async def test_clean_spot_service(hass: HomeAssistant, calls) -> None:
-    """Test clean spot service."""
-    await _register_components(hass)
-
-    # Clean spot
-    await common.async_clean_spot(hass, _TEST_VACUUM)
-    await hass.async_block_till_done()
-
-    # verify
-    assert hass.states.get(_SPOT_CLEANING_INPUT_BOOLEAN).state == STATE_ON
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "clean_spot"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
-
-
-async def test_locate_service(hass: HomeAssistant, calls) -> None:
+@pytest.mark.parametrize(
+    ("count", "state_template"),
+    [(1, "{{ states('sensor.test_state') }}")],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "action",
+    [
+        "start",
+        "pause",
+        "stop",
+        "clean_spot",
+        "return_to_base",
+        "locate",
+    ],
+)
+@pytest.mark.usefixtures("setup_state_vacuum")
+async def test_state_services(
+    hass: HomeAssistant, action: str, calls: list[ServiceCall]
+) -> None:
     """Test locate service."""
-    await _register_components(hass)
 
-    # Locate vacuum
-    await common.async_locate(hass, _TEST_VACUUM)
+    await hass.services.async_call(
+        "vacuum",
+        action,
+        {"entity_id": TEST_VACUUM.entity_id},
+        blocking=True,
+    )
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_LOCATING_INPUT_BOOLEAN).state == STATE_ON
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "locate"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
+    assert_action(TEST_VACUUM, calls, 1, action)
 
 
-async def test_set_fan_speed(hass: HomeAssistant, calls) -> None:
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template", "extra_config"),
+    [
+        (
+            1,
+            "{{ states('sensor.test_state') }}",
+            "{{ states('sensor.test_attribute') }}",
+            {
+                "fan_speeds": ["low", "medium", "high"],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "fan_speed"),
+        (ConfigurationStyle.TRIGGER, "fan_speed"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set valid fan speed."""
-    await _register_components(hass)
 
     # Set vacuum's fan speed to high
-    await common.async_set_fan_speed(hass, "high", _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, "high", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == "high"
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "set_fan_speed"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
-    assert calls[-1].data["option"] == "high"
+    assert_action(TEST_VACUUM, calls, 1, "set_fan_speed", fan_speed="high")
 
     # Set fan's speed to medium
-    await common.async_set_fan_speed(hass, "medium", _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, "medium", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == "medium"
-    assert len(calls) == 2
-    assert calls[-1].data["action"] == "set_fan_speed"
-    assert calls[-1].data["caller"] == _TEST_VACUUM
-    assert calls[-1].data["option"] == "medium"
+    assert_action(TEST_VACUUM, calls, 2, "set_fan_speed", fan_speed="medium")
 
 
-async def test_set_invalid_fan_speed(hass: HomeAssistant, calls) -> None:
+@pytest.mark.parametrize(
+    "extra_config",
+    [
+        {
+            "fan_speeds": ["low", "medium", "high"],
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute_template"),
+    [
+        (
+            1,
+            "{{ states('sensor.test_state') }}",
+            "{{ states('sensor.test_attribute') }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.MODERN, "fan_speed"),
+        (ConfigurationStyle.TRIGGER, "fan_speed"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_set_invalid_fan_speed(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test set invalid fan speed when fan has valid speed."""
-    await _register_components(hass)
 
     # Set vacuum's fan speed to high
-    await common.async_set_fan_speed(hass, "high", _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, "high", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == "high"
+    assert_action(TEST_VACUUM, calls, 1, "set_fan_speed", fan_speed="high")
 
     # Set vacuum's fan speed to 'invalid'
-    await common.async_set_fan_speed(hass, "invalid", _TEST_VACUUM)
+    await common.async_set_fan_speed(hass, "invalid", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify fan speed is unchanged
-    assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == "high"
+    assert_action(TEST_VACUUM, calls, 1, "set_fan_speed", fan_speed="high")
 
 
-def _verify(hass, expected_state, expected_battery_level):
-    """Verify vacuum's state and speed."""
-    state = hass.states.get(_TEST_VACUUM)
-    attributes = state.attributes
-    assert state.state == expected_state
-    assert attributes.get(ATTR_BATTERY_LEVEL) == expected_battery_level
-
-
-async def _register_basic_vacuum(hass):
-    """Register basic vacuum with only required options for testing."""
-    with assert_setup_component(1, "input_select"):
-        assert await setup.async_setup_component(
-            hass,
-            "input_select",
-            {"input_select": {"state": {"name": "State", "options": [STATE_CLEANING]}}},
-        )
-
-    with assert_setup_component(1, "vacuum"):
-        assert await setup.async_setup_component(
-            hass,
-            "vacuum",
+@pytest.mark.parametrize(("count", "vacuum_config"), [(1, {"start": []})])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "supported_features"),
+    [
+        (
             {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {
-                        "test_vacuum": {
-                            "start": {
-                                "service": "input_select.select_option",
-                                "data": {
-                                    "entity_id": _STATE_INPUT_SELECT,
-                                    "option": STATE_CLEANING,
-                                },
-                            }
-                        }
-                    },
-                }
+                "pause": [],
             },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def _register_components(hass):
-    """Register basic components for testing."""
-    with assert_setup_component(2, "input_boolean"):
-        assert await setup.async_setup_component(
-            hass,
-            "input_boolean",
-            {"input_boolean": {"spot_cleaning": None, "locating": None}},
-        )
-
-    with assert_setup_component(2, "input_select"):
-        assert await setup.async_setup_component(
-            hass,
-            "input_select",
+            VacuumEntityFeature.PAUSE,
+        ),
+        (
             {
-                "input_select": {
-                    "state": {
-                        "name": "State",
-                        "options": [
-                            STATE_CLEANING,
-                            STATE_DOCKED,
-                            STATE_IDLE,
-                            STATE_PAUSED,
-                            STATE_RETURNING,
-                        ],
-                    },
-                    "fan_speed": {
-                        "name": "Fan speed",
-                        "options": ["", "low", "medium", "high"],
-                    },
-                }
+                "stop": [],
             },
-        )
-
-    with assert_setup_component(1, "vacuum"):
-        test_vacuum_config = {
-            "value_template": "{{ states('input_select.state') }}",
-            "fan_speed_template": "{{ states('input_select.fan_speed') }}",
-            "start": [
-                {
-                    "service": "input_select.select_option",
-                    "data": {
-                        "entity_id": _STATE_INPUT_SELECT,
-                        "option": STATE_CLEANING,
-                    },
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "start",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "pause": [
-                {
-                    "service": "input_select.select_option",
-                    "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_PAUSED},
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "pause",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "stop": [
-                {
-                    "service": "input_select.select_option",
-                    "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_IDLE},
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "stop",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "return_to_base": [
-                {
-                    "service": "input_select.select_option",
-                    "data": {
-                        "entity_id": _STATE_INPUT_SELECT,
-                        "option": STATE_RETURNING,
-                    },
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "return_to_base",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "clean_spot": [
-                {
-                    "service": "input_boolean.turn_on",
-                    "entity_id": _SPOT_CLEANING_INPUT_BOOLEAN,
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "clean_spot",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "locate": [
-                {
-                    "service": "input_boolean.turn_on",
-                    "entity_id": _LOCATING_INPUT_BOOLEAN,
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "locate",
-                        "caller": "{{ this.entity_id }}",
-                    },
-                },
-            ],
-            "set_fan_speed": [
-                {
-                    "service": "input_select.select_option",
-                    "data_template": {
-                        "entity_id": _FAN_SPEED_INPUT_SELECT,
-                        "option": "{{ fan_speed }}",
-                    },
-                },
-                {
-                    "service": "test.automation",
-                    "data_template": {
-                        "action": "set_fan_speed",
-                        "caller": "{{ this.entity_id }}",
-                        "option": "{{ fan_speed }}",
-                    },
-                },
-            ],
-            "fan_speeds": ["low", "medium", "high"],
-            "attribute_templates": {
-                "test_attribute": "It {{ states.sensor.test_state.state }}."
-            },
-        }
-
-        assert await setup.async_setup_component(
-            hass,
-            "vacuum",
+            VacuumEntityFeature.STOP,
+        ),
+        (
             {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {"test_vacuum": test_vacuum_config},
-                }
+                "return_to_base": [],
+            },
+            VacuumEntityFeature.RETURN_HOME,
+        ),
+        (
+            {
+                "clean_spot": [],
+            },
+            VacuumEntityFeature.CLEAN_SPOT,
+        ),
+        (
+            {
+                "locate": [],
+            },
+            VacuumEntityFeature.LOCATE,
+        ),
+        (
+            {
+                "set_fan_speed": [],
+            },
+            VacuumEntityFeature.FAN_SPEED,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_empty_action_config(
+    hass: HomeAssistant,
+    supported_features: VacuumEntityFeature,
+) -> None:
+    """Test configuration with empty script."""
+    await common.async_start(hass, TEST_VACUUM.entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.attributes["supported_features"] == (
+        VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {"name": TEST_VACUUM.object_id, "start": [], **TEMPLATE_VACUUM_ACTIONS},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
+        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
+        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_assumed_optimistic(
+    hass: HomeAssistant,
+    service: str,
+    expected: VacuumActivity,
+    calls: list[ServiceCall],
+) -> None:
+    """Test assumed optimistic."""
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_VACUUM.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_VACUUM.object_id,
+                "state": "{{ states('sensor.test_state') }}",
+                "start": [],
+                **TEMPLATE_VACUUM_ACTIONS,
+                "optimistic": True,
             },
         )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
+        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
+        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_optimistic_option(
+    hass: HomeAssistant,
+    service: str,
+    expected: VacuumActivity,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic yaml option."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
 
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.state == VacuumActivity.DOCKED
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_VACUUM.entity_id},
+        blocking=True,
+    )
     await hass.async_block_till_done()
-    await hass.async_start()
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.state == expected
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, VacuumActivity.RETURNING)
     await hass.async_block_till_done()
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.state == VacuumActivity.DOCKED
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_VACUUM.object_id,
+                "state": "{{ states('sensor.test_state') }}",
+                "start": [],
+                **TEMPLATE_VACUUM_ACTIONS,
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "service",
+    [
+        vacuum.SERVICE_START,
+        vacuum.SERVICE_PAUSE,
+        vacuum.SERVICE_STOP,
+        vacuum.SERVICE_RETURN_TO_BASE,
+        vacuum.SERVICE_CLEAN_SPOT,
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_not_optimistic(
+    hass: HomeAssistant,
+    service: str,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_VACUUM.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                **CLEAN_SEGMENTS_ACTION,
+                "segments": (
+                    "{{ [{'id': '1', 'name': 'Livingroom'},"
+                    " {'id': '2', 'name': 'Kitchen'}] }}"
+                ),
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_clean_area(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test clean area passes segment IDs to action."""
+    entity_registry.async_update_entity_options(
+        TEST_VACUUM.entity_id,
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"area_1": ["1", "2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+
+    await common.async_clean_area(hass, ["area_1"], TEST_VACUUM.entity_id)
+    await hass.async_block_till_done()
+    assert_action(TEST_VACUUM, calls, 1, "clean_segments", segment_ids=["1", "2"])
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state is not None
+    assert state.attributes["supported_features"] & VacuumEntityFeature.CLEAN_AREA
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "start": [],
+                **CLEAN_SEGMENTS_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "expected_segments"),
+    [
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments": "{{ ["
+                "{'id': '1', 'name': 'Kitchen'}, "
+                "{'id': '2', 'name': 'Bedroom', 'group': 'Upstairs'}"
+                "] }}",
+            },
+            [
+                Segment(id="1", name="Kitchen"),
+                Segment(id="2", name="Bedroom", group="Upstairs"),
+            ],
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_get_segments(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    expected_segments: list[Segment],
+) -> None:
+    """Test get_segments returns segments from template."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, VacuumActivity.DOCKED)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": TEST_VACUUM.entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "segments": [asdict(segment) for segment in expected_segments]
+    }
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "start": [],
+                **CLEAN_SEGMENTS_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "err_msg"),
+    [
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments": "{{ [ {'id': '1'} ] }}",
+            },
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments": "{{ [ {'name': 'kitchen'} ] }}",
+            },
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments": "{{ [ {} ] }}",
+            },
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments": (
+                    "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}"
+                ),
+            },
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
+        ),
+        (
+            {"unique_id": TEST_VACUUM.entity_id, "segments": "{{ [[]] }}"},
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
+            },
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_invalid_segments(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    err_msg: str,
+) -> None:
+    """Test that errors are logged if parsing segment template fails."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "Works")
+    await hass.async_block_till_done()
+
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": TEST_VACUUM.entity_id}
+    )
+    msg = await client.receive_json()
+    assert msg["result"] == {"segments": []}
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "start": [],
+                **CLEAN_SEGMENTS_ACTION,
+                "segments": (
+                    "{{ [ {'id': '1', 'name': 'Kitchen'},"
+                    " {'id': '2', 'name':"
+                    " states('sensor.test_attribute')}] }}"
+                ),
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_raise_segments_changed_issue(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that issue is raised on segments change."""
+    hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bedroom")
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity_options(
+        TEST_VACUUM.entity_id,
+        vacuum.DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "1", "name": "Kitchen"},
+                {"id": "2", "name": "Bedroom"},
+            ],
+        },
+    )
+    hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bathroom")
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    assert len(issue_registry.issues) != 0
+
+
+@pytest.mark.parametrize(
+    ("vacuum_config", "err_msg"),
+    [
+        (
+            {**START_ACTION},
+            f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("count", "extra_config"),
+    [
+        (
+            0,
+            {
+                "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
+        ),
+        (
+            0,
+            {**CLEAN_SEGMENTS_ACTION},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_segments_part_config(
+    hass: HomeAssistant,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    count: int,
+    err_msg: str,
+) -> None:
+    """Test creating vacuum with segments, missing required options."""
+    assert len(hass.states.async_all(vacuum.DOMAIN)) == count
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("vacuum_config"),
+    [
+        {
+            **START_ACTION,
+            **CLEAN_SEGMENTS_ACTION,
+            "segments": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("count", "extra_config", "err_msg"),
+    [
+        (
+            0,
+            {},
+            f'key "{CONF_SEGMENTS}" requires key "{CONF_UNIQUE_ID}" to exist',
+        ),
+        (1, {"unique_id": TEST_VACUUM.entity_id}, ""),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_segments_unique_id(
+    hass: HomeAssistant,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    count: int,
+    err_msg: str,
+) -> None:
+    """Test creating vacuum with segments, missing required options."""
+    assert len(hass.states.async_all(vacuum.DOMAIN)) == count
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a vacuum from a config entry."""
+
+    hass.states.async_set(
+        "sensor.test_sensor",
+        "docked",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ states('sensor.test_sensor') }}",
+            "start": [],
+            "template_type": vacuum.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        vacuum.DOMAIN,
+        {
+            "name": "My template",
+            "state": "{{ 'cleaning' }}",
+            "start": [],
+        },
+    )
+
+    assert state["state"] == VacuumActivity.CLEANING

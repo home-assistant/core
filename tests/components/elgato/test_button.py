@@ -1,7 +1,8 @@
 """Tests for the Elgato Light button platform."""
+
 from unittest.mock import MagicMock
 
-from elgato import ElgatoError
+from elgato import ElgatoConnectionError, ElgatoError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -64,7 +65,7 @@ async def test_buttons(
 
     with pytest.raises(
         HomeAssistantError,
-        match="An error occurred while communicating with the Elgato Light",
+        match="An unknown error occurred while communicating with the Elgato device",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -74,3 +75,18 @@ async def test_buttons(
         )
 
     assert len(mocked_method.mock_calls) == 2
+
+    mocked_method.side_effect = ElgatoConnectionError
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Elgato device",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert len(mocked_method.mock_calls) == 3

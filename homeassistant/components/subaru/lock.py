@@ -1,28 +1,26 @@
 """Support for Subaru door locks."""
+
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, get_device_info
 from .const import (
     ATTR_DOOR,
-    ENTRY_CONTROLLER,
-    ENTRY_VEHICLES,
     SERVICE_UNLOCK_SPECIFIC_DOOR,
     UNLOCK_DOOR_ALL,
     UNLOCK_VALID_DOORS,
     VEHICLE_HAS_REMOTE_SERVICE,
     VEHICLE_NAME,
-    VEHICLE_VIN,
 )
+from .coordinator import SubaruConfigEntry
+from .entity import SubaruEntity
 from .remote_service import async_call_remote_service
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,13 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SubaruConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Subaru locks by config_entry."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-    controller = entry[ENTRY_CONTROLLER]
-    vehicle_info = entry[ENTRY_VEHICLES]
+    controller = config_entry.runtime_data.controller
+    vehicle_info = config_entry.runtime_data.vehicles
     async_add_entities(
         SubaruLock(vehicle, controller)
         for vehicle in vehicle_info.values()
@@ -52,24 +49,23 @@ async def async_setup_entry(
     )
 
 
-class SubaruLock(LockEntity):
+class SubaruLock(SubaruEntity, LockEntity):
     """Representation of a Subaru door lock.
 
-    Note that the Subaru API currently does not support returning the status of the locks. Lock status is always unknown.
+    Note that the Subaru API currently does not support
+    returning the status of the locks. Lock status is
+    always unknown.
     """
 
-    _attr_has_entity_name = True
     _attr_translation_key = "door_locks"
 
     def __init__(self, vehicle_info, controller):
         """Initialize the locks for the vehicle."""
+        super().__init__(vehicle_info, "door_locks")
         self.controller = controller
-        self.vehicle_info = vehicle_info
-        vin = vehicle_info[VEHICLE_VIN]
         self.car_name = vehicle_info[VEHICLE_NAME]
-        self._attr_unique_id = f"{vin}_door_locks"
-        self._attr_device_info = get_device_info(vehicle_info)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Send the lock command."""
         _LOGGER.debug("Locking doors for: %s", self.car_name)
@@ -79,6 +75,7 @@ class SubaruLock(LockEntity):
             self.vehicle_info,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send the unlock command."""
         _LOGGER.debug("Unlocking doors for: %s", self.car_name)

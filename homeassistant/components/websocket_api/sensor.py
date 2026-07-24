@@ -1,5 +1,6 @@
 """Entity to track connections to websocket API."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
@@ -29,10 +30,14 @@ async def async_setup_platform(
 class APICount(SensorEntity):
     """Entity to represent how many people are connected to the stream API."""
 
+    _attr_name = "Connected clients"
+    _attr_native_unit_of_measurement = "clients"
+
     def __init__(self) -> None:
         """Initialize the API count."""
-        self.count = 0
+        self._attr_native_value = 0
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle addition to hass."""
         self.async_on_remove(
@@ -46,22 +51,7 @@ class APICount(SensorEntity):
             )
         )
 
-    @property
-    def name(self) -> str:
-        """Return name of entity."""
-        return "Connected clients"
-
-    @property
-    def native_value(self) -> int:
-        """Return current API count."""
-        return self.count
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return "clients"
-
     @callback
     def _update_count(self) -> None:
-        self.count = self.hass.data.get(DATA_CONNECTIONS, 0)
+        self._attr_native_value = self.hass.data.get(DATA_CONNECTIONS, 0)
         self.async_write_ha_state()

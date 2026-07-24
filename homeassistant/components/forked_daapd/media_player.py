@@ -1,12 +1,10 @@
 """Support forked_daapd media player."""
-from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Any
+from typing import Any, override
 
-from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
@@ -27,16 +25,14 @@ from homeassistant.components.spotify import (
     resolve_spotify_media_type,
     spotify_uri_from_media_browser_url,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .browse_media import (
@@ -55,10 +51,7 @@ from .const import (
     DEFAULT_TTS_PAUSE_TIME,
     DEFAULT_TTS_VOLUME,
     DEFAULT_UNMUTE_VOLUME,
-    DOMAIN,
     FD_NAME,
-    HASS_DATA_REMOVE_LISTENERS_KEY,
-    HASS_DATA_UPDATER_KEY,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
     SIGNAL_ADD_ZONES,
@@ -75,65 +68,47 @@ from .const import (
     SUPPORTED_FEATURES_ZONE,
     TTS_TIMEOUT,
 )
+from .coordinator import ForkedDaapdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-WS_NOTIFY_EVENT_TYPES = ["player", "outputs", "volume", "options", "queue", "database"]
-WEBSOCKET_RECONNECT_TIME = 30  # seconds
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ForkedDaapdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up forked-daapd from a config entry."""
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    password = config_entry.data[CONF_PASSWORD]
-    forked_daapd_api = ForkedDaapdAPI(
-        async_get_clientsession(hass), host, port, password
-    )
+    forked_daapd_updater = config_entry.runtime_data
+
+    host: str = config_entry.data[CONF_HOST]
+    forked_daapd_api = forked_daapd_updater.api
     forked_daapd_master = ForkedDaapdMaster(
         clientsession=async_get_clientsession(hass),
         api=forked_daapd_api,
         ip_address=host,
-        api_port=port,
-        api_password=password,
         config_entry=config_entry,
     )
 
     @callback
     def async_add_zones(api, outputs):
-        zone_entities = []
-        for output in outputs:
-            zone_entities.append(ForkedDaapdZone(api, output, config_entry.entry_id))
-        async_add_entities(zone_entities, False)
+        async_add_entities(
+            ForkedDaapdZone(api, output, config_entry.entry_id) for output in outputs
+        )
 
-    remove_add_zones_listener = async_dispatcher_connect(
-        hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
+        )
     )
-    remove_entry_listener = config_entry.add_update_listener(update_listener)
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
-    if not hass.data.get(DOMAIN):
-        hass.data[DOMAIN] = {config_entry.entry_id: {}}
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        HASS_DATA_REMOVE_LISTENERS_KEY: [
-            remove_add_zones_listener,
-            remove_entry_listener,
-        ]
-    }
     async_add_entities([forked_daapd_master], False)
-    forked_daapd_updater = ForkedDaapdUpdater(
-        hass, forked_daapd_api, config_entry.entry_id
-    )
-    hass.data[DOMAIN][config_entry.entry_id][
-        HASS_DATA_UPDATER_KEY
-    ] = forked_daapd_updater
+
     await forked_daapd_updater.async_init()
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: ForkedDaapdConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options
@@ -154,6 +129,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
         self._available = True
         self._entry_id = entry_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Use lifecycle hooks."""
         self.async_on_remove(
@@ -175,10 +151,12 @@ class ForkedDaapdZone(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def unique_id(self):
         """Return unique ID."""
         return f"{self._entry_id}-{self._output_id}"
 
+    @override
     async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
         if self.state == MediaPlayerState.OFF:
@@ -187,24 +165,29 @@ class ForkedDaapdZone(MediaPlayerEntity):
             await self.async_turn_off()
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the zone is available."""
         return self._available
 
+    @override
     async def async_turn_on(self) -> None:
         """Enable the output."""
         await self._api.change_output(self._output_id, selected=True)
 
+    @override
     async def async_turn_off(self) -> None:
         """Disable the output."""
         await self._api.change_output(self._output_id, selected=False)
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the zone."""
         return f"{FD_NAME} output ({self._output['name']})"
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """State of the zone."""
         if self._output["selected"]:
@@ -212,15 +195,18 @@ class ForkedDaapdZone(MediaPlayerEntity):
         return MediaPlayerState.OFF
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._output["volume"] / 100
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self._output["volume"] == 0
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
@@ -232,11 +218,13 @@ class ForkedDaapdZone(MediaPlayerEntity):
             target_volume = self._last_volume  # restore volume level
         await self.async_set_volume_level(volume=target_volume)
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume - input range [0,1]."""
         await self._api.set_volume(volume=volume * 100, output_id=self._output_id)
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return SUPPORTED_FEATURES_ZONE
@@ -247,9 +235,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
 
     _attr_should_poll = False
 
-    def __init__(
-        self, clientsession, api, ip_address, api_port, api_password, config_entry
-    ):
+    def __init__(self, clientsession, api, ip_address, config_entry):
         """Initialize the ForkedDaapd Master Device."""
         # Leave the api public so the browse media helpers can use it
         self.api = api
@@ -276,7 +262,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._on_remove = None
         self._available = False
         self._clientsession = clientsession
-        self._config_entry = config_entry
+        self._entry_id = config_entry.entry_id
         self.update_options(config_entry.options)
         self._paused_event = asyncio.Event()
         self._pause_requested = False
@@ -284,47 +270,48 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._source = SOURCE_NAME_DEFAULT
         self._max_playlists = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Use lifecycle hooks."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_PLAYER.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_PLAYER.format(self._entry_id),
                 self._update_player,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_QUEUE.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_QUEUE.format(self._entry_id),
                 self._update_queue,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_OUTPUTS.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
                 self._update_outputs,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_MASTER.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_MASTER.format(self._entry_id),
                 self._update_callback,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._config_entry.entry_id),
+                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._entry_id),
                 self.update_options,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_DATABASE.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_DATABASE.format(self._entry_id),
                 self._update_database,
             )
         )
@@ -375,7 +362,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             self._queue["count"] >= 1
             and self._queue["items"][0]["data_kind"] == "pipe"
             and self._queue["items"][0]["title"] in KNOWN_PIPES
-        ):  # if we're playing a pipe, set the source automatically so we can forward controls
+        ):  # if playing a pipe, set source to forward controls
             self._source = f"{self._queue['items'][0]['title']} (pipe)"
         self._update_track_info()
         event.set()
@@ -413,42 +400,45 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 for track in self._queue["items"]
                 if track["id"] == self._player["item_id"]
             )
-        except (StopIteration, TypeError, KeyError):
+        except StopIteration, TypeError, KeyError:
             _LOGGER.debug("Could not get track info")
             self._track_info = defaultdict(str)
 
     @property
-    def unique_id(self):
+    @override
+    def unique_id(self) -> str:
         """Return unique ID."""
-        return self._config_entry.entry_id
+        return self._entry_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the master is available."""
         return self._available
 
+    @override
     async def async_turn_on(self) -> None:
         """Restore the last on outputs state."""
         # restore state
         await self.api.set_volume(volume=self._last_volume * 100)
         if self._last_outputs:
-            futures: list[asyncio.Task[int]] = []
-            for output in self._last_outputs:
-                futures.append(
-                    asyncio.create_task(
-                        self.api.change_output(
-                            output["id"],
-                            selected=output["selected"],
-                            volume=output["volume"],
-                        )
+            futures: list[asyncio.Task[int]] = [
+                asyncio.create_task(
+                    self.api.change_output(
+                        output["id"],
+                        selected=output["selected"],
+                        volume=output["volume"],
                     )
                 )
+                for output in self._last_outputs
+            ]
             await asyncio.wait(futures)
         else:  # enable all outputs
             await self.api.set_enabled_outputs(
                 [output["id"] for output in self._outputs]
             )
 
+    @override
     async def async_turn_off(self) -> None:
         """Pause player and store outputs state."""
         await self.async_media_pause()
@@ -456,6 +446,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         if any(output["selected"] for output in self._outputs):
             await self.api.set_enabled_outputs([])
 
+    @override
     async def async_toggle(self) -> None:
         """Toggle the power on the device.
 
@@ -468,11 +459,13 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             await self.async_turn_off()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return f"{FD_NAME} server"
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
         if self._player["state"] == "play":
@@ -486,41 +479,51 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._player["volume"] / 100
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._player["volume"] == 0
 
     @property
-    def media_content_id(self):
+    @override
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self._player["item_id"]
+        if (item_id := self._player["item_id"]) == 0:
+            return None
+        return str(item_id)
 
     @property
+    @override
     def media_content_type(self):
         """Content type of current playing media."""
         return self._track_info["media_kind"]
 
     @property
+    @override
     def media_duration(self):
         """Duration of current playing media in seconds."""
         return self._player["item_length_ms"] / 1000
 
     @property
+    @override
     def media_position(self):
         """Position of current playing media in seconds."""
         return self._player["item_progress_ms"] / 1000
 
     @property
+    @override
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
         return self._player_last_updated
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         # Use album field when data_kind is url
@@ -530,11 +533,13 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return self._track_info["title"]
 
     @property
+    @override
     def media_artist(self):
         """Artist of current playing media, music track only."""
         return self._track_info["artist"]
 
     @property
+    @override
     def media_album_name(self):
         """Album name of current playing media, music track only."""
         # Use title field when data_kind is url
@@ -544,35 +549,42 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         return self._track_info["album"]
 
     @property
+    @override
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
         return self._track_info["album_artist"]
 
     @property
+    @override
     def media_track(self):
         """Track number of current playing media, music track only."""
         return self._track_info["track_number"]
 
     @property
+    @override
     def shuffle(self):
         """Boolean if shuffle is enabled."""
         return self._player["shuffle"]
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return SUPPORTED_FEATURES
 
     @property
+    @override
     def source(self):
         """Name of the current input source."""
         return self._source
 
     @property
+    @override
     def source_list(self):
         """List of available input sources."""
         return [*self._sources_uris]
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
@@ -584,10 +596,12 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             target_volume = self._last_volume  # restore volume level
         await self.api.set_volume(volume=target_volume * 100)
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume - input range [0,1]."""
         await self.api.set_volume(volume=volume * 100)
 
+    @override
     async def async_media_play(self) -> None:
         """Start playback."""
         if self._use_pipe_control():
@@ -595,6 +609,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             await self.api.start_playback()
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause playback."""
         if self._use_pipe_control():
@@ -602,6 +617,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             await self.api.pause_playback()
 
+    @override
     async def async_media_stop(self) -> None:
         """Stop playback."""
         if self._use_pipe_control():
@@ -609,6 +625,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             await self.api.stop_playback()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         if self._use_pipe_control():
@@ -618,6 +635,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             await self.api.previous_track()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         if self._use_pipe_control():
@@ -625,19 +643,23 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         else:
             await self.api.next_track()
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to position."""
         await self.api.seek(position_ms=position * 1000)
 
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear playlist."""
         await self.api.clear_queue()
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self.api.shuffle(shuffle)
 
     @property
+    @override
     def media_image_url(self):
         """Image url of current playing media."""
         if url := self._track_info.get("artwork_url"):
@@ -650,15 +672,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._last_outputs = self._outputs
         if self._outputs:
             await self.api.set_volume(volume=self._tts_volume * 100)
-            futures = []
-            for output in self._outputs:
-                futures.append(
-                    asyncio.create_task(
-                        self.api.change_output(
-                            output["id"], selected=True, volume=self._tts_volume * 100
-                        )
+            futures = [
+                asyncio.create_task(
+                    self.api.change_output(
+                        output["id"], selected=True, volume=self._tts_volume * 100
                     )
                 )
+                for output in self._outputs
+            ]
             await asyncio.wait(futures)
 
     async def _pause_and_wait_for_callback(self):
@@ -668,10 +689,11 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         try:
             async with asyncio.timeout(CALLBACK_TIMEOUT):
                 await self._paused_event.wait()  # wait for paused
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pause_requested = False
         self._paused_event.clear()
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -701,7 +723,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
-            return await self._async_announce(media_id)
+            await self._async_announce(media_id)
+            return
 
         # if kwargs[ATTR_MEDIA_ENQUEUE] is None, we assume MediaPlayerEnqueue.REPLACE
         # if kwargs[ATTR_MEDIA_ENQUEUE] is True, we assume MediaPlayerEnqueue.ADD
@@ -711,11 +734,12 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
         )
         if enqueue in {True, MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE}:
-            return await self.api.add_to_queue(
+            await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
                 clear=enqueue == MediaPlayerEnqueue.REPLACE,
             )
+            return
 
         current_position = next(
             (
@@ -726,13 +750,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             0,
         )
         if enqueue == MediaPlayerEnqueue.NEXT:
-            return await self.api.add_to_queue(
+            await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
                 position=current_position + 1,
             )
+            return
         # enqueue == MediaPlayerEnqueue.PLAY
-        return await self.api.add_to_queue(
+        await self.api.add_to_queue(
             uris=media_id,
             playback="start",
             position=current_position,
@@ -764,7 +789,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             async with asyncio.timeout(TTS_TIMEOUT):
                 await self._tts_playing_event.wait()
             # we have started TTS, now wait for completion
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._tts_requested = False
             _LOGGER.warning("TTS request timed out")
         await asyncio.sleep(
@@ -800,6 +825,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         if saved_state != MediaPlayerState.PLAYING:
             await self.async_media_stop()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Change source.
 
@@ -826,14 +852,16 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return self._source[:-7]
         return ""
 
-    async def _pipe_call(self, pipe_name, base_function_name):
-        if self._pipe_control_api.get(pipe_name):
-            return await getattr(
-                self._pipe_control_api[pipe_name],
+    async def _pipe_call(self, pipe_name, base_function_name) -> None:
+        if pipe := self._pipe_control_api.get(pipe_name):
+            await getattr(
+                pipe,
                 PIPE_FUNCTION_MAP[pipe_name][base_function_name],
             )()
+            return
         _LOGGER.warning("No pipe control available for %s", pipe_name)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -871,6 +899,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         # media_content_type should only be None if media_content_id is None
         return await get_owntone_content(self, media_content_id)
 
+    @override
     async def async_get_browse_image(
         self,
         media_content_type: MediaType | str,
@@ -899,122 +928,3 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         if url := result.get("artwork_url"):
             return await self._async_fetch_image(self.api.full_url(url))
         return None, None
-
-
-class ForkedDaapdUpdater:
-    """Manage updates for the forked-daapd device."""
-
-    def __init__(self, hass, api, entry_id):
-        """Initialize."""
-        self.hass = hass
-        self._api = api
-        self.websocket_handler = None
-        self._all_output_ids = set()
-        self._entry_id = entry_id
-
-    async def async_init(self):
-        """Perform async portion of class initialization."""
-        if not (server_config := await self._api.get_request("config")):
-            raise PlatformNotReady
-        if websocket_port := server_config.get("websocket_port"):
-            self.websocket_handler = asyncio.create_task(
-                self._api.start_websocket_handler(
-                    websocket_port,
-                    WS_NOTIFY_EVENT_TYPES,
-                    self._update,
-                    WEBSOCKET_RECONNECT_TIME,
-                    self._disconnected_callback,
-                )
-            )
-        else:
-            _LOGGER.error("Invalid websocket port")
-
-    async def _disconnected_callback(self):
-        """Send update signals when the websocket gets disconnected."""
-        async_dispatcher_send(
-            self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), False
-        )
-        async_dispatcher_send(
-            self.hass, SIGNAL_UPDATE_OUTPUTS.format(self._entry_id), []
-        )
-
-    async def _update(self, update_types):
-        """Private update method."""
-        update_types = set(update_types)
-        update_events = {}
-        _LOGGER.debug("Updating %s", update_types)
-        if (
-            "queue" in update_types
-        ):  # update queue, queue before player for async_play_media
-            if queue := await self._api.get_request("queue"):
-                update_events["queue"] = asyncio.Event()
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_UPDATE_QUEUE.format(self._entry_id),
-                    queue,
-                    update_events["queue"],
-                )
-        # order of below don't matter
-        if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
-            if outputs := await self._api.get_request("outputs"):
-                outputs = outputs["outputs"]
-                update_events[
-                    "outputs"
-                ] = asyncio.Event()  # only for master, zones should ignore
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
-                    outputs,
-                    update_events["outputs"],
-                )
-                self._add_zones(outputs)
-        if not {"database"}.isdisjoint(update_types):
-            pipes, playlists = await asyncio.gather(
-                self._api.get_pipes(), self._api.get_playlists()
-            )
-            update_events["database"] = asyncio.Event()
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_UPDATE_DATABASE.format(self._entry_id),
-                pipes,
-                playlists,
-                update_events["database"],
-            )
-        if not {"update", "config"}.isdisjoint(update_types):  # not supported
-            _LOGGER.debug("update/config notifications neither requested nor supported")
-        if not {"player", "options", "volume"}.isdisjoint(
-            update_types
-        ):  # update player
-            if player := await self._api.get_request("player"):
-                update_events["player"] = asyncio.Event()
-                if update_events.get("queue"):
-                    await update_events[
-                        "queue"
-                    ].wait()  # make sure queue done before player for async_play_media
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_UPDATE_PLAYER.format(self._entry_id),
-                    player,
-                    update_events["player"],
-                )
-        if update_events:
-            await asyncio.wait(
-                [asyncio.create_task(event.wait()) for event in update_events.values()]
-            )  # make sure callbacks done before update
-            async_dispatcher_send(
-                self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), True
-            )
-
-    def _add_zones(self, outputs):
-        outputs_to_add = []
-        for output in outputs:
-            if output["id"] not in self._all_output_ids:
-                self._all_output_ids.add(output["id"])
-                outputs_to_add.append(output)
-        if outputs_to_add:
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_ADD_ZONES.format(self._entry_id),
-                self._api,
-                outputs_to_add,
-            )

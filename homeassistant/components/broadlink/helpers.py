@@ -1,4 +1,5 @@
 """Helper functions for the Broadlink integration."""
+
 from base64 import b64decode
 
 from homeassistant import config_entries

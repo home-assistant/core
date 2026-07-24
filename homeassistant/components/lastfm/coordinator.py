@@ -1,8 +1,8 @@
 """DataUpdateCoordinator for the LastFM integration."""
-from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from pylast import LastFMNetwork, PyLastError, Track
 
@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_USERS, DOMAIN, LOGGER
+
+type LastFMConfigEntry = ConfigEntry[LastFMDataUpdateCoordinator]
 
 
 def format_track(track: Track | None) -> str | None:
@@ -38,16 +40,18 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
     config_entry: ConfigEntry
     _client: LastFMNetwork
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the LastFM data coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self._client = LastFMNetwork(api_key=self.config_entry.options[CONF_API_KEY])
+        self._client = LastFMNetwork(api_key=config_entry.options[CONF_API_KEY])
 
+    @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
         res = {}
         for username in self.config_entry.options[CONF_USERS]:

@@ -1,4 +1,6 @@
 """PyTest fixtures and test helpers."""
+
+from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -7,6 +9,7 @@ import pytest
 
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -45,7 +48,6 @@ def mock_only_feature(spec, set_spec: bool = True, **kwargs):
 def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     """Mock a feature along with whole product setup."""
     feature_mock = mock_only_feature(spec, set_spec, **kwargs)
-    feature_mock.async_update = AsyncMock()
     product = setup_product_mock(category, [feature_mock])
 
     type(feature_mock.product).name = PropertyMock(return_value="Some name")
@@ -53,14 +55,28 @@ def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     type(feature_mock.product).model = PropertyMock(return_value="some model")
     type(feature_mock.product).brand = PropertyMock(return_value="BleBox")
     type(feature_mock.product).firmware_version = PropertyMock(return_value="1.23")
+    type(feature_mock.product).hardware_version = PropertyMock(return_value="0.1")
+    type(feature_mock.product).available_firmware_version = PropertyMock(
+        return_value="1.0.1"
+    )
+    type(feature_mock.product).api_version = PropertyMock(return_value=20200229)
+    type(feature_mock.product).last_data = PropertyMock(return_value={"state": 1})
     type(feature_mock.product).unique_id = PropertyMock(return_value="abcd0123ef5678")
     type(feature_mock).product = PropertyMock(return_value=product)
     return feature_mock
 
 
-def mock_config(ip_address="172.100.123.4"):
+def mock_config(ip_address="172.100.123.4", unique_id="abcd0123ef5678"):
     """Return a Mock of the HA entity config."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80})
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: ip_address, CONF_PORT: 80}, unique_id=unique_id
+    )
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture() -> MockConfigEntry:
+    """Return a MockConfigEntry for blebox."""
+    return mock_config()
 
 
 @pytest.fixture(name="config")
@@ -70,12 +86,28 @@ def config_fixture():
 
 
 @pytest.fixture(name="feature")
-def feature_fixture(request):
+def feature_fixture(request: pytest.FixtureRequest) -> Any:
     """Return an entity wrapper from given fixture name."""
     return request.getfixturevalue(request.param)
 
 
-async def async_setup_entities(hass, entity_ids):
+async def async_setup_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    *,
+    assert_success: bool = False,
+) -> None:
+    """Add and set up the given config entry."""
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+    if assert_success:
+        assert result
+    await hass.async_block_till_done()
+
+
+async def async_setup_entities(
+    hass: HomeAssistant, entity_ids: list[str]
+) -> list[er.RegistryEntry]:
     """Return configured entries with the given entity ids."""
 
     config_entry = mock_config()
@@ -88,7 +120,7 @@ async def async_setup_entities(hass, entity_ids):
     return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
 
 
-async def async_setup_entity(hass, entity_id):
+async def async_setup_entity(hass: HomeAssistant, entity_id: str) -> er.RegistryEntry:
     """Return a configured entry with the given entity_id."""
 
     return (await async_setup_entities(hass, [entity_id]))[0]

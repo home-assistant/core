@@ -39,7 +39,8 @@ SHARK_METADATA_DICT = [
     }
 ]
 
-# Dummy shark.properties_full for testing.  NB: this only includes those properties in the tests
+# Dummy shark.properties_full for testing.
+# NB: this only includes those properties in the tests
 SHARK_PROPERTIES_DICT = {
     "Battery_Capacity": {"base_type": "integer", "read_only": True, "value": 50},
     "Charging_Status": {"base_type": "boolean", "read_only": True, "value": 0},
@@ -64,6 +65,11 @@ SHARK_PROPERTIES_DICT = {
         "base_type": "string",
         "read_only": True,
         "value": "Dummy Firmware 1.0",
+    },
+    "Robot_Room_List": {
+        "base_type": "string",
+        "read_only": True,
+        "value": "AY001MRT1:Kitchen:Living Room",
     },
 }
 

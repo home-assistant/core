@@ -1,15 +1,12 @@
 """Philips TV menu switches."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 
 HUE_POWER_OFF = "Off"
@@ -18,13 +15,11 @@ HUE_POWER_ON = "On"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: PhilipsTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-    coordinator: PhilipsTVDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     async_add_entities([PhilipsTVScreenSwitch(coordinator)])
 
@@ -45,10 +40,10 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_icon = "mdi:television-shimmer"
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         if not super().available:
@@ -58,14 +53,17 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
         return self.coordinator.api.powerstate == "On"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.coordinator.api.screenstate == "On"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.setScreenState("On")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.setScreenState("Off")
@@ -84,10 +82,10 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_icon = "mdi:television-ambient-light"
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         if not super().available:
@@ -97,15 +95,18 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
         return self.coordinator.api.powerstate == "On"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.coordinator.api.huelamp_power == HUE_POWER_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.setHueLampPower(HUE_POWER_ON)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.setHueLampPower(HUE_POWER_OFF)

@@ -1,15 +1,14 @@
 """Support for wake on lan."""
-from __future__ import annotations
 
 import logging
 import subprocess as sp
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import wakeonlan
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -20,22 +19,16 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_OFF_ACTION = "turn_off"
-
-DEFAULT_NAME = "Wake on LAN"
-DEFAULT_PING_TIMEOUT = 1
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
@@ -47,10 +40,10 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a wake on lan switch."""
@@ -61,7 +54,7 @@ def setup_platform(
     name: str = config[CONF_NAME]
     off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
 
-    add_entities(
+    async_add_entities(
         [
             WolSwitch(
                 hass,
@@ -105,10 +98,12 @@ class WolSwitch(SwitchEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         service_kwargs: dict[str, Any] = {}
@@ -117,7 +112,7 @@ class WolSwitch(SwitchEntity):
         if self._broadcast_port is not None:
             service_kwargs["port"] = self._broadcast_port
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Send magic packet to mac %s (broadcast: %s, port: %s)",
             self._mac_address,
             self._broadcast_address,
@@ -128,8 +123,20 @@ class WolSwitch(SwitchEntity):
 
         if self._attr_assumed_state:
             self._state = True
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up script when removing from Home Assistant."""
+        if self._off_script is None:
+            return
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script as it will be reused.
+            await self._off_script.async_stop()
+            return
+        await self._off_script.async_unload()
+
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
@@ -137,10 +144,10 @@ class WolSwitch(SwitchEntity):
 
         if self._attr_assumed_state:
             self._state = False
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self) -> None:
-        """Check if device is on and update the state. Only called if assumed state is false."""
+        """Check if device is on and update the state."""
         ping_cmd = [
             "ping",
             "-c",

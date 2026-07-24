@@ -1,4 +1,5 @@
 """Tests for the Nightscout integration."""
+
 import json
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ from py_nightscout.models import SGV, ServerStatus
 
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -24,23 +26,70 @@ SERVER_STATUS = ServerStatus.new_from_json_dict(
 )
 SERVER_STATUS_STATUS_ONLY = ServerStatus.new_from_json_dict(
     json.loads(
-        '{"status":"ok","name":"nightscout","version":"14.0.4","serverTime":"2020-09-25T21:03:59.315Z","serverTimeEpoch":1601067839315,"apiEnabled":true,"careportalEnabled":true,"boluscalcEnabled":true,"settings":{"units":"mg/dl","timeFormat":12,"nightMode":false,"editMode":true,"showRawbg":"never","customTitle":"Nightscout","theme":"default","alarmUrgentHigh":true,"alarmUrgentHighMins":[30,60,90,120],"alarmHigh":true,"alarmHighMins":[30,60,90,120],"alarmLow":true,"alarmLowMins":[15,30,45,60],"alarmUrgentLow":true,"alarmUrgentLowMins":[15,30,45],"alarmUrgentMins":[30,60,90,120],"alarmWarnMins":[30,60,90,120],"alarmTimeagoWarn":true,"alarmTimeagoWarnMins":15,"alarmTimeagoUrgent":true,"alarmTimeagoUrgentMins":30,"alarmPumpBatteryLow":false,"language":"en","scaleY":"log","showPlugins":"dbsize delta direction upbat","showForecast":"ar2","focusHours":3,"heartbeat":60,"baseURL":"","authDefaultRoles":"status-only","thresholds":{"bgHigh":260,"bgTargetTop":180,"bgTargetBottom":80,"bgLow":55},"insecureUseHttp":true,"secureHstsHeader":false,"secureHstsHeaderIncludeSubdomains":false,"secureHstsHeaderPreload":false,"secureCsp":false,"deNormalizeDates":false,"showClockDelta":false,"showClockLastTime":false,"bolusRenderOver":1,"frameUrl1":"","frameUrl2":"","frameUrl3":"","frameUrl4":"","frameUrl5":"","frameUrl6":"","frameUrl7":"","frameUrl8":"","frameName1":"","frameName2":"","frameName3":"","frameName4":"","frameName5":"","frameName6":"","frameName7":"","frameName8":"","DEFAULT_FEATURES":["bgnow","delta","direction","timeago","devicestatus","upbat","errorcodes","profile","dbsize"],"alarmTypes":["predict"],"enable":["careportal","boluscalc","food","bwp","cage","sage","iage","iob","cob","basal","ar2","rawbg","pushover","bgi","pump","openaps","treatmentnotify","bgnow","delta","direction","timeago","devicestatus","upbat","errorcodes","profile","dbsize","ar2"]},"extendedSettings":{"devicestatus":{"advanced":true,"days":1}},"authorized":null}'
+        '{"status":"ok","name":"nightscout","version":"14.0.4",'
+        '"serverTime":"2020-09-25T21:03:59.315Z",'
+        '"serverTimeEpoch":1601067839315,"apiEnabled":true,'
+        '"careportalEnabled":true,"boluscalcEnabled":true,'
+        '"settings":{"units":"mg/dl","timeFormat":12,'
+        '"nightMode":false,"editMode":true,'
+        '"showRawbg":"never","customTitle":"Nightscout",'
+        '"theme":"default","alarmUrgentHigh":true,'
+        '"alarmUrgentHighMins":[30,60,90,120],'
+        '"alarmHigh":true,"alarmHighMins":[30,60,90,120],'
+        '"alarmLow":true,"alarmLowMins":[15,30,45,60],'
+        '"alarmUrgentLow":true,"alarmUrgentLowMins":[15,30,45],'
+        '"alarmUrgentMins":[30,60,90,120],'
+        '"alarmWarnMins":[30,60,90,120],'
+        '"alarmTimeagoWarn":true,"alarmTimeagoWarnMins":15,'
+        '"alarmTimeagoUrgent":true,"alarmTimeagoUrgentMins":30,'
+        '"alarmPumpBatteryLow":false,"language":"en",'
+        '"scaleY":"log",'
+        '"showPlugins":"dbsize delta direction upbat",'
+        '"showForecast":"ar2","focusHours":3,"heartbeat":60,'
+        '"baseURL":"","authDefaultRoles":"status-only",'
+        '"thresholds":{"bgHigh":260,"bgTargetTop":180,'
+        '"bgTargetBottom":80,"bgLow":55},'
+        '"insecureUseHttp":true,"secureHstsHeader":false,'
+        '"secureHstsHeaderIncludeSubdomains":false,'
+        '"secureHstsHeaderPreload":false,"secureCsp":false,'
+        '"deNormalizeDates":false,"showClockDelta":false,'
+        '"showClockLastTime":false,"bolusRenderOver":1,'
+        '"frameUrl1":"","frameUrl2":"","frameUrl3":"",'
+        '"frameUrl4":"","frameUrl5":"","frameUrl6":"",'
+        '"frameUrl7":"","frameUrl8":"","frameName1":"",'
+        '"frameName2":"","frameName3":"","frameName4":"",'
+        '"frameName5":"","frameName6":"","frameName7":"",'
+        '"frameName8":"","DEFAULT_FEATURES":["bgnow","delta",'
+        '"direction","timeago","devicestatus","upbat",'
+        '"errorcodes","profile","dbsize"],'
+        '"alarmTypes":["predict"],'
+        '"enable":["careportal","boluscalc","food","bwp",'
+        '"cage","sage","iage","iob","cob","basal","ar2",'
+        '"rawbg","pushover","bgi","pump","openaps",'
+        '"treatmentnotify","bgnow","delta","direction",'
+        '"timeago","devicestatus","upbat","errorcodes",'
+        '"profile","dbsize","ar2"]},'
+        '"extendedSettings":{"devicestatus":'
+        '{"advanced":true,"days":1}},"authorized":null}'
     )
 )
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "https://some.url:1234"},
     )
-    with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
-        return_value=GLUCOSE_READINGS,
-    ), patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
-        return_value=SERVER_STATUS,
+    with (
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+            return_value=GLUCOSE_READINGS,
+        ),
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+            return_value=SERVER_STATUS,
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -49,18 +98,21 @@ async def init_integration(hass) -> MockConfigEntry:
     return entry
 
 
-async def init_integration_unavailable(hass) -> MockConfigEntry:
+async def init_integration_unavailable(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "https://some.url:1234"},
     )
-    with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
-        side_effect=ClientConnectionError(),
-    ), patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
-        return_value=SERVER_STATUS,
+    with (
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+            side_effect=ClientConnectionError(),
+        ),
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+            return_value=SERVER_STATUS,
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -69,17 +121,21 @@ async def init_integration_unavailable(hass) -> MockConfigEntry:
     return entry
 
 
-async def init_integration_empty_response(hass) -> MockConfigEntry:
+async def init_integration_empty_response(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "https://some.url:1234"},
     )
-    with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs", return_value=[]
-    ), patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
-        return_value=SERVER_STATUS,
+    with (
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+            return_value=SERVER_STATUS,
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

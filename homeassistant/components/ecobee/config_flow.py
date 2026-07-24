@@ -1,67 +1,137 @@
 """Config flow to configure ecobee."""
+
+from collections.abc import Mapping
+from typing import Any, override
+
 from pyecobee import (
     ECOBEE_API_KEY,
-    ECOBEE_CONFIG_FILENAME,
-    ECOBEE_REFRESH_TOKEN,
+    ECOBEE_PASSWORD,
+    ECOBEE_USERNAME,
     Ecobee,
+    EcobeeAuthFailedError,
+    EcobeeAuthMfaRequiredError,
+    EcobeeAuthUnknownError,
+    MfaChallenge,
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.json import load_json_object
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 
-from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
+from .const import CONF_REFRESH_TOKEN, DOMAIN
+
+_USER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_API_KEY): str,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+    }
+)
+
+_MFA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
+_REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an ecobee config flow."""
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the ecobee flow."""
-        self._ecobee = None
+    _ecobee: Ecobee
+    _mfa_challenge: MfaChallenge | None = None
+    _pending_username: str | None = None
+    _pending_password: str | None = None
 
-    async def async_step_user(self, user_input=None):
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            # Config entry already exists, only one allowed.
-            return self.async_abort(reason="single_instance_allowed")
-
-        errors = {}
-        stored_api_key = (
-            self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
-            if DATA_ECOBEE_CONFIG in self.hass.data
-            else ""
-        )
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Use the user-supplied API key to attempt to obtain a PIN from ecobee.
-            self._ecobee = Ecobee(config={ECOBEE_API_KEY: user_input[CONF_API_KEY]})
+            api_key = user_input.get(CONF_API_KEY)
+            username = user_input.get(CONF_USERNAME)
+            password = user_input.get(CONF_PASSWORD)
 
-            if await self.hass.async_add_executor_job(self._ecobee.request_pin):
-                # We have a PIN; move to the next step of the flow.
-                return await self.async_step_authorize()
-            errors["base"] = "pin_request_failed"
+            if api_key and not (username or password):
+                self._ecobee = Ecobee(config={ECOBEE_API_KEY: api_key})
+                if await self.hass.async_add_executor_job(self._ecobee.request_pin):
+                    return await self.async_step_authorize()
+                errors["base"] = "pin_request_failed"
+            elif username and password and not api_key:
+                self._pending_username = username
+                self._pending_password = password
+                self._ecobee = Ecobee(
+                    config={
+                        ECOBEE_USERNAME: username,
+                        ECOBEE_PASSWORD: password,
+                    }
+                )
+                try:
+                    success = await self.hass.async_add_executor_job(
+                        self._ecobee.refresh_tokens
+                    )
+                except EcobeeAuthMfaRequiredError as err:
+                    self._mfa_challenge = err.args[0]
+                    return await self.async_step_mfa()
+                except EcobeeAuthFailedError:
+                    errors["base"] = "invalid_auth"
+                except EcobeeAuthUnknownError:
+                    errors["base"] = "unknown"
+                else:
+                    if success:
+                        return self._async_create_or_update_entry()
+                    errors["base"] = "login_failed"
+            else:
+                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_API_KEY, default=stored_api_key): str}
-            ),
+            data_schema=_USER_SCHEMA,
             errors=errors,
         )
 
-    async def async_step_authorize(self, user_input=None):
-        """Present the user with the PIN so that the app can be authorized on ecobee.com."""
-        errors = {}
+    async def async_step_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Collect an MFA OTP code and complete the login."""
+        assert self._mfa_challenge is not None
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Attempt to obtain tokens from ecobee and finish the flow.
+            code = user_input[CONF_CODE].strip()
+            if not code:
+                errors["base"] = "invalid_mfa_code"
+            else:
+                try:
+                    success = await self.hass.async_add_executor_job(
+                        self._ecobee.submit_mfa_code, self._mfa_challenge, code
+                    )
+                except EcobeeAuthFailedError:
+                    errors["base"] = "invalid_mfa_code"
+                except EcobeeAuthUnknownError:
+                    errors["base"] = "unknown"
+                else:
+                    if success:
+                        return self._async_create_or_update_entry()
+                    errors["base"] = "invalid_mfa_code"
+
+        return self.async_show_form(
+            step_id="mfa",
+            data_schema=_MFA_SCHEMA,
+            errors=errors,
+            description_placeholders={"mfa_type": self._mfa_challenge.mfa_type},
+        )
+
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Present the user with the PIN so that the app can be authorized on ecobee.com."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
             if await self.hass.async_add_executor_job(self._ecobee.request_tokens):
-                # Refresh token obtained; create the config entry.
                 config = {
                     CONF_API_KEY: self._ecobee.api_key,
                     CONF_REFRESH_TOKEN: self._ecobee.refresh_token,
@@ -72,52 +142,66 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="authorize",
             errors=errors,
-            description_placeholders={"pin": self._ecobee.pin},
+            description_placeholders={
+                "pin": self._ecobee.pin,
+                "auth_url": "https://www.ecobee.com/consumerportal/index.html",
+            },
         )
 
-    async def async_step_import(self, import_data):
-        """Import ecobee config from configuration.yaml.
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an ecobee authentication error."""
+        self._pending_username = entry_data.get(CONF_USERNAME)
+        self._pending_password = entry_data.get(CONF_PASSWORD)
+        return await self.async_step_reauth_confirm()
 
-        Triggered by async_setup only if a config entry doesn't already exist.
-        If ecobee.conf exists, we will attempt to validate the credentials
-        and create an entry if valid. Otherwise, we will delegate to the user
-        step so that the user can continue the config flow.
-        """
-        try:
-            legacy_config = await self.hass.async_add_executor_job(
-                load_json_object, self.hass.config.path(ECOBEE_CONFIG_FILENAME)
-            )
-            config = {
-                ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
-                ECOBEE_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
-            }
-        except (HomeAssistantError, KeyError):
-            _LOGGER.debug(
-                "No valid ecobee.conf configuration found for import, delegating to"
-                " user step"
-            )
-            return await self.async_step_user(
-                user_input={
-                    CONF_API_KEY: self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-run the web login. May surface a fresh MFA challenge."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._pending_password = user_input[CONF_PASSWORD]
+            self._ecobee = Ecobee(
+                config={
+                    ECOBEE_USERNAME: self._pending_username,
+                    ECOBEE_PASSWORD: self._pending_password,
                 }
             )
+            try:
+                success = await self.hass.async_add_executor_job(
+                    self._ecobee.refresh_tokens
+                )
+            except EcobeeAuthMfaRequiredError as err:
+                self._mfa_challenge = err.args[0]
+                return await self.async_step_mfa()
+            except EcobeeAuthFailedError:
+                errors["base"] = "invalid_auth"
+            except EcobeeAuthUnknownError:
+                errors["base"] = "unknown"
+            else:
+                if success:
+                    return self._async_create_or_update_entry()
+                errors["base"] = "login_failed"
 
-        ecobee = Ecobee(config=config)
-        if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
-            # Credentials found and validated; create the entry.
-            _LOGGER.debug(
-                "Valid ecobee configuration found for import, creating configuration"
-                " entry"
-            )
-            return self.async_create_entry(
-                title=DOMAIN,
-                data={
-                    CONF_API_KEY: ecobee.api_key,
-                    CONF_REFRESH_TOKEN: ecobee.refresh_token,
-                },
-            )
-        return await self.async_step_user(
-            user_input={
-                CONF_API_KEY: self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
-            }
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=_REAUTH_SCHEMA,
+            errors=errors,
+            description_placeholders={"username": self._pending_username or ""},
         )
+
+    def _async_create_or_update_entry(self) -> ConfigFlowResult:
+        """Create a new entry or update the existing one on reauth."""
+        data = {
+            CONF_USERNAME: self._pending_username,
+            CONF_PASSWORD: self._pending_password,
+            CONF_REFRESH_TOKEN: self._ecobee.refresh_token,
+        }
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+        return self.async_create_entry(title=DOMAIN, data=data)

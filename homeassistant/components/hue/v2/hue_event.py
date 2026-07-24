@@ -1,4 +1,5 @@
 """Handle forward of events transmitted by Hue devices to HASS."""
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_hue_events(bridge: "HueBridge"):
+async def async_setup_hue_events(bridge: HueBridge):
     """Manage listeners for stateless Hue sensors that emit events."""
     hass = bridge.hass
     api: HueBridgeV2 = bridge.api  # to satisfy typing
@@ -44,15 +45,18 @@ async def async_setup_hue_events(bridge: "HueBridge"):
             return
 
         hue_device = btn_controller.get_device(hue_resource.id)
-        device = dev_reg.async_get_device(identifiers={(DOMAIN, hue_device.id)})
+        device = dev_reg.async_get_device_by_identifier(
+            (DOMAIN, hue_device.id), conf_entry.entry_id
+        )
 
         # Fire event
         data = {
-            # send slugified entity name as id = backwards compatibility with previous version
+            # send slugified entity name as id = backwards
+            # compatibility with previous version
             CONF_ID: slugify(f"{hue_device.metadata.name} Button"),
             CONF_DEVICE_ID: device.id,  # type: ignore[union-attr]
             CONF_UNIQUE_ID: hue_resource.id,
-            CONF_TYPE: hue_resource.button.last_event.value,
+            CONF_TYPE: hue_resource.button.button_report.event.value,
             CONF_SUBTYPE: hue_resource.metadata.control_id,
         }
         hass.bus.async_fire(ATTR_HUE_EVENT, data)
@@ -70,16 +74,20 @@ async def async_setup_hue_events(bridge: "HueBridge"):
         LOGGER.debug("Received relative_rotary event: %s", hue_resource)
 
         hue_device = btn_controller.get_device(hue_resource.id)
-        device = dev_reg.async_get_device(identifiers={(DOMAIN, hue_device.id)})
+        device = dev_reg.async_get_device_by_identifier(
+            (DOMAIN, hue_device.id), conf_entry.entry_id
+        )
 
         # Fire event
         data = {
             CONF_DEVICE_ID: device.id,  # type: ignore[union-attr]
             CONF_UNIQUE_ID: hue_resource.id,
-            CONF_TYPE: hue_resource.relative_rotary.last_event.action.value,
-            CONF_SUBTYPE: hue_resource.relative_rotary.last_event.rotation.direction.value,
-            CONF_DURATION: hue_resource.relative_rotary.last_event.rotation.duration,
-            CONF_STEPS: hue_resource.relative_rotary.last_event.rotation.steps,
+            CONF_TYPE: hue_resource.relative_rotary.rotary_report.action.value,
+            CONF_SUBTYPE: (
+                hue_resource.relative_rotary.rotary_report.rotation.direction.value
+            ),
+            CONF_DURATION: hue_resource.relative_rotary.rotary_report.rotation.duration,
+            CONF_STEPS: hue_resource.relative_rotary.rotary_report.rotation.steps,
         }
         hass.bus.async_fire(ATTR_HUE_EVENT, data)
 

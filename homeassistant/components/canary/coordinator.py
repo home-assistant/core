@@ -1,15 +1,16 @@
 """Provides the Canary DataUpdateCoordinator."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import ValuesView
 from datetime import timedelta
 import logging
+from typing import override
 
 from canary.api import Api
 from canary.model import Location, Reading
 from requests.exceptions import ConnectTimeout, HTTPError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,10 +20,15 @@ from .model import CanaryData
 _LOGGER = logging.getLogger(__name__)
 
 
+type CanaryConfigEntry = ConfigEntry[CanaryDataUpdateCoordinator]
+
+
 class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
     """Class to manage fetching Canary data."""
 
-    def __init__(self, hass: HomeAssistant, *, api: Api) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: CanaryConfigEntry, *, api: Api
+    ) -> None:
         """Initialize global Canary data updater."""
         self.canary = api
         update_interval = timedelta(seconds=30)
@@ -30,6 +36,7 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=update_interval,
         )
@@ -45,15 +52,16 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
 
             for device in location.devices:
                 if device.is_online:
-                    readings_by_device_id[
-                        device.device_id
-                    ] = self.canary.get_latest_readings(device.device_id)
+                    readings_by_device_id[device.device_id] = (
+                        self.canary.get_latest_readings(device.device_id)
+                    )
 
         return {
             "locations": locations_by_id,
             "readings": readings_by_device_id,
         }
 
+    @override
     async def _async_update_data(self) -> CanaryData:
         """Fetch data from Canary."""
 

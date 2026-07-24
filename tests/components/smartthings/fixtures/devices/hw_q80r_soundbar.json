@@ -1,0 +1,106 @@
+{
+  "items": [
+    {
+      "deviceId": "afcf3b91-0000-1111-2222-ddff2a0a6577",
+      "name": "[AV] Samsung Soundbar Q80R",
+      "label": "Soundbar",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "VD-NetworkAudio-001S",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "c7f8e400-0000-1111-2222-76463f4eb484",
+      "ownerId": "bd0d9288-0000-1111-2222-68310a42a709",
+      "roomId": "be09ff51-0000-1111-2222-e48e2dab37fd",
+      "deviceTypeName": "Samsung OCF Network Audio Player",
+      "components": [
+        {
+          "id": "main",
+          "label": "Soundbar",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "audioTrackData",
+              "version": 1
+            },
+            {
+              "id": "mediaInputSource",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.audioInputSource",
+              "version": 1
+            },
+            {
+              "id": "mediaPlayback",
+              "version": 1
+            },
+            {
+              "id": "audioNotification",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.groupInfo",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "NetworkAudio",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2020-10-19T01:35:08Z",
+      "profile": {
+        "id": "c1036d88-000-1111-2222-a361463fd53f"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.networkaudio",
+        "name": "[AV] Samsung Soundbar Q80R",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "Q80R",
+        "platformVersion": "Tizen 4.0",
+        "platformOS": "4.1.10",
+        "hwVersion": "0-0",
+        "firmwareVersion": "HW-Q80RWWB-1012.6",
+        "vendorId": "VD-NetworkAudio-001S",
+        "vendorResourceClientServerVersion": "1.2",
+        "locale": "KO",
+        "lastSignupTime": "2021-01-16T07:05:02.184545Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

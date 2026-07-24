@@ -1,25 +1,18 @@
 """Platform for Flexit AC units with CI66 Modbus adapter."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import (
-    CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
-    DEFAULT_HUB,
-    ModbusHub,
-    get_hub,
-)
+from homeassistant.components.modbus import ModbusHub, get_hub
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -28,14 +21,20 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+# These constants are not offered by modbus, because modbus do not have
+# an official API.
+CALL_TYPE_REGISTER_HOLDING = "holding"
+CALL_TYPE_REGISTER_INPUT = "input"
 CALL_TYPE_WRITE_REGISTER = "write_register"
+DEFAULT_HUB = "modbus_hub"
+
 CONF_HUB = "hub"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
@@ -141,6 +140,7 @@ class Flexit(ClimateEntity):
             self._attr_hvac_action = HVACAction.OFF
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
@@ -153,6 +153,7 @@ class Flexit(ClimateEntity):
             "outdoor_air_temp": self._outdoor_air_temp,
         }
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -164,6 +165,7 @@ class Flexit(ClimateEntity):
         else:
             _LOGGER.error("Modbus error setting target temperature to Flexit")
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if self.fan_modes and await self._async_write_int16_to_register(

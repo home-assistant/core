@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/pocketcasts",
   "iot_class": "cloud_polling",
   "loggers": ["pycketcasts"],
+  "quality_scale": "legacy",
   "requirements": ["pycketcasts==1.0.1"]
 }

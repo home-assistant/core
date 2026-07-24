@@ -1,11 +1,12 @@
 """Support for V2C EVSE sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pytrydan import TrydanData
+from pytrydan.models.trydan import SlaveCommunicationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,29 +14,39 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import V2CUpdateCoordinator
+from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
+from .util import deprecate_entity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class V2CRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[TrydanData], float]
-
-
-@dataclass
-class V2CSensorEntityDescription(SensorEntityDescription, V2CRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class V2CSensorEntityDescription(SensorEntityDescription):
     """Describes an EVSE Power sensor entity."""
 
+    value_fn: Callable[[TrydanData], StateType]
+
+
+def get_meter_value(value: SlaveCommunicationState) -> str:
+    """Return the value of the enum and replace slave by meter."""
+    return value.name.lower().replace("slave", "meter")
+
+
+_METER_ERROR_OPTIONS = [get_meter_value(error) for error in SlaveCommunicationState]
 
 TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
@@ -45,6 +56,15 @@ TRYDAN_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.charge_power,
+    ),
+    V2CSensorEntityDescription(
+        key="voltage_installation",
+        translation_key="voltage_installation",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        value_fn=lambda evse_data: evse_data.voltage_installation,
+        entity_registry_enabled_default=False,
     ),
     V2CSensorEntityDescription(
         key="charge_energy",
@@ -78,28 +98,81 @@ TRYDAN_SENSORS = (
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.fv_power,
     ),
+    V2CSensorEntityDescription(
+        key="meter_error",
+        translation_key="meter_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda evse_data: get_meter_value(evse_data.slave_error),
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=_METER_ERROR_OPTIONS,
+    ),
+    V2CSensorEntityDescription(
+        key="battery_power",
+        translation_key="battery_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda evse_data: evse_data.battery_power,
+        entity_registry_enabled_default=False,
+    ),
+    V2CSensorEntityDescription(
+        key="ssid",
+        translation_key="ssid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda evse_data: evse_data.SSID,
+        entity_registry_enabled_default=False,
+    ),
+    V2CSensorEntityDescription(
+        key="ip_address",
+        translation_key="ip_address",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda evse_data: evse_data.IP,
+        entity_registry_enabled_default=False,
+    ),
+    V2CSensorEntityDescription(
+        key="signal_status",
+        translation_key="signal_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda evse_data: evse_data.signal_status,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: V2CConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up V2C sensor platform."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
 
-    async_add_entities(
-        V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)
-        for description in TRYDAN_SENSORS
-    )
+    entities: list[V2CSensorBaseEntity] = []
+    for description in TRYDAN_SENSORS:
+        if description.key == "voltage_installation" and not deprecate_entity(
+            hass=hass,
+            entity_registry=entity_registry,
+            platform_domain=Platform.SENSOR,
+            entity_unique_id=f"{config_entry.entry_id}_{description.key}",
+            issue_id=f"deprecated_sensor_{config_entry.entry_id}_{description.key}",
+            issue_string="deprecated_sensor",
+            replacement_entity_unique_id=f"{config_entry.entry_id}_{description.key}",
+            replacement_entity_id=f"number.evse_{description.key}",
+        ):
+            continue
+        entities.append(
+            V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)
+        )
+    async_add_entities(entities)
 
 
 class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
     """Defines a base v2c sensor entity."""
 
     entity_description: V2CSensorEntityDescription
-    _attr_icon = "mdi:ev-station"
 
     def __init__(
         self,
@@ -112,6 +185,7 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    @override
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

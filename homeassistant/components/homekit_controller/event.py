@@ -1,5 +1,6 @@
 """Support for Homekit motion sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
@@ -13,7 +14,7 @@ from homeassistant.components.event import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
@@ -21,6 +22,12 @@ from .entity import BaseCharacteristicEntity
 
 INPUT_EVENT_VALUES = {
     InputEventValues.SINGLE_PRESS: "single_press",
+    InputEventValues.DOUBLE_PRESS: "double_press",
+    InputEventValues.LONG_PRESS: "long_press",
+}
+
+DOORBELL_EVENT_VALUES = {
+    InputEventValues.SINGLE_PRESS: "ring",
     InputEventValues.DOUBLE_PRESS: "double_press",
     InputEventValues.LONG_PRESS: "long_press",
 }
@@ -49,17 +56,26 @@ class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
 
         self.entity_description = entity_description
 
-        # An INPUT_EVENT may support single_press, long_press and double_press. All are optional. So we have to
-        # clamp InputEventValues for this exact device
+        self._event_values = (
+            DOORBELL_EVENT_VALUES
+            if entity_description.device_class == EventDeviceClass.DOORBELL
+            else INPUT_EVENT_VALUES
+        )
+
+        # An INPUT_EVENT may support single_press, long_press and
+        # double_press. All are optional. So we have to clamp
+        # InputEventValues for this exact device
         self._attr_event_types = [
-            INPUT_EVENT_VALUES[v]
+            self._event_values[v]
             for v in clamp_enum_to_char(InputEventValues, self._char)
         ]
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [CharacteristicsTypes.INPUT_EVENT]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         await super().async_added_to_hass()
@@ -72,20 +88,20 @@ class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
         )
 
     @callback
-    def _handle_event(self):
+    def _handle_event(self) -> None:
         if self._char.value is None:
             # For IP backed devices the characteristic is marked as
             # pollable, but always returns None when polled
             # Make sure we don't explode if we see that edge case.
             return
-        self._trigger_event(INPUT_EVENT_VALUES[self._char.value])
+        self._trigger_event(self._event_values[self._char.value])
         self.async_write_ha_state()
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit event."""
     hkid: str = config_entry.data["AccessoryPairingID"]
@@ -117,21 +133,21 @@ async def async_setup_entry(
                 )
             )
 
-            for switch in switches:
-                # The Apple docs say that if we number the buttons ourselves
-                # We do it in service label index order. `switches` is already in
-                # that order.
-                entities.append(
-                    HomeKitEventEntity(
-                        conn,
-                        switch,
-                        EventEntityDescription(
-                            key=f"{service.accessory.aid}_{service.iid}",
-                            device_class=EventDeviceClass.BUTTON,
-                            translation_key="button",
-                        ),
-                    )
+            # The Apple docs say that if we number the buttons ourselves
+            # We do it in service label index order. `switches` is already in
+            # that order.
+            entities.extend(
+                HomeKitEventEntity(
+                    conn,
+                    switch,
+                    EventEntityDescription(
+                        key=f"{service.accessory.aid}_{service.iid}",
+                        device_class=EventDeviceClass.BUTTON,
+                        translation_key="button",
+                    ),
                 )
+                for switch in switches
+            )
 
         elif service.type == ServicesTypes.STATELESS_PROGRAMMABLE_SWITCH:
             # A stateless switch that has a SERVICE_LABEL_INDEX is part of a group

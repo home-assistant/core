@@ -1,135 +1,222 @@
-"""Test for Aladdin Connect init logic."""
-from unittest.mock import MagicMock, patch
+"""Tests for the Aladdin Connect integration."""
 
-from AIOAladdinConnect.session_manager import InvalidPasswordError
-from aiohttp import ClientConnectionError
+import http
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.aladdin_connect.const import DOMAIN
+from aiohttp import ClientConnectionError, RequestInfo
+from aiohttp.client_exceptions import ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+
+from homeassistant.components.aladdin_connect import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
-from tests.common import AsyncMock, MockConfigEntry
+from . import init_integration
 
-CONFIG = {"username": "test-user", "password": "test-password"}
-
-
-async def test_setup_get_doors_errors(hass: HomeAssistant) -> None:
-    """Test component setup Get Doors Errors."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=None,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
-        await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup_login_error(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test component setup Login Errors."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    mock_aladdinconnect_api.login.return_value = False
-    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    mock_config_entry.add_to_hass(hass)
+
     with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-
-
-async def test_setup_connection_error(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-) -> None:
-    """Test component setup Login Errors."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    mock_aladdinconnect_api.login.side_effect = ClientConnectionError
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-
-
-async def test_setup_component_no_error(hass: HomeAssistant) -> None:
-    """Test component setup No Error."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_entry_password_fail(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+async def test_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test password fail during entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"username": "test-user", "password": "test-password"},
-    )
-    entry.add_to_hass(hass)
-    mock_aladdinconnect_api.login = AsyncMock(return_value=False)
-    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.SETUP_ERROR
+    """Test a successful setup entry."""
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_load_and_unload(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+async def test_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test loading and unloading Aladdin Connect entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
+    """Test a successful unload entry."""
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    assert await config_entry.async_unload(hass)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected_state"),
+    [
+        (
+            OAuth2TokenRequestReauthError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.UNAUTHORIZED,
+                domain=DOMAIN,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            OAuth2TokenRequestError(
+                request_info=RequestInfo("", "POST", {}, ""),
+                status=http.HTTPStatus.INTERNAL_SERVER_ERROR,
+                domain=DOMAIN,
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+    ids=["auth_failure", "server_error"],
+)
+async def test_setup_entry_token_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    exc: OAuth2TokenRequestError,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup entry fails when token validation fails."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=exc,
+    ):
+        await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
+
+
+async def test_setup_entry_token_connection_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup entry retries when token validation has a connection error."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientConnectionError(),
+    ):
+        await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_state"),
+    [
+        (http.HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR),
+        (http.HTTPStatus.INTERNAL_SERVER_ERROR, ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["auth_failure", "server_error"],
+)
+async def test_setup_entry_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aladdin_connect_api: AsyncMock,
+    status: http.HTTPStatus,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup entry fails when API call fails."""
+    mock_aladdin_connect_api.get_doors.side_effect = ClientResponseError(
+        RequestInfo("", "GET", {}, ""), None, status=status
+    )
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is expected_state
+
+
+async def test_setup_entry_api_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aladdin_connect_api: AsyncMock,
+) -> None:
+    """Test setup entry retries when API has a connection error."""
+    mock_aladdin_connect_api.get_doors.side_effect = ClientConnectionError()
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_remove_stale_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale devices are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device that the API will no longer return
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "stale_device_id")},
+    )
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 1
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The stale device should be gone, only the real door remains
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 1
+    assert device_entries[0].identifiers == {(DOMAIN, "test_device_id-1")}
+
+
+async def test_dynamic_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_aladdin_connect_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test new devices are automatically discovered on coordinator refresh."""
+    await init_integration(hass, mock_config_entry)
+
+    # Initially one door -> one cover entity + one sensor entity
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 1
+    assert hass.states.get("cover.test_door") is not None
+
+    # Simulate a new door appearing on the API
+    mock_door_2 = AsyncMock()
+    mock_door_2.device_id = "test_device_id_2"
+    mock_door_2.door_number = 1
+    mock_door_2.name = "Test Door 2"
+    mock_door_2.status = "open"
+    mock_door_2.link_status = "connected"
+    mock_door_2.battery_level = 80
+    mock_door_2.unique_id = f"{mock_door_2.device_id}-{mock_door_2.door_number}"
+
+    existing_door = mock_aladdin_connect_api.get_doors.return_value[0]
+    mock_aladdin_connect_api.get_doors.return_value = [existing_door, mock_door_2]
+
+    # Trigger coordinator refresh
+    freezer.tick(15)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Now two devices should exist
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 2
+
+    # New cover entity should exist
+    assert hass.states.get("cover.test_door_2") is not None

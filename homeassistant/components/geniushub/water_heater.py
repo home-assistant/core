@@ -1,5 +1,6 @@
 """Support for Genius Hub water_heater devices."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -7,10 +8,10 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, GeniusHeatingZone
+from . import GeniusHubConfigEntry
+from .entity import GeniusHeatingZone
 
 STATE_AUTO = "auto"
 STATE_MANUAL = "manual"
@@ -32,24 +33,19 @@ GH_STATE_TO_HA = {
 GH_HEATERS = ["hot water temperature"]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: GeniusHubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Genius Hub water_heater entities."""
-    if discovery_info is None:
-        return
+    """Set up the Genius Hub water heater entities."""
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
     async_add_entities(
-        [
-            GeniusWaterHeater(broker, z)
-            for z in broker.client.zone_objs
-            if z.data.get("type") in GH_HEATERS
-        ]
+        GeniusWaterHeater(broker, z)
+        for z in broker.client.zone_objs
+        if z.data.get("type") in GH_HEATERS
     )
 
 
@@ -69,15 +65,18 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
         self._min_temp = 30.0
 
     @property
+    @override
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
         return list(HA_OPMODE_TO_GH)
 
     @property
-    def current_operation(self) -> str:
+    @override
+    def current_operation(self) -> str | None:
         """Return the current operation mode."""
-        return GH_STATE_TO_HA[self._zone.data["mode"]]  # type: ignore[return-value]
+        return GH_STATE_TO_HA[self._zone.data["mode"]]
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set a new operation mode for this boiler."""
         await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])

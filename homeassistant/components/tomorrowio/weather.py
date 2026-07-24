@@ -1,7 +1,7 @@
 """Weather component that handles meteorological data for your location."""
-from __future__ import annotations
 
 from datetime import datetime
+from typing import override
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
@@ -32,11 +32,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import dt as dt_util
 
-from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
     CLEAR_CONDITIONS,
     CONDITIONS,
@@ -59,14 +58,18 @@ from .const import (
     TMRW_ATTR_WIND_DIRECTION,
     TMRW_ATTR_WIND_SPEED,
 )
+from .coordinator import TomorrowioDataUpdateCoordinator
+from .entity import TomorrowioEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entity_registry = er.async_get(hass)
 
@@ -173,37 +176,44 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         return CONDITIONS[condition]
 
     @property
-    def native_temperature(self):
+    @override
+    def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         return self._get_current_property(TMRW_ATTR_TEMPERATURE)
 
     @property
-    def native_pressure(self):
+    @override
+    def native_pressure(self) -> float | None:
         """Return the raw pressure."""
         return self._get_current_property(TMRW_ATTR_PRESSURE)
 
     @property
-    def humidity(self):
+    @override
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self._get_current_property(TMRW_ATTR_HUMIDITY)
 
     @property
-    def native_wind_speed(self):
+    @override
+    def native_wind_speed(self) -> float | None:
         """Return the raw wind speed."""
         return self._get_current_property(TMRW_ATTR_WIND_SPEED)
 
     @property
-    def wind_bearing(self):
+    @override
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         return self._get_current_property(TMRW_ATTR_WIND_DIRECTION)
 
     @property
-    def ozone(self):
+    @override
+    def ozone(self) -> float | None:
         """Return the O3 (ozone) level."""
         return self._get_current_property(TMRW_ATTR_OZONE)
 
     @property
-    def condition(self):
+    @override
+    def condition(self) -> str | None:
         """Return the condition."""
         return self._translate_condition(
             self._get_current_property(TMRW_ATTR_CONDITION),
@@ -211,7 +221,8 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         )
 
     @property
-    def native_visibility(self):
+    @override
+    def native_visibility(self) -> float | None:
         """Return the raw visibility."""
         return self._get_current_property(TMRW_ATTR_VISIBILITY)
 
@@ -297,17 +308,14 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
 
         return forecasts
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast(self.forecast_type)
-
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast(DAILY)
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(HOURLY)

@@ -1,9 +1,8 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
-from __future__ import annotations
 
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from pycomfoconnect import (
     CMD_FAN_MODE_AWAY,
@@ -22,10 +21,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
@@ -61,7 +60,13 @@ class ComfoConnectFan(FanEntity):
 
     _attr_icon = "mdi:air-conditioner"
     _attr_should_poll = False
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+
     _attr_preset_modes = PRESET_MODES
     current_speed: float | None = None
 
@@ -72,6 +77,7 @@ class ComfoConnectFan(FanEntity):
         self._attr_unique_id = ccb.unique_id
         self._attr_preset_mode = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug("Registering for fan speed")
@@ -89,12 +95,12 @@ class ComfoConnectFan(FanEntity):
                 self._handle_mode_update,
             )
         )
-        await self.hass.async_add_executor_job(
-            self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
-        )
-        await self.hass.async_add_executor_job(
-            self._ccb.comfoconnect.register_sensor, SENSOR_OPERATING_MODE_BIS
-        )
+
+        def _register_sensors() -> None:
+            self._ccb.comfoconnect.register_sensor(SENSOR_FAN_SPEED_MODE)
+            self._ccb.comfoconnect.register_sensor(SENSOR_OPERATING_MODE_BIS)
+
+        await self.hass.async_add_executor_job(_register_sensors)
 
     def _handle_speed_update(self, value: float) -> None:
         """Handle update callbacks."""
@@ -115,6 +121,7 @@ class ComfoConnectFan(FanEntity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self.current_speed is None:
@@ -122,10 +129,12 @@ class ComfoConnectFan(FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self.current_speed)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,
@@ -142,10 +151,12 @@ class ComfoConnectFan(FanEntity):
         else:
             self.set_percentage(percentage)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan (to away)."""
         self.set_percentage(0)
 
+    @override
     def set_percentage(self, percentage: int) -> None:
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
@@ -158,6 +169,7 @@ class ComfoConnectFan(FanEntity):
 
         self._ccb.comfoconnect.cmd_rmi_request(cmd)
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if not self.preset_modes or preset_mode not in self.preset_modes:

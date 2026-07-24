@@ -1,4 +1,5 @@
 """Tests for greeneye_monitor sensors."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.greeneye_monitor.sensor import (
@@ -7,10 +8,7 @@ from homeassistant.components.greeneye_monitor.sensor import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import (
-    RegistryEntryDisabler,
-    async_get as get_entity_registry,
-)
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     MULTI_MONITOR_CONFIG,
@@ -26,15 +24,15 @@ from .conftest import assert_sensor_state
 
 
 async def test_sensor_does_not_exist_before_monitor_connected(
-    hass: HomeAssistant, monitors: AsyncMock
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, monitors: AsyncMock
 ) -> None:
     """Test that a sensor does not exist before its monitor is connected."""
-    # The sensor base class handles connecting the monitor, so we test this with a single voltage sensor for ease
+    # The sensor base class handles connecting the monitor, so we test
+    # this with a single voltage sensor for ease
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
 
-    entity_registry = get_entity_registry(hass)
     assert entity_registry.async_get("sensor.voltage_1") is None
 
 
@@ -42,7 +40,8 @@ async def test_sensors_created_when_monitor_connected(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
     """Test that sensors get created when the monitor first connects."""
-    # The sensor base class handles updating the state on connection, so we test this with a single voltage sensor for ease
+    # The sensor base class handles updating the state on connection,
+    # so we test this with a single voltage sensor for ease
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
@@ -56,8 +55,9 @@ async def test_sensors_created_when_monitor_connected(
 async def test_sensors_created_during_setup_if_monitor_already_connected(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
-    """Test that sensors get created during setup if the monitor happens to connect really quickly."""
-    # The sensor base class handles updating the state on connection, so we test this with a single voltage sensor for ease
+    """Test sensors get created during setup if monitor connects fast."""
+    # The sensor base class handles updating the state on connection,
+    # so we test this with a single voltage sensor for ease
     await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
@@ -70,8 +70,9 @@ async def test_sensors_created_during_setup_if_monitor_already_connected(
 async def test_disable_sensor_after_monitor_connected(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
-    """Test that a sensor disabled after its monitor connected stops listening for sensor changes."""
-    # The sensor base class handles connecting the monitor, so we test this with a single voltage sensor for ease
+    """Test disabled sensor stops listening for changes."""
+    # The sensor base class handles connecting the monitor, so we test
+    # this with a single voltage sensor for ease
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
@@ -85,8 +86,9 @@ async def test_disable_sensor_after_monitor_connected(
 async def test_updates_state_when_sensor_pushes(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
-    """Test that a sensor entity updates its state when the underlying sensor pushes an update."""
-    # The sensor base class handles triggering state updates, so we test this with a single voltage sensor for ease
+    """Test sensor entity updates state when underlying sensor pushes."""
+    # The sensor base class handles triggering state updates, so we
+    # test this with a single voltage sensor for ease
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
@@ -101,7 +103,7 @@ async def test_updates_state_when_sensor_pushes(
 async def test_power_sensor_initially_unknown(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
-    """Test that the power sensor can handle its initial state being unknown (since the GEM API needs at least two packets to arrive before it can compute watts)."""
+    """Test power sensor handles initial unknown state."""
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_POWER_SENSORS
     )
@@ -117,7 +119,7 @@ async def test_power_sensor_initially_unknown(
 
 
 async def test_power_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
-    """Test that a power sensor reports its values correctly, including handling net metering."""
+    """Test power sensor reports values including net metering."""
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_POWER_SENSORS
     )
@@ -135,7 +137,7 @@ async def test_power_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
 async def test_pulse_counter_initially_unknown(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
-    """Test that the pulse counter sensor can handle its initial state being unknown (since the GEM API needs at least two packets to arrive before it can compute pulses per time)."""
+    """Test pulse counter handles initial unknown state."""
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_PULSE_COUNTERS
     )
@@ -156,7 +158,7 @@ async def test_pulse_counter_initially_unknown(
 
 
 async def test_pulse_counter(hass: HomeAssistant, monitors: AsyncMock) -> None:
-    """Test that a pulse counter sensor reports its values properly, including calculating different units."""
+    """Test pulse counter sensor reports values with unit conversion."""
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_PULSE_COUNTERS
     )
@@ -171,7 +173,7 @@ async def test_pulse_counter(hass: HomeAssistant, monitors: AsyncMock) -> None:
 
 
 async def test_temperature_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
-    """Test that a temperature sensor reports its values properly, including proper handling of when its native unit is different from that configured in hass."""
+    """Test temperature sensor handles native unit conversion."""
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS
     )
@@ -203,8 +205,8 @@ async def test_multi_monitor_sensors(hass: HomeAssistant, monitors: AsyncMock) -
 
 async def disable_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Disable the given entity."""
-    entity_registry = get_entity_registry(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
-        entity_id, disabled_by=RegistryEntryDisabler.USER
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()

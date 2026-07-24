@@ -1,13 +1,13 @@
 """Demo platform that offers a fake date/time entity."""
-from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import override
 
 from homeassistant.components.datetime import DateTimeEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
 
@@ -15,7 +15,7 @@ from . import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo datetime platform."""
     async_add_entities(
@@ -60,6 +60,7 @@ class DemoDateTime(DateTimeEntity):
             name=device_name,
         )
 
+    @override
     async def async_set_value(self, value: datetime) -> None:
         """Update the date/time."""
         self._attr_native_value = value

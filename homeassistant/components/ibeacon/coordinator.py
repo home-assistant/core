@@ -1,7 +1,7 @@
 """Tracking for iBeacon devices."""
-from __future__ import annotations
 
 from datetime import datetime
+import logging
 import time
 
 from ibeacon_ble import (
@@ -21,6 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_ALLOW_NAMELESS_UUIDS,
     CONF_IGNORE_ADDRESSES,
     CONF_IGNORE_UUIDS,
     DOMAIN,
@@ -33,6 +34,8 @@ from .const import (
     UNAVAILABLE_TIMEOUT,
     UPDATE_INTERVAL,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_TIME = time.monotonic
 
@@ -64,7 +67,11 @@ def async_name(
         service_info.name,
         service_info.name.replace("-", ":"),
     ):
-        base_name = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
+        base_name = (
+            f"{ibeacon_advertisement.uuid}"
+            f"_{ibeacon_advertisement.major}"
+            f"_{ibeacon_advertisement.minor}"
+        )
     else:
         base_name = service_info.name
     if unique_address:
@@ -141,6 +148,16 @@ class IBeaconCoordinator:
         # iBeacons with random MAC addresses, fixed UUID, random major/minor
         self._major_minor_by_uuid: dict[str, set[tuple[int, int]]] = {}
 
+        # iBeacons from devices with no name
+        self._allow_nameless_uuids = set(
+            entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
+        )
+        self._ignored_nameless_by_uuid: dict[str, set[str]] = {}
+
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self.async_config_entry_updated)
+        )
+
     @callback
     def async_device_id_seen(self, device_id: str) -> bool:
         """Return True if the device_id has been seen since boot."""
@@ -167,7 +184,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_ignore_uuid(self, uuid: str) -> None:
-        """Ignore an UUID that does not follow the spec and any entities created by it."""
+        """Ignore a UUID that doesn't follow the spec.
+
+        Also removes any entities created by it.
+        """
         self._ignore_uuids.add(uuid)
         major_minor_by_uuid = self._major_minor_by_uuid.pop(uuid)
         unique_ids_to_purge = set()
@@ -186,7 +206,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_ignore_address(self, address: str) -> None:
-        """Ignore an address that does not follow the spec and any entities created by it."""
+        """Ignore an address that doesn't follow the spec.
+
+        Also removes any entities created by it.
+        """
         self._ignore_addresses.add(address)
         self._async_cancel_unavailable_tracker(address)
         entry_data = self._entry.data
@@ -200,8 +223,8 @@ class IBeaconCoordinator:
     def _async_purge_untrackable_entities(self, unique_ids: set[str]) -> None:
         """Remove entities that are no longer trackable."""
         for unique_id in unique_ids:
-            if device := self._dev_reg.async_get_device(
-                identifiers={(DOMAIN, unique_id)}
+            if device := self._dev_reg.async_get_device_by_identifier(
+                (DOMAIN, unique_id), self._entry.entry_id
             ):
                 self._dev_reg.async_remove_device(device.id)
             self._last_ibeacon_advertisement_by_unique_id.pop(unique_id, None)
@@ -213,7 +236,10 @@ class IBeaconCoordinator:
         service_info: bluetooth.BluetoothServiceInfoBleak,
         ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
-        """Switch to random mac tracking method when a group is using rotating mac addresses."""
+        """Switch to random mac tracking method.
+
+        Used when a group is using rotating mac addresses.
+        """
         self._group_ids_random_macs.add(group_id)
         self._async_purge_untrackable_entities(self._unique_ids_by_group_id[group_id])
         self._unique_ids_by_group_id.pop(group_id)
@@ -247,6 +273,8 @@ class IBeaconCoordinator:
         uuid_str = str(ibeacon_advertisement.uuid)
         if uuid_str in self._ignore_uuids:
             return
+
+        _LOGGER.debug("update beacon %s", uuid_str)
 
         major = ibeacon_advertisement.major
         minor = ibeacon_advertisement.minor
@@ -296,12 +324,25 @@ class IBeaconCoordinator:
         address = service_info.address
         unique_id = f"{group_id}_{address}"
         new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
+        uuid = str(ibeacon_advertisement.uuid)
+
         # Reject creating new trackers if the name is not set
-        if new and (
-            service_info.device.name is None
-            or service_info.device.name.replace("-", ":") == service_info.device.address
+        # (unless the uuid is allowlisted).
+        if (
+            new
+            and uuid not in self._allow_nameless_uuids
+            and (
+                service_info.device.name is None
+                or service_info.device.name.replace("-", ":")
+                == service_info.device.address
+            )
         ):
+            # Store the ignored addresses, cause the uuid might be allowlisted later
+            self._ignored_nameless_by_uuid.setdefault(uuid, set()).add(address)
+
+            _LOGGER.debug("ignoring new beacon %s due to empty device name", unique_id)
             return
+
         previously_tracked = address in self._unique_ids_by_address
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
@@ -349,7 +390,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_check_unavailable_groups_with_random_macs(self) -> None:
-        """Check for random mac groups that have not been seen in a while and mark them as unavailable."""
+        """Check for unseen random mac groups.
+
+        Marks them as unavailable if not seen in a while.
+        """
         now = MONOTONIC_TIME()
         gone_unavailable = [
             group_id
@@ -428,6 +472,33 @@ class IBeaconCoordinator:
                     ibeacon_advertisement,
                 )
 
+    async def async_config_entry_updated(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Restore ignored nameless beacons when the allowlist is updated."""
+
+        self._allow_nameless_uuids = set(
+            self._entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
+        )
+
+        for uuid in self._allow_nameless_uuids:
+            for address in self._ignored_nameless_by_uuid.pop(uuid, set()):
+                _LOGGER.debug(
+                    "restoring nameless iBeacon %s from address %s", uuid, address
+                )
+
+                if not (
+                    service_info := bluetooth.async_last_service_info(
+                        self.hass, address, connectable=False
+                    )
+                ):
+                    continue  # no longer available
+
+                # the beacon was ignored, we need to re-process it from scratch
+                self._async_update_ibeacon(
+                    service_info, bluetooth.BluetoothChange.ADVERTISEMENT
+                )
+
     @callback
     def _async_update(self, _now: datetime) -> None:
         """Update the Coordinator."""
@@ -437,14 +508,12 @@ class IBeaconCoordinator:
     @callback
     def _async_restore_from_registry(self) -> None:
         """Restore the state of the Coordinator from the device registry."""
-        for device in self._dev_reg.devices.values():
-            unique_id = None
-            for identifier in device.identifiers:
-                if identifier[0] == DOMAIN:
-                    unique_id = identifier[1]
-                    break
-            if not unique_id:
+        for device in self._dev_reg.devices.get_devices_for_config_entry_id(
+            self._entry.entry_id
+        ):
+            if not (identifier := next(iter(device.identifiers), None)):
                 continue
+            unique_id = identifier[1]
             # iBeacons with a fixed MAC address
             if unique_id.count("_") == 3:
                 uuid, major, minor, address = unique_id.split("_")

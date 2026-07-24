@@ -1,156 +1,156 @@
 """Tests for Fritz!Tools sensor platform."""
-from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any
+from datetime import UTC, datetime
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
+import pytest
+from requests.exceptions import RequestException
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.fritz.sensor import SENSOR_TYPES
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
-    SensorDeviceClass,
-    SensorStateClass,
-)
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_STATE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import entity_registry as er
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-SENSOR_STATES: dict[str, dict[str, Any]] = {
-    "sensor.mock_title_external_ip": {
-        ATTR_STATE: "1.2.3.4",
-        ATTR_ICON: "mdi:earth",
-    },
-    "sensor.mock_title_external_ipv6": {
-        ATTR_STATE: "fec0::1",
-        ATTR_ICON: "mdi:earth",
-    },
-    "sensor.mock_title_last_restart": {
-        # ATTR_STATE: "2022-02-05T17:46:04+00:00",
-        ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-    },
-    "sensor.mock_title_connection_uptime": {
-        # ATTR_STATE: "2022-03-06T11:27:16+00:00",
-        ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
-    },
-    "sensor.mock_title_upload_throughput": {
-        ATTR_STATE: "3.4",
-        ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
-        ATTR_UNIT_OF_MEASUREMENT: "kB/s",
-        ATTR_ICON: "mdi:upload",
-    },
-    "sensor.mock_title_download_throughput": {
-        ATTR_STATE: "67.6",
-        ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
-        ATTR_UNIT_OF_MEASUREMENT: "kB/s",
-        ATTR_ICON: "mdi:download",
-    },
-    "sensor.mock_title_max_connection_upload_throughput": {
-        ATTR_STATE: "2105.0",
-        ATTR_UNIT_OF_MEASUREMENT: "kbit/s",
-        ATTR_ICON: "mdi:upload",
-    },
-    "sensor.mock_title_max_connection_download_throughput": {
-        ATTR_STATE: "10087.0",
-        ATTR_UNIT_OF_MEASUREMENT: "kbit/s",
-        ATTR_ICON: "mdi:download",
-    },
-    "sensor.mock_title_gb_sent": {
-        ATTR_STATE: "1.7",
-        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        ATTR_UNIT_OF_MEASUREMENT: "GB",
-        ATTR_ICON: "mdi:upload",
-    },
-    "sensor.mock_title_gb_received": {
-        ATTR_STATE: "5.2",
-        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        ATTR_UNIT_OF_MEASUREMENT: "GB",
-        ATTR_ICON: "mdi:download",
-    },
-    "sensor.mock_title_link_upload_throughput": {
-        ATTR_STATE: "51805.0",
-        ATTR_UNIT_OF_MEASUREMENT: "kbit/s",
-        ATTR_ICON: "mdi:upload",
-    },
-    "sensor.mock_title_link_download_throughput": {
-        ATTR_STATE: "318557.0",
-        ATTR_UNIT_OF_MEASUREMENT: "kbit/s",
-        ATTR_ICON: "mdi:download",
-    },
-    "sensor.mock_title_link_upload_noise_margin": {
-        ATTR_STATE: "9.0",
-        ATTR_UNIT_OF_MEASUREMENT: "dB",
-        ATTR_ICON: "mdi:upload",
-    },
-    "sensor.mock_title_link_download_noise_margin": {
-        ATTR_STATE: "8.0",
-        ATTR_UNIT_OF_MEASUREMENT: "dB",
-        ATTR_ICON: "mdi:download",
-    },
-    "sensor.mock_title_link_upload_power_attenuation": {
-        ATTR_STATE: "7.0",
-        ATTR_UNIT_OF_MEASUREMENT: "dB",
-        ATTR_ICON: "mdi:upload",
-    },
-    "sensor.mock_title_link_download_power_attenuation": {
-        ATTR_STATE: "12.0",
-        ATTR_UNIT_OF_MEASUREMENT: "dB",
-        ATTR_ICON: "mdi:download",
-    },
-}
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
-    """Test setup of Fritz!Tools sesnors."""
+@pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test setup of Fritz!Tools sensors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    sensors = hass.states.async_all(SENSOR_DOMAIN)
-    assert len(sensors) == len(SENSOR_TYPES)
-
-    for sensor in sensors:
-        assert SENSOR_STATES.get(sensor.entity_id) is not None
-        for key, val in SENSOR_STATES[sensor.entity_id].items():
-            if key == ATTR_STATE:
-                assert sensor.state == val
-            else:
-                assert sensor.attributes.get(key) == val
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_sensor_update_fail(
-    hass: HomeAssistant, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
 ) -> None:
-    """Test failed update of Fritz!Tools sesnors."""
+    """Test failed update of Fritz!Tools sensors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    fc_class_mock().call_action_side_effect(FritzConnectionException)
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=300))
-    await hass.async_block_till_done()
+    fc_class_mock().call_action_side_effect(FritzConnectionException("Boom"))
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error while updating the data: Boom" in caplog.text
 
     sensors = hass.states.async_all(SENSOR_DOMAIN)
     for sensor in sensors:
         assert sensor.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.freeze_time("2026-02-14T09:30:00+00:00")
+async def test_sensor_uptime_spike(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test handling of uptime spikes in Fritz!Tools sensors."""
+
+    entity_id = "sensor.mock_title_uptime"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2026-01-16T06:00:21+00:00"
+
+    # Simulate uptime spike by setting uptime to a value that shifts
+    # the resulting timestamp only by 1 second.
+    base_uptime = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"]["NewUpTime"]
+    update_uptime = {
+        "DeviceInfo1": {
+            "GetInfo": {
+                "NewUpTime": base_uptime + SCAN_INTERVAL + 1,
+            },
+        },
+    }
+    fc_class_mock().override_services({**MOCK_FB_SERVICES, **update_uptime})
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (new_state := hass.states.get(entity_id))
+    assert new_state.state == "2026-01-16T06:00:21+00:00"
+
+
+@pytest.mark.freeze_time(datetime(2024, 9, 1, 20, tzinfo=UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("side_effect", "return_values"),
+    [
+        (RequestException("boom"), None),
+        (None, [0, 0, 0]),
+        (None, []),
+        (FritzConnectionException("boom"), None),
+    ],
+)
+async def test_sensor_cpu_temp_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    side_effect,
+    return_values,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test setup of Fritz!Tools sensors."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzStatus", fs_class_mock
+        ) as mock_status,
+    ):
+        mock_status.get_cpu_temperatures.side_effect = side_effect
+        mock_status.get_cpu_temperatures.return_value = return_values
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+        assert not entity_registry.async_is_registered(
+            "sensor.mock_title_cpu_temperature"
+        )

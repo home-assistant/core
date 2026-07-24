@@ -1,20 +1,21 @@
 """Support for INSTEON Modems (PLM and Hub)."""
+
 from contextlib import suppress
 import logging
 
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.constants import ReadWriteMode
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import device_registry as dr
 
 from . import api
 from .const import (
     CONF_CAT,
+    CONF_DEV_PATH,
     CONF_DIM_STEPS,
     CONF_HOUSECODE,
     CONF_OVERRIDE,
@@ -24,17 +25,14 @@ from .const import (
     DOMAIN,
     INSTEON_PLATFORMS,
 )
+from .services import async_setup_services
 from .utils import (
     add_insteon_events,
-    async_register_services,
     get_device_platforms,
     register_new_device_callback,
 )
 
 _LOGGER = logging.getLogger(__name__)
-OPTIONS = "options"
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_get_device_config(hass, config_entry):
@@ -75,13 +73,13 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Insteon platform."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
+
+    api.async_load_api(hass)
+    await api.async_register_insteon_frontend(
+        hass, entry.options.get(CONF_DEV_PATH) or None
+    )
 
     if not devices.modem:
         try:
@@ -97,19 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0
     )
-
-    # If options existed in YAML and have not already been saved to the config entry
-    # add them now
-    if (
-        not entry.options
-        and entry.source == SOURCE_IMPORT
-        and hass.data.get(DOMAIN)
-        and hass.data[DOMAIN].get(OPTIONS)
-    ):
-        hass.config_entries.async_update_entry(
-            entry=entry,
-            options=hass.data[DOMAIN][OPTIONS],
-        )
 
     for device_override in entry.options.get(CONF_OVERRIDE, []):
         # Override the device default capabilities for a specific address
@@ -133,6 +118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
+    create_insteon_device(hass, devices.modem, entry.entry_id)
+
     await hass.config_entries.async_forward_entry_setups(entry, INSTEON_PLATFORMS)
 
     for address in devices:
@@ -144,12 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass)
-    async_register_services(hass)
-
-    create_insteon_device(hass, devices.modem, entry.entry_id)
-
-    api.async_load_api(hass)
-    await api.async_register_insteon_frontend(hass)
+    async_setup_services(hass)
 
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"

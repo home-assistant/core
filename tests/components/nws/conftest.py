@@ -1,4 +1,7 @@
 """Fixtures for National Weather Service tests."""
+
+import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -9,7 +12,13 @@ from .const import DEFAULT_FORECAST, DEFAULT_OBSERVATION
 @pytest.fixture
 def mock_simple_nws():
     """Mock pynws SimpleNWS with default values."""
-    with patch("homeassistant.components.nws.SimpleNWS") as mock_nws:
+    # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
+    with (
+        patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
+        patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
+        patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
+    ):
         instance = mock_nws.return_value
         instance.set_station = AsyncMock(return_value=None)
         instance.update_observation = AsyncMock(return_value=None)
@@ -21,6 +30,39 @@ def mock_simple_nws():
         instance.forecast = DEFAULT_FORECAST
         instance.forecast_hourly = DEFAULT_FORECAST
         yield mock_nws
+
+
+@pytest.fixture
+def mock_simple_nws_times_out():
+    """Mock pynws SimpleNWS that times out."""
+    # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
+    with (
+        patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
+        patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
+        patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
+    ):
+        instance = mock_nws.return_value
+        instance.set_station = AsyncMock(side_effect=asyncio.TimeoutError)
+        instance.update_observation = AsyncMock(side_effect=asyncio.TimeoutError)
+        instance.update_forecast = AsyncMock(side_effect=asyncio.TimeoutError)
+        instance.update_forecast_hourly = AsyncMock(side_effect=asyncio.TimeoutError)
+        instance.station = "ABC"
+        instance.stations = ["ABC"]
+        instance.observation = None
+        instance.forecast = None
+        instance.forecast_hourly = None
+        yield mock_nws
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.nws.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture

@@ -1,8 +1,7 @@
 """Support for the light on the Sisyphus Kinetic Art Table."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 
@@ -32,7 +31,7 @@ async def async_setup_platform(
         table_holder = hass.data[DATA_SISYPHUS][host]
         table = await table_holder.get_table()
     except aiohttp.ClientError as err:
-        raise PlatformNotReady() from err
+        raise PlatformNotReady from err
 
     add_entities([SisyphusLight(table_holder.name, table)], update_before_add=True)
 
@@ -48,6 +47,7 @@ class SisyphusLight(LightEntity):
         self._name = name
         self._table = table
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add listeners after this object has been initialized."""
         self._table.add_listener(self.async_write_ha_state)
@@ -57,35 +57,42 @@ class SisyphusLight(LightEntity):
         await self._table.refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the table is responding to heartbeats."""
         return self._table.is_connected
 
     @property
+    @override
     def unique_id(self):
         """Return the UUID of the table."""
         return self._table.id
 
     @property
+    @override
     def name(self):
         """Return the ame of the table."""
         return self._name
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return True if the table is on."""
         return not self._table.is_sleeping
 
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int:
         """Return the current brightness of the table's ring light."""
         return self._table.brightness * 255
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Put the table to sleep."""
         await self._table.sleep()
         _LOGGER.debug("Sisyphus table %s: sleep")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Wake up the table if necessary, optionally changes brightness."""
         if not self.is_on:

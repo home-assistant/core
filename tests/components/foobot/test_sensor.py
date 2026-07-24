@@ -1,25 +1,19 @@
 """The tests for the Foobot sensor platform."""
-import asyncio
+
 from http import HTTPStatus
 import re
 from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.foobot import sensor as foobot
-import homeassistant.components.sensor as sensor
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfDensity, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 VALID_CONFIG = {
@@ -34,23 +28,23 @@ async def test_default_setup(
 ) -> None:
     """Test the default setup."""
     aioclient_mock.get(
-        re.compile("api.foobot.io/v2/owner/.*"),
-        text=load_fixture("devices.json", "foobot"),
+        re.compile(r"api\.foobot\.io/v2/owner/.*"),
+        text=await async_load_fixture(hass, "devices.json", "foobot"),
     )
     aioclient_mock.get(
-        re.compile("api.foobot.io/v2/device/.*"),
-        text=load_fixture("data.json", "foobot"),
+        re.compile(r"api\.foobot\.io/v2/device/.*"),
+        text=await async_load_fixture(hass, "data.json", "foobot"),
     )
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
     await hass.async_block_till_done()
 
     metrics = {
-        "co2": ["1232.0", CONCENTRATION_PARTS_PER_MILLION],
+        "co2": ["1232.0", UnitOfRatio.PARTS_PER_MILLION],
         "temperature": ["21.1", UnitOfTemperature.CELSIUS],
-        "humidity": ["49.5", PERCENTAGE],
-        "pm2_5": ["144.8", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER],
-        "voc": ["340.7", CONCENTRATION_PARTS_PER_BILLION],
-        "index": ["138.9", PERCENTAGE],
+        "humidity": ["49.5", UnitOfRatio.PERCENTAGE],
+        "pm2_5": ["144.8", UnitOfDensity.MICROGRAMS_PER_CUBIC_METER],
+        "voc": ["340.7", UnitOfRatio.PARTS_PER_BILLION],
+        "index": ["138.9", UnitOfRatio.PERCENTAGE],
     }
 
     for name, value in metrics.items():
@@ -65,9 +59,7 @@ async def test_setup_timeout_error(
     """Expected failures caused by a timeout in API response."""
     fake_async_add_entities = MagicMock()
 
-    aioclient_mock.get(
-        re.compile("api.foobot.io/v2/owner/.*"), exc=asyncio.TimeoutError()
-    )
+    aioclient_mock.get(re.compile(r"api\.foobot\.io/v2/owner/.*"), exc=TimeoutError())
     with pytest.raises(PlatformNotReady):
         await foobot.async_setup_platform(hass, VALID_CONFIG, fake_async_add_entities)
 
@@ -80,7 +72,7 @@ async def test_setup_permanent_error(
 
     errors = [HTTPStatus.BAD_REQUEST, HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN]
     for error in errors:
-        aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
+        aioclient_mock.get(re.compile(r"api\.foobot\.io/v2/owner/.*"), status=error)
         result = await foobot.async_setup_platform(
             hass, VALID_CONFIG, fake_async_add_entities
         )
@@ -95,7 +87,7 @@ async def test_setup_temporary_error(
 
     errors = [HTTPStatus.TOO_MANY_REQUESTS, HTTPStatus.INTERNAL_SERVER_ERROR]
     for error in errors:
-        aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
+        aioclient_mock.get(re.compile(r"api\.foobot\.io/v2/owner/.*"), status=error)
         with pytest.raises(PlatformNotReady):
             await foobot.async_setup_platform(
                 hass, VALID_CONFIG, fake_async_add_entities

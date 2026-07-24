@@ -1,9 +1,10 @@
 """The tests for Number device actions."""
+
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.number import DOMAIN, device_action
 from homeassistant.const import EntityCategory
@@ -21,11 +22,6 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_get_actions(
@@ -61,12 +57,12 @@ async def test_get_actions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -99,7 +95,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["set_value"]
+        for action in ("set_value",)
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -242,18 +238,26 @@ async def test_action_legacy(
 
 
 async def test_capabilities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test getting capabilities."""
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id="abcdefgh"
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
     )
     capabilities = await device_action.async_get_action_capabilities(
         hass,
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
-            "entity_id": entry.id,
+            "entity_id": entity_entry.id,
             "type": "set_value",
         },
     )
@@ -266,18 +270,26 @@ async def test_capabilities(
 
 
 async def test_capabilities_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test getting capabilities."""
-    entry = entity_registry.async_get_or_create(
-        DOMAIN, "test", "5678", device_id="abcdefgh"
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
     )
     capabilities = await device_action.async_get_action_capabilities(
         hass,
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
-            "entity_id": entry.entity_id,
+            "entity_id": entity_entry.entity_id,
             "type": "set_value",
         },
     )

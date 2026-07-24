@@ -1,0 +1,216 @@
+{
+  "success": true,
+  "data": {
+    "user": {
+      "api_user": "test-api-user",
+      "profile": { "name": "test-user" },
+      "auth": { "local": { "username": "test-username" } },
+      "stats": {
+        "buffs": {
+          "str": 26,
+          "int": 26,
+          "per": 26,
+          "con": 26,
+          "stealth": 0,
+          "streaks": false,
+          "seafoam": false,
+          "shinySeed": false,
+          "snowball": false,
+          "spookySparkles": false
+        },
+        "hp": 0,
+        "mp": 50.89999999999998,
+        "exp": 737,
+        "gp": 137.62587214609795,
+        "lvl": 38,
+        "class": "wizard",
+        "maxHealth": 50,
+        "maxMP": 166,
+        "toNextLevel": 880,
+        "points": 5,
+        "str": 15,
+        "con": 15,
+        "int": 15,
+        "per": 15
+      },
+      "preferences": {
+        "sleep": false,
+        "automaticAllocation": true,
+        "disableClasses": false,
+        "language": "en"
+      },
+      "flags": {
+        "classSelected": true
+      },
+      "tasksOrder": {
+        "rewards": ["5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"],
+        "todos": [
+          "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+          "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+          "1aa3137e-ef72-4d1f-91ee-41933602f438",
+          "86ea2475-d1b5-4020-bdcc-c188c7996afa"
+        ],
+        "dailys": [
+          "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a",
+          "bc1d1855-b2b8-4663-98ff-62e7b763dfc4",
+          "e97659e0-2c42-4599-a7bb-00282adc410d",
+          "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+          "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
+          "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
+          "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+        ],
+        "habits": ["1d147de6-5c02-4740-8e2f-71d3015a37f4"]
+      },
+      "party": {
+        "quest": {
+          "RSVPNeeded": true,
+          "key": "dustbunnies"
+        },
+        "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
+      },
+      "tags": [
+        {
+          "id": "8515e4ae-2f4b-455a-b4a4-8939e04b1bfd",
+          "name": "Arbeit"
+        },
+        {
+          "id": "6aa65cbb-dc08-4fdd-9a66-7dedb7ba4cab",
+          "name": "Training"
+        },
+        {
+          "id": "20409521-c096-447f-9a90-23e8da615710",
+          "name": "Gesundheit + Wohlbefinden"
+        },
+        {
+          "id": "2ac458af-0833-4f3f-bf04-98a0c33ef60b",
+          "name": "Schule"
+        },
+        {
+          "id": "1bcb1a0f-4d05-4087-8223-5ea779e258b0",
+          "name": "Teams"
+        },
+        {
+          "id": "b2780f82-b3b5-49a3-a677-48f2c8c7e3bb",
+          "name": "Hausarbeiten"
+        },
+        {
+          "id": "3450351f-1323-4c7e-9fd2-0cdff25b3ce0",
+          "name": "Kreativität"
+        }
+      ],
+      "needsCron": true,
+      "lastCron": "2024-09-21T22:01:55.586Z",
+      "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+      "items": {
+        "gear": {
+          "equipped": {
+            "weapon": "weapon_warrior_5",
+            "armor": "armor_warrior_5",
+            "head": "head_warrior_5",
+            "shield": "shield_warrior_5",
+            "back": "back_special_heroicAureole",
+            "headAccessory": "headAccessory_armoire_gogglesOfBookbinding",
+            "eyewear": "eyewear_armoire_plagueDoctorMask",
+            "body": "body_special_aetherAmulet"
+          }
+        }
+      },
+      "balance": 10
+    },
+    "task": {
+      "_id": "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+      "date": "2024-08-31T22:16:00.000Z",
+      "completed": false,
+      "collapseChecklist": false,
+      "checklist": [],
+      "type": "todo",
+      "text": "Rechnungen bezahlen",
+      "notes": "Strom- und Internetrechnungen rechtzeitig überweisen.",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "reminders": [
+        {
+          "id": "91c09432-10ac-4a49-bd20-823081ec29ed",
+          "time": "2024-09-22T02:00:00.0000Z"
+        }
+      ],
+      "byHabitica": false,
+      "createdAt": "2024-09-21T22:17:19.513Z",
+      "updatedAt": "2024-09-21T22:19:35.576Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+      "alias": "pay_bills"
+    }
+  },
+  "notifications": [
+    {
+      "type": "ITEM_RECEIVED",
+      "data": {
+        "icon": "notif_habitoween_base_pet",
+        "title": "Happy Habitoween!",
+        "text": "For this spooky celebration, you've received a Jack-O-Lantern Pet and an assortment of candy for your Pets!",
+        "destination": "/inventory/stable"
+      },
+      "seen": false,
+      "id": "5af98f52-f72a-4540-bdeb-3ffc39b34196"
+    },
+    {
+      "type": "ITEM_RECEIVED",
+      "data": {
+        "icon": "notif_harvestfeast_base_pet",
+        "title": "Happy Harvest Feast!",
+        "text": "Gobble gobble, you've received the Turkey Pet!",
+        "destination": "/inventory/stable"
+      },
+      "seen": false,
+      "id": "1e4a1481-e7ca-42d1-9b3f-3f442bef9435"
+    },
+    {
+      "type": "ITEM_RECEIVED",
+      "data": {
+        "title": "Happy New Year!",
+        "destination": "/inventory/equipment",
+        "icon": "notif_2013hat_nye",
+        "text": "Take on your resolutions with style in this Absurd Party Hat!"
+      },
+      "seen": false,
+      "id": "61fe229b-feee-48b9-bb4d-9e4b9c088ab1"
+    },
+    {
+      "type": "NEW_STUFF",
+      "data": {
+        "title": "SNAG YOUR FAVES FROM THE QUEST SHOP -  NEW SELECTIONS ARE ON THE WAY!"
+      },
+      "seen": true,
+      "id": "0decabad-57f8-4cb2-a158-ba7b44da890f"
+    },
+    {
+      "id": "f6fb06bc-6e63-40e1-b8c8-76bd5889ef51",
+      "type": "NEW_CHAT_MESSAGE",
+      "data": {
+        "group": {
+          "id": "a8289328-c2ae-4007-9ef4-833b9ac90d37",
+          "name": "tr4nt0r_2's Party"
+        }
+      },
+      "seen": false
+    },
+    {
+      "type": "UNALLOCATED_STATS_POINTS",
+      "data": {
+        "points": 21
+      },
+      "seen": false,
+      "id": "a88ba092-2d4d-40f9-bf87-902aedf954fe"
+    }
+  ],
+  "userV": 677,
+  "appVersion": "5.32.5"
+}

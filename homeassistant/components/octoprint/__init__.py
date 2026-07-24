@@ -1,5 +1,4 @@
 """Support for monitoring OctoPrint 3D printers."""
-from __future__ import annotations
 
 import logging
 
@@ -7,7 +6,7 @@ import aiohttp
 from pyoctoprintapi import OctoprintClient
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -23,12 +22,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
+from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import DOMAIN
-from .coordinator import OctoprintDataUpdateCoordinator
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,13 @@ def ensure_valid_path(value):
     return value
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"
@@ -124,6 +131,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
+    async_setup_services(hass)
     if DOMAIN not in config:
         return True
 
@@ -147,28 +155,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
     """Set up OctoPrint from a config entry."""
-
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     if CONF_VERIFY_SSL not in entry.data:
         data = {**entry.data, CONF_VERIFY_SSL: True}
         hass.config_entries.async_update_entry(entry, data=data)
 
     connector = aiohttp.TCPConnector(
         force_close=True,
-        ssl=False if not entry.data[CONF_VERIFY_SSL] else None,
+        ssl=get_default_no_verify_context()
+        if not entry.data[CONF_VERIFY_SSL]
+        else get_default_context(),
     )
     session = aiohttp.ClientSession(connector=connector)
 
     @callback
-    def _async_close_websession(event: Event) -> None:
+    def _async_close_websession(event: Event | None = None) -> None:
         """Close websession."""
         session.detach()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    entry.async_on_unload(_async_close_websession)
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    )
 
     client = OctoprintClient(
         host=entry.data[CONF_HOST],
@@ -184,21 +193,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "client": client,
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

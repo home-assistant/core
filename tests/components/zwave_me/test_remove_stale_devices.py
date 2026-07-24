@@ -1,11 +1,12 @@
 """Test the zwave_me removal of stale devices."""
+
 from unittest.mock import patch
 import uuid
 
 import pytest
 from zwave_me_ws import ZWaveMeData
 
-from homeassistant.components.zwave_me import ZWaveMePlatform
+from homeassistant.components.zwave_me.const import DOMAIN, ZWaveMePlatform
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -41,7 +42,7 @@ async def test_remove_stale_devices(
 
     config_entry = MockConfigEntry(
         unique_id=uuid.uuid4(),
-        domain="zwave_me",
+        domain=DOMAIN,
         data={CONF_TOKEN: "test_token", CONF_URL: "http://test_test"},
     )
     config_entry.add_to_hass(hass)
@@ -50,11 +51,14 @@ async def test_remove_stale_devices(
         connections={("mac", "12:34:56:AB:CD:EF")},
         identifiers={("zwave_me", f"{config_entry.unique_id}-{identifier}")},
     )
-    with patch(
-        "homeassistant.components.zwave_me.ZWaveMe.get_connection",
-        mock_connection,
-    ), patch(
-        "homeassistant.components.zwave_me.async_setup_platforms",
+    with (
+        patch(
+            "homeassistant.components.zwave_me.controller.ZWaveMe.get_connection",
+            mock_connection,
+        ),
+        patch(
+            "homeassistant.components.zwave_me.async_setup_platforms",
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert (

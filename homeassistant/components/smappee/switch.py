@@ -1,12 +1,13 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
-from typing import Any
+
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SmappeeConfigEntry
 from .const import DOMAIN
 
 SWITCH_PREFIX = "Switch"
@@ -14,11 +15,11 @@ SWITCH_PREFIX = "Switch"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SmappeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smappee Comfort Plugs."""
-    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
+    smappee_base = config_entry.runtime_data
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
@@ -35,18 +36,18 @@ async def async_setup_entry(
                     )
                 )
             elif actuator.type == "INFINITY_OUTPUT_MODULE":
-                for option in actuator.state_options:
-                    entities.append(
-                        SmappeeActuator(
-                            smappee_base,
-                            service_location,
-                            actuator.name,
-                            actuator_id,
-                            actuator.type,
-                            actuator.serialnumber,
-                            actuator_state_option=option,
-                        )
+                entities.extend(
+                    SmappeeActuator(
+                        smappee_base,
+                        service_location,
+                        actuator.name,
+                        actuator_id,
+                        actuator.type,
+                        actuator.serialnumber,
+                        actuator_state_option=option,
                     )
+                    for option in actuator.state_options
+                )
 
     async_add_entities(entities, True)
 
@@ -87,6 +88,7 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
+    @override
     def name(self):
         """Return the name of the switch."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
@@ -102,7 +104,8 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return (
@@ -113,6 +116,7 @@ class SmappeeActuator(SwitchEntity):
         # Switch or comfort plug
         return self._state == "ON_ON"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on Comport Plug."""
         if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
@@ -122,6 +126,7 @@ class SmappeeActuator(SwitchEntity):
                 self._actuator_id, state=self._actuator_state_option
             )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off Comport Plug."""
         if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
@@ -134,6 +139,7 @@ class SmappeeActuator(SwitchEntity):
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available. Unavailable for COMFORT_PLUGS."""
         return (
@@ -142,6 +148,7 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
+    @override
     def unique_id(
         self,
     ):

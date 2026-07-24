@@ -1,4 +1,5 @@
 """API for Smappee bound to Home Assistant OAuth."""
+
 from asyncio import run_coroutine_threadsafe
 
 from pysmappee import api
@@ -35,6 +36,8 @@ class ConfigEntrySmappeeApi(api.SmappeeApi):
             None,
             None,
             token=self.session.token,
+            # Uses legacy hass.data[DOMAIN] pattern
+            # pylint: disable-next=home-assistant-use-runtime-data
             farm=platform_to_farm[hass.data[DOMAIN][CONF_PLATFORM]],
         )
 

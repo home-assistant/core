@@ -1,12 +1,10 @@
 """The Nibe Heat Pump integration."""
-from __future__ import annotations
 
 from nibe.connection import Connection
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW, ProductInfo
 from nibe.heatpump import HeatPump, Model
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MODEL,
@@ -29,7 +27,7 @@ from .const import (
     CONF_WORD_SWAP,
     DOMAIN,
 )
-from .coordinator import Coordinator
+from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -44,7 +42,9 @@ PLATFORMS: list[Platform] = [
 COIL_READ_RETRIES = 5
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: NibeHeatpumpConfigEntry
+) -> bool:
     """Set up Nibe Heat Pump from a config entry."""
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
@@ -80,10 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
 
-    coordinator = Coordinator(hass, heatpump, connection)
+    coordinator = CoilCoordinator(hass, entry, heatpump, connection)
 
-    data = hass.data.setdefault(DOMAIN, {})
-    data[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     reg = dr.async_get(hass)
     device_entry = reg.async_get_or_create(
@@ -112,9 +111,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: NibeHeatpumpConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,5 +1,4 @@
 """The Times of the Day integration."""
-from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -12,14 +11,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, (Platform.BINARY_SENSOR,)
     )
 
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
-
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

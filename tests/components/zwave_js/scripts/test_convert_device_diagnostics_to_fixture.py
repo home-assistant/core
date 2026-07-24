@@ -1,4 +1,5 @@
 """Test convert_device_diagnostics_to_fixture script."""
+
 import copy
 import json
 from pathlib import Path
@@ -74,9 +75,12 @@ def test_main(capfd: pytest.CaptureFixture[str]) -> None:
 
     # Check file dump
     args.append("--file")
-    with patch.object(sys, "argv", args), patch(
-        "homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fixture.Path.write_text"
-    ) as write_text_mock:
+    with (
+        patch.object(sys, "argv", args),
+        patch(
+            "homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fixture.Path.write_text"
+        ) as write_text_mock,
+    ):
         main()
 
     assert len(write_text_mock.call_args_list) == 1

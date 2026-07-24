@@ -1,7 +1,8 @@
 """Test the lifx binary sensor platform."""
-from __future__ import annotations
 
 from datetime import timedelta
+
+import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -31,6 +32,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_hev_cycle_state(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -43,13 +45,15 @@ async def test_hev_cycle_state(
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_clean_bulb()
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "binary_sensor.my_bulb_clean_cycle"
+    entity_id = "binary_sensor.my_group_my_bulb_clean_cycle"
 
     state = hass.states.get(entity_id)
     assert state
@@ -64,11 +68,11 @@ async def test_hev_cycle_state(
     bulb.hev_cycle = {"duration": 7200, "remaining": 0, "last_power": False}
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == STATE_OFF
 
     bulb.hev_cycle = None
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == STATE_UNKNOWN

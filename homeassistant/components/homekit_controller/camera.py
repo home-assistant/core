@@ -1,5 +1,6 @@
 """Support for Homekit cameras."""
-from __future__ import annotations
+
+from typing import override
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.services import ServicesTypes
@@ -8,7 +9,7 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
@@ -20,10 +21,12 @@ class HomeKitCamera(AccessoryEntity, Camera):
 
     # content_type = "image/jpeg"
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -38,7 +41,7 @@ class HomeKitCamera(AccessoryEntity, Camera):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit sensors."""
     hkid: str = config_entry.data["AccessoryPairingID"]

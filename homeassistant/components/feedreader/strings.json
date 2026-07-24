@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "url_error": "The URL could not be opened."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "description": "Update your configuration information for {name}."
+      },
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "max_entries": "Maximum feed entries"
+        },
+        "data_description": {
+          "max_entries": "The maximum number of entries to extract from each feed."
+        }
+      }
+    }
+  }
+}

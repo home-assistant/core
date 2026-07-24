@@ -1,15 +1,20 @@
-"""Support for monitoring plants."""
+"""Support for monitoring plants.
+
+DEVELOPMENT OF THE PLANT INTEGRATION IS FROZEN
+PENDING A DESIGN EVALUATION.
+"""
+
 from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CONDUCTIVITY,
     CONF_SENSORS,
     LIGHT_LUX,
     PERCENTAGE,
@@ -17,18 +22,22 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfConductivity,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -124,6 +133,9 @@ class Plant(Entity):
 
     It also checks the measurements against
     configurable min and max values.
+
+    DEVELOPMENT OF THE PLANT INTEGRATION IS FROZEN
+    PENDING A DESIGN EVALUATION.
     """
 
     _attr_should_poll = False
@@ -144,7 +156,7 @@ class Plant(Entity):
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },
@@ -179,7 +191,7 @@ class Plant(Entity):
         self._brightness_history = DailyHistory(self._conf_check_days)
 
     @callback
-    def _state_changed_event(self, event: EventType[EventStateChangedData]) -> None:
+    def _state_changed_event(self, event: Event[EventStateChangedData]) -> None:
         """Sensor state change event."""
         self.state_changed(event.data["entity_id"], event.data["new_state"])
 
@@ -264,6 +276,7 @@ class Plant(Entity):
             min_value = self._config[params["min"]]
             if value < min_value:
                 return f"{sensor_name} low"
+        return None
 
     def _check_max(self, sensor_name, value, params):
         """If configured, check the value against the defined maximum value."""
@@ -273,6 +286,7 @@ class Plant(Entity):
                 return f"{sensor_name} high"
         return None
 
+    @override
     async def async_added_to_hass(self):
         """After being added to hass, load from history."""
         if "recorder" in self.hass.config.components:
@@ -323,17 +337,20 @@ class Plant(Entity):
         _LOGGER.debug("Initializing from database completed")
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def state(self):
         """Return the state of the entity."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the entity.
 
         Provide the individual measurements from the
@@ -358,6 +375,9 @@ class DailyHistory:
     """Stores one measurement per day for a maximum number of days.
 
     At the moment only the maximum value per day is kept.
+
+    DEVELOPMENT OF THE PLANT INTEGRATION IS FROZEN
+    PENDING A DESIGN EVALUATION.
     """
 
     def __init__(self, max_length):
@@ -369,7 +389,7 @@ class DailyHistory:
 
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = (timestamp or datetime.now()).date()
+        day = (timestamp or datetime.now()).date()  # pylint: disable=home-assistant-enforce-naive-now
         if not isinstance(value, (int, float)):
             return
         if self._days is None:

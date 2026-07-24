@@ -1,7 +1,6 @@
 """The Home Assistant Yellow hardware platform."""
-from __future__ import annotations
 
-from homeassistant.components.hardware.models import BoardInfo, HardwareInfo
+from homeassistant.components.hardware import BoardInfo, HardwareInfo
 from homeassistant.components.hassio import get_os_info
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -9,7 +8,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 BOARD_NAME = "Home Assistant Yellow"
-DOCUMENTATION_URL = "https://yellow.home-assistant.io/documentation/"
+DOCUMENTATION_URL = "https://support.nabucasa.com/hc/en-us/categories/24734575925149-Home-Assistant-Yellow"
 MANUFACTURER = "homeassistant"
 MODEL = "yellow"
 
@@ -17,8 +16,7 @@ MODEL = "yellow"
 @callback
 def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
-    if (os_info := get_os_info(hass)) is None:
-        raise HomeAssistantError
+    os_info = get_os_info(hass)
     board: str | None
     if (board := os_info.get("board")) is None:
         raise HomeAssistantError

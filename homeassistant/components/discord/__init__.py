@@ -1,4 +1,5 @@
 """The discord integration."""
+
 from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
 
@@ -35,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Failed to connect") from ex
     finally:
         await discord_bot.close()
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
 
     hass.async_create_task(
         discovery.async_load_platform(

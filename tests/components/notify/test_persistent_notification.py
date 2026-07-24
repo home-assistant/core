@@ -1,6 +1,7 @@
 """The tests for the notify.persistent_notification service."""
+
 from homeassistant.components import notify
-import homeassistant.components.persistent_notification as pn
+from homeassistant.components.persistent_notification import DOMAIN as PN_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -9,7 +10,7 @@ from tests.common import async_get_persistent_notifications
 
 async def test_async_send_message(hass: HomeAssistant) -> None:
     """Test sending a message to notify.persistent_notification service."""
-    await async_setup_component(hass, pn.DOMAIN, {"core": {}})
+    await async_setup_component(hass, PN_DOMAIN, {"core": {}})
     await async_setup_component(hass, notify.DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -29,7 +30,7 @@ async def test_async_send_message(hass: HomeAssistant) -> None:
 
 async def test_async_supports_notification_id(hass: HomeAssistant) -> None:
     """Test that notify.persistent_notification supports notification_id."""
-    await async_setup_component(hass, pn.DOMAIN, {"core": {}})
+    await async_setup_component(hass, PN_DOMAIN, {"core": {}})
     await async_setup_component(hass, notify.DOMAIN, {})
     await hass.async_block_till_done()
 

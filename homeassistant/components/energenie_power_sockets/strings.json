@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "device_not_found": "No device was found for the given ID.",
+      "no_device": "Unable to discover any (new) supported device.",
+      "usb_error": "Couldn't access USB devices!"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        },
+        "description": "Choose a discovered device.",
+        "title": "Searching for Energenie Power Sockets devices"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "socket": {
+        "name": "Socket {socket_id}"
+      }
+    }
+  },
+  "title": "Energenie Power Sockets"
+}

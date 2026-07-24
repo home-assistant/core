@@ -1,12 +1,19 @@
 """Support for Baidu speech service."""
+
 import logging
+from typing import Any, override
 
 from aip import AipSpeech
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+    TtsAudioType,
+)
 from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +28,7 @@ CONF_PITCH = "pitch"
 CONF_VOLUME = "volume"
 CONF_PERSON = "person"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
         vol.Required(CONF_APP_ID): cv.string,
@@ -80,17 +87,20 @@ class BaiduTTSProvider(Provider):
         }
 
     @property
-    def default_language(self):
+    @override
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    @override
+    def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return SUPPORTED_LANGUAGES
 
     @property
-    def default_options(self):
+    @override
+    def default_options(self) -> dict[str, Any]:
         """Return a dict including default options."""
         return {
             CONF_PERSON: self._speech_conf_data[_OPTIONS[CONF_PERSON]],
@@ -100,11 +110,18 @@ class BaiduTTSProvider(Provider):
         }
 
     @property
-    def supported_options(self):
+    @override
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORTED_OPTIONS
 
-    def get_tts_audio(self, message, language, options):
+    @override
+    def get_tts_audio(
+        self,
+        message: str,
+        language: str,
+        options: dict[str, Any],
+    ) -> TtsAudioType:
         """Load TTS from BaiduTTS."""
 
         aip_speech = AipSpeech(

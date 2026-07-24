@@ -1,5 +1,4 @@
 """Fixtures for the Geocaching integration tests."""
-from __future__ import annotations
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -27,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.geocaching.async_setup_entry", return_value=True
@@ -36,7 +35,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_geocaching_config_flow() -> Generator[None, MagicMock, None]:
+def mock_geocaching_config_flow() -> Generator[MagicMock]:
     """Return a mocked Geocaching API client."""
 
     mock_status = GeocachingStatus()

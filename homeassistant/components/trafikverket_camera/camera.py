@@ -1,28 +1,29 @@
 """Camera for the Trafikverket Camera integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_DESCRIPTION, ATTR_TYPE, DOMAIN
+from . import TVCameraConfigEntry
+from .const import ATTR_DESCRIPTION, ATTR_TYPE
 from .coordinator import TVDataUpdateCoordinator
 from .entity import TrafikverketCameraEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TVCameraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Trafikverket Camera."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -53,6 +54,7 @@ class TVCamera(TrafikverketCameraEntity, Camera):
         Camera.__init__(self)
         self._attr_unique_id = entry_id
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -60,11 +62,13 @@ class TVCamera(TrafikverketCameraEntity, Camera):
         return self.coordinator.data.image
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return camera on."""
         return self.coordinator.data.data.active is True
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         return {

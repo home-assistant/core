@@ -1,7 +1,6 @@
 """Support for Sensor.Community sensors."""
-from __future__ import annotations
 
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,25 +8,23 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_SHOW_ON_MAP,
-    PERCENTAGE,
+    EntityStateAttribute,
+    UnitOfDensity,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_SENSOR_ID, CONF_SENSOR_ID, DOMAIN
+from .coordinator import LuftdatenConfigEntry, LuftdatenDataUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -38,7 +35,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -57,13 +54,13 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="P1",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="P2",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -71,10 +68,12 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: LuftdatenConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Sensor.Community sensor based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SensorCommunitySensor(
@@ -98,7 +97,7 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LuftdatenDataUpdateCoordinator,
         description: SensorEntityDescription,
         sensor_id: int,
         show_on_map: bool,
@@ -120,14 +119,15 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
         )
 
         if show_on_map:
-            self._attr_extra_state_attributes[ATTR_LONGITUDE] = coordinator.data[
-                "longitude"
-            ]
-            self._attr_extra_state_attributes[ATTR_LATITUDE] = coordinator.data[
-                "latitude"
-            ]
+            self._attr_extra_state_attributes[EntityStateAttribute.LONGITUDE] = (
+                coordinator.data["longitude"]
+            )
+            self._attr_extra_state_attributes[EntityStateAttribute.LATITUDE] = (
+                coordinator.data["latitude"]
+            )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the device."""
         if (

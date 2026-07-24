@@ -1,5 +1,4 @@
 """Event parser and human readable log generator."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
@@ -29,7 +28,7 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
+from homeassistant.util.event_type import EventType
 
 from . import rest_api, websocket_api
 from .const import (  # noqa: F401
@@ -53,14 +52,13 @@ CONFIG_SCHEMA = vol.Schema(
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_NAME): cv.string,
-        vol.Required(ATTR_MESSAGE): cv.template,
+        vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_DOMAIN): cv.slug,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
     }
 )
 
 
-@bind_hass
 def log_entry(
     hass: HomeAssistant,
     name: str,
@@ -74,7 +72,6 @@ def log_entry(
 
 
 @callback
-@bind_hass
 def async_log_entry(
     hass: HomeAssistant,
     name: str,
@@ -110,12 +107,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # away so we use the "logbook" domain
             domain = DOMAIN
 
-        message.hass = hass
-        message = message.async_render(parse_result=False)
         async_log_entry(hass, name, message, domain, entity_id, service.context)
 
     frontend.async_register_built_in_panel(
-        hass, "logbook", "logbook", "hass:format-list-bulleted-type"
+        hass, "logbook", "logbook", "mdi:format-list-bulleted-type"
     )
 
     recorder_conf = config.get(RECORDER_DOMAIN, {})
@@ -133,7 +128,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entities_filter = None
 
     external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        EventType[Any] | str,
+        tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]],
     ] = {}
     hass.data[DOMAIN] = LogbookConfig(external_events, filters, entities_filter)
     websocket_api.async_setup(hass)
@@ -145,9 +141,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _process_logbook_platform(
-    hass: HomeAssistant, domain: str, platform: Any
-) -> None:
+@callback
+def _process_logbook_platform(hass: HomeAssistant, domain: str, platform: Any) -> None:
     """Process a logbook platform."""
     logbook_config: LogbookConfig = hass.data[DOMAIN]
     external_events = logbook_config.external_events

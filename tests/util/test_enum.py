@@ -1,4 +1,5 @@
 """Test enum helpers."""
+
 from enum import Enum, IntEnum, IntFlag, StrEnum
 from typing import Any
 

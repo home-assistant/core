@@ -1,7 +1,7 @@
 """Support for displaying weather info from Ecobee API."""
-from __future__ import annotations
 
 from datetime import timedelta
+from typing import override
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
 
@@ -16,7 +16,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -25,9 +24,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import EcobeeConfigEntry, EcobeeData
 from .const import (
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
@@ -38,11 +38,11 @@ from .const import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee weather platform."""
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     dev = []
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
@@ -58,12 +58,12 @@ class EcobeeWeather(WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_native_visibility_unit = UnitOfLength.METERS
-    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
-    def __init__(self, data, name, index):
+    def __init__(self, data: EcobeeData, name: str, index: int) -> None:
         """Initialize the Ecobee weather platform."""
         self.data = data
         self._name = name
@@ -80,6 +80,7 @@ class EcobeeWeather(WeatherEntity):
             raise ValueError from err
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information for the ecobee weather platform."""
         thermostat = self.data.ecobee.get_thermostat(self._index)
@@ -98,7 +99,8 @@ class EcobeeWeather(WeatherEntity):
         )
 
     @property
-    def condition(self):
+    @override
+    def condition(self) -> str | None:
         """Return the current condition."""
         try:
             return ECOBEE_WEATHER_SYMBOL_TO_HASS[self.get_forecast(0, "weatherSymbol")]
@@ -106,7 +108,8 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_temperature(self):
+    @override
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         try:
             return float(self.get_forecast(0, "temperature")) / 10
@@ -114,7 +117,8 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_pressure(self):
+    @override
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
         try:
             pressure = self.get_forecast(0, "pressure")
@@ -123,7 +127,8 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def humidity(self):
+    @override
+    def humidity(self) -> float | None:
         """Return the humidity."""
         try:
             return int(self.get_forecast(0, "relativeHumidity"))
@@ -131,7 +136,8 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_visibility(self):
+    @override
+    def native_visibility(self) -> float | None:
         """Return the visibility."""
         try:
             return int(self.get_forecast(0, "visibility"))
@@ -139,7 +145,8 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_wind_speed(self):
+    @override
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
             return int(self.get_forecast(0, "windSpeed"))
@@ -147,7 +154,8 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def wind_bearing(self):
+    @override
+    def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         try:
             return int(self.get_forecast(0, "windBearing"))
@@ -155,7 +163,8 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def attribution(self):
+    @override
+    def attribution(self) -> str | None:
         """Return the attribution."""
         if not self.weather:
             return None
@@ -166,12 +175,12 @@ class EcobeeWeather(WeatherEntity):
 
     def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
-        if "forecasts" not in self.weather:
+        if not self.weather or "forecasts" not in self.weather:
             return None
 
         forecasts: list[Forecast] = []
         date = dt_util.utcnow()
-        for day in range(0, 5):
+        for day in range(5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue
@@ -183,11 +192,7 @@ class EcobeeWeather(WeatherEntity):
             return forecasts
         return None
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast()
-
+    @override
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast()
@@ -216,7 +221,7 @@ def _process_forecast(json):
         if json["windSpeed"] != ECOBEE_STATE_UNKNOWN:
             forecast[ATTR_FORECAST_NATIVE_WIND_SPEED] = int(json["windSpeed"])
 
-    except (ValueError, IndexError, KeyError):
+    except ValueError, IndexError, KeyError:
         return None
 
     if forecast:

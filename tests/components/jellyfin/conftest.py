@@ -1,5 +1,4 @@
 """Fixtures for Jellyfin integration tests."""
-from __future__ import annotations
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
@@ -36,7 +35,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.jellyfin.async_setup_entry", return_value=True
@@ -45,7 +44,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_client_device_id() -> Generator[None, MagicMock, None]:
+def mock_client_device_id() -> Generator[MagicMock]:
     """Mock generating device id."""
     with patch(
         "homeassistant.components.jellyfin.config_flow._generate_client_device_id"
@@ -80,6 +79,7 @@ def mock_api() -> MagicMock:
     jf_api.get_item.side_effect = api_get_item_side_effect
     jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
     jf_api.user_items.side_effect = api_user_items_side_effect
+    jf_api.search_media_items.return_value = load_json_fixture("user-items.json")
 
     return jf_api
 
@@ -107,7 +107,7 @@ def mock_client(
 
 
 @pytest.fixture
-def mock_jellyfin(mock_client: MagicMock) -> Generator[None, MagicMock, None]:
+def mock_jellyfin(mock_client: MagicMock) -> Generator[MagicMock]:
     """Return a mocked Jellyfin."""
     with patch(
         "homeassistant.components.jellyfin.client_wrapper.Jellyfin", autospec=True
@@ -143,6 +143,8 @@ def api_artwork_side_effect(*args, **kwargs):
 def api_audio_url_side_effect(*args, **kwargs):
     """Handle variable responses for audio_url method."""
     item_id = args[0]
+    if audio_codec := kwargs.get("audio_codec"):
+        return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec={audio_codec}"
     return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000"
 
 
@@ -154,6 +156,10 @@ def api_video_url_side_effect(*args, **kwargs):
 
 def api_get_item_side_effect(*args):
     """Handle variable responses for get_item method."""
+    if args[0] == "SERIES-UUID":
+        return load_json_fixture("series.json")
+    if args[0] == "SEASON-UUID":
+        return load_json_fixture("season.json")
     return load_json_fixture("get-item-collection.json")
 
 
@@ -162,6 +168,8 @@ def api_user_items_side_effect(*args, **kwargs):
     params = kwargs.get("params", {}) if kwargs else {}
 
     if "parentId" in params:
-        return load_json_fixture("user-items-parent-id.json")
+        if params["parentId"] == "SERIES-UUID":
+            return load_json_fixture("seasons.json")
+        return load_json_fixture("episodes.json")
 
     return load_json_fixture("user-items.json")

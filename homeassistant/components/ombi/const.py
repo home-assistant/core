@@ -1,5 +1,4 @@
 """Support for Ombi."""
-from __future__ import annotations
 
 ATTR_SEASON = "season"
 

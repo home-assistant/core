@@ -1,15 +1,13 @@
 """Generate config flow file."""
-from __future__ import annotations
 
 import json
-import pathlib
 from typing import Any
 
 from .brand import validate as validate_brands
-from .model import Brand, Config, Integration
+from .model import Brand, Config, Integration, IntegrationType
 from .serializer import format_python_namespace
 
-UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
+UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard", "unifi_discovery"}
 
 
 def _validate_integration(config: Config, integration: Integration) -> None:
@@ -75,7 +73,7 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
 
         _validate_integration(config, integration)
 
-        if integration.integration_type == "helper":
+        if integration.integration_type == IntegrationType.HELPER:
             domains["helper"].append(domain)
         else:
             domains["integration"].append(domain)
@@ -94,9 +92,8 @@ def _populate_brand_integrations(
     for domain in sub_integrations:
         integration = integrations.get(domain)
         if not integration or integration.integration_type in (
-            "entity",
-            "hardware",
-            "system",
+            IntegrationType.ENTITY,
+            IntegrationType.SYSTEM,
         ):
             continue
         metadata: dict[str, Any] = {
@@ -131,9 +128,10 @@ def _generate_integrations(
         "translated_name": set(),
     }
 
-    # Not all integrations will have an item in the brands collection.
-    # The config flow data index will be the union of the integrations without a brands item
-    # and the brand domain names from the brands collection.
+    # Not all integrations will have an item in the brands
+    # collection. The config flow data index will be the union of
+    # the integrations without a brands item and the brand domain
+    # names from the brands collection.
 
     # Compile a set of integrations which are referenced from at least one brand's
     # integrations list. These integrations will not be present in the root level of the
@@ -171,7 +169,10 @@ def _generate_integrations(
             result["integration"][domain] = metadata
         else:  # integration
             integration = integrations[domain]
-            if integration.integration_type in ("entity", "system", "hardware"):
+            if integration.integration_type in (
+                IntegrationType.ENTITY,
+                IntegrationType.SYSTEM,
+            ):
                 continue
 
             if integration.translated_name:
@@ -181,7 +182,7 @@ def _generate_integrations(
 
             metadata["integration_type"] = integration.integration_type
 
-            if integration.integration_type == "virtual":
+            if integration.integration_type == IntegrationType.VIRTUAL:
                 if integration.supported_by:
                     metadata["supported_by"] = integration.supported_by
                 if integration.iot_standards:
@@ -191,7 +192,12 @@ def _generate_integrations(
                 if integration.iot_class:
                     metadata["iot_class"] = integration.iot_class
 
-            if integration.integration_type == "helper":
+                if single_config_entry := integration.manifest.get(
+                    "single_config_entry"
+                ):
+                    metadata["single_config_entry"] = single_config_entry
+
+            if integration.integration_type == IntegrationType.HELPER:
                 result["helper"][domain] = metadata
             else:
                 result["integration"][domain] = metadata
@@ -210,36 +216,30 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    brands = Brand.load_dir(pathlib.Path(config.root / "homeassistant/brands"), config)
+    brands = Brand.load_dir(config.root / "homeassistant/brands", config)
     validate_brands(brands, integrations, config)
 
-    with open(str(config_flow_path)) as fp:
-        if fp.read() != content:
-            config.add_error(
-                "config_flow",
-                "File config_flows.py is not up to date. "
-                "Run python3 -m script.hassfest",
-                fixable=True,
-            )
+    if config_flow_path.read_text() != content:
+        config.add_error(
+            "config_flow",
+            "File config_flows.py is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
     config.cache["integrations"] = content = _generate_integrations(
         brands, integrations, config
     )
-    with open(str(integrations_path)) as fp:
-        if fp.read() != content + "\n":
-            config.add_error(
-                "config_flow",
-                "File integrations.json is not up to date. "
-                "Run python3 -m script.hassfest",
-                fixable=True,
-            )
+    if integrations_path.read_text() != content + "\n":
+        config.add_error(
+            "config_flow",
+            "File integrations.json is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     integrations_path = config.root / "homeassistant/generated/integrations.json"
-    with open(str(config_flow_path), "w") as fp:
-        fp.write(f"{config.cache['config_flow']}")
-    with open(str(integrations_path), "w") as fp:
-        fp.write(f"{config.cache['integrations']}\n")
+    config_flow_path.write_text(f"{config.cache['config_flow']}")
+    integrations_path.write_text(f"{config.cache['integrations']}\n")

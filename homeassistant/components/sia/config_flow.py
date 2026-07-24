@@ -1,10 +1,9 @@
 """Config flow for sia integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysiaalarm import (
     InvalidAccountFormatError,
@@ -15,10 +14,9 @@ from pysiaalarm import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ACCOUNT,
@@ -31,7 +29,7 @@ from .const import (
     DOMAIN,
     TITLE,
 )
-from .hub import SIAHub
+from .hub import SIAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,8 +70,8 @@ def validate_input(data: dict[str, Any]) -> dict[str, str] | None:
         return {"base": "invalid_account_format"}
     except InvalidAccountLengthError:
         return {"base": "invalid_account_length"}
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception from SIAAccount: %s", exc)
+    except Exception:
+        _LOGGER.exception("Unexpected exception from SIAAccount")
         return {"base": "unknown"}
     if not 1 <= data[CONF_PING_INTERVAL] <= 1440:
         return {"base": "invalid_ping"}
@@ -87,15 +85,16 @@ def validate_zones(data: dict[str, Any]) -> dict[str, str] | None:
     return None
 
 
-class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for sia."""
 
     VERSION: int = 1
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: SIAConfigEntry,
     ) -> SIAOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SIAOptionsFlowHandler(config_entry)
@@ -105,9 +104,10 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self._options: Mapping[str, Any] = {CONF_ACCOUNTS: {}}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial user step."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -120,7 +120,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_add_account(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the additional accounts steps."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -133,8 +133,8 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_handle_data_and_route(
         self, user_input: dict[str, Any]
-    ) -> FlowResult:
-        """Handle the user_input, check if configured and route to the right next step or create entry."""
+    ) -> ConfigFlowResult:
+        """Handle user_input, check if configured and route to the right next step."""
         self._update_data(user_input)
 
         self._async_abort_entries_match({CONF_PORT: self._data[CONF_PORT]})
@@ -150,7 +150,8 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _update_data(self, user_input: dict[str, Any]) -> None:
         """Parse the user_input and store in data and options attributes.
 
-        If there is a port in the input or no data, assume it is fully new and overwrite.
+        If there is a port in the input or no data, assume
+        it is fully new and overwrite.
         Add the default options and overwrite the zones in options.
         """
         if not self._data or user_input.get(CONF_PORT):
@@ -171,29 +172,28 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
 
 
-class SIAOptionsFlowHandler(config_entries.OptionsFlow):
+class SIAOptionsFlowHandler(OptionsFlow):
     """Handle SIA options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    config_entry: SIAConfigEntry
+
+    def __init__(self, config_entry: SIAConfigEntry) -> None:
         """Initialize SIA options flow."""
-        self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))
-        self.hub: SIAHub | None = None
-        self.accounts_todo: list = []
+        self.accounts_todo: list[str] = []
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the SIA options."""
-        self.hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        assert self.hub is not None
-        assert self.hub.sia_accounts is not None
-        self.accounts_todo = [a.account_id for a in self.hub.sia_accounts]
+        self.accounts_todo = [
+            a[CONF_ACCOUNT] for a in self.config_entry.data[CONF_ACCOUNTS]
+        ]
         return await self.async_step_options()
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create the options step for a account."""
         errors: dict[str, str] | None = None
         if user_input is not None:

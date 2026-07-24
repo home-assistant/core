@@ -1,28 +1,31 @@
 """Config flow for Aranet integration."""
-from __future__ import annotations
 
-import logging
-from typing import Any
+from typing import Any, override
 
 from aranet4.client import Aranet4Advertisement, Version as AranetVersion
+from bluetooth_data_tools import human_readable_name
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_VERSION = AranetVersion(1, 2, 0)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+def _title(discovery_info: BluetoothServiceInfoBleak) -> str:
+    return discovery_info.device.name or human_readable_name(
+        None, "Aranet", discovery_info.address
+    )
+
+
+class AranetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aranet."""
 
     VERSION = 1
@@ -43,9 +46,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not adv.manufacturer_data.integrations:
             raise AbortFlow("integrations_disabled")
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the Bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -58,13 +62,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
-        assert self._discovered_device is not None
-        adv = self._discovered_device
         assert self._discovery_info is not None
-        discovery_info = self._discovery_info
-        title = adv.readings.name if adv.readings else discovery_info.name
+        title = _title(self._discovery_info)
         if user_input is not None:
             return self.async_create_entry(title=title, data={})
 
@@ -75,9 +76,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
@@ -90,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self._discovered_devices[address][0], data={}
             )
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
@@ -100,10 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 discovery_info.device, discovery_info.advertisement
             )
             if adv.manufacturer_data:
-                self._discovered_devices[address] = (
-                    adv.readings.name if adv.readings else discovery_info.name,
-                    adv,
-                )
+                self._discovered_devices[address] = (_title(discovery_info), adv)
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")

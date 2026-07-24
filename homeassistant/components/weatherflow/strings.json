@@ -1,33 +1,43 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "WeatherFlow discovery",
-        "description": "Unable to discover Tempest WeatherFlow devices. Click submit to try again.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
-      }
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "address_in_use": "Unable to open local UDP port 50222.",
-      "cannot_connect": "UDP discovery error."
+      "cannot_connect": "UDP discovery error.",
+      "no_device_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Tempest WeatherFlow device."
+        },
+        "description": "Unable to discover Tempest WeatherFlow devices. Select **Submit** to try again."
+      }
     }
   },
   "entity": {
+    "event": {
+      "lightning_strike_event": {
+        "name": "Lightning strike"
+      },
+      "precip_start_event": {
+        "name": "Precipitation start"
+      }
+    },
     "sensor": {
       "air_density": {
         "name": "Air density"
       },
-      "dew_point": {
-        "name": "Dew point"
-      },
       "battery_voltage": {
         "name": "Battery voltage"
+      },
+      "dew_point": {
+        "name": "Dew point"
       },
       "feels_like": {
         "name": "Feels like"
@@ -38,12 +48,21 @@
       "lightning_count": {
         "name": "Lightning count"
       },
+      "lightning_strike_last_distance": {
+        "name": "Lightning last distance"
+      },
+      "lightning_strike_last_energy": {
+        "name": "Lightning last energy"
+      },
+      "lightning_strike_last_epoch": {
+        "name": "Lightning last strike"
+      },
       "precipitation_type": {
         "name": "Precipitation type",
         "state": {
+          "hail": "Hail",
           "none": "None",
           "rain": "Rain",
-          "hail": "Hail",
           "rain_hail": "Rain and hail"
         }
       },
@@ -62,9 +81,6 @@
       "wet_bulb_temperature": {
         "name": "Wet bulb temperature"
       },
-      "wind_speed_average": {
-        "name": "Wind speed average"
-      },
       "wind_direction": {
         "name": "Wind direction"
       },
@@ -76,6 +92,9 @@
       },
       "wind_lull": {
         "name": "Wind lull"
+      },
+      "wind_speed_average": {
+        "name": "Wind speed average"
       }
     }
   }

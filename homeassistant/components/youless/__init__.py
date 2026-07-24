@@ -1,24 +1,22 @@
 """The youless integration."""
-from datetime import timedelta
+
 import logging
 from urllib.error import URLError
 
 from youless_api import YoulessAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .coordinator import YouLessConfigEntry, YouLessCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YouLessConfigEntry) -> bool:
     """Set up youless from a config entry."""
     api = YoulessAPI(entry.data[CONF_HOST])
 
@@ -27,32 +25,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except URLError as exception:
         raise ConfigEntryNotReady from exception
 
-    async def async_update_data() -> YoulessAPI:
-        """Fetch data from the API."""
-        await hass.async_add_executor_job(api.update)
-        return api
+    youless_coordinator = YouLessCoordinator(hass, entry, api)
+    await youless_coordinator.async_config_entry_first_refresh()
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="youless_gateway",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=10),
-    )
-
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = youless_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YouLessConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

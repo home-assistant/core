@@ -1,8 +1,8 @@
 """Notify.Events platform for notify component."""
-from __future__ import annotations
 
 import logging
 import os.path
+from typing import Any, override
 
 from notify_events import Message
 
@@ -122,7 +122,8 @@ class NotifyEventsNotificationService(BaseNotificationService):
 
         return msg
 
-    def send_message(self, message, **kwargs):
+    @override
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
         data = kwargs.get(ATTR_DATA) or {}
         token = data.get(ATTR_TOKEN, self.token)

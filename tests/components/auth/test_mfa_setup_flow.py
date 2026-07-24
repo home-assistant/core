@@ -1,8 +1,9 @@
 """Tests for the mfa setup flow."""
-from homeassistant import data_entry_flow
+
 from homeassistant.auth import auth_manager_from_config
-from homeassistant.components.auth import mfa_setup_flow
+from homeassistant.components.auth import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded
@@ -36,7 +37,7 @@ async def test_ws_setup_depose_mfa(
         ],
     )
     ensure_auth_manager_loaded(hass.auth)
-    await async_setup_component(hass, "auth", {"http": {}})
+    await async_setup_component(hass, DOMAIN, {"http": {}})
 
     user = MockUser(id="mock-user").add_to_hass(hass)
     cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
@@ -51,7 +52,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 10,
-            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "type": "auth/setup_mfa",
             "mfa_module_id": "invalid_module",
         }
     )
@@ -64,7 +65,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 11,
-            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "type": "auth/setup_mfa",
             "mfa_module_id": "example_module",
         }
     )
@@ -74,7 +75,8 @@ async def test_ws_setup_depose_mfa(
     assert result["success"]
 
     flow = result["result"]
-    assert flow["type"] == data_entry_flow.FlowResultType.FORM
+    # Cannot use identity `is` check here as the value is parsed from JSON
+    assert flow["type"] == FlowResultType.FORM.value
     assert flow["handler"] == "example_module"
     assert flow["step_id"] == "init"
     assert flow["data_schema"][0] == {"type": "string", "name": "pin", "required": True}
@@ -82,7 +84,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 12,
-            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "type": "auth/setup_mfa",
             "flow_id": flow["flow_id"],
             "user_input": {"pin": "654321"},
         }
@@ -93,14 +95,15 @@ async def test_ws_setup_depose_mfa(
     assert result["success"]
 
     flow = result["result"]
-    assert flow["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    # Cannot use identity `is` check here as the value is parsed from JSON
+    assert flow["type"] == FlowResultType.CREATE_ENTRY.value
     assert flow["handler"] == "example_module"
     assert flow["data"]["result"] is None
 
     await client.send_json(
         {
             "id": 13,
-            "type": mfa_setup_flow.WS_TYPE_DEPOSE_MFA,
+            "type": "auth/depose_mfa",
             "mfa_module_id": "invalid_id",
         }
     )
@@ -113,7 +116,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 14,
-            "type": mfa_setup_flow.WS_TYPE_DEPOSE_MFA,
+            "type": "auth/depose_mfa",
             "mfa_module_id": "example_module",
         }
     )

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "download": {
+        "default": "mdi:speedometer"
+      }
+    }
+  }
+}

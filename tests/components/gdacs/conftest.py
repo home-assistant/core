@@ -1,7 +1,8 @@
 """Configuration for GDACS tests."""
+
 import pytest
 
-from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
+from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -14,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def config_entry():
+def config_entry() -> MockConfigEntry:
     """Create a mock GDACS config entry."""
     return MockConfigEntry(
         domain=DOMAIN,

@@ -1,0 +1,12 @@
+{
+  "domain": "motionmount",
+  "name": "Vogel's MotionMount",
+  "codeowners": ["@laiho-vogels"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/motionmount",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["python-MotionMount==2.3.0"],
+  "zeroconf": ["_tvm._tcp.local."]
+}

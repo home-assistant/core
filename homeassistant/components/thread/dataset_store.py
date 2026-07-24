@@ -1,28 +1,88 @@
 """Persistently store thread datasets."""
-from __future__ import annotations
 
+from asyncio import Event, Task, wait
 import dataclasses
 from datetime import datetime
 import logging
-from typing import Any, cast
+from pprint import pformat
+from typing import Any, cast, override
 
+from propcache.api import cached_property
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
+from . import discovery
+
+BORDER_AGENT_DISCOVERY_TIMEOUT = 30
 DATA_STORE = "thread.datasets"
 STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
+# Bit 0x08 of the first security policy flags byte is the legacy "Beacons"
+# flag. It was removed from the Thread security policy in v1.2.1 (2022), so
+# current Thread stacks no longer set it; datasets that still carry it were
+# created by older implementations. It is ignored when comparing datasets.
+SECURITY_POLICY_BEACONS_FLAG = 0x08
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _format_dataset(
+    dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> dict[str, str]:
+    """Format a parsed Thread dataset for logging.
+
+    Returns a human-readable dict with enum field names as keys, redacting
+    NETWORKKEY and PSKC to avoid logging sensitive network credentials.
+    """
+    result = {}
+    for key, value in dataset.items():
+        name = key.name if isinstance(key, MeshcopTLVType) else str(key)
+        if key in (MeshcopTLVType.NETWORKKEY, MeshcopTLVType.PSKC):
+            result[name] = REDACTED
+        else:
+            result[name] = str(value)
+    return result
+
+
+def _normalize_dataset(
+    dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
+    """Normalize a dataset for equivalence comparison.
+
+    Thread Border Routers may report functionally equivalent datasets without
+    incrementing the active timestamp. To recognize these as equivalent, ignore
+    the fields that don't affect how Home Assistant uses the dataset:
+    - WAKEUP_CHANNEL: added in newer OpenThread Border Router versions, but the
+      wake-up protocol isn't defined yet, so we treat it as if it were always
+      present.
+    - The legacy Beacons bit in the security policy flags: it was removed from
+      the Thread security policy in v1.2.1, so datasets created by older
+      implementations may still set it while current routers don't.
+    """
+    normalized = {
+        key: value
+        for key, value in dataset.items()
+        if key != MeshcopTLVType.WAKEUP_CHANNEL
+    }
+    if (security_policy := normalized.get(MeshcopTLVType.SECURITYPOLICY)) and len(
+        security_policy.data
+    ) > 2:
+        flags = bytearray(security_policy.data)
+        flags[2] &= ~SECURITY_POLICY_BEACONS_FLAG
+        normalized[MeshcopTLVType.SECURITYPOLICY] = tlv_parser.MeshcopTLVItem(
+            security_policy.tag, bytes(flags)
+        )
+    return normalized
 
 
 class DatasetPreferredError(HomeAssistantError):
@@ -34,11 +94,12 @@ class DatasetEntry:
     """Dataset store entry."""
 
     preferred_border_agent_id: str | None
+    preferred_extended_address: str | None
     source: str
     tlv: str
 
     created: datetime = dataclasses.field(default_factory=dt_util.utcnow)
-    id: str = dataclasses.field(default_factory=ulid_util.ulid)
+    id: str = dataclasses.field(default_factory=ulid_util.ulid_now)
 
     @property
     def channel(self) -> int | None:
@@ -48,7 +109,7 @@ class DatasetEntry:
         return cast(tlv_parser.Channel, channel).channel
 
     @cached_property
-    def dataset(self) -> dict[MeshcopTLVType, tlv_parser.MeshcopTLVItem]:
+    def dataset(self) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
         """Return the dataset in dict format."""
         return tlv_parser.parse_tlv(self.tlv)
 
@@ -75,6 +136,7 @@ class DatasetEntry:
             "created": self.created.isoformat(),
             "id": self.id,
             "preferred_border_agent_id": self.preferred_border_agent_id,
+            "preferred_extended_address": self.preferred_extended_address,
             "source": self.source,
             "tlv": self.tlv,
         }
@@ -83,6 +145,7 @@ class DatasetEntry:
 class DatasetStoreStore(Store):
     """Store Thread datasets."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -100,6 +163,7 @@ class DatasetStoreStore(Store):
                         created=created,
                         id=dataset["id"],
                         preferred_border_agent_id=None,
+                        preferred_extended_address=None,
                         source=dataset["source"],
                         tlv=dataset["tlv"],
                     )
@@ -108,7 +172,8 @@ class DatasetStoreStore(Store):
                         or MeshcopTLVType.ACTIVETIMESTAMP not in entry.dataset
                     ):
                         _LOGGER.warning(
-                            "Dropped invalid Thread dataset '%s'", entry.tlv
+                            "Dropped invalid Thread dataset:\n%s",
+                            pformat(_format_dataset(entry.dataset)),
                         )
                         if entry.id == preferred_dataset:
                             preferred_dataset = None
@@ -117,12 +182,14 @@ class DatasetStoreStore(Store):
                     if entry.extended_pan_id in datasets:
                         if datasets[entry.extended_pan_id].id == preferred_dataset:
                             _LOGGER.warning(
-                                (
-                                    "Dropped duplicated Thread dataset '%s' "
-                                    "(duplicate of preferred dataset '%s')"
+                                "Dropped duplicated Thread dataset"
+                                " (duplicate of preferred dataset):\n%s\nkept:\n%s",
+                                pformat(_format_dataset(entry.dataset)),
+                                pformat(
+                                    _format_dataset(
+                                        datasets[entry.extended_pan_id].dataset
+                                    )
                                 ),
-                                entry.tlv,
-                                datasets[entry.extended_pan_id].tlv,
                             )
                             continue
                         new_timestamp = cast(
@@ -135,36 +202,40 @@ class DatasetStoreStore(Store):
                                 MeshcopTLVType.ACTIVETIMESTAMP
                             ],
                         )
-                        if old_timestamp.seconds >= new_timestamp.seconds or (
-                            old_timestamp.seconds == new_timestamp.seconds
-                            and old_timestamp.ticks >= new_timestamp.ticks
+                        if (old_timestamp.seconds, old_timestamp.ticks) >= (
+                            new_timestamp.seconds,
+                            new_timestamp.ticks,
                         ):
                             _LOGGER.warning(
-                                (
-                                    "Dropped duplicated Thread dataset '%s' "
-                                    "(duplicate of '%s')"
+                                "Dropped duplicated Thread dataset:\n%s\nkept:\n%s",
+                                pformat(_format_dataset(entry.dataset)),
+                                pformat(
+                                    _format_dataset(
+                                        datasets[entry.extended_pan_id].dataset
+                                    )
                                 ),
-                                entry.tlv,
-                                datasets[entry.extended_pan_id].tlv,
                             )
                             continue
                         _LOGGER.warning(
-                            (
-                                "Dropped duplicated Thread dataset '%s' "
-                                "(duplicate of '%s')"
+                            "Dropped duplicated Thread dataset:\n%s\nkept:\n%s",
+                            pformat(
+                                _format_dataset(datasets[entry.extended_pan_id].dataset)
                             ),
-                            datasets[entry.extended_pan_id].tlv,
-                            entry.tlv,
+                            pformat(_format_dataset(entry.dataset)),
                         )
                     datasets[entry.extended_pan_id] = entry
                 data = {
                     "preferred_dataset": preferred_dataset,
                     "datasets": [dataset.to_json() for dataset in datasets.values()],
                 }
-            if old_minor_version < 3:
-                # Add border agent ID
+            # Migration to version 1.3 removed, it added the ID of the preferred border
+            # agent
+            if old_minor_version < 4:
+                # Add extended address of the preferred border agent and clear border
+                # agent ID
                 for dataset in data["datasets"]:
-                    dataset.setdefault("preferred_border_agent_id", None)
+                    dataset["preferred_border_agent_id"] = None
+                    dataset["preferred_extended_address"] = None
 
         return data
 
@@ -177,6 +248,7 @@ class DatasetStore:
         self.hass = hass
         self.datasets: dict[str, DatasetEntry] = {}
         self._preferred_dataset: str | None = None
+        self._set_preferred_dataset_task: Task | None = None
         self._store: Store[dict[str, Any]] = DatasetStoreStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -187,7 +259,11 @@ class DatasetStore:
 
     @callback
     def async_add(
-        self, source: str, tlv: str, preferred_border_agent_id: str | None
+        self,
+        source: str,
+        tlv: str,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
     ) -> None:
         """Add dataset, does nothing if it already exists."""
         # Make sure the tlv is valid
@@ -201,17 +277,20 @@ class DatasetStore:
         ):
             raise HomeAssistantError("Invalid dataset")
 
+        # Don't allow setting preferred border agent ID without setting
+        # preferred extended address
+        if preferred_border_agent_id is not None and preferred_extended_address is None:
+            raise HomeAssistantError(
+                "Must set preferred extended address with preferred border agent ID"
+            )
+
         # Bail out if the dataset already exists
         entry: DatasetEntry | None
         for entry in self.datasets.values():
             if entry.dataset == dataset:
-                if (
-                    preferred_border_agent_id
-                    and entry.preferred_border_agent_id is None
-                ):
-                    self.async_set_preferred_border_agent_id(
-                        entry.id, preferred_border_agent_id
-                    )
+                self._async_maybe_update_preferred_border_agent(
+                    entry, preferred_border_agent_id, preferred_extended_address
+                )
                 return
 
         # Update if dataset with same extended pan id exists and the timestamp
@@ -232,45 +311,59 @@ class DatasetStore:
                 tlv_parser.Timestamp,
                 entry.dataset[MeshcopTLVType.ACTIVETIMESTAMP],
             )
-            if old_timestamp.seconds >= new_timestamp.seconds or (
-                old_timestamp.seconds == new_timestamp.seconds
-                and old_timestamp.ticks >= new_timestamp.ticks
-            ):
-                _LOGGER.warning(
-                    (
-                        "Got dataset with same extended PAN ID and same or older active"
-                        " timestamp, old dataset: '%s', new dataset: '%s'"
-                    ),
-                    entry.tlv,
-                    tlv,
+            old_ts = (old_timestamp.seconds, old_timestamp.ticks)
+            new_ts = (new_timestamp.seconds, new_timestamp.ticks)
+            if old_ts >= new_ts:
+                # Silently accept datasets that are functionally equivalent but
+                # reported without a newer active timestamp by some OpenThread
+                # Border Router versions (see _normalize_dataset).
+                if old_ts > new_ts or _normalize_dataset(dataset) != _normalize_dataset(
+                    entry.dataset
+                ):
+                    _LOGGER.warning(
+                        "Got dataset with same extended PAN ID and same or older"
+                        " active timestamp\nold:\n%s\nnew:\n%s",
+                        pformat(_format_dataset(entry.dataset)),
+                        pformat(_format_dataset(dataset)),
+                    )
+                    return
+            elif _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug(
+                    "Updating dataset with same extended PAN ID and newer"
+                    " active timestamp\nold:\n%s\nnew:\n%s",
+                    pformat(_format_dataset(entry.dataset)),
+                    pformat(_format_dataset(dataset)),
                 )
-                return
-            _LOGGER.debug(
-                (
-                    "Updating dataset with same extended PAN ID and newer active "
-                    "timestamp, old dataset: '%s', new dataset: '%s'"
-                ),
-                entry.tlv,
-                tlv,
-            )
             self.datasets[entry.id] = dataclasses.replace(
                 self.datasets[entry.id], tlv=tlv
             )
             self.async_schedule_save()
-            if preferred_border_agent_id and entry.preferred_border_agent_id is None:
-                self.async_set_preferred_border_agent_id(
-                    entry.id, preferred_border_agent_id
-                )
+            self._async_maybe_update_preferred_border_agent(
+                entry, preferred_border_agent_id, preferred_extended_address
+            )
             return
 
         entry = DatasetEntry(
-            preferred_border_agent_id=preferred_border_agent_id, source=source, tlv=tlv
+            preferred_border_agent_id=preferred_border_agent_id,
+            preferred_extended_address=preferred_extended_address,
+            source=source,
+            tlv=tlv,
         )
         self.datasets[entry.id] = entry
-        # Set to preferred if there is no preferred dataset
-        if self._preferred_dataset is None:
-            self._preferred_dataset = entry.id
         self.async_schedule_save()
+
+        # Set the new network as preferred if there is no preferred dataset and there is
+        # no other router present. We only attempt this once.
+        if (
+            self._preferred_dataset is None
+            and preferred_extended_address
+            and not self._set_preferred_dataset_task
+        ):
+            self._set_preferred_dataset_task = self.hass.async_create_task(
+                self._set_preferred_dataset_if_only_network(
+                    entry.id, preferred_extended_address
+                )
+            )
 
     @callback
     def async_delete(self, dataset_id: str) -> None:
@@ -286,12 +379,52 @@ class DatasetStore:
         return self.datasets.get(dataset_id)
 
     @callback
-    def async_set_preferred_border_agent_id(
-        self, dataset_id: str, border_agent_id: str
+    def _async_maybe_update_preferred_border_agent(
+        self,
+        entry: DatasetEntry,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
     ) -> None:
-        """Set preferred border agent id of a dataset."""
+        """Update the preferred border agent of an existing dataset if appropriate.
+
+        Sets the preferred border agent if it was not set yet, or refreshes the
+        stored extended address when the border agent ID still matches but the
+        extended address changed. The latter happens e.g. after an OTBR upgrade
+        regenerates the extended address while keeping the same border agent ID.
+        """
+        if not preferred_extended_address:
+            return
+        if entry.preferred_extended_address is None or (
+            preferred_border_agent_id is not None
+            and preferred_border_agent_id == entry.preferred_border_agent_id
+            and preferred_extended_address != entry.preferred_extended_address
+        ):
+            _LOGGER.info(
+                "Updating extended address of preferred border agent %s from %s to %s",
+                preferred_border_agent_id,
+                entry.preferred_extended_address,
+                preferred_extended_address,
+            )
+            self.async_set_preferred_border_agent(
+                entry.id, preferred_border_agent_id, preferred_extended_address
+            )
+
+    @callback
+    def async_set_preferred_border_agent(
+        self, dataset_id: str, border_agent_id: str | None, extended_address: str
+    ) -> None:
+        """Set preferred border agent id and extended address of a dataset."""
+        # Don't allow setting preferred border agent ID without setting
+        # preferred extended address
+        if border_agent_id is not None and extended_address is None:
+            raise HomeAssistantError(
+                "Must set preferred extended address with preferred border agent ID"
+            )
+
         self.datasets[dataset_id] = dataclasses.replace(
-            self.datasets[dataset_id], preferred_border_agent_id=border_agent_id
+            self.datasets[dataset_id],
+            preferred_border_agent_id=border_agent_id,
+            preferred_extended_address=extended_address,
         )
         self.async_schedule_save()
 
@@ -310,6 +443,62 @@ class DatasetStore:
         self._preferred_dataset = dataset_id
         self.async_schedule_save()
 
+    async def _set_preferred_dataset_if_only_network(
+        self, dataset_id: str, extended_address: str | None
+    ) -> None:
+        """Set the preferred dataset, unless there are other routers present."""
+        _LOGGER.debug(
+            "_set_preferred_dataset_if_only_network called for router %s",
+            extended_address,
+        )
+
+        own_router_evt = Event()
+        other_router_evt = Event()
+
+        @callback
+        def router_discovered(
+            key: str, data: discovery.ThreadRouterDiscoveryData
+        ) -> None:
+            """Handle router discovered."""
+            _LOGGER.debug("discovered router with ext addr %s", data.extended_address)
+            if data.extended_address == extended_address:
+                own_router_evt.set()
+                return
+
+            other_router_evt.set()
+
+        # Start Thread router discovery
+        thread_discovery = discovery.ThreadRouterDiscovery(
+            self.hass, router_discovered, lambda key: None
+        )
+        await thread_discovery.async_start()
+
+        found_own_router = self.hass.async_create_task(own_router_evt.wait())
+        found_other_router = self.hass.async_create_task(other_router_evt.wait())
+        pending = {found_own_router, found_other_router}
+        (done, pending) = await wait(pending, timeout=BORDER_AGENT_DISCOVERY_TIMEOUT)
+        if found_other_router in done:
+            # We found another router on the network, don't set the dataset
+            # as preferred
+            _LOGGER.debug("Other router found, do not set dataset as default")
+
+        # Note that asyncio.wait does not raise TimeoutError, it instead returns
+        # the jobs which did not finish in the pending-set.
+        elif found_own_router in pending:
+            # Either the router is not there, or mDNS is not working. In any case,
+            # don't set the router as preferred.
+            _LOGGER.debug("Own router not found, do not set dataset as default")
+
+        else:
+            # We've discovered the router connected to the dataset, but we did not
+            # find any other router on the network - mark the dataset as preferred.
+            _LOGGER.debug("No other router found, set dataset as default")
+            self.preferred_dataset = dataset_id
+
+        for task in pending:
+            task.cancel()
+        await thread_discovery.async_stop()
+
     async def async_load(self) -> None:
         """Load the datasets."""
         data = await self._store.async_load()
@@ -324,6 +513,7 @@ class DatasetStore:
                     created=created,
                     id=dataset["id"],
                     preferred_border_agent_id=dataset["preferred_border_agent_id"],
+                    preferred_extended_address=dataset["preferred_extended_address"],
                     source=dataset["source"],
                     tlv=dataset["tlv"],
                 )
@@ -360,10 +550,11 @@ async def async_add_dataset(
     tlv: str,
     *,
     preferred_border_agent_id: str | None = None,
+    preferred_extended_address: str | None = None,
 ) -> None:
     """Add a dataset."""
     store = await async_get_store(hass)
-    store.async_add(source, tlv, preferred_border_agent_id)
+    store.async_add(source, tlv, preferred_border_agent_id, preferred_extended_address)
 
 
 async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:

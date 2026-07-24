@@ -1,5 +1,4 @@
 """Provide common test tools for wake-word-detection."""
-from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from pathlib import Path

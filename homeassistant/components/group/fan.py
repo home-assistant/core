@@ -1,10 +1,9 @@
 """Platform allowing several fans to be grouped into one fan."""
-from __future__ import annotations
 
 from functools import reduce
 import logging
 from operator import ior
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -13,8 +12,8 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as FAN_DOMAIN,
+    PLATFORM_SCHEMA as FAN_PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -36,16 +35,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 from .util import attribute_equal, most_frequent_attribute, reduce_attribute
 
 SUPPORTED_FLAGS = {
     FanEntityFeature.SET_SPEED,
     FanEntityFeature.DIRECTION,
     FanEntityFeature.OSCILLATE,
+    FanEntityFeature.TURN_OFF,
+    FanEntityFeature.TURN_ON,
 }
 
 DEFAULT_NAME = "Fan Group"
@@ -53,9 +57,9 @@ DEFAULT_NAME = "Fan Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(FAN_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -79,7 +83,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Fan Group config entry."""
     registry = er.async_get(hass)
@@ -91,7 +95,9 @@ async def async_setup_entry(
 
 
 @callback
-def async_create_preview_fan(name: str, validated_config: dict[str, Any]) -> FanGroup:
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> FanGroup:
     """Create a preview sensor."""
     return FanGroup(
         None,
@@ -119,31 +125,37 @@ class FanGroup(GroupEntity, FanEntity):
         self._attr_unique_id = unique_id
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return self._speed_count
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._is_on
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         return self._percentage
 
     @property
+    @override
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
         return self._direction
 
     @property
+    @override
     def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
         return self._oscillating
 
     @callback
+    @override
     def async_update_supported_features(
         self,
         entity_id: str,
@@ -161,6 +173,7 @@ class FanGroup(GroupEntity, FanEntity):
                 else:
                     self._fans[feature].discard(entity_id)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage == 0:
@@ -171,6 +184,7 @@ class FanGroup(GroupEntity, FanEntity):
             {ATTR_PERCENTAGE: percentage},
         )
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._async_call_supported_entities(
@@ -179,6 +193,7 @@ class FanGroup(GroupEntity, FanEntity):
             {ATTR_OSCILLATING: oscillating},
         )
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self._async_call_supported_entities(
@@ -187,6 +202,7 @@ class FanGroup(GroupEntity, FanEntity):
             {ATTR_DIRECTION: direction},
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -197,18 +213,23 @@ class FanGroup(GroupEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
-        await self._async_call_all_entities(SERVICE_TURN_ON)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_ON, FanEntityFeature.TURN_ON, {}
+        )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fans off."""
-        await self._async_call_all_entities(SERVICE_TURN_OFF)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_OFF, FanEntityFeature.TURN_OFF, {}
+        )
 
     async def _async_call_supported_entities(
         self, service: str, support_flag: int, data: dict[str, Any]
     ) -> None:
         """Call a service with all entities."""
         await self.hass.services.async_call(
-            DOMAIN,
+            FAN_DOMAIN,
             service,
             {**data, ATTR_ENTITY_ID: self._fans[support_flag]},
             blocking=True,
@@ -218,7 +239,7 @@ class FanGroup(GroupEntity, FanEntity):
     async def _async_call_all_entities(self, service: str) -> None:
         """Call a service with all entities."""
         await self.hass.services.async_call(
-            DOMAIN,
+            FAN_DOMAIN,
             service,
             {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,
@@ -238,8 +259,10 @@ class FanGroup(GroupEntity, FanEntity):
         setattr(self, attr, most_frequent_attribute(states, entity_attr))
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
+        self._update_assumed_state_from_members()
 
         states = [
             state

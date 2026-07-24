@@ -1,0 +1,51 @@
+{
+  "components": {
+    "main": {
+      "presenceSensor": {
+        "presence": {
+          "value": "not present",
+          "timestamp": "2025-02-11T13:58:50.044Z"
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-01-16T21:14:07.471Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-02-11T14:23:22.053Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 71,
+          "unit": "F",
+          "timestamp": "2025-02-11T14:36:16.823Z"
+        }
+      },
+      "refresh": {},
+      "motionSensor": {
+        "motion": {
+          "value": "inactive",
+          "timestamp": "2025-02-11T13:58:50.044Z"
+        }
+      }
+    }
+  }
+}

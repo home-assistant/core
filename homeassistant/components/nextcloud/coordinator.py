@@ -1,7 +1,7 @@
 """Data update coordinator for the Nextcloud integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 
@@ -14,12 +14,16 @@ from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type NextcloudConfigEntry = ConfigEntry[NextcloudDataUpdateCoordinator]
+
 
 class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Nextcloud data update coordinator."""
 
+    config_entry: NextcloudConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, ncm: NextcloudMonitor, entry: ConfigEntry
+        self, hass: HomeAssistant, ncm: NextcloudMonitor, entry: NextcloudConfigEntry
     ) -> None:
         """Initialize the Nextcloud coordinator."""
         self.ncm = ncm
@@ -28,6 +32,7 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=self.url,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
@@ -64,6 +69,7 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 leaf = False
         return result
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch all Nextcloud data."""
 

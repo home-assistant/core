@@ -1,5 +1,13 @@
 """Tests for the HDMI-CEC switch platform."""
-from pycec.const import POWER_OFF, POWER_ON, STATUS_PLAY, STATUS_STILL, STATUS_STOP
+
+from pycec.const import (
+    CMD_STANDBY,
+    POWER_OFF,
+    POWER_ON,
+    STATUS_PLAY,
+    STATUS_STILL,
+    STATUS_STOP,
+)
 from pycec.network import PhysicalAddress
 import pytest
 
@@ -15,12 +23,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import MockHDMIDevice
+from . import MockHDMIDevice, assert_cec_command
+from .conftest import CecEntityCreator, HDMINetworkCreator
 
 
 @pytest.mark.parametrize("config", [{}, {"platform": "switch"}])
 async def test_load_platform(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity, config
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
+    config,
 ) -> None:
     """Test that switch entity is loaded."""
     hdmi_network = await create_hdmi_network(config=config)
@@ -35,7 +47,9 @@ async def test_load_platform(
 
 
 async def test_load_types(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test that switch entity is loaded when types is set."""
     config = {"platform": "media_player", "types": {"hdmi_cec.hdmi_3": "switch"}}
@@ -60,7 +74,9 @@ async def test_load_types(
 
 
 async def test_service_on(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test that switch triggers on `on` service."""
     hdmi_network = await create_hdmi_network()
@@ -80,7 +96,9 @@ async def test_service_on(
 
 
 async def test_service_off(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test that switch triggers on `off` service."""
     hdmi_network = await create_hdmi_network()
@@ -96,7 +114,12 @@ async def test_service_off(
         blocking=True,
     )
 
-    mock_hdmi_device.turn_off.assert_called_once_with()
+    mock_hdmi_device.turn_off.assert_not_called()
+    assert_cec_command(
+        mock_hdmi_device.send_command,
+        cmd=CMD_STANDBY,
+        dst=mock_hdmi_device.logical_address,
+    )
 
     state = hass.states.get("switch.hdmi_3")
     assert state.state == STATE_OFF
@@ -117,8 +140,8 @@ async def test_service_off(
 )
 async def test_device_status_change(
     hass: HomeAssistant,
-    create_hdmi_network,
-    create_cec_entity,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
     power_status,
     expected_state,
     status,
@@ -134,7 +157,10 @@ async def test_device_status_change(
     state = hass.states.get("switch.hdmi_3")
     if power_status in (POWER_ON, 4) and status is not None:
         pytest.xfail(
-            reason="`CecSwitchEntity.is_on` returns `False` here instead of `true` as expected."
+            reason=(
+                "`CecSwitchEntity.is_on` returns `False` here"
+                " instead of `true` as expected."
+            )
         )
     assert state.state == expected_state
 
@@ -153,7 +179,11 @@ async def test_device_status_change(
     ],
 )
 async def test_friendly_name(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity, device_values, expected
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
+    device_values,
+    expected,
 ) -> None:
     """Test friendly name setup."""
     hdmi_network = await create_hdmi_network()
@@ -175,7 +205,10 @@ async def test_friendly_name(
             {},
             {},
             marks=pytest.mark.xfail(
-                reason="physical address logic returns a string 'None' instead of not being set."
+                reason=(
+                    "physical address logic returns a string"
+                    " 'None' instead of not being set."
+                )
             ),
         ),
         (
@@ -206,8 +239,8 @@ async def test_friendly_name(
 )
 async def test_extra_state_attributes(
     hass: HomeAssistant,
-    create_hdmi_network,
-    create_cec_entity,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
     device_values,
     expected_attributes,
 ) -> None:
@@ -238,8 +271,8 @@ async def test_extra_state_attributes(
 )
 async def test_icon(
     hass: HomeAssistant,
-    create_hdmi_network,
-    create_cec_entity,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
     device_type,
     expected_icon,
 ) -> None:
@@ -253,7 +286,9 @@ async def test_icon(
 
 
 async def test_unavailable_status(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test entity goes into unavailable status when expected."""
     hdmi_network = await create_hdmi_network()

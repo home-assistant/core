@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:bluetooth-off",
+        "state": {
+          "home": "mdi:bluetooth-connect"
+        }
+      }
+    },
+    "sensor": {
+      "estimated_distance": {
+        "default": "mdi:signal-distance-variant"
+      }
+    }
+  }
+}

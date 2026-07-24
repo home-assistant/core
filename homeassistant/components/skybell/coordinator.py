@@ -1,6 +1,7 @@
 """Data update coordinator for the Skybell integration."""
 
 from datetime import timedelta
+from typing import override
 
 from aioskybell import SkybellDevice, SkybellException
 
@@ -10,22 +11,31 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER
 
+type SkybellConfigEntry = ConfigEntry[list[SkybellDataUpdateCoordinator]]
+
 
 class SkybellDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Skybell integration."""
 
-    config_entry: ConfigEntry
+    config_entry: SkybellConfigEntry
 
-    def __init__(self, hass: HomeAssistant, device: SkybellDevice) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SkybellConfigEntry,
+        device: SkybellDevice,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=device.name,
             update_interval=timedelta(seconds=30),
         )
         self.device = device
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:

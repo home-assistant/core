@@ -1,7 +1,6 @@
 """Config flow for Nibe Heat Pump integration."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW
@@ -17,10 +16,9 @@ from nibe.heatpump import HeatPump, Model
 import voluptuous as vol
 import yarl
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import (
@@ -73,6 +71,13 @@ STEP_MODBUS_DATA_SCHEMA = vol.Schema(
 )
 
 
+STEP_MODBUS_PLACEHOLDERS = {
+    "tcp": "tcp://[HOST]:[PORT]",
+    "serial": "serial://[LOCAL DEVICE]",
+    "rfc2217": "rfc2217://[HOST]:[PORT]",
+}
+
+
 class FieldError(Exception):
     """Field with invalid data."""
 
@@ -89,7 +94,6 @@ async def validate_nibegw_input(
     """Validate the user input allows us to connect."""
 
     heatpump = HeatPump(Model[data[CONF_MODEL]])
-    heatpump.word_swap = True
     await heatpump.initialize()
 
     connection = NibeGW(
@@ -106,6 +110,9 @@ async def validate_nibegw_input(
         raise FieldError(
             "Address already in use", "listening_port", "address_in_use"
         ) from exception
+
+    if heatpump.word_swap is None:
+        heatpump.word_swap = True
 
     try:
         await connection.verify_connectivity()
@@ -166,24 +173,27 @@ async def validate_modbus_input(
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nibe Heat Pump."""
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         return self.async_show_menu(step_id="user", menu_options=["modbus", "nibegw"])
 
     async def async_step_modbus(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the modbus step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="modbus", data_schema=STEP_MODBUS_DATA_SCHEMA
+                step_id="modbus",
+                data_schema=STEP_MODBUS_DATA_SCHEMA,
+                description_placeholders=STEP_MODBUS_PLACEHOLDERS,
             )
 
         errors = {}
@@ -193,19 +203,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FieldError as exception:
             LOGGER.debug("Validation error %s", exception)
             errors[exception.field] = exception.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
-            step_id="modbus", data_schema=STEP_MODBUS_DATA_SCHEMA, errors=errors
+            step_id="modbus",
+            data_schema=STEP_MODBUS_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=STEP_MODBUS_PLACEHOLDERS,
         )
 
     async def async_step_nibegw(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the nibegw step."""
         if user_input is None:
             return self.async_show_form(
@@ -219,7 +232,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FieldError as exception:
             LOGGER.exception("Validation error")
             errors[exception.field] = exception.error
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

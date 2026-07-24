@@ -1,14 +1,13 @@
 """Support for Schluter thermostats."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     ClimateEntity,
     ClimateEntityFeature,
@@ -28,7 +27,7 @@ from homeassistant.helpers.update_coordinator import (
 from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))}
 )
 
@@ -61,6 +60,7 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name="schluter",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
@@ -88,23 +88,22 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         self._serial_number = serial_number
         self._api = api
         self._session_id = session_id
+        self._attr_unique_id = serial_number
 
     @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._serial_number
-
-    @property
-    def name(self):
+    @override
+    def name(self) -> str:
         """Return the name of the thermostat."""
         return self.coordinator.data[self._serial_number].name
 
     @property
-    def current_temperature(self):
+    @override
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.coordinator.data[self._serial_number].temperature
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current operation. Can only be heating or idle."""
         if self.coordinator.data[self._serial_number].is_heating:
@@ -112,23 +111,28 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
-    def target_temperature(self):
+    @override
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.coordinator.data[self._serial_number].set_point_temp
 
     @property
-    def min_temp(self):
+    @override
+    def min_temp(self) -> float:
         """Identify min_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].min_temp
 
     @property
-    def max_temp(self):
+    @override
+    def max_temp(self) -> float:
         """Identify max_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].max_temp
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Mode is always heating, so do nothing."""
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = None
@@ -139,5 +143,6 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         try:
             if target_temp is not None:
                 self._api.set_temperature(self._session_id, serial_number, target_temp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except RequestException as ex:
             _LOGGER.error("An error occurred while setting temperature: %s", ex)

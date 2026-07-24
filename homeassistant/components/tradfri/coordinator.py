@@ -1,14 +1,17 @@
 """Tradfri DataUpdateCoordinator."""
-from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
+from pytradfri import Gateway
+from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -16,14 +19,30 @@ from .const import LOGGER
 
 SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
+type TradfriConfigEntry = ConfigEntry[TradfriData]
+
+
+@dataclass
+class TradfriData:
+    """Runtime data for a Tradfri config entry."""
+
+    factory: APIFactory
+    gateway: Gateway
+    api: Callable[[Command | list[Command]], Any]
+    coordinator_list: list[TradfriDeviceDataUpdateCoordinator] = field(
+        default_factory=list
+    )
+
 
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Coordinator to manage data for a specific Tradfri device."""
 
+    config_entry: TradfriConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
+        config_entry: TradfriConfigEntry,
         api: Callable[[Command | list[Command]], Any],
         device: Device,
     ) -> None:
@@ -35,6 +54,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"Update coordinator for {device}",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
@@ -68,6 +88,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self.update_interval = timedelta(seconds=5)
         await self.async_request_refresh()
 
+    @override
     async def _async_update_data(self) -> Device:
         """Fetch data from the gateway for a specific device."""
         try:

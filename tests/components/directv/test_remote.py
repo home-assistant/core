@@ -1,4 +1,5 @@
 """The tests for the DirecTV remote platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.remote import (

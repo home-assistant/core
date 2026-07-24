@@ -1,15 +1,17 @@
 """Support for Edimax switches."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from pyedimax.smartplug import SmartPlug
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -19,7 +21,7 @@ DEFAULT_NAME = "Edimax Smart Plug"
 DEFAULT_PASSWORD = "1234"
 DEFAULT_USERNAME = "admin"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -49,30 +51,16 @@ class SmartPlugSwitch(SwitchEntity):
     def __init__(self, smartplug, name):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._name = name
-        self._state = False
+        self._attr_name = name
+        self._attr_is_on = False
         self._info = None
-        self._mac = None
 
-    @property
-    def unique_id(self):
-        """Return the device's MAC address."""
-        return self._mac
-
-    @property
-    def name(self):
-        """Return the name of the Smart Plug, if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
-
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.smartplug.state = "ON"
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.smartplug.state = "OFF"
@@ -81,6 +69,6 @@ class SmartPlugSwitch(SwitchEntity):
         """Update edimax switch."""
         if not self._info:
             self._info = self.smartplug.info
-            self._mac = self._info["mac"]
+            self._attr_unique_id = self._info["mac"]
 
-        self._state = self.smartplug.state == "ON"
+        self._attr_is_on = self.smartplug.state == "ON"

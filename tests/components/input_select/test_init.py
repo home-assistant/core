@@ -1,4 +1,6 @@
 """The tests for the Input select component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,7 +37,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None, minor_version=STORAGE_VERSION_MINOR):
@@ -68,17 +70,18 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass: HomeAssistant) -> None:
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "invalid_config",
+    [
         None,
-        {},
         {"name with space": None},
         {"bad_initial": {"options": [1, 2], "initial": 3}},
-    ]
+    ],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
+    """Test config."""
 
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_select_option(hass: HomeAssistant) -> None:
@@ -421,7 +424,7 @@ async def test_input_select_context(
     """Test that input_select context works."""
     assert await async_setup_component(
         hass,
-        "input_select",
+        DOMAIN,
         {
             "input_select": {
                 "s1": {"options": ["first option", "middle option", "last option"]}
@@ -740,7 +743,7 @@ async def test_update_duplicates(
     )
     resp = await client.receive_json()
     assert not resp["success"]
-    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["code"] == "home_assistant_error"
     assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     state = hass.states.get(input_entity_id)
@@ -812,7 +815,7 @@ async def test_ws_create_duplicates(
     )
     resp = await client.receive_json()
     assert not resp["success"]
-    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["code"] == "home_assistant_error"
     assert resp["error"]["message"] == "Duplicate options are not allowed"
 
     assert not hass.states.get(input_entity_id)

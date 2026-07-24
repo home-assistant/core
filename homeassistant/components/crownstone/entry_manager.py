@@ -1,5 +1,4 @@
 """Manager to set up IO with Crownstone devices for a config entry."""
-from __future__ import annotations
 
 import logging
 from typing import Any
@@ -15,7 +14,7 @@ from crownstone_uart.Exceptions import UartException
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -25,7 +24,6 @@ from .const import (
     CONF_USB_PATH,
     CONF_USB_SPHERE,
     DOMAIN,
-    PLATFORMS,
     PROJECT_NAME,
     SSE_LISTENERS,
     UART_LISTENERS,
@@ -35,6 +33,8 @@ from .listeners import setup_sse_listeners, setup_uart_listeners
 
 _LOGGER = logging.getLogger(__name__)
 
+type CrownstoneConfigEntry = ConfigEntry[CrownstoneEntryManager]
+
 
 class CrownstoneEntryManager:
     """Manage a Crownstone config entry."""
@@ -43,7 +43,9 @@ class CrownstoneEntryManager:
     cloud: CrownstoneCloud
     sse: CrownstoneSSEAsync
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: CrownstoneConfigEntry
+    ) -> None:
         """Initialize the hub."""
         self.hass = hass
         self.config_entry = config_entry
@@ -77,7 +79,8 @@ class CrownstoneEntryManager:
             _LOGGER.error("Unknown error during login")
             raise ConfigEntryNotReady from unknown_err
 
-        # A new clientsession is created because the default one does not cleanup on unload
+        # A new clientsession is created because the default
+        # one does not cleanup on unload
         self.sse = CrownstoneSSEAsync(
             email=email,
             password=password,
@@ -96,20 +99,9 @@ class CrownstoneEntryManager:
             await self.async_setup_usb()
 
         # Save the sphere where the USB is located
-        # Makes HA aware of the Crownstone environment HA is placed in, a user can have multiple
+        # Makes HA aware of the Crownstone environment HA is
+        # placed in, a user can have multiple
         self.usb_sphere_id = self.config_entry.options[CONF_USB_SPHERE]
-
-        await self.hass.config_entries.async_forward_entry_setups(
-            self.config_entry, PLATFORMS
-        )
-
-        # HA specific listeners
-        self.config_entry.async_on_unload(
-            self.config_entry.add_update_listener(_async_update_listener)
-        )
-        self.config_entry.async_on_unload(
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_shutdown)
-        )
 
         return True
 
@@ -160,11 +152,12 @@ class CrownstoneEntryManager:
 
         setup_uart_listeners(self)
 
-    async def async_unload(self) -> bool:
+    @callback
+    def async_unload(self) -> None:
         """Unload the current config entry."""
         # Authentication failed
         if self.cloud.cloud_data is None:
-            return True
+            return
 
         self.sse.close_client()
         for sse_unsub in self.listeners[SSE_LISTENERS]:
@@ -175,23 +168,9 @@ class CrownstoneEntryManager:
             for subscription_id in self.listeners[UART_LISTENERS]:
                 UartEventBus.unsubscribe(subscription_id)
 
-        unload_ok = await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, PLATFORMS
-        )
-
-        if unload_ok:
-            self.hass.data[DOMAIN].pop(self.config_entry.entry_id)
-
-        return unload_ok
-
     @callback
     def on_shutdown(self, _: Event) -> None:
         """Close all IO connections."""
         self.sse.close_client()
         if self.uart:
             self.uart.stop()
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

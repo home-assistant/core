@@ -1,6 +1,6 @@
 """Code to support homekit_controller tests."""
-from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -10,12 +10,8 @@ from unittest import mock
 
 from aiohomekit.controller.abstract import AbstractDescription, AbstractPairing
 from aiohomekit.hkjson import loads as hkloads
-from aiohomekit.model import (
-    Accessories,
-    AccessoriesState,
-    Accessory,
-    mixin as model_mixin,
-)
+from aiohomekit.model import Accessories, AccessoriesState, Accessory
+from aiohomekit.model.services import Service
 from aiohomekit.testing import FakeController, FakePairing
 
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -34,7 +30,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -181,7 +177,7 @@ class Helper:
         return state
 
 
-async def time_changed(hass, seconds):
+async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
     async_fire_time_changed(hass, next_update)
@@ -194,11 +190,10 @@ async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accesso
         load_fixture, os.path.join("homekit_controller", path)
     )
     accessories_json = hkloads(accessories_fixture)
-    accessories = Accessories.from_list(accessories_json)
-    return accessories
+    return Accessories.from_list(accessories_json)
 
 
-async def setup_platform(hass):
+async def setup_platform(hass: HomeAssistant) -> FakeController:
     """Load the platform but with a fake Controller API."""
     config = {"discovery": {}}
 
@@ -210,7 +205,9 @@ async def setup_platform(hass):
     return await async_get_controller(hass)
 
 
-async def setup_test_accessories(hass, accessories, connection=None):
+async def setup_test_accessories(
+    hass: HomeAssistant, accessories: list[Accessory], connection: str | None = None
+) -> tuple[MockConfigEntry, AbstractPairing]:
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
     return await setup_test_accessories_with_controller(
@@ -219,8 +216,11 @@ async def setup_test_accessories(hass, accessories, connection=None):
 
 
 async def setup_test_accessories_with_controller(
-    hass, accessories, fake_controller, connection=None
-):
+    hass: HomeAssistant,
+    accessories: list[Accessory],
+    fake_controller: FakeController,
+    connection: str | None = None,
+) -> tuple[MockConfigEntry, AbstractPairing]:
     """Load a fake homekit device based on captured JSON profile."""
 
     pairing_id = "00:00:00:00:00:00"
@@ -237,7 +237,7 @@ async def setup_test_accessories_with_controller(
 
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data=data,
         title="test",
@@ -282,8 +282,13 @@ async def device_config_changed(hass: HomeAssistant, accessories: Accessories):
 
 
 async def setup_test_component(
-    hass, setup_accessory, capitalize=False, suffix=None, connection=None
-):
+    hass: HomeAssistant,
+    aid: int,
+    setup_accessory: Callable[[Accessory], Service | None],
+    capitalize: bool = False,
+    suffix: str | None = None,
+    connection: str | None = None,
+) -> Helper:
     """Load a fake homekit accessory based on a homekit accessory model.
 
     If capitalize is True, property names will be in upper case.
@@ -291,7 +296,7 @@ async def setup_test_component(
     If suffix is set, entityId will include the suffix
     """
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     setup_accessory(accessory)
 
@@ -306,27 +311,31 @@ async def setup_test_component(
 
     config_entry, pairing = await setup_test_accessories(hass, [accessory], connection)
     entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
-    return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
+    return Helper(hass, f"{domain}.{entity}", pairing, accessory, config_entry)
 
 
 async def assert_devices_and_entities_created(
     hass: HomeAssistant, expected: DeviceTestInfo
 ):
-    """Check that all expected devices and entities are loaded and enumerated as expected."""
+    """Check all expected devices and entities are loaded correctly."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
     async def _do_assertions(expected: DeviceTestInfo) -> dr.DeviceEntry:
         # Note: homekit_controller currently uses a 3-tuple for device identifiers
-        # The current standard is a 2-tuple (hkc was not migrated when this change was brought in)
+        # The current standard is a 2-tuple (hkc was not migrated when this change was
+        # brought in)
 
         # There are currently really 3 cases here:
-        # - We can match exactly one device by serial number. This won't work for devices like the Ryse.
-        #   These have nlank or broken serial numbers.
-        # - The device unique id is "00:00:00:00:00:00" - this is the pairing id. This is only set for
+        # - We can match exactly one device by serial number. This won't
+        #   work for devices like the Ryse.
+        #   These have blank or broken serial numbers.
+        # - The device unique id is "00:00:00:00:00:00" - this is the pairing id.
+        #   This is only set for
         #   the root (bridge) device.
-        # - The device unique id is "00:00:00:00:00:00-X", where X is a HAP aid. This is only set when
-        #   we have detected broken serial numbers (and serial number is not used as an identifier).
+        # - The device unique id is "00:00:00:00:00:00-X", where X is a HAP aid.
+        #   This is only set when we have detected broken serial numbers
+        #   (and serial number is not used as an identifier).
 
         device = device_registry.async_get_device(
             identifiers={(IDENTIFIER_ACCESSORY_ID, expected.unique_id)}
@@ -342,7 +351,8 @@ async def assert_devices_and_entities_created(
         assert device.sw_version == expected.sw_version
 
         # We might have matched the device by one identifier only
-        # Lets check that the other one is correct. Otherwise the test might silently be wrong.
+        # Lets check that the other one is correct. Otherwise the test might silently be
+        # wrong.
         accessory_id_set = False
 
         for key, value in device.identifiers:
@@ -350,7 +360,8 @@ async def assert_devices_and_entities_created(
                 assert value == expected.unique_id
                 accessory_id_set = True
 
-        # If unique_id or serial is provided it MUST actually appear in the device registry entry.
+        # If unique_id or serial is provided it MUST actually appear in the device
+        # registry entry.
         assert (not expected.unique_id) ^ accessory_id_set
 
         for entity_info in expected.entities:
@@ -397,22 +408,3 @@ async def assert_devices_and_entities_created(
 
     # Root device must not have a via, otherwise its not the device
     assert root_device.via_device_id is None
-
-
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
-
-
-def get_next_aid():
-    """Get next aid."""
-    return model_mixin.id_counter + 1

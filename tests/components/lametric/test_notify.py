@@ -1,4 +1,5 @@
 """Tests for the LaMetric notify platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import (
@@ -99,7 +100,7 @@ async def test_notification_options(
     assert len(notification.model.frames) == 1
     frame = notification.model.frames[0]
     assert type(frame) is Simple
-    assert frame.icon == 1234
+    assert frame.icon == "1234"
     assert frame.text == "The secret of getting ahead is getting started"
 
 

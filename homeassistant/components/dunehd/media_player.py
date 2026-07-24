@@ -1,20 +1,23 @@
 """Dune HD implementation of the media player."""
-from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from pdunehd import DuneHDPlayer
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
+    async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import DuneHDConfigEntry
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 CONF_SOURCES: Final = "sources"
@@ -26,18 +29,22 @@ DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DuneHDConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Dune HD entities from a config_entry."""
-    unique_id = entry.entry_id
-
-    player: DuneHDPlayer = hass.data[DOMAIN][entry.entry_id]
-
-    async_add_entities([DuneHDPlayerEntity(player, DEFAULT_NAME, unique_id)], True)
+    async_add_entities(
+        [DuneHDPlayerEntity(entry.runtime_data, DEFAULT_NAME, entry.entry_id)], True
+    )
 
 
 class DuneHDPlayerEntity(MediaPlayerEntity):
@@ -64,6 +71,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         self.__update_title()
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return player state."""
         state = MediaPlayerState.OFF
@@ -78,21 +86,25 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return state
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return len(self._state) > 0
 
     @property
+    @override
     def volume_level(self) -> float:
         """Return the volume level of the media player (0..1)."""
         return int(self._state.get("playback_volume", 0)) / 100
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Return a boolean if volume is currently muted."""
         return int(self._state.get("playback_mute", 0)) == 1
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return DUNEHD_PLAYER_SUPPORT
@@ -105,28 +117,62 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         """Volume down media player."""
         self._state = self._player.volume_down()
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute/unmute player volume."""
         self._state = self._player.mute(mute)
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self._media_title = None
         self._state = self._player.turn_off()
 
+    @override
     def turn_on(self) -> None:
-        """Turn off media player."""
+        """Turn on media player."""
         self._state = self._player.turn_on()
 
+    @override
     def media_play(self) -> None:
         """Play media player."""
         self._state = self._player.play()
 
+    @override
     def media_pause(self) -> None:
         """Pause media player."""
         self._state = self._player.pause()
 
+    @override
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play media from a URL or file."""
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = sourced_media.url
+
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        self._state = await self.hass.async_add_executor_job(
+            self._player.launch_media_url, media_id
+        )
+
+    @override
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(self.hass, media_content_id)
+
     @property
+    @override
     def media_title(self) -> str | None:
         """Return the current media source."""
         self.__update_title()
@@ -144,10 +190,12 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         else:
             self._media_title = None
 
+    @override
     def media_previous_track(self) -> None:
         """Send previous track command."""
         self._state = self._player.previous_track()
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self._state = self._player.next_track()

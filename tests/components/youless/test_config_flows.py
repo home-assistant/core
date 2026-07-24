@@ -1,8 +1,9 @@
 """Test the youless config flow."""
+
 from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 
-from homeassistant.components.youless import DOMAIN
+from homeassistant.components.youless.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,23 +26,26 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
 
     mock_youless = _get_mock_youless_api(
         initialize={"homes": [{"id": 1, "name": "myhome"}]}
     )
-    with patch(
-        "homeassistant.components.youless.config_flow.YoulessAPI",
-        return_value=mock_youless,
-    ) as mocked_youless:
+    with (
+        patch(
+            "homeassistant.components.youless.config_flow.YoulessAPI",
+            return_value=mock_youless,
+        ) as mocked_youless,
+        patch("homeassistant.components.youless.async_setup_entry", return_value=True),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "localhost"},
         )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "localhost"
     assert len(mocked_youless.mock_calls) == 1
 
@@ -52,7 +56,7 @@ async def test_not_found(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
 
@@ -66,5 +70,5 @@ async def test_not_found(hass: HomeAssistant) -> None:
             {"host": "localhost"},
         )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert len(mocked_youless.mock_calls) == 1

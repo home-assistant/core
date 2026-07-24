@@ -1,11 +1,9 @@
 """Platform for Schlage switch integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from pyschlage.lock import Lock
 
@@ -14,35 +12,21 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SchlageDataUpdateCoordinator
+from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
-@dataclass
-class SchlageSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    # NOTE: This has to be a mixin because these are required keys.
-    # SwitchEntityDescription has attributes with default values,
-    # which means we can't inherit from it because you haven't have
-    # non-default arguments follow default arguments in an initializer.
+@dataclass(frozen=True, kw_only=True)
+class SchlageSwitchEntityDescription(SwitchEntityDescription):
+    """Entity description for a Schlage switch."""
 
     on_fn: Callable[[Lock], None]
     off_fn: Callable[[Lock], None]
     value_fn: Callable[[Lock], bool]
-
-
-@dataclass
-class SchlageSwitchEntityDescription(
-    SwitchEntityDescription, SchlageSwitchEntityDescriptionMixin
-):
-    """Entity description for a Schlage switch."""
 
 
 SWITCHES: tuple[SchlageSwitchEntityDescription, ...] = (
@@ -69,22 +53,25 @@ SWITCHES: tuple[SchlageSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SchlageConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches based on a config entry."""
-    coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for device_id in coordinator.data.locks:
-        for description in SWITCHES:
-            entities.append(
-                SchlageSwitch(
-                    coordinator=coordinator,
-                    description=description,
-                    device_id=device_id,
-                )
+    coordinator = config_entry.runtime_data
+
+    def _add_new_locks(locks: dict[str, LockData]) -> None:
+        async_add_entities(
+            SchlageSwitch(
+                coordinator=coordinator,
+                description=description,
+                device_id=device_id,
             )
-    async_add_entities(entities)
+            for device_id in locks
+            for description in SWITCHES
+        )
+
+    _add_new_locks(coordinator.data.locks)
+    coordinator.new_locks_callbacks.append(_add_new_locks)
 
 
 class SchlageSwitch(SchlageEntity, SwitchEntity):
@@ -104,10 +91,12 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the switch is on."""
         return self.entity_description.value_fn(self._lock)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(
@@ -115,6 +104,7 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(

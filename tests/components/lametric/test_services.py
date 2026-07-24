@@ -1,4 +1,5 @@
 """Tests for the LaMetric services."""
+
 from unittest.mock import MagicMock
 
 from demetriek import (
@@ -189,7 +190,7 @@ async def test_service_message(
     assert len(notification.model.frames) == 1
     frame = notification.model.frames[0]
     assert type(frame) is Simple
-    assert frame.icon == 6916
+    assert frame.icon == "6916"
     assert frame.text == "Meow!"
 
     mock_lametric.notify.side_effect = LaMetricError

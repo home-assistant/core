@@ -2,18 +2,20 @@
 
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView, require_admin
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.sensor import async_update_suggested_units
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import location, unit_system
+from homeassistant.util import location as location_util, unit_system
 
 
-async def async_setup(hass):
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Set up the Hassbian config."""
     hass.http.register_view(CheckConfigView)
     websocket_api.async_register_command(hass, websocket_update_config)
@@ -28,10 +30,10 @@ class CheckConfigView(HomeAssistantView):
     name = "api:config:core:check_config"
 
     @require_admin
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Validate configuration and return results."""
 
-        res = await check_config.async_check_ha_config_file(request.app["hass"])
+        res = await check_config.async_check_ha_config_file(request.app[KEY_HASS])
 
         state = "invalid" if res.errors else "valid"
 
@@ -50,14 +52,17 @@ class CheckConfigView(HomeAssistantView):
         "type": "config/core/update",
         vol.Optional("country"): cv.country,
         vol.Optional("currency"): cv.currency,
-        vol.Optional("elevation"): int,
+        vol.Optional("elevation"): vol.Coerce(int),
         vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("language"): cv.language,
         vol.Optional("latitude"): cv.latitude,
         vol.Optional("location_name"): str,
         vol.Optional("longitude"): cv.longitude,
-        vol.Optional("time_zone"): cv.time_zone,
+        vol.Optional("radius"): cv.positive_int,
+        # Validated by async_set_time_zone in the executor to avoid
+        # blocking I/O loading zoneinfo data on the event loop.
+        vol.Optional("time_zone"): str,
         vol.Optional("update_units"): bool,
         vol.Optional("unit_system"): unit_system.validate_unit_system,
     }
@@ -94,7 +99,7 @@ async def websocket_detect_config(
 ) -> None:
     """Detect core config."""
     session = async_get_clientsession(hass)
-    location_info = await location.async_detect_location_info(session)
+    location_info = await location_util.async_detect_location_info(session)
 
     info: dict[str, Any] = {}
 
@@ -105,11 +110,9 @@ async def websocket_detect_config(
     # We don't want any integrations to use the name of the unit system
     # so we are using the private attribute here
     if location_info.use_metric:
-        # pylint: disable-next=protected-access
-        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_METRIC
+        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_METRIC  # noqa: SLF001
     else:
-        # pylint: disable-next=protected-access
-        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY
+        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY  # noqa: SLF001
 
     if location_info.latitude:
         info["latitude"] = location_info.latitude

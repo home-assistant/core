@@ -1,5 +1,6 @@
 """Support for the Rainforest Eagle energy monitor."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -7,16 +8,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .data import EagleDataCoordinator
+from .coordinator import EagleDataCoordinator, RainforestEagleConfigEntry
 
 SENSORS = (
     SensorEntityDescription(
@@ -44,10 +44,12 @@ SENSORS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RainforestEagleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = [EagleSensor(coordinator, description) for description in SENSORS]
 
     if coordinator.data.get("zigbee:Price") not in (None, "invalid"):
@@ -56,7 +58,7 @@ async def async_setup_entry(
                 coordinator,
                 SensorEntityDescription(
                     key="zigbee:Price",
-                    translation_key="meter_price",
+                    translation_key="energy_price",
                     native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{UnitOfEnergy.KILO_WATT_HOUR}",
                     state_class=SensorStateClass.MEASUREMENT,
                 ),
@@ -75,7 +77,11 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.cloud_id}-${coordinator.hardware_address}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.cloud_id}"
+            f"-${coordinator.hardware_address}"
+            f"-{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.cloud_id)},
             manufacturer="Rainforest Automation",
@@ -84,11 +90,13 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.is_connected
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
         return self.coordinator.data.get(self.entity_description.key)

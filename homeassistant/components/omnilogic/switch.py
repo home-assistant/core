@@ -1,31 +1,33 @@
 """Platform for Omnilogic switch integration."""
+
 import time
-from typing import Any
+from typing import Any, override
 
 from omnilogic import OmniLogicException
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .common import check_guard
+from .const import PUMP_TYPES
+from .coordinator import OmniLogicConfigEntry, OmniLogicUpdateCoordinator
+from .entity import OmniLogicEntity
 
 SERVICE_SET_SPEED = "set_pump_speed"
 OMNILOGIC_SWITCH_OFF = 7
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: OmniLogicConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the light platform."""
+    """Set up the switch platform."""
 
-    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -87,12 +89,13 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         )
 
         self._state_key = state_key
-        self._state = None
-        self._last_action = 0
+        self._state: bool | None = None
+        self._last_action = 0.0
         self._state_delay = 30
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return the on/off state of the switch."""
         state_int = 0
 
@@ -114,7 +117,8 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
 class OmniLogicRelayControl(OmniLogicSwitch):
     """Define the OmniLogic Relay entity."""
 
-    async def async_turn_on(self, **kwargs):
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the relay."""
         self._state = True
         self._last_action = time.time()
@@ -127,7 +131,8 @@ class OmniLogicRelayControl(OmniLogicSwitch):
             1,
         )
 
-    async def async_turn_off(self, **kwargs):
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the relay."""
         self._state = False
         self._last_action = time.time()
@@ -173,7 +178,8 @@ class OmniLogicPumpControl(OmniLogicSwitch):
 
         self._last_speed = None
 
-    async def async_turn_on(self, **kwargs):
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the pump."""
         self._state = True
         self._last_action = time.time()
@@ -191,7 +197,8 @@ class OmniLogicPumpControl(OmniLogicSwitch):
             on_value,
         )
 
-    async def async_turn_off(self, **kwargs):
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the pump."""
         self._state = False
         self._last_action = time.time()

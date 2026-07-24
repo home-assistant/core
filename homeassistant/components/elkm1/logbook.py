@@ -1,5 +1,4 @@
 """Describe elkm1 logbook events."""
-from __future__ import annotations
 
 from collections.abc import Callable
 

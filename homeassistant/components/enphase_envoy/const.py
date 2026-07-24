@@ -1,4 +1,5 @@
 """The enphase_envoy component."""
+
 from pyenphase import EnvoyAuthenticationError, EnvoyAuthenticationRequired
 
 from homeassistant.const import Platform
@@ -14,3 +15,15 @@ PLATFORMS = [
 ]
 
 INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)
+
+ACCESS_TOKEN_LOGIN_URL = "https://entrez.enphaseenergy.com"
+CONF_MANUAL_TOKEN = "use_manual_token"
+
+SETUP_RETRY_TIMEOUT = 50
+OPERATIONAL_RETRY_TIMEOUT = 200
+
+OPTION_DIAGNOSTICS_INCLUDE_FIXTURES = "diagnostics_include_fixtures"
+OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE = False
+
+OPTION_DISABLE_KEEP_ALIVE = "disable_keep_alive"
+OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE = False

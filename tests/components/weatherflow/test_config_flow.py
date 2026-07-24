@@ -30,15 +30,13 @@ async def test_single_instance(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_devices_with_mocks(
-    hass: HomeAssistant,
-    mock_start: AsyncMock,
-    mock_stop: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_start: AsyncMock, mock_stop: AsyncMock
 ) -> None:
     """Test getting user input."""
 
@@ -48,23 +46,23 @@ async def test_devices_with_mocks(
     )
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
 
 
 @pytest.mark.parametrize(
     ("exception", "error_msg"),
     [
-        (asyncio.TimeoutError, ERROR_MSG_NO_DEVICE_FOUND),
+        (TimeoutError, ERROR_MSG_NO_DEVICE_FOUND),
         (asyncio.exceptions.CancelledError, ERROR_MSG_CANNOT_CONNECT),
         (AddressInUseError, ERROR_MSG_ADDRESS_IN_USE),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_devices_with_various_mocks_errors(
     hass: HomeAssistant,
     mock_start: AsyncMock,
     mock_stop: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error_msg: str,
 ) -> None:
@@ -80,12 +78,12 @@ async def test_devices_with_various_mocks_errors(
         )
 
         await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == error_msg
         assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}

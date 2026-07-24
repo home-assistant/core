@@ -1,12 +1,15 @@
-"""Tests for the dnsip integration."""
-from __future__ import annotations
+"""Tests for the DNS IP integration."""
+
+import pycares
 
 
 class QueryResult:
     """Return Query results."""
 
-    host = "1.2.3.4"
-    ttl = 60
+    def __init__(self, ip="1.2.3.4", ttl=60) -> None:
+        """Initialize QueryResult class."""
+        self.host = ip
+        self.ttl = ttl
 
 
 class RetrieveDNS:
@@ -20,12 +23,78 @@ class RetrieveDNS:
             self.nameservers = nameservers
         self._nameservers = ["1.2.3.4"]
         self.error = error
+        self._closed = False
 
-    async def query(self, hostname, qtype) -> dict[str, str]:
-        """Return information."""
+    async def query_dns(
+        self, host: str, qtype: str, qclass: str | None = None
+    ) -> pycares.DNSResult:
+        """Return dns information."""
         if self.error:
             raise self.error
-        return [QueryResult]
+        if qtype == "AAAA":
+            results = pycares.DNSResult(
+                answer=[
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_AAAA,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.AAAARecordData(addr="2001:db8:77::face:b00c"),
+                        ttl=60,
+                    ),
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_AAAA,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.AAAARecordData(addr="2001:db8:77::dead:beef"),
+                        ttl=60,
+                    ),
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_AAAA,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.AAAARecordData(addr="2001:db8::77:dead:beef"),
+                        ttl=60,
+                    ),
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_AAAA,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.AAAARecordData(addr="2001:db8:66::dead:beef"),
+                        ttl=60,
+                    ),
+                ],
+                authority=[],
+                additional=[],
+            )
+        else:
+            results = pycares.DNSResult(
+                answer=[
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_CNAME,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.CNAMERecordData(cname="test.testing.com"),
+                        ttl=60,
+                    ),
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_A,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.ARecordData(addr="1.2.3.4"),
+                        ttl=60,
+                    ),
+                    pycares.DNSRecord(
+                        name="test",
+                        type=pycares.QUERY_TYPE_A,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.ARecordData(addr="1.1.1.1"),
+                        ttl=60,
+                    ),
+                ],
+                authority=[],
+                additional=[],
+            )
+        return results
 
     @property
     def nameservers(self) -> list[str]:
@@ -35,3 +104,7 @@ class RetrieveDNS:
     @nameservers.setter
     def nameservers(self, value: list[str]) -> None:
         self._nameservers = value
+
+    async def close(self) -> None:
+        """Close the resolver."""
+        self._closed = True

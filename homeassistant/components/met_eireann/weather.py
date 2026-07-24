@@ -1,7 +1,7 @@
 """Support for Met Éireann weather service."""
-import logging
-from types import MappingProxyType
-from typing import Any, cast
+
+from collections.abc import Mapping
+from typing import Any, cast, override
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -11,7 +11,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -24,18 +23,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import MetEireannWeatherData
 from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import MetEireannConfigEntry, MetEireannUpdateCoordinator
 
 
 def format_condition(condition: str | None) -> str | None:
-    """Map the conditions provided by the weather API to those supported by the frontend."""
+    """Map weather API conditions to those supported by the frontend."""
     if condition is not None:
         for key, value in CONDITION_MAP.items():
             if condition in value:
@@ -45,27 +41,25 @@ def format_condition(condition: str | None) -> str | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MetEireannConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
-    entities = [MetEireannWeather(coordinator, config_entry.data, False)]
-
-    # Add hourly entity to legacy config entries
-    if entity_registry.async_get_entity_id(
+    # Remove hourly entity from legacy config entries
+    if entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
         _calculate_unique_id(config_entry.data, True),
     ):
-        entities.append(MetEireannWeather(coordinator, config_entry.data, True))
+        entity_registry.async_remove(entity_id)
 
-    async_add_entities(entities)
+    async_add_entities([MetEireannWeather(coordinator, config_entry.data)])
 
 
-def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
     """Calculate unique ID."""
     name_appendix = ""
     if hourly:
@@ -74,9 +68,7 @@ def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> st
     return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
 
 
-class MetEireannWeather(
-    SingleCoordinatorWeatherEntity[DataUpdateCoordinator[MetEireannWeatherData]]
-):
+class MetEireannWeather(SingleCoordinatorWeatherEntity[MetEireannUpdateCoordinator]):
     """Implementation of a Met Éireann weather condition."""
 
     _attr_attribution = "Data provided by Met Éireann"
@@ -88,58 +80,77 @@ class MetEireannWeather(
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(self, coordinator, config, hourly):
+    def __init__(
+        self,
+        coordinator: MetEireannUpdateCoordinator,
+        config: Mapping[str, Any],
+    ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._attr_unique_id = _calculate_unique_id(config, hourly)
+        self._attr_unique_id = _calculate_unique_id(config, False)
         self._config = config
-        self._hourly = hourly
-        name_appendix = " Hourly" if hourly else ""
         if (name := self._config.get(CONF_NAME)) is not None:
-            self._attr_name = f"{name}{name_appendix}"
+            self._attr_name = name
         else:
-            self._attr_name = f"{DEFAULT_NAME}{name_appendix}"
-        self._attr_entity_registry_enabled_default = not hourly
+            self._attr_name = DEFAULT_NAME
         self._attr_device_info = DeviceInfo(
             name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN,)},
+            identifiers={(DOMAIN,)},  # type: ignore[arg-type]
             manufacturer="Met Éireann",
             model="Forecast",
             configuration_url="https://www.met.ie",
         )
 
     @property
-    def condition(self):
+    @override
+    def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(
             self.coordinator.data.current_weather_data.get("condition")
         )
 
     @property
-    def native_temperature(self):
+    @override
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
-    def native_pressure(self):
+    @override
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.current_weather_data.get("pressure")
 
     @property
-    def humidity(self):
+    @override
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
-    def native_wind_speed(self):
+    @override
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.current_weather_data.get("wind_speed")
 
     @property
-    def wind_bearing(self):
+    @override
+    def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get("wind_bearing")
+
+    @property
+    @override
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get("wind_gust")
+
+    @property
+    @override
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get("cloudiness")
 
     def _forecast(self, hourly: bool) -> list[Forecast]:
         """Return the forecast array."""
@@ -173,17 +184,14 @@ class MetEireannWeather(
             ha_forecast.append(ha_item)
         return ha_forecast
 
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self._forecast(self._hourly)
-
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast(False)
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(True)

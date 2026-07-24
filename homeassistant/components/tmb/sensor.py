@@ -1,17 +1,20 @@
-"""Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
-from __future__ import annotations
+"""Support for TMB Barcelona public transport."""
 
 from datetime import timedelta
 import logging
+from typing import Any, override
 
 from requests import HTTPError
 from tmb import IBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -36,7 +39,7 @@ LINE_STOP_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_APP_KEY): cv.string,
@@ -84,27 +87,32 @@ class TMBSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
     @property
+    @override
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
         return f"{self._stop}_{self._line}"
 
     @property
+    @override
     def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the last update."""
         return {
             ATTR_BUS_STOP: self._stop,

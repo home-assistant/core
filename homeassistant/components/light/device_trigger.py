@@ -1,5 +1,4 @@
 """Provides device trigger for lights."""
-from __future__ import annotations
 
 import voluptuous as vol
 
@@ -9,7 +8,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 TRIGGER_SCHEMA = vol.All(
     toggle_entity.TRIGGER_SCHEMA,

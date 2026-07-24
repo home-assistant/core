@@ -1,0 +1,82 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'server_about': dict({
+        'build': '15281783550',
+        'build_image': 'v1.134.0',
+        'build_image_url': 'https://github.com/immich-app/immich/pkgs/container/immich-server',
+        'build_url': 'https://github.com/immich-app/immich/actions/runs/15281783550',
+        'exiftool': '13.00',
+        'ffmpeg': '7.0.2-9',
+        'imagemagick': '7.1.1-47',
+        'libvips': '8.16.1',
+        'licensed': False,
+        'nodejs': 'v22.14.0',
+        'repository': 'immich-app/immich',
+        'repository_url': 'https://github.com/immich-app/immich',
+        'source_commit': '58ae77ec9204a2e43a8cb2f1fd27482af40d0891',
+        'source_ref': 'v1.134.0',
+        'source_url': 'https://github.com/immich-app/immich/commit/58ae77ec9204a2e43a8cb2f1fd27482af40d0891',
+        'version': 'v1.134.0',
+        'version_url': 'https://github.com/immich-app/immich/releases/tag/v1.134.0',
+      }),
+      'server_storage': dict({
+        'disk_available': '136.3 GiB',
+        'disk_available_raw': 146403004416,
+        'disk_size': '294.2 GiB',
+        'disk_size_raw': 315926315008,
+        'disk_usage_percentage': 48.56,
+        'disk_use': '142.9 GiB',
+        'disk_use_raw': 153400406016,
+      }),
+      'server_usage': dict({
+        'photos': 27038,
+        'usage': 119525451912,
+        'usage_by_user': list([
+          dict({
+            'photos': 27038,
+            'quota_size_in_bytes': None,
+            'usage': 119525451912,
+            'usage_photos': 54291170551,
+            'usage_videos': 65234281361,
+            'user_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e',
+            'user_name': 'admin',
+            'videos': 1836,
+          }),
+        ]),
+        'usage_photos': 54291170551,
+        'usage_videos': 65234281361,
+        'videos': 1836,
+      }),
+      'server_version_check': dict({
+        'checked_at': '2025-06-21T16:35:10.352000+00:00',
+        'release_version': 'v1.135.3',
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'host': '**REDACTED**',
+        'port': 80,
+        'ssl': False,
+        'verify_ssl': True,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'immich',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Someone',
+      'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e',
+      'version': 1,
+    }),
+  })
+# ---

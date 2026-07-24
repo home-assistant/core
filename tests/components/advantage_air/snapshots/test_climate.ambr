@@ -1,0 +1,72 @@
+# serializer version: 1
+# name: test_climate_myauto_main[climate.myauto-fanmode]
+  dict({
+    'ac3': dict({
+      'info': dict({
+        'fan': 'autoAA',
+      }),
+    }),
+  })
+# ---
+# name: test_climate_myauto_main[climate.myauto-settemp]
+  dict({
+    'ac3': dict({
+      'info': dict({
+        'myAutoCoolTargetTemp': 23.0,
+        'myAutoHeatTargetTemp': 21.0,
+      }),
+    }),
+  })
+# ---
+# name: test_climate_myauto_main[climate.myauto]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'myauto',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'MyAuto',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'MyZone',
+        'MyTemp',
+        'MyAuto',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 410>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 24,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 20,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.myauto',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_climate_myzone_main[climate.myzone-preset]
+  dict({
+    'ac1': dict({
+      'info': dict({
+        'climateControlModeEnabled': False,
+        'myAutoModeEnabled': True,
+      }),
+    }),
+  })
+# ---

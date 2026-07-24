@@ -1,10 +1,9 @@
 """Support for Brunt Blind Engine covers."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientResponseError
-from brunt import BruntClientAsync, Thing
+from brunt import Thing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -12,49 +11,39 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_REQUEST_POSITION,
     ATTRIBUTION,
     CLOSED_POSITION,
-    DATA_BAPI,
-    DATA_COOR,
     DOMAIN,
     FAST_INTERVAL,
     OPEN_POSITION,
     REGULAR_INTERVAL,
 )
+from .coordinator import BruntConfigEntry, BruntCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BruntConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the brunt platform."""
-    bapi: BruntClientAsync = hass.data[DOMAIN][entry.entry_id][DATA_BAPI]
-    coordinator: DataUpdateCoordinator[dict[str | None, Thing]] = hass.data[DOMAIN][
-        entry.entry_id
-    ][DATA_COOR]
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        BruntDevice(coordinator, serial, thing, bapi, entry.entry_id)
+        BruntDevice(coordinator, serial, thing, entry.entry_id)
         for serial, thing in coordinator.data.items()
     )
 
 
-class BruntDevice(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str | None, Thing]]], CoverEntity
-):
+class BruntDevice(CoordinatorEntity[BruntCoordinator], CoverEntity):
     """Representation of a Brunt cover device.
 
     Contains the common logic for all Brunt devices.
@@ -72,16 +61,14 @@ class BruntDevice(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str | None, Thing]],
+        coordinator: BruntCoordinator,
         serial: str | None,
         thing: Thing,
-        bapi: BruntClientAsync,
         entry_id: str,
     ) -> None:
         """Init the Brunt device."""
         super().__init__(coordinator)
         self._attr_unique_id = serial
-        self._bapi = bapi
         self._thing = thing
         self._entry_id = entry_id
 
@@ -96,6 +83,7 @@ class BruntDevice(
             model=self._thing.model,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -104,6 +92,7 @@ class BruntDevice(
         )
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -130,16 +119,19 @@ class BruntDevice(
         return self.coordinator.data[self.unique_id].move_state
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.move_state == 1
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.move_state == 2
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the detailed device state attributes."""
         return {
@@ -147,18 +139,22 @@ class BruntDevice(
         }
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return self.current_cover_position == CLOSED_POSITION
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Set the cover to the open position."""
         await self._async_update_cover(OPEN_POSITION)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Set the cover to the closed position."""
         await self._async_update_cover(CLOSED_POSITION)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover to a specific position."""
         await self._async_update_cover(int(kwargs[ATTR_POSITION]))
@@ -166,7 +162,7 @@ class BruntDevice(
     async def _async_update_cover(self, position: int) -> None:
         """Set the cover to the new position and wait for the update to be reflected."""
         try:
-            await self._bapi.async_change_request_position(
+            await self.coordinator.bapi.async_change_request_position(
                 position, thing_uri=self._thing.thing_uri
             )
         except ClientResponseError as exc:
@@ -181,7 +177,7 @@ class BruntDevice(
         """Update the update interval after each refresh."""
         if (
             self.request_cover_position
-            == self._bapi.last_requested_positions[self._thing.thing_uri]
+            == self.coordinator.bapi.last_requested_positions[self._thing.thing_uri]
             and self.move_state == 0
         ):
             self.coordinator.update_interval = REGULAR_INTERVAL

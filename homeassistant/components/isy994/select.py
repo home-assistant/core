@@ -1,7 +1,6 @@
 """Support for ISY select entities."""
-from __future__ import annotations
 
-from typing import cast
+from typing import cast, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -22,7 +21,6 @@ from pyisy.helpers import EventListener, NodeProperty
 from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -33,18 +31,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import _LOGGER, DOMAIN, UOM_INDEX
+from .const import _LOGGER, UOM_INDEX
 from .entity import ISYAuxControlEntity
-from .models import IsyData
+from .models import IsyConfigEntry
 
 
 def time_string(i: int) -> str:
     """Return a formatted ramp rate time string."""
     if i >= 60:
-        return f"{(float(i)/60):.1f} {UnitOfTime.MINUTES}"
+        return f"{(float(i) / 60):.1f} {UnitOfTime.MINUTES}"
     return f"{i} {UnitOfTime.SECONDS}"
 
 
@@ -54,11 +52,11 @@ BACKLIGHT_MEMORY_FILTER = {"memory": DEV_BL_ADDR, "cmd1": DEV_CMD_MEMORY_WRITE}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: IsyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX select entities from config entry."""
-    isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]
+    isy_data = config_entry.runtime_data
     device_info = isy_data.devices
     entities: list[
         ISYAuxControlIndexSelectEntity
@@ -114,6 +112,7 @@ class ISYRampRateSelectEntity(ISYAuxControlEntity, SelectEntity):
     """Representation of a ISY/IoX Aux Control Ramp Rate Select entity."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -122,6 +121,7 @@ class ISYRampRateSelectEntity(ISYAuxControlEntity, SelectEntity):
 
         return RAMP_RATE_OPTIONS[int(node_prop.value)]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
@@ -132,6 +132,7 @@ class ISYAuxControlIndexSelectEntity(ISYAuxControlEntity, SelectEntity):
     """Representation of a ISY/IoX Aux Control Index Select entity."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -142,6 +143,7 @@ class ISYAuxControlIndexSelectEntity(ISYAuxControlEntity, SelectEntity):
             return cast(str, options_dict.get(node_prop.value, node_prop.value))
         return cast(str, node_prop.formatted)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -169,6 +171,7 @@ class ISYBacklightSelectEntity(ISYAuxControlEntity, SelectEntity, RestoreEntity)
         self._memory_change_handler: EventListener | None = None
         self._attr_current_option = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Load the last known state when added to hass."""
         await super().async_added_to_hass()
@@ -198,6 +201,7 @@ class ISYBacklightSelectEntity(ISYAuxControlEntity, SelectEntity, RestoreEntity)
         self._attr_current_option = option
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 

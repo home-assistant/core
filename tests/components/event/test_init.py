@@ -1,4 +1,5 @@
 """The tests for the event integration."""
+
 from collections.abc import Generator
 from typing import Any
 
@@ -9,17 +10,20 @@ from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
     DOMAIN,
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .const import TEST_DOMAIN
 
 from tests.common import (
     MockConfigEntry,
@@ -31,9 +35,8 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
 )
-
-TEST_DOMAIN = "test"
 
 
 async def test_event() -> None:
@@ -48,7 +51,7 @@ async def test_event() -> None:
 
     # No event types defined, should raise
     with pytest.raises(AttributeError):
-        event.event_types
+        _ = event.event_types
 
     # Test retrieving data from entity description
     event.entity_description = EventEntityDescription(
@@ -56,6 +59,9 @@ async def test_event() -> None:
         event_types=["short_press", "long_press"],
         device_class=EventDeviceClass.DOORBELL,
     )
+    # Delete the cache since we changed the entity description
+    # at run time
+    del event.device_class
     assert event.event_types == ["short_press", "long_press"]
     assert event.device_class == EventDeviceClass.DOORBELL
 
@@ -92,7 +98,7 @@ async def test_event() -> None:
         event._trigger_event("unknown_event")
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
     mock_restore_cache_with_extra_data(
@@ -124,9 +130,6 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -138,7 +141,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state.attributes["hello"] == "world"
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
     mock_restore_cache_with_extra_data(
@@ -159,9 +162,6 @@ async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -173,7 +173,7 @@ async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
     assert "hello" not in state.attributes
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
     """Test we restore state integration."""
     mock_restore_cache(
@@ -194,9 +194,6 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -208,7 +205,7 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
     assert "hello" not in state.attributes
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
 async def test_saving_state(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test we restore state integration."""
     restore_data = {"last_event_type": "double_press", "last_event_attributes": None}
@@ -225,9 +222,6 @@ async def test_saving_state(hass: HomeAssistant, hass_storage: dict[str, Any]) -
             ),
         ),
     )
-
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -246,7 +240,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -262,7 +256,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.EVENT]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -305,7 +301,7 @@ async def test_name(hass: HomeAssistant) -> None:
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
@@ -350,3 +346,71 @@ async def test_name(hass: HomeAssistant) -> None:
         "device_class": "doorbell",
         "friendly_name": "Doorbell",
     }
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_doorbell_missing_ring_event_type(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test warning when doorbell entity lacks the ring event type."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.EVENT]
+        )
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Doorbell entity WITHOUT the standard "ring" event type
+    entity_without_ring = EventEntity()
+    entity_without_ring._attr_event_types = ["ding"]
+    entity_without_ring._attr_device_class = EventDeviceClass.DOORBELL
+    entity_without_ring._attr_has_entity_name = True
+    entity_without_ring.entity_id = "event.doorbell_without_ring"
+
+    # Doorbell entity WITH the standard "ring" event type
+    entity_with_ring = EventEntity()
+    entity_with_ring._attr_event_types = [DoorbellEventType.RING, "ding"]
+    entity_with_ring._attr_device_class = EventDeviceClass.DOORBELL
+    entity_with_ring._attr_has_entity_name = True
+    entity_with_ring.entity_id = "event.doorbell_with_ring"
+
+    # Non-doorbell entity should not warn
+    entity_button = EventEntity()
+    entity_button._attr_event_types = ["press"]
+    entity_button._attr_device_class = EventDeviceClass.BUTTON
+    entity_button._attr_has_entity_name = True
+    entity_button.entity_id = "event.button"
+
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [entity_without_ring, entity_with_ring, entity_button],
+        from_config_entry=True,
+    )
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    def get_error_message(entity_id: str) -> str:
+        return (
+            f"Entity {entity_id} is a doorbell event entity but does not support "
+            "the 'ring' event type"
+        )
+
+    assert get_error_message("event.doorbell_without_ring") in caplog.text
+    assert get_error_message("event.doorbell_with_ring") not in caplog.text
+    assert get_error_message("event.button") not in caplog.text

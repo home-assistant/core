@@ -1,22 +1,26 @@
 """Support for tracking consumption over given periods of time."""
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 import logging
 
-from croniter import croniter
+from cronsim import CronSim, CronSimError
 import voluptuous as vol
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
-    device_registry as dr,
+    config_validation as cv,
     discovery,
     entity_registry as er,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.device import async_entity_id_to_device_id
+from homeassistant.helpers.helper_integration import (
+    async_handle_source_entity_changes,
+    async_remove_helper_devices,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -27,6 +31,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
@@ -35,24 +40,27 @@ from .const import (
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
-    SERVICE_RESET,
-    SIGNAL_RESET_METER,
+    MeterInformation,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OFFSET = timedelta(hours=0)
 
 
-def validate_cron_pattern(pattern):
+def validate_cron_pattern(pattern: str) -> str:
     """Check that the pattern is well-formed."""
-    if croniter.is_valid(pattern):
-        return pattern
-    raise vol.Invalid("Invalid pattern")
+    try:
+        CronSim(pattern, datetime(2020, 1, 1))  # any date will do
+    except CronSimError as err:
+        _LOGGER.error("Invalid cron pattern %s: %s", pattern, err)
+        raise vol.Invalid("Invalid pattern") from err
+    return pattern
 
 
-def period_or_cron(config):
-    """Check that if cron pattern is used, then meter type and offsite must be removed."""
+def period_or_cron(config: ConfigType) -> ConfigType:
+    """Check cron pattern excludes meter type and offset."""
     if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
         raise vol.Invalid(f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>")
     if (
@@ -66,7 +74,7 @@ def period_or_cron(config):
     return config
 
 
-def max_28_days(config):
+def max_28_days(config: timedelta) -> timedelta:
     """Check that time period does not include more than 28 days."""
     if config.days >= 28:
         raise vol.Invalid(
@@ -93,6 +101,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
                 cv.ensure_list, vol.Unique(), [cv.string]
             ),
             vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+            vol.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
         },
         period_or_cron,
     )
@@ -107,36 +116,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an Utility Meter."""
     hass.data[DATA_UTILITY] = {}
 
-    async def async_reset_meters(service_call):
-        """Reset all sensors of a meter."""
-        meters = service_call.data["entity_id"]
-
-        for meter in meters:
-            _LOGGER.debug("resetting meter %s", meter)
-            domain, entity = split_entity_id(meter)
-            # backward compatibility up to 2022.07:
-            if domain == DOMAIN:
-                async_dispatcher_send(
-                    hass, SIGNAL_RESET_METER, f"{SELECT_DOMAIN}.{entity}"
-                )
-            else:
-                async_dispatcher_send(hass, SIGNAL_RESET_METER, meter)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESET,
-        async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: vol.All(cv.ensure_list, [cv.entity_id])}),
-    )
+    async_setup_services(hass)
 
     if DOMAIN not in config:
         return True
 
-    for meter, conf in config[DOMAIN].items():
+    domain_config: ConfigType = config[DOMAIN]
+    for meter, conf in domain_config.items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
-        hass.data[DATA_UTILITY][meter] = conf
-        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS] = []
+        meter_info: MeterInformation = {**conf, DATA_TARIFF_SENSORS: []}
+        hass.data[DATA_UTILITY][meter] = meter_info
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required
@@ -147,7 +137,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {meter: {CONF_METER: meter}},
                     config,
-                )
+                ),
+                eager_start=True,
             )
         else:
             # create tariff selection
@@ -158,12 +149,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {CONF_METER: meter, CONF_TARIFFS: conf[CONF_TARIFFS]},
                     config,
-                )
+                ),
+                eager_start=True,
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = "{}.{}".format(
-                SELECT_DOMAIN, meter
-            )
+            meter_info[CONF_TARIFF_ENTITY] = f"{SELECT_DOMAIN}.{meter}"
 
             # add one meter for each tariff
             tariff_confs = {}
@@ -177,7 +167,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config
-                )
+                ),
+                eager_start=True,
             )
 
     return True
@@ -185,11 +176,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
+
     entity_registry = er.async_get(hass)
-    hass.data[DATA_UTILITY][entry.entry_id] = {
+
+    entry_meter_info: MeterInformation = {
         "source": entry.options[CONF_SOURCE_SENSOR],
+        DATA_TARIFF_SENSORS: [],
     }
-    hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
+    hass.data[DATA_UTILITY][entry.entry_id] = entry_meter_info
 
     try:
         er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
@@ -201,45 +195,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
+    def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_SOURCE_SENSOR: source_entity_id},
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        async_handle_source_entity_changes(
+            hass,
+            helper_config_entry_id=entry.entry_id,
+            set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
+            source_device_id=async_entity_id_to_device_id(
+                hass, entry.options[CONF_SOURCE_SENSOR]
+            ),
+            source_entity_id_or_uuid=entry.options[CONF_SOURCE_SENSOR],
+        )
+    )
+
     if not entry.options.get(CONF_TARIFFS):
         # Only a single meter sensor is required
-        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = None
+        entry_meter_info[CONF_TARIFF_ENTITY] = None
         await hass.config_entries.async_forward_entry_setups(entry, (Platform.SENSOR,))
     else:
         # Create tariff selection + one meter sensor for each tariff
         entity_entry = entity_registry.async_get_or_create(
-            Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
+            Platform.SELECT, DOMAIN, entry.entry_id, object_id_base=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][
-            CONF_TARIFF_ENTITY
-        ] = entity_entry.entity_id
+        entry_meter_info[CONF_TARIFF_ENTITY] = entity_entry.entity_id
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )
 
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
-
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-    old_source = hass.data[DATA_UTILITY][entry.entry_id]["source"]
-    await hass.config_entries.async_reload(entry.entry_id)
-
-    if old_source == entry.options[CONF_SOURCE_SENSOR]:
-        return
-
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    old_source_entity = entity_registry.async_get(old_source)
-    if not old_source_entity or not old_source_entity.device_id:
-        return
-
-    device_registry.async_update_device(
-        old_source_entity.device_id, remove_config_entry_id=entry.entry_id
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -259,14 +248,35 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug(
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
+    )
 
     if config_entry.version == 1:
         new = {**config_entry.options}
         new[CONF_METER_PERIODICALLY_RESETTING] = True
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=new)
+        hass.config_entries.async_update_entry(config_entry, options=new, version=2)
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    if config_entry.version == 2:
+        options = {**config_entry.options}
+        if config_entry.minor_version < 2:
+            # Remove the utility_meter config entry from the source device
+            if source_device_id := async_entity_id_to_device_id(
+                hass, options[CONF_SOURCE_SENSOR]
+            ):
+                async_remove_helper_devices(
+                    hass,
+                    helper_config_entry_id=config_entry.entry_id,
+                    source_device_id=source_device_id,
+                )
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=2
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
     return True

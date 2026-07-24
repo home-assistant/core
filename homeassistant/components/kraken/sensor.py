@@ -1,47 +1,41 @@
 """The kraken integration."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import KrakenData
 from .const import (
     CONF_TRACKED_ASSET_PAIRS,
     DISPATCH_CONFIG_UPDATED,
     DOMAIN,
     KrakenResponse,
 )
+from .coordinator import KrakenConfigEntry, KrakenData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class KrakenRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class KrakenSensorEntityDescription(SensorEntityDescription):
+    """Describes Kraken sensor entity."""
 
     value_fn: Callable[[DataUpdateCoordinator[KrakenResponse], str], float | int]
-
-
-@dataclass
-class KrakenSensorEntityDescription(SensorEntityDescription, KrakenRequiredKeysMixin):
-    """Describes Kraken sensor entity."""
 
 
 SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
@@ -142,8 +136,8 @@ SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: KrakenConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kraken entities from a config_entry."""
 
@@ -153,19 +147,21 @@ async def async_setup_entry(
             entities.extend(
                 [
                     KrakenSensor(
-                        hass.data[DOMAIN],
+                        config_entry.runtime_data,
                         tracked_asset_pair,
                         description,
                     )
                     for description in SENSOR_TYPES
                 ]
             )
-        async_add_entities(entities, True)
+        async_add_entities(entities)
 
     _async_add_kraken_sensors(config_entry.options[CONF_TRACKED_ASSET_PAIRS])
 
     @callback
-    def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def async_update_sensors(
+        hass: HomeAssistant, config_entry: KrakenConfigEntry
+    ) -> None:
         """Add or remove sensors for configured tracked asset pairs."""
         dev_reg = dr.async_get(hass)
 
@@ -229,7 +225,7 @@ class KrakenSensor(
         self._device_name = create_device_name(tracked_asset_pair)
         self._attr_unique_id = "_".join(
             [
-                tracked_asset_pair.split("/")[0],
+                tracked_asset_pair.split("/", maxsplit=1)[0],
                 tracked_asset_pair.split("/")[1],
                 description.key,
             ]
@@ -245,11 +241,13 @@ class KrakenSensor(
             name=self._device_name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._update_internal_state()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._update_internal_state()
         super()._handle_coordinator_update()
@@ -259,7 +257,8 @@ class KrakenSensor(
             return
         try:
             self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator, self.tracked_asset_pair_wsname  # type: ignore[arg-type]
+                self.coordinator,  # type: ignore[arg-type]
+                self.tracked_asset_pair_wsname,
             )
             self._received_data_at_least_once = True
         except KeyError:
@@ -272,6 +271,7 @@ class KrakenSensor(
                     self._available = False
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon."""
         if self._target_asset == "EUR":
@@ -287,6 +287,7 @@ class KrakenSensor(
         return "mdi:cash"
 
     @property
+    @override
     def available(self) -> bool:
         """Could the api be accessed during the last update call."""
         return self._available and self.coordinator.last_update_success
@@ -294,4 +295,5 @@ class KrakenSensor(
 
 def create_device_name(tracked_asset_pair: str) -> str:
     """Create the device name for a given tracked asset pair."""
-    return f"{tracked_asset_pair.split('/')[0]} {tracked_asset_pair.split('/')[1]}"
+    parts = tracked_asset_pair.split("/", maxsplit=2)
+    return f"{parts[0]} {parts[1]}"

@@ -2,55 +2,53 @@
 # name: test_light_state_temperature[key-light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 54,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 297,
-      'color_temp_kelvin': 3367,
-      'friendly_name': 'Frenck',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 54,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3367,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.316,
         47.743,
       ),
-      'max_color_temp_kelvin': 6993,
-      'max_mireds': 344,
-      'min_color_temp_kelvin': 2906,
-      'min_mireds': 143,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6993,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2900,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
-        188,
+        189,
         133,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
-        0.465,
-        0.376,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
 # name: test_light_state_temperature[key-light-state].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 6993,
-      'max_mireds': 344,
-      'min_color_temp_kelvin': 2906,
-      'min_mireds': 143,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6993,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2900,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -61,7 +59,10 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'original_name': None,
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -78,7 +80,8 @@
 # name: test_light_state_temperature[key-light-state].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -96,13 +99,14 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })
@@ -110,57 +114,55 @@
 # name: test_light_state_temperature[light-strip-state-color-temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 54,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 297,
-      'color_temp_kelvin': 3367,
-      'friendly_name': 'Frenck',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 54,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3367,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.316,
         47.743,
       ),
-      'max_color_temp_kelvin': 6535,
-      'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
-      'min_mireds': 153,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 3500,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
-        188,
+        189,
         133,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
-        0.465,
-        0.376,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
 # name: test_light_state_temperature[light-strip-state-color-temperature].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 6535,
-      'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
-      'min_mireds': 153,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 3500,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -171,7 +173,10 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -179,6 +184,7 @@
     'original_name': None,
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -188,7 +194,8 @@
 # name: test_light_state_temperature[light-strip-state-color-temperature].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -206,13 +213,14 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
-    'model': 'Elgato Key Light',
+    'model': 'Elgato Light Strip',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })
@@ -220,57 +228,55 @@
 # name: test_light_state_temperature[light-strip-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
-      'color_temp_kelvin': None,
-      'friendly_name': 'Frenck',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         358.0,
         6.0,
       ),
-      'max_color_temp_kelvin': 6535,
-      'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
-      'min_mireds': 153,
-      'rgb_color': tuple(
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 3500,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
-        239,
+        240,
         240,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
-        0.34,
-        0.327,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.339,
+        0.328,
       ),
     }),
     'context': <ANY>,
     'entity_id': 'light.frenck',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
 # name: test_light_state_temperature[light-strip-state].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 6535,
-      'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
-      'min_mireds': 153,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 3500,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -281,7 +287,10 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,6 +298,7 @@
     'original_name': None,
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -298,7 +308,8 @@
 # name: test_light_state_temperature[light-strip-state].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -316,13 +327,14 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
-    'model': 'Elgato Key Light',
+    'model': 'Elgato Light Strip',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })

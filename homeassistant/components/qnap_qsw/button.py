@@ -1,9 +1,8 @@
 """Support for the QNAP QSW buttons."""
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from aioqsw.localapi import QnapQswApi
 
@@ -12,26 +11,20 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, QSW_COORD_DATA, QSW_REBOOT
-from .coordinator import QswDataCoordinator
+from .const import QSW_REBOOT
+from .coordinator import QnapQswConfigEntry, QswDataCoordinator
 from .entity import QswDataEntity
 
 
-@dataclass
-class QswButtonDescriptionMixin:
-    """Mixin to describe a Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class QswButtonDescription(ButtonEntityDescription):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[QnapQswApi], Awaitable[bool]]
-
-
-@dataclass
-class QswButtonDescription(ButtonEntityDescription, QswButtonDescriptionMixin):
-    """Class to describe a Button entity."""
 
 
 BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
@@ -45,10 +38,12 @@ BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: QnapQswConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW buttons from a config_entry."""
-    coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
+    coordinator = entry.runtime_data.data_coordinator
     async_add_entities(
         QswButton(coordinator, description, entry) for description in BUTTON_TYPES
     )
@@ -65,13 +60,14 @@ class QswButton(QswDataEntity, ButtonEntity):
         self,
         coordinator: QswDataCoordinator,
         description: QswButtonDescription,
-        entry: ConfigEntry,
+        entry: QnapQswConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Triggers the QNAP QSW button action."""
         await self.entity_description.press_action(self.coordinator.qsw)

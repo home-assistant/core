@@ -1,9 +1,9 @@
 """Tests for the Cast integration helpers."""
-import asyncio
 
 from aiohttp import client_exceptions
 import pytest
 
+from homeassistant.components.cast.const import DOMAIN
 from homeassistant.components.cast.helpers import (
     PlaylistError,
     PlaylistItem,
@@ -12,13 +12,13 @@ from homeassistant.components.cast.helpers import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
     ("url", "fixture", "content_type"),
-    (
+    [
         (
             "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
             "bbc_radio_fourfm.m3u8",
@@ -34,21 +34,23 @@ from tests.test_util.aiohttp import AiohttpClientMocker
             "rthkaudio2.m3u8",
             None,
         ),
-    ),
+    ],
 )
 async def test_hls_playlist_supported(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url, fixture, content_type
 ) -> None:
     """Test playlist parsing of HLS playlist."""
     headers = {"content-type": content_type}
-    aioclient_mock.get(url, text=load_fixture(fixture, "cast"), headers=headers)
+    aioclient_mock.get(
+        url, text=await async_load_fixture(hass, fixture, DOMAIN), headers=headers
+    )
     with pytest.raises(PlaylistSupported):
         await parse_playlist(hass, url)
 
 
 @pytest.mark.parametrize(
     ("url", "fixture", "content_type", "expected_playlist"),
-    (
+    [
         (
             "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
             "209-hi-mp3.m3u",
@@ -97,7 +99,7 @@ async def test_hls_playlist_supported(
                 )
             ],
         ),
-    ),
+    ],
 )
 async def test_parse_playlist(
     hass: HomeAssistant,
@@ -109,14 +111,16 @@ async def test_parse_playlist(
 ) -> None:
     """Test playlist parsing of HLS playlist."""
     headers = {"content-type": content_type}
-    aioclient_mock.get(url, text=load_fixture(fixture, "cast"), headers=headers)
+    aioclient_mock.get(
+        url, text=await async_load_fixture(hass, fixture, DOMAIN), headers=headers
+    )
     playlist = await parse_playlist(hass, url)
     assert expected_playlist == playlist
 
 
 @pytest.mark.parametrize(
     ("url", "fixture"),
-    (
+    [
         ("http://sverigesradio.se/164-hi-aac.pls", "164-hi-aac_invalid_entries.pls"),
         ("http://sverigesradio.se/164-hi-aac.pls", "164-hi-aac_invalid_file.pls"),
         ("http://sverigesradio.se/164-hi-aac.pls", "164-hi-aac_invalid_version.pls"),
@@ -127,23 +131,23 @@ async def test_parse_playlist(
         ("http://sverigesradio.se/164-hi-aac.pls", "164-hi-aac_no_version.pls"),
         ("https://sverigesradio.se/209-hi-mp3.m3u", "209-hi-mp3_bad_url.m3u"),
         ("https://sverigesradio.se/209-hi-mp3.m3u", "empty.m3u"),
-    ),
+    ],
 )
 async def test_parse_bad_playlist(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url, fixture
 ) -> None:
     """Test playlist parsing of HLS playlist."""
-    aioclient_mock.get(url, text=load_fixture(fixture, "cast"))
+    aioclient_mock.get(url, text=await async_load_fixture(hass, fixture, DOMAIN))
     with pytest.raises(PlaylistError):
         await parse_playlist(hass, url)
 
 
 @pytest.mark.parametrize(
     ("url", "exc"),
-    (
-        ("http://sverigesradio.se/164-hi-aac.pls", asyncio.TimeoutError),
+    [
+        ("http://sverigesradio.se/164-hi-aac.pls", TimeoutError),
         ("http://sverigesradio.se/164-hi-aac.pls", client_exceptions.ClientError),
-    ),
+    ],
 )
 async def test_parse_http_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url, exc

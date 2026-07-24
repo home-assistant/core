@@ -1,25 +1,23 @@
 """Config flow for UpCloud."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests.exceptions
 import upcloud_api
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .coordinator import UpCloudConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class UpCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """UpCloud config flow."""
 
     VERSION = 1
@@ -27,9 +25,10 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     username: str
     password: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user initiated flow."""
         if user_input is None:
             return self._async_show_form(step_id="user")
@@ -66,7 +65,7 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         step_id: str,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show our form."""
         if user_input is None:
             user_input = {}
@@ -87,23 +86,20 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: UpCloudConfigEntry,
     ) -> UpCloudOptionsFlow:
         """Get options flow."""
-        return UpCloudOptionsFlow(config_entry)
+        return UpCloudOptionsFlow()
 
 
-class UpCloudOptionsFlow(config_entries.OptionsFlow):
+class UpCloudOptionsFlow(OptionsFlow):
     """UpCloud options flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
 
         if user_input is not None:
@@ -111,6 +107,8 @@ class UpCloudOptionsFlow(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
+                # Polling interval is user-configurable, which is no longer allowed
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(CONF_SCAN_INTERVAL)

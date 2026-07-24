@@ -1,4 +1,5 @@
 """Handle manual setup of ihc resources as entities in Home Assistant."""
+
 import logging
 
 import voluptuous as vol
@@ -7,6 +8,7 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
+    CONF_NOTE,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -14,8 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -25,7 +26,6 @@ from .const import (
     CONF_INFO,
     CONF_INVERTING,
     CONF_LIGHT,
-    CONF_NOTE,
     CONF_OFF_ID,
     CONF_ON_ID,
     CONF_POSITION,

@@ -1,8 +1,8 @@
 """Data update coordinator for the Tautulli integration."""
-from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from typing import override
 
 from pytautulli import (
     PyTautulli,
@@ -23,15 +23,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+type TautulliConfigEntry = ConfigEntry[TautulliDataUpdateCoordinator]
+
 
 class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Tautulli integration."""
 
-    config_entry: ConfigEntry
+    config_entry: TautulliConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: TautulliConfigEntry,
         host_configuration: PyTautulliHostConfiguration,
         api_client: PyTautulli,
     ) -> None:
@@ -39,6 +42,7 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
@@ -48,6 +52,7 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.home_stats: list[PyTautulliApiHomeStats] | None = None
         self.users: list[PyTautulliApiUser] | None = None
 
+    @override
     async def _async_update_data(self) -> None:
         """Get the latest data from Tautulli."""
         try:

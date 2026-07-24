@@ -1,4 +1,5 @@
 """Errors for the Mikrotik component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

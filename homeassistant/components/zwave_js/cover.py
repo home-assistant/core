@@ -1,13 +1,14 @@
 """Support for Z-Wave cover devices."""
-from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, cast, override
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     CURRENT_VALUE_PROPERTY,
+    SET_VALUE_SUCCESS,
     TARGET_STATE_PROPERTY,
     TARGET_VALUE_PROPERTY,
+    CommandClass,
+    SetValueStatus,
 )
 from zwave_js_server.const.command_class.barrier_operator import BarrierState
 from zwave_js_server.const.command_class.multilevel_switch import (
@@ -18,6 +19,7 @@ from zwave_js_server.const.command_class.multilevel_switch import (
 from zwave_js_server.const.command_class.window_covering import (
     NO_POSITION_PROPERTY_KEYS,
     NO_POSITION_SUFFIX,
+    WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
     WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
     SlatStates,
 )
@@ -32,31 +34,26 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    COVER_POSITION_PROPERTY_KEYS,
-    COVER_TILT_PROPERTY_KEYS,
-    DATA_CLIENT,
-    DOMAIN,
-)
+from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Cover from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
@@ -89,6 +86,8 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     _current_position_value: ZwaveValue | None = None
     _target_position_value: ZwaveValue | None = None
     _stop_position_value: ZwaveValue | None = None
+    # Remember whether the moving state can be tracked reliably for this device.
+    _moving_state_disabled: bool = False
 
     def _set_position_values(
         self,
@@ -143,15 +142,35 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         return self._fully_open_position - self._fully_closed_position
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
         if not (value := self._current_position_value) or value.value is None:
             return None
         return bool(value.value == self._fully_closed_position)
 
+    @callback
+    @override
+    def on_value_update(self) -> None:
+        """Clear moving state when current position reaches target."""
+        if not self._attr_is_opening and not self._attr_is_closing:
+            return
+
+        if (current := self._current_position_value) is None or current.value is None:
+            return
+
+        if (
+            (t := self._target_position_value) is not None
+            and t.value is not None
+            and current.value == t.value
+        ):
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+
     @property
+    @override
     def current_cover_position(self) -> int | None:
-        """Return the current position of cover where 0 means closed and 100 is fully open."""
+        """Return current position of cover (0=closed, 100=open)."""
         if (
             self._current_position_value is None
             or self._current_position_value.value is None
@@ -160,33 +179,75 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             return None
         return self.zwave_to_percent_position(self._current_position_value.value)
 
+    async def _async_set_position_and_update_moving_state(
+        self, target_position: int
+    ) -> None:
+        """Set the target position and update the moving state if applicable."""
+        assert self._target_position_value
+        result = await self._async_set_value(
+            self._target_position_value, target_position
+        )
+        if (
+            self._moving_state_disabled
+            # If the command is unsupervised, or the device reported that it started
+            # working, we can assume the cover is moving in the desired direction.
+            or result is None
+            or result.status
+            not in (SetValueStatus.WORKING, SetValueStatus.SUCCESS_UNSUPERVISED)
+            # If we don't know the current position, we don't know which direction
+            # the cover is moving, so we can't update the moving state.
+            or (current_value := self._current_position_value) is None
+            or (current := current_value.value) is None
+        ):
+            return
+
+        if target_position > current:
+            self._attr_is_opening = True
+            self._attr_is_closing = False
+        elif target_position < current:
+            self._attr_is_opening = False
+            self._attr_is_closing = True
+        else:
+            return
+
+        self.async_write_ha_state()
+
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        assert self._target_position_value
-        await self._async_set_value(
-            self._target_position_value,
-            self.percent_to_zwave_position(kwargs[ATTR_POSITION]),
+        await self._async_set_position_and_update_moving_state(
+            self.percent_to_zwave_position(kwargs[ATTR_POSITION])
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        assert self._target_position_value
-        await self._async_set_value(
-            self._target_position_value, self._fully_open_position
+        await self._async_set_position_and_update_moving_state(
+            self._fully_open_position
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        assert self._target_position_value
-        await self._async_set_value(
-            self._target_position_value, self._fully_closed_position
+        await self._async_set_position_and_update_moving_state(
+            self._fully_closed_position
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
         assert self._stop_position_value
         # Stop the cover, will stop regardless of the actual direction of travel.
-        await self._async_set_value(self._stop_position_value, False)
+        result = await self._async_set_value(self._stop_position_value, False)
+        # When stopping is successful (or unsupervised),
+        # we can assume the cover has stopped moving.
+        if result is not None and result.status in (
+            SetValueStatus.SUCCESS,
+            SetValueStatus.SUCCESS_UNSUPERVISED,
+        ):
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+            self.async_write_ha_state()
 
 
 class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
@@ -247,6 +308,7 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
         return self._fully_open_tilt - self._fully_closed_tilt
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
@@ -256,6 +318,7 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
             return None
         return self.zwave_to_percent_tilt(int(value.value))
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         assert self._target_tilt_value
@@ -264,16 +327,19 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
             self.percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
         )
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         assert self._target_tilt_value
         await self._async_set_value(self._target_tilt_value, self._fully_open_tilt)
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         assert self._target_tilt_value
         await self._async_set_value(self._target_tilt_value, self._fully_closed_tilt)
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         assert self._stop_tilt_value
@@ -286,7 +352,7 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -301,13 +367,36 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
             ),
         )
 
+        # Multilevel Switch CC v3 and earlier don't report targetValue,
+        # so we cannot determine when the cover stops moving,
+        # especially when the device is controlled physically.
+        # OPENING/CLOSING states must not be used for these devices,
+        # because they will become stale/incorrect.
+        if (
+            self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL
+            and self.info.primary_value.cc_version < 4
+        ):
+            self._moving_state_disabled = True
+
         # Entity class attributes
         self._attr_device_class = CoverDeviceClass.WINDOW
-        if self.info.platform_hint and self.info.platform_hint.startswith("shutter"):
+        if (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("shutter")
+        ):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        elif self.info.platform_hint and self.info.platform_hint.startswith("blind"):
+        elif (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("blind")
+        ):
             self._attr_device_class = CoverDeviceClass.BLIND
-        elif self.info.platform_hint and self.info.platform_hint.startswith("gate"):
+        elif (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("gate")
+        ):
             self._attr_device_class = CoverDeviceClass.GATE
 
 
@@ -316,7 +405,7 @@ class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -334,12 +423,26 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
     """Representation of a Z-Wave Window Covering cover device."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize."""
         super().__init__(config_entry, driver, info)
         pos_value: ZwaveValue | None = None
         tilt_value: ZwaveValue | None = None
+        self._up_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
+        )
+        self._down_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
+        )
 
         # If primary value is for position, we have to search for a tilt value
         if info.primary_value.property_key in COVER_POSITION_PROPERTY_KEYS:
@@ -378,29 +481,91 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                     assert self._attr_supported_features
                     self._attr_supported_features ^= set_position_feature
 
-        additional_info: list[str] = []
-        for value in (self._current_position_value, self._current_tilt_value):
-            if value and value.property_key_name:
-                additional_info.append(
-                    value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
-                )
+        additional_info: list[str] = [
+            value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
+            for value in (self._current_position_value, self._current_tilt_value)
+            if value and value.property_key_name
+        ]
         self._attr_name = self.generate_name(additional_info=additional_info)
         self._attr_device_class = CoverDeviceClass.WINDOW
 
     @property
+    @override
     def _fully_open_tilt(self) -> int:
         """Return position to open cover tilt."""
         return SlatStates.OPEN
 
     @property
+    @override
     def _fully_closed_tilt(self) -> int:
         """Return position to close cover tilt."""
         return SlatStates.CLOSED_1
 
     @property
+    @override
     def _tilt_range(self) -> int:
         """Return range of valid tilt positions."""
         return abs(SlatStates.CLOSED_2 - SlatStates.CLOSED_1)
+
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        # Check before issuing the command in case targetValue report arrives early.
+        already_open = (
+            (cv := self._current_position_value) is not None
+            and cv.value is not None
+            and (tpv := self._target_position_value) is not None
+            and tpv.value == cv.value == self._fully_open_position
+        )
+        result = await self._async_set_value(self._up_value, True)
+        # StartLevelChange: SUCCESS means the device started
+        # moving in the desired direction
+        if (
+            result is not None
+            and result.status in SET_VALUE_SUCCESS
+            and self.supported_features & CoverEntityFeature.SET_POSITION
+            and not already_open
+        ):
+            self._attr_is_opening = True
+            self._attr_is_closing = False
+            self.async_write_ha_state()
+
+    @override
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        # Check before issuing the command in case targetValue report arrives early.
+        already_closed = (
+            (cv := self._current_position_value) is not None
+            and cv.value is not None
+            and (tpv := self._target_position_value) is not None
+            and tpv.value == cv.value == self._fully_closed_position
+        )
+        result = await self._async_set_value(self._down_value, True)
+        # StartLevelChange: SUCCESS means the device started
+        # moving in the desired direction
+        if (
+            result is not None
+            and result.status in SET_VALUE_SUCCESS
+            and self.supported_features & CoverEntityFeature.SET_POSITION
+            and not already_closed
+        ):
+            self._attr_is_opening = False
+            self._attr_is_closing = True
+            self.async_write_ha_state()
+
+    @override
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        result = await self._async_set_value(self._up_value, False)
+        # When stopping is successful (or unsupervised),
+        # we can assume the cover has stopped moving.
+        if result is not None and result.status in (
+            SetValueStatus.SUCCESS,
+            SetValueStatus.SUCCESS_UNSUPERVISED,
+        ):
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+            self.async_write_ha_state()
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
@@ -411,7 +576,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -424,6 +589,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         )
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         if self.info.primary_value.value is None:
@@ -431,6 +597,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         return bool(self.info.primary_value.value == BarrierState.OPENING)
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         if self.info.primary_value.value is None:
@@ -438,6 +605,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         return bool(self.info.primary_value.value == BarrierState.CLOSING)
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self.info.primary_value.value is None:
@@ -451,10 +619,12 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
         return bool(self.info.primary_value.value == BarrierState.CLOSED)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
         await self._async_set_value(self._target_state, BarrierState.OPEN)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
         await self._async_set_value(self._target_state, BarrierState.CLOSED)

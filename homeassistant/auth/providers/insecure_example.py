@@ -1,17 +1,15 @@
 """Example auth provider."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 import hmac
-from typing import Any, cast
+from typing import override
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from ..models import Credentials, UserMeta
+from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 USER_SCHEMA = vol.Schema(
@@ -36,7 +34,10 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
+    @override
+    async def async_login_flow(
+        self, context: AuthFlowContext | None
+    ) -> ExampleLoginFlow:
         """Return a flow to login."""
         return ExampleLoginFlow(self)
 
@@ -62,6 +63,7 @@ class ExampleAuthProvider(AuthProvider):
         ):
             raise InvalidAuthError
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -75,6 +77,7 @@ class ExampleAuthProvider(AuthProvider):
         # Create new credentials.
         return self.async_create_credentials({"username": username})
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
@@ -93,18 +96,19 @@ class ExampleAuthProvider(AuthProvider):
         return UserMeta(name=name, is_active=True)
 
 
-class ExampleLoginFlow(LoginFlow):
+class ExampleLoginFlow(LoginFlow[ExampleAuthProvider]):
     """Handler for the login flow."""
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         errors = None
 
         if user_input is not None:
             try:
-                cast(ExampleAuthProvider, self._auth_provider).async_validate_login(
+                self._auth_provider.async_validate_login(
                     user_input["username"], user_input["password"]
                 )
             except InvalidAuthError:

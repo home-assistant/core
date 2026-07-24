@@ -1,7 +1,6 @@
 """Support for ISY sensors."""
-from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -28,15 +27,19 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     _LOGGER,
-    DOMAIN,
+    TOTAL_INCREASING_DEVICE_CLASSES,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
     UOM_INDEX,
@@ -45,7 +48,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import convert_isy_value_to_hass
-from .models import IsyData
+from .models import IsyConfigEntry
 
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
@@ -72,8 +75,9 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "CV": SensorDeviceClass.VOLTAGE,
     "DEWPT": SensorDeviceClass.TEMPERATURE,
     "DISTANC": SensorDeviceClass.DISTANCE,
-    "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,  # codespell:ignore eto
     "FATM": SensorDeviceClass.WEIGHT,
+    "FLOW": SensorDeviceClass.VOLUME_FLOW_RATE,
     "FREQ": SensorDeviceClass.FREQUENCY,
     "MUSCLEM": SensorDeviceClass.WEIGHT,
     "PF": SensorDeviceClass.POWER_FACTOR,
@@ -96,8 +100,55 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "WEIGHT": SensorDeviceClass.WEIGHT,
     "WINDCH": SensorDeviceClass.TEMPERATURE,
 }
-ISY_CONTROL_TO_STATE_CLASS = {
-    control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
+UOM_TO_DEVICE_CLASS = {
+    "1": SensorDeviceClass.CURRENT,
+    "3": SensorDeviceClass.POWER,
+    "4": SensorDeviceClass.TEMPERATURE,
+    "7": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "12": SensorDeviceClass.SOUND_PRESSURE,
+    "13": SensorDeviceClass.SOUND_PRESSURE,
+    "17": SensorDeviceClass.TEMPERATURE,
+    "23": SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+    "24": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "26": SensorDeviceClass.TEMPERATURE,
+    "28": SensorDeviceClass.WEIGHT,
+    "29": SensorDeviceClass.VOLTAGE,
+    "30": SensorDeviceClass.POWER,
+    "31": SensorDeviceClass.PRESSURE,
+    "32": SensorDeviceClass.SPEED,
+    "33": SensorDeviceClass.ENERGY,
+    "35": SensorDeviceClass.WATER,
+    "39": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "40": SensorDeviceClass.SPEED,
+    "41": SensorDeviceClass.CURRENT,
+    "43": SensorDeviceClass.VOLTAGE,
+    "46": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "48": SensorDeviceClass.SPEED,
+    "49": SensorDeviceClass.SPEED,
+    "52": SensorDeviceClass.WEIGHT,
+    "54": SensorDeviceClass.CO2,
+    "69": SensorDeviceClass.WATER,
+    "72": SensorDeviceClass.VOLTAGE,
+    "73": SensorDeviceClass.POWER,
+    "74": SensorDeviceClass.IRRADIANCE,
+    "82": SensorDeviceClass.DISTANCE,
+    "83": SensorDeviceClass.DISTANCE,
+    "90": SensorDeviceClass.FREQUENCY,
+    "105": SensorDeviceClass.DISTANCE,
+    "106": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "116": SensorDeviceClass.DISTANCE,
+    "117": SensorDeviceClass.PRESSURE,
+    "118": SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+    "119": SensorDeviceClass.ENERGY,
+    "120": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "127": SensorDeviceClass.PRESSURE,
+    "130": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "131": SensorDeviceClass.SIGNAL_STRENGTH,
+    "133": SensorDeviceClass.FREQUENCY,
+    "138": SensorDeviceClass.PRESSURE,
+    "142": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "143": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "144": SensorDeviceClass.VOLUME_FLOW_RATE,
 }
 ISY_CONTROL_TO_ENTITY_CATEGORY = {
     PROP_RAMP_RATE: EntityCategory.DIAGNOSTIC,
@@ -106,13 +157,30 @@ ISY_CONTROL_TO_ENTITY_CATEGORY = {
 }
 
 
+def _check_volume_flow_rate_uom(
+    device_class: SensorDeviceClass | None,
+    uom: str | list[str] | None,
+) -> SensorDeviceClass | None:
+    """Check if the volume flow rate unit is supported."""
+    if device_class != SensorDeviceClass.VOLUME_FLOW_RATE:
+        return device_class
+    # Backwards compatibility for ISYv4 firmware which may return a list.
+    if isinstance(uom, list):
+        uom = uom[0] if uom else None
+    if uom is not None and UOM_FRIENDLY_NAME.get(uom) in UnitOfVolumeFlowRate:
+        return device_class
+    return None
+
+
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IsyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY sensor platform."""
-    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
+    isy_data = entry.runtime_data
     entities: list[ISYSensorEntity] = []
-    devices: dict[str, DeviceInfo] = isy_data.devices
+    devices = isy_data.devices
 
     for node in isy_data.nodes[Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
@@ -139,6 +207,26 @@ async def async_setup_entry(
 
 class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     """Representation of an ISY sensor device."""
+
+    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
+        """Initialize the ISY sensor."""
+        super().__init__(node, device_info=device_info)
+        uom = self._node.uom
+        if isinstance(uom, list):
+            uom = uom[0]
+
+        # Determine device class
+        self._attr_device_class = _check_volume_flow_rate_uom(
+            UOM_TO_DEVICE_CLASS.get(uom), uom
+        )
+
+        # Determine state class
+        if self._attr_device_class in TOTAL_INCREASING_DEVICE_CLASSES:
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif self._attr_device_class is not None:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        else:
+            self._attr_state_class = None
 
     @property
     def target(self) -> Node | NodeProperty | None:
@@ -173,6 +261,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         return UOM_FRIENDLY_NAME.get(uom)
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Get the state of the ISY sensor device."""
         if self.target is None:
@@ -191,24 +280,20 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         if uom in (UOM_INDEX, UOM_ON_OFF):
             return cast(str, self.target.formatted)
 
-        # Check if this is an index type and get formatted value
-        if uom == UOM_INDEX and hasattr(self.target, "formatted"):
-            return cast(str, self.target.formatted)
-
         # Handle ISY precision and rounding
         value = convert_isy_value_to_hass(value, uom, self.target.prec)
+        if value is None:
+            return None
 
         # Convert temperatures to Home Assistant's unit
         if uom in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT):
             value = self.hass.config.units.temperature(value, uom)
 
-        if value is None:
-            return None
-
         assert isinstance(value, (int, float))
         return value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Get the Home Assistant unit of measurement for the device."""
         raw_units = self.raw_unit_of_measurement
@@ -240,8 +325,24 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._control = control
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
-        self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
-        self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
+
+        uom = None
+        if control in self._node.aux_properties:
+            uom = self._node.aux_properties[control].uom
+
+        # Determine device class
+        self._attr_device_class = _check_volume_flow_rate_uom(
+            ISY_CONTROL_TO_DEVICE_CLASS.get(control), uom
+        )
+
+        # Determine state class
+        if self._attr_device_class in TOTAL_INCREASING_DEVICE_CLASSES:
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif self._attr_device_class is not None:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        else:
+            self._attr_state_class = None
+
         self._attr_unique_id = unique_id
         self._change_handler: EventListener = None
         self._availability_handler: EventListener = None
@@ -250,6 +351,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_name = f"{node.name} {name.replace('_', ' ').title()}"
 
     @property
+    @override
     def target(self) -> Node | NodeProperty | None:
         """Return target for the sensor."""
         if self._control not in self._node.aux_properties:
@@ -258,11 +360,13 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         return cast(NodeProperty, self._node.aux_properties[self._control])
 
     @property
+    @override
     def target_value(self) -> Any:
         """Return the target value."""
         return None if self.target is None else self.target.value
 
-    # pylint: disable-next=hass-missing-super-call
+    @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events.
 
@@ -282,11 +386,13 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         )
 
     @callback
+    @override
     def async_on_update(self, event: NodeProperty | NodeChangedEvent) -> None:
         """Handle a control event from the ISY Node."""
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return cast(bool, self._node.enabled)

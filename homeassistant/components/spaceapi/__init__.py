@@ -1,16 +1,20 @@
 """Support for the SpaceAPI."""
-from contextlib import suppress
 
+from contextlib import suppress
+import math
+from typing import Any
+
+from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant import core as ha
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_LOCATION,
     ATTR_NAME,
     ATTR_STATE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
     CONF_EMAIL,
     CONF_ENTITY_ID,
@@ -18,12 +22,12 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_STATE,
     CONF_URL,
+    EntityStateAttribute,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
@@ -36,7 +40,7 @@ ATTR_RADIO_SHOW = "radio_show"
 ATTR_LAT = "lat"
 ATTR_LON = "lon"
 ATTR_API = "api"
-ATTR_CLOSE = "close"
+ATTR_CLOSED = "closed"
 ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
@@ -248,29 +252,51 @@ class APISpaceApiView(HomeAssistantView):
     url = URL_API_SPACEAPI
     name = "api:spaceapi"
 
+    def __init__(self) -> None:
+        """Initialize SpaceAPI view."""
+        self.requires_auth = False
+        self.cors_allowed = True
+
     @staticmethod
-    def get_sensor_data(hass, spaceapi, sensor):
+    def get_sensor_data(
+        hass: HomeAssistant, spaceapi: dict[str, Any], entity_id: str
+    ) -> dict[str, str | float | dict[str, str]] | None:
         """Get data from a sensor."""
-        if not (sensor_state := hass.states.get(sensor)):
+        if not (sensor_state := hass.states.get(entity_id)):
             return None
-        sensor_data = {ATTR_NAME: sensor_state.name, ATTR_VALUE: sensor_state.state}
+
+        # SpaceAPI sensor values must be numbers
+        try:
+            state = float(sensor_state.state)
+        except ValueError:
+            state = math.nan
+        sensor_data: dict[str, str | float | dict[str, str]] = {
+            ATTR_NAME: sensor_state.name,
+            ATTR_VALUE: state,
+        }
+
         if ATTR_SENSOR_LOCATION in sensor_state.attributes:
             sensor_data[ATTR_LOCATION] = sensor_state.attributes[ATTR_SENSOR_LOCATION]
         else:
             sensor_data[ATTR_LOCATION] = spaceapi[CONF_SPACE]
         # Some sensors don't have a unit of measurement
-        if ATTR_UNIT_OF_MEASUREMENT in sensor_state.attributes:
-            sensor_data[ATTR_UNIT] = sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        if EntityStateAttribute.UNIT_OF_MEASUREMENT in sensor_state.attributes:
+            sensor_data[ATTR_UNIT] = sensor_state.attributes[
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            ]
+
         return sensor_data
 
     @ha.callback
-    def get(self, request):
+    def get(self, request: web.Request) -> web.Response:
         """Get SpaceAPI data."""
-        hass = request.app["hass"]
-        spaceapi = dict(hass.data[DATA_SPACEAPI])
-        is_sensors = spaceapi.get("sensors")
+        hass = request.app[KEY_HASS]
+        spaceapi: dict[str, Any] = hass.data[DATA_SPACEAPI]
 
-        location = {ATTR_LAT: hass.config.latitude, ATTR_LON: hass.config.longitude}
+        location = {
+            ATTR_LAT: hass.config.latitude,
+            ATTR_LON: hass.config.longitude,
+        }
 
         try:
             location[ATTR_ADDRESS] = spaceapi[ATTR_LOCATION][CONF_ADDRESS]
@@ -279,20 +305,24 @@ class APISpaceApiView(HomeAssistantView):
         except TypeError:
             pass
 
-        state_entity = spaceapi["state"][ATTR_ENTITY_ID]
+        state_entity_id = spaceapi[CONF_STATE][ATTR_ENTITY_ID]
 
-        if (space_state := hass.states.get(state_entity)) is not None:
+        state: dict[str, bool | int | float | str | dict[str, str]]
+        if (space_state := hass.states.get(state_entity_id)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
             }
         else:
-            state = {ATTR_OPEN: "null", ATTR_LASTCHANGE: 0}
+            state = {
+                ATTR_OPEN: "null",
+                ATTR_LASTCHANGE: 0,
+            }
 
         with suppress(KeyError):
             state[ATTR_ICON] = {
-                ATTR_OPEN: spaceapi["state"][CONF_ICON_OPEN],
-                ATTR_CLOSE: spaceapi["state"][CONF_ICON_CLOSED],
+                ATTR_OPEN: spaceapi[CONF_STATE][CONF_ICON_OPEN],
+                ATTR_CLOSED: spaceapi[CONF_STATE][CONF_ICON_CLOSED],
             }
 
         data = {
@@ -327,13 +357,16 @@ class APISpaceApiView(HomeAssistantView):
         with suppress(KeyError):
             data[ATTR_RADIO_SHOW] = spaceapi[CONF_RADIO_SHOW]
 
-        if is_sensors is not None:
-            sensors = {}
-            for sensor_type in is_sensors:
-                sensors[sensor_type] = []
-                for sensor in spaceapi["sensors"][sensor_type]:
-                    sensor_data = self.get_sensor_data(hass, spaceapi, sensor)
-                    sensors[sensor_type].append(sensor_data)
-            data[ATTR_SENSORS] = sensors
+        sensors: dict[str, list[str]] | None = spaceapi.get(CONF_SENSORS)
+        if isinstance(sensors, dict):
+            sensors_data: dict[str, list[dict[str, str | float | dict[str, str]]]] = {}
+            for sensor_type, entity_ids in sensors.items():
+                sensors_data[sensor_type] = [
+                    sensor_data
+                    for entity_id in entity_ids
+                    if (sensor_data := self.get_sensor_data(hass, spaceapi, entity_id))
+                    is not None
+                ]
+            data[ATTR_SENSORS] = sensors_data
 
         return self.json(data)

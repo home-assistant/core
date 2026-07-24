@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "holiday_active": {
+        "default": "mdi:bag-suitcase-outline",
+        "state": {
+          "off": "mdi:bag-suitcase-off-outline",
+          "on": "mdi:bag-suitcase-outline"
+        }
+      },
+      "summer_active": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "off": "mdi:radiator",
+          "on": "mdi:radiator-off"
+        }
+      },
+      "window_open": {
+        "default": "mdi:window-open",
+        "state": {
+          "off": "mdi:window-closed",
+          "on": "mdi:window-open"
+        }
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "holiday": "mdi:bag-suitcase-outline",
+              "summer": "mdi:radiator-off"
+            }
+          }
+        }
+      }
+    }
+  }
+}

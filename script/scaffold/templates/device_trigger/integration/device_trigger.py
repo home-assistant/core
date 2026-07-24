@@ -1,5 +1,4 @@
 """Provides device triggers for NEW_NAME."""
-from __future__ import annotations
 
 from typing import Any
 

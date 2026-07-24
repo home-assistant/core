@@ -1,0 +1,5 @@
+{
+  "domain": "heiman",
+  "name": "Heiman",
+  "iot_standards": ["matter", "zigbee"]
+}

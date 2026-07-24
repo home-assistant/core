@@ -1,41 +1,39 @@
 """Support for displaying minimal, maximal, mean or median values."""
-from __future__ import annotations
 
 from datetime import datetime
 import logging
 import statistics
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_ENTITY_ID,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
+from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    EventType,
-    StateType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -66,7 +64,7 @@ SENSOR_TYPES = {
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
             cv.string, vol.In(SENSOR_TYPES.values())
@@ -82,7 +80,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize min/max/mean config entry."""
     registry = er.async_get(hass)
@@ -246,6 +244,7 @@ class MinMaxSensor(SensorEntity):
         self.count_sensors = len(self._entity_ids)
         self.states: dict[str, Any] = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
@@ -257,14 +256,16 @@ class MinMaxSensor(SensorEntity):
         # Replay current state of source entities
         for entity_id in self._entity_ids:
             state = self.hass.states.get(entity_id)
-            state_event: EventType[EventStateChangedData] = EventType(
+            state_event: Event[EventStateChangedData] = Event(
                 "", {"entity_id": entity_id, "new_state": state, "old_state": None}
             )
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
 
+        self._update_device_class()
         self._calc_values()
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
@@ -273,6 +274,7 @@ class MinMaxSensor(SensorEntity):
         return value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self._unit_of_measurement_mismatch:
@@ -280,19 +282,25 @@ class MinMaxSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
+        attributes: dict[str, list[str] | str | None] = {
+            ATTR_ENTITY_ID: self._entity_ids
+        }
+
         if self._sensor_type == "min":
-            return {ATTR_MIN_ENTITY_ID: self.min_entity_id}
-        if self._sensor_type == "max":
-            return {ATTR_MAX_ENTITY_ID: self.max_entity_id}
-        if self._sensor_type == "last":
-            return {ATTR_LAST_ENTITY_ID: self.last_entity_id}
-        return None
+            attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
+        elif self._sensor_type == "max":
+            attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
+        elif self._sensor_type == "last":
+            attributes[ATTR_LAST_ENTITY_ID] = self.last_entity_id
+
+        return attributes
 
     @callback
     def _async_min_max_sensor_state_listener(
-        self, event: EventType[EventStateChangedData], update_state: bool = True
+        self, event: Event[EventStateChangedData], update_state: bool = True
     ) -> None:
         """Handle the sensor state changes."""
         new_state = event.data["new_state"]
@@ -317,11 +325,11 @@ class MinMaxSensor(SensorEntity):
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if self._unit_of_measurement != new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
         ):
             _LOGGER.warning(
                 "Units of measurement do not match for entity %s", self.entity_id
@@ -342,6 +350,32 @@ class MinMaxSensor(SensorEntity):
 
         self._calc_values()
         self.async_write_ha_state()
+
+    @callback
+    def _update_device_class(self) -> None:
+        """Update device_class based on source entities.
+
+        If all source entities have the same device_class, inherit it.
+        Otherwise, leave device_class as None.
+        """
+        device_classes: list[SensorDeviceClass | None] = []
+
+        for entity_id in self._entity_ids:
+            try:
+                device_class = get_device_class(self.hass, entity_id)
+                if device_class:
+                    device_classes.append(SensorDeviceClass(device_class))
+                else:
+                    device_classes.append(None)
+            except HomeAssistantError, ValueError:
+                # If we can't get device class for any entity, don't set it
+                device_classes.append(None)
+
+        # Only inherit device_class if all entities have the same non-None device_class
+        if device_classes and all(
+            dc is not None and dc == device_classes[0] for dc in device_classes
+        ):
+            self._attr_device_class = device_classes[0]
 
     @callback
     def _calc_values(self) -> None:

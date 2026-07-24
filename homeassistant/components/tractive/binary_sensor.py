@@ -1,20 +1,20 @@
 """Support for Tractive binary sensors."""
-from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveClient
-from .const import CLIENT, DOMAIN, TRACKABLES, TRACKER_HARDWARE_STATUS_UPDATED
+from . import Trackables, TractiveClient, TractiveConfigEntry
+from .const import ATTR_POWER_SAVING, TRACKER_HARDWARE_STATUS_UPDATED
 from .entity import TractiveEntity
 
 
@@ -25,7 +25,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         self,
         client: TractiveClient,
         item: Trackables,
-        description: BinarySensorEntityDescription,
+        description: TractiveBinarySensorEntityDescription,
     ) -> None:
         """Initialize sensor entity."""
         super().__init__(
@@ -40,6 +40,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
         self._attr_is_on = event[self.entity_description.key]
@@ -47,25 +48,42 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         super().handle_status_update(event)
 
 
-SENSOR_TYPE = BinarySensorEntityDescription(
-    key=ATTR_BATTERY_CHARGING,
-    translation_key="tracker_battery_charging",
-    device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-    entity_category=EntityCategory.DIAGNOSTIC,
-)
+@dataclass(frozen=True, kw_only=True)
+class TractiveBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Tractive binary sensor entities."""
+
+    supported: Callable[[dict], bool] = lambda _: True
+
+
+SENSOR_TYPES = [
+    TractiveBinarySensorEntityDescription(
+        key=ATTR_BATTERY_CHARGING,
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda details: details.get("charging_state") is not None,
+    ),
+    TractiveBinarySensorEntityDescription(
+        key=ATTR_POWER_SAVING,
+        translation_key="tracker_power_saving",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TractiveConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
-    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
+    client = entry.runtime_data.client
+    trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveBinarySensor(client, item, SENSOR_TYPE)
+        TractiveBinarySensor(client, item, description)
+        for description in SENSOR_TYPES
         for item in trackables
-        if item.tracker_details.get("charging_state") is not None
+        if description.supported(item.tracker_details)
     ]
 
     async_add_entities(entities)

@@ -1,10 +1,9 @@
 """Support for the Forecast.Solar sensor service."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from forecast_solar.models import Estimate
 
@@ -15,19 +14,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import ForecastSolarConfigEntry
 from .const import DOMAIN
 from .coordinator import ForecastSolarDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
 
-@dataclass
+
+@dataclass(frozen=True)
 class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     """Describes a Forecast.Solar Sensor."""
 
@@ -132,10 +133,12 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ForecastSolarConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: ForecastSolarDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ForecastSolarSensorEntity(
@@ -178,6 +181,7 @@ class ForecastSolarSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         if self.entity_description.state is None:

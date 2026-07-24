@@ -1,0 +1,22 @@
+{
+  "did": "8516fbb1-17f1-4194-0000000",
+  "name": "E1234567890000000002",
+  "class": "5xu9h3",
+  "resource": "cbCt",
+  "company": "eco-ng",
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-as.ww.ecouser.net"
+  },
+  "deviceName": "GOAT",
+  "icon": "https://portal-ww.ecouser.net/api/pim/file/get/63913d74df25d049785c3bd7",
+  "UILogicId": "goat_ww_h_goat",
+  "materialNo": "116-2201-0001",
+  "pid": "0000000",
+  "product_category": "GOATBOT",
+  "model": "GOAT",
+  "nick": "Goat G1",
+  "homeSort": 9999,
+  "status": 1,
+  "ota": true
+}

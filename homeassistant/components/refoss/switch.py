@@ -1,0 +1,81 @@
+"""Switch for Refoss."""
+
+from typing import Any, override
+
+from refoss_ha.controller.toggle import ToggleXMix
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .bridge import RefossConfigEntry, RefossDataUpdateCoordinator
+from .const import _LOGGER, DISPATCH_DEVICE_DISCOVERED
+from .entity import RefossEntity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: RefossConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Refoss device from a config entry."""
+
+    @callback
+    def init_device(coordinator: RefossDataUpdateCoordinator) -> None:
+        """Register the device."""
+        device = coordinator.device
+        if not isinstance(device, ToggleXMix):
+            return
+
+        new_entities = []
+        for channel in device.channels:
+            entity = RefossSwitch(coordinator=coordinator, channel=channel)
+            new_entities.append(entity)
+
+        async_add_entities(new_entities)
+        _LOGGER.debug("Device %s add switch entity success", device.dev_name)
+
+    for coordinator in config_entry.runtime_data.coordinators:
+        init_device(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
+    )
+
+
+class RefossSwitch(RefossEntity, SwitchEntity):
+    """Refoss Switch Device."""
+
+    def __init__(
+        self,
+        coordinator: RefossDataUpdateCoordinator,
+        channel: int,
+    ) -> None:
+        """Init Refoss switch."""
+        super().__init__(coordinator, channel)
+        self._attr_name = str(channel)
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.coordinator.device.is_on(channel=self.channel_id)
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self.coordinator.device.async_turn_on(self.channel_id)
+        self.async_write_ha_state()
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self.coordinator.device.async_turn_off(self.channel_id)
+        self.async_write_ha_state()
+
+    @override
+    async def async_toggle(self, **kwargs: Any) -> None:
+        """Toggle the switch."""
+        await self.coordinator.device.async_toggle(channel=self.channel_id)
+        self.async_write_ha_state()

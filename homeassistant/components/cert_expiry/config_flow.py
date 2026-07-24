@@ -1,29 +1,25 @@
 """Config flow for the Cert Expiry platform."""
-from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
     ConnectionRefused,
+    ConnectionReset,
     ConnectionTimeout,
     ResolveFailed,
     ValidationFailure,
 )
 from .helper import get_cert_expiry_timestamp
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -35,7 +31,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(
         self,
         user_input: Mapping[str, Any],
-    ):
+    ) -> bool:
         """Test connection to the server and try to get the certificate."""
         try:
             await get_cert_expiry_timestamp(
@@ -43,21 +39,25 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
             )
-            return True
         except ResolveFailed:
             self._errors[CONF_HOST] = "resolve_failed"
         except ConnectionTimeout:
             self._errors[CONF_HOST] = "connection_timeout"
         except ConnectionRefused:
             self._errors[CONF_HOST] = "connection_refused"
+        except ConnectionReset:
+            self._errors[CONF_HOST] = "connection_reset"
         except ValidationFailure:
+            return True
+        else:
             return True
         return False
 
+    @override
     async def async_step_user(
         self,
         user_input: Mapping[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
@@ -73,9 +73,6 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=title,
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
-            if self.context["source"] == config_entries.SOURCE_IMPORT:
-                _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
-                return self.async_abort(reason="import_failed")
         else:
             user_input = {}
             user_input[CONF_HOST] = ""
@@ -94,12 +91,41 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(
+    async def async_step_reconfigure(
         self,
         user_input: Mapping[str, Any] | None = None,
-    ) -> FlowResult:
-        """Import a config entry.
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        self._errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
 
-        Only host was required in the yaml file all other fields are optional
-        """
-        return await self.async_step_user(user_input)
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, DEFAULT_PORT)
+
+            if (
+                host != reconfigure_entry.data[CONF_HOST]
+                or port != reconfigure_entry.data[CONF_PORT]
+            ):
+                self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+
+            if await self._test_connection(user_input):
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: host, CONF_PORT: port},
+                    unique_id=f"{host}:{port}",
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    }
+                ),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=self._errors,
+        )

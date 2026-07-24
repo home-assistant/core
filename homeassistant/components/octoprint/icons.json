@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "file_name": {
+        "default": "mdi:printer-3d-nozzle",
+        "state": {
+          "unavailable": "mdi:printer-3d-nozzle-off"
+        }
+      },
+      "status": {
+        "default": "mdi:printer-3d",
+        "state": {
+          "cancelling": "mdi:file-cancel",
+          "connecting": "mdi:lan-connect",
+          "detect_serial": "mdi:lan-connect",
+          "error": "mdi:printer-3d-nozzle-alert",
+          "finishing": "mdi:printer-3d-nozzle",
+          "offline": "mdi:printer-3d-off",
+          "offline_after_error": "mdi:printer-3d-off",
+          "open_serial": "mdi:lan-connect",
+          "operational": "mdi:printer-3d",
+          "paused": "mdi:printer-3d-nozzle-off",
+          "pausing": "mdi:printer-3d-nozzle",
+          "printing": "mdi:printer-3d-nozzle",
+          "printing_sd": "mdi:printer-3d-nozzle",
+          "printing_streaming": "mdi:file-upload",
+          "resuming": "mdi:printer-3d-nozzle",
+          "starting": "mdi:printer-3d-nozzle",
+          "starting_sd": "mdi:printer-3d-nozzle",
+          "starting_streaming": "mdi:file-upload",
+          "transferring_file": "mdi:file-upload",
+          "unavailable": "mdi:printer-3d-off"
+        }
+      }
+    }
+  },
+  "services": {
+    "printer_connect": {
+      "service": "mdi:lan-connect"
+    }
+  }
+}

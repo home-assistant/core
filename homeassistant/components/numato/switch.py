@@ -1,8 +1,7 @@
 """Switch platform integration for Numato USB GPIO expanders."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from numato_gpio import NumatoGpioError
 
@@ -72,31 +71,23 @@ class NumatoGpioSwitch(SwitchEntity):
 
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the port."""
-        self._name = name or DEVICE_DEFAULT_NAME
+        self._attr_name = name or DEVICE_DEFAULT_NAME
         self._device_id = device_id
         self._port = port
         self._invert_logic = invert_logic
-        self._state = False
+        self._attr_is_on = False
         self._api = api
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if port is turned on."""
-        return self._state
-
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the port on."""
         try:
             self._api.write_output(
                 self._device_id, self._port, 0 if self._invert_logic else 1
             )
-            self._state = True
+            self._attr_is_on = True
             self.schedule_update_ha_state()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NumatoGpioError as err:
             _LOGGER.error(
                 "Failed to turn on Numato device %s port %s: %s",
@@ -105,14 +96,16 @@ class NumatoGpioSwitch(SwitchEntity):
                 err,
             )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the port off."""
         try:
             self._api.write_output(
                 self._device_id, self._port, 1 if self._invert_logic else 0
             )
-            self._state = False
+            self._attr_is_on = False
             self.schedule_update_ha_state()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NumatoGpioError as err:
             _LOGGER.error(
                 "Failed to turn off Numato device %s port %s: %s",

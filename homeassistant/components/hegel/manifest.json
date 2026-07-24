@@ -1,0 +1,18 @@
+{
+  "domain": "hegel",
+  "name": "Hegel Amplifier",
+  "codeowners": ["@boazca"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hegel/",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["hegel_ip_client"],
+  "quality_scale": "silver",
+  "requirements": ["hegel-ip-client==0.1.4"],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "Hegel"
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 """Support for AVM FRITZ!SmartHome cover devices."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -9,27 +8,40 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxDeviceEntity
+
+# Coordinator handles data updates, so we can allow unlimited parallel updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome cover from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        FritzboxCover(coordinator, ain)
-        for ain, device in coordinator.data.devices.items()
-        if device.has_blind
-    )
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
+            FritzboxCover(coordinator, ain)
+            for ain in devices
+            if coordinator.data.devices[ain].has_blind
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
@@ -44,6 +56,7 @@ class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
     )
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position."""
         position = None
@@ -52,29 +65,34 @@ class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
         return position
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.data.levelpercentage is None:
             return None
         return self.data.levelpercentage == 100  # type: ignore [no-any-return]
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_open)
+        await self.hass.async_add_executor_job(self.data.set_blind_open, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_close)
+        await self.hass.async_add_executor_job(self.data.set_blind_close, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.hass.async_add_executor_job(
-            self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION]
+            self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION], True
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_stop)
+        await self.hass.async_add_executor_job(self.data.set_blind_stop, True)
         await self.coordinator.async_refresh()

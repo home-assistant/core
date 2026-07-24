@@ -1,0 +1,13 @@
+{
+  "services": {
+    "capture_smartcam": {
+      "service": "mdi:camera"
+    },
+    "disable_autolock": {
+      "service": "mdi:lock-off"
+    },
+    "enable_autolock": {
+      "service": "mdi:lock"
+    }
+  }
+}

@@ -1,10 +1,12 @@
 """Bosch Smart Home Controller base entity."""
-from __future__ import annotations
+
+from typing import override
 
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo, async_get as get_dev_reg
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -14,8 +16,10 @@ async def async_remove_devices(
     hass: HomeAssistant, entity: SHCBaseEntity, entry_id: str
 ) -> None:
     """Get item that is removed from session."""
-    dev_registry = get_dev_reg(hass)
-    device = dev_registry.async_get_device(identifiers={(DOMAIN, entity.device_id)})
+    dev_registry = dr.async_get(hass)
+    device = dev_registry.async_get_device_by_identifier(
+        (DOMAIN, entity.device_id), entry_id
+    )
     if device is not None:
         dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
 
@@ -33,6 +37,7 @@ class SHCBaseEntity(Entity):
         self._device = device
         self._entry_id = entry_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
@@ -45,6 +50,7 @@ class SHCBaseEntity(Entity):
 
         self._device.subscribe_callback(self.entity_id, on_state_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
@@ -67,15 +73,11 @@ class SHCEntity(SHCBaseEntity):
             manufacturer=device.manufacturer,
             model=device.device_model,
             name=device.name,
-            via_device=(
-                DOMAIN,
-                device.parent_device_id
-                if device.parent_device_id is not None
-                else parent_id,
-            ),
+            via_device=(DOMAIN, device.root_device_id),
         )
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
@@ -86,6 +88,7 @@ class SHCEntity(SHCBaseEntity):
         for service in self._device.device_services:
             service.subscribe_callback(self.entity_id, on_state_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
@@ -93,6 +96,7 @@ class SHCEntity(SHCBaseEntity):
             service.unsubscribe_callback(self.entity_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.status == "AVAILABLE"
@@ -119,6 +123,7 @@ class SHCDomainEntity(SHCBaseEntity):
         super().__init__(device=domain, parent_id=parent_id, entry_id=entry_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.system_availability

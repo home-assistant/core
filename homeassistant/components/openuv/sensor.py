@@ -1,9 +1,8 @@
 """Support for OpenUV sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,16 +10,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
-from . import OpenUvEntity
 from .const import (
     DATA_UV,
-    DOMAIN,
     TYPE_CURRENT_OZONE_LEVEL,
     TYPE_CURRENT_UV_INDEX,
     TYPE_CURRENT_UV_LEVEL,
@@ -32,7 +28,8 @@ from .const import (
     TYPE_SAFE_EXPOSURE_TIME_5,
     TYPE_SAFE_EXPOSURE_TIME_6,
 )
-from .coordinator import OpenUvCoordinator
+from .coordinator import OpenUvConfigEntry
+from .entity import OpenUvEntity
 
 ATTR_MAX_UV_TIME = "time"
 
@@ -71,18 +68,11 @@ def get_uv_label(uv_index: int) -> str:
     return label.value
 
 
-@dataclass
-class OpenUvSensorEntityDescriptionMixin:
-    """Define a mixin for OpenUV sensor descriptions."""
+@dataclass(frozen=True, kw_only=True)
+class OpenUvSensorEntityDescription(SensorEntityDescription):
+    """Define a class that describes OpenUV sensor entities."""
 
     value_fn: Callable[[dict[str, Any]], int | str]
-
-
-@dataclass
-class OpenUvSensorEntityDescription(
-    SensorEntityDescription, OpenUvSensorEntityDescriptionMixin
-):
-    """Define a class that describes OpenUV sensor entities."""
 
 
 SENSOR_DESCRIPTIONS = (
@@ -96,7 +86,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_CURRENT_UV_INDEX,
         translation_key="current_uv_index",
-        icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["uv"],
@@ -104,7 +93,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_CURRENT_UV_LEVEL,
         translation_key="current_uv_level",
-        icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.ENUM,
         options=[label.value for label in UV_LABEL_DEFINITIONS],
         value_fn=lambda data: get_uv_label(data["uv"]),
@@ -112,7 +100,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_MAX_UV_INDEX,
         translation_key="max_uv_index",
-        icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["uv_max"],
@@ -120,7 +107,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_1,
         translation_key="skin_type_1_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -130,7 +116,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_2,
         translation_key="skin_type_2_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -140,7 +125,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_3,
         translation_key="skin_type_3_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -150,7 +134,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_4,
         translation_key="skin_type_4_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -160,7 +143,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_5,
         translation_key="skin_type_5_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -170,7 +152,6 @@ SENSOR_DESCRIPTIONS = (
     OpenUvSensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_6,
         translation_key="skin_type_6_safe_exposure_time",
-        icon="mdi:timer-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["safe_exposure_time"][
@@ -181,10 +162,12 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: OpenUvConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
-    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
+    coordinators = entry.runtime_data
 
     async_add_entities(
         [
@@ -200,6 +183,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     entity_description: OpenUvSensorEntityDescription
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
         attrs = {}
@@ -209,6 +193,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
         return attrs
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)

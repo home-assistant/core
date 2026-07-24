@@ -1,10 +1,11 @@
 """Test the legacy tts setup."""
-from __future__ import annotations
+
+from pathlib import Path
 
 import pytest
 
 from homeassistant.components.media_player import (
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.tts import ATTR_MESSAGE, DOMAIN, Provider
@@ -14,7 +15,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from .common import SUPPORT_LANGUAGES, MockProvider, MockTTS
+from .common import SUPPORT_LANGUAGES, MockTTS, MockTTSProvider
 
 from tests.common import (
     MockModule,
@@ -72,7 +73,9 @@ async def test_invalid_platform(
 
 
 async def test_platform_setup_without_provider(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_provider: MockProvider
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Test platform setup without provider returned."""
 
@@ -106,7 +109,7 @@ async def test_platform_setup_without_provider(
 async def test_platform_setup_with_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Test platform setup with an error during setup."""
 
@@ -120,7 +123,7 @@ async def test_platform_setup_with_error(
             discovery_info: DiscoveryInfoType | None = None,
         ) -> Provider:
             """Raise exception during platform setup."""
-            raise Exception("Setup error")  # pylint: disable=broad-exception-raised
+            raise Exception("Setup error")  # noqa: TRY002
 
     mock_integration(hass, MockModule(domain="bad_tts"))
     mock_platform(hass, "bad_tts.tts", BadPlatform(mock_provider))
@@ -138,15 +141,16 @@ async def test_platform_setup_with_error(
 
 
 async def test_service_without_cache_config(
-    hass: HomeAssistant, mock_tts_cache_dir, mock_tts
+    hass: HomeAssistant, mock_tts_cache_dir: Path, mock_tts
 ) -> None:
     """Set up a TTS platform without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     config = {DOMAIN: {"platform": "test", "cache": False}}
 
     with assert_setup_component(1, DOMAIN):
         assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN,

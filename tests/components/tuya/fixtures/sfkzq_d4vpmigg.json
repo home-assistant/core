@@ -1,0 +1,130 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Garden Valve Yard",
+  "category": "sfkzq",
+  "product_id": "d4vpmigg",
+  "product_name": "Valve Controller",
+  "online": true,
+  "sub": true,
+  "time_zone": "-04:00",
+  "active_time": "2025-08-09T19:01:51+00:00",
+  "create_time": "2025-08-09T19:01:51+00:00",
+  "update_time": "2025-08-09T19:01:51+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "time_use": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 2592000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "weather_delay": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "24h", "48h", "72h"]
+      }
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "smart_weather": {
+      "type": "Enum",
+      "value": {
+        "range": ["sunny", "cloudy", "rainy"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "time_use": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 2592000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "weather_delay": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "24h", "48h", "72h"]
+      }
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual", "idle"]
+      }
+    },
+    "smart_weather": {
+      "type": "Enum",
+      "value": {
+        "range": ["sunny", "cloudy", "rainy"]
+      }
+    },
+    "use_time_one": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "battery_percentage": 100,
+    "time_use": 38201,
+    "weather_delay": "cancel",
+    "countdown": 0,
+    "work_state": "idle",
+    "smart_weather": "sunny",
+    "use_time_one": 237
+  },
+  "set_up": true,
+  "support_local": true
+}

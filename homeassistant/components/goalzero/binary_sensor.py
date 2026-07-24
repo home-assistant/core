@@ -1,19 +1,17 @@
 """Support for Goal Zero Yeti Sensors."""
-from __future__ import annotations
 
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import GoalZeroConfigEntry
 from .entity import GoalZeroEntity
 
 PARALLEL_UPDATES = 0
@@ -22,7 +20,6 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="backlight",
         translation_key="backlight",
-        icon="mdi:clock-digital",
     ),
     BinarySensorEntityDescription(
         key="app_online",
@@ -43,14 +40,13 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GoalZeroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Goal Zero Yeti sensor."""
     async_add_entities(
-        GoalZeroBinarySensor(
-            hass.data[DOMAIN][entry.entry_id],
-            description,
-        )
+        GoalZeroBinarySensor(entry.runtime_data, description)
         for description in BINARY_SENSOR_TYPES
     )
 
@@ -59,6 +55,7 @@ class GoalZeroBinarySensor(GoalZeroEntity, BinarySensorEntity):
     """Representation of a Goal Zero Yeti sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the service is on."""
         return cast(bool, self._api.data[self.entity_description.key] == 1)

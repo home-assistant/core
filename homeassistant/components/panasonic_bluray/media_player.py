@@ -1,20 +1,20 @@
 """Support for Panasonic Blu-ray players."""
-from __future__ import annotations
 
 from datetime import timedelta
+from typing import override
 
 from panacotta import PanasonicBD
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
@@ -24,7 +24,7 @@ DEFAULT_NAME = "Panasonic Blu-Ray"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -38,8 +38,8 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Panasonic Blu-ray platform."""
-    conf = discovery_info if discovery_info else config
+    """Set up the Panasonic Blu-ray media player platform."""
+    conf = discovery_info or config
 
     # Register configured device with Home Assistant.
     add_entities([PanasonicBluRay(conf[CONF_HOST], conf[CONF_NAME])])
@@ -58,7 +58,7 @@ class PanasonicBluRay(MediaPlayerEntity):
     )
 
     def __init__(self, ip, name):
-        """Initialize the Panasonic Blue-ray device."""
+        """Initialize the Panasonic Blu-ray device."""
         self._device = PanasonicBD(ip)
         self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
@@ -90,6 +90,7 @@ class PanasonicBluRay(MediaPlayerEntity):
         self._attr_media_position_updated_at = utcnow()
         self._attr_media_duration = state[2]
 
+    @override
     def turn_off(self) -> None:
         """Instruct the device to turn standby.
 
@@ -103,6 +104,7 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_on(self) -> None:
         """Wake the device back up from standby."""
         if self.state == MediaPlayerState.OFF:
@@ -110,14 +112,17 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         self._attr_state = MediaPlayerState.IDLE
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._device.send_key("PLAYBACK")
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._device.send_key("PAUSE")
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         self._device.send_key("STOP")

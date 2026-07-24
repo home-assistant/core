@@ -1,8 +1,7 @@
 """Support for RFXtrx sirens."""
-from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
@@ -10,16 +9,12 @@ from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFe
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import (
-    DEFAULT_OFF_DELAY,
-    DeviceTuple,
-    RfxtrxCommandEntity,
-    async_setup_platform_entry,
-)
+from . import DEFAULT_OFF_DELAY, DeviceTuple, async_setup_platform_entry
 from .const import CONF_OFF_DELAY
+from .entity import RfxtrxCommandEntity
 
 SECURITY_PANIC_ON = "Panic"
 SECURITY_PANIC_OFF = "End Panic"
@@ -50,7 +45,7 @@ def get_first_key(data: dict[int, str], entry: str) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
 
@@ -92,7 +87,7 @@ async def async_setup_entry(
     )
 
 
-class RfxtrxOffDelayMixin(Entity):
+class RfxtrxOffDelayMixin(Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Mixin to support timeouts on data.
 
     Many 433 devices only send data when active. They will
@@ -119,6 +114,7 @@ class RfxtrxOffDelayMixin(Entity):
             self._timeout()
             self._timeout = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         self._cancel_timeout()
@@ -145,10 +141,12 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
         self._off_delay = off_delay
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._timeout is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._cancel_timeout()
@@ -164,6 +162,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
 
         self.async_write_ha_state()
 
+    @override
     def _apply_event(self, event: rfxtrxmod.ControlEvent) -> None:
         """Apply a received event."""
         super()._apply_event(event)
@@ -174,6 +173,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
             self._setup_timeout()
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:
@@ -204,10 +204,12 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
         self._off_delay = off_delay
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._timeout is not None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._cancel_timeout()
@@ -218,6 +220,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._cancel_timeout()
@@ -226,6 +229,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
 
         self.async_write_ha_state()
 
+    @override
     def _apply_event(self, event: rfxtrxmod.SensorEvent) -> None:
         """Apply a received event."""
         super()._apply_event(event)
@@ -239,6 +243,7 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
             self._cancel_timeout()
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:

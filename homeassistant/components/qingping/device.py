@@ -1,5 +1,4 @@
 """Support for Qingping devices."""
-from __future__ import annotations
 
 from qingping_ble import DeviceKey
 

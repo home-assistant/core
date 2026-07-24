@@ -1,15 +1,15 @@
 """LlamaLab Automate notification service."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any, override
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE
@@ -24,7 +24,7 @@ ATTR_PRIORITY = "priority"
 
 CONF_TO = "to"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_TO): cv.string,
@@ -55,7 +55,8 @@ class AutomateNotificationService(BaseNotificationService):
         self._recipient = recipient
         self._device = device
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
         # Extract params from data dict

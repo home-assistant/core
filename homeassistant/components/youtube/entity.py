@@ -1,5 +1,4 @@
 """Entity representing a YouTube account."""
-from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

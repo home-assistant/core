@@ -1,8 +1,8 @@
 """SendGrid notification service."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any, override
 
 from sendgrid import SendGridAPIClient
 import voluptuous as vol
@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ CONF_SENDER_NAME = "sender_name"
 
 DEFAULT_SENDER_NAME = "Home Assistant"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_SENDER): vol.Email(),
@@ -60,7 +60,8 @@ class SendgridNotificationService(BaseNotificationService):
 
         self._sg = SendGridAPIClient(self.api_key)
 
-    def send_message(self, message="", **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send an email to a user via SendGrid."""
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 

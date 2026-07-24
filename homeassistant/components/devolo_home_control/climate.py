@@ -1,7 +1,6 @@
 """Platform for climate integration."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
@@ -12,39 +11,38 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
+from . import DevoloHomeControlConfigEntry
+from .entity import DevoloMultiLevelSwitchDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeControlConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all cover devices and setup them via config entry."""
-    entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.multi_level_switch_devices:
-            for multi_level_switch in device.multi_level_switch_property:
-                if device.device_model_uid in (
-                    "devolo.model.Thermostat:Valve",
-                    "devolo.model.Room:Thermostat",
-                    "devolo.model.Eurotronic:Spirit:Device",
-                    "unk.model.Danfoss:Thermostat",
-                ):
-                    entities.append(
-                        DevoloClimateDeviceEntity(
-                            homecontrol=gateway,
-                            device_instance=device,
-                            element_uid=multi_level_switch,
-                        )
-                    )
-
-    async_add_entities(entities)
+    async_add_entities(
+        DevoloClimateDeviceEntity(
+            homecontrol=gateway,
+            device_instance=device,
+            element_uid=multi_level_switch,
+        )
+        for gateway in entry.runtime_data
+        for device in gateway.multi_level_switch_devices
+        for multi_level_switch in device.multi_level_switch_property
+        if device.device_model_uid
+        in (
+            "devolo.model.Thermostat:Valve",
+            "devolo.model.Room:Thermostat",
+            "devolo.model.Eurotronic:Spirit:Device",
+            "unk.model.Danfoss:Thermostat",
+        )
+    )
 
 
 class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntity):
@@ -71,13 +69,16 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         self._attr_max_temp = self._multi_level_switch_property.max
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if hasattr(self._device_instance, "multi_level_sensor_property"):
             return next(
                 (
                     multi_level_sensor.value
-                    for multi_level_sensor in self._device_instance.multi_level_sensor_property.values()
+                    for multi_level_sensor in (
+                        self._device_instance.multi_level_sensor_property.values()
+                    )
                     if multi_level_sensor.sensor_type == "temperature"
                 ),
                 None,
@@ -86,13 +87,16 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._value
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])

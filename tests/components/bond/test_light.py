@@ -1,16 +1,15 @@
 """Tests for the Bond light device."""
+
 from datetime import timedelta
 
 from bond_async import Action, DeviceType
 import pytest
 
-from homeassistant.components.bond.const import (
+from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond.services import (
     ATTR_POWER_STATE,
-    DOMAIN,
     SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-)
-from homeassistant.components.bond.light import (
     SERVICE_START_DECREASING_BRIGHTNESS,
     SERVICE_START_INCREASING_BRIGHTNESS,
     SERVICE_STOP,
@@ -321,7 +320,7 @@ async def test_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
 
 
 async def test_light_set_brightness_belief_api_error(hass: HomeAssistant) -> None:
-    """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
+    """Tests that set brightness belief throws HomeAssistantError on api error."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -329,16 +328,17 @@ async def test_light_set_brightness_belief_api_error(hass: HomeAssistant) -> Non
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
@@ -365,7 +365,7 @@ async def test_fp_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
 
 
 async def test_fp_light_set_brightness_belief_api_error(hass: HomeAssistant) -> None:
-    """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
+    """Tests that set brightness belief throws HomeAssistantError on api error."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -373,22 +373,23 @@ async def test_fp_light_set_brightness_belief_api_error(hass: HomeAssistant) -> 
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_set_brightness_belief_brightness_not_supported(
     hass: HomeAssistant,
 ) -> None:
-    """Tests that the set brightness belief function of a light that doesn't support setting brightness returns an error."""
+    """Tests that set brightness belief returns error when brightness is unsupported."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -403,7 +404,6 @@ async def test_light_set_brightness_belief_brightness_not_supported(
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
@@ -476,7 +476,7 @@ async def test_light_set_power_belief(hass: HomeAssistant) -> None:
 
 
 async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
-    """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
+    """Tests that set power belief throws HomeAssistantError on api error."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -484,16 +484,17 @@ async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_power_belief(hass: HomeAssistant) -> None:
@@ -520,7 +521,7 @@ async def test_fp_light_set_power_belief(hass: HomeAssistant) -> None:
 
 
 async def test_fp_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
-    """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
+    """Tests that set power belief throws HomeAssistantError on api error."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -528,22 +529,23 @@ async def test_fp_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_brightness_belief_brightness_not_supported(
     hass: HomeAssistant,
 ) -> None:
-    """Tests that the set brightness belief function of a fireplace light that doesn't support setting brightness returns an error."""
+    """Tests set brightness belief returns error for fireplace without brightness."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -558,11 +560,10 @@ async def test_fp_light_set_brightness_belief_brightness_not_supported(
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_start_increasing_brightness(hass: HomeAssistant) -> None:
-    """Tests a light that can only increase or decrease brightness delegates to API can start increasing brightness."""
+    """Tests a light with only increase/decrease brightness can start increasing."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -599,11 +600,10 @@ async def test_light_start_increasing_brightness_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_start_decreasing_brightness(hass: HomeAssistant) -> None:
-    """Tests a light that can only increase or decrease brightness delegates to API can start decreasing brightness."""
+    """Tests a light with only increase/decrease brightness can start decreasing."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -643,11 +643,10 @@ async def test_light_start_decreasing_brightness_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_stop(hass: HomeAssistant) -> None:
-    """Tests a light that can only increase or decrease brightness delegates to API can stop."""
+    """Tests a light with only increase/decrease brightness can stop."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -685,7 +684,6 @@ async def test_light_stop_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_turn_on_light(hass: HomeAssistant) -> None:
@@ -779,7 +777,7 @@ async def test_brightness_not_supported(hass: HomeAssistant) -> None:
 
 
 async def test_turn_on_light_with_brightness(hass: HomeAssistant) -> None:
-    """Tests that turn on command, on a dimmable light, delegates to API and parses brightness."""
+    """Tests turning on a dimmable light delegates to API and parses brightness."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
@@ -894,7 +892,7 @@ async def test_turn_off_down_light(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_light_is_on(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the light is on."""
+    """Tests that update sets correct state when Bond API reports light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"light": 1}):
@@ -905,7 +903,7 @@ async def test_update_reports_light_is_on(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_light_is_off(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the light is off."""
+    """Tests that update sets correct state when Bond API reports light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"light": 0}):
@@ -916,7 +914,7 @@ async def test_update_reports_light_is_off(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_up_light_is_on(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the up light is on."""
+    """Tests that update sets correct state when Bond API reports up light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"up_light": 1, "light": 1}):
@@ -927,7 +925,7 @@ async def test_update_reports_up_light_is_on(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_up_light_is_off(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the up light is off."""
+    """Tests that update sets correct state when Bond API reports up light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"up_light": 0, "light": 0}):
@@ -938,7 +936,7 @@ async def test_update_reports_up_light_is_off(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_down_light_is_on(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the down light is on."""
+    """Tests that update sets correct state when Bond API reports down light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"down_light": 1, "light": 1}):
@@ -949,7 +947,7 @@ async def test_update_reports_down_light_is_on(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_down_light_is_off(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the down light is off."""
+    """Tests that update sets correct state when Bond API reports down light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"down_light": 0, "light": 0}):
@@ -1032,7 +1030,7 @@ async def test_light_available(hass: HomeAssistant) -> None:
 
 
 async def test_parse_brightness(hass: HomeAssistant) -> None:
-    """Tests that reported brightness level (0..100) converted to HA brightness (0...255)."""
+    """Tests that reported brightness (0..100) converted to HA brightness (0..255)."""
     await setup_platform(hass, LIGHT_DOMAIN, dimmable_ceiling_fan("name-1"))
 
     with patch_bond_device_state(return_value={"light": 1, "brightness": 50}):

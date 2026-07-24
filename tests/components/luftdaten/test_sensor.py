@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Luftdaten integration."""
+
 from homeassistant.components.luftdaten.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -10,9 +11,9 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -54,7 +55,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Humidity"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfRatio.PERCENTAGE
     assert ATTR_ICON not in state.attributes
 
     entry = entity_registry.async_get("sensor.sensor_12345_pressure")
@@ -71,16 +72,16 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.PA
     assert ATTR_ICON not in state.attributes
 
-    entry = entity_registry.async_get("sensor.sensor_12345_pressure_at_sealevel")
+    entry = entity_registry.async_get("sensor.sensor_12345_pressure_at_sea_level")
     assert entry
     assert entry.device_id
     assert entry.unique_id == "12345_pressure_at_sealevel"
 
-    state = hass.states.get("sensor.sensor_12345_pressure_at_sealevel")
+    state = hass.states.get("sensor.sensor_12345_pressure_at_sea_level")
     assert state
     assert state.state == "103102.13"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure at sealevel"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure at sea level"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
@@ -100,7 +101,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
     assert ATTR_ICON not in state.attributes
 
@@ -117,7 +118,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
     assert ATTR_ICON not in state.attributes
 

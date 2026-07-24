@@ -1,18 +1,17 @@
 """Support for EZVIZ sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
@@ -36,11 +35,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "Seconds_Last_Trigger": SensorEntityDescription(
         key="Seconds_Last_Trigger",
         translation_key="seconds_last_trigger",
-        entity_registry_enabled_default=False,
-    ),
-    "last_alarm_pic": SensorEntityDescription(
-        key="last_alarm_pic",
-        translation_key="last_alarm_pic",
         entity_registry_enabled_default=False,
     ),
     "supported_channels": SensorEntityDescription(
@@ -71,12 +65,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -102,6 +96,7 @@ class EzvizSensor(EzvizEntity, SensorEntity):
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
         return self.data[self._sensor_name]

@@ -1,7 +1,7 @@
 """The lookin integration sensor platform."""
-from __future__ import annotations
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,14 +9,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import LookinDeviceCoordinatorEntity
-from .models import LookinData
+from .models import LookinConfigEntry, LookinData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,11 +39,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LookinConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lookin sensors from the config entry."""
-    lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
+    lookin_data = config_entry.runtime_data
 
     if lookin_data.lookin_device.model >= 2:
         async_add_entities(
@@ -69,6 +67,7 @@ class LookinSensorEntity(LookinDeviceCoordinatorEntity, SensorEntity):
         self._attr_native_value = getattr(self.coordinator.data, description.key)
         self._attr_unique_id = f"{self._lookin_device.id}-{description.key}"
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
         self._attr_native_value = getattr(

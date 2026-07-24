@@ -1,9 +1,11 @@
 """Discovergy sensor entity."""
+
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import override
 
-from pydiscovergy.models import Meter, Reading
+from pydiscovergy.models import Reading
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfElectricPotential,
@@ -21,13 +22,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DiscovergyData, DiscovergyUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER
+from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float | None:
@@ -37,14 +38,14 @@ def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float |
     return None
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DiscovergySensorEntityDescription(SensorEntityDescription):
     """Class to describe a Discovergy sensor entity."""
 
     value_fn: Callable[[Reading, str, int], datetime | float | None] = field(
         default=_get_and_scale
     )
-    alternative_keys: list[str] = field(default_factory=lambda: [])
+    alternative_keys: list[str] = field(default_factory=list)
     scale: int = field(default_factory=lambda: 1000)
 
 
@@ -158,34 +159,34 @@ ADDITIONAL_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda reading, key, scale: reading.time_with_timezone,
+        value_fn=lambda reading, key, scale: reading.time,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DiscovergyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Discovergy sensors."""
-    data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
-    meters: list[Meter] = data.meters  # always returns a list
-
     entities: list[DiscovergySensor] = []
-    for meter in meters:
+    for coordinator in entry.runtime_data:
         sensors: tuple[DiscovergySensorEntityDescription, ...] = ()
-        coordinator: DiscovergyUpdateCoordinator = data.coordinators[meter.meter_id]
 
-        # select sensor descriptions based on meter type and combine with additional sensors
-        if meter.measurement_type == "ELECTRICITY":
+        # select sensor descriptions based on meter type
+        # and combine with additional sensors
+        if coordinator.meter.measurement_type == "ELECTRICITY":
             sensors = ELECTRICITY_SENSORS + ADDITIONAL_SENSORS
-        elif meter.measurement_type == "GAS":
+        elif coordinator.meter.measurement_type == "GAS":
             sensors = GAS_SENSORS + ADDITIONAL_SENSORS
 
         entities.extend(
-            DiscovergySensor(value_key, description, meter, coordinator)
+            DiscovergySensor(value_key, description, coordinator)
             for description in sensors
             for value_key in {description.key, *description.alternative_keys}
             if description.value_fn(coordinator.data, value_key, description.scale)
+            is not None
         )
 
     async_add_entities(entities)
@@ -202,25 +203,30 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         self,
         data_key: str,
         description: DiscovergySensorEntityDescription,
-        meter: Meter,
         coordinator: DiscovergyUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.data_key = data_key
-
         self.entity_description = description
+
+        meter = coordinator.meter
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, meter.meter_id)},
-            name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
-            model=meter.type,
+            name=(
+                f"{meter.measurement_type.capitalize()}"
+                f" {meter.location.street}"
+                f" {meter.location.street_number}"
+            ),
+            model=meter.meter_type,
             manufacturer=MANUFACTURER,
             serial_number=meter.full_serial_number,
         )
 
     @property
+    @override
     def native_value(self) -> datetime | float | None:
         """Return the sensor state."""
         return self.entity_description.value_fn(

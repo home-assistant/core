@@ -1,5 +1,4 @@
 """Constants for National Weather Service Integration."""
-from __future__ import annotations
 
 from datetime import timedelta
 from typing import Final
@@ -22,10 +21,14 @@ from homeassistant.components.weather import (
 
 DOMAIN = "nws"
 
+CONF_LOCATION_ENTITY = "location_entity"
 CONF_STATION = "station"
+
+LOCATION_CHANGE_THRESHOLD = 2000  # meters
 
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
+ATTR_FORECAST_SHORT_DESCRIPTION: Final = "short_description"
 ATTR_FORECAST_DETAILED_DESCRIPTION: Final = "detailed_description"
 
 CONDITION_CLASSES: dict[str, list[str]] = {
@@ -75,7 +78,12 @@ CONDITION_CLASSES: dict[str, list[str]] = {
 DAYNIGHT = "daynight"
 HOURLY = "hourly"
 
-OBSERVATION_VALID_TIME = timedelta(minutes=20)
+OBSERVATION_VALID_TIME = timedelta(minutes=60)
 FORECAST_VALID_TIME = timedelta(minutes=45)
-# A lot of stations update once hourly plus some wiggle room
-UPDATE_TIME_PERIOD = timedelta(minutes=70)
+# Ask for observations for last four hours
+UPDATE_TIME_PERIOD = timedelta(minutes=240)
+
+DEBOUNCE_TIME = 10 * 60  # in seconds
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
+RETRY_INTERVAL = timedelta(minutes=1)
+RETRY_STOP = timedelta(minutes=10)

@@ -1,11 +1,12 @@
 """Tests for the Start.ca sensor platform."""
+
 from http import HTTPStatus
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -208,7 +209,7 @@ async def test_bad_return_code(
         status=HTTPStatus.NOT_FOUND,
     )
 
-    scd = StartcaData(hass.loop, async_get_clientsession(hass), "NOTAKEY", 400)
+    scd = StartcaData(async_get_clientsession(hass), "NOTAKEY", 400)
 
     result = await scd.async_update()
     assert result is False
@@ -222,7 +223,7 @@ async def test_bad_json_decode(
         "https://www.start.ca/support/usage/api?key=NOTAKEY", text="this is not xml"
     )
 
-    scd = StartcaData(hass.loop, async_get_clientsession(hass), "NOTAKEY", 400)
+    scd = StartcaData(async_get_clientsession(hass), "NOTAKEY", 400)
 
     result = await scd.async_update()
     assert result is False

@@ -1,34 +1,28 @@
 """Support for Roku sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from rokuecp.models import Device as RokuDevice
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RokuDataUpdateCoordinator
+from .coordinator import RokuConfigEntry
 from .entity import RokuEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
-@dataclass
-class RokuSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+
+@dataclass(frozen=True, kw_only=True)
+class RokuSensorEntityDescription(SensorEntityDescription):
+    """Describes Roku sensor entity."""
 
     value_fn: Callable[[RokuDevice], str | None]
-
-
-@dataclass
-class RokuSensorEntityDescription(
-    SensorEntityDescription, RokuSensorEntityDescriptionMixin
-):
-    """Describes Roku sensor entity."""
 
 
 SENSORS: tuple[RokuSensorEntityDescription, ...] = (
@@ -36,14 +30,12 @@ SENSORS: tuple[RokuSensorEntityDescription, ...] = (
         key="active_app",
         translation_key="active_app",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:application",
         value_fn=lambda device: device.app.name if device.app else None,
     ),
     RokuSensorEntityDescription(
         key="active_app_id",
         translation_key="active_app_id",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:application-cog",
         value_fn=lambda device: device.app.app_id if device.app else None,
     ),
 )
@@ -51,15 +43,13 @@ SENSORS: tuple[RokuSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: RokuConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roku sensor based on a config entry."""
-    coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
         RokuSensorEntity(
-            coordinator=coordinator,
+            coordinator=entry.runtime_data,
             description=description,
         )
         for description in SENSORS
@@ -72,6 +62,7 @@ class RokuSensorEntity(RokuEntity, SensorEntity):
     entity_description: RokuSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

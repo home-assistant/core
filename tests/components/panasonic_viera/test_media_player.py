@@ -23,7 +23,7 @@ async def test_media_player_handle_URLerror(
     mock_remote.get_mute = Mock(side_effect=URLError(None, None))
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=2))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state_tv = hass.states.get("media_player.panasonic_viera_tv")
     assert state_tv.state == STATE_UNAVAILABLE
@@ -41,7 +41,7 @@ async def test_media_player_handle_HTTPError(
     mock_remote.get_mute = Mock(side_effect=HTTPError(None, 400, None, None, None))
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=2))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state_tv = hass.states.get("media_player.panasonic_viera_tv")
     assert state_tv.state == STATE_OFF

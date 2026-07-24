@@ -1,6 +1,7 @@
 """Support for Insteon covers via PowerLinc Modem."""
+
 import math
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -11,17 +12,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
-from .insteon_entity import InsteonEntity
+from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Insteon covers from a config entry."""
 
@@ -52,27 +53,32 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
     )
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current cover position."""
         if self._insteon_device_group.value is not None:
             pos = self._insteon_device_group.value
         else:
             pos = 0
-        return int(math.ceil(pos * 100 / 255))
+        return math.ceil(pos * 100 / 255)
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self.current_cover_position)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self._insteon_device.async_open()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._insteon_device.async_close()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         position = int(kwargs[ATTR_POSITION] * 255 / 100)

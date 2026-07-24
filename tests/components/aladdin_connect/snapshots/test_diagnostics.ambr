@@ -1,20 +1,40 @@
 # serializer version: 1
-# name: test_entry_diagnostics
+# name: test_diagnostics
   dict({
-    'doors': list([
-      dict({
-        'battery_level': 0,
-        'ble_strength': 0,
-        'device_id': '**REDACTED**',
-        'door_number': 1,
-        'link_status': 'Connected',
-        'model': '02',
-        'name': 'home',
-        'rssi': -67,
-        'serial': '**REDACTED**',
-        'status': 'open',
-        'vendor': 'GENIE',
+    'config_entry': dict({
+      'data': dict({
+        'auth_implementation': 'aladdin_connect',
+        'token': dict({
+          'access_token': '**REDACTED**',
+          'expires_in': 3600,
+          'refresh_token': '**REDACTED**',
+        }),
       }),
-    ]),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'aladdin_connect',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Aladdin Connect',
+      'unique_id': 'test_user_123',
+      'version': 2,
+    }),
+    'doors': dict({
+      'test_device_id-1': dict({
+        'battery_level': 100,
+        'device_id': 'test_device_id',
+        'door_number': 1,
+        'link_status': 'connected',
+        'name': 'Test Door',
+        'status': 'closed',
+      }),
+    }),
   })
 # ---

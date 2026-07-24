@@ -1,23 +1,24 @@
 """Support for Modern Forms Binary Sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ModernFormsDataUpdateCoordinator, ModernFormsDeviceEntity
-from .const import CLEAR_TIMER, DOMAIN
+from .const import CLEAR_TIMER
+from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ModernFormsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Modern Forms binary sensors."""
-    coordinator: ModernFormsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     binary_sensors: list[ModernFormsBinarySensor] = [
         ModernFormsFanSleepTimerActive(entry.entry_id, coordinator),
@@ -40,11 +41,10 @@ class ModernFormsBinarySensor(ModernFormsDeviceEntity, BinarySensorEntity):
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        icon: str,
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
-        super().__init__(entry_id=entry_id, coordinator=coordinator, icon=icon)
+        super().__init__(entry_id=entry_id, coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
 
@@ -62,11 +62,11 @@ class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:av-timer",
             key="light_sleep_timer_active",
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the timer."""
         return not (
@@ -94,11 +94,11 @@ class ModernFormsFanSleepTimerActive(ModernFormsBinarySensor):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:av-timer",
             key="fan_sleep_timer_active",
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the timer."""
         return not (

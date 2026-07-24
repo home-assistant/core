@@ -1,12 +1,13 @@
 """Provides the NZBGet DataUpdateCoordinator."""
+
 import asyncio
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import override
 
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -23,30 +24,38 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+type NZBGetConfigEntry = ConfigEntry[NZBGetDataUpdateCoordinator]
+
+
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NZBGet data."""
+
+    config_entry: NZBGetConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        config: Mapping[str, Any],
+        config_entry: NZBGetConfigEntry,
     ) -> None:
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
-            config[CONF_HOST],
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            config[CONF_SSL],
-            config[CONF_VERIFY_SSL],
-            config[CONF_PORT],
+            host=config_entry.data[CONF_HOST],
+            username=config_entry.data.get(CONF_USERNAME),
+            password=config_entry.data.get(CONF_PASSWORD),
+            secure=config_entry.data[CONF_SSL],
+            verify_certificate=config_entry.data[CONF_VERIFY_SSL],
+            port=config_entry.data[CONF_PORT],
         )
 
         self._completed_downloads_init = False
         self._completed_downloads = set[tuple]()
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=5)
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=5),
         )
 
     def _check_completed_downloads(self, history):
@@ -73,6 +82,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         self._completed_downloads = actual_completed_downloads
         self._completed_downloads_init = True
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from NZBGet."""
 

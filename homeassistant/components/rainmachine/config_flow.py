@@ -1,22 +1,25 @@
 """Config flow to configure the RainMachine component."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_USE_APP_RUN_TIMES,
     DEFAULT_PORT,
@@ -45,7 +48,7 @@ async def async_get_controller(
     return get_client_controller(client)
 
 
-class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a RainMachine config flow."""
 
     VERSION = 2
@@ -54,27 +57,30 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> RainMachineOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return RainMachineOptionsFlowHandler(config_entry)
+        return RainMachineOptionsFlowHandler()
 
+    @override
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_homekit_zeroconf(discovery_info)
 
+    @override
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via zeroconf."""
         return await self.async_step_homekit_zeroconf(discovery_info)
 
     async def async_step_homekit_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via zeroconf."""
         ip_address = discovery_info.host
 
@@ -97,7 +103,10 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # A new rain machine: We will change out the unique id
         # for the mac address once we authenticate, however we want to
         # prevent multiple different rain machines on the same network
-        # from being shown in discovery
+        # from being shown in discovery.
+        # Uses the discovered IP address as a temporary unique ID for
+        # discovery de-duplication until the MAC address is available.
+        # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(ip_address)
         self._abort_if_unique_id_configured()
         self.discovered_ip_address = ip_address
@@ -114,9 +123,10 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
         if user_input:
@@ -160,16 +170,12 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
+class RainMachineOptionsFlowHandler(OptionsFlow):
     """Handle a RainMachine options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
@@ -187,6 +193,12 @@ class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_USE_APP_RUN_TIMES,
                         default=self.config_entry.options.get(CONF_USE_APP_RUN_TIMES),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_INACTIVE_ZONES_TO_RUN
+                        ),
                     ): bool,
                 }
             ),

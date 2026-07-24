@@ -1,5 +1,4 @@
 """Helper functions for Android TV Remote integration."""
-from __future__ import annotations
 
 from androidtvremote2 import AndroidTVRemote
 
@@ -8,6 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_ENABLE_IME, CONF_ENABLE_IME_DEFAULT_VALUE
+
+AndroidTVRemoteConfigEntry = ConfigEntry[AndroidTVRemote]
 
 
 def create_api(hass: HomeAssistant, host: str, enable_ime: bool) -> AndroidTVRemote:
@@ -22,6 +23,6 @@ def create_api(hass: HomeAssistant, host: str, enable_ime: bool) -> AndroidTVRem
     )
 
 
-def get_enable_ime(entry: ConfigEntry) -> bool:
+def get_enable_ime(entry: AndroidTVRemoteConfigEntry) -> bool:
     """Get value of enable_ime option or its default value."""
-    return entry.options.get(CONF_ENABLE_IME, CONF_ENABLE_IME_DEFAULT_VALUE)
+    return bool(entry.options.get(CONF_ENABLE_IME, CONF_ENABLE_IME_DEFAULT_VALUE))

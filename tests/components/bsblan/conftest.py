@@ -1,13 +1,26 @@
 """Fixtures for BSBLAN integration tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from bsblan import Device, Info, State
+from bsblan import (
+    Device,
+    HotWaterConfig,
+    HotWaterSchedule,
+    HotWaterState,
+    Info,
+    Sensor,
+    State,
+    StaticState,
+)
 import pytest
 
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from homeassistant.components.bsblan.const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -24,13 +37,36 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=3,
     )
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_config_entry_dual_circuit() -> MockConfigEntry:
+    """Return a mocked config entry with dual heating circuits."""
+    return MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1, 2],
+        },
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=3,
+    )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.bsblan.async_setup_entry", return_value=True
@@ -39,41 +75,44 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_bsblan_config_flow() -> Generator[None, MagicMock, None]:
+def mock_bsblan() -> Generator[MagicMock]:
     """Return a mocked BSBLAN client."""
-    with patch(
-        "homeassistant.components.bsblan.config_flow.BSBLAN", autospec=True
-    ) as bsblan_mock:
+    with (
+        patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock,
+        patch("homeassistant.components.bsblan.config_flow.BSBLAN", new=bsblan_mock),
+    ):
         bsblan = bsblan_mock.return_value
-        bsblan.device.return_value = Device.parse_raw(
+        bsblan.info.return_value = Info.model_validate_json(
+            load_fixture("info.json", DOMAIN)
+        )
+        bsblan.device.return_value = Device.model_validate_json(
             load_fixture("device.json", DOMAIN)
         )
-        bsblan.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
-        yield bsblan
-
-
-@pytest.fixture
-def mock_bsblan(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
-    """Return a mocked BSBLAN client."""
-
-    with patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock:
-        bsblan = bsblan_mock.return_value
-        bsblan.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
-        bsblan.device.return_value = Device.parse_raw(
-            load_fixture("device.json", DOMAIN)
+        bsblan.state.return_value = State.model_validate_json(
+            load_fixture("state.json", DOMAIN)
         )
-        bsblan.state.return_value = State.parse_raw(load_fixture("state.json", DOMAIN))
+        bsblan.static_values.return_value = StaticState.model_validate_json(
+            load_fixture("static.json", DOMAIN)
+        )
+        bsblan.sensor.return_value = Sensor.model_validate_json(
+            load_fixture("sensor.json", DOMAIN)
+        )
+        bsblan.hot_water_state.return_value = HotWaterState.model_validate_json(
+            load_fixture("dhw_state.json", DOMAIN)
+        )
+        # Mock new config methods using fixture files
+        bsblan.hot_water_config.return_value = HotWaterConfig.model_validate_json(
+            load_fixture("dhw_config.json", DOMAIN)
+        )
+        bsblan.hot_water_schedule.return_value = HotWaterSchedule.model_validate_json(
+            load_fixture("dhw_schedule.json", DOMAIN)
+        )
+        # mock get_temperature_unit property
+        bsblan.get_temperature_unit = "°C"
+        # Default to a modern JSON-API version (>= v2) so setup uses the full
+        # feature set and does not raise the outdated-firmware repair issue.
+        bsblan.json_api_version = "3.0"
+        # Default: single circuit (for config flow tests)
+        bsblan.get_available_circuits.return_value = [1]
+
         yield bsblan
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_bsblan: MagicMock
-) -> MockConfigEntry:
-    """Set up the bsblan integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return mock_config_entry

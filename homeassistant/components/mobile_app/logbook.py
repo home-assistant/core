@@ -1,7 +1,7 @@
 """Describe mobile_app logbook events."""
-from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ENTITY_ID,
@@ -9,8 +9,9 @@ from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.event_type import EventType
 
 from .const import DOMAIN
 
@@ -20,7 +21,7 @@ IOS_EVENT_ZONE_EXITED = "ios.zone_exited"
 ATTR_ZONE = "zone"
 ATTR_SOURCE_DEVICE_NAME = "sourceDeviceName"
 ATTR_SOURCE_DEVICE_ID = "sourceDeviceID"
-EVENT_TO_DESCRIPTION = {
+EVENT_TO_DESCRIPTION: dict[EventType[Any] | str, str] = {
     IOS_EVENT_ZONE_ENTERED: "entered zone",
     IOS_EVENT_ZONE_EXITED: "exited zone",
 }
@@ -45,8 +46,8 @@ def async_describe_events(
         zone_name = None
         zone_icon = None
         if zone_entity_id and (zone_state := hass.states.get(zone_entity_id)):
-            zone_name = zone_state.attributes.get(ATTR_FRIENDLY_NAME)
-            zone_icon = zone_state.attributes.get(ATTR_ICON)
+            zone_name = zone_state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+            zone_icon = zone_state.attributes.get(EntityStateAttribute.ICON)
         description = {
             LOGBOOK_ENTRY_NAME: source_device_name,
             LOGBOOK_ENTRY_MESSAGE: f"{event_description} {zone_name or zone_entity_id}",

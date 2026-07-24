@@ -1,13 +1,11 @@
 """Support for OVO Energy sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+import dataclasses
 from datetime import datetime, timedelta
-from typing import Final
+from typing import Final, override
 
-from ovoenergy import OVODailyUsage
-from ovoenergy.ovoenergy import OVOEnergy
+from ovoenergy.models import OVODailyUsage
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,16 +13,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import OVOEnergyDeviceEntity
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
+from .coordinator import OVOEnergyConfigEntry, OVOEnergyDataUpdateCoordinator
+from .entity import OVOEnergyDeviceEntity
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
@@ -33,7 +30,7 @@ KEY_LAST_ELECTRICITY_COST: Final = "last_electricity_cost"
 KEY_LAST_GAS_COST: Final = "last_gas_cost"
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class OVOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
@@ -53,10 +50,12 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         key=KEY_LAST_ELECTRICITY_COST,
         translation_key=KEY_LAST_ELECTRICITY_COST,
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value=lambda usage: usage.electricity[-1].cost.amount
-        if usage.electricity[-1].cost is not None
-        else None,
+        state_class=SensorStateClass.TOTAL,
+        value=lambda usage: (
+            usage.electricity[-1].cost.amount
+            if usage.electricity[-1].cost is not None
+            else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_electricity_start_time",
@@ -81,18 +80,16 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon="mdi:gas-cylinder",
         value=lambda usage: usage.gas[-1].consumption,
     ),
     OVOEnergySensorEntityDescription(
         key=KEY_LAST_GAS_COST,
         translation_key=KEY_LAST_GAS_COST,
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:cash-multiple",
-        value=lambda usage: usage.gas[-1].cost.amount
-        if usage.gas[-1].cost is not None
-        else None,
+        state_class=SensorStateClass.TOTAL,
+        value=lambda usage: (
+            usage.gas[-1].cost.amount if usage.gas[-1].cost is not None else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_gas_start_time",
@@ -112,13 +109,12 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: OVOEnergyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
-    coordinator: DataUpdateCoordinator[OVODailyUsage] = hass.data[DOMAIN][
-        entry.entry_id
-    ][DATA_COORDINATOR]
-    client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    coordinator = entry.runtime_data
 
     entities = []
 
@@ -130,10 +126,13 @@ async def async_setup_entry(
                     and coordinator.data.electricity[-1] is not None
                     and coordinator.data.electricity[-1].cost is not None
                 ):
-                    description.native_unit_of_measurement = (
-                        coordinator.data.electricity[-1].cost.currency_unit
+                    description = dataclasses.replace(
+                        description,
+                        native_unit_of_measurement=(
+                            coordinator.data.electricity[-1].cost.currency_unit
+                        ),
                     )
-                entities.append(OVOEnergySensor(coordinator, description, client))
+                entities.append(OVOEnergySensor(coordinator, description))
         if coordinator.data.gas:
             for description in SENSOR_TYPES_GAS:
                 if (
@@ -141,10 +140,13 @@ async def async_setup_entry(
                     and coordinator.data.gas[-1] is not None
                     and coordinator.data.gas[-1].cost is not None
                 ):
-                    description.native_unit_of_measurement = coordinator.data.gas[
-                        -1
-                    ].cost.currency_unit
-                entities.append(OVOEnergySensor(coordinator, description, client))
+                    description = dataclasses.replace(
+                        description,
+                        native_unit_of_measurement=coordinator.data.gas[
+                            -1
+                        ].cost.currency_unit,
+                    )
+                entities.append(OVOEnergySensor(coordinator, description))
 
     async_add_entities(entities, True)
 
@@ -152,21 +154,22 @@ async def async_setup_entry(
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Define a OVO Energy sensor."""
 
-    coordinator: DataUpdateCoordinator[DataUpdateCoordinator[OVODailyUsage]]
     entity_description: OVOEnergySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[OVODailyUsage],
+        coordinator: OVOEnergyDataUpdateCoordinator,
         description: OVOEnergySensorEntityDescription,
-        client: OVOEnergy,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, client)
-        self._attr_unique_id = f"{DOMAIN}_{client.account_id}_{description.key}"
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        )
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         usage = self.coordinator.data

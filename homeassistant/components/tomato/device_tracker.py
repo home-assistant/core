@@ -1,17 +1,17 @@
 """Support for Tomato routers."""
-from __future__ import annotations
 
 from http import HTTPStatus
 import json
 import logging
 import re
+from typing import override
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -23,14 +23,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 CONF_HTTP_ID = "http_id"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
     """Validate the configuration and returns a Tomato scanner."""
-    return TomatoDeviceScanner(config[DOMAIN])
+    return TomatoDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
 
 class TomatoDeviceScanner(DeviceScanner):
@@ -60,9 +60,10 @@ class TomatoDeviceScanner(DeviceScanner):
         if port is None:
             port = 443 if self.ssl else 80
 
+        protocol = "https" if self.ssl else "http"
         self.req = requests.Request(
             "POST",
-            "http{}://{}:{}/update.cgi".format("s" if self.ssl else "", host, port),
+            f"{protocol}://{host}:{port}/update.cgi",
             data={"_http_id": http_id, "exec": "devlist"},
             auth=requests.auth.HTTPBasicAuth(username, password),
         ).prepare()
@@ -73,12 +74,14 @@ class TomatoDeviceScanner(DeviceScanner):
 
         self.success_init = self._update_tomato_info()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_tomato_info()
 
         return [item[1] for item in self.last_results["wldev"]]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_named = [
@@ -95,15 +98,15 @@ class TomatoDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
 
         try:
             if self.ssl:
                 response = requests.Session().send(
-                    self.req, timeout=3, verify=self.verify_ssl
+                    self.req, timeout=60, verify=self.verify_ssl
                 )
             else:
-                response = requests.Session().send(self.req, timeout=3)
+                response = requests.Session().send(self.req, timeout=60)
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.

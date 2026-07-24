@@ -1,0 +1,56 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Wi-Fi solar grid micro inverter \uff08GT\uff09",
+  "category": "znnbq",
+  "product_id": "6b3pbbuqbfabhfiq",
+  "product_name": "Wi-Fi solar grid micro inverter \uff08GT\uff09",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-08-18T16:19:32+00:00",
+  "create_time": "2025-08-18T16:19:32+00:00",
+  "update_time": "2025-08-18T16:19:32+00:00",
+  "function": {},
+  "status_range": {
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": 0,
+        "max": 900000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -500,
+        "max": 2000,
+        "scale": 1,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "reverse_energy_total": 19,
+    "power_total": 0,
+    "temp_current": 219
+  },
+  "set_up": true,
+  "support_local": true
+}

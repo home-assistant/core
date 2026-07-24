@@ -8,7 +8,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import DATE_STR_FORMAT
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     FRIENDLY_NAME,
@@ -269,6 +269,42 @@ async def test_recurring_event(
     ]
 
 
+@pytest.mark.parametrize(
+    "time_zone",
+    ["America/Los_Angeles", "America/New_York", "Europe/London", "Asia/Tokyo"],
+)
+async def test_recurring_event_with_until_non_utc_timezone(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+    get_events: GetEventsFn,
+) -> None:
+    """Test creating a recurring event with UNTIL in a non-UTC timezone.
+
+    Regression test: When HA is configured with a non-UTC timezone, creating
+    a recurring event with an UNTIL date was failing because _parse_event()
+    strips tzinfo from dtstart (making it floating) but was not stripping
+    tzinfo from UNTIL in the rrule, causing a naive/aware datetime mismatch.
+    """
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Weekly meeting",
+                "dtstart": "2022-08-29T09:00:00+00:00",
+                "dtend": "2022-08-29T10:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;UNTIL=20220912T235959Z",
+            },
+        },
+    )
+
+    events = await get_events("2022-08-20T00:00:00", "2022-09-20T00:00:00")
+    summaries = [event["summary"] for event in events]
+    assert summaries.count("Weekly meeting") == 3
+
+
 async def test_websocket_delete(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
 ) -> None:
@@ -408,6 +444,46 @@ async def test_websocket_delete_recurring(
     ]
 
 
+async def test_websocket_delete_empty_recurrence_id(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+) -> None:
+    """Test websocket delete command with an empty recurrence id no-op."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+    uid = events[0]["uid"]
+
+    # Delete the event with an empty recurrence id
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+            "recurrence_id": "",
+        },
+    )
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == []
+
+
 async def test_websocket_update(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
 ) -> None:
@@ -454,6 +530,58 @@ async def test_websocket_update(
             "summary": "Bastille Day Party [To be rescheduled]",
             "start": {"date": "1997-07-14"},
             "end": {"date": "1997-07-15"},
+        }
+    ]
+
+
+async def test_websocket_update_empty_recurrence(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+) -> None:
+    """Test an edit with an empty recurrence id (no-op)."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+    uid = events[0]["uid"]
+
+    # Update the event with an empty string for the recurrence id which should
+    # have no effect.
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": uid,
+            "recurrence_id": "",
+            "event": {
+                "summary": "Bastille Day Party [To be rescheduled]",
+                "dtstart": "1997-07-15T11:00:00-06:00",
+                "dtend": "1997-07-15T22:00:00-06:00",
+            },
+        },
+    )
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party [To be rescheduled]",
+            "start": {"dateTime": "1997-07-15T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-15T22:00:00-06:00"},
         }
     ]
 
@@ -630,6 +758,7 @@ async def test_websocket_update_recurring(
             "summary": "Morning Routine [Adjusted]",
             "start": {"dateTime": "2022-08-24T08:00:00-06:00"},
             "end": {"dateTime": "2022-08-24T08:30:00-06:00"},
+            "recurrence_id": "20220824T083000",
         },
         {
             "summary": "Morning Routine",
@@ -692,7 +821,7 @@ async def test_all_day_iter_order(
     setup_integration: None,
     get_events: GetEventsFn,
     event_order: list[str],
-):
+) -> None:
     """Test the sort order of an all day events depending on the time zone."""
     client = await ws_client()
     await client.cmd_result(

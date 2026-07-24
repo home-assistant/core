@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/discogs",
   "iot_class": "cloud_polling",
   "loggers": ["discogs_client"],
+  "quality_scale": "legacy",
   "requirements": ["discogs-client==2.3.0"]
 }

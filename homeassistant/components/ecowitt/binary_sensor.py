@@ -1,36 +1,46 @@
 """Support for Ecowitt Weather Stations."""
-import dataclasses
-from typing import Final
 
-from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
+import dataclasses
+from typing import Final, override
+
+from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import EcowittConfigEntry
 from .entity import EcowittEntity
+
+PARALLEL_UPDATES = 0
 
 ECOWITT_BINARYSENSORS_MAPPING: Final = {
     EcoWittSensorTypes.LEAK: BinarySensorEntityDescription(
         key="LEAK", device_class=BinarySensorDeviceClass.MOISTURE
     ),
     EcoWittSensorTypes.BATTERY_BINARY: BinarySensorEntityDescription(
-        key="BATTERY", device_class=BinarySensorDeviceClass.BATTERY
+        key="BATTERY",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    EcoWittSensorTypes.RAIN_STATE: BinarySensorEntityDescription(
+        key="RAIN_STATE", device_class=BinarySensorDeviceClass.MOISTURE
     ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EcowittConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensors if new."""
-    ecowitt: EcoWittListener = hass.data[DOMAIN][entry.entry_id]
+    ecowitt = entry.runtime_data
 
     def _new_sensor(sensor: EcoWittSensor) -> None:
         """Add new sensor."""
@@ -66,6 +76,7 @@ class EcowittBinarySensorEntity(EcowittEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self.ecowitt.value)

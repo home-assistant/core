@@ -1,4 +1,5 @@
-"""Errors for the Plex component."""
+"""Errors for the Plex integration."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

@@ -1,0 +1,101 @@
+[
+  {
+    "id": 432,
+    "type": 14,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 195,
+    "sceneId": 330,
+    "errorShd_Ids": []
+  },
+  {
+    "id": 433,
+    "type": 10,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 69,
+    "sceneId": 328,
+    "errorShd_Ids": []
+  },
+  {
+    "id": 434,
+    "type": 14,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 228,
+    "sceneId": 314,
+    "errorShd_Ids": []
+  },
+  {
+    "id": 439,
+    "type": 14,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 136,
+    "sceneId": 280,
+    "errorShd_Ids": []
+  },
+  {
+    "id": 441,
+    "type": 10,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 21,
+    "sceneId": 278,
+    "errorShd_Ids": []
+  },
+  {
+    "id": 443,
+    "type": 10,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 56,
+    "sceneId": 299,
+    "errorShd_Ids": [121]
+  },
+  {
+    "id": 444,
+    "type": 10,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 244,
+    "sceneId": 344,
+    "errorShd_Ids": []
+  },
+  {
+    "id": 445,
+    "type": 10,
+    "enabled": true,
+    "days": 127,
+    "hour": 0,
+    "min": 0,
+    "bleId": 70,
+    "sceneId": 292,
+    "errorShd_Ids": []
+  },
+  {
+    "id": 437,
+    "type": 14,
+    "enabled": true,
+    "days": 127,
+    "hour": 1,
+    "min": 0,
+    "bleId": 2,
+    "sceneId": 220,
+    "errorShd_Ids": []
+  }
+]

@@ -1,13 +1,65 @@
 {
   "config": {
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "swing_horizontal_mode": {
+            "state": {
+              "center": "Center",
+              "default": "Default",
+              "full_swing": "Full swing",
+              "left": "Left",
+              "left_center": "Left center",
+              "right": "Right",
+              "right_center": "Right center"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "default": "Default",
+              "fixed_lower": "Fixed lower",
+              "fixed_lower_middle": "Fixed lower middle",
+              "fixed_middle": "Fixed middle",
+              "fixed_upper": "Fixed upper",
+              "fixed_upper_middle": "Fixed upper middle",
+              "full_swing": "Full swing",
+              "swing_lower": "Swing lower",
+              "swing_lower_middle": "Swing lower middle",
+              "swing_middle": "Swing middle",
+              "swing_upper": "Swing upper",
+              "swing_upper_middle": "Swing upper middle"
+            }
+          }
+        }
+      }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    "switch": {
+      "fresh_air": {
+        "name": "Fresh air"
+      },
+      "health_mode": {
+        "name": "Health mode"
+      },
+      "light": {
+        "name": "Panel light"
+      },
+      "quiet": {
+        "name": "Quiet mode"
+      },
+      "xfan": {
+        "name": "Xtra fan"
+      }
     }
   }
 }

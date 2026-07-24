@@ -1,5 +1,4 @@
 """Support for Start.ca Bandwidth Monitor."""
-from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
@@ -7,11 +6,12 @@ from http import HTTPStatus
 import logging
 from xml.parsers.expat import ExpatError
 
+from aiohttp import ClientSession
 import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -24,8 +24,8 @@ from homeassistant.const import (
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -126,7 +126,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_VARIABLES): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]
@@ -149,7 +149,7 @@ async def async_setup_platform(
     apikey = config[CONF_API_KEY]
     bandwidthcap = config[CONF_TOTAL_BANDWIDTH]
 
-    ts_data = StartcaData(hass.loop, websession, apikey, bandwidthcap)
+    ts_data = StartcaData(websession, apikey, bandwidthcap)
     ret = await ts_data.async_update()
     if ret is False:
         _LOGGER.error("Invalid Start.ca API key: %s", apikey)
@@ -175,7 +175,9 @@ async def async_setup_platform(
 class StartcaSensor(SensorEntity):
     """Representation of Start.ca Bandwidth sensor."""
 
-    def __init__(self, startcadata, name, description: SensorEntityDescription) -> None:
+    def __init__(
+        self, startcadata: StartcaData, name: str, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.startcadata = startcadata
@@ -193,9 +195,10 @@ class StartcaSensor(SensorEntity):
 class StartcaData:
     """Get data from Start.ca API."""
 
-    def __init__(self, loop, websession, api_key, bandwidth_cap):
+    def __init__(
+        self, websession: ClientSession, api_key: str, bandwidth_cap: int
+    ) -> None:
         """Initialize the data object."""
-        self.loop = loop
         self.websession = websession
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
@@ -214,7 +217,7 @@ class StartcaData:
         return float(value) * 10**-9
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> bool:
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"

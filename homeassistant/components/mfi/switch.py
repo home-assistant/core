@@ -1,14 +1,16 @@
 """Support for Ubiquiti mFi switches."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
-from mficlient.client import FailedToLogin, MFiClient
+from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,7 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -29,7 +31,7 @@ DEFAULT_VERIFY_SSL = True
 
 SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v", "Dimmer Switch"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -47,18 +49,23 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up mFi sensors."""
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    use_tls = config[CONF_SSL]
-    verify_tls = config.get(CONF_VERIFY_SSL)
+    """Set up mFi switches."""
+    host: str = config[CONF_HOST]
+    username: str = config[CONF_USERNAME]
+    password: str = config[CONF_PASSWORD]
+    use_tls: bool = config[CONF_SSL]
+    verify_tls: bool = config[CONF_VERIFY_SSL]
     default_port = 6443 if use_tls else 6080
-    port = int(config.get(CONF_PORT, default_port))
+    network_port: int = config.get(CONF_PORT, default_port)
 
     try:
         client = MFiClient(
-            host, username, password, port=port, use_tls=use_tls, verify=verify_tls
+            host,
+            username,
+            password,
+            port=network_port,
+            use_tls=use_tls,
+            verify=verify_tls,
         )
     except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error("Unable to connect to mFi: %s", str(ex))
@@ -75,23 +82,26 @@ def setup_platform(
 class MfiSwitch(SwitchEntity):
     """Representation of an mFi switch-able device."""
 
-    def __init__(self, port):
+    def __init__(self, port: MFiPort) -> None:
         """Initialize the mFi device."""
         self._port = port
-        self._target_state = None
+        self._target_state: bool | None = None
 
     @property
-    def unique_id(self):
+    @override
+    def unique_id(self) -> str:
         """Return the unique ID of the device."""
         return self._port.ident
 
     @property
-    def name(self):
+    @override
+    def name(self) -> str:
         """Return the name of the device."""
         return self._port.label
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool | None:
         """Return true if the device is on."""
         return self._port.output
 
@@ -102,11 +112,13 @@ class MfiSwitch(SwitchEntity):
             self._port.data["output"] = float(self._target_state)
             self._target_state = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.control(True)
         self._target_state = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.control(False)

@@ -1,136 +1,93 @@
-"""Config flow for Aladdin Connect cover integration."""
-from __future__ import annotations
+"""Config flow for Aladdin Connect Genie."""
 
-import asyncio
 from collections.abc import Mapping
-from typing import Any
+import logging
+from typing import Any, override
 
-from AIOAladdinConnect import AladdinConnectClient
-import AIOAladdinConnect.session_manager as Aladdin
-from aiohttp.client_exceptions import ClientError
+from genie_partner_sdk.client import AladdinConnectClient
+import jwt
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .const import CLIENT_ID, DOMAIN
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+from .api import AsyncConfigFlowAuth
+from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
+    """Config flow to handle Aladdin Connect Genie OAuth2 authentication."""
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    acc = AladdinConnectClient(
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-        async_get_clientsession(hass),
-        CLIENT_ID,
-    )
-    try:
-        await acc.login()
-    except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError) as ex:
-        raise ex
+    DOMAIN = DOMAIN
+    VERSION = CONFIG_FLOW_VERSION
+    MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
 
-    except Aladdin.InvalidPasswordError as ex:
-        raise InvalidAuth from ex
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Check we have the cloud integration set up."""
+        if "cloud" not in self.hass.config.components:
+            return self.async_abort(
+                reason="cloud_not_enabled",
+                description_placeholders={"default_config": "default_config"},
+            )
+        return await super().async_step_user(user_input)
 
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Aladdin Connect."""
-
-    VERSION = 1
-    entry: config_entries.ConfigEntry | None
-
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Handle re-authentication with Aladdin Connect."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon API auth error or upgrade from v1 to v2."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Confirm re-authentication with Aladdin Connect."""
-        errors: dict[str, str] = {}
-
-        if user_input:
-            assert self.entry is not None
-            password = user_input[CONF_PASSWORD]
-            data = {
-                CONF_USERNAME: self.entry.data[CONF_USERNAME],
-                CONF_PASSWORD: password,
-            }
-
-            try:
-                await validate_input(self.hass, data)
-
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-
-            except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
-                errors["base"] = "cannot_connect"
-
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_PASSWORD: password,
-                    },
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=REAUTH_SCHEMA,
-            errors=errors,
-        )
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
             )
+        return await self.async_step_user()
 
-        errors = {}
-
+    @override
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+        """Create an oauth config entry or update existing entry for reauth."""
         try:
-            await validate_input(self.hass, user_input)
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-
-        except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
-            errors["base"] = "cannot_connect"
-
-        else:
-            await self.async_set_unique_id(
-                user_input["username"].lower(), raise_on_progress=False
+            token = jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
             )
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="Aladdin Connect", data=user_input)
+            user_id = token["sub"]
+        except jwt.DecodeError, KeyError:
+            return self.async_abort(reason="oauth_error")
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        client = AladdinConnectClient(
+            AsyncConfigFlowAuth(
+                aiohttp_client.async_get_clientsession(self.hass),
+                data["token"]["access_token"],
+            )
         )
+        try:
+            await client.get_doors()
+        except Exception:  # noqa: BLE001
+            return self.async_abort(reason="cannot_connect")
 
+        await self.async_set_unique_id(user_id)
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title="Aladdin Connect", data=data)
+
+    @property
+    @override
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)

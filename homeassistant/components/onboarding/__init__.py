@@ -1,11 +1,13 @@
 """Support to help onboard new users."""
-from typing import TYPE_CHECKING
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, TypedDict, override
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from . import views
 from .const import (
@@ -16,6 +18,7 @@ from .const import (
     STEP_USER,
     STEPS,
 )
+from .views import BaseOnboardingView, NoAuthBaseOnboardingView  # noqa: F401
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 4
@@ -23,10 +26,31 @@ STORAGE_VERSION = 4
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-class OnboadingStorage(Store):
+@dataclass
+class OnboardingData:
+    """Container for onboarding data."""
+
+    listeners: list[Callable[[], None]]
+    onboarded: bool
+    steps: OnboardingStoreData
+
+
+class OnboardingStoreData(TypedDict):
+    """Onboarding store data."""
+
+    done: list[str]
+
+
+class OnboardingStorage(Store[OnboardingStoreData]):
     """Store onboarding data."""
 
-    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
+    @override
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: OnboardingStoreData,
+    ) -> OnboardingStoreData:
         """Migrate to the new version."""
         # From version 1 -> 2, we automatically mark the integration step done
         if old_major_version < 2:
@@ -38,24 +62,39 @@ class OnboadingStorage(Store):
         return old_data
 
 
-@bind_hass
 @callback
 def async_is_onboarded(hass: HomeAssistant) -> bool:
     """Return if Home Assistant has been onboarded."""
-    data = hass.data.get(DOMAIN)
-    return data is None or data is True
+    data: OnboardingData | None = hass.data.get(DOMAIN)
+    return data is None or data.onboarded is True
 
 
-@bind_hass
 @callback
 def async_is_user_onboarded(hass: HomeAssistant) -> bool:
     """Return if a user has been created as part of onboarding."""
-    return async_is_onboarded(hass) or STEP_USER in hass.data[DOMAIN]["done"]
+    return async_is_onboarded(hass) or STEP_USER in hass.data[DOMAIN].steps["done"]
+
+
+@callback
+def async_add_listener(hass: HomeAssistant, listener: Callable[[], None]) -> None:
+    """Add a listener to be called when onboarding is complete."""
+    data: OnboardingData | None = hass.data.get(DOMAIN)
+
+    if not data:
+        # Onboarding not active
+        return
+
+    if data.onboarded:
+        listener()
+        return
+
+    data.listeners.append(listener)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the onboarding component."""
-    store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    store = OnboardingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    data: OnboardingStoreData | None
     if (data := await store.async_load()) is None:
         data = {"done": []}
 
@@ -79,7 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if set(data["done"]) == set(STEPS):
         return True
 
-    hass.data[DOMAIN] = data
+    hass.data[DOMAIN] = OnboardingData([], False, data)
 
     await views.async_setup(hass, data, store)
 

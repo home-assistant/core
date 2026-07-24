@@ -1,25 +1,26 @@
 """Support for Rflink lights."""
-from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    DOMAIN as PLATFORM_DOMAIN,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
     CONF_DEVICE_DEFAULTS,
@@ -32,9 +33,13 @@ from . import (
     DEVICE_DEFAULTS_SCHEMA,
     EVENT_KEY_COMMAND,
     EVENT_KEY_ID,
-    SwitchableRflinkDevice,
 )
-from .utils import brightness_to_rflink, rflink_to_brightness
+from .entity import SwitchableRflinkDevice
+from .utils import (
+    brightness_to_rflink,
+    create_issue_yaml_migration,
+    rflink_to_brightness,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,35 +50,37 @@ TYPE_SWITCHABLE = "switchable"
 TYPE_HYBRID = "hybrid"
 TYPE_TOGGLE = "toggle"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
-        ): DEVICE_DEFAULTS_SCHEMA,
-        vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_TYPE): vol.Any(
-                        TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE
-                    ),
-                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_FIRE_EVENT): cv.boolean,
-                    vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                    vol.Optional(CONF_GROUP, default=True): cv.boolean,
-                }
-            )
-        },
+RFLINK_PLATFORM = {
+    vol.Optional(
+        CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
+    ): DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema(
+            {
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_TYPE): vol.Any(
+                    TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE
+                ),
+                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_FIRE_EVENT): cv.boolean,
+                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+            }
+        )
     },
+}
+
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
+    RFLINK_PLATFORM,
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -100,7 +107,7 @@ def entity_class_for_type(entity_type):
     entity_device_mapping = {
         # sends only 'dim' commands not compatible with on/off switches
         TYPE_DIMMABLE: DimmableRflinkLight,
-        # sends only 'on/off' commands not advices with dimmers and signal
+        # sends only 'on/off' commands not advised with dimmers and signal
         # repetition
         TYPE_SWITCHABLE: RflinkLight,
         # sends 'dim' and 'on' command to support both dimmers and on/off
@@ -156,7 +163,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink light platform."""
-    async_add_entities(devices_from_config(config))
 
     async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
@@ -165,12 +171,27 @@ async def async_setup_platform(
         entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
         entity_class = entity_class_for_type(entity_type)
 
-        device_config = config[CONF_DEVICE_DEFAULTS]
         device = entity_class(device_id, initial_event=event, **device_config)
         async_add_entities([device])
 
-    if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
+    def automatic_add_config(
+        hass: HomeAssistant,
+        platform_config: ConfigType | DiscoveryInfoType,
+    ):
+        """Enables the 'add_new_device' function if configured."""
+        if platform_config[CONF_AUTOMATIC_ADD]:
+            _LOGGER.debug("enabling 'light' automatic add function")
+            hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
+
+    if discovery_info is None:
+        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
+        device_config = config[CONF_DEVICE_DEFAULTS]
+        async_add_entities(devices_from_config(config))
+        automatic_add_config(hass, config)
+    else:
+        device_config = discovery_info[CONF_DEVICE_DEFAULTS]
+        async_add_entities(devices_from_config(discovery_info))
+        automatic_add_config(hass, discovery_info)
 
 
 class RflinkLight(SwitchableRflinkDevice, LightEntity):
@@ -187,6 +208,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 255
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink light brightness attribute."""
         await super().async_added_to_hass()
@@ -194,11 +216,15 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         old_state = await self.async_get_last_state()
         if (
             old_state is not None
-            and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
+            and old_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+            is not None
         ):
             # restore also brightness in dimmables devices
-            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+            self._brightness = int(
+                old_state.attributes[LightEntityStateAttribute.BRIGHTNESS]
+            )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -210,6 +236,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         # Turn on light at the requested dim level
         await self._async_handle_command("dim", self._brightness)
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
@@ -220,12 +247,13 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         elif command in ["off", "alloff"]:
             self._state = False
         # dimmable device accept 'set_level=(0-15)' commands
-        elif re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
-            self._brightness = rflink_to_brightness(int(command.split("=")[1]))
+        elif match := re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
+            self._brightness = rflink_to_brightness(int(match.group(1)))
             self._state = True
 
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
@@ -245,6 +273,7 @@ class HybridRflinkLight(DimmableRflinkLight):
     Which results in a nice house disco :)
     """
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on and set dim level."""
         await super().async_turn_on(**kwargs)
@@ -263,6 +292,7 @@ class ToggleRflinkLight(RflinkLight):
     and if the light is off and 'on' gets sent, the light will turn on.
     """
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
@@ -272,10 +302,12 @@ class ToggleRflinkLight(RflinkLight):
             # if the state is true, it gets set as false
             self._state = self._state in [None, False]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._async_handle_command("toggle")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._async_handle_command("toggle")

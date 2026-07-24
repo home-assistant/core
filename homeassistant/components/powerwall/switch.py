@@ -1,19 +1,17 @@
 """Support for Powerwall Switches (V2 API only)."""
 
-from typing import Any
+from typing import Any, override
 
 from tesla_powerwall import GridStatus, IslandMode, PowerwallError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import PowerwallConfigEntry, PowerwallRuntimeData
 from .entity import PowerWallEntity
-from .models import PowerwallRuntimeData
 
 OFF_GRID_STATUSES = {
     GridStatus.TRANSITION_TO_ISLAND,
@@ -23,12 +21,15 @@ OFF_GRID_STATUSES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PowerwallConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Powerwall switch platform from Powerwall resources."""
-    powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([PowerwallOffGridEnabledEntity(powerwall_data)])
+    # Off-grid switch requires writing to /api/operation, which 404s on the
+    # restricted PW3-style surface. Skip when no writes are available.
+    if entry.runtime_data["base_info"].restricted:
+        return
+    async_add_entities([PowerwallOffGridEnabledEntity(entry.runtime_data)])
 
 
 class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
@@ -44,14 +45,17 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
         self._attr_unique_id = f"{self.base_unique_id}_off_grid_operation"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the powerwall is off-grid."""
         return self.coordinator.data.grid_status in OFF_GRID_STATUSES
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn off-grid mode on."""
         await self._async_set_island_mode(IslandMode.OFFGRID)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off-grid mode off (return to on-grid usage)."""
         await self._async_set_island_mode(IslandMode.ONGRID)
@@ -59,15 +63,13 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     async def _async_set_island_mode(self, island_mode: IslandMode) -> None:
         """Toggles off-grid mode using the island_mode argument."""
         try:
-            await self.hass.async_add_executor_job(
-                self.power_wall.set_island_mode, island_mode
-            )
+            await self.power_wall.set_island_mode(island_mode)
         except PowerwallError as ex:
             raise HomeAssistantError(
                 f"Setting off-grid operation to {island_mode} failed: {ex}"
             ) from ex
 
-        self._attr_is_on = island_mode == IslandMode.OFFGRID
+        self._attr_is_on = island_mode is IslandMode.OFFGRID
         self.async_write_ha_state()
 
         await self.coordinator.async_request_refresh()

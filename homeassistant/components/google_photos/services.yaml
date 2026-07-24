@@ -1,0 +1,15 @@
+upload:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: google_photos
+    filename:
+      required: false
+      selector:
+        object:
+    album:
+      required: true
+      selector:
+        text:

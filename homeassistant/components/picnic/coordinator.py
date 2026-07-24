@@ -1,64 +1,129 @@
 """Coordinator to fetch data from the Picnic API."""
+
 import asyncio
 from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
+from typing import override
 
-from python_picnic_api import PicnicAPI
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.session import PicnicAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
+from .const import (
+    ADDRESS,
+    CART_DATA,
+    DEFAULT_UPDATE_INTERVAL,
+    DELIVERY_UPDATE_INTERVAL,
+    DELIVERY_WINDOW_LAG_TIME,
+    DELIVERY_WINDOW_LEAD_TIME,
+    LAST_ORDER_DATA,
+    NEXT_DELIVERY_DATA,
+    SLOT_DATA,
+)
+
+type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
+    config_entry: PicnicConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         picnic_api_client: PicnicAPI,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
     ) -> None:
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
-        self.config_entry = config_entry
         self._user_address = None
 
         logger = logging.getLogger(__name__)
         super().__init__(
             hass,
             logger,
+            config_entry=config_entry,
             name="Picnic coordinator",
-            update_interval=timedelta(minutes=30),
+            update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
+        # Recompute up front so failed refreshes also relax the cadence
+        if self.data:
+            self.update_interval = self._get_update_interval(
+                self.data.get(NEXT_DELIVERY_DATA)
+            )
+
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
             # Update the auth token in the config entry if applicable
             self._update_auth_token()
-
-            # Return the fetched data
-            return data
         except ValueError as error:
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
             raise ConfigEntryAuthFailed from error
+        except TimeoutError as error:
+            raise UpdateFailed(
+                "Timeout while connecting to the Picnic API", retry_after=120
+            ) from error
+
+        self.update_interval = self._get_update_interval(data.get(NEXT_DELIVERY_DATA))
+
+        # Return the fetched data
+        return data
+
+    @staticmethod
+    def _get_update_interval(next_delivery: dict | None) -> timedelta:
+        """Poll faster around the delivery so the live ETA is picked up in time."""
+        if not next_delivery:
+            return DEFAULT_UPDATE_INTERVAL
+
+        eta = next_delivery.get("eta")
+        slot = next_delivery.get("slot")
+
+        start = end = None
+        if eta:
+            start = dt_util.parse_datetime(str(eta.get("start")))
+            end = dt_util.parse_datetime(str(eta.get("end")))
+        if (start is None or end is None) and slot:
+            start = dt_util.parse_datetime(str(slot.get("window_start")))
+            end = dt_util.parse_datetime(str(slot.get("window_end")))
+
+        if start is None or end is None:
+            return DEFAULT_UPDATE_INTERVAL
+
+        now = dt_util.utcnow()
+        window_start = start - DELIVERY_WINDOW_LEAD_TIME
+
+        if window_start <= now <= end + DELIVERY_WINDOW_LAG_TIME:
+            return DELIVERY_UPDATE_INTERVAL
+
+        if now < window_start:
+            return max(
+                DELIVERY_UPDATE_INTERVAL,
+                min(DEFAULT_UPDATE_INTERVAL, window_start - now),
+            )
+
+        return DEFAULT_UPDATE_INTERVAL
 
     def fetch_data(self):
-        """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
+        """Fetch data from the Picnic API.
+
+        Return a flat dict with only needed sensor data.
+        """
         # Fetch from the API and pre-process the data
         if not (cart := self.picnic_api_client.get_cart()):
             raise UpdateFailed("API response doesn't contain expected data.")
@@ -78,7 +143,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         """Get the address that identifies the Picnic service."""
         if self._user_address is None:
             address = self.picnic_api_client.get_user()["address"]
-            self._user_address = f'{address["street"]} {address["house_number"]}{address["house_number_ext"]}'
+            self._user_address = (
+                f"{address['street']} "
+                f"{address['house_number']}{address['house_number_ext']}"
+            )
 
         return self._user_address
 
@@ -105,7 +173,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         # Determine the last order and return an empty dict if there is none
         try:
-            # Filter on status CURRENT and select the last on the list which is the first one to be delivered
+            # Filter on status CURRENT and select the last
+            # on the list which is the first one to be delivered
             # Make a deepcopy because some references are local
             next_deliveries = list(
                 filter(lambda d: d["status"] == "CURRENT", deliveries)
@@ -114,8 +183,9 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 copy.deepcopy(next_deliveries[-1]) if next_deliveries else {}
             )
             last_order = copy.deepcopy(deliveries[0]) if deliveries else {}
-        except (KeyError, TypeError):
-            # A KeyError or TypeError indicate that the response contains unexpected data
+        except KeyError, TypeError:
+            # A KeyError or TypeError indicate that the
+            # response contains unexpected data
             return {}, {}
 
         #  Get the next order's position details if there is an undelivered order
@@ -127,13 +197,19 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                     next_delivery["delivery_id"]
                 )
 
-        # Determine the ETA, if available, the one from the delivery position API is more precise
+        # Determine the ETA, if available, the one from the
+        # delivery position API is more precise
         # but, it's only available shortly before the actual delivery.
         next_delivery["eta"] = delivery_position.get(
             "eta_window", next_delivery.get("eta2", {})
         )
         if "eta2" in next_delivery:
             del next_delivery["eta2"]
+
+        # The position response's eta (unix timestamp in milliseconds) feeds
+        # the estimated arrival sensor; the API only serves it shortly before
+        # the delivery, so that sensor is unknown outside that window
+        next_delivery["estimated_arrival"] = delivery_position.get("eta")
 
         # Determine the total price by adding up the total price of all sub-orders
         total_price = 0

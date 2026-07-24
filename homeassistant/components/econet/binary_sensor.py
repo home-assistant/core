@@ -1,19 +1,19 @@
 """Support for Rheem EcoNet water heaters."""
-from __future__ import annotations
 
-from pyeconet.equipment import EquipmentType
+from typing import override
+
+from pyeconet.equipment import Equipment, EquipmentType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EcoNetEntity
-from .const import DOMAIN, EQUIPMENT
+from . import EconetConfigEntry
+from .entity import EcoNetEntity
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -40,10 +40,12 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EconetConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EcoNet binary sensor based on a config entry."""
-    equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
+    equipment = entry.runtime_data
     all_equipment = equipment[EquipmentType.WATER_HEATER].copy()
     all_equipment.extend(equipment[EquipmentType.THERMOSTAT].copy())
 
@@ -61,7 +63,7 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
     """Define a Econet binary sensor."""
 
     def __init__(
-        self, econet_device, description: BinarySensorEntityDescription
+        self, econet_device: Equipment, description: BinarySensorEntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(econet_device)
@@ -72,6 +74,7 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return getattr(self._econet, self.entity_description.key)

@@ -1,11 +1,10 @@
 """Test helpers for VoIP integration."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from voip_utils import CallInfo
+from voip_utils.sip import get_sip_endpoint
 
 from homeassistant.components.voip import DOMAIN
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
@@ -14,10 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.tts.conftest import (
+    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
+)
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -37,23 +39,26 @@ async def setup_voip(hass: HomeAssistant, config_entry: MockConfigEntry) -> None
         "homeassistant.components.voip._create_sip_server",
         return_value=(Mock(), AsyncMock()),
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
         yield
 
 
 @pytest.fixture
-async def voip_devices(hass: HomeAssistant, setup_voip: None) -> VoIPDevices:
+async def voip_devices(
+    hass: HomeAssistant, config_entry: MockConfigEntry, setup_voip: None
+) -> VoIPDevices:
     """Get VoIP devices object from a configured instance."""
-    return hass.data[DOMAIN].devices
+    return config_entry.runtime_data.domain_data.devices
 
 
 @pytest.fixture
 def call_info() -> CallInfo:
     """Fake call info."""
     return CallInfo(
-        caller_ip="192.168.1.210",
-        caller_sip_port=5060,
+        caller_endpoint=get_sip_endpoint("192.168.1.210", 5060),
+        local_endpoint=get_sip_endpoint("192.168.1.10", 5060),
         caller_rtp_port=5004,
         server_ip="192.168.1.10",
         headers={
@@ -66,7 +71,8 @@ def call_info() -> CallInfo:
             "max-forwards": "70",
             "user-agent": "Grandstream HT801 1.0.17.5",
             "supported": "replaces, path, timer, eventlist",
-            "allow": "INVITE, ACK, OPTIONS, CANCEL, BYE, SUBSCRIBE, NOTIFY, INFO, REFER, UPDATE",
+            "allow": "INVITE, ACK, OPTIONS, CANCEL, BYE,"
+            " SUBSCRIBE, NOTIFY, INFO, REFER, UPDATE",
             "content-type": "application/sdp",
             "accept": "application/sdp, application/dtmf-relay",
             "content-length": "480",

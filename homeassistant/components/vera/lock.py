@@ -1,18 +1,16 @@
 """Support for Vera locks."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VeraDevice
-from .common import ControllerData, get_controller_data
+from .common import ControllerData, VeraConfigEntry
+from .entity import VeraEntity
 
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
@@ -20,11 +18,11 @@ ATTR_LOW_BATTERY = "low_battery"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VeraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = get_controller_data(hass, entry)
+    controller_data = entry.runtime_data
     async_add_entities(
         [
             VeraLock(device, controller_data)
@@ -34,27 +32,30 @@ async def async_setup_entry(
     )
 
 
-class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
+class VeraLock(VeraEntity[veraApi.VeraLock], LockEntity):
     """Representation of a Vera lock."""
 
     def __init__(
         self, vera_device: veraApi.VeraLock, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
+    @override
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self.vera_device.lock()
         self._attr_is_locked = True
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self.vera_device.unlock()
         self._attr_is_locked = False
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Who unlocked the lock and did a low battery alert fire.
 
@@ -72,6 +73,7 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         return data
 
     @property
+    @override
     def changed_by(self) -> str | None:
         """Who unlocked the lock.
 
@@ -83,6 +85,7 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
             return last_user[0]
         return None
 
+    @override
     def update(self) -> None:
         """Update state by the Vera device callback."""
         self._attr_is_locked = self.vera_device.is_locked(True)

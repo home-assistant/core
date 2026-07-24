@@ -1,5 +1,4 @@
 """All queries for logbook."""
-from __future__ import annotations
 
 from sqlalchemy import lambda_stmt
 from sqlalchemy.sql.lambdas import StatementLambdaElement

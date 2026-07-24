@@ -1,0 +1,9 @@
+{
+  "deviceId": "MW2-2E247F93-B570-46A6-B827-920E9E10F966",
+  "deviceInfo": {
+    "deviceType": "DEVICE_AIR_CONDITIONER",
+    "modelName": "PAC_910604_WW",
+    "alias": "Test air conditioner",
+    "reportable": true
+  }
+}

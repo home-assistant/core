@@ -1,13 +1,9 @@
 """Test reproduce state for select entities."""
+
 import pytest
 
-from homeassistant.components.select.const import (
-    ATTR_OPTION,
-    ATTR_OPTIONS,
-    DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.select.const import ATTR_OPTIONS, DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 

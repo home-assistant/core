@@ -1,13 +1,11 @@
 """Config flow for Version integration."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SOURCE
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ATTR_VERSION_SOURCE,
@@ -33,7 +31,7 @@ from .const import (
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Version."""
 
     VERSION = 1
@@ -42,10 +40,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Version config flow."""
         self._entry_data: dict[str, Any] = DEFAULT_CONFIGURATION.copy()
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial user step."""
         if user_input is None:
             self._entry_data = DEFAULT_CONFIGURATION.copy()
@@ -64,10 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input[CONF_SOURCE] = VERSION_SOURCE_MAP[user_input[CONF_VERSION_SOURCE]]
         self._entry_data.update(user_input)
 
-        if not self.show_advanced_options or user_input[CONF_SOURCE] in (
-            "local",
-            "haio",
-        ):
+        if user_input[CONF_SOURCE] in ("local", "haio"):
             return self.async_create_entry(
                 title=self._config_entry_name,
                 data=self._entry_data,
@@ -78,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_version_source(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the version_source step."""
         if user_input is None:
             if self._entry_data[CONF_SOURCE] in (

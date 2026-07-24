@@ -1,16 +1,15 @@
 """Support for D-Link Power Plug Switches."""
-from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_TOTAL_CONSUMPTION, DOMAIN
+from . import DLinkConfigEntry
+from .const import ATTR_TOTAL_CONSUMPTION
 from .entity import DLinkEntity
 
 SCAN_INTERVAL = timedelta(minutes=2)
@@ -21,13 +20,12 @@ SWITCH_TYPE = SwitchEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DLinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the D-Link Power Plug switch."""
-    async_add_entities(
-        [SmartPlugSwitch(entry, hass.data[DOMAIN][entry.entry_id], SWITCH_TYPE)],
-        True,
-    )
+    async_add_entities([SmartPlugSwitch(entry, SWITCH_TYPE)], True)
 
 
 class SmartPlugSwitch(DLinkEntity, SwitchEntity):
@@ -36,6 +34,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     _attr_name = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         try:
@@ -50,22 +49,23 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         except ValueError:
             total_consumption = None
 
-        attrs = {
+        return {
             ATTR_TOTAL_CONSUMPTION: total_consumption,
             ATTR_TEMPERATURE: temperature,
         }
 
-        return attrs
-
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.data.state == "ON"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.data.smartplug.state = "ON"
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.data.smartplug.state = "OFF"
@@ -75,6 +75,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         self.data.update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data.available

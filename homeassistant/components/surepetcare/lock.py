@@ -1,46 +1,37 @@
 """Support for Sure PetCare Flaps locks."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from surepy.entities import SurepyEntity
-from surepy.enums import EntityType, LockState
+from surepy.enums import EntityType, LockState as SurepyLockState
 
-from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SurePetcareDataCoordinator
-from .const import DOMAIN
+from .coordinator import SurePetcareConfigEntry, SurePetcareDataCoordinator
 from .entity import SurePetcareEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SurePetcareConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sure PetCare locks on a config entry."""
 
-    entities: list[SurePetcareLock] = []
+    coordinator = entry.runtime_data
 
-    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    for surepy_entity in coordinator.data.values():
-        if surepy_entity.type not in [
-            EntityType.CAT_FLAP,
-            EntityType.PET_FLAP,
-        ]:
-            continue
-
+    async_add_entities(
+        SurePetcareLock(surepy_entity.id, coordinator, lock_state)
+        for surepy_entity in coordinator.data.values()
+        if surepy_entity.type in [EntityType.CAT_FLAP, EntityType.PET_FLAP]
         for lock_state in (
-            LockState.LOCKED_IN,
-            LockState.LOCKED_OUT,
-            LockState.LOCKED_ALL,
-        ):
-            entities.append(SurePetcareLock(surepy_entity.id, coordinator, lock_state))
-
-    async_add_entities(entities)
+            SurepyLockState.LOCKED_IN,
+            SurepyLockState.LOCKED_OUT,
+            SurepyLockState.LOCKED_ALL,
+        )
+    )
 
 
 class SurePetcareLock(SurePetcareEntity, LockEntity):
@@ -50,7 +41,7 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         self,
         surepetcare_id: int,
         coordinator: SurePetcareDataCoordinator,
-        lock_state: LockState,
+        lock_state: SurepyLockState,
     ) -> None:
         """Initialize a Sure Petcare lock."""
         self._lock_state = lock_state.name.lower()
@@ -62,24 +53,27 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
         self._attr_unique_id = f"{self._device_id}-{self._lock_state}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return self._available and super().available
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state."""
         status = surepy_entity.raw_data()["status"]
 
         self._attr_is_locked = (
-            LockState(status["locking"]["mode"]).name.lower() == self._lock_state
+            SurepyLockState(status["locking"]["mode"]).name.lower() == self._lock_state
         )
 
         self._available = bool(status.get("online"))
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        if self.state != STATE_UNLOCKED:
+        if self.state != LockState.UNLOCKED:
             return
         self._attr_is_locking = True
         self.async_write_ha_state()
@@ -91,9 +85,10 @@ class SurePetcareLock(SurePetcareEntity, LockEntity):
             self._attr_is_locking = False
             self.async_write_ha_state()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        if self.state != STATE_LOCKED:
+        if self.state != LockState.LOCKED:
             return
         self._attr_is_unlocking = True
         self.async_write_ha_state()

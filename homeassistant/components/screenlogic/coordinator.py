@@ -1,13 +1,20 @@
 """ScreenlogicDataUpdateCoordinator definition."""
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, override
 
-from screenlogicpy import ScreenLogicError, ScreenLogicGateway
-from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
+from screenlogicpy import ScreenLogicGateway
+from screenlogicpy.const.common import (
+    SL_GATEWAY_IP,
+    SL_GATEWAY_NAME,
+    SL_GATEWAY_PORT,
+    ScreenLogicCommunicationError,
+)
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -27,11 +34,13 @@ async def async_get_connect_info(
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
     # Attempt to rediscover gateway to follow IP changes
-    discovered_gateways = await async_discover_gateways_by_unique_id(hass)
+    discovered_gateways = await async_discover_gateways_by_unique_id()
     if mac in discovered_gateways:
         return discovered_gateways[mac]
 
     _LOGGER.debug("Gateway rediscovery failed for %s", entry.title)
+    if TYPE_CHECKING:
+        assert mac is not None
     # Static connection defined or fallback from discovery
     return {
         SL_GATEWAY_NAME: name_for_mac(mac),
@@ -43,6 +52,8 @@ async def async_get_connect_info(
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage the data update for the Screenlogic component."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -51,17 +62,14 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         gateway: ScreenLogicGateway,
     ) -> None:
         """Initialize the Screenlogic Data Update Coordinator."""
-        self.config_entry = config_entry
         self.gateway = gateway
 
-        interval = timedelta(
-            seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        )
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=interval,
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             # Debounced option since the device takes
             # a moment to reflect the knock-on changes
             request_refresh_debouncer=Debouncer(
@@ -80,9 +88,9 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if EQUIPMENT_FLAG.CHLORINATOR in self.gateway.equipment_flags:
             await self.gateway.async_get_scg()
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
-        assert self.config_entry is not None
         try:
             if not self.gateway.is_connected:
                 connect_info = await async_get_connect_info(
@@ -91,7 +99,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 await self.gateway.async_connect(**connect_info)
 
             await self._async_update_configured_data()
-        except ScreenLogicError as ex:
+        except ScreenLogicCommunicationError as sle:
             if self.gateway.is_connected:
                 await self.gateway.async_disconnect()
-            raise UpdateFailed(ex.msg) from ex
+            raise UpdateFailed(sle.msg) from sle

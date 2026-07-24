@@ -1,12 +1,23 @@
 """The test for the data filter sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.filter.sensor import (
+from homeassistant.components.filter.const import (
+    CONF_FILTER_NAME,
+    CONF_FILTER_PRECISION,
+    CONF_FILTER_WINDOW_SIZE,
+    CONF_TIME_SMA_TYPE,
+    DEFAULT_NAME,
+    DEFAULT_PRECISION,
     DOMAIN,
+    FILTER_NAME_TIME_SMA,
+    TIME_SMA_LAST,
+)
+from homeassistant.components.filter.sensor import (
     LowPassFilter,
     OutlierFilter,
     RangeFilter,
@@ -23,6 +34,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ENTITY_ID,
+    CONF_NAME,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -31,9 +44,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, get_fixture_path
+from tests.common import MockConfigEntry, assert_setup_component, get_fixture_path
 
 
 @pytest.fixture(name="values")
@@ -91,7 +104,42 @@ async def test_chain(
         assert state.state == "18.05"
 
 
-@pytest.mark.parametrize("missing", (True, False))
+async def test_from_config_entry(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Test if filter works loaded from config entry."""
+
+    state = hass.states.get("sensor.filtered_sensor")
+    assert state.state == "22.0"
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_FILTER_NAME: FILTER_NAME_TIME_SMA,
+            CONF_TIME_SMA_TYPE: TIME_SMA_LAST,
+            CONF_FILTER_WINDOW_SIZE: {"hours": 40, "minutes": 5, "seconds": 5},
+            CONF_FILTER_PRECISION: DEFAULT_PRECISION,
+        }
+    ],
+)
+async def test_from_config_entry_duration(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Test if filter works loaded from config entry with duration."""
+
+    state = hass.states.get("sensor.filtered_sensor")
+    assert state.state == "20.0"
+
+
+@pytest.mark.parametrize("missing", [True, False])
 async def test_chain_history(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -129,12 +177,15 @@ async def test_chain_history(
             ]
         }
 
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        return_value=fake_states,
-    ), patch(
-        "homeassistant.components.recorder.history.get_last_state_changes",
-        return_value=fake_states,
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            return_value=fake_states,
+        ),
+        patch(
+            "homeassistant.components.recorder.history.get_last_state_changes",
+            return_value=fake_states,
+        ),
     ):
         with assert_setup_component(1, "sensor"):
             assert await async_setup_component(hass, "sensor", config)
@@ -154,31 +205,38 @@ async def test_chain_history(
 async def test_source_state_none(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
 
-    config = {
-        "sensor": [
-            {
-                "platform": "template",
-                "sensors": {
-                    "template_test": {
-                        "value_template": "{{ states.sensor.test_state.state }}"
-                    }
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "filter",
+                    "name": "test",
+                    "entity_id": "sensor.template_test",
+                    "filters": [
+                        {
+                            "filter": "time_simple_moving_average",
+                            "window_size": "00:01",
+                            "precision": "2",
+                        }
+                    ],
                 },
-            },
-            {
-                "platform": "filter",
-                "name": "test",
-                "entity_id": "sensor.template_test",
-                "filters": [
-                    {
-                        "filter": "time_simple_moving_average",
-                        "window_size": "00:01",
-                        "precision": "2",
-                    }
-                ],
-            },
-        ]
-    }
-    await async_setup_component(hass, "sensor", config)
+            ],
+        },
+    )
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "template_test",
+                    "state": "{{ states.sensor.test_state.state }}",
+                }
+            }
+        },
+    )
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.test_state", 0)
@@ -233,12 +291,15 @@ async def test_history_time(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             State("sensor.test_monitored", "18.2", last_changed=t_2),
         ]
     }
-    with patch(
-        "homeassistant.components.recorder.history.state_changes_during_period",
-        return_value=fake_states,
-    ), patch(
-        "homeassistant.components.recorder.history.get_last_state_changes",
-        return_value=fake_states,
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            return_value=fake_states,
+        ),
+        patch(
+            "homeassistant.components.recorder.history.get_last_state_changes",
+            return_value=fake_states,
+        ),
     ):
         with assert_setup_component(1, "sensor"):
             assert await async_setup_component(hass, "sensor", config)
@@ -276,14 +337,14 @@ async def test_setup(
                 "icon": "mdi:test",
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
-                ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             },
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
         assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
-        assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+        assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
         assert state.state == "1.0"
 
         entity_id = entity_registry.async_get_entity_id(
@@ -383,7 +444,7 @@ def test_initial_outlier(values: list[State]) -> None:
     """Test issue #13363."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     out = State("sensor.test_monitored", "4000")
-    for state in [out] + values:
+    for state in (out, *values):
         filtered = filt.filter_state(state)
     assert filtered.state == 21
 
@@ -392,7 +453,7 @@ def test_unknown_state_outlier(values: list[State]) -> None:
     """Test issue #32395."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     out = State("sensor.test_monitored", "unknown")
-    for state in [out] + values + [out]:
+    for state in (out, *values, out):
         try:
             filtered = filt.filter_state(state)
         except ValueError:
@@ -412,7 +473,7 @@ def test_lowpass(values: list[State]) -> None:
     """Test if lowpass filter works."""
     filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
     out = State("sensor.test_monitored", "unknown")
-    for state in [out] + values + [out]:
+    for state in (out, *values, out):
         try:
             filtered = filt.filter_state(state)
         except ValueError:
@@ -460,7 +521,7 @@ def test_throttle(values: list[State]) -> None:
         new_state = filt.filter_state(state)
         if not filt.skip_processing:
             filtered.append(new_state)
-    assert [20, 21] == [f.state for f in filtered]
+    assert [f.state for f in filtered] == [20, 21]
 
 
 def test_time_throttle(values: list[State]) -> None:
@@ -473,7 +534,7 @@ def test_time_throttle(values: list[State]) -> None:
         new_state = filt.filter_state(state)
         if not filt.skip_processing:
             filtered.append(new_state)
-    assert [20, 18, 22] == [f.state for f in filtered]
+    assert [f.state for f in filtered] == [20, 18, 22]
 
 
 def test_time_sma(values: list[State]) -> None:

@@ -1,9 +1,11 @@
 """Tests for the PVOutput integration."""
+
 from unittest.mock import MagicMock
 
 from pvo import (
     PVOutputAuthenticationError,
     PVOutputConnectionError,
+    PVOutputError,
     PVOutputNoDataError,
 )
 import pytest
@@ -36,7 +38,9 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("side_effect", [PVOutputConnectionError, PVOutputNoDataError])
+@pytest.mark.parametrize(
+    "side_effect", [PVOutputConnectionError, PVOutputNoDataError, PVOutputError]
+)
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

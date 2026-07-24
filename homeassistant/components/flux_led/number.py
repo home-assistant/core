@@ -1,10 +1,9 @@
 """Support for LED numbers."""
-from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Coroutine
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from flux_led.protocol import (
     MUSIC_PIXELS_MAX,
@@ -15,18 +14,16 @@ from flux_led.protocol import (
     SEGMENTS_MAX,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.light import EFFECT_RANDOM
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness
 
@@ -37,11 +34,11 @@ DEBOUNCE_TIME = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FluxLedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flux lights."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     device = coordinator.device
     entities: list[
         FluxSpeedNumber
@@ -89,14 +86,15 @@ class FluxSpeedNumber(
     _attr_native_max_value = 100
     _attr_native_step = 1
     _attr_mode = NumberMode.SLIDER
-    _attr_icon = "mdi:speedometer"
     _attr_translation_key = "effect_speed"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the effect speed."""
         return cast(float, self._device.speed)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the flux speed value."""
         current_effect = self._device.effect
@@ -134,6 +132,7 @@ class FluxConfigNumber(
         self._debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._pending_value: int | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the debouncer when adding to hass."""
         self._debouncer = Debouncer(
@@ -145,6 +144,7 @@ class FluxConfigNumber(
         )
         await super().async_added_to_hass()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         self._pending_value = int(value)
@@ -175,9 +175,9 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     """Defines a flux_led pixels per segment number."""
 
     _attr_translation_key = "pixels_per_segment"
-    _attr_icon = "mdi:dots-grid"
 
     @property
+    @override
     def native_max_value(self) -> int:
         """Return the max value."""
         return min(
@@ -185,11 +185,13 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the pixels per segment."""
         assert self._device.pixels_per_segment is not None
         return self._device.pixels_per_segment
 
+    @override
     async def _async_set_native_value(self) -> None:
         """Set the pixels per segment."""
         assert self._pending_value is not None
@@ -202,9 +204,9 @@ class FluxSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led segments number."""
 
     _attr_translation_key = "segments"
-    _attr_icon = "mdi:segment"
 
     @property
+    @override
     def native_max_value(self) -> int:
         """Return the max value."""
         assert self._device.pixels_per_segment is not None
@@ -213,11 +215,13 @@ class FluxSegmentsNumber(FluxConfigNumber):
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the segments."""
         assert self._device.segments is not None
         return self._device.segments
 
+    @override
     async def _async_set_native_value(self) -> None:
         """Set the segments."""
         assert self._pending_value is not None
@@ -228,6 +232,7 @@ class FluxMusicNumber(FluxConfigNumber):
     """A number that is only available if the base pixels do not fit in music mode."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return if music pixels per segment can be set."""
         return super().available and not self._pixels_and_segments_fit_in_music_mode()
@@ -237,9 +242,9 @@ class FluxMusicPixelsPerSegmentNumber(FluxMusicNumber):
     """Defines a flux_led music pixels per segment number."""
 
     _attr_translation_key = "music_pixels_per_segment"
-    _attr_icon = "mdi:dots-grid"
 
     @property
+    @override
     def native_max_value(self) -> int:
         """Return the max value."""
         assert self._device.music_segments is not None
@@ -249,11 +254,13 @@ class FluxMusicPixelsPerSegmentNumber(FluxMusicNumber):
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the music pixels per segment."""
         assert self._device.music_pixels_per_segment is not None
         return self._device.music_pixels_per_segment
 
+    @override
     async def _async_set_native_value(self) -> None:
         """Set the music pixels per segment."""
         assert self._pending_value is not None
@@ -266,9 +273,9 @@ class FluxMusicSegmentsNumber(FluxMusicNumber):
     """Defines a flux_led music segments number."""
 
     _attr_translation_key = "music_segments"
-    _attr_icon = "mdi:segment"
 
     @property
+    @override
     def native_max_value(self) -> int:
         """Return the max value."""
         assert self._device.pixels_per_segment is not None
@@ -278,11 +285,13 @@ class FluxMusicSegmentsNumber(FluxMusicNumber):
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the music segments."""
         assert self._device.music_segments is not None
         return self._device.music_segments
 
+    @override
     async def _async_set_native_value(self) -> None:
         """Set the music segments."""
         assert self._pending_value is not None

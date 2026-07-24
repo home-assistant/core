@@ -1,41 +1,41 @@
 """Test the Home Assistant Green config flow."""
-from unittest.mock import patch
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import GreenOptions
 import pytest
 
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
 from homeassistant.components.homeassistant_green.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
-@pytest.fixture(name="get_green_settings")
-def mock_get_green_settings():
-    """Mock getting green settings."""
+@pytest.fixture(autouse=True)
+def mock_get_supervisor_client(supervisor_client: AsyncMock) -> Generator[None]:
+    """Mock get_supervisor_client method."""
     with patch(
-        "homeassistant.components.homeassistant_green.config_flow.async_get_green_settings",
-        return_value={
-            "activity_led": True,
-            "power_led": True,
-            "system_health_led": True,
-        },
-    ) as get_green_settings:
-        yield get_green_settings
+        "homeassistant.components.homeassistant_green.config_flow.get_supervisor_client",
+        return_value=supervisor_client,
+    ):
+        yield
 
 
 @pytest.fixture(name="set_green_settings")
-def mock_set_green_settings():
+def mock_set_green_settings(supervisor_client: AsyncMock) -> Generator[AsyncMock]:
     """Mock setting green settings."""
-    with patch(
-        "homeassistant.components.homeassistant_green.config_flow.async_set_green_settings",
-    ) as set_green_settings:
-        yield set_green_settings
+    return supervisor_client.os.set_green_options
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test the config flow."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     with patch(
         "homeassistant.components.homeassistant_green.async_setup_entry",
@@ -45,7 +45,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "system"}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant Green"
     assert result["data"] == {}
     assert result["options"] == {}
@@ -60,6 +60,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
     """Test only a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -78,11 +79,12 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "system"}
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
     mock_setup_entry.assert_not_called()
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_option_flow_non_hassio(
     hass: HomeAssistant,
 ) -> None:
@@ -104,17 +106,18 @@ async def test_option_flow_non_hassio(
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_hassio"
 
 
+@pytest.mark.usefixtures("os_green_info")
 async def test_option_flow_led_settings(
     hass: HomeAssistant,
-    get_green_settings,
-    set_green_settings,
+    set_green_settings: AsyncMock,
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -126,26 +129,27 @@ async def test_option_flow_led_settings(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hardware_settings"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"activity_led": False, "power_led": False, "system_health_led": False},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     set_green_settings.assert_called_once_with(
-        hass, {"activity_led": False, "power_led": False, "system_health_led": False}
+        GreenOptions(activity_led=False, power_led=False, system_health_led=False)
     )
 
 
+@pytest.mark.usefixtures("os_green_info")
 async def test_option_flow_led_settings_unchanged(
     hass: HomeAssistant,
-    get_green_settings,
-    set_green_settings,
+    set_green_settings: AsyncMock,
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -157,20 +161,24 @@ async def test_option_flow_led_settings_unchanged(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hardware_settings"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {"activity_led": True, "power_led": True, "system_health_led": True},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     set_green_settings.assert_not_called()
 
 
-async def test_option_flow_led_settings_fail_1(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("exc", [TimeoutError, SupervisorError])
+async def test_option_flow_led_settings_fail_1(
+    hass: HomeAssistant, os_green_info: AsyncMock, exc: type[Exception]
+) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -181,21 +189,21 @@ async def test_option_flow_led_settings_fail_1(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.homeassistant_green.config_flow.async_get_green_settings",
-        side_effect=TimeoutError,
-    ):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    os_green_info.side_effect = exc
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "read_hw_settings_error"
 
 
+@pytest.mark.usefixtures("os_green_info")
+@pytest.mark.parametrize("exc", [TimeoutError, SupervisorError])
 async def test_option_flow_led_settings_fail_2(
-    hass: HomeAssistant, get_green_settings
+    hass: HomeAssistant, set_green_settings: AsyncMock, exc: type[Exception]
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -207,16 +215,13 @@ async def test_option_flow_led_settings_fail_2(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hardware_settings"
 
-    with patch(
-        "homeassistant.components.homeassistant_green.config_flow.async_set_green_settings",
-        side_effect=TimeoutError,
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {"activity_led": False, "power_led": False, "system_health_led": False},
-        )
-    assert result["type"] == FlowResultType.ABORT
+    set_green_settings.side_effect = exc
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"activity_led": False, "power_led": False, "system_health_led": False},
+    )
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "write_hw_settings_error"

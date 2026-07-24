@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_update[update.uptime_example_org_uptime_kuma_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'update.uptime_example_org_uptime_kuma_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime Kuma version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Uptime Kuma version',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 16>,
+    'translation_key': <UptimeKumaUpdate.UPDATE: 'update'>,
+    'unique_id': '123456789_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[update.uptime_example_org_uptime_kuma_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/uptime_kuma/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'uptime.example.org Uptime Kuma version',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '2.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '2.0.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/louislam/uptime-kuma/releases/tag/2.0.1',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 16>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: 'Uptime Kuma 2.0.1',
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.uptime_example_org_uptime_kuma_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

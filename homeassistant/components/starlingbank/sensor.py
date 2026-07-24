@@ -1,17 +1,20 @@
 """Support for balance data via the Starling Bank API."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import requests
 from starlingbank import StarlingAccount
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -40,7 +43,7 @@ ACCOUNT_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_ACCOUNTS): vol.Schema([ACCOUNT_SCHEMA])}
 )
 
@@ -53,18 +56,18 @@ def setup_platform(
 ) -> None:
     """Set up the Sterling Bank sensor platform."""
 
-    sensors = []
+    sensors: list[StarlingBalanceSensor] = []
     for account in config[CONF_ACCOUNTS]:
         try:
             starling_account = StarlingAccount(
                 account[CONF_ACCESS_TOKEN], sandbox=account[CONF_SANDBOX]
             )
-            for balance_type in account[CONF_BALANCE_TYPES]:
-                sensors.append(
-                    StarlingBalanceSensor(
-                        starling_account, account[CONF_NAME], balance_type
-                    )
+            sensors.extend(
+                StarlingBalanceSensor(
+                    starling_account, account[CONF_NAME], balance_type
                 )
+                for balance_type in account[CONF_BALANCE_TYPES]
+            )
         except requests.exceptions.HTTPError as error:
             _LOGGER.error(
                 "Unable to set up Starling account '%s': %s", account[CONF_NAME], error
@@ -86,18 +89,20 @@ class StarlingBalanceSensor(SensorEntity):
         self._account_name = account_name
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._account_name, self._balance_data_type.replace("_", " ").capitalize()
-        )
+        balance_data_type = self._balance_data_type.replace("_", " ").capitalize()
+        return f"{self._account_name} {balance_data_type}"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._starling_account.currency

@@ -1,0 +1,28 @@
+{
+  "locationId": "2738909",
+  "gateways": [
+    {
+      "gatewayId": "2499896",
+      "temperatureControlSystems": [
+        {
+          "systemId": "3432522",
+          "zones": [
+            {
+              "zoneId": "3432576",
+              "name": "Main Room",
+              "temperatureStatus": { "temperature": 19.0, "isAvailable": true },
+              "setpointStatus": {
+                "targetHeatTemperature": 17.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "activeFaults": []
+            }
+          ],
+          "activeFaults": [],
+          "systemModeStatus": { "mode": "AutoWithEco", "isPermanent": true }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}

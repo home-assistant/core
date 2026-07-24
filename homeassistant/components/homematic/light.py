@@ -1,11 +1,10 @@
 """Support for Homematic lights."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
@@ -16,9 +15,13 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import color as color_util
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
+
+MAX_MIREDS = 500  # 2000 K
+MIN_MIREDS = 153  # 6500 K
 
 
 def setup_platform(
@@ -42,8 +45,12 @@ def setup_platform(
 class HMLight(HMDevice, LightEntity):
     """Representation of a Homematic light."""
 
+    _attr_min_color_temp_kelvin = 2000  # 500 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
+
     @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         # Is dimmer?
         if self._state == "LEVEL":
@@ -51,7 +58,8 @@ class HMLight(HMDevice, LightEntity):
         return None
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if light is on."""
         try:
             return self._hm_get_state() > 0
@@ -59,6 +67,7 @@ class HMLight(HMDevice, LightEntity):
             return False
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if "COLOR" in self._hmdevice.WRITENODE:
@@ -68,6 +77,7 @@ class HMLight(HMDevice, LightEntity):
         return ColorMode.BRIGHTNESS
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         color_modes: set[ColorMode] = set()
@@ -82,6 +92,7 @@ class HMLight(HMDevice, LightEntity):
         return color_modes
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         features = LightEntityFeature.TRANSITION
@@ -90,7 +101,8 @@ class HMLight(HMDevice, LightEntity):
         return features
 
     @property
-    def hs_color(self):
+    @override
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if ColorMode.HS not in self.supported_color_modes:
             return None
@@ -98,27 +110,33 @@ class HMLight(HMDevice, LightEntity):
         return hue * 360.0, sat * 100.0
 
     @property
-    def color_temp(self):
-        """Return the color temp in mireds [int]."""
+    @override
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         if ColorMode.COLOR_TEMP not in self.supported_color_modes:
             return None
         hm_color_temp = self._hmdevice.get_color_temp(self._channel)
-        return self.max_mireds - (self.max_mireds - self.min_mireds) * hm_color_temp
+        return color_util.color_temperature_mired_to_kelvin(
+            MAX_MIREDS - (MAX_MIREDS - MIN_MIREDS) * hm_color_temp
+        )
 
     @property
-    def effect_list(self):
+    @override
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         if not self.supported_features & LightEntityFeature.EFFECT:
             return None
         return self._hmdevice.get_effect_list()
 
     @property
-    def effect(self):
+    @override
+    def effect(self) -> str | None:
         """Return the current color change program of the light."""
         if not self.supported_features & LightEntityFeature.EFFECT:
             return None
         return self._hmdevice.get_effect()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on and/or change color or color effect settings."""
         if ATTR_TRANSITION in kwargs:
@@ -129,7 +147,7 @@ class HMLight(HMDevice, LightEntity):
             self._hmdevice.set_level(percent_bright, self._channel)
         elif (
             ATTR_HS_COLOR not in kwargs
-            and ATTR_COLOR_TEMP not in kwargs
+            and ATTR_COLOR_TEMP_KELVIN not in kwargs
             and ATTR_EFFECT not in kwargs
         ):
             self._hmdevice.on(self._channel)
@@ -140,14 +158,16 @@ class HMLight(HMDevice, LightEntity):
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
                 channel=self._channel,
             )
-        if ATTR_COLOR_TEMP in kwargs:
-            hm_temp = (self.max_mireds - kwargs[ATTR_COLOR_TEMP]) / (
-                self.max_mireds - self.min_mireds
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            mireds = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
             )
+            hm_temp = (MAX_MIREDS - mireds) / (MAX_MIREDS - MIN_MIREDS)
             self._hmdevice.set_color_temp(hm_temp)
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs:
@@ -155,7 +175,8 @@ class HMLight(HMDevice, LightEntity):
 
         self._hmdevice.off(self._channel)
 
-    def _init_data_struct(self):
+    @override
+    def _init_data_struct(self) -> None:
         """Generate a data dict (self._data) from the Homematic metadata."""
         # Use LEVEL
         self._state = "LEVEL"

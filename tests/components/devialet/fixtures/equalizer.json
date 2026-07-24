@@ -1,0 +1,26 @@
+{
+  "availablePresets": ["custom", "flat", "voice"],
+  "currentEqualization": {
+    "high": {
+      "gain": 0
+    },
+    "low": {
+      "gain": 0
+    }
+  },
+  "customEqualization": {
+    "high": {
+      "gain": 0
+    },
+    "low": {
+      "gain": 0
+    }
+  },
+  "enabled": true,
+  "gainRange": {
+    "max": 6,
+    "min": -6,
+    "stepPrecision": 1
+  },
+  "preset": "flat"
+}

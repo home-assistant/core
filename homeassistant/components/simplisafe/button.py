@@ -1,36 +1,28 @@
 """Buttons for the SimpliSafe integration."""
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from simplipy.errors import SimplipyError
 from simplipy.system import System
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
-from .const import DOMAIN
+from . import SimpliSafe, SimpliSafeConfigEntry
+from .entity import SimpliSafeEntity
 from .typing import SystemType
 
 
-@dataclass
-class SimpliSafeButtonDescriptionMixin:
-    """Define an entity description mixin for SimpliSafe buttons."""
+@dataclass(frozen=True, kw_only=True)
+class SimpliSafeButtonDescription(ButtonEntityDescription):
+    """Describe a SimpliSafe button entity."""
 
     push_action: Callable[[System], Awaitable]
-
-
-@dataclass
-class SimpliSafeButtonDescription(
-    ButtonEntityDescription, SimpliSafeButtonDescriptionMixin
-):
-    """Describe a SimpliSafe button entity."""
 
 
 BUTTON_KIND_CLEAR_NOTIFICATIONS = "clear_notifications"
@@ -51,10 +43,12 @@ BUTTON_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SimpliSafeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe buttons based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    simplisafe = entry.runtime_data
 
     async_add_entities(
         [
@@ -83,6 +77,7 @@ class SimpliSafeButton(SimpliSafeEntity, ButtonEntity):
 
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Send out a restart command."""
         try:

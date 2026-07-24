@@ -1,7 +1,7 @@
 """Support for the demo for speech-to-text service."""
-from __future__ import annotations
 
 from collections.abc import AsyncIterable
+from typing import override
 
 from homeassistant.components.stt import (
     AudioBitRates,
@@ -16,7 +16,7 @@ from homeassistant.components.stt import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 SUPPORT_LANGUAGES = ["en", "de"]
 
@@ -24,7 +24,7 @@ SUPPORT_LANGUAGES = ["en", "de"]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Demo speech platform via config entry."""
     async_add_entities([DemoProviderEntity()])
@@ -36,35 +36,42 @@ class DemoProviderEntity(SpeechToTextEntity):
     _attr_name = "Demo STT"
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
+    @override
     def supported_formats(self) -> list[AudioFormats]:
         """Return a list of supported formats."""
         return [AudioFormats.WAV]
 
     @property
+    @override
     def supported_codecs(self) -> list[AudioCodecs]:
         """Return a list of supported codecs."""
         return [AudioCodecs.PCM]
 
     @property
+    @override
     def supported_bit_rates(self) -> list[AudioBitRates]:
         """Return a list of supported bit rates."""
         return [AudioBitRates.BITRATE_16]
 
     @property
+    @override
     def supported_sample_rates(self) -> list[AudioSampleRates]:
         """Return a list of supported sample rates."""
         return [AudioSampleRates.SAMPLERATE_16000, AudioSampleRates.SAMPLERATE_44100]
 
     @property
+    @override
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_STEREO]
 
+    @override
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:

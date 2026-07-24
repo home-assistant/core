@@ -1,7 +1,6 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
-from __future__ import annotations
 
-from typing import cast
+from typing import cast, override
 
 from surepy.entities import SurepyEntity
 from surepy.entities.pet import Pet as SurepyPet
@@ -11,24 +10,24 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SurePetcareDataCoordinator
-from .const import DOMAIN
+from .coordinator import SurePetcareConfigEntry, SurePetcareDataCoordinator
 from .entity import SurePetcareEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SurePetcareConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sure PetCare Flaps binary sensors based on a config entry."""
 
     entities: list[SurePetcareBinarySensor] = []
 
-    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     for surepy_entity in coordinator.data.values():
         # connectivity
@@ -69,11 +68,13 @@ class Hub(SurePetcareBinarySensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and bool(self._attr_is_on)
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
         state = surepy_entity.raw_data()["status"]
@@ -95,13 +96,14 @@ class Pet(SurePetcareBinarySensor):
     _attr_device_class = BinarySensorDeviceClass.PRESENCE
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
         surepy_entity = cast(SurepyPet, surepy_entity)
         state = surepy_entity.location
         try:
             self._attr_is_on = bool(Location(state.where) == Location.INSIDE)
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             self._attr_is_on = False
         if state:
             self._attr_extra_state_attributes = {
@@ -129,13 +131,17 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         self._attr_unique_id = f"{self._device_id}-connectivity"
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
-        state = surepy_entity.raw_data()["status"]
-        self._attr_is_on = bool(state)
-        if state:
-            self._attr_extra_state_attributes = {
-                "device_rssi": f'{state["signal"]["device_rssi"]:.2f}',
-                "hub_rssi": f'{state["signal"]["hub_rssi"]:.2f}',
-            }
-        else:
-            self._attr_extra_state_attributes = {}
+        state = surepy_entity.raw_data().get("status", {})
+        online = bool(state.get("online", False))
+        self._attr_is_on = online
+        self._attr_extra_state_attributes = {}
+        if online:
+            device_rssi = state.get("signal", {}).get("device_rssi")
+            self._attr_extra_state_attributes["device_rssi"] = (
+                f"{device_rssi:.2f}" if device_rssi else "Unknown"
+            )
+            hub_rssi = state.get("signal", {}).get("hub_rssi")
+            if hub_rssi is not None:
+                self._attr_extra_state_attributes["hub_rssi"] = f"{hub_rssi:.2f}"

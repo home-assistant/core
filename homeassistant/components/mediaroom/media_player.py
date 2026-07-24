@@ -1,8 +1,7 @@
 """Support for the Mediaroom Set-up-box."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymediaroom import (
     COMMANDS,
@@ -14,7 +13,7 @@ from pymediaroom import (
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -28,7 +27,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -45,7 +44,7 @@ MEDIA_TYPE_MEDIAROOM = "mediaroom"
 SIGNAL_STB_NOTIFY = "mediaroom_stb_discovered"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -133,7 +132,7 @@ class MediaroomDevice(MediaPlayerEntity):
 
         state_map = {
             State.OFF: MediaPlayerState.OFF,
-            State.STANDBY: MediaPlayerState.STANDBY,
+            State.STANDBY: MediaPlayerState.IDLE,
             State.PLAYING_LIVE_TV: MediaPlayerState.PLAYING,
             State.PLAYING_RECORDED_TV: MediaPlayerState.PLAYING,
             State.PLAYING_TIMESHIFT_TV: MediaPlayerState.PLAYING,
@@ -148,15 +147,15 @@ class MediaroomDevice(MediaPlayerEntity):
 
         self.host = host
         self.stb = Remote(host)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Found STB at %s%s", host, " - I'm optimistic" if optimistic else ""
         )
         self._channel = None
         self._optimistic = optimistic
         self._attr_state = (
-            MediaPlayerState.PLAYING if optimistic else MediaPlayerState.STANDBY
+            MediaPlayerState.PLAYING if optimistic else MediaPlayerState.IDLE
         )
-        self._name = f"Mediaroom {device_id if device_id else host}"
+        self._name = f"Mediaroom {device_id or host}"
         self._available = True
         if device_id:
             self._unique_id = device_id
@@ -164,10 +163,12 @@ class MediaroomDevice(MediaPlayerEntity):
             self._unique_id = None
 
     @property
-    def available(self):
+    @override
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Retrieve latest state."""
 
@@ -188,6 +189,7 @@ class MediaroomDevice(MediaPlayerEntity):
             )
         )
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -221,20 +223,24 @@ class MediaroomDevice(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def media_channel(self):
         """Channel currently playing."""
         return self._channel
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the receiver."""
 
@@ -247,18 +253,20 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the receiver."""
 
         try:
             self.set_state(await self.stb.turn_off())
             if self._optimistic:
-                self._attr_state = MediaPlayerState.STANDBY
+                self._attr_state = MediaPlayerState.IDLE
             self._available = True
         except PyMediaroomError:
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
 
@@ -272,6 +280,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
 
@@ -284,6 +293,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
 
@@ -296,6 +306,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send Program Down command."""
 
@@ -308,6 +319,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send Program Up command."""
 
@@ -320,6 +332,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
 
@@ -330,6 +343,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_volume_down(self) -> None:
         """Send volume up command."""
 
@@ -339,6 +353,7 @@ class MediaroomDevice(MediaPlayerEntity):
             self._available = False
         self.async_write_ha_state()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
 

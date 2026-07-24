@@ -1,1 +1,1 @@
-"""The gitlab_ci component."""
+"""The GitLab-CI integration."""

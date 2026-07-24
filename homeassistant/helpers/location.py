@@ -1,12 +1,11 @@
 """Location helpers for Home Assistant."""
-from __future__ import annotations
 
 from collections.abc import Iterable
 import logging
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
-from homeassistant.util import location as loc_util
+from homeassistant.util import location as location_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,8 +17,12 @@ def has_location(state: State) -> bool:
     """
     return (
         isinstance(state, State)
-        and isinstance(state.attributes.get(ATTR_LATITUDE), float)
-        and isinstance(state.attributes.get(ATTR_LONGITUDE), float)
+        and isinstance(
+            state.attributes.get(EntityStateAttribute.LATITUDE), (float, int)
+        )
+        and isinstance(
+            state.attributes.get(EntityStateAttribute.LONGITUDE), (float, int)
+        )
     )
 
 
@@ -35,13 +38,15 @@ def closest(latitude: float, longitude: float, states: Iterable[State]) -> State
 
     return min(
         with_location,
-        key=lambda state: loc_util.distance(
-            state.attributes.get(ATTR_LATITUDE),
-            state.attributes.get(ATTR_LONGITUDE),
-            latitude,
-            longitude,
-        )
-        or 0,
+        key=lambda state: (
+            location_util.distance(
+                state.attributes.get(EntityStateAttribute.LATITUDE),
+                state.attributes.get(EntityStateAttribute.LONGITUDE),
+                latitude,
+                longitude,
+            )
+            or 0
+        ),
     )
 
 
@@ -71,13 +76,13 @@ def find_coordinates(
 
     # Check if entity_state is a zone
     zone_entity = hass.states.get(f"zone.{entity_state.state}")
-    if has_location(zone_entity):  # type: ignore[arg-type]
+    if zone_entity and has_location(zone_entity):
         _LOGGER.debug(
             "%s is in %s, getting zone location",
             name,
-            zone_entity.entity_id,  # type: ignore[union-attr]
+            zone_entity.entity_id,
         )
-        return _get_location_from_attributes(zone_entity)  # type: ignore[arg-type]
+        return _get_location_from_attributes(zone_entity)
 
     # Check if entity_state is a friendly name of a zone
     if (zone_coords := resolve_zone(hass, entity_state.state)) is not None:
@@ -123,4 +128,7 @@ def resolve_zone(hass: HomeAssistant, zone_name: str) -> str | None:
 def _get_location_from_attributes(entity_state: State) -> str:
     """Get the lat/long string from an entities attributes."""
     attr = entity_state.attributes
-    return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
+    return (
+        f"{attr.get(EntityStateAttribute.LATITUDE)},"
+        f"{attr.get(EntityStateAttribute.LONGITUDE)}"
+    )

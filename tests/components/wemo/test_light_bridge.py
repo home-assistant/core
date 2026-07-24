@@ -1,4 +1,5 @@
 """Tests for the Wemo light entity via the bridge."""
+
 from unittest.mock import create_autospec
 
 import pytest
@@ -10,7 +11,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.light import (
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
@@ -47,7 +48,7 @@ def pywemo_bridge_light_fixture(pywemo_device):
 async def test_async_update_locked_callback_and_update(
     hass: HomeAssistant, pywemo_bridge_light, wemo_entity, pywemo_device
 ) -> None:
-    """Test that a callback and a state update request can't both happen at the same time."""
+    """Test callback and state update can't both happen at once."""
     await entity_test_helpers.test_async_update_locked_callback_and_update(
         hass,
         pywemo_device,
@@ -84,7 +85,7 @@ async def test_available_after_update(
     pywemo_bridge_light,
     wemo_entity,
 ) -> None:
-    """Test the avaliability when an On call fails and after an update."""
+    """Test the availability when an On call fails and after an update."""
     pywemo_bridge_light.turn_on.side_effect = pywemo.exceptions.ActionException
     pywemo_bridge_light.state["onoff"] = 1
     await entity_test_helpers.test_avaliable_after_update(
@@ -115,7 +116,7 @@ async def test_light_update_entity(
         blocking=True,
     )
     state = hass.states.get(wemo_entity.entity_id)
-    assert state.attributes.get(ATTR_COLOR_TEMP) == 432
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 2314
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
     assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
     assert state.state == STATE_ON

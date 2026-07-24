@@ -1,6 +1,5 @@
 """Constants of the FluxLed/MagicHome Integration."""
 
-import asyncio
 import socket
 from typing import Final
 
@@ -10,8 +9,10 @@ from flux_led.const import (
     COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
 )
+from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.components.light import ColorMode
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "flux_led"
 
@@ -35,10 +36,10 @@ DEFAULT_NETWORK_SCAN_INTERVAL: Final = 120
 DEFAULT_SCAN_INTERVAL: Final = 5
 DEFAULT_EFFECT_SPEED: Final = 50
 
-FLUX_LED_DISCOVERY: Final = "flux_led_discovery"
+FLUX_LED_DISCOVERY: HassKey[list[FluxLEDDiscovery]] = HassKey(DOMAIN)
 
 FLUX_LED_EXCEPTIONS: Final = (
-    asyncio.TimeoutError,
+    TimeoutError,
     socket.error,
     RuntimeError,
     BrokenPipeError,
@@ -65,7 +66,6 @@ TRANSITION_STROBE: Final = "strobe"
 CONF_COLORS: Final = "colors"
 CONF_SPEED_PCT: Final = "speed_pct"
 CONF_TRANSITION: Final = "transition"
-CONF_EFFECT: Final = "effect"
 
 
 EFFECT_SPEED_SUPPORT_MODES: Final = {ColorMode.RGB, ColorMode.RGBW, ColorMode.RGBWW}

@@ -1,4 +1,5 @@
 """Support for device connected via Lightwave WiFi-link hub."""
+
 import logging
 
 from lightwave.lightwave import LWLink
@@ -12,7 +13,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -92,7 +93,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             lwlink.set_trv_proxy(proxy_ip, proxy_port)
             _LOGGER.warning(
-                "Proxy no longer required, remove `proxy_ip` from config to use builtin listener"
+                "Proxy no longer required, remove"
+                " `proxy_ip` from config to use"
+                " builtin listener"
             )
 
         for platform in PLATFORMS:

@@ -1,5 +1,4 @@
 """Tests for the sql component."""
-from __future__ import annotations
 
 from typing import Any
 
@@ -9,7 +8,12 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sql.const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from homeassistant.components.sql.const import (
+    CONF_ADDITIONAL_OPTIONS,
+    CONF_COLUMN_NAME,
+    CONF_QUERY,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -18,6 +22,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger_template_entity import (
@@ -28,53 +33,220 @@ from homeassistant.helpers.trigger_template_entity import (
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
-    CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT 5 as value",
     CONF_COLUMN_NAME: "value",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
-    CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
-    CONF_STATE_CLASS: SensorStateClass.TOTAL,
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+        CONF_STATE_CLASS: SensorStateClass.TOTAL,
+    },
+}
+
+ENTRY_CONFIG_BLANK_QUERY = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "  ",
+    CONF_COLUMN_NAME: "value",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+        CONF_STATE_CLASS: SensorStateClass.TOTAL,
+    },
 }
 
 ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
-    CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT 5 as value",
     CONF_COLUMN_NAME: "value",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
-    CONF_VALUE_TEMPLATE: "{{ value }}",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+    },
+}
+
+ENTRY_CONFIG_WITH_QUERY_TEMPLATE = {
+    CONF_QUERY: (
+        "SELECT {% if states('sensor.input1')=='on' %}"
+        " 5 {% else %} 6 {% endif %} as value"
+    ),
+    CONF_COLUMN_NAME: "value",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+    },
+}
+
+ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE = {
+    CONF_QUERY: "SELECT {{ 5 as value",
+    CONF_COLUMN_NAME: "value",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+    },
+}
+
+ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE_OPT = {
+    CONF_QUERY: "SELECT {{ 5 as value",
+    CONF_COLUMN_NAME: "value",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+    },
 }
 
 ENTRY_CONFIG_INVALID_QUERY = {
-    CONF_NAME: "Get Value",
-    CONF_QUERY: "UPDATE 5 as value",
+    CONF_QUERY: "SELECT 5 FROM as value",
     CONF_COLUMN_NAME: "size",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
 }
+
+
+ENTRY_CONFIG_INVALID_QUERY_2 = {
+    CONF_QUERY: "SELECT5 FROM as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+
+ENTRY_CONFIG_INVALID_QUERY_3 = {
+    CONF_QUERY: ";;",
+    CONF_COLUMN_NAME: "size",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
 
 ENTRY_CONFIG_INVALID_QUERY_OPT = {
-    CONF_QUERY: "UPDATE 5 as value",
+    CONF_QUERY: "SELECT 5 FROM as value",
     CONF_COLUMN_NAME: "size",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
 }
 
+
+ENTRY_CONFIG_INVALID_QUERY_2_OPT = {
+    CONF_QUERY: "SELECT5 FROM as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+
+ENTRY_CONFIG_INVALID_QUERY_3_OPT = {
+    CONF_QUERY: ";;",
+    CONF_COLUMN_NAME: "size",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+
+ENTRY_CONFIG_QUERY_READ_ONLY_CTE = {
+    CONF_QUERY: (
+        "WITH test AS (SELECT 1 AS row_num, 10 AS state)"
+        " SELECT state FROM test WHERE row_num = 1 LIMIT 1;"
+    ),
+    CONF_COLUMN_NAME: "state",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+ENTRY_CONFIG_QUERY_NO_READ_ONLY = {
+    CONF_QUERY: "UPDATE states SET state = 999999 WHERE state_id = 11125",
+    CONF_COLUMN_NAME: "state",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE = {
+    CONF_QUERY: (
+        "WITH test AS (SELECT state FROM states)"
+        " UPDATE states SET states.state = test.state;"
+    ),
+    CONF_COLUMN_NAME: "size",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+ENTRY_CONFIG_QUERY_READ_ONLY_CTE_OPT = {
+    CONF_QUERY: (
+        "WITH test AS (SELECT 1 AS row_num, 10 AS state)"
+        " SELECT state FROM test WHERE row_num = 1 LIMIT 1;"
+    ),
+    CONF_COLUMN_NAME: "state",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT = {
+    CONF_QUERY: "UPDATE 5 as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT = {
+    CONF_QUERY: (
+        "WITH test AS (SELECT state FROM states)"
+        " UPDATE states SET states.state = test.state;"
+    ),
+    CONF_COLUMN_NAME: "size",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+
+ENTRY_CONFIG_MULTIPLE_QUERIES = {
+    CONF_QUERY: "SELECT 5 as state; UPDATE states SET state = 10;",
+    CONF_COLUMN_NAME: "state",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+
+ENTRY_CONFIG_MULTIPLE_QUERIES_OPT = {
+    CONF_QUERY: "SELECT 5 as state; UPDATE states SET state = 10;",
+    CONF_COLUMN_NAME: "state",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
+}
+
+
 ENTRY_CONFIG_INVALID_COLUMN_NAME = {
-    CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT 5 as value",
     CONF_COLUMN_NAME: "size",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
 }
 
 ENTRY_CONFIG_INVALID_COLUMN_NAME_OPT = {
     CONF_QUERY: "SELECT 5 as value",
     CONF_COLUMN_NAME: "size",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
 }
 
 ENTRY_CONFIG_NO_RESULTS = {
-    CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT kalle as value from no_table;",
     CONF_COLUMN_NAME: "value",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_ADDITIONAL_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+    },
 }
 
 YAML_CONFIG = {
@@ -83,10 +255,10 @@ YAML_CONFIG = {
         CONF_NAME: "Get Value",
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_UNIT_OF_MEASUREMENT: UnitOfInformation.MEBIBYTES,
         CONF_UNIQUE_ID: "unique_id_12345",
         CONF_VALUE_TEMPLATE: "{{ value }}",
-        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
         CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
     }
 }
@@ -130,7 +302,10 @@ YAML_CONFIG_BINARY = {
     "sql": {
         CONF_DB_URL: "sqlite://",
         CONF_NAME: "Get Binary Value",
-        CONF_QUERY: "SELECT cast(x'd34324324230392032' as blob) as value, cast(x'd343aa' as blob) as test_attr",
+        CONF_QUERY: (
+            "SELECT cast(x'd34324324230392032' as blob) as value,"
+            " cast(x'd343aa' as blob) as test_attr"
+        ),
         CONF_COLUMN_NAME: "value",
         CONF_UNIQUE_ID: "unique_id_12345",
     }
@@ -162,8 +337,15 @@ YAML_CONFIG_ALL_TEMPLATES = {
         CONF_UNIT_OF_MEASUREMENT: "MiB/s",
         CONF_UNIQUE_ID: "unique_id_123456",
         CONF_VALUE_TEMPLATE: "{{ value }}",
-        CONF_ICON: '{% if states("sensor.input1")=="on" %} mdi:on {% else %} mdi:off {% endif %}',
-        CONF_PICTURE: '{% if states("sensor.input1")=="on" %} /local/picture1.jpg {% else %} /local/picture2.jpg {% endif %}',
+        CONF_ICON: (
+            '{% if states("sensor.input1")=="on" %}'
+            " mdi:on {% else %} mdi:off {% endif %}"
+        ),
+        CONF_PICTURE: (
+            '{% if states("sensor.input1")=="on" %}'
+            " /local/picture1.jpg"
+            " {% else %} /local/picture2.jpg {% endif %}"
+        ),
         CONF_AVAILABILITY: '{{ states("sensor.input2")=="on" }}',
         CONF_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
         CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -173,20 +355,27 @@ YAML_CONFIG_ALL_TEMPLATES = {
 
 async def init_integration(
     hass: HomeAssistant,
-    config: dict[str, Any] = None,
+    *,
+    title: str = "Select value SQL query",
+    config: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
     entry_id: str = "1",
     source: str = SOURCE_USER,
 ) -> MockConfigEntry:
     """Set up the SQL integration in Home Assistant."""
-    if not config:
-        config = ENTRY_CONFIG
+    if not options:
+        options = ENTRY_CONFIG
+    if CONF_ADDITIONAL_OPTIONS not in options:
+        options[CONF_ADDITIONAL_OPTIONS] = {}
 
     config_entry = MockConfigEntry(
+        title=title,
         domain=DOMAIN,
         source=source,
-        data={},
-        options=config,
+        data=config or {},
+        options=options,
         entry_id=entry_id,
+        version=2,
     )
 
     config_entry.add_to_hass(hass)

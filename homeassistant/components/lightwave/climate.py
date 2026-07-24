@@ -1,7 +1,6 @@
 """Support for LightwaveRF TRVs."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
@@ -47,7 +46,11 @@ class LightwaveTrv(ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_max_temp = DEFAULT_MAX_TEMP
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = 0.5
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -58,7 +61,8 @@ class LightwaveTrv(ClimateEntity):
         self._lwlink = lwlink
         self._serial = serial
         self._attr_unique_id = f"{serial}-trv"
-        # inhibit is used to prevent race condition on update.  If non zero, skip next update cycle.
+        # inhibit is used to prevent race condition on update.
+        # If non zero, skip next update cycle.
         self._inhibit = 0
 
     def update(self) -> None:
@@ -85,7 +89,8 @@ class LightwaveTrv(ClimateEntity):
                 self._attr_hvac_action = HVACAction.OFF
 
     @property
-    def target_temperature(self):
+    @override
+    def target_temperature(self) -> float | None:
         """Target room temperature."""
         if self._inhibit > 0:
             # If we get an update before the new temp has
@@ -95,6 +100,7 @@ class LightwaveTrv(ClimateEntity):
             self._attr_target_temperature = self._inhibit
         return self._attr_target_temperature
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set TRV target temperature."""
         if ATTR_TEMPERATURE in kwargs:
@@ -104,5 +110,6 @@ class LightwaveTrv(ClimateEntity):
             self._device_id, self._attr_target_temperature, self._attr_name
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC Mode for TRV."""

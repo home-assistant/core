@@ -1,0 +1,153 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "in_bed": {
+        "default": "mdi:bed-outline",
+        "state": {
+          "off": "mdi:bed-empty",
+          "on": "mdi:bed"
+        }
+      }
+    },
+    "sensor": {
+      "activity_distance_today": {
+        "default": "mdi:map-marker-distance"
+      },
+      "activity_elevation_today": {
+        "default": "mdi:stairs-up"
+      },
+      "activity_steps_today": {
+        "default": "mdi:shoe-print"
+      },
+      "average_heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "battery": {
+        "default": "mdi:battery-off",
+        "state": {
+          "high": "mdi:battery",
+          "low": "mdi:battery-20",
+          "medium": "mdi:battery-50"
+        }
+      },
+      "bone_mass": {
+        "default": "mdi:bone"
+      },
+      "deep_sleep": {
+        "default": "mdi:sleep"
+      },
+      "fat_free_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_free_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "heart_pulse": {
+        "default": "mdi:heart-pulse"
+      },
+      "height": {
+        "default": "mdi:human-male-height-variant"
+      },
+      "hydration": {
+        "default": "mdi:water"
+      },
+      "light_sleep": {
+        "default": "mdi:sleep"
+      },
+      "maximum_heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "minimum_heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "muscle_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "muscle_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "rem_sleep": {
+        "default": "mdi:sleep"
+      },
+      "sleep_goal": {
+        "default": "mdi:bed-clock"
+      },
+      "sleep_score": {
+        "default": "mdi:medal"
+      },
+      "step_goal": {
+        "default": "mdi:shoe-print"
+      },
+      "time_to_sleep": {
+        "default": "mdi:sleep"
+      },
+      "time_to_wakeup": {
+        "default": "mdi:sleep-off"
+      },
+      "wakeup_count": {
+        "default": "mdi:sleep-off"
+      },
+      "wakeup_time": {
+        "default": "mdi:sleep-off"
+      },
+      "workout_distance": {
+        "default": "mdi:map-marker-distance"
+      },
+      "workout_duration": {
+        "default": "mdi:timer"
+      },
+      "workout_elevation": {
+        "default": "mdi:stairs-up"
+      },
+      "workout_pause_duration": {
+        "default": "mdi:timer-pause"
+      },
+      "workout_type": {
+        "state": {
+          "badminton": "mdi:badminton",
+          "baseball": "mdi:baseball",
+          "basket_ball": "mdi:basketball",
+          "bicycling": "mdi:bike",
+          "boxing": "mdi:boxing-glove",
+          "climbing": "mdi:carabiner",
+          "dancing": "mdi:human-female-dance",
+          "fencing": "mdi:fencing",
+          "football": "mdi:football",
+          "golf": "mdi:golf",
+          "handball": "mdi:handball",
+          "hiking": "mdi:hiking",
+          "hockey": "mdi:hockey-sticks",
+          "horse_riding": "mdi:horse-human",
+          "ice_hockey": "mdi:hockey-sticks",
+          "ice_skating": "mdi:skate",
+          "kitesurfing": "mdi:kitesurfing",
+          "lift_weights": "mdi:weight-lifter",
+          "martial_arts": "mdi:karate",
+          "rowing": "mdi:rowing",
+          "rugby": "mdi:rugby",
+          "run": "mdi:run",
+          "skating": "mdi:skateboarding",
+          "skiing": "mdi:ski",
+          "snowboarding": "mdi:snowboard",
+          "soccer": "mdi:soccer",
+          "squash": "mdi:racquetball",
+          "surfing": "mdi:surfing",
+          "swimming": "mdi:swim",
+          "table_tennis": "mdi:table-tennis",
+          "tennis": "mdi:tennis",
+          "volley_ball": "mdi:volleyball",
+          "walk": "mdi:walk",
+          "waterpolo": "mdi:water-polo",
+          "windsurfing": "mdi:kitesurfing",
+          "yoga": "mdi:yoga"
+        }
+      }
+    }
+  }
+}

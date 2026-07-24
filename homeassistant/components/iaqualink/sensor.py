@@ -1,39 +1,43 @@
 """Support for Aqualink temperature sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from iaqualink.device import AqualinkSensor
 
-from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AqualinkEntity
-from .const import DOMAIN as AQUALINK_DOMAIN
+from . import AqualinkConfigEntry
+from .coordinator import AqualinkDataUpdateCoordinator
+from .entity import AqualinkEntity
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AqualinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkSensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        HassAqualinkSensor(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.sensors
+    )
 
 
-class HassAqualinkSensor(AqualinkEntity, SensorEntity):
+class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):
     """Representation of a sensor."""
 
-    def __init__(self, dev: AqualinkSensor) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkSensor
+    ) -> None:
         """Initialize AquaLink sensor."""
-        super().__init__(dev)
-        self._attr_name = dev.label
+        super().__init__(coordinator, dev)
         if not dev.name.endswith("_temp"):
             return
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -43,6 +47,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         if self.dev.state == "":

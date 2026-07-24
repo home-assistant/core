@@ -1,9 +1,0 @@
-{
-  "domain": "epsonworkforce",
-  "name": "Epson Workforce",
-  "codeowners": ["@ThaStealth"],
-  "documentation": "https://www.home-assistant.io/integrations/epsonworkforce",
-  "iot_class": "local_polling",
-  "loggers": ["epsonprinter_pkg"],
-  "requirements": ["epsonprinter==0.0.9"]
-}

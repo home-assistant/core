@@ -1,18 +1,23 @@
 """Test the shelly bluetooth scanner."""
-from __future__ import annotations
 
+from unittest.mock import Mock, patch
+
+from aioshelly.ble.backend.scanner import ShellyBLEScanner
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
 import pytest
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.shelly.const import CONF_BLE_SCANNER_MODE, BLEScannerMode
 from homeassistant.core import HomeAssistant
 
 from .. import init_integration, inject_rpc_device_event
 
 
-async def test_scanner(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
-    """Test injecting data into the scanner."""
+async def test_scanner_v1(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test injecting data into the scanner v1."""
     await init_integration(
         hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
     )
@@ -49,8 +54,52 @@ async def test_scanner(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> Non
     assert ble_device is None
 
 
+async def test_scanner_v2(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test injecting data into the scanner v2."""
+    await init_integration(
+        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+    )
+    assert mock_rpc_device.initialized is True
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "script:1",
+                    "data": [
+                        2,
+                        [
+                            [
+                                "aa:bb:cc:dd:ee:ff",
+                                -62,
+                                "AgEGCf9ZANH7O3TIkA==",
+                                "EQcbxdWlAgC4n+YRTSIADaLLBhYADUgQYQ==",
+                            ]
+                        ],
+                    ],
+                    "event": BLE_SCAN_RESULT_EVENT,
+                    "id": 1,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    ble_device = bluetooth.async_ble_device_from_address(
+        hass, "AA:BB:CC:DD:EE:FF", connectable=False
+    )
+    assert ble_device is not None
+    ble_device = bluetooth.async_ble_device_from_address(
+        hass, "AA:BB:CC:DD:EE:FF", connectable=True
+    )
+    assert ble_device is None
+
+
 async def test_scanner_ignores_non_ble_events(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test injecting non ble data into the scanner."""
     await init_integration(
@@ -76,7 +125,10 @@ async def test_scanner_ignores_non_ble_events(
 
 
 async def test_scanner_ignores_wrong_version_and_logs(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test injecting wrong version of ble data into the scanner."""
     await init_integration(
@@ -108,21 +160,11 @@ async def test_scanner_ignores_wrong_version_and_logs(
     assert "Unsupported BLE scan result version: 0" in caplog.text
 
 
-async def test_scanner_minimum_firmware_log_error(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test scanner log error if device firmware incompatible."""
-    monkeypatch.setattr(mock_rpc_device, "version", "0.11.0")
-    await init_integration(
-        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
-    )
-    assert mock_rpc_device.initialized is True
-
-    assert "BLE not supported on device" in caplog.text
-
-
 async def test_scanner_warns_on_corrupt_event(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test injecting garbage ble data into the scanner."""
     await init_integration(
@@ -148,3 +190,19 @@ async def test_scanner_warns_on_corrupt_event(
         },
     )
     assert "Failed to parse BLE event" in caplog.text
+
+
+async def test_scanner_auto_mode_starts_passive_and_binds_provider(
+    hass: HomeAssistant, mock_rpc_device: Mock
+) -> None:
+    """AUTO runs the radio passive; the scanner is pinned AUTO so the worker spawns."""
+    with patch.object(
+        ShellyBLEScanner, "set_active_window_provider", autospec=True
+    ) as mock_set_provider:
+        await init_integration(hass, 2, options={CONF_BLE_SCANNER_MODE: "auto"})
+    assert mock_rpc_device.initialized is True
+    scanner = bluetooth.async_scanner_by_source(hass, "12:34:56:78:9A:BE")
+    assert scanner is not None
+    assert scanner.requested_mode is BluetoothScanningMode.AUTO
+    assert scanner.current_mode is BluetoothScanningMode.PASSIVE
+    mock_set_provider.assert_called_once_with(scanner, mock_rpc_device)

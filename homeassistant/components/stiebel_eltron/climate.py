@@ -1,185 +1,167 @@
 """Support for stiebel_eltron climate platform."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
+
+from modbus_connection import ModbusError
+from pystiebeleltron.lwz import OperatingMode
 
 from homeassistant.components.climate import (
+    PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as STE_DOMAIN
-
-DEPENDENCIES = ["stiebel_eltron"]
+from . import StiebelEltronConfigEntry
+from .coordinator import StiebelEltronDataCoordinator
+from .entity import StiebelEltronEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_DAY = "day"
-PRESET_SETBACK = "setback"
-PRESET_EMERGENCY = "emergency"
+PARALLEL_UPDATES = 0
 
-SUPPORT_HVAC = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
-SUPPORT_PRESET = [PRESET_ECO, PRESET_DAY, PRESET_EMERGENCY, PRESET_SETBACK]
+CLIMATE_HK_1 = "climate_hk_1"
 
 # Mapping STIEBEL ELTRON states to homeassistant states/preset.
-STE_TO_HA_HVAC = {
-    "AUTOMATIC": HVACMode.AUTO,
-    "MANUAL MODE": HVACMode.HEAT,
-    "STANDBY": HVACMode.AUTO,
-    "DAY MODE": HVACMode.AUTO,
-    "SETBACK MODE": HVACMode.AUTO,
-    "DHW": HVACMode.OFF,
-    "EMERGENCY OPERATION": HVACMode.AUTO,
+LWZ_TO_HA_HVAC = {
+    OperatingMode.AUTOMATIC: HVACMode.AUTO,
+    OperatingMode.MANUAL_MODE: HVACMode.HEAT,
+    OperatingMode.STANDBY: HVACMode.AUTO,
+    OperatingMode.DAY_MODE: HVACMode.AUTO,
+    OperatingMode.SETBACK_MODE: HVACMode.AUTO,
+    OperatingMode.DHW: HVACMode.OFF,
+    OperatingMode.EMERGENCY_OPERATION: HVACMode.AUTO,
 }
 
-STE_TO_HA_PRESET = {
-    "STANDBY": PRESET_ECO,
-    "DAY MODE": PRESET_DAY,
-    "SETBACK MODE": PRESET_SETBACK,
-    "EMERGENCY OPERATION": PRESET_EMERGENCY,
+HA_TO_LWZ_HVAC = {
+    HVACMode.AUTO: OperatingMode.AUTOMATIC,
+    HVACMode.OFF: OperatingMode.DHW,
+    HVACMode.HEAT: OperatingMode.MANUAL_MODE,
 }
 
-HA_TO_STE_HVAC = {
-    HVACMode.AUTO: "AUTOMATIC",
-    HVACMode.HEAT: "MANUAL MODE",
-    HVACMode.OFF: "DHW",
+# Custom presets
+PRESET_PROGRAM = "program"
+PRESET_WATER_HEATING = "water_heating"
+PRESET_EMERGENCY = "emergency"
+PRESET_READY = "ready"
+PRESET_MANUAL = "manual"
+PRESET_AUTO = "auto"
+
+LWZ_TO_HA_PRESET = {
+    OperatingMode.STANDBY: PRESET_READY,
+    OperatingMode.DAY_MODE: PRESET_COMFORT,
+    OperatingMode.SETBACK_MODE: PRESET_ECO,
+    OperatingMode.DHW: PRESET_WATER_HEATING,
+    OperatingMode.AUTOMATIC: PRESET_AUTO,
+    OperatingMode.MANUAL_MODE: PRESET_MANUAL,
+    OperatingMode.EMERGENCY_OPERATION: PRESET_EMERGENCY,
 }
 
-HA_TO_STE_PRESET = {k: i for i, k in STE_TO_HA_PRESET.items()}
+HA_TO_LWZ_PRESET = {
+    PRESET_READY: OperatingMode.STANDBY,
+    PRESET_COMFORT: OperatingMode.DAY_MODE,
+    PRESET_ECO: OperatingMode.SETBACK_MODE,
+    PRESET_WATER_HEATING: OperatingMode.DHW,
+    PRESET_AUTO: OperatingMode.AUTOMATIC,
+    PRESET_MANUAL: OperatingMode.MANUAL_MODE,
+    PRESET_EMERGENCY: OperatingMode.EMERGENCY_OPERATION,
+}
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: StiebelEltronConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the StiebelEltron platform."""
-    name = hass.data[STE_DOMAIN]["name"]
-    ste_data = hass.data[STE_DOMAIN]["ste_data"]
+    """Set up STIEBEL ELTRON climate platform."""
 
-    add_entities([StiebelEltron(name, ste_data)], True)
+    async_add_entities([StiebelEltron(entry.runtime_data)])
 
 
-class StiebelEltron(ClimateEntity):
+class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     """Representation of a STIEBEL ELTRON heat pump."""
 
-    _attr_hvac_modes = SUPPORT_HVAC
+    _attr_name = None
+    _attr_hvac_modes = list(HA_TO_LWZ_HVAC)
+    _attr_preset_modes = list(HA_TO_LWZ_PRESET)
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = PRECISION_TENTHS
+    _attr_min_temp = 10.0
+    _attr_max_temp = 30.0
 
-    def __init__(self, name, ste_data):
+    def __init__(self, coordinator: StiebelEltronDataCoordinator) -> None:
         """Initialize the unit."""
-        self._name = name
-        self._target_temperature = None
-        self._current_temperature = None
-        self._current_humidity = None
-        self._operation = None
-        self._filter_alarm = None
-        self._force_update = False
-        self._ste_data = ste_data
-
-    def update(self) -> None:
-        """Update unit attributes."""
-        self._ste_data.update(no_throttle=self._force_update)
-        self._force_update = False
-
-        self._target_temperature = self._ste_data.api.get_target_temp()
-        self._current_temperature = self._ste_data.api.get_current_temp()
-        self._current_humidity = self._ste_data.api.get_current_humidity()
-        self._filter_alarm = self._ste_data.api.get_filter_alarm_status()
-        self._operation = self._ste_data.api.get_operation()
-
-        _LOGGER.debug(
-            "Update %s, current temp: %s", self._name, self._current_temperature
+        assert coordinator.config_entry is not None
+        super().__init__(
+            coordinator, f"{coordinator.config_entry.entry_id}-{CLIMATE_HK_1}"
         )
+        self._set_attr()
 
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        return {"filter_alarm": self._filter_alarm}
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle entity update."""
+        self._set_attr()
+        super()._handle_coordinator_update()
 
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
+    def _set_attr(self) -> None:
+        lwz_api_client = self.coordinator.api_client
 
-    # Handle ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_target_temperature = lwz_api_client.get_target_temp()
+        self._attr_current_temperature = lwz_api_client.get_current_temp()
+        self._attr_current_humidity = lwz_api_client.get_current_humidity()
+        operation = lwz_api_client.get_operation()
+        self._attr_hvac_mode = LWZ_TO_HA_HVAC.get(operation)
+        self._attr_preset_mode = LWZ_TO_HA_PRESET.get(operation)
+        self._attr_extra_state_attributes = {
+            "filter_alarm": lwz_api_client.get_filter_alarm_status()
+        }
 
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 0.1
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return 10.0
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return 30.0
-
-    @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        return float(f"{self._current_humidity:.1f}")
-
-    @property
-    def hvac_mode(self) -> HVACMode | None:
-        """Return current operation ie. heat, cool, idle."""
-        return STE_TO_HA_HVAC.get(self._operation)
-
-    @property
-    def preset_mode(self):
-        """Return the current preset mode, e.g., home, away, temp."""
-        return STE_TO_HA_PRESET.get(self._operation)
-
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes."""
-        return SUPPORT_PRESET
-
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if self.preset_mode:
-            return
-        new_mode = HA_TO_STE_HVAC.get(hvac_mode)
-        _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)
-        self._ste_data.api.set_operation(new_mode)
-        self._force_update = True
+        new_mode = HA_TO_LWZ_HVAC[hvac_mode]
+        _LOGGER.debug("async_set_hvac_mode: %s -> %s", self._attr_hvac_mode, new_mode)
+        try:
+            await self.coordinator.api_client.set_operation(new_mode)
+        except ModbusError as e:
+            _LOGGER.error("Error setting HVAC mode: %s", e)
+            raise HomeAssistantError("Failed to set HVAC mode") from e
+        await self.coordinator.async_request_refresh()
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        if target_temperature is not None:
-            _LOGGER.debug("set_temperature: %s", target_temperature)
-            self._ste_data.api.set_target_temp(target_temperature)
-            self._force_update = True
+        target_temperature = kwargs[ATTR_TEMPERATURE]
+        _LOGGER.debug("async_set_temperature: %s", target_temperature)
+        try:
+            await self.coordinator.api_client.set_target_temp(target_temperature)
+        except ModbusError as e:
+            _LOGGER.error("Error setting target temperature: %s", e)
+            raise HomeAssistantError("Failed to set target temperature") from e
+        await self.coordinator.async_request_refresh()
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        new_mode = HA_TO_STE_PRESET.get(preset_mode)
-        _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)
-        self._ste_data.api.set_operation(new_mode)
-        self._force_update = True
+        new_preset = HA_TO_LWZ_PRESET[preset_mode]
+        _LOGGER.debug(
+            "async_set_preset_mode: %s -> %s", self._attr_preset_mode, new_preset
+        )
+        try:
+            await self.coordinator.api_client.set_operation(new_preset)
+        except ModbusError as e:
+            _LOGGER.error("Error setting preset mode: %s", e)
+            raise HomeAssistantError("Failed to set preset mode") from e
+        await self.coordinator.async_request_refresh()

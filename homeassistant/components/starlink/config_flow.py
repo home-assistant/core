@@ -1,14 +1,12 @@
 """Config flow for Starlink."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from starlink_grpc import ChannelContext, GrpcError, get_id
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -20,9 +18,10 @@ CONFIG_SCHEMA = vol.Schema(
 class StarlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """The configuration flow for a Starlink system."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Ask the user for a server address and a name for the system."""
         errors = {}
         if user_input:

@@ -1,20 +1,20 @@
 """Support for Denon Network Receivers."""
-from __future__ import annotations
 
 import logging
-import telnetlib  # pylint: disable=deprecated-module
+from typing import override
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,7 +37,7 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.PLAY
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -69,6 +69,7 @@ MEDIA_MODES = {
     "Favorites": "FAVORITES",
     "Internet Radio": "IRADIO",
     "USB/IPOD": "USB/IPOD",
+    "USB": "USB",
 }
 
 # Sub-modes of 'NET/USB'
@@ -210,11 +211,13 @@ class DenonDevice(MediaPlayerEntity):
         return True
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._pwstate == "PWSTANDBY":
@@ -225,26 +228,31 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume / self._volume_max
 
     @property
+    @override
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
         return self._muted
 
     @property
+    @override
     def source_list(self):
         """Return the list of available input sources."""
         return sorted(self._source_list)
 
     @property
+    @override
     def media_title(self):
         """Return the current media info."""
         return self._mediainfo
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._mediasource in MEDIA_MODES.values():
@@ -252,12 +260,15 @@ class DenonDevice(MediaPlayerEntity):
         return SUPPORT_DENON
 
     @property
-    def source(self):
+    @override
+    def source(self) -> str | None:
         """Return the current input source."""
         for pretty_name, name in self._source_list.items():
             if self._mediasource == name:
                 return pretty_name
+        return None
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self.telnet_command("PWSTANDBY")
@@ -270,39 +281,48 @@ class DenonDevice(MediaPlayerEntity):
         """Volume down media player."""
         self.telnet_command("MVDOWN")
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.telnet_command(f"MV{round(volume * self._volume_max):02}")
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         mute_status = "ON" if mute else "OFF"
-        self.telnet_command(f"MU{mute_status})")
+        self.telnet_command(f"MU{mute_status}")
 
+    @override
     def media_play(self) -> None:
         """Play media player."""
         self.telnet_command("NS9A")
 
+    @override
     def media_pause(self) -> None:
         """Pause media player."""
         self.telnet_command("NS9B")
 
+    @override
     def media_stop(self) -> None:
         """Pause media player."""
         self.telnet_command("NS9C")
 
+    @override
     def media_next_track(self) -> None:
         """Send the next track command."""
         self.telnet_command("NS9D")
 
+    @override
     def media_previous_track(self) -> None:
         """Send the previous track command."""
         self.telnet_command("NS9E")
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self.telnet_command("PWON")
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         self.telnet_command(f"SI{self._source_list.get(source)}")

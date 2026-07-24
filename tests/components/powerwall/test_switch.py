@@ -1,5 +1,6 @@
 """Test for Powerwall off-grid switch."""
-from unittest.mock import Mock, patch
+
+from unittest.mock import MagicMock, patch
 
 import pytest
 from tesla_powerwall import GridStatus, PowerwallError
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .mocks import _mock_powerwall_with_fixtures
+from .mocks import _mock_powerwall_restricted, _mock_powerwall_with_fixtures
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +24,7 @@ ENTITY_ID = "switch.mysite_off_grid_operation"
 
 
 @pytest.fixture(name="mock_powerwall")
-async def mock_powerwall_fixture(hass):
+async def mock_powerwall_fixture(hass: HomeAssistant) -> MagicMock:
     """Set up base powerwall fixture."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
@@ -43,7 +44,7 @@ async def test_entity_registry(
 ) -> None:
     """Test powerwall off-grid switch device."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     assert ENTITY_ID in entity_registry.entities
 
@@ -51,7 +52,7 @@ async def test_entity_registry(
 async def test_initial(hass: HomeAssistant, mock_powerwall) -> None:
     """Test initial grid status without off grid switch selected."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -60,7 +61,7 @@ async def test_initial(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
     """Test state once offgrid switch has been turned on."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.ISLANDED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.ISLANDED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -76,7 +77,7 @@ async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_off(hass: HomeAssistant, mock_powerwall) -> None:
     """Test state once offgrid switch has been turned off."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -92,16 +93,35 @@ async def test_off(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_exception_on_powerwall_error(
     hass: HomeAssistant, mock_powerwall
 ) -> None:
-    """Ensure that an exception in the tesla_powerwall library causes a HomeAssistantError."""
+    """Ensure tesla_powerwall exception causes HomeAssistantError."""
 
+    mock_powerwall.set_island_mode.side_effect = PowerwallError("Mock exception")
     with pytest.raises(HomeAssistantError, match="Setting off-grid operation to"):
-        mock_powerwall.set_island_mode = Mock(
-            side_effect=PowerwallError("Mock exception")
-        )
-
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+
+
+async def test_pw3_no_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Switch platform must not create entities for restricted PW3 surface."""
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4"},
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("switch.powerwall_1_2_3_4_off_grid_operation") is None
+    assert "switch.powerwall_1_2_3_4_off_grid_operation" not in entity_registry.entities

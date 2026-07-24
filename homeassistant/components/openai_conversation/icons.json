@@ -1,0 +1,10 @@
+{
+  "services": {
+    "generate_content": {
+      "service": "mdi:receipt-text"
+    },
+    "generate_image": {
+      "service": "mdi:image-sync"
+    }
+  }
+}

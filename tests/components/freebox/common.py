@@ -1,4 +1,5 @@
 """Common methods used across tests for Freebox."""
+
 from unittest.mock import patch
 
 from homeassistant.components.freebox.const import DOMAIN
@@ -17,6 +18,7 @@ async def setup_platform(hass: HomeAssistant, platform: str) -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
         unique_id=MOCK_HOST,
+        version=2,
     )
     mock_entry.add_to_hass(hass)
 

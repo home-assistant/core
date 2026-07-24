@@ -1,64 +1,73 @@
 """Bluetooth support for shelly."""
-from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aioshelly.ble import async_start_scanner
-from aioshelly.ble.const import (
-    BLE_SCAN_RESULT_EVENT,
-    BLE_SCAN_RESULT_VERSION,
-    DEFAULT_DURATION_MS,
-    DEFAULT_INTERVAL_MS,
-    DEFAULT_WINDOW_MS,
-)
+from aioshelly.ble import async_start_scanner, create_scanner
+from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT, BLE_SCAN_RESULT_VERSION
 
 from homeassistant.components.bluetooth import (
-    HaBluetoothConnector,
-    async_get_advertisement_callback,
+    BluetoothScanningMode,
     async_register_scanner,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
-from homeassistant.helpers.device_registry import format_mac
 
 from ..const import BLEScannerMode
-from .scanner import ShellyBLEScanner
 
 if TYPE_CHECKING:
     from ..coordinator import ShellyRpcCoordinator
+
+BLE_SCANNER_MODE_TO_BLUETOOTH_SCANNING_MODE = {
+    BLEScannerMode.PASSIVE: BluetoothScanningMode.PASSIVE,
+    BLEScannerMode.ACTIVE: BluetoothScanningMode.ACTIVE,
+    BLEScannerMode.AUTO: BluetoothScanningMode.AUTO,
+}
 
 
 async def async_connect_scanner(
     hass: HomeAssistant,
     coordinator: ShellyRpcCoordinator,
     scanner_mode: BLEScannerMode,
+    device_id: str,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
-    entry = coordinator.entry
-    source = format_mac(coordinator.mac).upper()
-    new_info_callback = async_get_advertisement_callback(hass)
-    connector = HaBluetoothConnector(
-        # no active connections to shelly yet
-        client=None,  # type: ignore[arg-type]
-        source=source,
-        can_connect=lambda: False,
+    entry = coordinator.config_entry
+    # Options persist as plain strings, coerce so `is` checks work.
+    scanner_mode = BLEScannerMode(scanner_mode)
+    requested_mode = BLE_SCANNER_MODE_TO_BLUETOOTH_SCANNING_MODE[scanner_mode]
+    # AUTO runs the radio passive and lets habluetooth's auto-scheduler
+    # flip the BLE script to active on demand.
+    firmware_active = scanner_mode is BLEScannerMode.ACTIVE
+    current_mode = (
+        BluetoothScanningMode.ACTIVE
+        if firmware_active
+        else BluetoothScanningMode.PASSIVE
     )
-    scanner = ShellyBLEScanner(
-        hass, source, entry.title, new_info_callback, connector, False
+    scanner = create_scanner(
+        coordinator.bluetooth_source,
+        entry.title,
+        requested_mode=requested_mode,
+        current_mode=current_mode,
     )
+    if scanner_mode is BLEScannerMode.AUTO:
+        scanner.set_active_window_provider(device)
     unload_callbacks = [
-        async_register_scanner(hass, scanner, False),
+        async_register_scanner(
+            hass,
+            scanner,
+            source_domain=entry.domain,
+            source_model=coordinator.model,
+            source_config_entry_id=entry.entry_id,
+            source_device_id=device_id,
+        ),
         scanner.async_setup(),
         coordinator.async_subscribe_events(scanner.async_on_event),
     ]
     await async_start_scanner(
         device=device,
-        active=scanner_mode == BLEScannerMode.ACTIVE,
+        active=firmware_active,
         event_type=BLE_SCAN_RESULT_EVENT,
         data_version=BLE_SCAN_RESULT_VERSION,
-        interval_ms=DEFAULT_INTERVAL_MS,
-        window_ms=DEFAULT_WINDOW_MS,
-        duration_ms=DEFAULT_DURATION_MS,
     )
 
     @hass_callback

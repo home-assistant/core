@@ -1,0 +1,74 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "low_nutrients": {
+        "default": "mdi:beaker-alert",
+        "state": {
+          "off": "mdi:beaker"
+        }
+      },
+      "low_water": {
+        "default": "mdi:water-percent-alert",
+        "state": {
+          "off": "mdi:water-percent"
+        }
+      },
+      "pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    },
+    "number": {
+      "light_brightness": {
+        "default": "mdi:brightness-5"
+      },
+      "plant_days": {
+        "default": "mdi:calendar-blank"
+      }
+    },
+    "select": {
+      "display_temperature_unit": {
+        "default": "mdi:thermometer-lines"
+      },
+      "light_brightness": {
+        "default": "mdi:brightness-6",
+        "state": {
+          "high": "mdi:brightness-7"
+        }
+      },
+      "light_mode": {
+        "default": "mdi:sprout",
+        "state": {
+          "flower": "mdi:flower"
+        }
+      }
+    },
+    "sensor": {
+      "water_level": {
+        "default": "mdi:water-percent"
+      }
+    },
+    "switch": {
+      "alarm_sound": {
+        "default": "mdi:bell-ring",
+        "state": {
+          "off": "mdi:bell-off"
+        }
+      },
+      "auto_mode": {
+        "default": "mdi:water-pump",
+        "state": {
+          "off": "mdi:water-pump-off"
+        }
+      },
+      "pump_cycling": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    }
+  }
+}

@@ -1,17 +1,15 @@
 """Light platform for Evil Genius Light."""
-from __future__ import annotations
 
 import asyncio
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components import light
 from homeassistant.components.light import ColorMode, LightEntity, LightEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EvilGeniusEntity, EvilGeniusUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import EvilGeniusConfigEntry, EvilGeniusUpdateCoordinator
+from .entity import EvilGeniusEntity
 from .util import update_when_done
 
 HA_NO_EFFECT = "None"
@@ -20,12 +18,11 @@ FIB_NO_EFFECT = "Solid Color"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EvilGeniusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Evil Genius light platform."""
-    coordinator: EvilGeniusUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([EvilGeniusLight(coordinator)])
+    async_add_entities([EvilGeniusLight(config_entry.runtime_data)])
 
 
 class EvilGeniusLight(EvilGeniusEntity, LightEntity):
@@ -48,16 +45,19 @@ class EvilGeniusLight(EvilGeniusEntity, LightEntity):
         self._attr_effect_list.insert(0, HA_NO_EFFECT)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if light is on."""
         return cast(int, self.coordinator.data["power"]["value"]) == 1
 
     @property
+    @override
     def brightness(self) -> int:
         """Return brightness."""
         return cast(int, self.coordinator.data["brightness"]["value"])
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value [int, int, int]."""
         return cast(
@@ -69,6 +69,7 @@ class EvilGeniusLight(EvilGeniusEntity, LightEntity):
         )
 
     @property
+    @override
     def effect(self) -> str:
         """Return current effect."""
         value = cast(
@@ -82,6 +83,7 @@ class EvilGeniusLight(EvilGeniusEntity, LightEntity):
         return value
 
     @update_when_done
+    @override
     async def async_turn_on(
         self,
         **kwargs: Any,
@@ -108,6 +110,7 @@ class EvilGeniusLight(EvilGeniusEntity, LightEntity):
             await self.coordinator.client.set_path_value("power", 1)
 
     @update_when_done
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         async with asyncio.timeout(5):

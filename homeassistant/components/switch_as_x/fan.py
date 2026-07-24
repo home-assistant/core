@@ -1,14 +1,17 @@
 """Fan support for switch entities."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN, FanEntity
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import BaseToggleEntity
 
@@ -16,7 +19,7 @@ from .entity import BaseToggleEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Fan Switch config entry."""
     registry = er.async_get(hass)
@@ -40,7 +43,10 @@ async def async_setup_entry(
 class FanSwitch(BaseToggleEntity, FanEntity):
     """Represents a Switch as a Fan."""
 
+    _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on.
 
@@ -50,6 +56,7 @@ class FanSwitch(BaseToggleEntity, FanEntity):
         """
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,

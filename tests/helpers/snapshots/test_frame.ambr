@@ -1,0 +1,82 @@
+# serializer version: 1
+# name: test_report_usage[core default]
+  list([
+  ])
+# ---
+# name: test_report_usage[core integration default]
+  list([
+    "Detected that integration 'test_core_integration' test_report_string at homeassistant/components/test_core_integration/light.py, line 23: self.light.is_on. Please create a bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_core_integration%22",
+  ])
+# ---
+# name: test_report_usage[core_behavior ignore]
+  list([
+  ])
+# ---
+# name: test_report_usage[core_behavior log]
+  list([
+    'Detected code that test_report_string. Please report this issue',
+  ])
+# ---
+# name: test_report_usage[core_integration_behavior error]
+  list([
+    "Detected that integration 'test_integration_frame' test_report_string at homeassistant/components/test_integration_frame/light.py, line 23: self.light.is_on. Please create a bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_integration_frame%22",
+  ])
+# ---
+# name: test_report_usage[core_integration_behavior ignore]
+  list([
+  ])
+# ---
+# name: test_report_usage[custom integration default]
+  list([
+    "Detected that custom integration 'test_custom_integration' test_report_string at custom_components/test_custom_integration/light.py, line 23: self.light.is_on. Please report it to the author of the 'test_custom_integration' custom integration",
+  ])
+# ---
+# name: test_report_usage[custom integration error]
+  list([
+    "Detected that custom integration 'test_custom_integration' test_report_string at custom_components/test_custom_integration/light.py, line 23: self.light.is_on. Please report it to the author of the 'test_custom_integration' custom integration",
+  ])
+# ---
+# name: test_report_usage[custom integration ignore]
+  list([
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker[core integration]
+  list([
+    "Detected that integration 'test_core_integration' test_report_string at homeassistant/components/test_core_integration/light.py, line 23: self.light.is_on. Please create a bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_core_integration%22",
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker[core]
+  list([
+    'Detected code that test_report_string. Please report this issue',
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker[custom integration]
+  list([
+    "Detected that custom integration 'test_custom_integration' test_report_string at custom_components/test_custom_integration/light.py, line 23: self.light.is_on. Please create a bug report at https://blablabla.com",
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker[unknown custom integration]
+  list([
+    "Detected that custom integration 'unknown_custom_integration' test_report_string at custom_components/unknown_custom_integration/light.py, line 23: self.light.is_on. Please report it to the author of the 'unknown_custom_integration' custom integration",
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker_other_thread[core integration]
+  list([
+    "Detected that integration 'test_core_integration' test_report_string at homeassistant/components/test_core_integration/light.py, line 23: self.light.is_on. Please create a bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_core_integration%22",
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker_other_thread[core]
+  list([
+    'Detected code that test_report_string. Please report this issue',
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker_other_thread[custom integration]
+  list([
+    "Detected that custom integration 'test_custom_integration' test_report_string at custom_components/test_custom_integration/light.py, line 23: self.light.is_on. Please create a bug report at https://blablabla.com",
+  ])
+# ---
+# name: test_report_usage_find_issue_tracker_other_thread[unknown custom integration]
+  list([
+    "Detected that custom integration 'unknown_custom_integration' test_report_string at custom_components/unknown_custom_integration/light.py, line 23: self.light.is_on. Please report it to the author of the 'unknown_custom_integration' custom integration",
+  ])
+# ---

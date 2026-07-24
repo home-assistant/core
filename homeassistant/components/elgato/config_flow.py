@@ -1,17 +1,18 @@
 """Config flow to configure the Elgato Light integration."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from elgato import Elgato, ElgatoError
 import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.components import onboarding
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -22,19 +23,18 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     host: str
-    port: int
     serial_number: str
     mac: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._async_show_setup_form()
 
         self.host = user_input[CONF_HOST]
-        self.port = user_input[CONF_PORT]
 
         try:
             await self._get_elgato_serial_number(raise_on_progress=False)
@@ -43,13 +43,13 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
+    @override
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
         self.mac = discovery_info.properties.get("id")
-        self.port = discovery_info.port or 9123
 
         try:
             await self._get_elgato_serial_number()
@@ -67,33 +67,95 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, _: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         return self._async_create_entry()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing Elgato device."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            elgato = Elgato(
+                host=user_input[CONF_HOST],
+                session=async_get_clientsession(self.hass),
+            )
+
+            try:
+                info = await elgato.info()
+            except ElgatoError:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(info.serial_number)
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=self._get_reconfigure_entry().data[CONF_HOST],
+                    ): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery of a known Elgato device.
+
+        Only devices already configured (matched via ``registered_devices``)
+        reach this step. It is used to keep the stored host in sync with the
+        current IP address of the device.
+        """
+        mac = format_mac(discovery_info.macaddress)
+
+        for entry in self._async_current_entries():
+            if (entry_mac := entry.data.get(CONF_MAC)) is None or format_mac(
+                entry_mac
+            ) != mac:
+                continue
+            if entry.data[CONF_HOST] != discovery_info.ip:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data | {CONF_HOST: discovery_info.ip},
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
+
+        return self.async_abort(reason="no_devices_found")
 
     @callback
     def _async_show_setup_form(
         self, errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=9123): int,
                 }
             ),
             errors=errors or {},
         )
 
     @callback
-    def _async_create_entry(self) -> FlowResult:
+    def _async_create_entry(self) -> ConfigFlowResult:
         return self.async_create_entry(
             title=self.serial_number,
             data={
                 CONF_HOST: self.host,
-                CONF_PORT: self.port,
                 CONF_MAC: self.mac,
             },
         )
@@ -103,7 +165,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         elgato = Elgato(
             host=self.host,
-            port=self.port,
             session=session,
         )
         info = await elgato.info()
@@ -113,7 +174,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             info.serial_number, raise_on_progress=raise_on_progress
         )
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.host, CONF_PORT: self.port, CONF_MAC: self.mac}
+            updates={CONF_HOST: self.host, CONF_MAC: self.mac}
         )
 
         self.serial_number = info.serial_number

@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+
 from unittest.mock import AsyncMock
 
 from aiohttp.client_exceptions import ClientResponseError

@@ -1,4 +1,5 @@
 """Tests for binary sensors."""
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -6,6 +7,7 @@ from .conftest import (
     _test_sensors,
     get_lifetime_mock,
     get_vitals_mock,
+    get_wifi_status_mock,
 )
 
 
@@ -22,14 +24,13 @@ async def test_sensors(hass: HomeAssistant) -> None:
     ]
 
     mock_vitals_first_update = get_vitals_mock()
-    mock_vitals_first_update.contactor_closed = False
-    mock_vitals_first_update.vehicle_connected = True
 
     mock_vitals_second_update = get_vitals_mock()
     mock_vitals_second_update.contactor_closed = True
     mock_vitals_second_update.vehicle_connected = False
 
     lifetime_mock = get_lifetime_mock()
+    wifi_status_mock = get_wifi_status_mock()
 
     await _test_sensors(
         hass,
@@ -38,4 +39,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
         vitals_second_update=mock_vitals_second_update,
         lifetime_first_update=lifetime_mock,
         lifetime_second_update=lifetime_mock,
+        wifi_status_first_update=wifi_status_mock,
+        wifi_status_second_update=wifi_status_mock,
     )

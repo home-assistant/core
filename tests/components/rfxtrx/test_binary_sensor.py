@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx sensor platform."""
+
 import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN
@@ -25,7 +26,7 @@ EVENT_AC_118CDEA_2_ON = "0b1100100118cdea02010f70"
 async def test_one(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 sensor."""
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f230010f71": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -49,7 +50,7 @@ async def test_one_pt2262(hass: HomeAssistant, rfxtrx) -> None:
             }
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -57,17 +58,17 @@ async def test_one_pt2262(hass: HomeAssistant, rfxtrx) -> None:
     await hass.async_block_till_done()
     await hass.async_start()
 
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226700")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226700"
 
     await rfxtrx.signal("0913000022670e013970")
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226700")
     assert state.state == "on"
 
     await rfxtrx.signal("09130000226707013d70")
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226700")
     assert state.state == "off"
 
 
@@ -76,7 +77,7 @@ async def test_pt2262_unconfigured(hass: HomeAssistant, rfxtrx) -> None:
     entry_data = create_rfx_test_cfg(
         devices={"0913000022670e013970": {}, "09130000226707013970": {}}
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -84,10 +85,10 @@ async def test_pt2262_unconfigured(hass: HomeAssistant, rfxtrx) -> None:
     await hass.async_block_till_done()
     await hass.async_start()
 
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226707")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226707"
 
     state = hass.states.get("binary_sensor.pt2262_226707")
     assert state
@@ -97,7 +98,7 @@ async def test_pt2262_unconfigured(hass: HomeAssistant, rfxtrx) -> None:
 
 @pytest.mark.parametrize(
     ("state", "event"),
-    [["on", "0b1100cd0213c7f230010f71"], ["off", "0b1100cd0213c7f230000f71"]],
+    [("on", "0b1100cd0213c7f230010f71"), ("off", "0b1100cd0213c7f230000f71")],
 )
 async def test_state_restore(hass: HomeAssistant, rfxtrx, state, event) -> None:
     """State restoration."""
@@ -107,7 +108,7 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state, event) -> None:
     mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
 
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f230010f71": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -126,7 +127,7 @@ async def test_several(hass: HomeAssistant, rfxtrx) -> None:
             "0b1100100118cdea03010f70": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -188,7 +189,7 @@ async def test_off_delay_restore(hass: HomeAssistant, rfxtrx) -> None:
     )
 
     entry_data = create_rfx_test_cfg(devices={EVENT_AC_118CDEA_2_ON: {"off_delay": 5}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -206,7 +207,7 @@ async def test_off_delay(hass: HomeAssistant, rfxtrx, timestep) -> None:
     entry_data = create_rfx_test_cfg(
         devices={"0b1100100118cdea02010f70": {"off_delay": 5}}
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -309,7 +310,7 @@ async def test_pt2262_duplicate_id(hass: HomeAssistant, rfxtrx) -> None:
             },
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -317,7 +318,7 @@ async def test_pt2262_duplicate_id(hass: HomeAssistant, rfxtrx) -> None:
     await hass.async_block_till_done()
     await hass.async_start()
 
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226700")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226700"

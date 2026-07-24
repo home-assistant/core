@@ -1,16 +1,16 @@
 """Charge and Climate Control Support for the Nissan Leaf."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LeafDataStore, LeafEntity
+from . import LeafDataStore
 from .const import DATA_CLIMATE, DATA_LEAF
+from .entity import LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,10 +42,12 @@ class LeafClimateSwitch(LeafEntity, SwitchEntity):
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_climatecontrol"
 
     @property
+    @override
     def name(self) -> str:
         """Switch name."""
         return f"{self.car.leaf.nickname} Climate Control"
 
+    @override
     def log_registration(self) -> None:
         """Log registration."""
         _LOGGER.debug(
@@ -54,6 +56,7 @@ class LeafClimateSwitch(LeafEntity, SwitchEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return climate control attributes."""
         attrs = super().extra_state_attributes
@@ -61,15 +64,18 @@ class LeafClimateSwitch(LeafEntity, SwitchEntity):
         return attrs
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if climate control is on."""
         return bool(self.car.data[DATA_CLIMATE])
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on climate control."""
         if await self.car.async_set_climate(True):
             self.car.data[DATA_CLIMATE] = True
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off climate control."""
         if await self.car.async_set_climate(False):

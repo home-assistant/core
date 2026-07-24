@@ -1,33 +1,24 @@
 """Support for Ecoforest number platform."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyecoforest.models.device import Device
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import EcoforestCoordinator
+from .coordinator import EcoforestConfigEntry
 from .entity import EcoforestEntity
 
 
-@dataclass
-class EcoforestRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EcoforestNumberEntityDescription(NumberEntityDescription):
+    """Describes an ecoforest number entity."""
 
     value_fn: Callable[[Device], float | None]
-
-
-@dataclass
-class EcoforestNumberEntityDescription(
-    NumberEntityDescription, EcoforestRequiredKeysMixin
-):
-    """Describes an ecoforest number entity."""
 
 
 NUMBER_ENTITIES = (
@@ -44,11 +35,11 @@ NUMBER_ENTITIES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcoforestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ecoforest number platform."""
-    coordinator: EcoforestCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [
         EcoforestNumberEntity(coordinator, description)
@@ -64,10 +55,12 @@ class EcoforestNumberEntity(EcoforestEntity, NumberEntity):
     entity_description: EcoforestNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the native value."""
         await self.coordinator.api.set_power(int(value))

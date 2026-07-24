@@ -1,66 +1,59 @@
 """Support for Risco alarms."""
-from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrisco.common import Partition
+from pyrisco.local.partition import Partition as LocalPartition
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PIN,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
+from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LocalData, RiscoDataUpdateCoordinator, is_local
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
-    DATA_COORDINATOR,
     DEFAULT_OPTIONS,
     DOMAIN,
     RISCO_ARM,
     RISCO_GROUPS,
     RISCO_PARTIAL_ARM,
 )
+from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudEntity
+from .models import RiscoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 STATES_TO_SUPPORTED_FEATURES = {
-    STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-    STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+    AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    ),
+    AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+    AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RiscoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Risco alarm control panel."""
     options = {**DEFAULT_OPTIONS, **config_entry.options}
-    if is_local(config_entry):
-        local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
+    risco_data = config_entry.runtime_data
+    if local_data := risco_data.local_data:
         async_add_entities(
             RiscoLocalAlarm(
                 local_data.system.id,
@@ -72,10 +65,8 @@ async def async_setup_entry(
             )
             for partition_id, partition in local_data.system.partitions.items()
         )
-    else:
-        coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
-            config_entry.entry_id
-        ][DATA_COORDINATOR]
+    elif cloud_data := risco_data.cloud_data:
+        coordinator = cloud_data.coordinator
         async_add_entities(
             RiscoCloudAlarm(
                 coordinator, partition_id, config_entry.data[CONF_PIN], options
@@ -87,7 +78,6 @@ async def async_setup_entry(
 class RiscoAlarm(AlarmControlPanelEntity):
     """Representation of a Risco cloud partition."""
 
-    _attr_code_format = CodeFormat.NUMBER
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -105,22 +95,28 @@ class RiscoAlarm(AlarmControlPanelEntity):
         self._partition_id = partition_id
         self._partition = partition
         self._code = code
-        self._attr_code_arm_required = options[CONF_CODE_ARM_REQUIRED]
-        self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
+        arm_required = options[CONF_CODE_ARM_REQUIRED]
+        disarm_required = options[CONF_CODE_DISARM_REQUIRED]
+        self._attr_code_arm_required = arm_required
+        self._code_disarm_required = disarm_required
+        self._attr_code_format = (
+            CodeFormat.NUMBER if arm_required or disarm_required else None
+        )
         self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
         self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
         for state in self._ha_to_risco:
             self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
 
     @property
-    def state(self) -> str | None:
+    @override
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._partition.triggered:
-            return STATE_ALARM_TRIGGERED
+            return AlarmControlPanelState.TRIGGERED
         if self._partition.arming:
-            return STATE_ALARM_ARMING
+            return AlarmControlPanelState.ARMING
         if self._partition.disarmed:
-            return STATE_ALARM_DISARMED
+            return AlarmControlPanelState.DISARMED
         if self._partition.armed:
             return self._risco_to_ha[RISCO_ARM]
         if self._partition.partially_armed:
@@ -132,10 +128,11 @@ class RiscoAlarm(AlarmControlPanelEntity):
 
         return None
 
-    def _validate_code(self, code):
+    def _validate_code(self, code: str | None) -> bool:
         """Validate given code."""
         return code == self._code
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if self._code_disarm_required and not self._validate_code(code):
@@ -143,23 +140,27 @@ class RiscoAlarm(AlarmControlPanelEntity):
             return
         await self._call_alarm_method("disarm")
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._arm(STATE_ALARM_ARMED_HOME, code)
+        await self._arm(AlarmControlPanelState.ARMED_HOME, code)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._arm(STATE_ALARM_ARMED_AWAY, code)
+        await self._arm(AlarmControlPanelState.ARMED_AWAY, code)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self._arm(STATE_ALARM_ARMED_NIGHT, code)
+        await self._arm(AlarmControlPanelState.ARMED_NIGHT, code)
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        await self._arm(STATE_ALARM_ARMED_CUSTOM_BYPASS, code)
+        await self._arm(AlarmControlPanelState.ARMED_CUSTOM_BYPASS, code)
 
-    async def _arm(self, mode, code):
+    async def _arm(self, mode: AlarmControlPanelState, code: str | None) -> None:
         if self.code_arm_required and not self._validate_code(code):
             _LOGGER.warning("Wrong code entered for %s", mode)
             return
@@ -202,10 +203,12 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
             manufacturer="Risco",
         )
 
+    @override
     def _get_data_from_coordinator(self) -> None:
         self._partition = self.coordinator.data.partitions[self._partition_id]
 
-    async def _call_alarm_method(self, method, *args):
+    @override
+    async def _call_alarm_method(self, method: str, *args: Any) -> None:
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
@@ -220,7 +223,7 @@ class RiscoLocalAlarm(RiscoAlarm):
         self,
         system_id: str,
         partition_id: int,
-        partition: Partition,
+        partition: LocalPartition,
         partition_updates: dict[int, Callable[[], Any]],
         code: str,
         options: dict[str, Any],
@@ -238,9 +241,11 @@ class RiscoLocalAlarm(RiscoAlarm):
             manufacturer="Risco",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._partition_updates[self._partition_id] = self.async_write_ha_state
 
+    @override
     async def _call_alarm_method(self, method: str, *args: Any) -> None:
         await getattr(self._partition, method)(*args)

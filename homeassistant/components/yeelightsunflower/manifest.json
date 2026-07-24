@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/yeelightsunflower",
   "iot_class": "local_polling",
   "loggers": ["yeelightsunflower"],
+  "quality_scale": "legacy",
   "requirements": ["yeelightsunflower==0.0.10"]
 }

@@ -1,7 +1,6 @@
 """Support for the sensors in a GreenEye Monitor."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import greeneye
 
@@ -54,55 +53,54 @@ async def async_setup_platform(
     def on_new_monitor(monitor: greeneye.monitor.Monitor) -> None:
         monitor_config = next(
             filter(
-                lambda monitor_config: monitor_config[CONF_SERIAL_NUMBER]
-                == monitor.serial_number,
+                lambda monitor_config: (
+                    monitor_config[CONF_SERIAL_NUMBER] == monitor.serial_number
+                ),
                 monitor_configs,
             ),
             None,
         )
         if monitor_config:
-            entities: list[GEMSensor] = []
-
             channel_configs = monitor_config[CONF_CHANNELS]
-            for sensor in channel_configs:
-                entities.append(
-                    CurrentSensor(
-                        monitor,
-                        sensor[CONF_NUMBER],
-                        sensor[CONF_NAME],
-                        sensor[CONF_NET_METERING],
-                    )
+            entities: list[GEMSensor] = [
+                CurrentSensor(
+                    monitor,
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                    sensor[CONF_NET_METERING],
                 )
+                for sensor in channel_configs
+            ]
 
             pulse_counter_configs = monitor_config[CONF_PULSE_COUNTERS]
-            for sensor in pulse_counter_configs:
-                entities.append(
-                    PulseCounter(
-                        monitor,
-                        sensor[CONF_NUMBER],
-                        sensor[CONF_NAME],
-                        sensor[CONF_COUNTED_QUANTITY],
-                        sensor[CONF_TIME_UNIT],
-                        sensor[CONF_COUNTED_QUANTITY_PER_PULSE],
-                    )
+            entities.extend(
+                PulseCounter(
+                    monitor,
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                    sensor[CONF_COUNTED_QUANTITY],
+                    sensor[CONF_TIME_UNIT],
+                    sensor[CONF_COUNTED_QUANTITY_PER_PULSE],
                 )
+                for sensor in pulse_counter_configs
+            )
 
             temperature_sensor_configs = monitor_config[CONF_TEMPERATURE_SENSORS]
-            for sensor in temperature_sensor_configs[CONF_SENSORS]:
-                entities.append(
-                    TemperatureSensor(
-                        monitor,
-                        sensor[CONF_NUMBER],
-                        sensor[CONF_NAME],
-                        temperature_sensor_configs[CONF_TEMPERATURE_UNIT],
-                    )
+            entities.extend(
+                TemperatureSensor(
+                    monitor,
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                    temperature_sensor_configs[CONF_TEMPERATURE_UNIT],
                 )
+                for sensor in temperature_sensor_configs[CONF_SENSORS]
+            )
 
             voltage_sensor_configs = monitor_config[CONF_VOLTAGE_SENSORS]
-            for sensor in voltage_sensor_configs:
-                entities.append(
-                    VoltageSensor(monitor, sensor[CONF_NUMBER], sensor[CONF_NAME])
-                )
+            entities.extend(
+                VoltageSensor(monitor, sensor[CONF_NUMBER], sensor[CONF_NAME])
+                for sensor in voltage_sensor_configs
+            )
 
             async_add_entities(entities)
             monitor_configs.remove(monitor_config)
@@ -110,13 +108,13 @@ async def async_setup_platform(
         if len(monitor_configs) == 0:
             monitors.remove_listener(on_new_monitor)
 
-    monitors: greeneye.Monitors = hass.data[DATA_GREENEYE_MONITOR]
+    monitors = hass.data[DATA_GREENEYE_MONITOR]
     monitors.add_listener(on_new_monitor)
     for monitor in monitors.monitors.values():
         on_new_monitor(monitor)
 
 
-UnderlyingSensorType = (
+type UnderlyingSensorType = (
     greeneye.monitor.Channel
     | greeneye.monitor.PulseCounter
     | greeneye.monitor.TemperatureSensor
@@ -148,10 +146,12 @@ class GEMSensor(SensorEntity):
             f"{self._monitor_serial_number}-{self._sensor_type}-{self._number}"
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Wait for and connect to the sensor."""
         self._sensor.add_listener(self.async_write_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove listener from the sensor."""
         if self._sensor:
@@ -177,11 +177,13 @@ class CurrentSensor(GEMSensor):
         self._net_metering = net_metering
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current number of watts being used by the channel."""
         return self._sensor.watts
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return total wattseconds in the state dictionary."""
         if self._net_metering:
@@ -216,17 +218,17 @@ class PulseCounter(GEMSensor):
         self._attr_native_unit_of_measurement = f"{counted_quantity}/{self._time_unit}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current rate of change for the given pulse counter."""
         if self._sensor.pulses_per_second is None:
             return None
 
-        result = (
+        return (
             self._sensor.pulses_per_second
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return result
 
     @property
     def _seconds_per_time_unit(self) -> int:
@@ -245,6 +247,7 @@ class PulseCounter(GEMSensor):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return total pulses in the data dictionary."""
         return {DATA_PULSES: self._sensor.pulses}
@@ -266,6 +269,7 @@ class TemperatureSensor(GEMSensor):
         self._attr_native_unit_of_measurement = unit
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current temperature being reported by this sensor."""
         return self._sensor.temperature
@@ -285,6 +289,7 @@ class VoltageSensor(GEMSensor):
         self._sensor: greeneye.monitor.VoltageSensor = self._sensor
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current voltage being reported by this sensor."""
         return self._sensor.voltage

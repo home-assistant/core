@@ -1,9 +1,8 @@
 """Platform for update integration."""
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import UpdateFirmwareCheck
@@ -15,30 +14,24 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, REGULAR_FIRMWARE
+from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 0
 
-@dataclass
-class DevoloUpdateRequiredKeysMixin:
-    """Mixin for required keys."""
+
+@dataclass(frozen=True, kw_only=True)
+class DevoloUpdateEntityDescription(UpdateEntityDescription):
+    """Describes devolo update entity."""
 
     latest_version: Callable[[UpdateFirmwareCheck], str]
     update_func: Callable[[Device], Awaitable[bool]]
-
-
-@dataclass
-class DevoloUpdateEntityDescription(
-    UpdateEntityDescription, DevoloUpdateRequiredKeysMixin
-):
-    """Describes devolo update entity."""
 
 
 UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {
@@ -53,13 +46,12 @@ UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinators"]
+    coordinators = entry.runtime_data.coordinators
 
     async_add_entities(
         [
@@ -67,7 +59,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[REGULAR_FIRMWARE],
                 UPDATE_TYPES[REGULAR_FIRMWARE],
-                device,
             )
         ]
     )
@@ -84,22 +75,23 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
+        entry: DevoloHomeNetworkConfigEntry,
+        coordinator: DevoloDataUpdateCoordinator,
         description: DevoloUpdateEntityDescription,
-        device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
-        super().__init__(entry, coordinator, device)
+        super().__init__(entry, coordinator)
         self._in_progress_old_version: str | None = None
 
     @property
+    @override
     def installed_version(self) -> str:
         """Version currently in use."""
         return self.device.firmware_version
 
     @property
+    @override
     def latest_version(self) -> str:
         """Latest version available for install."""
         if latest_version := self.entity_description.latest_version(
@@ -109,10 +101,12 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
         return self.device.firmware_version
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Update installation in progress."""
         return self._in_progress_old_version == self.installed_version
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -123,9 +117,13 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authentication to set or change the password"
+                translation_domain=DOMAIN,
+                translation_key="password_protected",
+                translation_placeholders={"title": self.entry.title},
             ) from ex
         except DeviceUnavailable as ex:
             raise HomeAssistantError(
-                f"Device {self.entry.title} did not respond"
+                translation_domain=DOMAIN,
+                translation_key="no_response",
+                translation_placeholders={"title": self.entry.title},
             ) from ex

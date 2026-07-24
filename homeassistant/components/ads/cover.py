@@ -1,7 +1,6 @@
 """Support for ADS covers."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import pyads
 import voluptuous as vol
@@ -9,24 +8,20 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_ADS_VAR,
-    CONF_ADS_VAR_POSITION,
-    DATA_ADS,
-    STATE_KEY_POSITION,
-    STATE_KEY_STATE,
-    AdsEntity,
-)
+from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .entity import AdsEntity
+from .hub import AdsHub
 
 DEFAULT_NAME = "ADS Cover"
 
@@ -34,10 +29,13 @@ CONF_ADS_VAR_SET_POS = "adsvar_set_position"
 CONF_ADS_VAR_OPEN = "adsvar_open"
 CONF_ADS_VAR_CLOSE = "adsvar_close"
 CONF_ADS_VAR_STOP = "adsvar_stop"
+CONF_ADS_VAR_POSITION = "adsvar_position"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+STATE_KEY_POSITION = "position"
+
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_ADS_VAR): cv.string,
+        vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
         vol.Optional(CONF_ADS_VAR_SET_POS): cv.string,
         vol.Optional(CONF_ADS_VAR_CLOSE): cv.string,
@@ -58,14 +56,14 @@ def setup_platform(
     """Set up the cover platform for ADS."""
     ads_hub = hass.data[DATA_ADS]
 
-    ads_var_is_closed = config.get(CONF_ADS_VAR)
-    ads_var_position = config.get(CONF_ADS_VAR_POSITION)
-    ads_var_pos_set = config.get(CONF_ADS_VAR_SET_POS)
-    ads_var_open = config.get(CONF_ADS_VAR_OPEN)
-    ads_var_close = config.get(CONF_ADS_VAR_CLOSE)
-    ads_var_stop = config.get(CONF_ADS_VAR_STOP)
-    name = config[CONF_NAME]
-    device_class = config.get(CONF_DEVICE_CLASS)
+    ads_var_is_closed: str = config[CONF_ADS_VAR]
+    ads_var_position: str | None = config.get(CONF_ADS_VAR_POSITION)
+    ads_var_pos_set: str | None = config.get(CONF_ADS_VAR_SET_POS)
+    ads_var_open: str | None = config.get(CONF_ADS_VAR_OPEN)
+    ads_var_close: str | None = config.get(CONF_ADS_VAR_CLOSE)
+    ads_var_stop: str | None = config.get(CONF_ADS_VAR_STOP)
+    name: str = config[CONF_NAME]
+    device_class: CoverDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     add_entities(
         [
@@ -89,16 +87,16 @@ class AdsCover(AdsEntity, CoverEntity):
 
     def __init__(
         self,
-        ads_hub,
-        ads_var_is_closed,
-        ads_var_position,
-        ads_var_pos_set,
-        ads_var_open,
-        ads_var_close,
-        ads_var_stop,
-        name,
-        device_class,
-    ):
+        ads_hub: AdsHub,
+        ads_var_is_closed: str,
+        ads_var_position: str | None,
+        ads_var_pos_set: str | None,
+        ads_var_open: str | None,
+        ads_var_close: str | None,
+        ads_var_stop: str | None,
+        name: str,
+        device_class: CoverDeviceClass | None,
+    ) -> None:
         """Initialize AdsCover entity."""
         super().__init__(ads_hub, name, ads_var_is_closed)
         if self._attr_unique_id is None:
@@ -124,6 +122,7 @@ class AdsCover(AdsEntity, CoverEntity):
         if ads_var_pos_set is not None:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         if self._ads_var is not None:
@@ -135,6 +134,7 @@ class AdsCover(AdsEntity, CoverEntity):
             )
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._ads_var is not None:
@@ -144,15 +144,18 @@ class AdsCover(AdsEntity, CoverEntity):
         return None
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return current position of cover."""
         return self._state_dict[STATE_KEY_POSITION]
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
         if self._ads_var_stop:
             self._ads_hub.write_by_name(self._ads_var_stop, True, pyads.PLCTYPE_BOOL)
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
         position = kwargs[ATTR_POSITION]
@@ -161,6 +164,7 @@ class AdsCover(AdsEntity, CoverEntity):
                 self._ads_var_pos_set, position, pyads.PLCTYPE_BYTE
             )
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
         if self._ads_var_open is not None:
@@ -168,6 +172,7 @@ class AdsCover(AdsEntity, CoverEntity):
         elif self._ads_var_pos_set is not None:
             self.set_cover_position(position=100)
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
         if self._ads_var_close is not None:
@@ -176,6 +181,7 @@ class AdsCover(AdsEntity, CoverEntity):
             self.set_cover_position(position=0)
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if state has not been updated yet."""
         if self._ads_var is not None or self._ads_var_position is not None:

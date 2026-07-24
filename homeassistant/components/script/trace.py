@@ -1,7 +1,6 @@
 """Trace support for script."""
-from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
@@ -25,11 +24,11 @@ class ScriptTrace(ActionTrace):
 def trace_script(
     hass: HomeAssistant,
     item_id: str,
-    config: dict[str, Any],
-    blueprint_inputs: dict[str, Any],
+    config: dict[str, Any] | None,
+    blueprint_inputs: dict[str, Any] | None,
     context: Context,
     trace_config: dict[str, Any],
-) -> Iterator[ScriptTrace]:
+) -> Generator[ScriptTrace]:
     """Trace execution of a script."""
     trace = ScriptTrace(item_id, config, blueprint_inputs, context)
     async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
@@ -39,7 +38,7 @@ def trace_script(
     except Exception as ex:
         if item_id:
             trace.set_error(ex)
-        raise ex
+        raise
     finally:
         if item_id:
             trace.finished()

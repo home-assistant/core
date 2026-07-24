@@ -1,0 +1,76 @@
+{
+  "components": {
+    "main02": {
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 200.0,
+          "unit": "C",
+          "timestamp": "2024-12-02T20:18:52.095Z"
+        }
+      }
+    },
+    "main": {
+      "thermostatOperatingState": {
+        "thermostatOperatingState": {
+          "value": null
+        }
+      },
+      "signalStrength": {
+        "rssi": {
+          "value": -84,
+          "unit": "dBm",
+          "timestamp": "2025-03-07T20:53:55.346Z"
+        },
+        "lqi": {
+          "value": 255,
+          "timestamp": "2025-03-07T20:53:55.387Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 21.0,
+          "unit": "C",
+          "timestamp": "2025-03-07T16:58:23.773Z"
+        }
+      },
+      "thermostatHeatingSetpoint": {
+        "heatingSetpoint": {
+          "value": 23.0,
+          "unit": "C",
+          "timestamp": "2025-02-10T17:48:38.299Z"
+        },
+        "heatingSetpointRange": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "valleyboard16460.debug": {
+        "value": {
+          "value": "<table style=\"font-size:0.6em;min-width:100%\"><tbody>\n        <tr><th align=\"left\" style=\"width:35%\">Actual</th><td style=\"width:65%\">_TZE200_rxntag7i</td></tr>\n        <tr><th align=\"left\">Expected</th><td>_TZE200_4hbx5cvx</td></tr>\n        <tr><th align=\"left\">Profile</th><td>normal-thermostat-v3</td></tr>\n        <tr><th align=\"left\">Mode</th><td>Similarity</td></tr>\n        <tr><th align=\"left\">Preferences</th><td>Modified</td></tr>\n        <tr><th align=\"left\">Exposes EF00</th><td>Yes</td></tr>\n        <tr><th align=\"left\">Default DP</th><td>No</td></tr>\n        </tbody></table>",
+          "timestamp": "2025-03-05T03:04:54.025Z"
+        }
+      },
+      "thermostatMode": {
+        "thermostatMode": {
+          "value": "heat",
+          "data": {},
+          "timestamp": "2024-12-30T08:22:19.273Z"
+        },
+        "supportedThermostatModes": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      }
+    }
+  }
+}

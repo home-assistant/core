@@ -1,23 +1,23 @@
 """Support for sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import async_setup_entry_platform
-from .coordinator import FjaraskupanCoordinator
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FjaraskupanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities dynamically through discovery."""
 
@@ -52,12 +52,14 @@ class PeriodicVentingTime(CoordinatorEntity[FjaraskupanCoordinator], NumberEntit
         self._attr_device_info = device_info
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if data := self.coordinator.data:
             return data.periodic_venting
         return None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         async with self.coordinator.async_connect_and_update() as device:

@@ -1,4 +1,5 @@
 """Constants for the Netgear LTE integration."""
+
 import logging
 from typing import Final
 
@@ -14,9 +15,14 @@ CONF_BINARY_SENSOR: Final = "binary_sensor"
 CONF_NOTIFY: Final = "notify"
 CONF_SENSOR: Final = "sensor"
 
-DISPATCHER_NETGEAR_LTE = "netgear_lte_update"
+DATA_HASS_CONFIG = "netgear_lte_hass_config"
+DATA_SESSION = "session"
+# https://kb.netgear.com/31160/How-do-I-change-my-4G-LTE-Modem-s-IP-address-range
+DEFAULT_HOST = "192.168.5.1"
 DOMAIN: Final = "netgear_lte"
 
 FAILOVER_MODES = ["auto", "wire", "mobile"]
 
 LOGGER = logging.getLogger(__package__)
+
+MANUFACTURER: Final = "Netgear"

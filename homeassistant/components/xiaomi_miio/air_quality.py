@@ -1,24 +1,30 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+
 from collections.abc import Callable
 import logging
+from typing import Any, override
 
-from miio import AirQualityMonitor, AirQualityMonitorCGDN1, DeviceException
+from miio import (
+    AirQualityMonitor,
+    AirQualityMonitorCGDN1,
+    Device as MiioDevice,
+    DeviceException,
+)
 
 from homeassistant.components.air_quality import AirQualityEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     MODEL_AIRQUALITYMONITOR_B1,
     MODEL_AIRQUALITYMONITOR_CGDN1,
     MODEL_AIRQUALITYMONITOR_S1,
     MODEL_AIRQUALITYMONITOR_V1,
 )
-from .device import XiaomiMiioEntity
+from .entity import XiaomiMiioEntity
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +46,18 @@ PROP_TO_ATTR = {
 class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _attr_icon = "mdi:cloud"
+
+    def __init__(
+        self,
+        name: str,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._icon = "mdi:cloud"
-        self._available = None
         self._air_quality_index = None
         self._carbon_dioxide = None
         self._carbon_dioxide_equivalent = None
@@ -64,27 +76,19 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
             self._total_volatile_organic_compounds = round(state.tvoc, 3)
             self._temperature = round(state.temperature, 2)
             self._humidity = round(state.humidity, 2)
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
-            self._available = False
+            self._attr_available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
+    @override
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._air_quality_index
 
     @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._carbon_dioxide
@@ -95,6 +99,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._carbon_dioxide_equivalent
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._particulate_matter_2_5
@@ -115,7 +120,8 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._humidity
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data = {}
 
@@ -129,6 +135,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
 class AirMonitorS1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
+    @override
     async def async_update(self):
         """Fetch state from the miio device."""
         try:
@@ -139,29 +146,31 @@ class AirMonitorS1(AirMonitorB1):
             self._total_volatile_organic_compounds = state.tvoc
             self._temperature = state.temperature
             self._humidity = state.humidity
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class AirMonitorV1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
+    @override
     async def async_update(self):
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
             self._air_quality_index = state.aqi
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    @override
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return None
@@ -170,12 +179,18 @@ class AirMonitorV1(AirMonitorB1):
 class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for cgllc.airm.cgdn1 device."""
 
-    def __init__(self, name, device, entry, unique_id):
+    _attr_icon = "mdi:cloud"
+
+    def __init__(
+        self,
+        name: str,
+        device: MiioDevice,
+        entry: XiaomiMiioConfigEntry,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._icon = "mdi:cloud"
-        self._available = None
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None
@@ -188,32 +203,25 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
             self._carbon_dioxide = state.co2
             self._particulate_matter_2_5 = round(state.pm25, 1)
             self._particulate_matter_10 = round(state.pm10, 1)
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
-            self._available = False
+            self._attr_available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._carbon_dioxide
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._particulate_matter_2_5
 
     @property
+    @override
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._particulate_matter_10
@@ -241,8 +249,8 @@ DEVICE_MAP: dict[str, dict[str, Callable]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi Air Quality from a config entry."""
     entities = []

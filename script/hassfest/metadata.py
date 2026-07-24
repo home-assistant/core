@@ -1,4 +1,5 @@
 """Package metadata validation."""
+
 import tomllib
 
 from homeassistant.const import REQUIRED_PYTHON_VER, __version__
@@ -9,8 +10,7 @@ from .model import Config, Integration
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate project metadata keys."""
     metadata_path = config.root / "pyproject.toml"
-    with open(metadata_path, "rb") as fp:
-        data = tomllib.load(fp)
+    data = tomllib.loads(metadata_path.read_text())
 
     try:
         if data["project"]["version"] != __version__:
@@ -25,7 +25,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         if data["project"]["requires-python"] != required_py_version:
             config.add_error(
                 "metadata",
-                f"'project.requires-python' value doesn't match '{required_py_version}'",
+                "'project.requires-python' value doesn't"
+                f" match '{required_py_version}'",
             )
     except KeyError:
         config.add_error("metadata", "No 'options.python_requires' key found!")

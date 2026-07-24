@@ -1,10 +1,19 @@
 """Test the ibeacon sensors."""
+
 from datetime import timedelta
 import time
 
 import pytest
 
-from homeassistant.components.ibeacon.const import ATTR_SOURCE, DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
+from homeassistant.components.ibeacon.const import (
+    ATTR_SOURCE,
+    CONF_ALLOW_NAMELESS_UUIDS,
+    DOMAIN,
+    UPDATE_INTERVAL,
+)
 from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -26,16 +35,17 @@ from tests.components.bluetooth import (
     inject_advertisement_with_time_and_source_connectable,
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
 async def test_many_groups_same_address_ignored(hass: HomeAssistant) -> None:
-    """Test the different uuid, major, minor from many addresses removes all associated entities."""
+    """Test rotating uuid/major/minor removes all associated entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
@@ -146,8 +156,111 @@ async def test_ignore_default_name(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids()) == before_entity_count
 
 
+async def test_default_name_allowlisted(hass: HomeAssistant) -> None:
+    """Test we do NOT ignore beacons with default device name but allowlisted UUID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_ALLOW_NAMELESS_UUIDS: ["426c7565-4368-6172-6d42-6561636f6e73"]},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) > before_entity_count
+
+
+async def test_default_name_allowlisted_restore(hass: HomeAssistant) -> None:
+    """Test ignored nameless iBeacons restore on allowlist add."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"new_uuid": "426c7565-4368-6172-6d42-6561636f6e73"},
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) > before_entity_count
+
+
+async def test_default_name_allowlisted_restore_late(hass: HomeAssistant) -> None:
+    """Test allowlisting a no-longer-advertised nameless iBeacon has no effect."""
+    start_monotonic = time.monotonic()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+    # Fastforward time until the device is no longer advertised
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"new_uuid": "426c7565-4368-6172-6d42-6561636f6e73"},
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+
 async def test_rotating_major_minor_and_mac_with_name(hass: HomeAssistant) -> None:
-    """Test the different uuid, major, minor from many addresses removes all associated entities."""
+    """Test rotating major/minor/mac with name removes entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )
@@ -182,7 +295,7 @@ async def test_rotating_major_minor_and_mac_with_name(hass: HomeAssistant) -> No
 
 
 async def test_rotating_major_minor_and_mac_no_name(hass: HomeAssistant) -> None:
-    """Test no-name devices with different uuid, major, minor from many addresses removes all associated entities."""
+    """Test no-name devices with rotating major/minor/mac removes entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
     )

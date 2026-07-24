@@ -1,5 +1,4 @@
 """Test the legacy stt setup."""
-from __future__ import annotations
 
 from pathlib import Path
 
@@ -40,7 +39,7 @@ async def test_platform_setup_with_error(
         discovery_info: DiscoveryInfoType | None = None,
     ) -> Provider:
         """Raise exception during platform setup."""
-        raise Exception("Setup error")  # pylint: disable=broad-exception-raised
+        raise Exception("Setup error")  # noqa: TRY002
 
     mock_stt_platform(hass, tmp_path, "bad_stt", async_get_engine=async_get_engine)
 

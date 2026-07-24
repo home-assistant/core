@@ -1,4 +1,5 @@
 """The Recovery Mode integration."""
+
 from homeassistant.components import persistent_notification
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv

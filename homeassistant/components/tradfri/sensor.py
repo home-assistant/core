@@ -1,9 +1,8 @@
 """Support for IKEA Tradfri sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -14,42 +13,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
-    Platform,
-    UnitOfTime,
-)
+from homeassistant.const import Platform, UnitOfDensity, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base_class import TradfriBaseEntity
-from .const import (
-    CONF_GATEWAY_ID,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    KEY_API,
-    LOGGER,
-)
-from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .const import CONF_GATEWAY_ID, DOMAIN, LOGGER
+from .coordinator import TradfriConfigEntry, TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
-@dataclass
-class TradfriSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TradfriSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tradfri sensor entities."""
 
     value: Callable[[Device], Any | None]
-
-
-@dataclass
-class TradfriSensorEntityDescription(
-    SensorEntityDescription,
-    TradfriSensorEntityDescriptionMixin,
-):
-    """Class describing Tradfri sensor entities."""
 
 
 def _get_air_quality(device: Device) -> int | None:
@@ -79,7 +57,7 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
         key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value=lambda device: cast(int, device.device_info.battery_level),
     ),
 )
@@ -90,8 +68,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         key="aqi",
         translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:air-filter",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
@@ -99,7 +76,6 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         translation_key="filter_life_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),
 )
@@ -136,17 +112,17 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: TradfriConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Tradfri config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api = coordinator_data[KEY_API]
+    tradfri_data = config_entry.runtime_data
+    api = tradfri_data.api
 
     entities: list[TradfriSensor] = []
 
-    for device_coordinator in coordinator_data[COORDINATOR_LIST]:
+    for device_coordinator in tradfri_data.coordinator_list:
         if (
             not device_coordinator.device.has_light_control
             and not device_coordinator.device.has_socket_control
@@ -204,6 +180,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self._refresh()  # Set initial state
 
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._attr_native_value = self.entity_description.value(self.coordinator.data)

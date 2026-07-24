@@ -1,7 +1,6 @@
 """Support for Tasmota fans."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from hatasmota import const as tasmota_const, fan as tasmota_fan
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -15,7 +14,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -23,7 +22,7 @@ from homeassistant.util.percentage import (
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 ORDERED_NAMED_FAN_SPEEDS = [
     tasmota_const.FAN_SPEED_LOW,
@@ -35,7 +34,7 @@ ORDERED_NAMED_FAN_SPEEDS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tasmota fan dynamically through discovery."""
 
@@ -48,12 +47,12 @@ async def async_setup_entry(
             [TasmotaFan(tasmota_entity=tasmota_entity, discovery_hash=discovery_hash)]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(FAN_DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(FAN_DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(FAN_DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(FAN_DOMAIN),
+            async_discover,
+        )
     )
 
 
@@ -64,7 +63,11 @@ class TasmotaFan(
 ):
     """Representation of a Tasmota fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _fan_speed = tasmota_const.FAN_SPEED_MEDIUM
     _tasmota_entity: tasmota_fan.TasmotaFan
 
@@ -76,6 +79,7 @@ class TasmotaFan(
             **kwds,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.fan_state_updated)
@@ -91,11 +95,13 @@ class TasmotaFan(
         self.async_write_ha_state()
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._state is None:
@@ -104,6 +110,7 @@ class TasmotaFan(
             return 0
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._state)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
@@ -114,6 +121,7 @@ class TasmotaFan(
             )
             await self._tasmota_entity.set_speed(tasmota_speed)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -129,6 +137,7 @@ class TasmotaFan(
             )
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._tasmota_entity.set_speed(tasmota_const.FAN_SPEED_OFF)

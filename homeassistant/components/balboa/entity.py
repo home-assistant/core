@@ -1,5 +1,6 @@
 """Balboa entities."""
-from __future__ import annotations
+
+from typing import override
 
 from pybalboa import EVENT_UPDATE, SpaClient
 
@@ -15,12 +16,11 @@ class BalboaEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, client: SpaClient, name: str | None = None) -> None:
+    def __init__(self, client: SpaClient, key: str) -> None:
         """Initialize the control."""
         mac = client.mac_address
         model = client.model
-        self._attr_unique_id = f'{model}-{name}-{mac.replace(":","")[-6:]}'
-        self._attr_name = name
+        self._attr_unique_id = f"{model}-{key}-{mac.replace(':', '')[-6:]}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
             name=model,
@@ -32,10 +32,12 @@ class BalboaEntity(Entity):
         self._client = client
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from device."""
         return not self._client.available
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(self._client.on(EVENT_UPDATE, self.async_write_ha_state))

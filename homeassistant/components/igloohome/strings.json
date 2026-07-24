@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client secret"
+        },
+        "data_description": {
+          "client_id": "Client ID provided by your iglooaccess account.",
+          "client_secret": "Client Secret provided by your iglooaccess account."
+        },
+        "description": "Copy & paste your [API access credentials]({api_access_url}) to give Home Assistant access to your account."
+      }
+    }
+  }
+}

@@ -1,21 +1,19 @@
 """Config flow for Qingping integration."""
-from __future__ import annotations
 
-import asyncio
-from typing import Any
+from typing import Any, override
 
 from qingping_ble import QingpingBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
     async_process_advertisements,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -51,9 +49,10 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
             ADDITIONAL_DISCOVERY_TIMEOUT,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -62,7 +61,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         self._discovered_device = device
@@ -70,7 +69,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
         device = self._discovered_device
@@ -87,9 +86,10 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
@@ -99,7 +99,8 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._discovered_devices[address], data={}
             )
 
-        current_addresses = self._async_current_ids()
+        await bluetooth.async_request_active_scan(self.hass)
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:

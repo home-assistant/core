@@ -1,4 +1,5 @@
 """Minio Test event."""
+
 TEST_EVENT = {
     "Records": [
         {

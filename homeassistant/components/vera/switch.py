@@ -1,27 +1,25 @@
 """Support for Vera switches."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VeraDevice
-from .common import ControllerData, get_controller_data
+from .common import ControllerData, VeraConfigEntry
+from .entity import VeraEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VeraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = get_controller_data(hass, entry)
+    controller_data = entry.runtime_data
     async_add_entities(
         [
             VeraSwitch(device, controller_data)
@@ -31,7 +29,7 @@ async def async_setup_entry(
     )
 
 
-class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
+class VeraSwitch(VeraEntity[veraApi.VeraSwitch], SwitchEntity):
     """Representation of a Vera Switch."""
 
     _attr_is_on = False
@@ -40,21 +38,24 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self.vera_device.switch_on()
         self._attr_is_on = True
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.vera_device.switch_off()
         self._attr_is_on = False
         self.schedule_update_ha_state()
 
+    @override
     def update(self) -> None:
         """Update device state."""
         super().update()

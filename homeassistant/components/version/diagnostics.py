@@ -1,24 +1,23 @@
 """Provides diagnostics for Version."""
-from __future__ import annotations
 
 from typing import Any
 
-from attr import asdict
-
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import (
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN
-from .coordinator import VersionDataUpdateCoordinator
+from .coordinator import VersionConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VersionConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: VersionDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
@@ -43,9 +42,11 @@ async def async_get_config_entry_diagnostics(
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
 
-            entities.append({"entry": asdict(entity), "state": state_dict})
+            entities.append(
+                {"entry": entity_entry_as_dict(entity), "state": state_dict}
+            )
 
-        devices.append({"device": asdict(device), "entities": entities})
+        devices.append({"device": device_entry_as_dict(device), "entities": entities})
 
     return {
         "entry": config_entry.as_dict(),

@@ -1,4 +1,5 @@
 """The tests for the Binary sensor component."""
+
 from collections.abc import Generator
 from unittest import mock
 
@@ -6,9 +7,11 @@ import pytest
 
 from homeassistant.components import binary_sensor
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .common import MockBinarySensor
 
 from tests.common import (
     MockConfigEntry,
@@ -18,7 +21,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
 
 TEST_DOMAIN = "test"
 
@@ -44,7 +46,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -59,8 +61,8 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, binary_sensor.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.BINARY_SENSOR]
         )
         return True
 
@@ -100,9 +102,9 @@ async def test_name(hass: HomeAssistant) -> None:
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
@@ -139,8 +141,8 @@ async def test_entity_category_config_raises_error(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, binary_sensor.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.BINARY_SENSOR]
         )
         return True
 
@@ -170,9 +172,9 @@ async def test_entity_category_config_raises_error(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2])
 
     mock_platform(
@@ -191,6 +193,6 @@ async def test_entity_category_config_raises_error(
     state2 = hass.states.get("binary_sensor.test2")
     assert state2 is None
     assert (
-        "Entity binary_sensor.test2 cannot be added as the entity category is set to config"
-        in caplog.text
+        "Entity binary_sensor.test2 cannot be added as the"
+        " entity category is set to config" in caplog.text
     )

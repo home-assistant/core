@@ -1,4 +1,5 @@
 """Define tests for the Bravia TV config flow."""
+
 from unittest.mock import patch
 
 from pybravia import (
@@ -9,19 +10,24 @@ from pybravia import (
 )
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
 from homeassistant.components.braviatv.const import (
-    CONF_CLIENT_ID,
     CONF_NICKNAME,
     CONF_USE_PSK,
+    CONF_USE_SSL,
     DOMAIN,
     NICKNAME_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import instance_id
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -46,14 +52,14 @@ BRAVIA_SOURCES = [
     {"title": "AV/Component", "uri": "extInput:component?port=1"},
 ]
 
-BRAVIA_SSDP = ssdp.SsdpServiceInfo(
+BRAVIA_SSDP = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="http://bravia-host:52323/dmr.xml",
     upnp={
-        ssdp.ATTR_UPNP_UDN: "uuid:1234",
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: "Living TV",
-        ssdp.ATTR_UPNP_MODEL_NAME: "KE-55XH9096",
+        ATTR_UPNP_UDN: "uuid:1234",
+        ATTR_UPNP_FRIENDLY_NAME: "Living TV",
+        ATTR_UPNP_MODEL_NAME: "KE-55XH9096",
         "X_ScalarWebAPI_DeviceInfo": {
             "X_ScalarWebAPI_ServiceList": {
                 "X_ScalarWebAPI_ServiceType": [
@@ -68,14 +74,14 @@ BRAVIA_SSDP = ssdp.SsdpServiceInfo(
     },
 )
 
-FAKE_BRAVIA_SSDP = ssdp.SsdpServiceInfo(
+FAKE_BRAVIA_SSDP = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="http://soundbar-host:52323/dmr.xml",
     upnp={
-        ssdp.ATTR_UPNP_UDN: "uuid:1234",
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: "Sony Audio Device",
-        ssdp.ATTR_UPNP_MODEL_NAME: "HT-S700RF",
+        ATTR_UPNP_UDN: "uuid:1234",
+        ATTR_UPNP_FRIENDLY_NAME: "Sony Audio Device",
+        ATTR_UPNP_MODEL_NAME: "HT-S700RF",
         "X_ScalarWebAPI_DeviceInfo": {
             "X_ScalarWebAPI_ServiceList": {
                 "X_ScalarWebAPI_ServiceType": ["guide", "system", "audio", "avContent"],
@@ -93,7 +99,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -105,41 +111,45 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         context={"source": SOURCE_SSDP},
         data=BRAVIA_SSDP,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.pair"
-    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "authorize"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_USE_PSK: False}
+            result["flow_id"], user_input={CONF_USE_PSK: False, CONF_USE_SSL: False}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pin"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "very_unique_string"
-        assert result["title"] == "TV-Model"
+        assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
             CONF_USE_PSK: False,
+            CONF_USE_SSL: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
             CONF_CLIENT_ID: uuid,
             CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
@@ -154,7 +164,7 @@ async def test_ssdp_discovery_fake(hass: HomeAssistant) -> None:
         data=FAKE_BRAVIA_SSDP,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_bravia_device"
 
 
@@ -178,7 +188,7 @@ async def test_ssdp_discovery_exist(hass: HomeAssistant) -> None:
         data=BRAVIA_SSDP,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -201,10 +211,13 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
 )
 async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test that PIN form errors are correct."""
-    with patch(
-        "pybravia.BraviaClient.connect",
-        side_effect=side_effect,
-    ), patch("pybravia.BraviaClient.pair"):
+    with (
+        patch(
+            "pybravia.BraviaClient.connect",
+            side_effect=side_effect,
+        ),
+        patch("pybravia.BraviaClient.pair"),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
@@ -255,7 +268,7 @@ async def test_no_ip_control(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_USE_PSK: False}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_ip_control"
 
 
@@ -273,11 +286,14 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.pair"
-    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
@@ -289,85 +305,67 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
-    """Test that entry is added correctly with PIN auth."""
+@pytest.mark.parametrize(
+    ("use_psk", "use_ssl"),
+    [
+        (True, False),
+        (False, False),
+        (True, True),
+        (False, True),
+    ],
+)
+async def test_create_entry(hass: HomeAssistant, use_psk, use_ssl) -> None:
+    """Test that entry is added correctly."""
     uuid = await instance_id.async_get(hass)
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.pair"
-    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "authorize"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_USE_PSK: False}
+            result["flow_id"], user_input={CONF_USE_PSK: use_psk, CONF_USE_SSL: use_ssl}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "pin"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "psk" if use_psk else "pin"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PIN: "1234"}
+            result["flow_id"], user_input={CONF_PIN: "secret"}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "very_unique_string"
-        assert result["title"] == "TV-Model"
+        assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
-            CONF_PIN: "1234",
-            CONF_USE_PSK: False,
+            CONF_PIN: "secret",
+            CONF_USE_PSK: use_psk,
+            CONF_USE_SSL: use_ssl,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
-            CONF_CLIENT_ID: uuid,
-            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
-        }
-
-
-async def test_create_entry_psk(hass: HomeAssistant) -> None:
-    """Test that entry is added correctly with PSK auth."""
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.set_wol_mode"
-    ), patch(
-        "pybravia.BraviaClient.get_system_info",
-        return_value=BRAVIA_SYSTEM_INFO,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "authorize"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_USE_PSK: True}
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "psk"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PIN: "mypsk"}
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == "very_unique_string"
-        assert result["title"] == "TV-Model"
-        assert result["data"] == {
-            CONF_HOST: "bravia-host",
-            CONF_PIN: "mypsk",
-            CONF_USE_PSK: True,
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            **(
+                {
+                    CONF_CLIENT_ID: uuid,
+                    CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
+                }
+                if not use_psk
+                else {}
+            ),
         }
 
 
@@ -391,26 +389,25 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
         title="TV-Model",
     )
     config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
 
-    with patch("pybravia.BraviaClient.connect"), patch(
-        "pybravia.BraviaClient.get_power_status",
-        return_value="active",
-    ), patch(
-        "pybravia.BraviaClient.get_external_status",
-        return_value=BRAVIA_SOURCES,
-    ), patch(
-        "pybravia.BraviaClient.send_rest_req",
-        return_value={},
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch(
+            "pybravia.BraviaClient.get_power_status",
+            return_value="active",
+        ),
+        patch(
+            "pybravia.BraviaClient.get_external_status",
+            return_value=BRAVIA_SOURCES,
+        ),
+        patch(
+            "pybravia.BraviaClient.send_rest_req",
+            return_value={},
+        ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
-            data=config_entry.data,
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "authorize"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_USE_PSK: use_psk}
         )
@@ -418,6 +415,6 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
             result["flow_id"], user_input={CONF_PIN: new_pin}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert config_entry.data[CONF_PIN] == new_pin

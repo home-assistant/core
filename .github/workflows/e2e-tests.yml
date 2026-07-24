@@ -1,0 +1,95 @@
+name: E2E tests
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…)"
+        default: "dev"
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}
+  cancel-in-progress: true
+
+jobs:
+  boot_check:
+    name: Boot check ${{ matrix.arch }} core image
+    if: github.repository_owner == 'home-assistant'
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runs-on: ubuntu-24.04
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+    env:
+      BASE_URL: http://localhost:8123
+    services:
+      homeassistant:
+        image: ghcr.io/home-assistant/home-assistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
+        ports:
+          - 8123:8123
+        # Gate steps until Home Assistant answers (60 x 5s ≈ 300s startup budget)
+        options: >-
+          --health-cmd="curl --fail --silent --max-time 10 --output /dev/null http://127.0.0.1:8123/"
+          --health-start-period=10s
+          --health-interval=5s
+          --health-retries=60
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          package_json_file: tests/e2e/package.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: tests/e2e/pnpm-lock.yaml
+
+      - name: Install E2E test dependencies
+        working-directory: tests/e2e
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        working-directory: tests/e2e
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        working-directory: tests/e2e
+        run: pnpm exec playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-${{ matrix.arch }}
+          path: |
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
+
+      - name: Dump container logs
+        if: always()
+        env:
+          CONTAINER: ${{ job.services.homeassistant.id }}
+        run: docker logs "$CONTAINER" > homeassistant.log 2>&1 || true
+
+      - name: Upload container logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: container-logs-${{ matrix.arch }}
+          path: homeassistant.log

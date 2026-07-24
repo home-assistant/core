@@ -12,6 +12,7 @@ assume_state:
           options:
             - "on"
             - "off"
+          translation_key: assume_state
 enable_timer:
   target:
     entity:
@@ -58,8 +59,9 @@ enable_pure_boost:
       selector:
         select:
           options:
-            - "Normal"
-            - "Sensitive"
+            - "normal"
+            - "sensitive"
+          translation_key: sensitivity
 full_state:
   target:
     entity:
@@ -78,6 +80,7 @@ full_state:
             - "auto"
             - "dry"
             - "off"
+          translation_key: hvac_mode
     target_temperature:
       required: false
       example: 23
@@ -113,6 +116,7 @@ full_state:
             - "on"
             - "off"
             - "dim"
+          translation_key: light_mode
 enable_climate_react:
   target:
     entity:
@@ -152,5 +156,24 @@ enable_climate_react:
         select:
           options:
             - "temperature"
-            - "feelsLike"
+            - "feelslike"
             - "humidity"
+          translation_key: smart_type
+get_device_capabilities:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    hvac_mode:
+      required: true
+      example: "heat"
+      selector:
+        select:
+          options:
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan"
+            - "heat"
+          translation_key: hvac_mode

@@ -1,4 +1,5 @@
 """Tests for diagnostics platform of local calendar."""
+
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest
@@ -6,7 +7,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY, Client
 
@@ -40,13 +40,8 @@ def _get_test_client_generator(
     return auth_client
 
 
-@pytest.fixture(autouse=True)
-async def setup_diag(hass):
-    """Set up diagnostics platform."""
-    assert await async_setup_component(hass, "diagnostics", {})
-
-
 @freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.usefixtures("socket_enabled")
 async def test_empty_calendar(
     hass: HomeAssistant,
     setup_integration: None,
@@ -54,7 +49,6 @@ async def test_empty_calendar(
     hass_admin_credential: Credentials,
     config_entry: MockConfigEntry,
     aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics against an empty calendar."""
@@ -62,9 +56,11 @@ async def test_empty_calendar(
     # manually create a new token and clients since the token created by
     # the fixtures would not be valid.
     #
-    # Ideally we would use pytest.mark.freeze_time before the fixtures, but that does not
-    # work with the ical library and freezegun because
-    # `TypeError: '<' not supported between instances of 'FakeDatetimeMeta' and 'FakeDateMeta'`
+    # Ideally we would use pytest.mark.freeze_time before the
+    # fixtures, but that does not work with the ical library and
+    # freezegun because
+    # `TypeError: '<' not supported between instances of
+    # 'FakeDatetimeMeta' and 'FakeDateMeta'`
     new_token = await generate_new_hass_access_token(
         hass, hass_admin_user, hass_admin_credential
     )
@@ -75,6 +71,7 @@ async def test_empty_calendar(
 
 
 @freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.usefixtures("socket_enabled")
 async def test_api_date_time_event(
     hass: HomeAssistant,
     setup_integration: None,
@@ -83,7 +80,6 @@ async def test_api_date_time_event(
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
     aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test an event with a start/end date time."""
@@ -91,9 +87,11 @@ async def test_api_date_time_event(
     # manually create a new token and clients since the token created by
     # the fixtures would not be valid.
     #
-    # Ideally we would use pytest.mark.freeze_time before the fixtures, but that does not
-    # work with the ical library and freezegun because
-    # `TypeError: '<' not supported between instances of 'FakeDatetimeMeta' and 'FakeDateMeta'`
+    # Ideally we would use pytest.mark.freeze_time before the
+    # fixtures, but that does not work with the ical library and
+    # freezegun because
+    # `TypeError: '<' not supported between instances of
+    # 'FakeDatetimeMeta' and 'FakeDateMeta'`
     new_token = await generate_new_hass_access_token(
         hass, hass_admin_user, hass_admin_credential
     )

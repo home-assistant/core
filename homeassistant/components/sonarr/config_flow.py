@@ -1,9 +1,8 @@
 """Config flow for Sonarr."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -11,13 +10,20 @@ from aiopyarr.sonarr_client import SonarrClient
 import voluptuous as vol
 import yarl
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_MORE_OPTIONS,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
     DEFAULT_UPCOMING_DAYS,
@@ -53,48 +59,56 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self.entry: ConfigEntry | None = None
-
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SonarrOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SonarrOptionsFlowHandler(config_entry)
+        return SonarrOptionsFlowHandler()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            assert self.entry is not None
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"url": self.entry.data[CONF_URL]},
+                description_placeholders={
+                    "url": self._get_reauth_entry().data[CONF_URL]
+                },
                 errors={},
             )
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
         if user_input is not None:
-            if self.entry:
-                user_input = {**self.entry.data, **user_input}
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+            user_input[CONF_VERIFY_SSL] = more_options.get(
+                CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+            )
 
-            if CONF_VERIFY_SSL not in user_input:
-                user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
+            # aiopyarr defaults to the service port if one isn't given
+            # this is counter to standard practice where http = 80
+            # and https = 443.
+            if CONF_URL in user_input:
+                url = yarl.URL(user_input[CONF_URL])
+                user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
+
+            if self.source == SOURCE_REAUTH:
+                user_input = {**self._get_reauth_entry().data, **user_input}
 
             try:
                 await _validate_input(self.hass, user_input)
@@ -102,12 +116,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "invalid_auth"}
             except ArrException:
                 errors = {"base": "cannot_connect"}
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                if self.entry:
-                    return await self._async_reauth_update_entry(user_input)
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data=user_input
+                    )
 
                 parsed = yarl.URL(user_input[CONF_URL])
 
@@ -115,49 +131,41 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=parsed.host or "Sonarr", data=user_input
                 )
 
-        data_schema = self._get_user_data_schema()
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=self._get_user_data_schema(),
             errors=errors,
         )
 
-    async def _async_reauth_update_entry(self, data: dict[str, Any]) -> FlowResult:
-        """Update existing config entry."""
-        assert self.entry is not None
-        self.hass.config_entries.async_update_entry(self.entry, data=data)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
-
-        return self.async_abort(reason="reauth_successful")
-
-    def _get_user_data_schema(self) -> dict[vol.Marker, type]:
+    def _get_user_data_schema(self) -> vol.Schema:
         """Get the data schema to display user form."""
-        if self.entry:
-            return {vol.Required(CONF_API_KEY): str}
+        if self.source == SOURCE_REAUTH:
+            return vol.Schema({vol.Required(CONF_API_KEY): str})
 
-        data_schema: dict[vol.Marker, type] = {
-            vol.Required(CONF_URL): str,
-            vol.Required(CONF_API_KEY): str,
-        }
+        return vol.Schema(
+            {
+                vol.Required(CONF_URL): str,
+                vol.Required(CONF_API_KEY): str,
+                vol.Required(CONF_MORE_OPTIONS): section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                            ): bool,
+                        }
+                    ),
+                    SectionConfig(collapsed=True),
+                ),
+            }
+        )
 
-        if self.show_advanced_options:
-            data_schema[
-                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)
-            ] = bool
 
-        return data_schema
-
-
-class SonarrOptionsFlowHandler(OptionsFlow):
+class SonarrOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Sonarr client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, int] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Sonarr options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

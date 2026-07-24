@@ -1,36 +1,34 @@
 """Support for Acmeda Roller Blinds."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import AcmedaBase
-from .const import ACMEDA_HUB_UPDATE, DOMAIN
+from . import AcmedaConfigEntry
+from .const import ACMEDA_HUB_UPDATE
+from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
-from .hub import PulseHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AcmedaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
-    hub: PulseHub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     current: set[int] = set()
 
     @callback
-    def async_add_acmeda_covers():
+    def async_add_acmeda_covers() -> None:
         async_add_acmeda_entities(
             hass, AcmedaCover, config_entry, current, async_add_entities
         )
@@ -44,12 +42,13 @@ async def async_setup_entry(
     )
 
 
-class AcmedaCover(AcmedaBase, CoverEntity):
+class AcmedaCover(AcmedaEntity, CoverEntity):
     """Representation of an Acmeda cover device."""
 
     _attr_name = None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the roller blind.
 
@@ -61,6 +60,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt of the roller blind.
 
@@ -72,6 +72,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = CoverEntityFeature(0)
@@ -93,38 +94,47 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return supported_features
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        return self.roller.closed_percent == 100
+        return self.roller.closed_percent == 100  # type: ignore[no-any-return]
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the roller."""
         await self.roller.move_down()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the roller."""
         await self.roller.move_up()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the roller."""
         await self.roller.move_stop()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
         await self.roller.move_to(100 - kwargs[ATTR_POSITION])
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the roller."""
         await self.roller.move_down()
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the roller."""
         await self.roller.move_up()
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the roller."""
         await self.roller.move_stop()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the roller shutter to a specific position."""
         await self.roller.move_to(100 - kwargs[ATTR_POSITION])

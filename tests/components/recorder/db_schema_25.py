@@ -1,5 +1,4 @@
 """Models for SQLAlchemy."""
-from __future__ import annotations
 
 from datetime import datetime, timedelta
 import json
@@ -36,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 # SQLAlchemy Schema
 Base = declarative_base()
@@ -179,8 +178,10 @@ class States(Base):  # type: ignore[misc,valid-type]
             f"<recorder.States("
             f"id={self.state_id}, entity_id='{self.entity_id}', "
             f"state='{self.state}', event_id='{self.event_id}', "
-            f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
-            f"old_state_id={self.old_state_id}, attributes_id={self.attributes_id}"
+            f"last_updated="
+            f"'{self.last_updated.isoformat(sep=' ', timespec='seconds')}'"
+            f", old_state_id={self.old_state_id}, "
+            f"attributes_id={self.attributes_id}"
             f")>"
         )
 
@@ -241,7 +242,8 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.StateAttributes("
-            f"id={self.attributes_id}, hash='{self.hash}', attributes='{self.shared_attrs}'"
+            f"id={self.attributes_id}, hash='{self.hash}', "
+            f"attributes='{self.shared_attrs}'"
             f")>"
         )
 
@@ -421,9 +423,11 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
         )
         return (
             f"<recorder.RecorderRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f"id={self.run_id}, start="
+            f"'{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f"end={end}, closed_incorrect={self.closed_incorrect}, "
-            f"created='{self.created.isoformat(sep=' ', timespec='seconds')}'"
+            f"created="
+            f"'{self.created.isoformat(sep=' ', timespec='seconds')}'"
             f")>"
         )
 
@@ -482,19 +486,18 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.StatisticsRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
-            f")>"
+            f"id={self.run_id}, start="
+            f"'{self.start.isoformat(sep=' ', timespec='seconds')}'"
+            f", )>"
         )
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:
@@ -508,13 +511,11 @@ def process_timestamp(ts: datetime | None) -> datetime | None:
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: None) -> None:
-    ...
+def process_timestamp_to_utc_isoformat(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
-    ...
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str: ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
@@ -532,12 +533,12 @@ class LazyState(State):
     """A lazy version of core State."""
 
     __slots__ = [
-        "_row",
+        "_attr_cache",
         "_attributes",
+        "_context",
         "_last_changed",
         "_last_updated",
-        "_context",
-        "_attr_cache",
+        "_row",
     ]
 
     def __init__(  # pylint: disable=super-init-not-called
@@ -656,7 +657,7 @@ class LazyState(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Return the comparison."""
         return (
             other.__class__ in [self.__class__, State]

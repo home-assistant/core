@@ -1,140 +1,145 @@
-"""Support for Unifi AP direct access."""
-from __future__ import annotations
+"""Support for UniFi AP Direct access as device tracker using Coordinator."""
 
-import json
-import logging
+from typing import override
 
-from pexpect import exceptions, pxssh
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    DeviceScanner,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_SSH_PORT, DOMAIN
+from .coordinator import UniFiDirectConfigEntry, UniFiDirectDataUpdateCoordinator
 
-DEFAULT_SSH_PORT = 22
-UNIFI_COMMAND = 'mca-dump | tr -d "\n"'
-UNIFI_SSID_TABLE = "vap_table"
-UNIFI_CLIENT_TABLE = "sta_table"
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
     }
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner | None:
-    """Validate the configuration and return a Unifi direct scanner."""
-    scanner = UnifiDeviceScanner(config[DOMAIN])
-    if not scanner.connected:
-        return None
-    return scanner
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    _async_see: AsyncSeeCallback,
+    _discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the legacy UniFi AP Direct device tracker."""
+    import_data = {
+        CONF_HOST: config[CONF_HOST],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_PORT: config.get(CONF_PORT, DEFAULT_SSH_PORT),
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=import_data,
+    )
 
-
-class UnifiDeviceScanner(DeviceScanner):
-    """Class which queries Unifi wireless access point."""
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-        self.port = config[CONF_PORT]
-        self.ssh = None
-        self.connected = False
-        self.last_results = {}
-        self._connect()
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        result = _response_to_json(self._get_update())
-        if result:
-            self.last_results = result
-        return self.last_results.keys()
-
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        hostname = next(
-            (
-                value.get("hostname")
-                for key, value in self.last_results.items()
-                if key.upper() == device.upper()
-            ),
-            None,
+    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "yaml_import_cannot_connect",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_cannot_connect",
+            translation_placeholders={"host": config[CONF_HOST]},
         )
-        if hostname is not None:
-            hostname = str(hostname)
-        return hostname
+        return False
 
-    def _connect(self):
-        """Connect to the Unifi AP SSH server."""
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "UniFi AP",
+        },
+    )
 
-        self.ssh = pxssh.pxssh(options={"HostKeyAlgorithms": "ssh-rsa"})
-        try:
-            self.ssh.login(
-                self.host, self.username, password=self.password, port=self.port
-            )
-            self.connected = True
-        except exceptions.EOF:
-            _LOGGER.error("Connection refused. SSH enabled?")
-            self._disconnect()
-
-    def _disconnect(self):
-        """Disconnect the current SSH connection."""
-        try:
-            self.ssh.logout()
-        except Exception:  # pylint: disable=broad-except
-            pass
-        finally:
-            self.ssh = None
-
-        self.connected = False
-
-    def _get_update(self):
-        try:
-            if not self.connected:
-                self._connect()
-            # If we still aren't connected at this point
-            # don't try to send anything to the AP.
-            if not self.connected:
-                return None
-            self.ssh.sendline(UNIFI_COMMAND)
-            self.ssh.prompt()
-            return self.ssh.before
-        except pxssh.ExceptionPxssh as err:
-            _LOGGER.error("Unexpected SSH error: %s", str(err))
-            self._disconnect()
-            return None
-        except (AssertionError, exceptions.EOF) as err:
-            _LOGGER.error("Connection to AP unavailable: %s", str(err))
-            self._disconnect()
-            return None
+    return True
 
 
-def _response_to_json(response):
-    try:
-        json_response = json.loads(str(response)[31:-1].replace("\\", ""))
-        _LOGGER.debug(str(json_response))
-        ssid_table = json_response.get(UNIFI_SSID_TABLE)
-        active_clients = {}
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: UniFiDirectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker for UniFi AP Direct."""
+    coordinator = config_entry.runtime_data
+    tracked: set[str] = set()
 
-        for ssid in ssid_table:
-            client_table = ssid.get(UNIFI_CLIENT_TABLE)
-            for client in client_table:
-                active_clients[client.get("mac")] = client
+    @callback
+    def _async_update_devices() -> None:
+        """Add new devices from the coordinator."""
+        new_entities: list[UniFiScannerEntity] = []
+        for mac in coordinator.data:
+            if mac not in tracked:
+                tracked.add(mac)
+                new_entities.append(UniFiScannerEntity(coordinator, mac))
+        if new_entities:
+            async_add_entities(new_entities)
 
-        return active_clients
-    except (ValueError, TypeError):
-        _LOGGER.error("Failed to decode response from AP")
-        return {}
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
+    _async_update_devices()
+
+
+class UniFiScannerEntity(
+    CoordinatorEntity[UniFiDirectDataUpdateCoordinator], ScannerEntity
+):
+    """Representation of a device connected to a UniFi AP Direct."""
+
+    def __init__(self, coordinator: UniFiDirectDataUpdateCoordinator, mac: str) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self._mac = mac
+        device = coordinator.data.get(mac, {})
+        self._attr_name = device.get("hostname") or mac
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the AP."""
+        return self._mac in self.coordinator.data
+
+    @property
+    @override
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    @property
+    @override
+    def ip_address(self) -> str | None:
+        """Return the IP address of the device."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.get("ip")
+        return None
+
+    @property
+    @override
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.get("hostname")
+        return None

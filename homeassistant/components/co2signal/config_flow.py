@@ -1,24 +1,32 @@
 """Config flow for Co2signal integration."""
-from __future__ import annotations
 
-from typing import Any
+from collections.abc import Mapping
+import logging
+from typing import Any, override
 
-from aioelectricitymaps import ElectricityMaps
-from aioelectricitymaps.exceptions import ElectricityMapsError, InvalidToken
+from aioelectricitymaps import (
+    ElectricityMaps,
+    ElectricityMapsInvalidTokenError,
+    ElectricityMapsNoDataError,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_COUNTRY_CODE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_COUNTRY_CODE, DOMAIN
+from .const import DOMAIN
 from .helpers import fetch_latest_carbon_intensity
 from .util import get_extra_name
 
@@ -26,16 +34,23 @@ TYPE_USE_HOME = "use_home_location"
 TYPE_SPECIFY_COORDINATES = "specify_coordinates"
 TYPE_SPECIFY_COUNTRY = "specify_country_code"
 
+_LOGGER = logging.getLogger(__name__)
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+DESCRIPTION_PLACEHOLDER = {
+    "register_link": "https://electricitymaps.com/free-tier",
+}
+
+
+class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Co2signal."""
 
     VERSION = 1
     _data: dict | None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         data_schema = vol.Schema(
             {
@@ -58,6 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
+                description_placeholders=DESCRIPTION_PLACEHOLDER,
             )
 
         data = {CONF_API_KEY: user_input[CONF_API_KEY]}
@@ -74,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_coordinates(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate coordinates."""
         data_schema = vol.Schema(
             {
@@ -97,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_country(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate country."""
         data_schema = vol.Schema(
             {
@@ -113,23 +129,53 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "country", data_schema, {**self._data, **user_input}
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle the reauth step."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reauth step."""
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): cv.string,
+            }
+        )
+        return await self._validate_and_create(
+            "reauth_confirm", data_schema, user_input
+        )
+
     async def _validate_and_create(
-        self, step_id: str, data_schema: vol.Schema, data: dict
-    ) -> FlowResult:
+        self, step_id: str, data_schema: vol.Schema, data: Mapping[str, Any] | None
+    ) -> ConfigFlowResult:
         """Validate data and show form if it is invalid."""
         errors: dict[str, str] = {}
 
-        session = async_get_clientsession(self.hass)
-        async with ElectricityMaps(token=data[CONF_API_KEY], session=session) as em:
+        if data:
+            session = async_get_clientsession(self.hass)
+            em = ElectricityMaps(token=data[CONF_API_KEY], session=session)
+
             try:
                 await fetch_latest_carbon_intensity(self.hass, em, data)
-            except InvalidToken:
+            except ElectricityMapsInvalidTokenError:
                 errors["base"] = "invalid_auth"
-            except ElectricityMapsError:
+            except ElectricityMapsNoDataError:
+                errors["base"] = "no_data"
+            except Exception:
+                _LOGGER.exception("Unexpected error occurred while checking API key")
                 errors["base"] = "unknown"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={CONF_API_KEY: data[CONF_API_KEY]},
+                    )
+
                 return self.async_create_entry(
-                    title=get_extra_name(data) or "CO2 Signal",
+                    title=get_extra_name(data) or "Electricity Maps",
                     data=data,
                 )
 
@@ -137,4 +183,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=data_schema,
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDER,
         )

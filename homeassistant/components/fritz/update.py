@@ -1,37 +1,40 @@
 """Support for AVM FRITZ!Box update platform."""
-from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import AvmWrapper, FritzBoxBaseCoordinatorEntity, FritzEntityDescription
-from .const import DOMAIN
+from .coordinator import AvmWrapper, FritzConfigEntry
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
-@dataclass
+
+@dataclass(frozen=True, kw_only=True)
 class FritzUpdateEntityDescription(UpdateEntityDescription, FritzEntityDescription):
     """Describes Fritz update entity."""
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AVM FRITZ!Box update entities."""
     _LOGGER.debug("Setting up AVM FRITZ!Box update entities")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     entities = [FritzBoxUpdateEntity(avm_wrapper, entry.title)]
 
@@ -58,11 +61,13 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
         super().__init__(avm_wrapper, device_friendly_name, description)
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         return self.coordinator.current_firmware
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if self.coordinator.update_available:
@@ -70,10 +75,12 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
         return self.coordinator.current_firmware
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self.coordinator.release_url
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

@@ -1,0 +1,149 @@
+# serializer version: 1
+# name: test_humidifier[device_info0-6][humidifier.humidifier_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'normal',
+        'auto',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.humidifier_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': 'humidifier',
+    'unique_id': 'humidifier-id-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier[device_info0-6][humidifier.humidifier_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'normal',
+        'auto',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'humidifier-1',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 50,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 1,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.humidifier_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_humidifier[device_info1-7][humidifier.humidifier2_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'high',
+        'medium',
+        'low',
+        'quiet',
+        'target_humidity',
+        'sleep',
+        'auto',
+        'drying_filter',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.humidifier2_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'switchbot_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': 'evaporative_humidifier',
+    'unique_id': 'humidifier2-id-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier[device_info1-7][humidifier.humidifier2_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'high',
+        'medium',
+        'low',
+        'quiet',
+        'target_humidity',
+        'sleep',
+        'auto',
+        'drying_filter',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'humidifier2-1',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 50,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'high',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.humidifier2_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

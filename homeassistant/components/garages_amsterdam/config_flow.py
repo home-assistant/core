@@ -1,15 +1,13 @@
 """Config flow for Garages Amsterdam integration."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from odp_amsterdam import ODPAmsterdam, VehicleType
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -17,15 +15,16 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GaragesAmsterdamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Garages Amsterdam."""
 
     VERSION = 1
     _options: list[str] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._options is None:
             self._options = []
@@ -36,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ClientResponseError:
                 _LOGGER.error("Unexpected response from server")
                 return self.async_abort(reason="cannot_connect")
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 

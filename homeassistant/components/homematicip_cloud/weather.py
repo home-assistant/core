@@ -1,12 +1,9 @@
 """Support for HomematicIP Cloud weather devices."""
-from __future__ import annotations
 
-from homematicip.aio.device import (
-    AsyncWeatherSensor,
-    AsyncWeatherSensorPlus,
-    AsyncWeatherSensorPro,
-)
+from typing import override
+
 from homematicip.base.enums import WeatherCondition
+from homematicip.device import WeatherSensor, WeatherSensorPlus, WeatherSensorPro
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -21,13 +18,12 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     WeatherEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .entity import HomematicipGenericEntity
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 HOME_WEATHER_CONDITION = {
     WeatherCondition.CLEAR: ATTR_CONDITION_SUNNY,
@@ -41,7 +37,9 @@ HOME_WEATHER_CONDITION = {
     WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW: ATTR_CONDITION_SNOWY,
     WeatherCondition.HEAVILY_CLOUDY_WITH_SNOW_RAIN: ATTR_CONDITION_SNOWY_RAINY,
     WeatherCondition.HEAVILY_CLOUDY_WITH_THUNDER: ATTR_CONDITION_LIGHTNING,
-    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: ATTR_CONDITION_LIGHTNING_RAINY,
+    WeatherCondition.HEAVILY_CLOUDY_WITH_RAIN_AND_THUNDER: (
+        ATTR_CONDITION_LIGHTNING_RAINY
+    ),
     WeatherCondition.FOGGY: ATTR_CONDITION_FOG,
     WeatherCondition.STRONG_WIND: ATTR_CONDITION_WINDY,
     WeatherCondition.UNKNOWN: "",
@@ -50,16 +48,16 @@ HOME_WEATHER_CONDITION = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HomematicIPConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
-        if isinstance(device, AsyncWeatherSensorPro):
+        if isinstance(device, WeatherSensorPro):
             entities.append(HomematicipWeatherSensorPro(hap, device))
-        elif isinstance(device, (AsyncWeatherSensor, AsyncWeatherSensorPlus)):
+        elif isinstance(device, (WeatherSensor, WeatherSensorPlus)):
             entities.append(HomematicipWeatherSensor(hap, device))
 
     entities.append(HomematicipHomeWeather(hap))
@@ -76,29 +74,28 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="weather")
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._device.label
-
-    @property
+    @override
     def native_temperature(self) -> float:
         """Return the platform temperature."""
         return self._device.actualTemperature
 
     @property
+    @override
     def humidity(self) -> int:
         """Return the humidity."""
         return self._device.humidity
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self._device.windSpeed
 
     @property
+    @override
     def condition(self) -> str:
         """Return the current condition."""
         if getattr(self._device, "raining", None):
@@ -114,6 +111,7 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
     """Representation of the HomematicIP weather sensor pro."""
 
     @property
+    @override
     def wind_bearing(self) -> float:
         """Return the wind bearing."""
         return self._device.windDirection
@@ -122,6 +120,7 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
 class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     """Representation of the HomematicIP home weather."""
 
+    _attr_has_entity_name = False
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_attribution = "Powered by Homematic IP"
@@ -129,39 +128,46 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the home weather."""
         hap.home.modelType = "HmIP-Home-Weather"
-        super().__init__(hap, hap.home)
+        super().__init__(hap, hap.home, feature_id="home_weather")
 
     @property
+    @override
     def available(self) -> bool:
         """Return if weather entity is available."""
         return self._home.connected
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return f"Weather {self._home.location.city}"
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the temperature."""
         return self._device.weather.temperature
 
     @property
+    @override
     def humidity(self) -> int:
         """Return the humidity."""
         return self._device.weather.humidity
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return round(self._device.weather.windSpeed, 1)
 
     @property
+    @override
     def wind_bearing(self) -> float:
         """Return the wind bearing."""
         return self._device.weather.windDirection
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return HOME_WEATHER_CONDITION.get(self._device.weather.weatherCondition)

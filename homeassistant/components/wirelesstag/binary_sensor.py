@@ -1,69 +1,44 @@
 """Binary sensor support for Wireless Sensor Tags."""
-from __future__ import annotations
+
+from typing import override
 
 import voluptuous as vol
+from wirelesstagpy import SensorTag, constants as WT_CONSTANTS
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    SIGNAL_BINARY_EVENT_UPDATE,
-    WirelessTagBaseSensor,
-)
-
-# On means in range, Off means out of range
-SENSOR_PRESENCE = "presence"
-
-# On means motion detected, Off means clear
-SENSOR_MOTION = "motion"
-
-# On means open, Off means closed
-SENSOR_DOOR = "door"
-
-# On means temperature become too cold, Off means normal
-SENSOR_COLD = "cold"
-
-# On means hot, Off means normal
-SENSOR_HEAT = "heat"
-
-# On means too dry (humidity), Off means normal
-SENSOR_DRY = "dry"
-
-# On means too wet (humidity), Off means normal
-SENSOR_WET = "wet"
-
-# On means light detected, Off means no light
-SENSOR_LIGHT = "light"
-
-# On means moisture detected (wet), Off means no moisture (dry)
-SENSOR_MOISTURE = "moisture"
-
-# On means tag battery is low, Off means normal
-SENSOR_BATTERY = "battery"
+from . import WirelessTagPlatform
+from .const import SIGNAL_BINARY_EVENT_UPDATE, WIRELESSTAG_DATA
+from .entity import WirelessTagBaseSensor
+from .util import async_migrate_unique_id
 
 # Sensor types: Name, device_class, push notification type representing 'on',
 # attr to check
 SENSOR_TYPES = {
-    SENSOR_PRESENCE: "Presence",
-    SENSOR_MOTION: "Motion",
-    SENSOR_DOOR: "Door",
-    SENSOR_COLD: "Cold",
-    SENSOR_HEAT: "Heat",
-    SENSOR_DRY: "Too dry",
-    SENSOR_WET: "Too wet",
-    SENSOR_LIGHT: "Light",
-    SENSOR_MOISTURE: "Leak",
-    SENSOR_BATTERY: "Low Battery",
+    WT_CONSTANTS.EVENT_PRESENCE: BinarySensorDeviceClass.PRESENCE,
+    WT_CONSTANTS.EVENT_MOTION: BinarySensorDeviceClass.MOTION,
+    WT_CONSTANTS.EVENT_DOOR: BinarySensorDeviceClass.DOOR,
+    WT_CONSTANTS.EVENT_COLD: BinarySensorDeviceClass.COLD,
+    WT_CONSTANTS.EVENT_HEAT: BinarySensorDeviceClass.HEAT,
+    WT_CONSTANTS.EVENT_DRY: None,
+    WT_CONSTANTS.EVENT_WET: None,
+    WT_CONSTANTS.EVENT_LIGHT: BinarySensorDeviceClass.LIGHT,
+    WT_CONSTANTS.EVENT_MOISTURE: BinarySensorDeviceClass.MOISTURE,
+    WT_CONSTANTS.EVENT_BATTERY: BinarySensorDeviceClass.BATTERY,
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
@@ -72,14 +47,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the platform for a WirelessTags."""
-    platform = hass.data[WIRELESSTAG_DOMAIN]
+    platform = hass.data[WIRELESSTAG_DATA]
 
     sensors = []
     tags = platform.tags
@@ -87,21 +62,26 @@ def setup_platform(
         allowed_sensor_types = tag.supported_binary_events_types
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if sensor_type in allowed_sensor_types:
+                async_migrate_unique_id(hass, tag, Platform.BINARY_SENSOR, sensor_type)
                 sensors.append(WirelessTagBinarySensor(platform, tag, sensor_type))
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
     """A binary sensor implementation for WirelessTags."""
 
-    def __init__(self, api, tag, sensor_type):
+    def __init__(
+        self, api: WirelessTagPlatform, tag: SensorTag, sensor_type: str
+    ) -> None:
         """Initialize a binary sensor for a Wireless Sensor Tags."""
         super().__init__(api, tag)
         self._sensor_type = sensor_type
-        self._name = f"{self._tag.name} {self.event.human_readable_name}"
-        self._attr_unique_id = f"{self.tag_id}_{self._sensor_type}"
+        self._attr_device_class = SENSOR_TYPES[sensor_type]
+        self._attr_name = f"{self._tag.name} {self.event.human_readable_name}"
+        self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         tag_id = self.tag_id
@@ -116,14 +96,10 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self._state == STATE_ON
-
-    @property
-    def device_class(self):
-        """Return the class of the binary sensor."""
-        return self._sensor_type
 
     @property
     def event(self):
@@ -131,6 +107,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         return self._tag.event[self._sensor_type]
 
     @property
+    @override
     def principal_value(self):
         """Return value of tag.
 
@@ -138,12 +115,13 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         """
         return STATE_ON if self.event.is_state_on else STATE_OFF
 
+    @override
     def updated_state_value(self):
         """Use raw princial value."""
         return self.principal_value
 
     @callback
-    def _on_binary_event_callback(self, new_tag):
+    def _on_binary_event_callback(self, new_tag: SensorTag) -> None:
         """Update state from arrived push notification."""
         self._tag = new_tag
         self._state = self.updated_state_value()

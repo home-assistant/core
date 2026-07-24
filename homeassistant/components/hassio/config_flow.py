@@ -1,21 +1,33 @@
 """Config flow for Home Assistant Supervisor integration."""
-import logging
 
-from homeassistant import config_entries
+from typing import Any
 
-from . import DOMAIN
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import HASSIO_USER_NAME
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    DATA_HASSIO_SUPERVISOR_USER,
+    DEFAULT_UPDATE_OPTIONS,
+    DOMAIN,
+    ENTRY_DATA_USER,
+)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Assistant Supervisor."""
 
     VERSION = 1
 
-    async def async_step_system(self, user_input=None):
+    async def async_step_system(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        # We only need one Hass.io config entry
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(title="Supervisor", data={})
+        data: dict[str, Any] = {}
+        if (user := self.hass.data.get(DATA_HASSIO_SUPERVISOR_USER)) is not None:
+            data[ENTRY_DATA_USER] = user.id
+
+        return self.async_create_entry(
+            title=HASSIO_USER_NAME,
+            data=data,
+            options=dict(DEFAULT_UPDATE_OPTIONS),
+        )

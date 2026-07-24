@@ -1,19 +1,18 @@
 """Support for SolarEdge-local Monitoring API."""
-from __future__ import annotations
 
 from contextlib import suppress
-from copy import copy
-from dataclasses import dataclass
+import dataclasses
 from datetime import timedelta
 import logging
 import statistics
+from typing import Any, override
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -29,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -51,7 +50,7 @@ INVERTER_MODES = (
 )
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class SolarEdgeLocalSensorEntityDescription(SensorEntityDescription):
     """Describes SolarEdge-local sensor entity."""
 
@@ -193,7 +192,7 @@ SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
@@ -223,7 +222,7 @@ def setup_platform(
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
         return
-    except (ConnectTimeout, HTTPError):
+    except ConnectTimeout, HTTPError:
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
@@ -231,10 +230,13 @@ def setup_platform(
     data = SolarEdgeData(hass, api)
 
     # Changing inverter temperature unit.
-    inverter_temp_description = copy(SENSOR_TYPE_INVERTER_TEMPERATURE)
-    if status.inverters.primary.temperature.units.farenheit:
-        inverter_temp_description.native_unit_of_measurement = (
-            UnitOfTemperature.FAHRENHEIT
+    inverter_temp_description = SENSOR_TYPE_INVERTER_TEMPERATURE
+    if (
+        status.inverters.primary.temperature.units.farenheit  # codespell:ignore farenheit
+    ):
+        inverter_temp_description = dataclasses.replace(
+            inverter_temp_description,
+            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         )
 
     # Create entities
@@ -286,7 +288,8 @@ class SolarEdgeSensor(SensorEntity):
         self._attr_name = f"{platform_name} ({description.name})"
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if extra_attr := self.entity_description.extra_attribute:
             try:

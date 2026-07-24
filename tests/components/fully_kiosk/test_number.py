@@ -1,10 +1,11 @@
 """Test the Fully Kiosk Browser number entities."""
+
 from unittest.mock import MagicMock
 
+from homeassistant.components import number
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
-import homeassistant.components.number as number
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -52,7 +53,7 @@ async def test_numbers(
     # Test invalid numeric data
     mock_fully_kiosk.getSettings.return_value = {"screenBrightness": "invalid"}
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("number.amazon_fire_screen_brightness")
     assert state
@@ -61,7 +62,7 @@ async def test_numbers(
     # Test unknown/missing data
     mock_fully_kiosk.getSettings.return_value = {}
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("number.amazon_fire_screensaver_timer")
     assert state
@@ -80,9 +81,11 @@ async def test_numbers(
     assert device_entry.sw_version == "1.42.5"
 
 
-def set_value(hass, entity_id, value):
+async def set_value(
+    hass: HomeAssistant, entity_id: str, value: float
+) -> ServiceResponse:
     """Set the value of a number entity."""
-    return hass.services.async_call(
+    return await hass.services.async_call(
         number.DOMAIN,
         "set_value",
         {ATTR_ENTITY_ID: entity_id, number.ATTR_VALUE: value},

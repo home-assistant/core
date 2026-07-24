@@ -1,5 +1,4 @@
 """Statistics schema repairs."""
-from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
@@ -24,6 +23,9 @@ def validate_db_schema(instance: Recorder) -> set[str]:
     schema_errors: set[str] = set()
     schema_errors |= validate_table_schema_supports_utf8(
         instance, StatisticsMeta, (StatisticsMeta.statistic_id,)
+    )
+    schema_errors |= validate_table_schema_has_correct_collation(
+        instance, StatisticsMeta
     )
     for table in (Statistics, StatisticsShortTerm):
         schema_errors |= validate_db_schema_precision(instance, table)

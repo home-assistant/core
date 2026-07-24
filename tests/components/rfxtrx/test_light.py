@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx light platform."""
+
 from unittest.mock import call
 
 import pytest
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry, mock_restore_cache
 async def test_one_light(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 light."""
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210020f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -90,7 +91,7 @@ async def test_one_light(hass: HomeAssistant, rfxtrx) -> None:
 
 
 @pytest.mark.parametrize(
-    ("state", "brightness"), [["on", 100], ["on", 50], ["off", None]]
+    ("state", "brightness"), [("on", 100), ("on", 50), ("off", None)]
 )
 async def test_state_restore(hass: HomeAssistant, rfxtrx, state, brightness) -> None:
     """State restoration."""
@@ -102,7 +103,7 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state, brightness) -> 
     )
 
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210020f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -122,7 +123,7 @@ async def test_several_lights(hass: HomeAssistant, rfxtrx) -> None:
             "0b1100101118cdea02050f70": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 

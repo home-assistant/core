@@ -1,5 +1,4 @@
 """Define constants for the GeoJSON events integration."""
-from __future__ import annotations
 
 from datetime import timedelta
 from typing import Final

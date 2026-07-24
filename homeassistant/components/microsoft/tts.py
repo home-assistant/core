@@ -1,14 +1,21 @@
 """Support for the Microsoft Cognitive Services text-to-speech service."""
+
 import logging
+from typing import Any, override
 
 from pycsspeechtts import pycsspeechtts
 from requests.exceptions import HTTPError
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+    TtsAudioType,
+)
 from homeassistant.const import CONF_API_KEY, CONF_REGION, CONF_TYPE, PERCENTAGE
 from homeassistant.generated.microsoft_tts import SUPPORTED_LANGUAGES
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_GENDER = "gender"
 CONF_OUTPUT = "output"
@@ -30,7 +37,7 @@ DEFAULT_PITCH = "default"
 DEFAULT_CONTOUR = ""
 DEFAULT_REGION = "eastus"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
@@ -84,26 +91,33 @@ class MicrosoftProvider(Provider):
         self.name = "Microsoft"
 
     @property
-    def default_language(self):
+    @override
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    @override
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
-        return SUPPORTED_LANGUAGES
+        return list(SUPPORTED_LANGUAGES)
 
     @property
-    def supported_options(self):
+    @override
+    def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
         return [CONF_GENDER, CONF_TYPE]
 
     @property
-    def default_options(self):
+    @override
+    def default_options(self) -> dict[str, Any]:
         """Return a dict include default options."""
         return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
 
-    def get_tts_audio(self, message, language, options):
+    @override
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from Microsoft."""
         if language is None:
             language = self._lang

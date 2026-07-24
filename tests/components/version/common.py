@@ -1,5 +1,4 @@
 """Fixtures for version integration."""
-from __future__ import annotations
 
 from typing import Any, Final
 from unittest.mock import patch
@@ -14,6 +13,7 @@ from homeassistant.components.version.const import (
     UPDATE_COORDINATOR_UPDATE_INTERVAL,
     VERSION_SOURCE_LOCAL,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -40,13 +40,12 @@ async def mock_get_version_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     version: str = MOCK_VERSION,
-    data: dict[str, Any] = MOCK_VERSION_DATA,
-    side_effect: Exception = None,
+    side_effect: Exception | None = None,
 ) -> None:
     """Mock getting version."""
     with patch(
         "pyhaversion.HaVersion.get_version",
-        return_value=(version, data),
+        return_value=(version, MOCK_VERSION_DATA),
         side_effect=side_effect,
     ):
         freezer.tick(UPDATE_COORDINATOR_UPDATE_INTERVAL)
@@ -74,6 +73,6 @@ async def setup_version_integration(
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_entry.state == config_entries.ConfigEntryState.LOADED
+    assert mock_entry.state is ConfigEntryState.LOADED
 
     return mock_entry

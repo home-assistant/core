@@ -1,55 +1,35 @@
 """Support for Agent camera streaming."""
+
 from datetime import timedelta
 import logging
+from typing import override
 
 from agent import AgentError
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTRIBUTION,
-    CAMERA_SCAN_INTERVAL_SECS,
-    CONNECTION,
-    DOMAIN as AGENT_DOMAIN,
-)
+from . import AgentDVRConfigEntry
+from .const import ATTRIBUTION, CAMERA_SCAN_INTERVAL_SECS, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=CAMERA_SCAN_INTERVAL_SECS)
 
 _LOGGER = logging.getLogger(__name__)
 
-_DEV_EN_ALT = "enable_alerts"
-_DEV_DS_ALT = "disable_alerts"
-_DEV_EN_REC = "start_recording"
-_DEV_DS_REC = "stop_recording"
-_DEV_SNAP = "snapshot"
-
-CAMERA_SERVICES = {
-    _DEV_EN_ALT: "async_enable_alerts",
-    _DEV_DS_ALT: "async_disable_alerts",
-    _DEV_EN_REC: "async_start_recording",
-    _DEV_DS_REC: "async_stop_recording",
-    _DEV_SNAP: "async_snapshot",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AgentDVRConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Agent cameras."""
     filter_urllib3_logging()
     cameras = []
 
-    server = hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION]
+    server = config_entry.runtime_data
     if not server.devices:
         _LOGGER.warning("Could not fetch cameras from Agent server")
         return
@@ -60,10 +40,6 @@ async def async_setup_entry(
             cameras.append(camera)
 
     async_add_entities(cameras)
-
-    platform = async_get_current_platform()
-    for service, method in CAMERA_SERVICES.items():
-        platform.async_register_entity_service(service, {}, method)
 
 
 class AgentCamera(MjpegCamera):
@@ -79,14 +55,14 @@ class AgentCamera(MjpegCamera):
         """Initialize as a subclass of MjpegCamera."""
         self.device = device
         self._removed = False
-        self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
+        self._attr_unique_id = f"{device.client.unique}_{device.typeID}_{device.id}"
         super().__init__(
             name=device.name,
-            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
-            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
+            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
+            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(AGENT_DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Agent",
             model="Camera",
             name=f"{device.client.name} {device.name}",
@@ -120,6 +96,7 @@ class AgentCamera(MjpegCamera):
         }
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return whether the monitor is recording."""
         return self.device.recording
@@ -140,11 +117,13 @@ class AgentCamera(MjpegCamera):
         return self.device.connected
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if on."""
         return self.device.online
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self.device.detector_active
@@ -157,10 +136,12 @@ class AgentCamera(MjpegCamera):
         """Disable alerts."""
         await self.device.alerts_off()
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection."""
         await self.device.detector_on()
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection."""
         await self.device.detector_off()
@@ -173,6 +154,7 @@ class AgentCamera(MjpegCamera):
         """Stop recording."""
         await self.device.record_stop()
 
+    @override
     async def async_turn_on(self) -> None:
         """Enable the camera."""
         await self.device.enable()
@@ -181,6 +163,7 @@ class AgentCamera(MjpegCamera):
         """Take a snapshot."""
         await self.device.snapshot()
 
+    @override
     async def async_turn_off(self) -> None:
         """Disable the camera."""
         await self.device.disable()

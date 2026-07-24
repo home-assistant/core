@@ -1,7 +1,6 @@
 """Support for Vera lights."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
@@ -12,23 +11,22 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from . import VeraDevice
-from .common import ControllerData, get_controller_data
+from .common import ControllerData, VeraConfigEntry
+from .entity import VeraEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VeraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = get_controller_data(hass, entry)
+    controller_data = entry.runtime_data
     async_add_entities(
         [
             VeraLight(device, controller_data)
@@ -38,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
+class VeraLight(VeraEntity[veraApi.VeraDimmer], LightEntity):
     """Representation of a Vera Light, including dimmable."""
 
     _attr_is_on = False
@@ -49,10 +47,11 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         self, vera_device: veraApi.VeraDimmer, controller_data: ControllerData
     ) -> None:
         """Initialize the light."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.vera_device.is_dimmable:
@@ -62,10 +61,12 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         return ColorMode.ONOFF
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs and self._attr_hs_color:
@@ -79,12 +80,14 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         self._attr_is_on = True
         self.schedule_update_ha_state(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self.vera_device.switch_off()
         self._attr_is_on = False
         self.schedule_update_ha_state()
 
+    @override
     def update(self) -> None:
         """Call to update state."""
         super().update()

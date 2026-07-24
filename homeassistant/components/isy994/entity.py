@@ -1,7 +1,6 @@
 """Representation of ISYEntity Types."""
-from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -52,6 +51,7 @@ class ISYEntity(Entity):
         self._change_handler: EventListener | None = None
         self._control_handler: EventListener | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         self._change_handler = self._node.status_events.subscribe(self.async_on_update)
@@ -100,12 +100,14 @@ class ISYNodeEntity(ISYEntity):
             self._attr_name = None
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return getattr(self._node, TAG_ENABLED, True)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device.
 
         The 'aux_properties' in the pyisy Node class are combined with the
@@ -150,7 +152,7 @@ class ISYNodeEntity(ISYEntity):
         await self._node.send_cmd(command, value, unit_of_measurement, parameters)
 
     async def async_get_zwave_parameter(self, parameter: Any) -> None:
-        """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
+        """Respond to a service command to request a Z-Wave parameter."""
         if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave"
@@ -161,7 +163,7 @@ class ISYNodeEntity(ISYEntity):
     async def async_set_zwave_parameter(
         self, parameter: Any, value: Any | None, size: int | None
     ) -> None:
-        """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
+        """Respond to a service command to set a Z-Wave parameter."""
         if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave"
@@ -180,6 +182,7 @@ class ISYProgramEntity(ISYEntity):
 
     _actions: Program
     _status: Program
+    _node: Program
 
     def __init__(self, name: str, status: Program, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""
@@ -188,7 +191,8 @@ class ISYProgramEntity(ISYEntity):
         self._actions = actions
 
     @property
-    def extra_state_attributes(self) -> dict:
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device."""
         attr = {}
         if self._actions:
@@ -240,6 +244,7 @@ class ISYAuxControlEntity(Entity):
         self._change_handler: EventListener = None
         self._availability_handler: EventListener = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
         self._change_handler = self._node.control_events.subscribe(
@@ -262,6 +267,7 @@ class ISYAuxControlEntity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return cast(bool, self._node.enabled)

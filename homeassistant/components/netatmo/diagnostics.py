@@ -1,14 +1,11 @@
 """Diagnostics support for Netatmo."""
-from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_HANDLER, DOMAIN
-from .data_handler import ACCOUNT, NetatmoDataHandler
+from .coordinator import ACCOUNT, NetatmoConfigEntry
 
 TO_REDACT = {
     "access_token",
@@ -31,12 +28,10 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: NetatmoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data_handler: NetatmoDataHandler = hass.data[DOMAIN][config_entry.entry_id][
-        DATA_HANDLER
-    ]
+    data_handler = config_entry.runtime_data
 
     return {
         "info": async_redact_data(
@@ -48,7 +43,7 @@ async def async_get_config_entry_diagnostics(
         ),
         "data": {
             ACCOUNT: async_redact_data(
-                getattr(data_handler.account, "raw_data"),
+                data_handler.account.raw_data,
                 TO_REDACT,
             )
         },

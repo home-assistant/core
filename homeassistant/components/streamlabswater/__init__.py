@@ -1,91 +1,45 @@
 """Support for Streamlabs Water Monitor devices."""
-import logging
 
-from streamlabswater import streamlabswater
-import voluptuous as vol
+from streamlabswater.streamlabswater import StreamlabsClient
 
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "streamlabswater"
+from .const import DOMAIN
+from .coordinator import StreamlabsConfigEntry, StreamlabsCoordinator
+from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_AWAY_MODE = "away_mode"
-SERVICE_SET_AWAY_MODE = "set_away_mode"
-AWAY_MODE_AWAY = "away"
-AWAY_MODE_HOME = "home"
-
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
-
-CONF_LOCATION_ID = "location_id"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_LOCATION_ID): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-SET_AWAY_MODE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_AWAY_MODE): vol.In([AWAY_MODE_AWAY, AWAY_MODE_HOME])}
-)
+ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=streamlabswater"}
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the streamlabs water integration."""
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-    conf = config[DOMAIN]
-    api_key = conf.get(CONF_API_KEY)
-    location_id = conf.get(CONF_LOCATION_ID)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-    client = streamlabswater.StreamlabsClient(api_key)
-    locations = client.get_locations().get("locations")
 
-    if locations is None:
-        _LOGGER.error("Unable to retrieve locations. Verify API key")
-        return False
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the integration."""
+    async_setup_services(hass)
+    return True
 
-    if location_id is None:
-        location = locations[0]
-        location_id = location["locationId"]
-        _LOGGER.info(
-            "Streamlabs Water Monitor auto-detected location_id=%s", location_id
-        )
-    else:
-        location = next(
-            (loc for loc in locations if location_id == loc["locationId"]), None
-        )
-        if location is None:
-            _LOGGER.error("Supplied location_id is invalid")
-            return False
 
-    location_name = location["name"]
+async def async_setup_entry(hass: HomeAssistant, entry: StreamlabsConfigEntry) -> bool:
+    """Set up StreamLabs from a config entry."""
 
-    hass.data[DOMAIN] = {
-        "client": client,
-        "location_id": location_id,
-        "location_name": location_name,
-    }
+    api_key = entry.data[CONF_API_KEY]
+    client = StreamlabsClient(api_key)
+    coordinator = StreamlabsCoordinator(hass, entry, client)
 
-    for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+    await coordinator.async_config_entry_first_refresh()
 
-    def set_away_mode(service: ServiceCall) -> None:
-        """Set the StreamLabsWater Away Mode."""
-        away_mode = service.data.get(ATTR_AWAY_MODE)
-        client.update_location(location_id, away_mode)
-
-    hass.services.register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, set_away_mode, schema=SET_AWAY_MODE_SCHEMA
-    )
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: StreamlabsConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

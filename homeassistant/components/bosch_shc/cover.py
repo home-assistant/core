@@ -1,7 +1,8 @@
 """Platform for cover integration."""
-from typing import Any
 
-from boschshcpy import SHCSession, SHCShutterControl
+from typing import Any, override
+
+from boschshcpy import SHCShutterControl
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -9,34 +10,29 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN
+from . import BoschConfigEntry
 from .entity import SHCEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BoschConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC cover platform."""
+    session = config_entry.runtime_data
 
-    entities = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
-
-    for cover in session.device_helper.shutter_controls:
-        entities.append(
-            ShutterControlCover(
-                device=cover,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-            )
+    async_add_entities(
+        ShutterControlCover(
+            device=cover,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
         )
-
-    async_add_entities(entities)
+        for cover in session.device_helper.shutter_controls
+    )
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):
@@ -52,20 +48,24 @@ class ShutterControlCover(SHCEntity, CoverEntity):
     )
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current cover position."""
         return round(self._device.level * 100.0)
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._device.stop()
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed or not."""
         return self.current_cover_position == 0
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return (
@@ -74,6 +74,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         )
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return (
@@ -81,14 +82,17 @@ class ShutterControlCover(SHCEntity, CoverEntity):
             == SHCShutterControl.ShutterControlService.State.CLOSING
         )
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._device.level = 1.0
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self._device.level = 0.0
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]

@@ -140,6 +140,18 @@
           "bridge": "12:34:56:30:d5:d4"
         },
         {
+          "id": "0009999993",
+          "type": "NBO",
+          "current_position": 0,
+          "target_position": 0,
+          "target_position:step": 100,
+          "firmware_revision": 22,
+          "rf_strength": 0,
+          "last_seen": 1671395511,
+          "reachable": true,
+          "bridge": "12:34:56:30:d5:d4"
+        },
+        {
           "id": "12:34:56:00:86:99",
           "type": "NACamDoorTag",
           "battery_state": "high",
@@ -276,6 +288,16 @@
           "power": 0,
           "reachable": true,
           "bridge": "12:34:56:80:60:40"
+        },
+        {
+          "id": "12:34:56:00:01:01:01:b1",
+          "type": "NLLF",
+          "firmware_revision": 60,
+          "last_seen": 1657086949,
+          "power": 11,
+          "reachable": true,
+          "bridge": "12:34:56:80:60:40",
+          "fan_speed": 1
         }
       ],
       "rooms": [

@@ -1,0 +1,51 @@
+get_feeder_meal_plan:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tuya
+
+set_feeder_meal_plan:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tuya
+    meal_plan:
+      required: true
+      selector:
+        object:
+          translation_key: set_feeder_meal_plan
+          description_field: portion
+          multiple: true
+          fields:
+            days:
+              selector:
+                select:
+                  options:
+                    - monday
+                    - tuesday
+                    - wednesday
+                    - thursday
+                    - friday
+                    - saturday
+                    - sunday
+                  multiple: true
+                  translation_key: days_of_week
+
+            time:
+              selector:
+                time:
+
+            portion:
+              selector:
+                number:
+                  min: 0
+                  max: 100
+                  mode: box
+                  unit_of_measurement: "g"
+            enabled:
+              selector:
+                boolean: {}

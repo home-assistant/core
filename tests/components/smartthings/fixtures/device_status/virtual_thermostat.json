@@ -1,0 +1,97 @@
+{
+  "components": {
+    "main": {
+      "thermostatOperatingState": {
+        "thermostatOperatingState": {
+          "value": "pending cool",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        }
+      },
+      "thermostatHeatingSetpoint": {
+        "heatingSetpoint": {
+          "value": 814.7469111058201,
+          "unit": "F",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        },
+        "heatingSetpointRange": {
+          "value": {
+            "maximum": 3226.693210895862,
+            "step": 9234.459191378826,
+            "minimum": 6214.940743832475
+          },
+          "unit": "F",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": {
+            "maximum": 1826.722761785079,
+            "step": 138.2080712609211,
+            "minimum": 9268.726934158902
+          },
+          "unit": "F",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        },
+        "temperature": {
+          "value": 8554.194688973037,
+          "unit": "F",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        }
+      },
+      "thermostatFanMode": {
+        "thermostatFanMode": {
+          "value": "followschedule",
+          "data": {},
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        },
+        "supportedThermostatFanModes": {
+          "value": ["on"],
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        }
+      },
+      "thermostatMode": {
+        "thermostatMode": {
+          "value": "auxheatonly",
+          "data": {},
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        },
+        "supportedThermostatModes": {
+          "value": ["rush hour"],
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": 51,
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        },
+        "type": {
+          "value": "38140",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": {
+            "maximum": 7288.145606306409,
+            "step": 7620.031701049315,
+            "minimum": 4997.721228739137
+          },
+          "unit": "F",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        },
+        "coolingSetpoint": {
+          "value": 244.33726326608746,
+          "unit": "F",
+          "timestamp": "2025-02-10T22:04:56.341Z"
+        }
+      }
+    }
+  }
+}

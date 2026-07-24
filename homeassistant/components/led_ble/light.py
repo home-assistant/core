@@ -1,7 +1,6 @@
 """LED BLE integration light platform."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast, override
 
 from led_ble import LEDBLE
 
@@ -14,31 +13,27 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_EFFECT_SPEED, DOMAIN
-from .models import LEDBLEData
+from .const import DEFAULT_EFFECT_SPEED
+from .coordinator import LEDBLEConfigEntry, LEDBLECoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LEDBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform for LEDBLE."""
-    data: LEDBLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities([LEDBLEEntity(data.coordinator, data.device, entry.title)])
 
 
-class LEDBLEEntity(CoordinatorEntity, LightEntity):
+class LEDBLEEntity(CoordinatorEntity[LEDBLECoordinator], LightEntity):
     """Representation of LEDBLE device."""
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.WHITE}
@@ -47,7 +42,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
     _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: LEDBLE, name: str
+        self, coordinator: LEDBLECoordinator, device: LEDBLE, name: str
     ) -> None:
         """Initialize an ledble light."""
         super().__init__(coordinator)
@@ -80,9 +75,10 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
             round(brightness / 255 * 100),
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+        brightness = cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness))
         if effect := kwargs.get(ATTR_EFFECT):
             await self._async_set_effect(effect, brightness)
             return
@@ -98,16 +94,19 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
             return
         await self._device.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._device.turn_off()
 
     @callback
+    @override
     def _handle_coordinator_update(self, *args: Any) -> None:
         """Handle data update."""
         self._async_update_attrs()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

@@ -1,20 +1,15 @@
 """PlaatoEntity class."""
+
+from typing import Any, cast, override
+
 from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    DEVICE,
-    DEVICE_ID,
-    DEVICE_NAME,
-    DEVICE_TYPE,
-    DOMAIN,
-    EXTRA_STATE_ATTRIBUTES,
-    SENSOR_DATA,
-    SENSOR_SIGNAL,
-)
+from .const import DOMAIN, EXTRA_STATE_ATTRIBUTES, SENSOR_SIGNAL
+from .coordinator import PlaatoCoordinator, PlaatoData
 
 
 class PlaatoEntity(entity.Entity):
@@ -22,16 +17,24 @@ class PlaatoEntity(entity.Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, data, sensor_type, coordinator=None):
+    def __init__(
+        self,
+        data: PlaatoData,
+        sensor_type: str,
+        coordinator: PlaatoCoordinator | None = None,
+    ) -> None:
         """Initialize the sensor."""
         self._coordinator = coordinator
         self._entry_data = data
         self._sensor_type = sensor_type
-        self._device_id = data[DEVICE][DEVICE_ID]
-        self._device_type = data[DEVICE][DEVICE_TYPE]
-        self._device_name = data[DEVICE][DEVICE_NAME]
+        assert self._entry_data.device_id is not None
+        self._device_id = cast(str, data.device_id)
+        self._device_type = data.device_type
+        self._device_name = data.device_name
         self._attr_unique_id = f"{self._device_id}_{self._sensor_type}"
-        self._attr_name = f"{DOMAIN} {self._device_type} {self._device_name} {self._sensor_name}".title()
+        self._attr_name = (
+            f"{DOMAIN} {self._device_type} {self._device_name} {self._sensor_name}"
+        ).title()
         sw_version = None
         if firmware := self._sensor_data.firmware_version:
             sw_version = firmware
@@ -55,10 +58,11 @@ class PlaatoEntity(entity.Entity):
     def _sensor_data(self) -> PlaatoDevice:
         if self._coordinator:
             return self._coordinator.data
-        return self._entry_data[SENSOR_DATA]
+        return self._entry_data.sensor_data
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the monitored installation."""
         if self._attributes:
             return {
@@ -67,15 +71,18 @@ class PlaatoEntity(entity.Entity):
                 if plaato_key in self._attributes
                 and self._attributes[plaato_key] is not None
             }
+        return None
 
     @property
-    def available(self):
+    @override
+    def available(self) -> bool:
         """Return if sensor is available."""
         if self._coordinator is not None:
             return self._coordinator.last_update_success
         return True
 
-    async def async_added_to_hass(self):
+    @override
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         if self._coordinator is not None:
             self.async_on_remove(

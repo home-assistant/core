@@ -1,44 +1,37 @@
 """Support for Mikrotik routers as device tracker."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .hub import Device, MikrotikDataUpdateCoordinator
+from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MikrotikConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Mikrotik component."""
-    coordinator: MikrotikDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker] = {}
 
     registry = er.async_get(hass)
 
     # Restore clients that is not a part of active clients list.
-    for entity in registry.entities.values():
-        if (
-            entity.config_entry_id == config_entry.entry_id
-            and entity.domain == DEVICE_TRACKER
-        ):
+    for entity in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity.domain == DEVICE_TRACKER_DOMAIN:
             if (
                 entity.unique_id in coordinator.api.devices
                 or entity.unique_id not in coordinator.api.all_devices
@@ -59,7 +52,7 @@ async def async_setup_entry(
 @callback
 def update_items(
     coordinator: MikrotikDataUpdateCoordinator,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker],
 ) -> None:
     """Update tracked device state from the hub."""
@@ -77,6 +70,8 @@ class MikrotikDataUpdateCoordinatorTracker(
 ):
     """Representation of network device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, device: Device, coordinator: MikrotikDataUpdateCoordinator
     ) -> None:
@@ -87,6 +82,7 @@ class MikrotikDataUpdateCoordinatorTracker(
         self._attr_unique_id = device.mac
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
         if (
@@ -98,26 +94,25 @@ class MikrotikDataUpdateCoordinatorTracker(
         return False
 
     @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the client."""
-        return SourceType.ROUTER
-
-    @property
+    @override
     def hostname(self) -> str:
         """Return the hostname of the client."""
         return self.device.name
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the client."""
         return self.device.mac
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the mac address of the client."""
         return self.device.ip_address
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         return self.device.attrs if self.is_connected else None

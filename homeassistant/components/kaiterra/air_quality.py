@@ -1,5 +1,6 @@
 """Support for Kaiterra Air Quality Sensors."""
-from __future__ import annotations
+
+from typing import Any, override
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
@@ -53,16 +54,19 @@ class KaiterraAirQuality(AirQualityEntity):
         return self._api.data.get(self._device_id, {})
 
     @property
+    @override
     def available(self):
         """Return the availability of the sensor."""
         return self._api.data.get(self._device_id) is not None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._data("aqi")
@@ -78,16 +82,19 @@ class KaiterraAirQuality(AirQualityEntity):
         return self._data("aqi_pollutant")
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._data("rpm25c")
 
     @property
+    @override
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._data("rpm10c")
 
     @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._data("rco2")
@@ -98,26 +105,26 @@ class KaiterraAirQuality(AirQualityEntity):
         return self._data("rtvoc")
 
     @property
+    @override
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f"{self._device_id}_air_quality"
+        return f"{self._device_id}_air_quality"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        data = {}
-        attributes = [
-            (ATTR_VOC, self.volatile_organic_compounds),
-            (ATTR_AQI_LEVEL, self.air_quality_index_level),
-            (ATTR_AQI_POLLUTANT, self.air_quality_index_pollutant),
-        ]
+        return {
+            attr: value
+            for attr, value in (
+                (ATTR_VOC, self.volatile_organic_compounds),
+                (ATTR_AQI_LEVEL, self.air_quality_index_level),
+                (ATTR_AQI_POLLUTANT, self.air_quality_index_pollutant),
+            )
+            if value is not None
+        }
 
-        for attr, value in attributes:
-            if value is not None:
-                data[attr] = value
-
-        return data
-
+    @override
     async def async_added_to_hass(self):
         """Register callback."""
         self.async_on_remove(

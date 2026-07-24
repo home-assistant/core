@@ -1,25 +1,26 @@
 """Support for Duotecno lights."""
-from typing import Any
+
+from typing import Any, override
 
 from duotecno.unit import DimUnit
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: DuotecnoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Duotecno light based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(DuotecnoLight(channel) for channel in cntrl.get_units("DimUnit"))
+    async_add_entities(
+        DuotecnoLight(channel) for channel in entry.runtime_data.get_units("DimUnit")
+    )
 
 
 class DuotecnoLight(DuotecnoEntity, LightEntity):
@@ -30,16 +31,19 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._unit.is_on()
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return int((self._unit.get_dimmer_state() * 255) / 100)
 
     @api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if (val := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -51,6 +55,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
         await self._unit.set_dimmer_state(val)
 
     @api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._unit.set_dimmer_state(0)

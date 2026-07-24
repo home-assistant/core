@@ -1,4 +1,5 @@
 """Test the Fully Kiosk Browser sensors."""
+
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -52,6 +53,18 @@ async def test_sensors_sensors(
     entry = entity_registry.async_get("sensor.amazon_fire_screen_orientation")
     assert entry
     assert entry.unique_id == "abcdef-123456-screenOrientation"
+
+    state = hass.states.get("sensor.amazon_fire_battery_temperature")
+    assert state
+    assert state.state == "27"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Battery temperature"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+    entry = entity_registry.async_get("sensor.amazon_fire_battery_temperature")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-batteryTemperature"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.amazon_fire_foreground_app")
     assert state
@@ -144,7 +157,7 @@ async def test_sensors_sensors(
     mock_fully_kiosk.getDeviceInfo.return_value = {}
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
     assert state
@@ -154,7 +167,7 @@ async def test_sensors_sensors(
     mock_fully_kiosk.getDeviceInfo.side_effect = FullyKioskError("error", "status")
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
     assert state
@@ -180,7 +193,7 @@ async def test_url_sensor_truncating(
         "currentPage": long_url,
     }
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.amazon_fire_current_page")
     assert state

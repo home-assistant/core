@@ -1,47 +1,45 @@
 """Support for IKEA Tradfri lights."""
-from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pytradfri.command import Command
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from .base_class import TradfriBaseEntity
-from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
-from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .const import CONF_GATEWAY_ID
+from .coordinator import TradfriConfigEntry, TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: TradfriConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Tradfri lights based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api = coordinator_data[KEY_API]
+    tradfri_data = config_entry.runtime_data
 
     async_add_entities(
         TradfriLight(
             device_coordinator,
-            api,
+            tradfri_data.api,
             gateway_id,
         )
-        for device_coordinator in coordinator_data[COORDINATOR_LIST]
+        for device_coordinator in tradfri_data.coordinator_list
         if device_coordinator.device.has_light_control
     )
 
@@ -51,6 +49,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
 
     _attr_name = None
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _fixed_color_mode: ColorMode | None = None
 
     def __init__(
         self,
@@ -68,32 +67,40 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._device_control = self._device.light_control
         self._device_data = self._device_control.lights[0]
 
-        self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"
+        self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._hs_color = None
 
         # Calculate supported color modes
-        self._attr_supported_color_modes: set[ColorMode] = set()
+        modes: set[ColorMode] = {ColorMode.ONOFF}
         if self._device.light_control.can_set_color:
-            self._attr_supported_color_modes.add(ColorMode.HS)
+            modes.add(ColorMode.HS)
         if self._device.light_control.can_set_temp:
-            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if (
-            not self._attr_supported_color_modes
-            and self._device.light_control.can_set_dimmer
-        ):
-            # Must be the only supported mode according to docs for
-            # ColorMode.BRIGHTNESS
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+            modes.add(ColorMode.COLOR_TEMP)
+        if self._device.light_control.can_set_dimmer:
+            modes.add(ColorMode.BRIGHTNESS)
+        self._attr_supported_color_modes = filter_supported_color_modes(modes)
+        if len(self._attr_supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
         if self._device_control:
-            self._attr_min_mireds = self._device_control.min_mireds
-            self._attr_max_mireds = self._device_control.max_mireds
+            self._attr_max_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(
+                    self._device_control.min_mireds
+                )
+            )
+            self._attr_min_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(
+                    self._device_control.max_mireds
+                )
+            )
 
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self.coordinator.data.light_control.lights[0]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         if not self._device_data:
@@ -101,6 +108,17 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return cast(bool, self._device_data.state)
 
     @property
+    @override
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._fixed_color_mode:
+            return self._fixed_color_mode
+        if self.hs_color:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
+
+    @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         if not self._device_data:
@@ -108,13 +126,15 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return cast(int, self._device_data.dimmer)
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temp value in mireds."""
-        if not self._device_data:
+    @override
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        if not self._device_data or not (color_temp := self._device_data.color_temp):
             return None
-        return cast(int, self._device_data.color_temp)
+        return color_util.color_temperature_mired_to_kelvin(color_temp)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """HS color of the light."""
         if not self._device_control or not self._device_data:
@@ -127,6 +147,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 return hue, sat
         return None
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         # This allows transitioning to off, but resets the brightness
@@ -145,6 +166,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         else:
             await self._api(self._device_control.set_state(False))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if not self._device_control:
@@ -181,18 +203,19 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             transition_time = None
 
         temp_command = None
-        if ATTR_COLOR_TEMP in kwargs and (
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and (
             self._device_control.can_set_temp or self._device_control.can_set_color
         ):
-            temp = kwargs[ATTR_COLOR_TEMP]
+            temp_k = kwargs[ATTR_COLOR_TEMP_KELVIN]
             # White Spectrum bulb
             if self._device_control.can_set_temp:
-                if temp > self.max_mireds:
-                    temp = self.max_mireds
-                elif temp < self.min_mireds:
-                    temp = self.min_mireds
+                temp = color_util.color_temperature_kelvin_to_mired(temp_k)
+                if temp < (min_mireds := self._device_control.min_mireds):
+                    temp = min_mireds
+                elif temp > (max_mireds := self._device_control.max_mireds):
+                    temp = max_mireds
                 temp_data = {
-                    ATTR_COLOR_TEMP: temp,
+                    "color_temp": temp,
                     "transition_time": transition_time,
                 }
                 temp_command = self._device_control.set_color_temp(**temp_data)
@@ -200,7 +223,6 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             # Color bulb (CWS)
             # color_temp needs to be set with hue/saturation
             elif self._device_control.can_set_color:
-                temp_k = color_util.color_temperature_mired_to_kelvin(temp)
                 hs_color = color_util.color_temperature_to_hs(temp_k)
                 hue = int(hs_color[0] * (self._device_control.max_hue / 360))
                 sat = int(hs_color[1] * (self._device_control.max_saturation / 100))

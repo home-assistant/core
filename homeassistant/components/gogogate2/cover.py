@@ -1,7 +1,6 @@
 """Support for Gogogate2 garage Doors."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from ismartgate.common import (
     AbstractDoor,
@@ -15,25 +14,21 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import (
-    DeviceDataUpdateCoordinator,
-    GoGoGate2Entity,
-    cover_unique_id,
-    get_data_update_coordinator,
-)
+from .common import cover_unique_id
+from .coordinator import DeviceDataUpdateCoordinator, GogoGateConfigEntry
+from .entity import GoGoGate2Entity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: GogoGateConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
-    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
+    data_update_coordinator = config_entry.runtime_data
 
     async_add_entities(
         [
@@ -50,7 +45,7 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: GogoGateConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
     ) -> None:
@@ -62,11 +57,13 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         )
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the door."""
         return self.door.name
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, else False."""
         door_status = self.door_status
@@ -77,20 +74,24 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         return None
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.door_status == TransitionDoorStatus.CLOSING
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.door_status == TransitionDoorStatus.OPENING
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door."""
         await self._api.async_open_door(self._door_id)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door."""
         await self._api.async_close_door(self._door_id)

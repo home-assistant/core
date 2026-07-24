@@ -1,16 +1,20 @@
 """Config flow to configure the MJPEG IP Camera integration."""
-from __future__ import annotations
 
+from collections.abc import Mapping
 from http import HTTPStatus
-from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -21,7 +25,6 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
@@ -29,7 +32,7 @@ from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 
 @callback
 def async_get_schema(
-    defaults: dict[str, Any] | MappingProxyType[str, Any], show_name: bool = False
+    defaults: Mapping[str, Any], show_name: bool = False
 ) -> vol.Schema:
     """Return MJPEG IP Camera schema."""
     schema = {
@@ -54,7 +57,9 @@ def async_get_schema(
 
     if show_name:
         schema = {
-            vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
             **schema,
         }
 
@@ -118,7 +123,7 @@ async def async_validate_input(
             )
     except InvalidAuth:
         errors["username"] = "invalid_auth"
-    except (OSError, HTTPError, Timeout):
+    except OSError, HTTPError, Timeout:
         LOGGER.exception("Cannot connect to %s", user_input[CONF_MJPEG_URL])
         errors[field] = "cannot_connect"
 
@@ -132,15 +137,17 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MJPEGOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return MJPEGOptionsFlowHandler(config_entry)
+        return MJPEGOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
 
@@ -178,13 +185,9 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 class MJPEGOptionsFlowHandler(OptionsFlow):
     """Handle MJPEG IP Camera options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize MJPEG IP Camera options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage MJPEG IP Camera options."""
         errors: dict[str, str] = {}
 

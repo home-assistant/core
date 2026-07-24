@@ -1,12 +1,18 @@
 """Support for the MaryTTS service."""
-from __future__ import annotations
+
+from typing import Any, override
 
 from speak2mary import MaryTTS
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+    TtsAudioType,
+)
 from homeassistant.const import CONF_EFFECT, CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
@@ -25,7 +31,7 @@ DEFAULT_EFFECTS: dict[str, str] = {}
 
 MAP_MARYTTS_CODEC = {"WAVE_FILE": "wav", "AIFF_FILE": "aiff", "AU_FILE": "au"}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -61,26 +67,33 @@ class MaryTTSProvider(Provider):
         self.name = "MaryTTS"
 
     @property
-    def default_language(self):
+    @override
+    def default_language(self) -> str:
         """Return the default language."""
         return self._mary.locale
 
     @property
-    def supported_languages(self):
+    @override
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def default_options(self):
+    @override
+    def default_options(self) -> dict[str, Any]:
         """Return dict include default options."""
         return {CONF_EFFECT: self._effects}
 
     @property
-    def supported_options(self):
+    @override
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    def get_tts_audio(self, message, language, options):
+    @override
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from MaryTTS."""
         effects = options[CONF_EFFECT]
 

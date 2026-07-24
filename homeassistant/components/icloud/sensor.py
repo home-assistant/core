@@ -1,26 +1,26 @@
 """Support for iCloud sensors."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from .account import IcloudAccount, IcloudDevice
+from .account import IcloudAccount, IcloudConfigEntry, IcloudDevice
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IcloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for iCloud component."""
-    account: IcloudAccount = hass.data[DOMAIN][entry.unique_id]
+    account = entry.runtime_data
     tracked = set[str]()
 
     @callback
@@ -73,11 +73,13 @@ class IcloudDeviceBatterySensor(SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Battery state percentage."""
         return self._device.battery_level
 
     @property
+    @override
     def icon(self) -> str:
         """Battery state icon handling."""
         return icon_for_battery_level(
@@ -86,16 +88,19 @@ class IcloudDeviceBatterySensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the iCloud device entity."""
         return self._device.extra_state_attributes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         if self._unsub_dispatcher:

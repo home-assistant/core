@@ -1,9 +1,11 @@
 """Tests for Glances integration."""
+
 from unittest.mock import MagicMock
 
 from glances_api.exceptions import (
     GlancesApiAuthorizationError,
     GlancesApiConnectionError,
+    GlancesApiNoDataAvailable,
 )
 import pytest
 
@@ -24,7 +26,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -32,6 +34,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
     [
         (GlancesApiAuthorizationError, ConfigEntryState.SETUP_ERROR),
         (GlancesApiConnectionError, ConfigEntryState.SETUP_RETRY),
+        (GlancesApiNoDataAvailable, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_setup_error(

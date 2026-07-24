@@ -1,22 +1,19 @@
 """Config flow for Aurora ABB PowerOne integration."""
-from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from aurorapy.client import AuroraError, AuroraSerialClient
-import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant import config_entries, core
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.components import usb
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from .const import (
     ATTR_FIRMWARE,
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -28,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def validate_and_connect(
-    hass: core.HomeAssistant, data: Mapping[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
@@ -45,10 +42,10 @@ def validate_and_connect(
         ret[ATTR_SERIAL_NUMBER] = client.serial_number()
         ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
         ret[ATTR_FIRMWARE] = client.firmware(1)
-        _LOGGER.info("Returning device info=%s", ret)
-    except AuroraError as err:
+        _LOGGER.debug("Returning device info=%s", ret)
+    except AuroraError:
         _LOGGER.warning("Could not connect to device=%s", comport)
-        raise err
+        raise
     finally:
         if client.serline.isOpen():
             client.close()
@@ -57,9 +54,11 @@ def validate_and_connect(
     return ret
 
 
-def scan_comports() -> tuple[list[str] | None, str | None]:
+async def async_scan_comports(
+    hass: HomeAssistant,
+) -> tuple[list[str] | None, str | None]:
     """Find and store available com ports for the GUI dropdown."""
-    com_ports = serial.tools.list_ports.comports(include_links=True)
+    com_ports = await usb.async_scan_serial_ports(hass)
     com_ports_list = []
     for port in com_ports:
         com_ports_list.append(port.device)
@@ -70,28 +69,30 @@ def scan_comports() -> tuple[list[str] | None, str | None]:
     return None, None
 
 
-class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aurora ABB PowerOne."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise the config flow."""
-        self.config = None
-        self._com_ports_list = None
-        self._default_com_port = None
+        self._com_ports_list: list[str] | None = None
+        self._default_com_port: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialised by the user."""
 
         errors = {}
         if self._com_ports_list is None:
-            result = await self.hass.async_add_executor_job(scan_comports)
+            result = await async_scan_comports(self.hass)
             self._com_ports_list, self._default_com_port = result
             if self._default_com_port is None:
                 return self.async_abort(reason="no_serial_ports")
+            if TYPE_CHECKING:
+                assert isinstance(self._com_ports_list, list)
 
         # Handle the initial step.
         if user_input is not None:

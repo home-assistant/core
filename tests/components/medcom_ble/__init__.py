@@ -1,5 +1,4 @@
 """Tests for the Medcom Inspector BLE integration."""
-from __future__ import annotations
 
 from unittest.mock import patch
 
@@ -74,6 +73,7 @@ MEDCOM_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=-127,
 )
 
 UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -94,6 +94,7 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=-127,
 )
 
 MEDCOM_DEVICE_INFO = MedcomBleDevice(

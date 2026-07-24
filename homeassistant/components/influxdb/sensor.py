@@ -1,9 +1,8 @@
 """InfluxDB component which allows you to get data from an Influx database."""
-from __future__ import annotations
 
 import datetime
 import logging
-from typing import Final
+from typing import Final, override
 
 import voluptuous as vol
 
@@ -13,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_API_VERSION,
+    CONF_LANGUAGE,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady, TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -35,7 +35,6 @@ from .const import (
     CONF_FIELD,
     CONF_GROUP_FUNCTION,
     CONF_IMPORTS,
-    CONF_LANGUAGE,
     CONF_MEASUREMENT_NAME,
     CONF_QUERIES,
     CONF_QUERIES_FLUX,
@@ -165,7 +164,7 @@ def setup_platform(
         influx = get_influx_connection(config, test_read=True)
     except ConnectionError as exc:
         _LOGGER.error(exc)
-        raise PlatformNotReady() from exc
+        raise PlatformNotReady from exc
 
     entities = []
     if CONF_QUERIES_FLUX in config:
@@ -193,52 +192,46 @@ class InfluxSensor(SensorEntity):
         """Initialize the sensor."""
         self._name = query.get(CONF_NAME)
         self._unit_of_measurement = query.get(CONF_UNIT_OF_MEASUREMENT)
-        value_template = query.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            self._value_template = value_template
-            self._value_template.hass = hass
-        else:
-            self._value_template = None
+        self._value_template = query.get(CONF_VALUE_TEMPLATE)
         self._state = None
         self._hass = hass
         self._attr_unique_id = query.get(CONF_UNIQUE_ID)
 
         if query[CONF_LANGUAGE] == LANGUAGE_FLUX:
-            query_clause = query.get(CONF_QUERY)
-            query_clause.hass = hass
             self.data = InfluxFluxSensorData(
                 influx,
                 query.get(CONF_BUCKET),
                 query.get(CONF_RANGE_START),
                 query.get(CONF_RANGE_STOP),
-                query_clause,
+                query.get(CONF_QUERY),
                 query.get(CONF_IMPORTS),
                 query.get(CONF_GROUP_FUNCTION),
             )
 
         else:
-            where_clause = query.get(CONF_WHERE)
-            where_clause.hass = hass
             self.data = InfluxQLSensorData(
                 influx,
                 query.get(CONF_DB_NAME),
                 query.get(CONF_GROUP_FUNCTION),
                 query.get(CONF_FIELD),
                 query.get(CONF_MEASUREMENT_NAME),
-                where_clause,
+                query.get(CONF_WHERE),
             )
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement

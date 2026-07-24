@@ -1,25 +1,24 @@
 """Support for Elgato switches."""
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from elgato import Elgato, ElgatoError
+from elgato import Elgato
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
+from .coordinator import ElgatoConfigEntry, ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
+from .helpers import elgato_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ElgatoSwitchEntityDescription(SwitchEntityDescription):
     """Class describing Elgato switch entities."""
 
@@ -32,7 +31,6 @@ SWITCHES = [
     ElgatoSwitchEntityDescription(
         key="bypass",
         translation_key="bypass",
-        icon="mdi:battery-off-outline",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.battery is not None,
         is_on_fn=lambda x: x.settings.battery.bypass if x.settings.battery else None,
@@ -41,7 +39,6 @@ SWITCHES = [
     ElgatoSwitchEntityDescription(
         key="energy_saving",
         translation_key="energy_saving",
-        icon="mdi:leaf",
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: x.battery is not None,
         is_on_fn=lambda x: (
@@ -54,11 +51,11 @@ SWITCHES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ElgatoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elgato switches based on a config entry."""
-    coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ElgatoSwitchEntity(
@@ -89,28 +86,21 @@ class ElgatoSwitchEntity(ElgatoEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
+    @elgato_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        try:
-            await self.entity_description.set_fn(self.coordinator.client, True)
-        except ElgatoError as error:
-            raise HomeAssistantError(
-                "An error occurred while updating the Elgato Light"
-            ) from error
-        finally:
-            await self.coordinator.async_refresh()
+        await self.entity_description.set_fn(self.coordinator.client, True)
+        await self.coordinator.async_request_refresh()
 
+    @elgato_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        try:
-            await self.entity_description.set_fn(self.coordinator.client, False)
-        except ElgatoError as error:
-            raise HomeAssistantError(
-                "An error occurred while updating the Elgato Light"
-            ) from error
-        finally:
-            await self.coordinator.async_refresh()
+        await self.entity_description.set_fn(self.coordinator.client, False)
+        await self.coordinator.async_request_refresh()

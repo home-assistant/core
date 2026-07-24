@@ -1,14 +1,15 @@
 """Support for setting the level of logging for components."""
-from __future__ import annotations
 
 import logging
 import re
+from typing import override
 
 import voluptuous as vol
 
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
@@ -23,8 +24,10 @@ from .const import (
     SERVICE_SET_LEVEL,
 )
 from .helpers import (
+    DATA_LOGGER,
     LoggerDomainConfig,
     LoggerSettings,
+    _clear_logger_overwrites,  # noqa: F401
     set_default_log_level,
     set_log_levels,
 )
@@ -53,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     settings = LoggerSettings(hass, config)
 
-    domain_config = hass.data[DOMAIN] = LoggerDomainConfig({}, settings)
+    domain_config = hass.data[DATA_LOGGER] = LoggerDomainConfig({}, settings)
     logging.setLoggerClass(_get_logger_class(domain_config.overrides))
 
     websocket_api.async_load_websocket_api(hass)
@@ -71,7 +74,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for key, value in log_filters.items():
             _add_log_filter(logging.getLogger(key), value)
 
-    # Combine log levels configured in configuration.yaml with log levels set by frontend
+    # Combine log levels configured in configuration.yaml
+    # with log levels set by frontend
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
 
@@ -83,14 +87,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             set_log_levels(hass, service.data)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_DEFAULT_LEVEL,
         async_service_handler,
         schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA,
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SET_LEVEL,
         async_service_handler,
@@ -119,6 +125,7 @@ def _get_logger_class(hass_overrides: dict[str, int]) -> type[logging.Logger]:
     class HassLogger(logging.Logger):
         """Home Assistant aware logger class."""
 
+        @override
         def setLevel(self, level: int | str) -> None:
             """Set the log level unless overridden."""
             if self.name in hass_overrides:

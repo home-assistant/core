@@ -1,0 +1,116 @@
+[
+  {
+    "id": 7330963245622279024,
+    "created_at": "2024-02-02T11:21:24.000Z",
+    "answered": false,
+    "events": [],
+    "kind": "ding",
+    "favorite": false,
+    "snapshot_url": "",
+    "recording": {
+      "status": "ready"
+    },
+    "duration": 40.0,
+    "cv_properties": {
+      "person_detected": null,
+      "stream_broken": false,
+      "detection_type": null,
+      "cv_triggers": null,
+      "detection_types": null,
+      "security_alerts": null
+    },
+    "properties": {
+      "is_alexa": false,
+      "is_sidewalk": false,
+      "is_autoreply": false
+    },
+    "doorbot": {
+      "id": 185036587,
+      "description": "Ingresso",
+      "type": "intercom_handset_audio"
+    },
+    "device_placement": null,
+    "geolocation": null,
+    "last_location": null,
+    "siren": null,
+    "is_e2ee": false,
+    "had_subscription": false,
+    "owner_id": "762490876"
+  },
+  {
+    "id": 7323267080901445808,
+    "created_at": "2024-01-12T17:36:28.000Z",
+    "answered": true,
+    "events": [],
+    "kind": "on_demand",
+    "favorite": false,
+    "snapshot_url": "",
+    "recording": {
+      "status": "ready"
+    },
+    "duration": 13.0,
+    "cv_properties": {
+      "person_detected": null,
+      "stream_broken": false,
+      "detection_type": null,
+      "cv_triggers": null,
+      "detection_types": null,
+      "security_alerts": null
+    },
+    "properties": {
+      "is_alexa": false,
+      "is_sidewalk": false,
+      "is_autoreply": false
+    },
+    "doorbot": {
+      "id": 185036587,
+      "description": "Ingresso",
+      "type": "intercom_handset_audio"
+    },
+    "device_placement": null,
+    "geolocation": null,
+    "last_location": null,
+    "siren": null,
+    "is_e2ee": false,
+    "had_subscription": false,
+    "owner_id": "762490876"
+  },
+  {
+    "id": 7307399027047288688,
+    "created_at": "2023-12-01T18:44:28.000Z",
+    "answered": true,
+    "events": [],
+    "kind": "on_demand",
+    "favorite": false,
+    "snapshot_url": "",
+    "recording": {
+      "status": "ready"
+    },
+    "duration": 43.0,
+    "cv_properties": {
+      "person_detected": null,
+      "stream_broken": false,
+      "detection_type": null,
+      "cv_triggers": null,
+      "detection_types": null,
+      "security_alerts": null
+    },
+    "properties": {
+      "is_alexa": false,
+      "is_sidewalk": false,
+      "is_autoreply": false
+    },
+    "doorbot": {
+      "id": 185036587,
+      "description": "Ingresso",
+      "type": "intercom_handset_audio"
+    },
+    "device_placement": null,
+    "geolocation": null,
+    "last_location": null,
+    "siren": null,
+    "is_e2ee": false,
+    "had_subscription": false,
+    "owner_id": "762490876"
+  }
+]

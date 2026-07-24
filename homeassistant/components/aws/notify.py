@@ -1,11 +1,10 @@
 """AWS platform for notify component."""
-from __future__ import annotations
 
 import asyncio
 import base64
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiobotocore.session import AioSession
 
@@ -26,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSIONS
+from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_AWS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,10 +74,12 @@ async def async_get_service(
     if CONF_CONTEXT in aws_config:
         del aws_config[CONF_CONTEXT]
 
+    sessions = hass.data[DATA_AWS].sessions
+
     if not aws_config:
         # no platform config, use the first aws component credential instead
-        if hass.data[DATA_SESSIONS]:
-            session = next(iter(hass.data[DATA_SESSIONS].values()))
+        if sessions:
+            session = next(iter(sessions.values()))
         else:
             _LOGGER.error("Missing aws credential for %s", config[CONF_NAME])
             return None
@@ -86,7 +87,7 @@ async def async_get_service(
     if session is None:
         credential_name = aws_config.get(CONF_CREDENTIAL_NAME)
         if credential_name is not None:
-            session = hass.data[DATA_SESSIONS].get(credential_name)
+            session = sessions.get(credential_name)
             if session is None:
                 _LOGGER.warning("No available aws session for %s", credential_name)
             del aws_config[CONF_CREDENTIAL_NAME]
@@ -140,6 +141,7 @@ class AWSLambda(AWSNotify):
         super().__init__(session, aws_config)
         self.context = context
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified LAMBDA ARN."""
         if not kwargs.get(ATTR_TARGET):
@@ -154,15 +156,14 @@ class AWSLambda(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
-            for target in kwargs.get(ATTR_TARGET, []):
-                tasks.append(
-                    client.invoke(
-                        FunctionName=target,
-                        Payload=json_payload,
-                        ClientContext=self.context,
-                    )
+            tasks = [
+                client.invoke(
+                    FunctionName=target,
+                    Payload=json_payload,
+                    ClientContext=self.context,
                 )
+                for target in kwargs.get(ATTR_TARGET, [])
+            ]
 
             if tasks:
                 await asyncio.gather(*tasks)
@@ -173,6 +174,7 @@ class AWSSNS(AWSNotify):
 
     service = "sns"
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified SNS ARN."""
         if not kwargs.get(ATTR_TARGET):
@@ -191,16 +193,15 @@ class AWSSNS(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
-            for target in kwargs.get(ATTR_TARGET, []):
-                tasks.append(
-                    client.publish(
-                        TargetArn=target,
-                        Message=message,
-                        Subject=subject,
-                        MessageAttributes=message_attributes,
-                    )
+            tasks = [
+                client.publish(
+                    TargetArn=target,
+                    Message=message,
+                    Subject=subject,
+                    MessageAttributes=message_attributes,
                 )
+                for target in kwargs.get(ATTR_TARGET, [])
+            ]
 
             if tasks:
                 await asyncio.gather(*tasks)
@@ -211,6 +212,7 @@ class AWSSQS(AWSNotify):
 
     service = "sqs"
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified SQS ARN."""
         if not kwargs.get(ATTR_TARGET):
@@ -231,15 +233,14 @@ class AWSSQS(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
-            for target in kwargs.get(ATTR_TARGET, []):
-                tasks.append(
-                    client.send_message(
-                        QueueUrl=target,
-                        MessageBody=json_body,
-                        MessageAttributes=message_attributes,
-                    )
+            tasks = [
+                client.send_message(
+                    QueueUrl=target,
+                    MessageBody=json_body,
+                    MessageAttributes=message_attributes,
                 )
+                for target in kwargs.get(ATTR_TARGET, [])
+            ]
 
             if tasks:
                 await asyncio.gather(*tasks)
@@ -250,6 +251,7 @@ class AWSEventBridge(AWSNotify):
 
     service = "events"
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified EventBus."""
 
@@ -264,7 +266,6 @@ class AWSEventBridge(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
             entries = []
             for target in kwargs.get(ATTR_TARGET, [None]):
                 entry = {
@@ -277,10 +278,10 @@ class AWSEventBridge(AWSNotify):
                     entry["EventBusName"] = target
 
                 entries.append(entry)
-            for i in range(0, len(entries), 10):
-                tasks.append(
-                    client.put_events(Entries=entries[i : min(i + 10, len(entries))])
-                )
+            tasks = [
+                client.put_events(Entries=entries[i : min(i + 10, len(entries))])
+                for i in range(0, len(entries), 10)
+            ]
 
             if tasks:
                 results = await asyncio.gather(*tasks)

@@ -1,9 +1,8 @@
 """Support for Keene Electronics IR-IP devices."""
-from __future__ import annotations
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
@@ -40,9 +39,10 @@ class KiraRemote(remote.RemoteEntity):
         self._attr_name = name
         self._kira = kira
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         for single_command in command:
             code_tuple = (single_command, kwargs.get(remote.ATTR_DEVICE))
-            _LOGGER.info("Sending Command: %s to %s", *code_tuple)
+            _LOGGER.debug("Sending Command: %s to %s", *code_tuple)
             self._kira.sendCode(code_tuple)

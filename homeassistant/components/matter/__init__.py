@@ -1,28 +1,41 @@
 """The Matter integration."""
-from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from functools import cache
+from typing import TYPE_CHECKING
 
+from aiohasupervisor.models import InterfaceMethod
 from matter_server.client import MatterClient
-from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
-from matter_server.common.errors import MatterError, NodeCommissionFailed, NodeNotExists
-import voluptuous as vol
+from matter_server.client.exceptions import (
+    CannotConnect,
+    InvalidServerVersion,
+    NotConnected,
+    ServerVersionTooNew,
+    ServerVersionTooOld,
+)
+from matter_server.common.errors import MatterError, NodeNotExists
+from yarl import URL
 
-from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonManager,
+    AddonState,
+    SupervisorError,
+    get_supervisor_client,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import ConfigType
 
 from .adapter import MatterAdapter
 from .addon import get_addon_manager
@@ -30,15 +43,23 @@ from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
+    MatterConfigEntry,
     MatterEntryData,
     get_matter,
     get_node_from_device_entry,
     node_from_ha_device_id,
 )
 from .models import MatterDeviceInfo
+from .services import async_setup_services
+
+if TYPE_CHECKING:
+    from matter_ble_proxy import MatterBleProxy
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+BLE_PROXY_CONNECT_TIMEOUT = 10
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -47,17 +68,25 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not (node := node_from_ha_device_id(hass, device_id)):
+    if not hass.config_entries.async_loaded_entries(DOMAIN) or not (
+        node := node_from_ha_device_id(hass, device_id)
+    ):
         return None
 
     return MatterDeviceInfo(
-        unique_id=node.device_info.uniqueID,
+        unique_id=node.device_info.uniqueID or "",
         vendor_id=hex(node.device_info.vendorID),
         product_id=hex(node.device_info.productID),
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Matter integration services."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
     """Set up Matter from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
@@ -66,20 +95,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await matter_client.connect()
-    except (CannotConnect, asyncio.TimeoutError) as err:
+    except (CannotConnect, TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
-        if use_addon:
-            addon_manager = _get_addon_manager(hass)
-            addon_manager.async_schedule_update_addon(catch_error=True)
-        else:
+        if isinstance(err, ServerVersionTooOld):
+            if use_addon:
+                addon_manager = _get_addon_manager(hass)
+                addon_manager.async_schedule_update_addon(catch_error=True)
+            else:
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "server_version_version_too_old",
+                    is_fixable=False,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="server_version_version_too_old",
+                )
+        elif isinstance(err, ServerVersionTooNew):
             async_create_issue(
                 hass,
                 DOMAIN,
-                "invalid_server_version",
+                "server_version_version_too_new",
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
-                translation_key="invalid_server_version",
+                translation_key="server_version_version_too_new",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
@@ -89,10 +128,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Unknown error connecting to the Matter server"
         ) from err
 
-    async_delete_issue(hass, DOMAIN, "invalid_server_version")
+    async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
+    async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
+
+    await _async_check_ipv6_enabled(hass)
+
+    ble_proxy: MatterBleProxy | None = None
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
+        if ble_proxy is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception(
+                    "Failed to disconnect BLE proxy during Home Assistant stop"
+                )
         await matter_client.disconnect()
 
     entry.async_on_unload(
@@ -111,37 +162,156 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         listen_task.cancel()
         raise ConfigEntryNotReady("Matter client not ready") from err
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-        _async_init_services(hass)
+    # Set default fabric
+    try:
+        await matter_client.set_default_fabric_label(
+            hass.config.location_name or "Home"
+        )
+    except (NotConnected, MatterError) as err:
+        listen_task.cancel()
+        raise ConfigEntryNotReady("Failed to set default fabric label") from err
 
     # create an intermediate layer (adapter) which keeps track of the nodes
     # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
-    hass.data[DOMAIN][entry.entry_id] = MatterEntryData(matter, listen_task)
 
-    await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
-    await matter.setup_nodes()
+    # Gate on `ble_proxy_enabled`, not `bluetooth_enabled`: the latter is also true
+    # when the server uses a local BLE adapter, where no `/ble` endpoint exists.
+    # Importing `.ble_proxy` lazily here avoids pulling `matter_ble_proxy` + `bleak`
+    # into every Matter setup when the server has BLE proxy disabled.
+    server_info = matter_client.server_info
+    if server_info and server_info.ble_proxy_enabled:
+        if "bluetooth" not in hass.config.components:
+            LOGGER.warning(
+                "Matter server reports BLE proxy support but Home Assistant's "
+                "bluetooth integration is not loaded; BLE proxy will not be used"
+            )
+        elif (ble_proxy_url := _derive_ble_proxy_url(entry.data[CONF_URL])) is None:
+            LOGGER.warning(
+                "Could not derive BLE proxy endpoint from %s; BLE proxy will not be used",
+                entry.data[CONF_URL],
+            )
+        else:
+            from .ble_proxy import create_matter_ble_proxy  # noqa: PLC0415
 
-    # If the listen task is already failed, we need to raise ConfigEntryNotReady
-    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
-        await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
-        hass.data[DOMAIN].pop(entry.entry_id)
-        try:
-            await matter_client.disconnect()
-        finally:
-            raise ConfigEntryNotReady(listen_error) from listen_error
+            LOGGER.debug("Matter server reports BLE available, connecting BLE proxy")
+            ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
+            try:
+                async with asyncio.timeout(BLE_PROXY_CONNECT_TIMEOUT):
+                    await ble_proxy.connect()
+            except (TimeoutError, ConnectionError, OSError) as err:
+                LOGGER.warning(
+                    "Failed to connect BLE proxy - BLE commissioning may not work: %s",
+                    err,
+                )
+                ble_proxy = None
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error connecting BLE proxy")
+                ble_proxy = None
 
-    return True
+    entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
+
+    setup_error: BaseException | None = None
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
+        await matter.setup_nodes()
+    except Exception as err:  # noqa: BLE001
+        # Platform/node setup raised. Cancel the listen task so the cleanup
+        # block below tears down the matter client and BLE proxy alongside
+        # the partially-loaded platforms, then surfaces this error.
+        listen_task.cancel()
+        setup_error = err
+    else:
+        if listen_task.done() and (listen_err := listen_task.exception()) is not None:
+            setup_error = listen_err
+
+    if setup_error is None:
+        return True
+
+    await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
+    try:
+        if ble_proxy is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Failed to disconnect BLE proxy during setup abort")
+        await matter_client.disconnect()
+    finally:
+        raise ConfigEntryNotReady(setup_error) from setup_error
+
+
+def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
+    """Derive the `/ble` endpoint URL by swapping the trailing `/ws` path segment.
+
+    Uses real URL parsing so hostnames containing `ws` aren't corrupted. Returns
+    `None` when the path does not match the expected `/ws` shape, so callers can
+    skip BLE proxy setup instead of probing a wrong endpoint.
+    """
+    parsed = URL(matter_ws_url)
+    path = parsed.path.rstrip("/")
+    if path.endswith("/ws"):
+        new_path = f"{path[:-3]}/ble"
+    elif not path:
+        new_path = "/ble"
+    else:
+        return None
+    return str(parsed.with_path(new_path))
+
+
+async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
+    """Raise a repair issue when IPv6 is disabled in Supervisor network settings.
+
+    Matter relies on IPv6 to communicate with devices. On Supervised/HAOS
+    installations the host network IPv6 method can be disabled per interface,
+    which silently breaks Matter, so we surface a repair pointing the user at
+    the network settings.
+    """
+    if not is_hassio(hass):
+        return
+
+    client = get_supervisor_client(hass)
+    try:
+        network_info = await client.network.info()
+    except SupervisorError as err:
+        LOGGER.debug("Failed to fetch Supervisor network info: %s", err)
+        return
+
+    connected_interfaces = [
+        interface
+        for interface in network_info.interfaces
+        if interface.enabled and interface.connected
+    ]
+    # Without a connected interface we can't tell whether IPv6 is disabled or
+    # the network is simply not up yet, so avoid raising a false repair.
+    if not connected_interfaces:
+        return
+
+    if any(
+        interface.ipv6 is not None
+        and interface.ipv6.method is not InterfaceMethod.DISABLED
+        for interface in connected_interfaces
+    ):
+        async_delete_issue(hass, DOMAIN, "ipv6_disabled")
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "ipv6_disabled",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="ipv6_disabled",
+        learn_more_url="homeassistant://config/network",
+    )
 
 
 async def _client_listen(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MatterConfigEntry,
     matter_client: MatterClient,
     init_ready: asyncio.Event,
 ) -> None:
@@ -149,13 +319,13 @@ async def _client_listen(
     try:
         await matter_client.start_listening(init_ready)
     except MatterError as err:
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
 
     if not hass.is_stopping:
@@ -163,16 +333,23 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, SUPPORTED_PLATFORMS
     )
 
     if unload_ok:
-        matter_entry_data: MatterEntryData = hass.data[DOMAIN].pop(entry.entry_id)
-        matter_entry_data.listen_task.cancel()
-        await matter_entry_data.adapter.matter_client.disconnect()
+        # Disconnect the BLE proxy first so it stops accepting new GATT/BTP
+        # traffic before the matter client (which originates that traffic) is
+        # torn down.
+        if (ble_proxy := entry.runtime_data.ble_proxy) is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Failed to disconnect BLE proxy during unload")
+        entry.runtime_data.listen_task.cancel()
+        await entry.runtime_data.adapter.matter_client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -186,7 +363,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Config entry is being removed."""
 
     if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
@@ -209,64 +386,50 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
 
 
+def _remove_via_devices(
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device_entry: dr.DeviceEntry
+) -> None:
+    """Remove all via devices associated with a device."""
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    for device in devices:
+        if device.via_device_id == device_entry.id:
+            device_registry.async_remove_device(device.id)
+
+
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:
+        # In case this was a bridge
+        _remove_via_devices(hass, config_entry, device_entry)
+        # Always allow users to remove orphan devices
         return True
 
-    if node.is_bridge_device:
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(
-            device_registry, config_entry.entry_id
-        )
-        for device in devices:
-            if device.via_device_id == device_entry.id:
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=config_entry.entry_id
-                )
+    if device_entry.via_device_id:
+        # Do not allow to delete devices that exposed via bridge.
+        return False
 
     matter = get_matter(hass)
-    with suppress(NodeNotExists):
-        # ignore if the server has already removed the node.
+    try:
         await matter.matter_client.remove_node(node.node_id)
+    except NodeNotExists:
+        # Ignore if the server has already removed the node.
+        LOGGER.debug("Node %s didn't exist on the Matter server", node.node_id)
+    finally:
+        # Make sure potentially orphan devices of a bridge are removed too.
+        if node.is_bridge_device:
+            _remove_via_devices(hass, config_entry, device_entry)
 
     return True
 
 
-@callback
-def _async_init_services(hass: HomeAssistant) -> None:
-    """Init services."""
-
-    async def open_commissioning_window(call: ServiceCall) -> None:
-        """Open commissioning window on specific node."""
-        node = node_from_ha_device_id(hass, call.data["device_id"])
-
-        if node is None:
-            raise HomeAssistantError("This is not a Matter device")
-
-        matter_client = get_matter(hass).matter_client
-
-        # We are sending device ID .
-
-        try:
-            await matter_client.open_commissioning_window(node.node_id)
-        except NodeCommissionFailed as err:
-            raise HomeAssistantError(str(err)) from err
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        "open_commissioning_window",
-        open_commissioning_window,
-        vol.Schema({"device_id": str}),
-    )
-
-
-async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_ensure_addon_running(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
     """Ensure that Matter Server add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:
@@ -276,16 +439,22 @@ async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -
 
     addon_state = addon_info.state
 
-    if addon_state == AddonState.NOT_INSTALLED:
+    if addon_state is AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             addon_info.options,
             catch_error=True,
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="addon_not_installed",
+        )
 
-    if addon_state == AddonState.NOT_RUNNING:
+    if addon_state is AddonState.NOT_RUNNING:
         addon_manager.async_schedule_start_addon(catch_error=True)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="addon_not_running",
+        )
 
 
 @callback
@@ -296,5 +465,8 @@ def _get_addon_manager(hass: HomeAssistant) -> AddonManager:
     """
     addon_manager: AddonManager = get_addon_manager(hass)
     if addon_manager.task_in_progress():
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="addon_not_ready",
+        )
     return addon_manager

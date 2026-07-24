@@ -1,8 +1,8 @@
 """Support to interface with the Roon API."""
+
 import logging
 
-from homeassistant.components.media_player import BrowseMedia, MediaClass
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
 
 
 class UnknownMediaType(BrowseError):
@@ -103,7 +103,8 @@ def library_payload(roon_server, zone_id, media_content_id):
         "count": ITEM_LIMIT,
     }
 
-    # Roon starts browsing for a zone where it left off - so start from the top unless otherwise specified
+    # Roon starts browsing for a zone where it left off
+    # so start from the top unless otherwise specified
     if media_content_id is None or media_content_id == "Explore":
         opts["pop_all"] = True
         content_id = "Explore"

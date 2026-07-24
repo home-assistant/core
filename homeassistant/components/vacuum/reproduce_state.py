@@ -1,5 +1,4 @@
 """Reproduce an Vacuum state."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
@@ -10,35 +9,31 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_IDLE,
     STATE_OFF,
     STATE_ON,
-    STATE_PAUSED,
 )
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
-    ATTR_FAN_SPEED,
     DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_RETURNING,
+    VacuumActivity,
 )
+from .const import VacuumEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES_TOGGLE = {STATE_ON, STATE_OFF}
 VALID_STATES_STATE = {
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
+    VacuumActivity.CLEANING,
+    VacuumActivity.DOCKED,
+    VacuumActivity.IDLE,
+    VacuumActivity.PAUSED,
+    VacuumActivity.RETURNING,
 }
 
 
@@ -62,8 +57,8 @@ async def _async_reproduce_state(
 
     # Return if we are already at the right state.
     if cur_state.state == state.state and cur_state.attributes.get(
-        ATTR_FAN_SPEED
-    ) == state.attributes.get(ATTR_FAN_SPEED):
+        VacuumEntityStateAttribute.FAN_SPEED
+    ) == state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED):
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
@@ -74,22 +69,26 @@ async def _async_reproduce_state(
             service = SERVICE_TURN_ON
         elif state.state == STATE_OFF:
             service = SERVICE_TURN_OFF
-        elif state.state == STATE_CLEANING:
+        elif state.state == VacuumActivity.CLEANING:
             service = SERVICE_START
-        elif state.state in [STATE_DOCKED, STATE_RETURNING]:
+        elif state.state in [VacuumActivity.DOCKED, VacuumActivity.RETURNING]:
             service = SERVICE_RETURN_TO_BASE
-        elif state.state == STATE_IDLE:
+        elif state.state == VacuumActivity.IDLE:
             service = SERVICE_STOP
-        elif state.state == STATE_PAUSED:
+        elif state.state == VacuumActivity.PAUSED:
             service = SERVICE_PAUSE
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True
         )
 
-    if cur_state.attributes.get(ATTR_FAN_SPEED) != state.attributes.get(ATTR_FAN_SPEED):
+    if cur_state.attributes.get(
+        VacuumEntityStateAttribute.FAN_SPEED
+    ) != state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED):
         # Wrong fan speed
-        service_data["fan_speed"] = state.attributes[ATTR_FAN_SPEED]
+        service_data["fan_speed"] = state.attributes[
+            VacuumEntityStateAttribute.FAN_SPEED
+        ]
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_FAN_SPEED, service_data, context=context, blocking=True
         )

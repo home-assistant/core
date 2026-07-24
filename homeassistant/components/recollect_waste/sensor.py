@@ -1,21 +1,18 @@
 """Support for ReCollect Waste sensors."""
-from __future__ import annotations
 
-from datetime import date
-
-from aiorecollect.client import PickupEvent
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 from .entity import ReCollectWasteEntity
 from .util import async_get_pickup_type_names
 
@@ -38,15 +35,13 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RecollectWasteConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
-    coordinator: DataUpdateCoordinator[list[PickupEvent]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
-
     async_add_entities(
-        ReCollectWasteSensor(coordinator, entry, description)
+        ReCollectWasteSensor(entry.runtime_data, entry, description)
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -63,8 +58,8 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[PickupEvent]],
-        entry: ConfigEntry,
+        coordinator: ReCollectWasteDataUpdateCoordinator,
+        entry: RecollectWasteConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize."""
@@ -74,9 +69,12 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        relevant_events = (e for e in self.coordinator.data if e.date >= date.today())
+        relevant_events = (
+            e for e in self.coordinator.data if e.date >= dt_util.now().date()
+        )
         pickup_index = self.PICKUP_INDEX_MAP[self.entity_description.key]
 
         try:
@@ -88,7 +86,9 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
             self._attr_native_value = None
         else:
             self._attr_extra_state_attributes[ATTR_AREA_NAME] = event.area_name
-            self._attr_extra_state_attributes[
-                ATTR_PICKUP_TYPES
-            ] = async_get_pickup_type_names(self._entry, event.pickup_types)
+            self._attr_extra_state_attributes[ATTR_PICKUP_TYPES] = (
+                async_get_pickup_type_names(self._entry, event.pickup_types)
+            )
             self._attr_native_value = event.date
+
+        super()._handle_coordinator_update()

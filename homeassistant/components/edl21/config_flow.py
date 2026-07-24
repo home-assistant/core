@@ -1,27 +1,30 @@
 """Config flow for EDL21 integration."""
 
+from typing import override
+
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import CONF_SERIAL_PORT, DEFAULT_TITLE, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SERIAL_PORT): str,
+        vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
     }
 )
 
 
-class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EDL21ConfigFlow(ConfigFlow, domain=DOMAIN):
     """EDL21 config flow."""
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user setup step."""
         if user_input is not None:
             self._async_abort_entries_match(

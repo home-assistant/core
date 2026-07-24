@@ -1,5 +1,4 @@
 """Base Entity for IPMA."""
-from __future__ import annotations
 
 from pyipma.api import IPMA_API
 from pyipma.location import Location

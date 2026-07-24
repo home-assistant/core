@@ -1,21 +1,21 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
-from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
+from typing import Any, override
 
 import oasatelematics
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -38,7 +38,7 @@ DEFAULT_NAME = "OASA Telematics"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Required(CONF_ROUTE_ID): cv.string,
@@ -54,9 +54,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the OASA Telematics sensor."""
-    name = config[CONF_NAME]
-    stop_id = config[CONF_STOP_ID]
-    route_id = config.get(CONF_ROUTE_ID)
+    name: str = config[CONF_NAME]
+    stop_id: str = config[CONF_STOP_ID]
+    route_id: str = config[CONF_ROUTE_ID]
 
     data = OASATelematicsData(stop_id, route_id)
 
@@ -67,42 +67,32 @@ class OASATelematicsSensor(SensorEntity):
     """Implementation of the OASA Telematics sensor."""
 
     _attr_attribution = "Data retrieved from telematics.oasa.gr"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = "mdi:bus"
 
-    def __init__(self, data, stop_id, route_id, name):
+    def __init__(
+        self, data: OASATelematicsData, stop_id: str, route_id: str, name: str
+    ) -> None:
         """Initialize the sensor."""
         self.data = data
-        self._name = name
+        self._attr_name = name
         self._stop_id = stop_id
         self._route_id = route_id
-        self._name_data = self._times = self._state = None
+        self._name_data: dict[str, Any] | None = None
+        self._times: list[dict[str, Any]] | None = None
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return SensorDeviceClass.TIMESTAMP
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         params = {}
         if self._times is not None:
             next_arrival_data = self._times[0]
             if ATTR_NEXT_ARRIVAL in next_arrival_data:
-                next_arrival = next_arrival_data[ATTR_NEXT_ARRIVAL]
+                next_arrival: datetime = next_arrival_data[ATTR_NEXT_ARRIVAL]
                 params.update({ATTR_NEXT_ARRIVAL: next_arrival.isoformat()})
             if len(self._times) > 1:
-                second_next_arrival_time = self._times[1][ATTR_NEXT_ARRIVAL]
+                second_next_arrival_time: datetime = self._times[1][ATTR_NEXT_ARRIVAL]
                 if second_next_arrival_time is not None:
                     second_arrival = second_next_arrival_time
                     params.update(
@@ -114,12 +104,13 @@ class OASATelematicsSensor(SensorEntity):
                     ATTR_STOP_ID: self._stop_id,
                 }
             )
-        params.update(
-            {
-                ATTR_ROUTE_NAME: self._name_data[ATTR_ROUTE_NAME],
-                ATTR_STOP_NAME: self._name_data[ATTR_STOP_NAME],
-            }
-        )
+        if self._name_data is not None:
+            params.update(
+                {
+                    ATTR_ROUTE_NAME: self._name_data[ATTR_ROUTE_NAME],
+                    ATTR_STOP_NAME: self._name_data[ATTR_STOP_NAME],
+                }
+            )
         return {k: v for k, v in params.items() if v}
 
     def update(self) -> None:
@@ -129,7 +120,7 @@ class OASATelematicsSensor(SensorEntity):
         self._name_data = self.data.name_data
         next_arrival_data = self._times[0]
         if ATTR_NEXT_ARRIVAL in next_arrival_data:
-            self._state = next_arrival_data[ATTR_NEXT_ARRIVAL]
+            self._attr_native_value = next_arrival_data[ATTR_NEXT_ARRIVAL]
 
 
 class OASATelematicsData:

@@ -1,27 +1,26 @@
 """Support for AdGuard Home switches."""
-from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
-from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
+from adguardhome import AdGuardHome, AdGuardHomeError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN, LOGGER
+from . import AdGuardConfigEntry, AdGuardData
+from .const import DOMAIN
 from .entity import AdGuardHomeEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class AdGuardHomeSwitchEntityDescription(SwitchEntityDescription):
     """Describes AdGuard Home switch entity."""
 
@@ -34,7 +33,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="protection",
         translation_key="protection",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.protection_enabled,
         turn_on_fn=lambda adguard: adguard.enable_protection,
         turn_off_fn=lambda adguard: adguard.disable_protection,
@@ -42,7 +40,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="parental",
         translation_key="parental",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.parental.enabled,
         turn_on_fn=lambda adguard: adguard.parental.enable,
         turn_off_fn=lambda adguard: adguard.parental.disable,
@@ -50,7 +47,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safesearch",
         translation_key="safe_search",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.safesearch.enabled,
         turn_on_fn=lambda adguard: adguard.safesearch.enable,
         turn_off_fn=lambda adguard: adguard.safesearch.disable,
@@ -58,7 +54,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safebrowsing",
         translation_key="safe_browsing",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.safebrowsing.enabled,
         turn_on_fn=lambda adguard: adguard.safebrowsing.enable,
         turn_off_fn=lambda adguard: adguard.safebrowsing.disable,
@@ -66,7 +61,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="filtering",
         translation_key="filtering",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.filtering.enabled,
         turn_on_fn=lambda adguard: adguard.filtering.enable,
         turn_off_fn=lambda adguard: adguard.filtering.disable,
@@ -74,7 +68,6 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="querylog",
         translation_key="query_log",
-        icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.querylog.enabled,
         turn_on_fn=lambda adguard: adguard.querylog.enable,
         turn_off_fn=lambda adguard: adguard.querylog.disable,
@@ -84,21 +77,14 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: AdGuardConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
-    adguard = hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_CLIENT]
-
-    try:
-        version = await adguard.version()
-    except AdGuardHomeConnectionError as exception:
-        raise PlatformNotReady from exception
-
-    hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_VERSION] = version
+    data = entry.runtime_data
 
     async_add_entities(
-        [AdGuardHomeSwitch(adguard, entry, description) for description in SWITCHES],
+        [AdGuardHomeSwitch(data, entry, description) for description in SWITCHES],
         True,
     )
 
@@ -110,33 +96,48 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
 
     def __init__(
         self,
-        adguard: AdGuardHome,
-        entry: ConfigEntry,
+        data: AdGuardData,
+        entry: AdGuardConfigEntry,
         description: AdGuardHomeSwitchEntityDescription,
     ) -> None:
         """Initialize AdGuard Home switch."""
-        super().__init__(adguard, entry)
+        super().__init__(data, entry)
         self.entity_description = description
-        self._attr_unique_id = "_".join(
-            [DOMAIN, adguard.host, str(adguard.port), "switch", description.key]
+        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
+            [
+                DOMAIN,
+                self.adguard.host,
+                str(self.adguard.port),
+                "switch",
+                description.key,
+            ]
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
             await self.entity_description.turn_off_fn(self.adguard)()
-        except AdGuardHomeError:
-            LOGGER.error("An error occurred while turning off AdGuard Home switch")
+        except AdGuardHomeError as err:
             self._attr_available = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_while_turn_off",
+            ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
             await self.entity_description.turn_on_fn(self.adguard)()
-        except AdGuardHomeError:
-            LOGGER.error("An error occurred while turning on AdGuard Home switch")
+        except AdGuardHomeError as err:
             self._attr_available = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_while_turn_on",
+            ) from err
 
+    @override
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         self._attr_is_on = await self.entity_description.is_on_fn(self.adguard)()

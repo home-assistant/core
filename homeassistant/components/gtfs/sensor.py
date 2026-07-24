@@ -1,11 +1,10 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
-from __future__ import annotations
 
 import datetime
 import logging
 import os
 import threading
-from typing import Any
+from typing import Any, override
 
 import pygtfs
 from sqlalchemy.sql import text
@@ -18,11 +17,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -269,7 +267,7 @@ def get_next_departure(
     schedule: Any,
     start_station_id: Any,
     end_station_id: Any,
-    offset: cv.time_period,
+    offset: datetime.timedelta,
     include_tomorrow: bool = False,
 ) -> dict:
     """Get the next departure for the given schedule."""
@@ -404,7 +402,7 @@ def get_next_departure(
 
     item = {}
     for key in sorted(timetable.keys()):
-        if dt_util.parse_datetime(key) > now:
+        if (value := dt_util.parse_datetime(key)) is not None and value > now:
             item = timetable[key]
             _LOGGER.debug(
                 "Departure found for station %s @ %s -> %s", start_station_id, key, item
@@ -552,26 +550,31 @@ class GTFSDepartureSensor(SensorEntity):
         self.update()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> datetime.datetime | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._attributes
 
     @property
+    @override
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon
@@ -736,10 +739,10 @@ class GTFSDepartureSensor(SensorEntity):
             self._attributes[ATTR_LOCATION_DESTINATION] = LOCATION_TYPE_OPTIONS.get(
                 self._destination.location_type, LOCATION_TYPE_DEFAULT
             )
-            self._attributes[
-                ATTR_WHEELCHAIR_DESTINATION
-            ] = WHEELCHAIR_BOARDING_OPTIONS.get(
-                self._destination.wheelchair_boarding, WHEELCHAIR_BOARDING_DEFAULT
+            self._attributes[ATTR_WHEELCHAIR_DESTINATION] = (
+                WHEELCHAIR_BOARDING_OPTIONS.get(
+                    self._destination.wheelchair_boarding, WHEELCHAIR_BOARDING_DEFAULT
+                )
             )
 
         # Manage Route metadata

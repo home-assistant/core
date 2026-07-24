@@ -1,5 +1,4 @@
 """Support for recording details."""
-from __future__ import annotations
 
 import abc
 import asyncio
@@ -8,13 +7,13 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import threading
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.core import Event
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.typing import UndefinedType
+from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
-from .const import DOMAIN
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups, session_scope
@@ -45,6 +44,7 @@ class ChangeStatisticsUnitTask(RecorderTask):
     new_unit_of_measurement: str
     old_unit_of_measurement: str
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.change_statistics_unit(
@@ -59,29 +59,39 @@ class ChangeStatisticsUnitTask(RecorderTask):
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
+    on_done: Callable[[], None] | None
     statistic_ids: list[str]
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.clear_statistics(instance, self.statistic_ids)
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
 class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
+    on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
+    new_unit_class: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.update_statistics_metadata(
             instance,
             self.statistic_id,
             self.new_statistic_id,
+            self.new_unit_class,
             self.new_unit_of_measurement,
         )
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
@@ -91,6 +101,7 @@ class UpdateStatesMetadataTask(RecorderTask):
     entity_id: str
     new_entity_id: str
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         entity_registry.update_states_metadata(
@@ -108,13 +119,12 @@ class PurgeTask(RecorderTask):
     repack: bool
     apply_filter: bool
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Purge the database."""
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
-            with instance.get_session() as session:
-                instance.recorder_runs_manager.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -133,6 +143,7 @@ class PurgeEntitiesTask(RecorderTask):
     entity_filter: Callable[[str], bool]
     purge_before: datetime
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Purge entities from the database."""
         if purge.purge_entity_data(instance, self.entity_filter, self.purge_before):
@@ -148,6 +159,7 @@ class PerodicCleanupTask(RecorderTask):
     Trigger cleanup tasks when auto purge is disabled.
     """
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         periodic_db_cleanups(instance)
@@ -160,6 +172,7 @@ class StatisticsTask(RecorderTask):
     start: datetime
     fire_events: bool
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
         if statistics.compile_statistics(instance, self.start, self.fire_events):
@@ -170,8 +183,9 @@ class StatisticsTask(RecorderTask):
 
 @dataclass(slots=True)
 class CompileMissingStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to run a compile missing statistics."""
+    """An object to insert into the recorder queue to compile missing statistics."""
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task to compile missing statistics."""
         if statistics.compile_missing_statistics(instance):
@@ -188,6 +202,7 @@ class ImportStatisticsTask(RecorderTask):
     statistics: Iterable[StatisticData]
     table: type[Statistics | StatisticsShortTerm]
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
         if statistics.import_statistics(
@@ -209,6 +224,7 @@ class AdjustStatisticsTask(RecorderTask):
     sum_adjustment: float
     adjustment_unit: str
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
         if statistics.adjust_statistics(
@@ -239,9 +255,10 @@ class WaitTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        instance._queue_watch.set()  # pylint: disable=[protected-access]
+        instance._queue_watch.set()  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -252,9 +269,10 @@ class DatabaseLockTask(RecorderTask):
     database_unlock: threading.Event
     queue_overflow: bool
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        instance._lock_database(self)  # pylint: disable=[protected-access]
+        instance._lock_database(self)  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -263,22 +281,10 @@ class StopTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance.stop_requested = True
-
-
-@dataclass(slots=True)
-class EventTask(RecorderTask):
-    """An event to be processed."""
-
-    event: Event
-    commit_before = False
-
-    def run(self, instance: Recorder) -> None:
-        """Handle the task."""
-        # pylint: disable-next=[protected-access]
-        instance._process_one_event(self.event)
 
 
 @dataclass(slots=True)
@@ -287,10 +293,10 @@ class KeepAliveTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        # pylint: disable-next=[protected-access]
-        instance._send_keep_alive()
+        instance._send_keep_alive()  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -299,10 +305,10 @@ class CommitTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        # pylint: disable-next=[protected-access]
-        instance._commit_event_session_or_retry()
+        instance._commit_event_session_or_retry()  # noqa: SLF001
 
 
 @dataclass(slots=True)
@@ -313,12 +319,13 @@ class AddRecorderPlatformTask(RecorderTask):
     platform: Any
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         hass = instance.hass
         domain = self.domain
         platform = self.platform
-        platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
+        platforms: dict[str, Any] = hass.data[DATA_RECORDER].recorder_platforms
         platforms[domain] = platform
 
 
@@ -327,38 +334,19 @@ class SynchronizeTask(RecorderTask):
     """Ensure all pending data has been committed."""
 
     # commit_before is the default
-    event: asyncio.Event
+    future: asyncio.Future
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         # Does not use a tracked task to avoid
         # blocking shutdown if the recorder is broken
-        instance.hass.loop.call_soon_threadsafe(self.event.set)
+        instance.hass.loop.call_soon_threadsafe(self._set_result_if_not_done)
 
-
-@dataclass(slots=True)
-class PostSchemaMigrationTask(RecorderTask):
-    """Post migration task to update schema."""
-
-    old_version: int
-    new_version: int
-
-    def run(self, instance: Recorder) -> None:
-        """Handle the task."""
-        instance._post_schema_migration(  # pylint: disable=[protected-access]
-            self.old_version, self.new_version
-        )
-
-
-@dataclass(slots=True)
-class StatisticsTimestampMigrationCleanupTask(RecorderTask):
-    """An object to insert into the recorder queue to run a statistics migration cleanup task."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run statistics timestamp cleanup task."""
-        if not statistics.cleanup_statistics_timestamp_migration(instance):
-            # Schedule a new statistics migration task if this one didn't finish
-            instance.queue_task(StatisticsTimestampMigrationCleanupTask())
+    def _set_result_if_not_done(self) -> None:
+        """Set the result if not done."""
+        if not self.future.done():
+            self.future.set_result(None)
 
 
 @dataclass(slots=True)
@@ -367,113 +355,19 @@ class AdjustLRUSizeTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
-        instance._adjust_lru_size()  # pylint: disable=[protected-access]
-
-
-@dataclass(slots=True)
-class StatesContextIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate states context ids."""
-
-    commit_before = False
-
-    def run(self, instance: Recorder) -> None:
-        """Run context id migration task."""
-        if (
-            not instance._migrate_states_context_ids()  # pylint: disable=[protected-access]
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(StatesContextIDMigrationTask())
-
-
-@dataclass(slots=True)
-class EventsContextIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate events context ids."""
-
-    commit_before = False
-
-    def run(self, instance: Recorder) -> None:
-        """Run context id migration task."""
-        if (
-            not instance._migrate_events_context_ids()  # pylint: disable=[protected-access]
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EventsContextIDMigrationTask())
-
-
-@dataclass(slots=True)
-class EventTypeIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate event type ids."""
-
-    commit_before = True
-    # We have to commit before to make sure there are
-    # no new pending event_types about to be added to
-    # the db since this happens live
-
-    def run(self, instance: Recorder) -> None:
-        """Run event type id migration task."""
-        if not instance._migrate_event_type_ids():  # pylint: disable=[protected-access]
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EventTypeIDMigrationTask())
-
-
-@dataclass(slots=True)
-class EntityIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate entity_ids to StatesMeta."""
-
-    commit_before = True
-    # We have to commit before to make sure there are
-    # no new pending states_meta about to be added to
-    # the db since this happens live
-
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id migration task."""
-        if not instance._migrate_entity_ids():  # pylint: disable=[protected-access]
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDMigrationTask())
-        else:
-            # The migration has finished, now we start the post migration
-            # to remove the old entity_id data from the states table
-            # at this point we can also start using the StatesMeta table
-            # so we set active to True
-            instance.states_meta_manager.active = True
-            instance.queue_task(EntityIDPostMigrationTask())
-
-
-@dataclass(slots=True)
-class EntityIDPostMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id post migration task."""
-        if (
-            not instance._post_migrate_entity_ids()  # pylint: disable=[protected-access]
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDPostMigrationTask())
-
-
-@dataclass(slots=True)
-class EventIdMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
-
-    This task should only be queued if the ix_states_event_id index exists
-    since it is used to scan the states table and it will be removed after this
-    task is run if its no longer needed.
-    """
-
-    def run(self, instance: Recorder) -> None:
-        """Clean up the legacy event_id index on states."""
-        instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]
+        instance._adjust_lru_size()  # noqa: SLF001
 
 
 @dataclass(slots=True)
 class RefreshEventTypesTask(RecorderTask):
     """An object to insert into the recorder queue to refresh event types."""
 
-    event_types: list[str]
+    event_types: list[EventType[Any] | str]
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Refresh event types."""
         with session_scope(session=instance.get_session(), read_only=True) as session:

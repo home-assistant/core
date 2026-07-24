@@ -1,18 +1,19 @@
 """Class representing a Sonos household storage helper."""
-from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
 from soco import SoCo
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 
-from .const import DATA_SONOS
 from .exception import SonosUpdateError
+
+if TYPE_CHECKING:
+    from .helpers import SonosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,28 +23,43 @@ class SonosHouseholdCoordinator:
 
     cache_update_lock: asyncio.Lock
 
-    def __init__(self, hass: HomeAssistant, household_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, household_id: str, config_entry: SonosConfigEntry
+    ) -> None:
         """Initialize the data."""
         self.hass = hass
         self.household_id = household_id
-        self.async_poll: Callable[[], Coroutine[None, None, None]] | None = None
+        self._poll_debouncer: Debouncer[Awaitable[None]] | None = None
+        self.async_poll: Callable[[], Awaitable[None]] | None = None
         self.last_processed_event_id: int | None = None
+        self.config_entry = config_entry
 
     def setup(self, soco: SoCo) -> None:
         """Set up the SonosAlarm instance."""
         self.update_cache(soco)
         self.hass.add_job(self._async_setup)
 
-    async def _async_setup(self) -> None:
+    @callback
+    def _async_setup(self) -> None:
         """Finish setup in async context."""
         self.cache_update_lock = asyncio.Lock()
-        self.async_poll = Debouncer[Coroutine[Any, Any, None]](
+        self._poll_debouncer = Debouncer[Awaitable[None]](
             self.hass,
             _LOGGER,
             cooldown=3,
             immediate=False,
             function=self._async_poll,
-        ).async_call
+        )
+        self.async_poll = self._poll_debouncer.async_call
+        self.config_entry.async_on_unload(self.async_shutdown)
+
+    @callback
+    def async_shutdown(self) -> None:
+        """Cancel any scheduled household refreshes during unload."""
+        if self._poll_debouncer is not None:
+            self._poll_debouncer.async_shutdown()
+            self._poll_debouncer = None
+            self.async_poll = None
 
     @property
     def class_type(self) -> str:
@@ -52,7 +68,7 @@ class SonosHouseholdCoordinator:
 
     async def _async_poll(self) -> None:
         """Poll any known speaker."""
-        discovered = self.hass.data[DATA_SONOS].discovered
+        discovered = self.config_entry.runtime_data.discovered
 
         for uid, speaker in discovered.items():
             _LOGGER.debug("Polling %s using %s", self.class_type, speaker.soco)
@@ -73,8 +89,14 @@ class SonosHouseholdCoordinator:
         self, soco: SoCo, update_id: int | None = None
     ) -> None:
         """Update the cache and update entities."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
-        """Update the cache of the household-level feature and return if cache has changed."""
-        raise NotImplementedError()
+        """Update the household-level feature cache.
+
+        Return if cache has changed.
+        """
+        raise NotImplementedError
+
+    def add_speaker(self, soco: SoCo) -> None:
+        """Additional processing when a speaker is added if needed."""

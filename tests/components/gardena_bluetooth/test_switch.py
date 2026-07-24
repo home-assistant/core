@@ -1,6 +1,5 @@
 """Test Gardena Bluetooth sensor."""
 
-
 from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, call
 
@@ -21,17 +20,19 @@ from . import setup_entry
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
+
 
 @pytest.fixture
 def mock_switch_chars(mock_read_char_raw):
     """Mock data on device."""
     mock_read_char_raw[Valve.state.uuid] = b"\x00"
-    mock_read_char_raw[
-        Valve.remaining_open_time.uuid
-    ] = Valve.remaining_open_time.encode(0)
-    mock_read_char_raw[
-        Valve.manual_watering_time.uuid
-    ] = Valve.manual_watering_time.encode(1000)
+    mock_read_char_raw[Valve.remaining_open_time.uuid] = (
+        Valve.remaining_open_time.encode(0)
+    )
+    mock_read_char_raw[Valve.manual_watering_time.uuid] = (
+        Valve.manual_watering_time.encode(1000)
+    )
     return mock_read_char_raw
 
 

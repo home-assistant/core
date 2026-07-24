@@ -1,4 +1,5 @@
 """Errors for translations."""
+
 import json
 
 
@@ -9,6 +10,15 @@ class ExitApp(Exception):
         """Initialize the exit app exception."""
         self.reason = reason
         self.exit_code = exit_code
+
+
+class MissingReference(Exception):
+    """Exception to indicate a missing reference in translations."""
+
+    def __init__(self, reference_key: str):
+        """Initialize the missing reference exception."""
+        self.reference_key = reference_key
+        super().__init__(f"Missing reference key: {reference_key}")
 
 
 class JSONDecodeErrorWithPath(json.JSONDecodeError):

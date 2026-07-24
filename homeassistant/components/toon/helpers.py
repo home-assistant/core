@@ -1,29 +1,40 @@
 """Helpers for Toon."""
-import logging
+
+from collections.abc import Callable, Coroutine
+from typing import Any, Concatenate
 
 from toonapi import ToonConnectionError, ToonError
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import DOMAIN
+from .entity import ToonEntity
 
 
-def toon_exception_handler(func):
+def toon_exception_handler[_ToonEntityT: ToonEntity, **_P](
+    func: Callable[Concatenate[_ToonEntityT, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_ToonEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate Toon calls to handle Toon exceptions.
 
     A decorator that wraps the passed in function, catches Toon errors,
-    and handles the availability of the device in the data coordinator.
+    and raises a translated ``HomeAssistantError``.
     """
 
-    async def handler(self, *args, **kwargs):
+    async def handler(self: _ToonEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
             self.coordinator.async_update_listeners()
-
         except ToonConnectionError as error:
-            _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
-
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
         except ToonError as error:
-            _LOGGER.error("Invalid response from API: %s", error)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            ) from error
 
     return handler

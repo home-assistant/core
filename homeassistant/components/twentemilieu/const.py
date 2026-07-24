@@ -1,4 +1,5 @@
 """Constants for the Twente Milieu integration."""
+
 from datetime import timedelta
 import logging
 from typing import Final
@@ -20,4 +21,12 @@ WASTE_TYPE_TO_DESCRIPTION = {
     WasteType.PACKAGES: "Packages waste pickup",
     WasteType.PAPER: "Paper waste pickup",
     WasteType.TREE: "Christmas tree pickup",
+}
+
+SENSOR_UNIQUE_ID_MIGRATION = {
+    "tree": "tree",
+    "Non-recyclable": "non_recyclable",
+    "Organic": "organic",
+    "Paper": "paper",
+    "Plastic": "packages",
 }

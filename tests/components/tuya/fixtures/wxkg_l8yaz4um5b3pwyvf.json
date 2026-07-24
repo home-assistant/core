@@ -1,0 +1,50 @@
+{
+  "endpoint": "https://openapi.tuyaeu.com",
+  "auth_type": 0,
+  "country_code": "44",
+  "app_type": "smartlife",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bathroom Smart Switch",
+  "model": "LKWSW201",
+  "category": "wxkg",
+  "product_id": "l8yaz4um5b3pwyvf",
+  "product_name": "Wireless Switch",
+  "online": true,
+  "sub": false,
+  "time_zone": "+00:00",
+  "active_time": "2023-01-05T20:12:39+00:00",
+  "create_time": "2023-01-05T20:12:39+00:00",
+  "update_time": "2023-05-30T17:17:47+00:00",
+  "function": {},
+  "status_range": {
+    "switch_mode1": {
+      "type": "Enum",
+      "value": {
+        "range": ["click", "press"]
+      }
+    },
+    "switch_mode2": {
+      "type": "Enum",
+      "value": {
+        "range": ["click", "press"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_mode1": "click",
+    "switch_mode2": "click",
+    "battery_percentage": 100
+  }
+}

@@ -1,10 +1,10 @@
 """Platform for sensor integration."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from ultraheat_api.response import HeatMeterResponse
 
@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
@@ -26,31 +25,22 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN
+from .const import DOMAIN
+from .coordinator import UltraheatConfigEntry, UltraheatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class HeatMeterSensorEntityDescriptionMixin:
-    """Mixin for additional Heat Meter sensor description attributes ."""
+@dataclass(frozen=True, kw_only=True)
+class HeatMeterSensorEntityDescription(SensorEntityDescription):
+    """Heat Meter sensor description."""
 
     value_fn: Callable[[HeatMeterResponse], StateType | datetime]
-
-
-@dataclass
-class HeatMeterSensorEntityDescription(
-    SensorEntityDescription, HeatMeterSensorEntityDescriptionMixin
-):
-    """Heat Meter sensor description."""
 
 
 HEAT_METER_SENSOR_TYPES = (
@@ -253,9 +243,9 @@ HEAT_METER_SENSOR_TYPES = (
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: dt_util.as_utc(res.meter_date_time)
-        if res.meter_date_time
-        else None,
+        value_fn=lambda res: (
+            dt_util.as_utc(res.meter_date_time) if res.meter_date_time else None
+        ),
     ),
     HeatMeterSensorEntityDescription(
         key="measuring_range_m3ph",
@@ -275,13 +265,13 @@ HEAT_METER_SENSOR_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: UltraheatConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     unique_id = entry.entry_id
-    coordinator: DataUpdateCoordinator[HeatMeterResponse] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
 
     model = entry.data["model"]
 
@@ -292,15 +282,14 @@ async def async_setup_entry(
         name="Landis+Gyr Heat Meter",
     )
 
-    sensors = []
-    for description in HEAT_METER_SENSOR_TYPES:
-        sensors.append(HeatMeterSensor(coordinator, description, device))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        HeatMeterSensor(coordinator, description, device)
+        for description in HEAT_METER_SENSOR_TYPES
+    )
 
 
 class HeatMeterSensor(
-    CoordinatorEntity[DataUpdateCoordinator[HeatMeterResponse]],
+    CoordinatorEntity[UltraheatCoordinator],
     SensorEntity,
 ):
     """Representation of a Sensor."""
@@ -309,14 +298,16 @@ class HeatMeterSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[HeatMeterResponse],
+        coordinator: UltraheatCoordinator,
         description: HeatMeterSensorEntityDescription,
         device: DeviceInfo,
     ) -> None:
         """Set up the sensor with the initial values."""
         super().__init__(coordinator)
         self.key = description.key
-        self._attr_unique_id = f"{coordinator.config_entry.data['device_number']}_{description.key}"  # type: ignore[union-attr]
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.data['device_number']}_{description.key}"
+        )
         self._attr_name = f"Heat Meter {description.name}"
         self.entity_description = description
         self._attr_device_info = device
@@ -330,6 +321,7 @@ class HeatMeterSensor(
             self._attr_entity_registry_enabled_default = False
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

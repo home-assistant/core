@@ -1,151 +1,215 @@
 """Support for Roborock image."""
-import asyncio
-import io
-from itertools import chain
 
-from roborock import RoborockCommand
-from vacuum_map_parser_base.config.color import ColorsPalette
-from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Sizes
-from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
+from datetime import datetime
+import logging
+from typing import override
+
+from roborock.devices.traits.v1.home import HomeTrait
+from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
-from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .coordinator import (
+    RoborockB01Q10UpdateCoordinator,
+    RoborockConfigEntry,
+    RoborockCoordinatorType,
+    RoborockDataUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityB01Q10, RoborockCoordinatedEntityV1
+
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RoborockConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock image platform."""
+    coordinators = config_entry.runtime_data
 
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-    entities = list(
-        chain.from_iterable(
-            await asyncio.gather(
-                *(create_coordinator_maps(coord) for coord in coordinators.values())
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            map_entities: dict[int, RoborockMap] = {}
+
+            @callback
+            def async_update_map_entities() -> None:
+                """Add new map entities and remove deleted ones."""
+                if (map_infos := coordinator.properties_api.home.home_map_info) is None:
+                    return
+                current_flags = set(map_infos.keys())
+                existing_flags = set(map_entities.keys())
+
+                # Add new maps
+                new_entities = []
+                for map_flag in current_flags - existing_flags:
+                    map_info = map_infos[map_flag]
+                    entity = RoborockMap(
+                        config_entry,
+                        coordinator,
+                        coordinator.properties_api.home,
+                        map_info.map_flag,
+                        map_info.name,
+                    )
+                    map_entities[map_flag] = entity
+                    new_entities.append(entity)
+                if new_entities:
+                    async_add_entities(new_entities)
+
+                # Remove deleted maps
+                entity_registry = er.async_get(coordinator.hass)
+                for map_flag in existing_flags - current_flags:
+                    entity = map_entities.pop(map_flag)
+                    coordinator.hass.async_create_task(entity.async_remove())
+                    if entity.entity_id and entity_registry.async_get(entity.entity_id):
+                        entity_registry.async_remove(entity.entity_id)
+
+            async_update_map_entities()
+
+            config_entry.async_on_unload(
+                coordinator.properties_api.home.add_update_listener(
+                    async_update_map_entities
+                )
             )
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            async_add_entities([RoborockMapQ10(coordinator)])
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
     )
-    async_add_entities(entities)
 
 
-class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
+class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
+    image_last_updated: datetime
+    _attr_name: str
 
     def __init__(
         self,
-        unique_id: str,
+        config_entry: ConfigEntry,
         coordinator: RoborockDataUpdateCoordinator,
+        home_trait: HomeTrait,
         map_flag: int,
-        starting_map: bytes,
         map_name: str,
     ) -> None:
         """Initialize a Roborock map."""
-        RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
+        map_name = map_name or f"Map {map_flag}"
+        # Note: Map names are not a valid unique id since they can be changed
+        # in the roborock app. This should be migrated to use map flag for
+        # the unique id.
+        unique_id = f"{coordinator.duid_slug}_map_{map_name}"
+        RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
+        self.config_entry = config_entry
         self._attr_name = map_name
-        self.parser = RoborockMapDataParser(
-            ColorsPalette(), Sizes(), IMAGE_DRAWABLES, ImageConfig(), []
-        )
-        self._attr_image_last_updated = dt_util.utcnow()
+        self._home_trait = home_trait
         self.map_flag = map_flag
-        self.cached_map = self._create_image(starting_map)
+        self.cached_map: bytes | None = None
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_image_last_updated = None
 
-    def is_map_valid(self) -> bool:
-        """Update this map if it is the current active map, and the vacuum is cleaning."""
-        return (
-            self.map_flag == self.coordinator.current_map
-            and self.image_last_updated is not None
-            and self.coordinator.roborock_device_info.props.status is not None
-            and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
-        )
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass load any previously cached maps from disk."""
+        await super().async_added_to_hass()
+        self._attr_image_last_updated = self.coordinator.last_home_update
+        self.async_write_ha_state()
 
-    def _handle_coordinator_update(self):
-        # Bump last updated every third time the coordinator runs, so that async_image
-        # will be called and we will evaluate on the new coordinator data if we should
-        # update the cache.
-        if (
-            dt_util.utcnow() - self.image_last_updated
-        ).total_seconds() > IMAGE_CACHE_INTERVAL and self.is_map_valid():
-            self._attr_image_last_updated = dt_util.utcnow()
+    @property
+    def _map_content(self) -> MapContent | None:
+        if self._home_trait.home_map_content and (
+            map_content := self._home_trait.home_map_content.get(self.map_flag)
+        ):
+            return map_content
+        return None
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator.
+
+        If the coordinator has updated the map, we can update the image.
+        """
+        if self.coordinator.data is None or (map_content := self._map_content) is None:
+            return
+        if self.cached_map != map_content.image_content:
+            self.cached_map = map_content.image_content
+            self._attr_image_last_updated = self.coordinator.last_home_update
         super()._handle_coordinator_update()
 
+    @override
     async def async_image(self) -> bytes | None:
-        """Update the image if it is not cached."""
-        if self.is_map_valid():
-            map_data: bytes = await self.cloud_api.get_map_v1()
-            self.cached_map = self._create_image(map_data)
-        return self.cached_map
-
-    def _create_image(self, map_bytes: bytes) -> bytes:
-        """Create an image using the map parser."""
-        parsed_map = self.parser.parse(map_bytes)
-        if parsed_map.image is None:
-            raise HomeAssistantError("Something went wrong creating the map.")
-        img_byte_arr = io.BytesIO()
-        parsed_map.image.data.save(img_byte_arr, format="PNG")
-        return img_byte_arr.getvalue()
+        """Get the cached image."""
+        if (map_content := self._map_content) is None:
+            raise HomeAssistantError("Map flag not found in coordinator maps")
+        return map_content.image_content
 
 
-async def create_coordinator_maps(
-    coord: RoborockDataUpdateCoordinator,
-) -> list[RoborockMap]:
-    """Get the starting map information for all maps for this device. The following steps must be done synchronously.
+class RoborockMapQ10(RoborockCoordinatedEntityB01Q10, ImageEntity):
+    """A class to let you visualize the current map of a Q10 device.
 
-    Only one map can be loaded at a time per device.
+    The Q10 pushes its current map over MQTT rather than serving it on
+    request, and the multi-map list is not reachable on this channel, so the
+    device exposes a single push-driven map entity.
     """
-    entities = []
-    maps = await coord.cloud_api.get_multi_maps_list()
-    if maps is not None and maps.map_info is not None:
-        cur_map = coord.current_map
-        # This won't be None at this point as the coordinator will have run first.
-        assert cur_map is not None
-        # Sort the maps so that we start with the current map and we can skip the
-        # load_multi_map call.
-        maps_info = sorted(
-            maps.map_info, key=lambda data: data.mapFlag == cur_map, reverse=True
+
+    _attr_content_type = "image/png"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "map"
+
+    def __init__(self, coordinator: RoborockB01Q10UpdateCoordinator) -> None:
+        """Initialize a Roborock Q10 map."""
+        RoborockCoordinatedEntityB01Q10.__init__(
+            self, f"map_{coordinator.duid_slug}", coordinator
         )
-        for roborock_map in maps_info:
-            # Load the map - so we can access it with get_map_v1
-            if roborock_map.mapFlag != cur_map:
-                # Only change the map and sleep if we have multiple maps.
-                await coord.api.send_command(
-                    RoborockCommand.LOAD_MULTI_MAP, [roborock_map.mapFlag]
-                )
-                # We cannot get the map until the roborock servers fully process the
-                # map change.
-                await asyncio.sleep(MAP_SLEEP)
-            # Get the map data
-            api_data: bytes = await coord.cloud_api.get_map_v1()
-            entities.append(
-                RoborockMap(
-                    f"{slugify(coord.roborock_device_info.device.duid)}_map_{roborock_map.name}",
-                    coord,
-                    roborock_map.mapFlag,
-                    api_data,
-                    roborock_map.name,
-                )
-            )
-        if len(maps.map_info) != 1:
-            # Set the map back to the map the user previously had selected so that it
-            # does not change the end user's app.
-            # Only needs to happen when we changed maps above.
-            await coord.cloud_api.send_command(
-                RoborockCommand.LOAD_MULTI_MAP, [cur_map]
-            )
-    return entities
+        ImageEntity.__init__(self, coordinator.hass)
+        self._map_trait = coordinator.api.map
+        self._cached_map: bytes | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register a trait listener for push-based map updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._map_trait.add_update_listener(self._handle_map_update)
+        )
+        # Pick up a map that was pushed before the entity was added.
+        self._handle_map_update()
+
+    @callback
+    def _handle_map_update(self) -> None:
+        """Cache the newly pushed map if its content changed."""
+        image_content = self._map_trait.image_content
+        if image_content is None or image_content == self._cached_map:
+            return
+        self._cached_map = image_content
+        self._attr_image_last_updated = dt_util.utcnow()
+        self.async_write_ha_state()
+
+    @override
+    async def async_image(self) -> bytes | None:
+        """Get the cached image."""
+        return self._cached_map

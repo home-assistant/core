@@ -1,8 +1,7 @@
 """Adds config flow for MicroBot."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.backends.device import BLEDevice
 from microbot import (
@@ -13,13 +12,13 @@ from microbot import (
 )
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -34,7 +33,7 @@ def short_address(address: str) -> str:
 
 def name_from_discovery(discovery: MicroBotAdvertisement) -> str:
     """Get the name from a discovery."""
-    return f'{discovery.data["local_name"]} {short_address(discovery.address)}'
+    return f"{discovery.data['local_name']} {short_address(discovery.address)}"
 
 
 class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -42,9 +41,9 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
         self._discovered_adv: MicroBotAdvertisement | None = None
         self._discovered_advs: dict[str, MicroBotAdvertisement] = {}
         self._client: MicroBotApiClient | None = None
@@ -52,9 +51,10 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._bdaddr: str | None = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
@@ -69,23 +69,25 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_init()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
         return await self.async_step_init(user_input)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Check if paired."""
         errors: dict[str, str] = {}
 
         if discovery := self._discovered_adv:
             self._discovered_advs[discovery.address] = discovery
         else:
-            current_addresses = self._async_current_ids()
+            await bluetooth.async_request_active_scan(self.hass)
+            current_addresses = self._async_current_ids(include_ignore=False)
             for discovery_info in async_discovered_service_info(self.hass):
                 self._ble_device = discovery_info.device
                 address = discovery_info.address
@@ -125,7 +127,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Given a configured host, will ask the user to press the button to pair."""
         errors: dict[str, str] = {}
         token = randomid(32)
@@ -138,6 +140,8 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._client.connect(init=True)
             return self.async_show_form(step_id="link")
 
+        if not await self._client.is_connected():
+            await self._client.connect(init=False)
         if not await self._client.is_connected():
             errors["base"] = "linking"
         else:

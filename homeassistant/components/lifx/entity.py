@@ -1,5 +1,4 @@
 """Support for LIFX lights."""
-from __future__ import annotations
 
 from aiolifx import products
 

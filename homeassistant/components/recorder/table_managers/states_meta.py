@@ -1,16 +1,16 @@
 """Support managing StatesMeta."""
-from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, cast
 
 from sqlalchemy.orm.session import Session
 
-from homeassistant.core import Event
+from homeassistant.core import Event, EventStateChangedData
+from homeassistant.util.collection import chunked_or_all
 
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
-from ..util import chunked, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
@@ -27,7 +27,9 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         self._did_first_load = False
         super().__init__(recorder, CACHE_SIZE)
 
-    def load(self, events: list[Event], session: Session) -> None:
+    def load(
+        self, events: list[Event[EventStateChangedData]], session: Session
+    ) -> None:
         """Load the entity_id to metadata_id mapping into memory.
 
         This call is not thread-safe and must be called from the
@@ -36,9 +38,9 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         self._did_first_load = True
         self.get_many(
             {
-                event.data["new_state"].entity_id
+                new_state.entity_id
                 for event in events
-                if event.data.get("new_state") is not None
+                if (new_state := event.data["new_state"]) is not None
             },
             session,
             True,
@@ -103,7 +105,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         update_cache = from_recorder or not self._did_first_load
 
         with session.no_autoflush:
-            for missing_chunk in chunked(missing, self.recorder.max_bind_vars):
+            for missing_chunk in chunked_or_all(missing, self.recorder.max_bind_vars):
                 for metadata_id, entity_id in execute_stmt_lambda_element(
                     session, find_states_metadata_ids(missing_chunk)
                 ):
@@ -126,7 +128,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         self._pending[entity_id] = db_states_meta
 
     def post_commit_pending(self) -> None:
-        """Call after commit to load the metadata_ids of the new StatesMeta into the LRU.
+        """Call after commit to load new StatesMeta into the LRU.
 
         This call is not thread-safe and must be called from the
         recorder thread.

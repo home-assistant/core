@@ -1,46 +1,52 @@
 """Support for Aqualink temperature sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from iaqualink.device import AqualinkBinarySensor
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AqualinkEntity
-from .const import DOMAIN as AQUALINK_DOMAIN
+from . import AqualinkConfigEntry
+from .coordinator import AqualinkDataUpdateCoordinator
+from .entity import AqualinkEntity
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AqualinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered binary sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkBinarySensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        HassAqualinkBinarySensor(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.binary_sensors
+    )
 
 
-class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorEntity):
+class HassAqualinkBinarySensor(
+    AqualinkEntity[AqualinkBinarySensor], BinarySensorEntity
+):
     """Representation of a binary sensor."""
 
-    def __init__(self, dev: AqualinkBinarySensor) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkBinarySensor
+    ) -> None:
         """Initialize AquaLink binary sensor."""
-        super().__init__(dev)
-        self._attr_name = dev.label
+        super().__init__(coordinator, dev)
         if dev.label == "Freeze Protection":
             self._attr_device_class = BinarySensorDeviceClass.COLD
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the binary sensor is on or not."""
         return self.dev.is_on

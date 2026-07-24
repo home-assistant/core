@@ -1,13 +1,11 @@
 """Component to create an interface to a Pilight daemon."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
 import functools
 import logging
-import socket
 import threading
-from typing import Any, ParamSpec
+from typing import Any
 
 from pilight import pilight
 import voluptuous as vol
@@ -20,13 +18,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-
-_P = ParamSpec("_P")
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +35,7 @@ DEFAULT_SEND_DELAY = 0.0
 DOMAIN = "pilight"
 
 EVENT = "pilight_received"
+type EVENT_TYPE = Event[dict[str, Any]]
 
 # The Pilight code schema depends on the protocol. Thus only require to have
 # the protocol information. Ensure that protocol is in a list otherwise
@@ -75,7 +73,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
-    except (OSError, socket.timeout) as err:
+    except (OSError, TimeoutError) as err:
         _LOGGER.error("Unable to connect to %s on port %s: %s", host, port, err)
         return False
 
@@ -100,10 +98,22 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             pilight_client.send_code(message_data)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except OSError:
             _LOGGER.error("Pilight send failed for %s", str(message_data))
 
-    hass.services.register(DOMAIN, SERVICE_NAME, send_code, schema=RF_CODE_SCHEMA)
+    def _register_service() -> None:
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_NAME,
+            send_code,
+            schema=RF_CODE_SCHEMA,
+            description_placeholders={
+                "pilight_protocols_docs_url": "https://manual.pilight.org/protocols/index.html"
+            },
+        )
+
+    run_callback_threadsafe(hass.loop, _register_service).result()
 
     # Publish received codes on the HA event bus
     # A whitelist of codes to be published in the event bus
@@ -117,11 +127,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {"protocol": data["protocol"], "uuid": data["uuid"]}, **data["message"]
         )
 
-        # No whitelist defined, put data on event bus
-        if not whitelist:
-            hass.bus.fire(EVENT, data)
-        # Check if data matches the defined whitelist
-        elif all(str(data[key]) in whitelist[key] for key in whitelist):
+        # No whitelist defined or data matches whitelist, put data on event bus
+        if not whitelist or all(str(data[key]) in whitelist[key] for key in whitelist):
             hass.bus.fire(EVENT, data)
 
     pilight_client.set_callback(handle_received_code)
@@ -150,7 +157,7 @@ class CallRateDelayThrottle:
         self._next_ts = dt_util.utcnow()
         self._schedule = functools.partial(track_point_in_utc_time, hass)
 
-    def limited(self, method: Callable[_P, Any]) -> Callable[_P, None]:
+    def limited[**_P](self, method: Callable[_P, Any]) -> Callable[_P, None]:
         """Decorate to delay calls on a certain method."""
 
         @functools.wraps(method)

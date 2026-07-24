@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "plex": {
+        "default": "mdi:plex"
+      }
+    }
+  },
+  "services": {
+    "refresh_library": {
+      "service": "mdi:refresh"
+    }
+  }
+}

@@ -25,7 +25,7 @@ from aioqsw.const import (
     QSD_SYSTEM_TIME,
     QSD_TEMP,
     QSD_TEMP_MAX,
-    QSD_UPTIME,
+    QSD_UPTIME_SECONDS,
     QSD_VERSION,
 )
 
@@ -53,7 +53,6 @@ async def test_config_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)
-    assert hass.data[DOMAIN]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
@@ -118,6 +117,6 @@ async def test_config_entry_diagnostics(
     assert (
         sys_time_diag.items()
         >= {
-            QSD_UPTIME: sys_time_mock[API_UPTIME],
+            QSD_UPTIME_SECONDS: sys_time_mock[API_UPTIME],
         }.items()
     )

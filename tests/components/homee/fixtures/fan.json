@@ -1,0 +1,73 @@
+{
+  "id": 77,
+  "name": "Test Fan",
+  "profile": 3019,
+  "image": "default",
+  "favorite": 0,
+  "order": 76,
+  "protocol": 3,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1736106044,
+  "added": 1723550156,
+  "history": 1,
+  "cube_type": 3,
+  "note": "",
+  "services": 1,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": 77,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 8,
+      "current_value": 3.0,
+      "target_value": 3.0,
+      "last_value": 6.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 99,
+      "state": 5,
+      "last_changed": 1729920212,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["step"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 2,
+      "node_id": 77,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 2,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 100,
+      "state": 1,
+      "last_changed": 1736106312,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": ""
+    }
+  ]
+}

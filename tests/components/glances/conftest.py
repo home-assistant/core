@@ -1,4 +1,5 @@
-"""Conftest for speedtestdotnet."""
+"""Conftest for Glances."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

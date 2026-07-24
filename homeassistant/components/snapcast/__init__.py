@@ -1,45 +1,45 @@
 """Snapcast Integration."""
-import logging
 
-import snapcast.control
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
-from .server import HomeAssistantSnapcast
+from .coordinator import SnapcastConfigEntry, SnapcastUpdateCoordinator
+from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> bool:
     """Set up Snapcast from a config entry."""
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
+    coordinator = SnapcastUpdateCoordinator(hass, entry)
+
     try:
-        server = await snapcast.control.create_server(
-            hass.loop, host, port, reconnect=True
-        )
+        await coordinator.async_config_entry_first_refresh()
     except OSError as ex:
         raise ConfigEntryNotReady(
-            f"Could not connect to Snapcast server at {host}:{port}"
+            "Could not connect to Snapcast server at "
+            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcast(
-        hass, server, f"{host}:{port}", entry.entry_id
-    )
-
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        snapcast_data = hass.data[DOMAIN].pop(entry.entry_id)
         # disconnect from server
-        await snapcast_data.disconnect()
+        await entry.runtime_data.disconnect()
     return unload_ok

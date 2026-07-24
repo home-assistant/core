@@ -1,19 +1,20 @@
-"""DataUpdateCoordinator for motion blinds integration."""
+"""DataUpdateCoordinator for Motionblinds integration."""
+
 import asyncio
 from datetime import timedelta
 import logging
-from socket import timeout
-from typing import Any
+from typing import override
 
-from motionblinds import ParseException
+from motionblinds import DEVICE_TYPES_WIFI, MotionGateway, ParseException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_AVAILABLE,
     CONF_WAIT_FOR_PUSH,
-    KEY_API_LOCK,
+    DEFAULT_WAIT_FOR_PUSH,
     KEY_GATEWAY,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_FAST,
@@ -22,35 +23,41 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+type MotionBlindsConfigEntry = ConfigEntry[DataUpdateCoordinatorMotionBlinds]
+
+
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     """Class to manage fetching data from single endpoint."""
+
+    config_entry: MotionBlindsConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: MotionBlindsConfigEntry,
         logger: logging.Logger,
-        coordinator_info: dict[str, Any],
-        *,
-        name: str,
-        update_interval: timedelta,
+        gateway: MotionGateway,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
-            name=name,
-            update_interval=update_interval,
+            config_entry=config_entry,
+            name=config_entry.title,
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-        self.api_lock = coordinator_info[KEY_API_LOCK]
-        self._gateway = coordinator_info[KEY_GATEWAY]
-        self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
+        self.api_lock = asyncio.Lock()
+        self.gateway = gateway
+        self._wait_for_push = config_entry.options.get(
+            CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH
+        )
 
     def update_gateway(self):
         """Fetch data from gateway."""
         try:
-            self._gateway.Update()
-        except (timeout, ParseException):
+            self.gateway.Update()
+        except TimeoutError, ParseException:
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 
@@ -59,16 +66,19 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     def update_blind(self, blind):
         """Fetch data from a blind."""
         try:
-            if self._wait_for_push:
+            if blind.device_type in DEVICE_TYPES_WIFI:
+                blind.Update_from_cache()
+            elif self._wait_for_push:
                 blind.Update()
             else:
                 blind.Update_trigger()
-        except (timeout, ParseException):
+        except TimeoutError, ParseException:
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 
         return {ATTR_AVAILABLE: True}
 
+    @override
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
         data = {}
@@ -78,7 +88,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
                 self.update_gateway
             )
 
-        for blind in self._gateway.device_list.values():
+        for blind in self.gateway.device_list.values():
             await asyncio.sleep(1.5)
             async with self.api_lock:
                 data[blind.mac] = await self.hass.async_add_executor_job(

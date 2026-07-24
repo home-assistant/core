@@ -1,7 +1,7 @@
 """The Nibe Heat Pump sensors."""
-from __future__ import annotations
 
 from datetime import date
+from typing import override
 
 from nibe.coil import Coil
 from nibe.coil_groups import WATER_HEATER_COILGROUPS, WaterHeaterCoilGroup
@@ -13,29 +13,27 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
     LOGGER,
     VALUES_TEMPORARY_LUX_INACTIVE,
     VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE,
 )
-from .coordinator import Coordinator
+from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: NibeHeatpumpConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     def water_heaters():
         for key, group in WATER_HEATER_COILGROUPS.get(coordinator.series, ()).items():
@@ -47,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(water_heaters())
 
 
-class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
+class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
     """Sensor entity."""
 
     _attr_entity_category = None
@@ -58,7 +56,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: CoilCoordinator,
         key: str,
         desc: WaterHeaterCoilGroup,
     ) -> None:
@@ -125,6 +123,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
         self._attr_temperature_unit = self._coil_current.unit
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if not self.coordinator.data:
             return
@@ -165,6 +164,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if not self.coordinator.last_update_success:
@@ -180,6 +180,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
 
         return False
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         if not self._coil_temporary_lux:

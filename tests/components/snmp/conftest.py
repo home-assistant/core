@@ -1,5 +1,13 @@
-"""Skip test collection for Python 3.12."""
-import sys
+"""Conftest for SNMP tests."""
 
-if sys.version_info >= (3, 12):
-    collect_ignore_glob = ["test_*.py"]
+import socket
+from unittest.mock import patch
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def patch_getaddrinfo():
+    """Patch getaddrinfo to avoid DNS lookups in SNMP tests."""
+    with patch.object(socket, "getaddrinfo"):
+        yield

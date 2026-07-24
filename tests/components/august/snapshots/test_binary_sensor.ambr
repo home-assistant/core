@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_doorbell_device_registry
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'tmt100_name',
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': 'https://account.august.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'august',
+        'tmt100',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'August Home Inc.',
+    'model': 'hydra1',
+    'model_id': None,
+    'name': 'tmt100 Name',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': '3.1.0-HYDRC75+201909251139',
+    'via_device_id': None,
+  })
+# ---

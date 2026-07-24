@@ -1,96 +1,128 @@
 """Helpers to help coordinate updates."""
-from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ServerDisconnectedError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
-    BadCredentialsException,
-    InvalidEventListenerIdException,
-    MaintenanceException,
-    NotAuthenticatedException,
-    TooManyConcurrentRequestsException,
-    TooManyRequestsException,
+    BadCredentialsError,
+    InvalidEventListenerIdError,
+    MaintenanceError,
+    NotAuthenticatedError,
+    ServiceUnavailableError,
+    TooManyConcurrentRequestsError,
+    TooManyRequestsError,
 )
-from pyoverkiz.models import Device, Event, Place
+from pyoverkiz.models import (
+    Device,
+    DeviceEvent,
+    DeviceRemovedEvent,
+    DeviceStateChangedEvent,
+    ExecutionRegisteredEvent,
+    ExecutionStateChangedEvent,
+    Place,
+)
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+if TYPE_CHECKING:
+    from . import OverkizDataConfigEntry
 
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+
+# Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
-    str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
+    str, Callable[[OverkizDataUpdateCoordinator, Any], Coroutine[Any, Any, None]]
 ] = Registry()
 
 
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
+    config_entry: OverkizDataConfigEntry
+    _default_update_interval: timedelta
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: OverkizDataConfigEntry,
         logger: logging.Logger,
         *,
-        name: str,
         client: OverkizClient,
         devices: list[Device],
         places: Place | None,
-        update_interval: timedelta | None = None,
-        config_entry_id: str,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
-            name=name,
-            update_interval=update_interval,
+            config_entry=config_entry,
+            name="device events",
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.is_stateless = all(
-            device.protocol in (Protocol.RTS, Protocol.INTERNAL) for device in devices
-        )
-        self.executions: dict[str, dict[str, str]] = {}
+        self.executions: dict[str, list[dict[str, str]]] = {}
         self.areas = self._places_to_area(places) if places else None
-        self.config_entry_id = config_entry_id
+        self._default_update_interval = UPDATE_INTERVAL
 
+        self.is_stateless = all(
+            device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
+            for device in devices
+            if device.widget not in IGNORED_OVERKIZ_DEVICES
+            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
+        )
+
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except BadCredentialsException as exception:
+        except (
+            BadCredentialsError,
+            NotAuthenticatedError,
+            OAuth2TokenRequestReauthError,
+        ) as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
-        except TooManyConcurrentRequestsException as exception:
+        except OAuth2TokenRequestError as exception:
+            raise UpdateFailed("Failed to refresh OAuth2 token.") from exception
+        except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
-        except TooManyRequestsException as exception:
+        except TooManyRequestsError as exception:
             raise UpdateFailed("Too many requests, try again later.") from exception
-        except MaintenanceException as exception:
+        except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
-        except InvalidEventListenerIdException as exception:
+        except ServiceUnavailableError as exception:
+            raise UpdateFailed("Server is unavailable.") from exception
+        except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
-        except TimeoutError as exception:
+        except (TimeoutError, ClientConnectorError) as exception:
+            LOGGER.debug("Failed to connect", exc_info=True)
             raise UpdateFailed("Failed to connect.") from exception
-        except (ServerDisconnectedError, NotAuthenticatedException):
+        except ServerDisconnectedError:
             self.executions = {}
 
             # During the relogin, similar exceptions can be thrown.
             try:
                 await self.client.login()
                 self.devices = await self._get_devices()
-            except BadCredentialsException as exception:
+            except (BadCredentialsError, NotAuthenticatedError) as exception:
                 raise ConfigEntryAuthFailed("Invalid authentication.") from exception
-            except TooManyRequestsException as exception:
+            except TooManyRequestsError as exception:
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
             return self.devices
@@ -101,8 +133,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
+        # Restore the default update interval if no executions are pending
         if not self.executions:
-            self.update_interval = UPDATE_INTERVAL
+            self.update_interval = self._default_update_interval
 
         return self.devices
 
@@ -123,43 +156,48 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         return areas
 
+    def set_update_interval(self, update_interval: timedelta) -> None:
+        """Set the update interval and store this value."""
+        self.update_interval = update_interval
+        self._default_update_interval = update_interval
+
 
 @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
 async def on_device_available(
-    coordinator: OverkizDataUpdateCoordinator, event: Event
+    coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
 ) -> None:
     """Handle device available event."""
-    if event.device_url:
+    if event.device_url in coordinator.devices:
         coordinator.devices[event.device_url].available = True
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_UNAVAILABLE)
 @EVENT_HANDLERS.register(EventName.DEVICE_DISABLED)
 async def on_device_unavailable_disabled(
-    coordinator: OverkizDataUpdateCoordinator, event: Event
+    coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
 ) -> None:
     """Handle device unavailable / disabled event."""
-    if event.device_url:
+    if event.device_url in coordinator.devices:
         coordinator.devices[event.device_url].available = False
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_CREATED)
 @EVENT_HANDLERS.register(EventName.DEVICE_UPDATED)
 async def on_device_created_updated(
-    coordinator: OverkizDataUpdateCoordinator, event: Event
+    coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
 ) -> None:
     """Handle device unavailable / disabled event."""
     coordinator.hass.async_create_task(
-        coordinator.hass.config_entries.async_reload(coordinator.config_entry_id)
+        coordinator.hass.config_entries.async_reload(coordinator.config_entry.entry_id)
     )
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_STATE_CHANGED)
 async def on_device_state_changed(
-    coordinator: OverkizDataUpdateCoordinator, event: Event
+    coordinator: OverkizDataUpdateCoordinator, event: DeviceStateChangedEvent
 ) -> None:
     """Handle device state changed event."""
-    if not event.device_url:
+    if event.device_url not in coordinator.devices:
         return
 
     for state in event.device_states:
@@ -169,31 +207,32 @@ async def on_device_state_changed(
 
 @EVENT_HANDLERS.register(EventName.DEVICE_REMOVED)
 async def on_device_removed(
-    coordinator: OverkizDataUpdateCoordinator, event: Event
+    coordinator: OverkizDataUpdateCoordinator, event: DeviceRemovedEvent
 ) -> None:
     """Handle device removed event."""
-    if not event.device_url:
-        return
-
     base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 
-    if registered_device := registry.async_get_device(
-        identifiers={(DOMAIN, base_device_url)}
+    if registered_device := registry.async_get_device_by_identifier(
+        (DOMAIN, base_device_url), coordinator.config_entry.entry_id
     ):
-        registry.async_remove_device(registered_device.id)
+        # Detach only this entry; the registry deletes the device once none remain.
+        registry.async_update_device(
+            registered_device.id,
+            remove_config_entry_id=coordinator.config_entry.entry_id,
+        )
 
-    if event.device_url:
+    if event.device_url in coordinator.devices:
         del coordinator.devices[event.device_url]
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_REGISTERED)
 async def on_execution_registered(
-    coordinator: OverkizDataUpdateCoordinator, event: Event
+    coordinator: OverkizDataUpdateCoordinator, event: ExecutionRegisteredEvent
 ) -> None:
     """Handle execution registered event."""
-    if event.exec_id and event.exec_id not in coordinator.executions:
-        coordinator.executions[event.exec_id] = {}
+    if event.exec_id not in coordinator.executions:
+        coordinator.executions[event.exec_id] = []
 
     if not coordinator.is_stateless:
         coordinator.update_interval = timedelta(seconds=1)
@@ -201,7 +240,7 @@ async def on_execution_registered(
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)
 async def on_execution_state_changed(
-    coordinator: OverkizDataUpdateCoordinator, event: Event
+    coordinator: OverkizDataUpdateCoordinator, event: ExecutionStateChangedEvent
 ) -> None:
     """Handle execution changed event."""
     if event.exec_id in coordinator.executions and event.new_state in [

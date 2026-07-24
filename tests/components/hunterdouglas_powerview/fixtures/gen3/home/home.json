@@ -1,0 +1,1294 @@
+{
+  "gHome": false,
+  "aHome": false,
+  "rooms": [
+    {
+      "icon": "12",
+      "shades": [
+        {
+          "id": 413,
+          "type": 6,
+          "name": "RmFtaWx5IExlZnQ=",
+          "ptName": "Family Left",
+          "motion": null,
+          "capabilities": 0,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 217,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 0,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -71,
+          "bleName": "R23:FC42",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeBottomUp"
+        },
+        {
+          "id": 22,
+          "type": 44,
+          "name": "RmFtaWx5IENlbnRyZQ==",
+          "ptName": "Family Centre",
+          "motion": null,
+          "capabilities": 0,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 217,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 0,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -74,
+          "bleName": "R23:BD25",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeBottomUpTiltOnClosed180"
+        },
+        {
+          "id": 6539,
+          "type": 18,
+          "name": "RmFtaWx5IFJpZ2h0",
+          "ptName": "Family Right",
+          "motion": null,
+          "capabilities": 1,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 217,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 0,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -74,
+          "bleName": "R23:BD25",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeBottomUpTiltOnClosed90"
+        }
+      ],
+      "name": "Family Room",
+      "type": 0,
+      "groups": [],
+      "color": "4",
+      "_id": 217
+    },
+    {
+      "name": "Bedroom 2",
+      "groups": [],
+      "type": 0,
+      "color": "5",
+      "_id": 236,
+      "icon": "7",
+      "shades": [
+        {
+          "id": 10,
+          "type": 51,
+          "name": "QmVkIDI=",
+          "ptName": "Bed 2",
+          "motion": null,
+          "capabilities": 2,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 236,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 1,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -66,
+          "bleName": "R23:CE7A",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeBottomUpTiltAnywhere"
+        }
+      ]
+    },
+    {
+      "icon": "160",
+      "shades": [
+        {
+          "id": 46,
+          "type": 71,
+          "name": "QmVkIDM=",
+          "ptName": "Bed 3",
+          "motion": null,
+          "capabilities": 3,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 252,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 1,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -72,
+          "bleName": "R23:77EC",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeVertical"
+        }
+      ],
+      "color": "11",
+      "_id": 252,
+      "groups": [],
+      "type": 0,
+      "name": "Bedroom 3"
+    },
+    {
+      "icon": "116",
+      "type": 0,
+      "shades": [
+        {
+          "id": 173,
+          "type": 56,
+          "name": "QmVkIDQ=",
+          "ptName": "Bed 4",
+          "motion": null,
+          "capabilities": 4,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 277,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 1,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -83,
+          "bleName": "R23:20CC",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeVerticalTiltAnywhere"
+        }
+      ],
+      "_id": 277,
+      "color": "12",
+      "name": "Bedroom 4",
+      "groups": []
+    },
+    {
+      "type": 0,
+      "color": "7",
+      "shades": [
+        {
+          "id": 110,
+          "type": 66,
+          "name": "TG91bmdlIFJvb20gTGVmdA==",
+          "ptName": "Lounge Room Left",
+          "motion": null,
+          "capabilities": 5,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 291,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 1,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -71,
+          "bleName": "R23:9A5B",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeTiltOnly"
+        },
+        {
+          "id": 51,
+          "type": 7,
+          "name": "TG91bmdlIFJvb20gUmlnaHQ=",
+          "ptName": "Lounge Room Right",
+          "motion": null,
+          "capabilities": 6,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 252,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 1,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -74,
+          "bleName": "R23:1043",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeTopDown"
+        }
+      ],
+      "_id": 291,
+      "groups": [],
+      "name": "Lounge Room",
+      "icon": "54"
+    },
+    {
+      "color": "1",
+      "groups": [],
+      "type": 0,
+      "shades": [
+        {
+          "id": 118,
+          "type": 8,
+          "name": "TWFzdGVyIExlZnQ=",
+          "ptName": "Master Left",
+          "motion": null,
+          "capabilities": 7,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 298,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 1,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -80,
+          "bleName": "R23:E2CD",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeTopDownBottomUp"
+        },
+        {
+          "id": 13,
+          "type": 79,
+          "name": "TWFzdGVyIFJpZ2h0",
+          "ptName": "Master Right",
+          "motion": null,
+          "capabilities": 8,
+          "powerType": 2,
+          "batteryStatus": 2,
+          "roomId": 236,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 309
+          },
+          "positions": {
+            "primary": 1,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -60,
+          "bleName": "R23:AFDD",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeDualOverlapped"
+        }
+      ],
+      "name": "Master Bedroom",
+      "icon": "100",
+      "_id": 298
+    },
+    {
+      "color": "6",
+      "shades": [
+        {
+          "id": 180,
+          "type": 38,
+          "name": "S2l0Y2hlbiBSb2xsZXI=",
+          "ptName": "Kitchen Roller",
+          "motion": null,
+          "capabilities": 9,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 311,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 359
+          },
+          "positions": {
+            "primary": 0,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -74,
+          "bleName": "R23:B07F",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeDualOverlappedTilt90"
+        }
+      ],
+      "name": "Kitchen",
+      "type": 0,
+      "groups": [],
+      "icon": "12",
+      "_id": 311
+    },
+    {
+      "color": "9",
+      "type": 0,
+      "_id": 327,
+      "shades": [
+        {
+          "id": 192,
+          "type": 999,
+          "name": "U3R1ZHkgRHVldHRl",
+          "ptName": "Study Duette",
+          "motion": null,
+          "capabilities": 10,
+          "powerType": 2,
+          "batteryStatus": 3,
+          "roomId": 327,
+          "firmware": {
+            "revision": 3,
+            "subRevision": 0,
+            "build": 359
+          },
+          "positions": {
+            "primary": 0,
+            "secondary": 0,
+            "tilt": 0,
+            "velocity": 0
+          },
+          "signalStrength": -66,
+          "bleName": "R23:E63C",
+          "shadeGroupIds": [],
+          "shade_api_class": "ShadeDualOverlappedTilt180"
+        }
+      ],
+      "icon": "123",
+      "name": "Study",
+      "groups": []
+    },
+    {
+      "color": "15",
+      "icon": "162",
+      "type": 2,
+      "name": "Default Room",
+      "groups": [],
+      "_id": 216,
+      "shades": []
+    }
+  ],
+  "hkHome": "u",
+  "modApp": "IOS: com.hunterdouglas.powerview v14970",
+  "createdDate": "03-03-2023",
+  "owner": "powerview@homeassistant.com",
+  "createdBy": "HDIT",
+  "automations": [
+    {
+      "bleId": 136,
+      "hour": 0,
+      "min": 0,
+      "type": 14,
+      "_id": 439,
+      "errorShd_Ids": [],
+      "days": 127,
+      "enabled": true,
+      "scene_Id": 280
+    },
+    {
+      "hour": 0,
+      "_id": 434,
+      "days": 127,
+      "min": 0,
+      "bleId": 228,
+      "type": 14,
+      "scene_Id": 314,
+      "enabled": true,
+      "errorShd_Ids": []
+    },
+    {
+      "_id": 441,
+      "days": 127,
+      "scene_Id": 278,
+      "min": 0,
+      "hour": 0,
+      "bleId": 21,
+      "enabled": true,
+      "errorShd_Ids": [],
+      "type": 10
+    },
+    {
+      "errorShd_Ids": [],
+      "_id": 433,
+      "bleId": 69,
+      "enabled": true,
+      "type": 10,
+      "hour": 0,
+      "min": 0,
+      "days": 127,
+      "scene_Id": 328
+    },
+    {
+      "min": 0,
+      "hour": 0,
+      "type": 14,
+      "errorShd_Ids": [],
+      "days": 127,
+      "scene_Id": 330,
+      "enabled": true,
+      "bleId": 195,
+      "_id": 432
+    },
+    {
+      "type": 10,
+      "errorShd_Ids": [],
+      "hour": 0,
+      "bleId": 70,
+      "enabled": true,
+      "scene_Id": 292,
+      "days": 127,
+      "min": 0,
+      "_id": 445
+    },
+    {
+      "scene_Id": 344,
+      "_id": 444,
+      "bleId": 244,
+      "hour": 0,
+      "min": 0,
+      "enabled": true,
+      "days": 127,
+      "type": 10,
+      "errorShd_Ids": []
+    },
+    {
+      "min": 0,
+      "type": 10,
+      "_id": 443,
+      "scene_Id": 299,
+      "enabled": true,
+      "bleId": 56,
+      "days": 127,
+      "errorShd_Ids": [],
+      "hour": 0
+    },
+    {
+      "scene_Id": 220,
+      "type": 14,
+      "hour": 1,
+      "min": 0,
+      "_id": 437,
+      "enabled": true,
+      "bleId": 2,
+      "days": 127,
+      "errorShd_Ids": []
+    }
+  ],
+  "home": {
+    "key": "A1B2C3D4E5",
+    "country": "US",
+    "name": "Springfield Ranch",
+    "tz": "America/Chicago",
+    "gtwsNeedReconfig": false,
+    "autosEnabled": true,
+    "loc": {
+      "latitude": 39.7817,
+      "longitude": 89.6501
+    },
+    "power": 2
+  },
+  "gateways": [
+    {
+      "_id": 431,
+      "mac": "AA:BB:CC:DD:EE:FF",
+      "radio2V": "3.0.39",
+      "model": "Pro",
+      "serial": "A1B2C3D4E5G6H7",
+      "name": "Powerview Generation 3",
+      "v": "3.1.472",
+      "aux": true,
+      "ssid": "Hub-E5:G6:H7",
+      "shd_Ids": [413, 22, 10, 13, 46, 51, 173],
+      "ip": "192.168.0.20",
+      "radio1V": "3.0.39"
+    },
+    {
+      "model": "Pro",
+      "serial": "Z9Y8X7W6V5U4T3",
+      "mac": "GG:HH:II:JJ:KK:LL",
+      "radio2V": "3.0.39",
+      "ssid": "Hub-V5:U4:T3",
+      "aux": false,
+      "_id": 385,
+      "name": "Powerview Generation 3",
+      "ip": "192.168.0.21",
+      "v": "3.1.472",
+      "radio1V": "3.0.39",
+      "shd_Ids": [110, 118, 180, 192]
+    }
+  ],
+  "scenes": [
+    {
+      "bleId": 45057,
+      "room_Id": 291,
+      "members": [
+        {
+          "shd_Id": 51,
+          "pos": {
+            "pos1": 10000
+          },
+          "_id": 414
+        },
+        {
+          "pos": {
+            "pos1": 10000
+          },
+          "_id": 219,
+          "shd_Id": 110
+        }
+      ],
+      "icon": "183",
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 199723000
+      },
+      "color": "4",
+      "_id": 218,
+      "name": "Close Lounge Room"
+    },
+    {
+      "_id": 220,
+      "bleId": 45058,
+      "icon": "185",
+      "name": "Close Bed 4",
+      "members": [
+        {
+          "_id": 415,
+          "shd_Id": 173,
+          "pos": {
+            "pos1": 0
+          }
+        }
+      ],
+      "modDate": {
+        "seconds": 1681857815,
+        "nanoseconds": 275506000
+      },
+      "room_Id": 277,
+      "color": "4"
+    },
+    {
+      "color": "5",
+      "_id": 237,
+      "icon": "183",
+      "members": [
+        {
+          "shd_Id": 236,
+          "_id": 241,
+          "pos": {
+            "pos1": 10000
+          }
+        }
+      ],
+      "bleId": 45057,
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 199887000
+      },
+      "room_Id": 277,
+      "name": "Close Bed 2"
+    },
+    {
+      "icon": "185",
+      "name": "Close Master Bed",
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 199939000
+      },
+      "room_Id": 298,
+      "members": [
+        {
+          "pos": {
+            "pos1": 0
+          },
+          "_id": 240,
+          "shd_Id": 118
+        },
+        {
+          "_id": 242,
+          "pos": {
+            "pos1": 0
+          },
+          "shd_Id": 13
+        }
+      ],
+      "_id": 239,
+      "color": "5",
+      "bleId": 45058
+    },
+    {
+      "name": "Close Family",
+      "icon": "183",
+      "room_Id": 217,
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 199985000
+      },
+      "_id": 253,
+      "color": "11",
+      "members": [
+        {
+          "shd_Id": 413,
+          "pos": {
+            "pos1": 10000
+          },
+          "_id": 257
+        },
+        {
+          "pos": {
+            "pos1": 10000
+          },
+          "shd_Id": 22,
+          "_id": 254
+        },
+        {
+          "pos": {
+            "pos1": 10000
+          },
+          "shd_Id": 6539,
+          "_id": 255
+        }
+      ],
+      "bleId": 45057
+    },
+    {
+      "bleId": 45058,
+      "room_Id": 277,
+      "color": "11",
+      "_id": 255,
+      "name": "Open Bed 4",
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200057000
+      },
+      "icon": "185",
+      "members": [
+        {
+          "_id": 258,
+          "pos": {
+            "pos1": 0
+          },
+          "shd_Id": 173
+        }
+      ]
+    },
+    {
+      "name": "Open Master Bed",
+      "icon": "183",
+      "room_Id": 298,
+      "_id": 278,
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200124000
+      },
+      "bleId": 45057,
+      "members": [
+        {
+          "_id": 279,
+          "pos": {
+            "pos1": 10000
+          },
+          "shd_Id": 118
+        },
+        {
+          "_id": 280,
+          "pos": {
+            "pos1": 10000
+          },
+          "shd_Id": 13
+        }
+      ],
+      "color": "12"
+    },
+    {
+      "members": [
+        {
+          "_id": 281,
+          "shd_Id": 46,
+          "pos": {
+            "pos1": 0
+          }
+        }
+      ],
+      "room_Id": 252,
+      "name": "Open Bed 3",
+      "icon": "185",
+      "color": "12",
+      "bleId": 45058,
+      "_id": 280,
+      "modDate": {
+        "seconds": 1681857936,
+        "nanoseconds": 86256000
+      }
+    },
+    {
+      "color": "7",
+      "members": [
+        {
+          "shd_Id": 413,
+          "pos": {
+            "pos1": 10000
+          },
+          "_id": 293
+        },
+        {
+          "shd_Id": 22,
+          "pos": {
+            "pos1": 10000
+          },
+          "_id": 294
+        },
+        {
+          "shd_Id": 6539,
+          "pos": {
+            "pos1": 10000
+          },
+          "_id": 295
+        }
+      ],
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200176000
+      },
+      "room_Id": 217,
+      "name": "Open Family",
+      "_id": 292,
+      "icon": "183",
+      "bleId": 45057
+    },
+    {
+      "name": "Close Study",
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200206000
+      },
+      "room_Id": 327,
+      "color": "7",
+      "icon": "185",
+      "members": [
+        {
+          "_id": 296,
+          "pos": {
+            "pos1": 0
+          },
+          "shd_Id": 192
+        }
+      ],
+      "bleId": 45058,
+      "_id": 294
+    },
+    {
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200237000
+      },
+      "name": "Open All",
+      "color": "1",
+      "_id": 299,
+      "room_Id": 298,
+      "members": [
+        {
+          "_id": 300,
+          "shd_Id": 10,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 301,
+          "shd_Id": 13,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 302,
+          "shd_Id": 22,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 303,
+          "shd_Id": 46,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 304,
+          "shd_Id": 51,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 305,
+          "shd_Id": 110,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 306,
+          "shd_Id": 118,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 307,
+          "shd_Id": 173,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 308,
+          "shd_Id": 180,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 309,
+          "shd_Id": 192,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 310,
+          "shd_Id": 413,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 311,
+          "shd_Id": 6539,
+          "pos": {
+            "pos1": 10000
+          }
+        }
+      ],
+      "icon": "183",
+      "bleId": 45057
+    },
+    {
+      "name": "Close All",
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200292000
+      },
+      "members": [
+        {
+          "_id": 312,
+          "shd_Id": 10,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 313,
+          "shd_Id": 13,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 314,
+          "shd_Id": 22,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 315,
+          "shd_Id": 46,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 316,
+          "shd_Id": 51,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 317,
+          "shd_Id": 110,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 318,
+          "shd_Id": 118,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 319,
+          "shd_Id": 173,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 320,
+          "shd_Id": 180,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 321,
+          "shd_Id": 192,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 322,
+          "shd_Id": 413,
+          "pos": {
+            "pos1": 10000
+          }
+        },
+        {
+          "_id": 323,
+          "shd_Id": 6539,
+          "pos": {
+            "pos1": 10000
+          }
+        }
+      ],
+      "bleId": 45058,
+      "color": "1",
+      "_id": 301,
+      "room_Id": 298,
+      "icon": "185"
+    },
+    {
+      "members": [
+        {
+          "pos": {
+            "pos1": 10000
+          },
+          "shd_Id": 180,
+          "_id": 324
+        }
+      ],
+      "name": "Open Kitchen",
+      "_id": 312,
+      "room_Id": 311,
+      "modDate": {
+        "seconds": 1681857535,
+        "nanoseconds": 565021000
+      },
+      "color": "6",
+      "icon": "183",
+      "bleId": 45057
+    },
+    {
+      "modDate": {
+        "seconds": 1681857630,
+        "nanoseconds": 350224000
+      },
+      "color": "6",
+      "icon": "185",
+      "members": [
+        {
+          "_id": 325,
+          "shd_Id": 110,
+          "pos": {
+            "pos1": 0
+          }
+        },
+        {
+          "_id": 326,
+          "shd_Id": 51,
+          "pos": {
+            "pos1": 0
+          }
+        }
+      ],
+      "name": "Open Lounge Room",
+      "bleId": 45058,
+      "_id": 314,
+      "room_Id": 291
+    },
+    {
+      "icon": "183",
+      "_id": 328,
+      "name": "Open Bed 2",
+      "color": "9",
+      "members": [
+        {
+          "shd_Id": 236,
+          "pos": {
+            "pos1": 10000
+          },
+          "_id": 329
+        }
+      ],
+      "modDate": {
+        "seconds": 1681857204,
+        "nanoseconds": 252732000
+      },
+      "bleId": 45057,
+      "room_Id": 236
+    },
+    {
+      "icon": "185",
+      "room_Id": 252,
+      "_id": 330,
+      "modDate": {
+        "seconds": 1681857210,
+        "nanoseconds": 22480000
+      },
+      "bleId": 45058,
+      "color": "9",
+      "name": "Close Bed 3",
+      "members": [
+        {
+          "_id": 331,
+          "pos": {
+            "pos1": 0
+          },
+          "shd_Id": 46
+        }
+      ]
+    },
+    {
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200587000
+      },
+      "_id": 344,
+      "name": "Close Kitchen",
+      "members": [
+        {
+          "_id": 332,
+          "pos": {
+            "pos1": 0
+          },
+          "shd_Id": 180
+        }
+      ],
+      "bleId": 45057,
+      "color": "10",
+      "icon": "183",
+      "room_Id": 311
+    },
+    {
+      "icon": "185",
+      "name": "Open Study",
+      "members": [
+        {
+          "_id": 333,
+          "pos": {
+            "pos1": 0
+          },
+          "shd_Id": 192
+        }
+      ],
+      "bleId": 45058,
+      "room_Id": 327,
+      "_id": 346,
+      "modDate": {
+        "seconds": 1677890844,
+        "nanoseconds": 200633000
+      },
+      "color": "10"
+    }
+  ],
+  "remotes": [
+    {
+      "bleName": "PR:6B48",
+      "_id": 269,
+      "v": 74,
+      "name": "Family Remote",
+      "members": [
+        {
+          "group": 1,
+          "_id": 271,
+          "shd_Id": 413
+        },
+        {
+          "group": 1,
+          "_id": 270,
+          "shd_Id": 22
+        },
+        {
+          "group": 1,
+          "_id": 271,
+          "shd_Id": 6539
+        }
+      ],
+      "accelGlow": true,
+      "mac": ""
+    },
+    {
+      "name": "Bed 2 Remote",
+      "_id": 247,
+      "v": 74,
+      "mac": "",
+      "bleName": "PR:3C4F",
+      "members": [
+        {
+          "shd_Id": 10,
+          "_id": 248,
+          "group": 1
+        }
+      ],
+      "accelGlow": true
+    },
+    {
+      "accelGlow": true,
+      "mac": "",
+      "_id": 354,
+      "name": "Bed 3 Remote",
+      "v": 74,
+      "members": [
+        {
+          "shd_Id": 46,
+          "_id": 249,
+          "group": 1
+        }
+      ],
+      "bleName": "PR:71FA"
+    },
+    {
+      "bleName": "PR:A062",
+      "name": "Master Bedroom Remote",
+      "mac": "",
+      "v": 74,
+      "_id": 230,
+      "members": [
+        {
+          "shd_Id": 118,
+          "group": 1,
+          "_id": 419
+        },
+        {
+          "_id": 420,
+          "group": 2,
+          "shd_Id": 13
+        }
+      ],
+      "accelGlow": true
+    },
+    {
+      "name": "Bed 4 Remote",
+      "mac": "",
+      "bleName": "PR:27DD",
+      "_id": 338,
+      "accelGlow": true,
+      "v": 74,
+      "members": [
+        {
+          "shd_Id": 173,
+          "_id": 339,
+          "group": 1
+        }
+      ]
+    },
+    {
+      "mac": "",
+      "_id": 322,
+      "name": "Lounge Room Remote",
+      "accelGlow": true,
+      "members": [
+        {
+          "group": 1,
+          "shd_Id": 110,
+          "_id": 323
+        },
+        {
+          "group": 1,
+          "shd_Id": 51,
+          "_id": 324
+        }
+      ],
+      "bleName": "PR:285F",
+      "v": 78
+    },
+    {
+      "v": 74,
+      "bleName": "PR:9986",
+      "name": "Kitchen Remote",
+      "_id": 370,
+      "accelGlow": true,
+      "mac": "",
+      "members": [
+        {
+          "group": 1,
+          "shd_Id": 180,
+          "_id": 325
+        }
+      ]
+    },
+    {
+      "bleName": "PR:7022",
+      "mac": "",
+      "accelGlow": true,
+      "name": "Study Remote",
+      "members": [
+        {
+          "group": 1,
+          "shd_Id": 192,
+          "_id": 326
+        }
+      ],
+      "_id": 382,
+      "v": 74
+    }
+  ],
+  "_schemaVersion": 31,
+  "id": "A1B2C3D4E5G6H7",
+  "modDate": {
+    "seconds": 1685703057,
+    "nanoseconds": 772341000
+  }
+}

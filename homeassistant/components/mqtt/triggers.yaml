@@ -1,0 +1,14 @@
+# Describes the format for MQTT triggers
+
+_:
+  fields:
+    payload:
+      example: "on"
+      required: false
+      selector:
+        text:
+    topic:
+      example: "living_room/switch/ac"
+      required: true
+      selector:
+        text:

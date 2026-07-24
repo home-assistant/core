@@ -1,9 +1,8 @@
 """Class to hold all sensor accessories."""
-from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
 from pyhap.const import CATEGORY_SENSOR
 from pyhap.service import Service
@@ -40,6 +39,8 @@ from .const import (
     CHAR_PM25_DENSITY,
     CHAR_SMOKE_DETECTED,
     CHAR_VOC_DENSITY,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     PROP_CELSIUS,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
@@ -126,6 +127,7 @@ class TemperatureSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update temperature after state changed."""
         unit = new_state.attributes.get(
@@ -157,6 +159,7 @@ class HumiditySensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (humidity := convert_to_float(new_state.state)) is not None:
@@ -190,6 +193,7 @@ class AirQualitySensor(HomeAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (density := convert_to_float(new_state.state)) is not None:
@@ -205,6 +209,7 @@ class AirQualitySensor(HomeAccessory):
 class PM10Sensor(AirQualitySensor):
     """Generate a PM10Sensor accessory as PM 10 sensor."""
 
+    @override
     def create_services(self) -> None:
         """Override the init function for PM 10 Sensor."""
         serv_air_quality = self.add_preload_service(
@@ -214,6 +219,7 @@ class PM10Sensor(AirQualitySensor):
         self.char_density = serv_air_quality.configure_char(CHAR_PM10_DENSITY, value=0)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -232,6 +238,7 @@ class PM10Sensor(AirQualitySensor):
 class PM25Sensor(AirQualitySensor):
     """Generate a PM25Sensor accessory as PM 2.5 sensor."""
 
+    @override
     def create_services(self) -> None:
         """Override the init function for PM 2.5 Sensor."""
         serv_air_quality = self.add_preload_service(
@@ -241,6 +248,7 @@ class PM25Sensor(AirQualitySensor):
         self.char_density = serv_air_quality.configure_char(CHAR_PM25_DENSITY, value=0)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -259,6 +267,7 @@ class PM25Sensor(AirQualitySensor):
 class NitrogenDioxideSensor(AirQualitySensor):
     """Generate a NitrogenDioxideSensor accessory as NO2 sensor."""
 
+    @override
     def create_services(self) -> None:
         """Override the init function for PM 2.5 Sensor."""
         serv_air_quality = self.add_preload_service(
@@ -270,6 +279,7 @@ class NitrogenDioxideSensor(AirQualitySensor):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -288,9 +298,10 @@ class NitrogenDioxideSensor(AirQualitySensor):
 class VolatileOrganicCompoundsSensor(AirQualitySensor):
     """Generate a VolatileOrganicCompoundsSensor accessory as VOCs sensor.
 
-    Sensor entity must return VOC in µg/m3.
+    Sensor entity must return VOC in μg/m3.
     """
 
+    @override
     def create_services(self) -> None:
         """Override the init function for VOC Sensor."""
         serv_air_quality: Service = self.add_preload_service(
@@ -307,6 +318,7 @@ class VolatileOrganicCompoundsSensor(AirQualitySensor):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
@@ -334,6 +346,10 @@ class CarbonMonoxideSensor(HomeAccessory):
             SERV_CARBON_MONOXIDE_SENSOR,
             [CHAR_CARBON_MONOXIDE_LEVEL, CHAR_CARBON_MONOXIDE_PEAK_LEVEL],
         )
+
+        self.threshold_co = self.config.get(CONF_THRESHOLD_CO, THRESHOLD_CO)
+        _LOGGER.debug("%s: Set CO threshold to %d", self.entity_id, self.threshold_co)
+
         self.char_level = serv_co.configure_char(CHAR_CARBON_MONOXIDE_LEVEL, value=0)
         self.char_peak = serv_co.configure_char(
             CHAR_CARBON_MONOXIDE_PEAK_LEVEL, value=0
@@ -346,13 +362,14 @@ class CarbonMonoxideSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (value := convert_to_float(new_state.state)) is not None:
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
-            co_detected = value > THRESHOLD_CO
+            co_detected = value > self.threshold_co
             self.char_detected.set_value(co_detected)
             _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 
@@ -370,6 +387,10 @@ class CarbonDioxideSensor(HomeAccessory):
             SERV_CARBON_DIOXIDE_SENSOR,
             [CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL],
         )
+
+        self.threshold_co2 = self.config.get(CONF_THRESHOLD_CO2, THRESHOLD_CO2)
+        _LOGGER.debug("%s: Set CO2 threshold to %d", self.entity_id, self.threshold_co2)
+
         self.char_level = serv_co2.configure_char(CHAR_CARBON_DIOXIDE_LEVEL, value=0)
         self.char_peak = serv_co2.configure_char(
             CHAR_CARBON_DIOXIDE_PEAK_LEVEL, value=0
@@ -382,13 +403,14 @@ class CarbonDioxideSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (value := convert_to_float(new_state.state)) is not None:
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
-            co2_detected = value > THRESHOLD_CO2
+            co2_detected = value > self.threshold_co2
             self.char_detected.set_value(co2_detected)
             _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 
@@ -411,6 +433,7 @@ class LightSensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         if (luminance := convert_to_float(new_state.state)) is not None:
@@ -445,6 +468,7 @@ class BinarySensor(HomeAccessory):
         self.async_update_state(state)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update accessory after state change."""
         state = new_state.state

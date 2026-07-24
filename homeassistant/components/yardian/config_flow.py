@@ -1,8 +1,7 @@
 """Config flow for Yardian integration."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyyardian import (
     AsyncYardianClient,
@@ -12,9 +11,8 @@ from pyyardian import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PRODUCT_NAME
@@ -29,23 +27,24 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class YardianConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yardian."""
 
     VERSION = 1
 
     async def async_fetch_device_info(self, host: str, access_token: str) -> DeviceInfo:
         """Fetch device info from Yardian."""
-        yarcli = AsyncYardianClient(
+        yarcli = await AsyncYardianClient.create(
             async_get_clientsession(self.hass),
             host,
-            access_token,
+            token=access_token,
         )
         return await yarcli.fetch_device_info()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -57,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NetworkException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

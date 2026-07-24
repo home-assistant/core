@@ -1,12 +1,14 @@
 """Entity for the opengarage.io component."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, OpenGarageDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import OpenGarageDataUpdateCoordinator
 
 
 class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
@@ -37,12 +39,14 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
         """Update the state and attributes."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr()
         self.async_write_ha_state()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
@@ -52,5 +56,5 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
             manufacturer="Open Garage",
             name=self.coordinator.data["name"],
             suggested_area="Garage",
-            sw_version=self.coordinator.data["fwv"],
+            sw_version=str(self.coordinator.data["fwv"]),
         )

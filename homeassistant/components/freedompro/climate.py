@@ -1,9 +1,8 @@
 """Support for Freedompro climate."""
-from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client import ClientSession
 from pyfreedompro import put_state
@@ -14,16 +13,15 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import FreedomproDataUpdateCoordinator
+from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +41,13 @@ SUPPORTED_HVAC_MODES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreedomproConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro climate."""
     api_key: str = entry.data[CONF_API_KEY]
-    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         Device(
             aiohttp_client.async_get_clientsession(hass), api_key, device, coordinator
@@ -64,7 +64,11 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_current_temperature = 0
     _attr_target_temperature = 0
     _attr_hvac_mode = HVACMode.OFF
@@ -92,6 +96,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = next(
@@ -112,15 +117,15 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
                 self._attr_hvac_mode = HVAC_MAP[state["heatingCoolingState"]]
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Async function to set mode to climate."""
-        if hvac_mode not in SUPPORTED_HVAC_MODES:
-            raise ValueError(f"Got unsupported hvac_mode {hvac_mode}")
 
         payload = {"heatingCoolingState": HVAC_INVERT_MAP[hvac_mode]}
         await put_state(
@@ -131,6 +136,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Async function to set temperature to climate."""
         payload = {}

@@ -1,13 +1,15 @@
 """Support for Xiaomi curtain."""
-from typing import Any
+
+from typing import Any, override
+
+from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import XiaomiDevice
-from .const import DOMAIN, GATEWAYS_KEY
+from . import XiaomiAqaraConfigEntry
+from .entity import XiaomiDevice
 
 ATTR_CURTAIN_LEVEL = "curtain_level"
 
@@ -17,12 +19,12 @@ DATA_KEY_PROTO_V2 = "curtain_status"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiAqaraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     for device in gateway.devices["cover"]:
         model = device["model"]
         if model in ("curtain", "curtain.aq2", "curtain.hagl04"):
@@ -39,34 +41,47 @@ async def async_setup_entry(
 class XiaomiGenericCover(XiaomiDevice, CoverEntity):
     """Representation of a XiaomiGenericCover."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        data_key: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: XiaomiAqaraConfigEntry,
+    ) -> None:
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key
         self._pos = 0
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of the cover."""
         return self._pos
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.current_cover_position <= 0
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "close"})
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "open"})
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "stop"})
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
@@ -75,6 +90,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
         else:
             self._write_to_hub(self._sid, **{ATTR_CURTAIN_LEVEL: str(position)})
 
+    @override
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if ATTR_CURTAIN_LEVEL in data:

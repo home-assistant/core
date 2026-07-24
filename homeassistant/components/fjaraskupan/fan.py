@@ -1,7 +1,6 @@
 """Support for Fjäråskupan fans."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from fjaraskupan import (
     COMMAND_AFTERCOOKINGTIMERAUTO,
@@ -12,11 +11,10 @@ from fjaraskupan import (
 )
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -24,7 +22,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import async_setup_entry_platform
-from .coordinator import FjaraskupanCoordinator
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
@@ -50,8 +48,8 @@ class UnsupportedPreset(HomeAssistantError):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FjaraskupanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
@@ -64,7 +62,13 @@ async def async_setup_entry(
 class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
     """Fan entity."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -82,10 +86,11 @@ class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
         self._preset_mode = PRESET_MODE_NORMAL
         self._update_from_device_data(coordinator.data)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set speed."""
 
-        # Proactively update percentage to mange successive increases
+        # Proactively update percentage to manage successive increases
         self._percentage = percentage
 
         async with self.coordinator.async_connect_and_update() as device:
@@ -97,6 +102,7 @@ class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
                 )
                 await device.send_fan_speed(int(new_speed))
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -129,40 +135,45 @@ class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
             elif preset_mode == PRESET_MODE_AFTER_COOKING_AUTO:
                 await device.send_after_cooking(0)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if command := PRESET_TO_COMMAND.get(preset_mode):
-            async with self.coordinator.async_connect_and_update() as device:
-                await device.send_command(command)
-        else:
-            raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
+        command = PRESET_TO_COMMAND[preset_mode]
+        async with self.coordinator.async_connect_and_update() as device:
+            await device.send_command(command)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         async with self.coordinator.async_connect_and_update() as device:
             await device.send_command(COMMAND_STOP_FAN)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed."""
         return self._percentage
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if fan is on."""
         return self._percentage != 0
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self._preset_mode
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return PRESET_MODES
@@ -189,6 +200,7 @@ class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
             self._preset_mode = PRESET_MODE_NORMAL
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
 

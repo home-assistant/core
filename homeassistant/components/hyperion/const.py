@@ -3,10 +3,7 @@
 CONF_AUTH_ID = "auth_id"
 CONF_CREATE_TOKEN = "create_token"
 CONF_INSTANCE = "instance"
-CONF_INSTANCE_CLIENTS = "INSTANCE_CLIENTS"
-CONF_ON_UNLOAD = "ON_UNLOAD"
 CONF_PRIORITY = "priority"
-CONF_ROOT_CLIENT = "ROOT_CLIENT"
 CONF_EFFECT_HIDE_LIST = "effect_hide_list"
 CONF_EFFECT_SHOW_LIST = "effect_show_list"
 
@@ -28,3 +25,6 @@ SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal.{{}}"
 TYPE_HYPERION_CAMERA = "hyperion_camera"
 TYPE_HYPERION_LIGHT = "hyperion_light"
 TYPE_HYPERION_COMPONENT_SWITCH_BASE = "hyperion_component_switch"
+
+TYPE_HYPERION_SENSOR_BASE = "hyperion_sensor"
+TYPE_HYPERION_SENSOR_VISIBLE_PRIORITY = "visible_priority"

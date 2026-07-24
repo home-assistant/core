@@ -1,35 +1,31 @@
 """Support for the Foobot indoor air quality monitor."""
-from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from foobot_async import FoobotClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
-    PERCENTAGE,
+    UnitOfDensity,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -46,7 +42,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="pm",
         name=ATTR_PM2_5,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         icon="mdi:cloud",
     ),
     SensorEntityDescription(
@@ -58,25 +54,25 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="hum",
         name=ATTR_HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         icon="mdi:water-percent",
     ),
     SensorEntityDescription(
         key="co2",
         name=ATTR_CARBON_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         icon="mdi:molecule-co2",
     ),
     SensorEntityDescription(
         key="voc",
         name=ATTR_VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         icon="mdi:cloud",
     ),
     SensorEntityDescription(
         key="allpollu",
         name=ATTR_FOOBOT_INDEX,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         icon="mdi:percent",
     ),
 )
@@ -86,7 +82,7 @@ PARALLEL_UPDATES = 1
 
 TIMEOUT = 10
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_USERNAME): cv.string}
 )
 
@@ -118,7 +114,7 @@ async def async_setup_platform(
             )
     except (
         aiohttp.client_exceptions.ClientConnectorError,
-        asyncio.TimeoutError,
+        TimeoutError,
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
     ) as err:
@@ -147,6 +143,7 @@ class FoobotSensor(SensorEntity):
         self._attr_unique_id = f"{device['uuid']}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the device."""
         return self.foobot_data.data.get(self.entity_description.key)
@@ -175,7 +172,7 @@ class FoobotData:
             )
         except (
             aiohttp.client_exceptions.ClientConnectorError,
-            asyncio.TimeoutError,
+            TimeoutError,
             self._client.TooManyRequests,
             self._client.InternalError,
         ):

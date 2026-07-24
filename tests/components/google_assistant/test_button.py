@@ -1,4 +1,5 @@
 """Test buttons."""
+
 from unittest.mock import patch
 
 import pytest
@@ -28,7 +29,7 @@ async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> No
     assert state
 
     config_entry = hass.config_entries.async_entries("google_assistant")[0]
-    google_config: ga.GoogleConfig = hass.data[ga.DOMAIN][config_entry.entry_id]
+    google_config: ga.GoogleConfig = config_entry.runtime_data
 
     with patch.object(google_config, "async_sync_entities") as mock_sync_entities:
         mock_sync_entities.return_value = 200
@@ -42,9 +43,8 @@ async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> No
         )
         mock_sync_entities.assert_called_once_with(hass_owner_user.id)
 
+        mock_sync_entities.return_value = 400
         with pytest.raises(HomeAssistantError):
-            mock_sync_entities.return_value = 400
-
             await hass.services.async_call(
                 "button",
                 "press",

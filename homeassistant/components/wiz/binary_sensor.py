@@ -1,41 +1,37 @@
 """WiZ integration binary sensor platform."""
-from __future__ import annotations
 
 from collections.abc import Callable
-
-from pywizlight.bulb import PIR_SOURCE
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_WIZ_PIR
+from .const import DOMAIN, OCCUPANCY_SOURCES, SIGNAL_WIZ_PIR
+from .coordinator import WizConfigEntry, WizData
 from .entity import WizEntity
-from .models import WizData
 
 OCCUPANCY_UNIQUE_ID = "{}_occupancy"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: WizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WiZ binary sensor platform."""
-    wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    mac = wiz_data.bulb.mac
+    mac = entry.runtime_data.bulb.mac
 
     if er.async_get(hass).async_get_entity_id(
         Platform.BINARY_SENSOR, DOMAIN, OCCUPANCY_UNIQUE_ID.format(mac)
     ):
-        async_add_entities([WizOccupancyEntity(wiz_data, entry.title)])
+        async_add_entities([WizOccupancyEntity(entry.runtime_data, entry.title)])
         return
 
     cancel_dispatcher: Callable[[], None] | None = None
@@ -46,7 +42,7 @@ async def async_setup_entry(
         assert cancel_dispatcher is not None
         cancel_dispatcher()
         cancel_dispatcher = None
-        async_add_entities([WizOccupancyEntity(wiz_data, entry.title)])
+        async_add_entities([WizOccupancyEntity(entry.runtime_data, entry.title)])
 
     cancel_dispatcher = async_dispatcher_connect(
         hass, SIGNAL_WIZ_PIR.format(mac), _async_add_occupancy_sensor
@@ -74,7 +70,8 @@ class WizOccupancyEntity(WizEntity, BinarySensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        if self._device.state.get_source() == PIR_SOURCE:
+        if self._device.state.get_source() in OCCUPANCY_SOURCES:
             self._attr_is_on = self._device.status

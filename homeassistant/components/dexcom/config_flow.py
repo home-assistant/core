@@ -1,14 +1,18 @@
 """Config flow for Dexcom integration."""
-from __future__ import annotations
 
-from pydexcom import AccountError, Dexcom, SessionError
+import logging
+from typing import Any, override
+
+from pydexcom import Dexcom, Region
+from pydexcom.errors import AccountError, SessionError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_SERVER, DOMAIN, MG_DL, MMOL_L, SERVER_OUS, SERVER_US
+from .const import CONF_SERVER, DOMAIN, SERVER_OUS, SERVER_US
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -19,27 +23,34 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DexcomConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dexcom."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
-                    Dexcom,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    user_input[CONF_SERVER] == SERVER_OUS,
+                    lambda: Dexcom(
+                        username=user_input[CONF_USERNAME],
+                        password=user_input[CONF_PASSWORD],
+                        region=Region.OUS
+                        if user_input[CONF_SERVER] == SERVER_OUS
+                        else Region.US,
+                    )
                 )
             except SessionError:
                 errors["base"] = "cannot_connect"
             except AccountError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
 
             if "base" not in errors:
@@ -52,36 +63,3 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> DexcomOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return DexcomOptionsFlowHandler(config_entry)
-
-
-class DexcomOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for Dexcom."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_UNIT_OF_MEASUREMENT,
-                    default=self.config_entry.options.get(
-                        CONF_UNIT_OF_MEASUREMENT, MG_DL
-                    ),
-                ): vol.In({MG_DL, MMOL_L}),
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)

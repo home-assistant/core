@@ -1,36 +1,27 @@
 """Platform for Kostal Plenticore select widgets."""
-from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .helper import Plenticore, SelectDataUpdateCoordinator
+from .coordinator import PlenticoreConfigEntry, SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore select entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSelectEntityDescription(SelectEntityDescription):
+    """A class that describes plenticore select entities."""
 
     module_id: str
-
-
-@dataclass
-class PlenticoreSelectEntityDescription(
-    SelectEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore select entities."""
 
 
 SELECT_SETTINGS_DATA = [
@@ -48,18 +39,16 @@ SELECT_SETTINGS_DATA = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PlenticoreConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Select widget."""
-    plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore = entry.runtime_data
 
     available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
 
     entities = []
@@ -115,6 +104,7 @@ class PlenticoreDataSelect(
         self._attr_unique_id = f"{entry_id}_{description.module_id}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -124,6 +114,7 @@ class PlenticoreDataSelect(
             and self.data_id in self.coordinator.data[self.module_id]
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
@@ -133,11 +124,13 @@ class PlenticoreDataSelect(
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
         self.coordinator.stop_fetch_data(self.module_id, self.data_id, self.options)
         await super().async_will_remove_from_hass()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         for all_option in self.options:
@@ -150,6 +143,7 @@ class PlenticoreDataSelect(
         self.async_write_ha_state()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if self.available:

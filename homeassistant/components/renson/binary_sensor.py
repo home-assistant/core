@@ -1,7 +1,7 @@
 """Binary sensors for renson."""
-from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import override
 
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_CONTROL_FIELD,
@@ -20,28 +20,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 
-@dataclass
-class RensonBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RensonBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Description of binary sensor."""
 
     field: FieldEnum
-
-
-@dataclass
-class RensonBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RensonBinarySensorEntityDescriptionMixin
-):
-    """Description of binary sensor."""
 
 
 BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
@@ -91,15 +82,13 @@ BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RensonConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Call the Renson integration to setup."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
+    api = config_entry.runtime_data.api
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities(
         RensonBinarySensor(description, api, coordinator)
@@ -125,6 +114,7 @@ class RensonBinarySensor(RensonEntity, BinarySensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         all_data = self.coordinator.data

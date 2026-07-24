@@ -1,5 +1,6 @@
 """API for Honeywell Lyric bound to Home Assistant OAuth."""
-from typing import cast
+
+from typing import cast, override
 
 from aiohttp import BasicAuth, ClientSession
 from aiolyric.client import LyricClient
@@ -35,8 +36,7 @@ class ConfigEntryLyricClient(LyricClient):
 
     async def async_get_access_token(self):
         """Return a valid access token."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token["access_token"]
 
@@ -46,6 +46,13 @@ class LyricLocalOAuth2Implementation(
 ):
     """Lyric Local OAuth2 implementation."""
 
+    @property
+    @override
+    def extra_authorize_data(self) -> dict:
+        """Prompt the user to choose between Resideo and First Alert apps."""
+        return {"appSelect": "1"}
+
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)

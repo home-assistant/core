@@ -1,4 +1,5 @@
 """Support for Telldus Live."""
+
 import asyncio
 from functools import partial
 import logging
@@ -83,6 +84,8 @@ async def async_new_client(hass, session, entry):
     interval = entry.data[KEY_SCAN_INTERVAL]
     _LOGGER.debug("Update interval %s seconds", interval)
     client = TelldusLiveClient(hass, entry, session, interval)
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN] = client
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():
@@ -179,14 +182,15 @@ class TelldusLiveClient:
         )
         async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
             if component not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
-                await self._hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, component
+                await self._hass.config_entries.async_forward_entry_setups(
+                    self._config_entry, [component]
                 )
                 self._hass.data[CONFIG_ENTRY_IS_SETUP].add(component)
         device_ids = []
         if device.is_sensor:
-            for item in device.items:
-                device_ids.append((device.device_id, item.name, item.scale))
+            device_ids.extend(
+                (device.device_id, item.name, item.scale) for item in device.items
+            )
         else:
             device_ids.append(device_id)
         for _id in device_ids:

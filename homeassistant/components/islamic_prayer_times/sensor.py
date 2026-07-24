@@ -1,19 +1,21 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
+
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IslamicPrayerDataUpdateCoordinator
+from . import IslamicPrayerTimesConfigEntry
 from .const import DOMAIN, NAME
+from .coordinator import IslamicPrayerDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -49,15 +51,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: IslamicPrayerTimesConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Islamic prayer times sensor platform."""
 
-    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-
+    coordinator = config_entry.runtime_data
     async_add_entities(
         IslamicPrayerTimeSensor(coordinator, description)
         for description in SENSOR_TYPES
@@ -88,6 +87,7 @@ class IslamicPrayerTimeSensor(
         )
 
     @property
+    @override
     def native_value(self) -> datetime:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]

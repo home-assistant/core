@@ -1,11 +1,10 @@
 """Support for Overkiz binary sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
-from pyoverkiz.enums import OverkizCommandParam, OverkizState
+from pyoverkiz.enums import OverkizCommandParam, OverkizState, UIClass, UIWidget
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.binary_sensor import (
@@ -13,27 +12,23 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
-class OverkizBinarySensorDescriptionMixin:
-    """Define an entity description mixin for binary sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizBinarySensorDescription(BinarySensorEntityDescription):
+    """Class to describe an Overkiz binary sensor."""
 
     value_fn: Callable[[OverkizStateType], bool]
 
-
-@dataclass
-class OverkizBinarySensorDescription(
-    BinarySensorEntityDescription, OverkizBinarySensorDescriptionMixin
-):
-    """Class to describe an Overkiz binary sensor."""
+    # Restrict this entity to the listed device types (UIWidget/UIClass).
+    # When omitted, the sensor applies to any device exposing the state.
+    device_types: list[UIWidget | UIClass] | None = None
 
 
 BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
@@ -56,6 +51,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_WATER_DETECTION,
         name="Water",
         icon="mdi:water",
+        device_class=BinarySensorDeviceClass.MOISTURE,
         value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # AirSensor/AirFlowSensor
@@ -104,12 +100,61 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizBinarySensorDescription(
         key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
-        name="Energy Demand Status",
+        name="Energy demand status",
         device_class=BinarySensorDeviceClass.HEAT,
-        value_fn=lambda state: cast(dict, state).get(
-            OverkizCommandParam.ENERGY_DEMAND_STATUS
-        )
-        == 1,
+        value_fn=lambda state: (
+            cast(dict, state).get(OverkizCommandParam.ENERGY_DEMAND_STATUS) == 1
+        ),
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_HEATING_STATUS,
+        name="Heating status",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_fn=lambda state: (
+            cast(str, state).lower()
+            in (OverkizCommandParam.ON, OverkizCommandParam.HEATING)
+        ),
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_ABSENCE_MODE,
+        name="Absence mode",
+        value_fn=(
+            lambda state: state in (OverkizCommandParam.ON, OverkizCommandParam.PROG)
+        ),
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_BOOST_MODE,
+        name="Boost mode",
+        value_fn=(
+            lambda state: state in (OverkizCommandParam.ON, OverkizCommandParam.PROG)
+        ),
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_MODE,
+        name="Manual mode",
+        value_fn=(
+            lambda state: (
+                state
+                in (OverkizCommandParam.MANUAL, OverkizCommandParam.MANUAL_ECO_INACTIVE)
+            )
+        ),
+    ),
+    # ContactSensor/IntrusionEventSensor
+    # (io:SomfyWindowStateSensor, io:SomfySlidingWindowStateSensor)
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_OPEN_CLOSED,
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_fn=lambda state: state == OverkizCommandParam.OPEN,
+        # core:OpenClosedState is also exposed by all cover devices,
+        # restrict this to ContactSensor devices (e.g. the Somfy IntelliTAG)
+        device_types=[UIClass.CONTACT_SENSOR],
+    ),
+    # ContactSensor/IntrusionEventSensor (io:SomfyWindowStateSensor)
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_TILTED,
+        name="Tilt",
+        icon="mdi:angle-acute",
+        value_fn=bool,
     ),
 ]
 
@@ -118,13 +163,16 @@ SUPPORTED_STATES = {
 }
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz binary sensors from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizBinarySensor] = []
 
     for device in data.coordinator.data.values():
@@ -134,15 +182,20 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizBinarySensor(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizBinarySensor(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state))
+            and (
+                description.device_types is None
+                or device.widget in description.device_types
+                or device.ui_class in description.device_types
+            )
+        )
 
     async_add_entities(entities)
 
@@ -153,6 +206,7 @@ class OverkizBinarySensor(OverkizDescriptiveEntity, BinarySensorEntity):
     entity_description: OverkizBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         if state := self.device.states.get(self.entity_description.key):

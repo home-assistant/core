@@ -1,49 +1,53 @@
 """Test GitHub sensor."""
-import json
 
+from unittest.mock import AsyncMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.github.const import DOMAIN, FALLBACK_UPDATE_INTERVAL
+from homeassistant.components.github.const import FALLBACK_UPDATE_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import entity_registry as er
 
-from .common import TEST_REPOSITORY
+from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_SENSOR_ENTITY = "sensor.octocat_hello_world_latest_release"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all entities."""
+    with patch("homeassistant.components.github.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 async def test_sensor_updates_with_empty_release_array(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensor updates by default GitHub sensors."""
+    await setup_integration(hass, mock_config_entry)
     state = hass.states.get(TEST_SENSOR_ENTITY)
     assert state.state == "v1.0.0"
 
-    response_json = json.loads(load_fixture("graphql.json", DOMAIN))
-    response_json["data"]["repository"]["release"] = None
-    headers = json.loads(load_fixture("base_headers.json", DOMAIN))
+    github_client.graphql.return_value.data["data"]["repository"]["release"] = None
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        f"https://api.github.com/repos/{TEST_REPOSITORY}/events",
-        json=[],
-        headers=headers,
-    )
-    aioclient_mock.post(
-        "https://api.github.com/graphql",
-        json=response_json,
-        headers=headers,
-    )
-
-    async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_UPDATE_INTERVAL)
+    freezer.tick(FALLBACK_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     new_state = hass.states.get(TEST_SENSOR_ENTITY)
-    assert new_state.state == "unavailable"
+    assert new_state.state == STATE_UNAVAILABLE

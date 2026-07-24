@@ -1,9 +1,9 @@
 """Support for WLED sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import override
 
 from wled import Device as WLEDDevice
 
@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -22,16 +21,18 @@ from homeassistant.const import (
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
-from .coordinator import WLEDDataUpdateCoordinator
-from .models import WLEDEntity
+from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WLEDSensorEntityDescription(SensorEntityDescription):
     """Describes WLED sensor entity."""
 
@@ -68,15 +69,14 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime)),
+        value_fn=lambda device: utcnow() - device.info.uptime,
     ),
     WLEDSensorEntityDescription(
         key="free_heap",
         translation_key="free_heap",
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -87,7 +87,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_signal",
         translation_key="wifi_signal",
-        icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -107,7 +106,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_channel",
         translation_key="wifi_channel",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.channel if device.info.wifi else None,
@@ -115,7 +113,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_bssid",
         translation_key="wifi_bssid",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.bssid if device.info.wifi else None,
@@ -123,7 +120,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="ip",
         translation_key="ip",
-        icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.ip,
     ),
@@ -132,11 +128,11 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: WLEDConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED sensor based on a config entry."""
-    coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         WLEDSensorEntity(coordinator, description)
         for description in SENSORS
@@ -160,6 +156,7 @@ class WLEDSensorEntity(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

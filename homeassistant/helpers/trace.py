@@ -1,15 +1,14 @@
 """Helpers for script and condition tracing."""
-from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, cast
+from typing import Any, Literal, overload, override
 
 from homeassistant.core import ServiceResponse
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .typing import TemplateVarsType
 
@@ -21,34 +20,30 @@ class TraceElement:
         "_child_key",
         "_child_run_id",
         "_error",
-        "path",
+        "_last_variables",
         "_result",
-        "reuse_by_child",
+        "_template_errors",
         "_timestamp",
         "_variables",
+        "path",
+        "reuse_by_child",
     )
 
     def __init__(self, variables: TemplateVarsType, path: str) -> None:
         """Container for trace data."""
         self._child_key: str | None = None
         self._child_run_id: str | None = None
-        self._error: Exception | None = None
+        self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
+        self._template_errors: list[str] | None = None
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 
-        if variables is None:
-            variables = {}
-        last_variables = variables_cv.get() or {}
-        variables_cv.set(dict(variables))
-        changed_variables = {
-            key: value
-            for key, value in variables.items()
-            if key not in last_variables or last_variables[key] != value
-        }
-        self._variables = changed_variables
+        self._last_variables = variables_cv.get() or {}
+        self.update_variables(variables)
 
+    @override
     def __repr__(self) -> str:
         """Container for trace data."""
         return str(self.as_dict())
@@ -58,9 +53,26 @@ class TraceElement:
         self._child_key = child_key
         self._child_run_id = child_run_id
 
-    def set_error(self, ex: Exception) -> None:
+    def set_error(self, ex: BaseException | None) -> None:
         """Set error."""
         self._error = ex
+
+    def add_template_error(self, msg: str) -> None:
+        """Record a template error message.
+
+        Used to record template variable errors which would otherwise be logged
+        directly, so they are surfaced in the trace instead of spamming the log.
+        A single template render can emit more than one message, so they are
+        accumulated in a list.
+        """
+        if self._template_errors is None:
+            self._template_errors = []
+        self._template_errors.append(msg)
+
+    @property
+    def template_errors(self) -> list[str]:
+        """Return the recorded template error messages."""
+        return self._template_errors or []
 
     def set_result(self, **kwargs: Any) -> None:
         """Set result."""
@@ -70,6 +82,21 @@ class TraceElement:
         """Set result."""
         old_result = self._result or {}
         self._result = {**old_result, **kwargs}
+
+    def update_variables(self, variables: TemplateVarsType) -> None:
+        """Update variables."""
+        if variables is None:
+            variables = {}
+        last_variables = self._last_variables
+        # variables is often a ChainMap which is costly to iterate, so flatten
+        # it once and reuse the snapshot for both the baseline and the diff.
+        snapshot = dict(variables)
+        variables_cv.set(snapshot)
+        self._variables = {
+            key: value
+            for key, value in snapshot.items()
+            if key not in last_variables or last_variables[key] != value
+        }
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
@@ -84,7 +111,9 @@ class TraceElement:
         if self._variables:
             result["changed_variables"] = self._variables
         if self._error is not None:
-            result["error"] = str(self._error)
+            result["error"] = str(self._error) or self._error.__class__.__name__
+        if self._template_errors:
+            result["template_errors"] = self._template_errors
         if self._result is not None:
             result["result"] = self._result
         return result
@@ -113,6 +142,27 @@ trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 script_execution_cv: ContextVar[StopReason | None] = ContextVar(
     "script_execution_cv", default=None
 )
+# When set, template errors recorded on the active TraceElement are not also
+# logged. Template errors are always recorded in the trace regardless.
+suppress_template_error_logging_cv: ContextVar[bool] = ContextVar(
+    "suppress_template_error_logging_cv", default=False
+)
+
+
+@contextmanager
+def suppress_template_error_logging() -> Generator[None]:
+    """Suppress logging of template errors that are recorded in the trace.
+
+    Template errors are always recorded on the active trace element. Consumers
+    such as the subscribe_condition websocket command, which re-evaluate a
+    condition repeatedly and forward template errors to the client via the
+    trace, can use this to also stop the errors from spamming the log.
+    """
+    token = suppress_template_error_logging_cv.set(True)
+    try:
+        yield
+    finally:
+        suppress_template_error_logging_cv.reset(token)
 
 
 def trace_id_set(trace_id: tuple[str, str]) -> None:
@@ -125,21 +175,25 @@ def trace_id_get() -> tuple[str, str] | None:
     return trace_id_cv.get()
 
 
-def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
+def trace_stack_push[_T](
+    trace_stack_var: ContextVar[list[_T] | None], node: _T
+) -> None:
     """Push an element to the top of a trace stack."""
+    trace_stack: list[_T] | None
     if (trace_stack := trace_stack_var.get()) is None:
         trace_stack = []
         trace_stack_var.set(trace_stack)
     trace_stack.append(node)
 
 
-def trace_stack_pop(trace_stack_var: ContextVar) -> None:
+def trace_stack_pop(trace_stack_var: ContextVar[list[Any] | None]) -> None:
     """Remove the top element from a trace stack."""
     trace_stack = trace_stack_var.get()
-    trace_stack.pop()
+    if trace_stack is not None:
+        trace_stack.pop()
 
 
-def trace_stack_top(trace_stack_var: ContextVar) -> Any | None:
+def trace_stack_top[_T](trace_stack_var: ContextVar[list[_T] | None]) -> _T | None:
     """Return the element at the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     return trace_stack[-1] if trace_stack else None
@@ -180,8 +234,23 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
+@overload
+def trace_get(clear: Literal[True] = True) -> dict[str, deque[TraceElement]]: ...
+
+
+@overload
+def trace_get(clear: Literal[False]) -> dict[str, deque[TraceElement]] | None: ...
+
+
 def trace_get(clear: bool = True) -> dict[str, deque[TraceElement]] | None:
-    """Return the current trace."""
+    """Return the current trace.
+
+    When clear is True the trace is reset and a fresh (empty) trace is
+    unconditionally returned.
+
+    When clear is False, the current trace is returned without modification
+    if it exists, otherwise None is returned.
+    """
     if clear:
         trace_clear()
     return trace_cv.get()
@@ -198,21 +267,20 @@ def trace_clear() -> None:
 
 def trace_set_child_id(child_key: str, child_run_id: str) -> None:
     """Set child trace_id of TraceElement at the top of the stack."""
-    node = cast(TraceElement, trace_stack_top(trace_stack_cv))
-    if node:
+    if node := trace_stack_top(trace_stack_cv):
         node.set_child_id(child_key, child_run_id)
 
 
 def trace_set_result(**kwargs: Any) -> None:
     """Set the result of TraceElement at the top of the stack."""
-    node = cast(TraceElement, trace_stack_top(trace_stack_cv))
-    node.set_result(**kwargs)
+    if node := trace_stack_top(trace_stack_cv):
+        node.set_result(**kwargs)
 
 
 def trace_update_result(**kwargs: Any) -> None:
     """Update the result of TraceElement at the top of the stack."""
-    node = cast(TraceElement, trace_stack_top(trace_stack_cv))
-    node.update_result(**kwargs)
+    if node := trace_stack_top(trace_stack_cv):
+        node.update_result(**kwargs)
 
 
 class StopReason:
@@ -237,30 +305,47 @@ def script_execution_get() -> str | None:
     return data.script_execution
 
 
-@contextmanager
-def trace_path(suffix: str | list[str]) -> Generator:
+class trace_path:
     """Go deeper in the config tree.
 
-    Can not be used as a decorator on couroutine functions.
+    Can not be used as a decorator.
     """
-    count = trace_path_push(suffix)
-    try:
-        yield
-    finally:
-        trace_path_pop(count)
+
+    __slots__ = ("_count", "_suffix")
+
+    _count: int
+
+    def __init__(self, suffix: str | list[str]) -> None:
+        """Store the path suffix to push on enter."""
+        self._suffix = suffix
+
+    def __enter__(self) -> None:
+        """Go deeper in the config tree."""
+        self._count = trace_path_push(self._suffix)
+
+    def __exit__(self, *exc: object) -> None:
+        """Go back up in the config tree."""
+        trace_path_pop(self._count)
 
 
-def async_trace_path(suffix: str | list[str]) -> Callable:
+def async_trace_path[*_Ts](
+    suffix: str | list[str],
+) -> Callable[
+    [Callable[[*_Ts], Coroutine[Any, Any, None]]],
+    Callable[[*_Ts], Coroutine[Any, Any, None]],
+]:
     """Go deeper in the config tree.
 
     To be used as a decorator on coroutine functions.
     """
 
-    def _trace_path_decorator(func: Callable) -> Callable:
+    def _trace_path_decorator(
+        func: Callable[[*_Ts], Coroutine[Any, Any, None]],
+    ) -> Callable[[*_Ts], Coroutine[Any, Any, None]]:
         """Decorate a coroutine function."""
 
         @wraps(func)
-        async def async_wrapper(*args: Any) -> None:
+        async def async_wrapper(*args: *_Ts) -> None:
             """Catch and log exception."""
             with trace_path(suffix):
                 await func(*args)

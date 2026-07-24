@@ -1,24 +1,24 @@
 {
   "services": {
     "start_record": {
-      "name": "Start record",
       "description": "Starts QVR Pro recording on specified channel.",
       "fields": {
         "guid": {
-          "name": "GUID",
-          "description": "GUID of the channel to start recording."
+          "description": "GUID of the channel to start recording.",
+          "name": "GUID"
         }
-      }
+      },
+      "name": "Start record"
     },
     "stop_record": {
-      "name": "Stop record",
       "description": "Stops QVR Pro recording on specified channel.",
       "fields": {
         "guid": {
-          "name": "[%key:component::qvr_pro::services::start_record::fields::guid::name%]",
-          "description": "GUID of the channel to stop recording."
+          "description": "GUID of the channel to stop recording.",
+          "name": "[%key:component::qvr_pro::services::start_record::fields::guid::name%]"
         }
-      }
+      },
+      "name": "Stop record"
     }
   }
 }

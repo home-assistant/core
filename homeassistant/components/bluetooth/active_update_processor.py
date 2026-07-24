@@ -2,17 +2,16 @@
 
 Collects data from advertisements but can also poll.
 """
-from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, override
 
 from bleak import BleakError
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.util.dt import monotonic_time_coarse
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_processor import PassiveBluetoothProcessorCoordinator
@@ -20,11 +19,9 @@ from .passive_update_processor import PassiveBluetoothProcessorCoordinator
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
 
-_T = TypeVar("_T")
 
-
-class ActiveBluetoothProcessorCoordinator(
-    Generic[_T], PassiveBluetoothProcessorCoordinator[_T]
+class ActiveBluetoothProcessorCoordinator[_DataT](
+    PassiveBluetoothProcessorCoordinator[_DataT]
 ):
     """A processor coordinator that parses passive data.
 
@@ -62,18 +59,29 @@ class ActiveBluetoothProcessorCoordinator(
         *,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], _T],
+        update_method: Callable[[BluetoothServiceInfoBleak], _DataT],
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, _T],
+            Coroutine[Any, Any, _DataT],
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         connectable: bool = True,
+        scan_interval: float | None = None,
+        scan_duration: float | None = None,
     ) -> None:
         """Initialize the processor."""
-        super().__init__(hass, logger, address, mode, update_method, connectable)
+        super().__init__(
+            hass,
+            logger,
+            address,
+            mode,
+            update_method,
+            connectable,
+            scan_interval,
+            scan_duration,
+        )
 
         self._needs_poll_method = needs_poll_method
         self._poll_method = poll_method
@@ -91,6 +99,7 @@ class ActiveBluetoothProcessorCoordinator(
                 cooldown=POLL_DEFAULT_COOLDOWN,
                 immediate=POLL_DEFAULT_IMMEDIATE,
                 function=self._async_poll,
+                background=True,
             )
         else:
             poll_debouncer.function = self._async_poll
@@ -108,7 +117,7 @@ class ActiveBluetoothProcessorCoordinator(
 
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
-    ) -> _T:
+    ) -> _DataT:
         """Fetch the latest data from the source."""
         if self._poll_method is None:
             raise NotImplementedError("Poll method not implemented")
@@ -127,7 +136,7 @@ class ActiveBluetoothProcessorCoordinator(
                 )
                 self.last_poll_successful = False
             return
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False
@@ -143,6 +152,7 @@ class ActiveBluetoothProcessorCoordinator(
             processor.async_handle_update(update)
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,
@@ -157,9 +167,10 @@ class ActiveBluetoothProcessorCoordinator(
         # We use bluetooth events to trigger the poll so that we scan as soon as
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
-            self.hass.async_create_task(self._debounced_poll.async_call())
+            self._debounced_poll.async_schedule_call()
 
     @callback
+    @override
     def _async_stop(self) -> None:
         """Cancel debouncer and stop the callbacks."""
         self._debounced_poll.async_cancel()

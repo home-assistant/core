@@ -1,8 +1,7 @@
 """Platform for the opengarage.io sensor component."""
-from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -19,10 +17,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OpenGarageDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import OpenGarageConfigEntry
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,22 +55,20 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: OpenGarageConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OpenGarage sensors."""
-    open_garage_data_coordinator: OpenGarageDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    open_garage_data_coordinator = entry.runtime_data
     async_add_entities(
-        [
-            OpenGarageSensor(
-                open_garage_data_coordinator,
-                cast(str, entry.unique_id),
-                description,
-            )
-            for description in SENSOR_TYPES
-            if description.key in open_garage_data_coordinator.data
-        ],
+        OpenGarageSensor(
+            open_garage_data_coordinator,
+            cast(str, entry.unique_id),
+            description,
+        )
+        for description in SENSOR_TYPES
+        if description.key in open_garage_data_coordinator.data
     )
 
 
@@ -81,6 +76,7 @@ class OpenGarageSensor(OpenGarageEntity, SensorEntity):
     """Representation of a OpenGarage sensor."""
 
     @callback
+    @override
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)

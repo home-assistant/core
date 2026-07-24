@@ -1,8 +1,6 @@
 """Code to handle a Dynalite bridge."""
-from __future__ import annotations
 
-from collections.abc import Callable
-from types import MappingProxyType
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from dynalite_devices_lib.dynalite_devices import (
@@ -15,12 +13,15 @@ from dynalite_devices_lib.dynalite_devices import (
     DynaliteNotification,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
+
+type DynaliteConfigEntry = ConfigEntry[DynaliteBridge]
 
 
 class DynaliteBridge:
@@ -46,7 +47,7 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    def reload_config(self, config: MappingProxyType[str, Any]) -> None:
+    def reload_config(self, config: Mapping[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(convert_config(config))
@@ -63,11 +64,13 @@ class DynaliteBridge:
     def update_device(self, device: DynaliteBaseDevice | None = None) -> None:
         """Call when a device or all devices should be updated."""
         if not device:
-            # This is used to signal connection or disconnection, so all devices may become available or not.
+            # This is used to signal connection or
+            # disconnection, so all devices may become
+            # available or not.
             log_string = (
                 "Connected" if self.dynalite_devices.connected else "Disconnected"
             )
-            LOGGER.info("%s to dynalite host", log_string)
+            LOGGER.debug("%s to dynalite host", log_string)
             async_dispatcher_send(self.hass, self.update_signal())
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))
@@ -101,7 +104,10 @@ class DynaliteBridge:
             self.async_add_devices[platform](self.waiting_devices[platform])
 
     def add_devices_when_registered(self, devices: list[DynaliteBaseDevice]) -> None:
-        """Add the devices to HA if the add devices callback was registered, otherwise queue until it is."""
+        """Add the devices to HA if the add devices callback was registered.
+
+        Otherwise queue until it is.
+        """
         for platform in PLATFORMS:
             platform_devices = [
                 device for device in devices if device.category == platform

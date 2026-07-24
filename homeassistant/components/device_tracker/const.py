@@ -1,10 +1,12 @@
 """Device tracker constants."""
-from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
 import logging
 from typing import Final
+
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.signal_type import SignalType
 
 LOGGER: Final = logging.getLogger(__package__)
 
@@ -14,13 +16,6 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_TYPE_LEGACY: Final = "legacy"
 PLATFORM_TYPE_ENTITY: Final = "entity_platform"
 
-# SOURCE_TYPE_* below are deprecated as of 2022.9
-# use the SourceType enum instead.
-SOURCE_TYPE_GPS: Final = "gps"
-SOURCE_TYPE_ROUTER: Final = "router"
-SOURCE_TYPE_BLUETOOTH: Final = "bluetooth"
-SOURCE_TYPE_BLUETOOTH_LE: Final = "bluetooth_le"
-
 
 class SourceType(StrEnum):
     """Source type for device trackers."""
@@ -29,6 +24,54 @@ class SourceType(StrEnum):
     ROUTER = "router"
     BLUETOOTH = "bluetooth"
     BLUETOOTH_LE = "bluetooth_le"
+
+
+class TrackingType(StrEnum):
+    """Tracking type for device trackers.
+
+    Describes how the tracker determines presence: by the device's geographic
+    position (e.g. GPS) or by its connection to a known endpoint (e.g. a router
+    or beacon associated with a zone).
+    """
+
+    CONNECTION = "connection"
+    POSITION = "position"
+
+
+class DeviceTrackerEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for device tracker entities."""
+
+    TRACKING_TYPE = "tracking_type"
+
+
+class DeviceTrackerEntityStateAttribute(StrEnum):
+    """State attributes common to device tracker entities."""
+
+    SOURCE_TYPE = "source_type"
+    IN_ZONES = "in_zones"
+
+
+class TrackerEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "LATITUDE": ("EntityStateAttribute.LATITUDE", "2027.2.0"),
+        "LONGITUDE": ("EntityStateAttribute.LONGITUDE", "2027.2.0"),
+    },
+):
+    """State attributes set by TrackerEntity."""
+
+    LATITUDE = "latitude"  # Deprecated, replaced with EntityStateAttribute.LATITUDE
+    LONGITUDE = "longitude"  # Deprecated, replaced with EntityStateAttribute.LONGITUDE
+    GPS_ACCURACY = "gps_accuracy"
+
+
+class ScannerEntityStateAttribute(StrEnum):
+    """State attributes set by ScannerEntity."""
+
+    IP = "ip"
+    MAC = "mac"
+    HOST_NAME = "host_name"
 
 
 CONF_SCAN_INTERVAL: Final = "interval_seconds"
@@ -42,15 +85,21 @@ DEFAULT_CONSIDER_HOME: Final = timedelta(seconds=180)
 
 CONF_NEW_DEVICE_DEFAULTS: Final = "new_device_defaults"
 
+CONF_ASSOCIATED_ZONE: Final = "associated_zone"
+
 ATTR_ATTRIBUTES: Final = "attributes"
 ATTR_BATTERY: Final = "battery"
 ATTR_DEV_ID: Final = "dev_id"
 ATTR_GPS: Final = "gps"
 ATTR_HOST_NAME: Final = "host_name"
+ATTR_IN_ZONES: Final = "in_zones"
 ATTR_LOCATION_NAME: Final = "location_name"
 ATTR_MAC: Final = "mac"
 ATTR_SOURCE_TYPE: Final = "source_type"
+ATTR_TRACKING_TYPE: Final = "tracking_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
 
-CONNECTED_DEVICE_REGISTERED: Final = "device_tracker_connected_device_registered"
+CONNECTED_DEVICE_REGISTERED = SignalType[dict[str, str | None]](
+    "device_tracker_connected_device_registered"
+)

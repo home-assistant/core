@@ -1,9 +1,11 @@
 """Test KNX events."""
+
 import logging
 
 import pytest
 
-from homeassistant.components.knx import CONF_EVENT, CONF_TYPE, KNX_ADDRESS
+from homeassistant.components.knx.const import KNX_ADDRESS
+from homeassistant.const import CONF_EVENT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -30,7 +32,6 @@ async def test_knx_event(
     events = async_capture_events(hass, "knx_event")
 
     async def test_event_data(address, payload, value=None):
-        await hass.async_block_till_done()
         assert len(events) == 1
         event = events.pop()
         assert event.data["data"] == payload
@@ -68,7 +69,6 @@ async def test_knx_event(
     )
 
     # no event received
-    await hass.async_block_till_done()
     assert len(events) == 0
 
     # receive telegrams for group addresses matching the filter
@@ -100,7 +100,6 @@ async def test_knx_event(
     await knx.receive_write("0/5/0", True)
     await knx.receive_write("1/7/0", True)
     await knx.receive_write("2/6/6", True)
-    await hass.async_block_till_done()
     assert len(events) == 0
 
     # receive telegrams with wrong payload length

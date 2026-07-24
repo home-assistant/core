@@ -1,7 +1,6 @@
 """Config flow for Airzone Cloud."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.common import ConnectionOptions
@@ -9,9 +8,8 @@ from aioairzone_cloud.const import AZD_ID, AZD_NAME, AZD_WEBSERVERS
 from aioairzone_cloud.exceptions import AirzoneCloudError, LoginError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -23,14 +21,14 @@ from homeassistant.helpers.selector import (
 from .const import DOMAIN
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for an Airzone Cloud device."""
 
     airzone: AirzoneCloudApi
 
     async def async_step_inst_pick(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the installation selection."""
         errors = {}
         options: dict[str, str] = {}
@@ -79,9 +77,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -94,12 +93,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ConnectionOptions(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
+                    False,
                 ),
             )
 
             try:
                 await self.airzone.login()
-            except (AirzoneCloudError, LoginError):
+            except AirzoneCloudError, LoginError:
                 errors["base"] = "cannot_connect"
             else:
                 return await self.async_step_inst_pick()

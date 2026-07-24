@@ -1,6 +1,8 @@
 """Test reproduce state for Input select."""
+
 import pytest
 
+from homeassistant.components.input_select import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.state import async_reproduce_state
@@ -26,7 +28,7 @@ async def test_reproducing_states(
     # Setup entity
     assert await async_setup_component(
         hass,
-        "input_select",
+        DOMAIN,
         {
             "input_select": {
                 "test_select": {"options": VALID_OPTION_SET1, "initial": VALID_OPTION1}

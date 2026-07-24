@@ -1,14 +1,17 @@
 """Component providing support for Xiaomi Cameras."""
-from __future__ import annotations
 
 from ftplib import FTP, error_perm
 import logging
+from typing import override
 
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     CONF_HOST,
@@ -39,7 +42,7 @@ CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 MODEL_YI = "yi"
 MODEL_XIAOFANG = "xiaofang"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.template,
@@ -76,7 +79,6 @@ class XiaomiCamera(Camera):
         self._manager = get_ffmpeg_manager(hass)
         self._name = config[CONF_NAME]
         self.host = config[CONF_HOST]
-        self.host.hass = hass
         self._model = config[CONF_MODEL]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]
@@ -84,16 +86,19 @@ class XiaomiCamera(Camera):
         self.passwd = config[CONF_PASSWORD]
 
     @property
+    @override
     def name(self):
         """Return the name of this camera."""
         return self._name
 
     @property
+    @override
     def brand(self):
         """Return the camera brand."""
         return DEFAULT_BRAND
 
     @property
+    @override
     def model(self):
         """Return the camera model."""
         return self._model
@@ -137,7 +142,7 @@ class XiaomiCamera(Camera):
 
         videos = [v for v in ftp.nlst() if ".tmp" not in v]
         if not videos:
-            _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
+            _LOGGER.debug('Video folder "%s" is empty; delaying', latest_dir)
             return False
 
         if self._model == MODEL_XIAOFANG:
@@ -147,6 +152,7 @@ class XiaomiCamera(Camera):
 
         return f"ftp://{self.user}:{self.passwd}@{host}:{self.port}{ftp.pwd()}/{video}"
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -154,6 +160,7 @@ class XiaomiCamera(Camera):
 
         try:
             host = self.host.async_render(parse_result=False)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TemplateError as exc:
             _LOGGER.error("Error parsing template %s: %s", self.host, exc)
             return self._last_image
@@ -171,6 +178,7 @@ class XiaomiCamera(Camera):
 
         return self._last_image
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
 

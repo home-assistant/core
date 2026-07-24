@@ -1,10 +1,26 @@
 """Constants for the automation integration."""
+
+from enum import StrEnum
 import logging
 
-CONF_ACTION = "action"
-CONF_TRIGGER = "trigger"
 CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
+
+
+class AutomationEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for automation entities."""
+
+    ID = "id"
+
+
+class AutomationEntityStateAttribute(StrEnum):
+    """State attributes for automation entities."""
+
+    LAST_TRIGGERED = "last_triggered"
+    MODE = "mode"
+    CUR = "current"
+    MAX = "max"
+
 
 CONF_HIDE_ENTITY = "hide_entity"
 

@@ -1,10 +1,8 @@
 """Config flow to configure the Sun integration."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -14,18 +12,16 @@ class SunConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None:
             return self.async_create_entry(title=DEFAULT_NAME, data={})
 
         return self.async_show_form(step_id="user")
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)

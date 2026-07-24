@@ -1,87 +1,101 @@
 """Test issues from supervisor issues."""
-from __future__ import annotations
 
-from asyncio import TimeoutError
+from collections.abc import Generator
 import os
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, AsyncMock, patch
+from uuid import UUID, uuid4
 
+from aiohasupervisor import (
+    SupervisorBadRequestError,
+    SupervisorError,
+    SupervisorTimeoutError,
+)
+from aiohasupervisor.models import (
+    Check,
+    CheckType,
+    ContextType,
+    Issue,
+    IssueType,
+    ResolutionInfo,
+    Suggestion,
+    SuggestionType,
+    UnhealthyReason,
+    UnsupportedReason,
+)
 import pytest
 
+from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
+from homeassistant.components.hassio.coordinator import (
+    IssueSubscription,
+    IssueSubscriptionEvent,
+    get_issues_info,
+)
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .test_init import MOCK_ENVIRON
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_repairs(hass):
+async def setup_repairs(hass: HomeAssistant) -> None:
     """Set up the repairs integration."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
 
 
 @pytest.fixture(autouse=True)
-async def mock_all(all_setup_requests):
-    """Mock all setup requests."""
-
-
-@pytest.fixture(autouse=True)
-async def fixture_supervisor_environ():
+def fixture_supervisor_environ() -> Generator[None]:
     """Mock os environ for supervisor."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         yield
 
 
 def mock_resolution_info(
-    aioclient_mock: AiohttpClientMocker,
-    unsupported: list[str] | None = None,
-    unhealthy: list[str] | None = None,
-    issues: list[dict[str, str]] | None = None,
-):
-    """Mock resolution/info endpoint with unsupported/unhealthy reasons and/or issues."""
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": unsupported or [],
-                "unhealthy": unhealthy or [],
-                "suggestions": [],
-                "issues": [
-                    {k: v for k, v in issue.items() if k != "suggestions"}
-                    for issue in issues
-                ]
-                if issues
-                else [],
-                "checks": [
-                    {"enabled": True, "slug": "supervisor_trust"},
-                    {"enabled": True, "slug": "free_space"},
-                ],
-            },
-        },
+    supervisor_client: AsyncMock,
+    unsupported: list[UnsupportedReason | str] | None = None,
+    unhealthy: list[UnhealthyReason | str] | None = None,
+    issues: list[Issue] | None = None,
+    suggestions_by_issue: dict[UUID, list[Suggestion]] | None = None,
+    suggestion_result: SupervisorError | None = None,
+) -> None:
+    """Mock resolution/info endpoint with unsupported/unhealthy reasons."""
+    supervisor_client.resolution.info.return_value = ResolutionInfo(
+        unsupported=unsupported or [],
+        unhealthy=unhealthy or [],
+        issues=issues or [],
+        suggestions=[
+            suggestion
+            for issue_list in suggestions_by_issue.values()
+            for suggestion in issue_list
+        ]
+        if suggestions_by_issue
+        else [],
+        checks=[
+            Check(enabled=True, slug=CheckType.DOCKER_CONFIG),
+            Check(enabled=True, slug=CheckType.FREE_SPACE),
+        ],
     )
 
-    if issues:
-        suggestions_by_issue = {
-            issue["uuid"]: issue.get("suggestions", []) for issue in issues
-        }
-        for issue_uuid, suggestions in suggestions_by_issue.items():
-            aioclient_mock.get(
-                f"http://127.0.0.1/resolution/issue/{issue_uuid}/suggestions",
-                json={"result": "ok", "data": {"suggestions": suggestions}},
-            )
-            for suggestion in suggestions:
-                aioclient_mock.post(
-                    f"http://127.0.0.1/resolution/suggestion/{suggestion['uuid']}",
-                    json={"result": "ok"},
-                )
+    if suggestions_by_issue:
+
+        async def mock_suggestions_for_issue(uuid: UUID) -> list[Suggestion]:
+            """Mock of suggestions for issue api."""
+            return suggestions_by_issue.get(uuid, [])
+
+        supervisor_client.resolution.suggestions_for_issue.side_effect = (
+            mock_suggestions_for_issue
+        )
+        supervisor_client.resolution.apply_suggestion.side_effect = suggestion_result
 
 
-def assert_repair_in_list(issues: list[dict[str, Any]], unhealthy: bool, reason: str):
+def assert_repair_in_list(
+    issues: list[dict[str, Any]], unhealthy: bool, reason: str
+) -> None:
     """Assert repair for unhealthy/unsupported in list."""
     repair_type = "unhealthy" if unhealthy else "unsupported"
     assert {
@@ -106,9 +120,13 @@ def assert_issue_repair_in_list(
     context: str,
     type_: str,
     fixable: bool,
-    reference: str | None,
-):
+    *,
+    reference: str | None = None,
+    placeholders: dict[str, str] | None = None,
+) -> None:
     """Assert repair for unhealthy/unsupported in list."""
+    if reference:
+        placeholders = (placeholders or {}) | {"reference": reference}
     assert {
         "breaks_in_ha_version": None,
         "created": ANY,
@@ -121,19 +139,22 @@ def assert_issue_repair_in_list(
         "learn_more_url": None,
         "severity": "warning",
         "translation_key": f"issue_{context}_{type_}",
-        "translation_placeholders": {"reference": reference} if reference else None,
+        "translation_placeholders": placeholders,
     } in issues
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unhealthy_issues(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test issues added for unhealthy systems."""
-    mock_resolution_info(aioclient_mock, unhealthy=["docker", "setup"])
+    mock_resolution_info(
+        supervisor_client, unhealthy=[UnhealthyReason.DOCKER, UnhealthyReason.SETUP]
+    )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -146,15 +167,44 @@ async def test_unhealthy_issues(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
 
 
+@pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize("unhealthy_reason", list(UnhealthyReason))
+async def test_unhealthy_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    unhealthy_reason: UnhealthyReason,
+) -> None:
+    """Test all unhealthy reasons in client library are made into repairs."""
+    mock_resolution_info(supervisor_client, unhealthy=[unhealthy_reason])
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=True, reason=unhealthy_reason.value
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unsupported_issues(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test issues added for unsupported systems."""
-    mock_resolution_info(aioclient_mock, unsupported=["content_trust", "os"])
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[UnsupportedReason.CONNECTIVITY_CHECK, UnsupportedReason.OS],
+    )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -164,23 +214,52 @@ async def test_unsupported_issues(
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 2
     assert_repair_in_list(
-        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+        msg["result"]["issues"], unhealthy=False, reason="connectivity_check"
     )
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
 
 
-async def test_unhealthy_issues_add_remove(
+@pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize(
+    "unsupported_reason",
+    [r for r in UnsupportedReason if r != UnsupportedReason.PRIVILEGED],
+)
+async def test_unsupported_reasons(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
+    unsupported_reason: UnsupportedReason,
 ) -> None:
-    """Test unhealthy issues added and removed from dispatches."""
-    mock_resolution_info(aioclient_mock)
+    """Test all unsupported reasons in client library are made into repairs."""
+    mock_resolution_info(supervisor_client, unsupported=[unsupported_reason])
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=False, reason=unsupported_reason.value
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_unhealthy_issues_add_remove(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test unhealthy issues added and removed from dispatches."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
 
     await client.send_json(
         {
@@ -225,18 +304,19 @@ async def test_unhealthy_issues_add_remove(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unsupported_issues_add_remove(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test unsupported issues added and removed from dispatches."""
-    mock_resolution_info(aioclient_mock)
+    mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
 
     await client.send_json(
         {
@@ -281,30 +361,44 @@ async def test_unsupported_issues_add_remove(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_reset_issues_supervisor_restart(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """All issues reset on supervisor restart."""
     mock_resolution_info(
-        aioclient_mock,
-        unsupported=["os"],
-        unhealthy=["docker"],
+        supervisor_client,
+        unsupported=[UnsupportedReason.OS],
+        unhealthy=[UnhealthyReason.DOCKER],
         issues=[
-            {
-                "uuid": "1234",
-                "type": "reboot_required",
-                "context": "system",
-                "reference": None,
-            }
+            Issue(
+                type=IssueType.REBOOT_REQUIRED,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=(uuid := uuid4()),
+                reference_extra=None,
+            )
         ],
+        suggestions_by_issue={
+            uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_REBOOT,
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                )
+            ]
+        },
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
 
     await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
@@ -314,15 +408,14 @@ async def test_reset_issues_supervisor_restart(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
     assert_issue_repair_in_list(
         msg["result"]["issues"],
-        uuid="1234",
+        uuid=uuid.hex,
         context="system",
         type_="reboot_required",
-        fixable=False,
+        fixable=True,
         reference=None,
     )
 
-    aioclient_mock.clear_requests()
-    mock_resolution_info(aioclient_mock)
+    mock_resolution_info(supervisor_client)
     await client.send_json(
         {
             "id": 2,
@@ -330,7 +423,7 @@ async def test_reset_issues_supervisor_restart(
             "data": {
                 "event": "supervisor_update",
                 "update_key": "supervisor",
-                "data": {},
+                "data": {"startup": "complete"},
             },
         }
     )
@@ -344,30 +437,29 @@ async def test_reset_issues_supervisor_restart(
     assert msg["result"] == {"issues": []}
 
 
-async def test_reasons_added_and_removed(
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_no_reset_issues_supervisor_update_found(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test an unsupported/unhealthy reasons being added and removed at same time."""
-    mock_resolution_info(aioclient_mock, unsupported=["os"], unhealthy=["docker"])
+    """Issues do not reset because a supervisor update was found."""
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[UnsupportedReason.OS],
+    )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
 
     await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert len(msg["result"]["issues"]) == 2
-    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="docker")
-    assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
+    assert len(msg["result"]["issues"]) == 1
 
-    aioclient_mock.clear_requests()
-    mock_resolution_info(
-        aioclient_mock, unsupported=["content_trust"], unhealthy=["setup"]
-    )
+    mock_resolution_info(supervisor_client)
     await client.send_json(
         {
             "id": 2,
@@ -386,24 +478,78 @@ async def test_reasons_added_and_removed(
     await client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_reasons_added_and_removed(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an unsupported/unhealthy reasons being added and removed at same time."""
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[UnsupportedReason.OS],
+        unhealthy=[UnhealthyReason.DOCKER],
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 2
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="docker")
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
+
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[UnsupportedReason.CONNECTIVITY_CHECK],
+        unhealthy=[UnhealthyReason.SETUP],
+    )
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
     assert len(msg["result"]["issues"]) == 2
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
     assert_repair_in_list(
-        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+        msg["result"]["issues"], unhealthy=False, reason="connectivity_check"
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_ignored_unsupported_skipped(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Unsupported reasons which have an identical unhealthy reason are ignored."""
     mock_resolution_info(
-        aioclient_mock, unsupported=["privileged"], unhealthy=["privileged"]
+        supervisor_client,
+        unsupported=[UnsupportedReason.PRIVILEGED],
+        unhealthy=[UnhealthyReason.PRIVILEGED],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -415,17 +561,20 @@ async def test_ignored_unsupported_skipped(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="privileged")
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_new_unsupported_unhealthy_reason(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """New unsupported/unhealthy reasons result in a generic repair until next core update."""
+    """New unsupported/unhealthy reasons result in a generic repair."""
     mock_resolution_info(
-        aioclient_mock, unsupported=["fake_unsupported"], unhealthy=["fake_unhealthy"]
+        supervisor_client,
+        unsupported=["fake_unsupported"],
+        unhealthy=["fake_unhealthy"],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -464,45 +613,53 @@ async def test_new_unsupported_unhealthy_reason(
     } in msg["result"]["issues"]
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test repairs added for supervisor issue."""
     mock_resolution_info(
-        aioclient_mock,
+        supervisor_client,
         issues=[
-            {
-                "uuid": "1234",
-                "type": "reboot_required",
-                "context": "system",
-                "reference": None,
-            },
-            {
-                "uuid": "1235",
-                "type": "multiple_data_disks",
-                "context": "system",
-                "reference": "/dev/sda1",
-                "suggestions": [
-                    {
-                        "uuid": "1236",
-                        "type": "rename_data_disk",
-                        "context": "system",
-                        "reference": "/dev/sda1",
-                    }
-                ],
-            },
-            {
-                "uuid": "1237",
-                "type": "should_not_be_repair",
-                "context": "os",
-                "reference": None,
-            },
+            Issue(
+                type=IssueType.DETACHED_ADDON_MISSING,
+                context=ContextType.ADDON,
+                reference="test",
+                uuid=(uuid_issue1 := uuid4()),
+                reference_extra=None,
+            ),
+            Issue(
+                type=IssueType.MULTIPLE_DATA_DISKS,
+                context=ContextType.SYSTEM,
+                reference="/dev/sda1",
+                uuid=(uuid_issue2 := uuid4()),
+                reference_extra=None,
+            ),
+            Issue(
+                type="should_not_be_repair",
+                context=ContextType.OS,
+                reference=None,
+                uuid=uuid4(),
+                reference_extra=None,
+            ),
         ],
+        suggestions_by_issue={
+            uuid_issue2: [
+                Suggestion(
+                    type=SuggestionType.RENAME_DATA_DISK,
+                    context=ContextType.SYSTEM,
+                    reference="/dev/sda1",
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                )
+            ]
+        },
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -513,15 +670,16 @@ async def test_supervisor_issues(
     assert len(msg["result"]["issues"]) == 2
     assert_issue_repair_in_list(
         msg["result"]["issues"],
-        uuid="1234",
-        context="system",
-        type_="reboot_required",
+        uuid=uuid_issue1.hex,
+        context="addon",
+        type_="detached_addon_missing",
         fixable=False,
-        reference=None,
+        reference="test",
+        placeholders={"addon_url": "/hassio/addon/test", "addon": "test"},
     )
     assert_issue_repair_in_list(
         msg["result"]["issues"],
-        uuid="1235",
+        uuid=uuid_issue2.hex,
         context="system",
         type_="multiple_data_disks",
         fixable=True,
@@ -529,18 +687,68 @@ async def test_supervisor_issues(
     )
 
 
-async def test_supervisor_issues_add_remove(
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_initial_failure(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test supervisor issues added and removed from dispatches."""
-    mock_resolution_info(aioclient_mock)
+    """Test initial issues refresh failure does not block hassio setup."""
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[],
+        unhealthy=[],
+        issues=[
+            Issue(
+                type=IssueType.REBOOT_REQUIRED,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=(uuid := uuid4()),
+                reference_extra=None,
+            )
+        ],
+        suggestions_by_issue={
+            uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_REBOOT,
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                )
+            ]
+        },
+    )
+    resolution_info.side_effect = [
+        SupervisorBadRequestError("System is not ready with state: setup"),
+        resolution_info.return_value,
+    ]
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 0
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_add_remove(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issues added and removed from dispatches."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
 
     await client.send_json(
         {
@@ -549,8 +757,279 @@ async def test_supervisor_issues_add_remove(
             "data": {
                 "event": "issue_changed",
                 "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "reboot_required",
+                    "context": "system",
+                    "reference": None,
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "execute_reboot",
+                            "context": "system",
+                            "reference": None,
+                        }
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="system",
+        type_="reboot_required",
+        fixable=True,
+        reference=None,
+    )
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_removed",
+                "data": {
+                    "uuid": issue_uuid,
+                    "type": "reboot_required",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 4, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"issues": []}
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_suggestions_fail(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_suggestions_for_issue: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test failing to get suggestions for issue skips it."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.REBOOT_REQUIRED,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=uuid4(),
+                reference_extra=None,
+            )
+        ],
+    )
+    resolution_suggestions_for_issue.side_effect = SupervisorTimeoutError
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 0
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_remove_missing_issue_without_error(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test HA skips message to remove issue that it didn't know about (sync issue)."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_removed",
+                "data": {
                     "uuid": "1234",
                     "type": "reboot_required",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_system_is_not_ready(
+    hass: HomeAssistant,
+    resolution_info: AsyncMock,
+) -> None:
+    """Ensure hassio starts despite issues refresh errors."""
+    resolution_info.side_effect = SupervisorBadRequestError(
+        "System is not ready with state: setup"
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+    assert not issues_coordinator.issues
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_detached_addon_missing(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for detached addon due to missing repository."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "detached_addon_missing",
+                    "context": "addon",
+                    "reference": "test",
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="detached_addon_missing",
+        fixable=False,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/hassio/addon/test",
+        },
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_ntp_sync_failed(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for NTP sync failed."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "ntp_sync_failed",
+                    "context": "system",
+                    "reference": None,
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "enable_ntp",
+                            "context": "system",
+                            "reference": None,
+                        }
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="system",
+        type_="ntp_sync_failed",
+        fixable=True,
+        placeholders=None,
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_disk_lifetime(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for disk lifetime nearly exceeded."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "disk_lifetime",
                     "context": "system",
                     "reference": None,
                 },
@@ -567,169 +1046,450 @@ async def test_supervisor_issues_add_remove(
     assert len(msg["result"]["issues"]) == 1
     assert_issue_repair_in_list(
         msg["result"]["issues"],
-        uuid="1234",
+        uuid=issue_uuid,
         context="system",
-        type_="reboot_required",
+        type_="disk_lifetime",
         fixable=False,
-        reference=None,
+        placeholders=None,
     )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_free_space(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for too little free space remaining."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "free_space",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="system",
+        type_="free_space",
+        fixable=False,
+        placeholders={
+            "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+            "storage_url": "/config/storage",
+            "free_space": "1.6",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_addon_pwned(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for pwned secret in an addon."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "pwned",
+                    "context": "addon",
+                    "reference": "test",
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="pwned",
+        fixable=False,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/hassio/addon/test",
+            "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
+        },
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_subscription_events(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscription callbacks for issue add/update/remove by key."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+
+    events: list[str] = []
+
+    @callback
+    def _handle_subscription_event(event: IssueSubscriptionEvent) -> None:
+        events.append(event.event)
+
+    unsubscribe = issues_coordinator.subscribe(
+        IssueSubscription(
+            event_callback=_handle_subscription_event,
+            key="issue_system_should_not_be_repair",
+        )
+    )
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "should_not_be_repair",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["changed"]
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": issue_uuid,
+                    "type": "should_not_be_repair",
+                    "context": "system",
+                    "reference": "updated",
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["changed", "changed"]
 
     await client.send_json(
         {
             "id": 3,
             "type": "supervisor/event",
             "data": {
+                "event": "issue_removed",
+                "data": {
+                    "uuid": issue_uuid,
+                    "type": "should_not_be_repair",
+                    "context": "system",
+                    "reference": "updated",
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["changed", "changed", "removed"]
+
+    unsubscribe()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_periodic_refresh_backstop(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test issues coordinator polls periodically without requiring subscribers."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type="should_not_be_repair",
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=uuid4(),
+                reference_extra=None,
+            )
+        ],
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+
+    supervisor_client.resolution.info.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    supervisor_client.resolution.info.assert_called_once()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_suggestions_change_updates_fixable_state(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test suggestion-only issue changes are not treated as unchanged."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    supervisor_client.resolution.info.reset_mock()
+    issue_uuid = uuid4()
+
+    supervisor_client.resolution.info.return_value = ResolutionInfo(
+        unsupported=[],
+        unhealthy=[],
+        issues=[
+            Issue(
+                type="should_not_be_repair",
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=issue_uuid,
+                reference_extra=None,
+            )
+        ],
+        suggestions=[
+            Suggestion(
+                type=SuggestionType.EXECUTE_REBOOT,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=uuid4(),
+                auto=False,
+                reference_extra=None,
+            )
+        ],
+        checks=[
+            Check(enabled=True, slug=CheckType.DOCKER_CONFIG),
+            Check(enabled=True, slug=CheckType.FREE_SPACE),
+        ],
+    )
+    supervisor_client.resolution.suggestions_for_issue.return_value = [
+        Suggestion(
+            type=SuggestionType.EXECUTE_REBOOT,
+            context=ContextType.SYSTEM,
+            reference=None,
+            uuid=uuid4(),
+            auto=False,
+            reference_extra=None,
+        )
+    ]
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+    events: list[str] = []
+
+    @callback
+    def _subscription_event(event: IssueSubscriptionEvent) -> None:
+        events.append(event.event)
+
+    unsubscribe = issues_coordinator.subscribe(
+        IssueSubscription(
+            event_callback=_subscription_event,
+            key="issue_system_should_not_be_repair",
+        )
+    )
+
+    supervisor_client_ws = await hass_supervisor_ws_client()
+    await supervisor_client_ws.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
                 "event": "issue_changed",
                 "data": {
-                    "uuid": "1234",
-                    "type": "reboot_required",
+                    "uuid": issue_uuid.hex,
+                    "type": "should_not_be_repair",
                     "context": "system",
                     "reference": None,
-                    "suggestions": [
-                        {
-                            "uuid": "1235",
-                            "type": "execute_reboot",
-                            "context": "system",
-                            "reference": None,
-                        }
-                    ],
                 },
+            },
+        }
+    )
+    msg = await supervisor_client_ws.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["changed"]
+
+    await issues_coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert events == ["changed", "changed"]
+
+    unsubscribe()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test a later refresh recovers issue state after initial refresh failure."""
+    issue_uuid = uuid4()
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type="should_not_be_repair",
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=issue_uuid,
+                reference_extra=None,
+            )
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_REBOOT,
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                )
+            ]
+        },
+    )
+    resolution_info.side_effect = [
+        SupervisorBadRequestError("System is not ready with state: setup"),
+        resolution_info.return_value,
+    ]
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+    assert len(issues_coordinator.issues) == 0
+
+    await issues_coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert len(issues_coordinator.issues) == 1
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_unload_disconnects_listener(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test SupervisorIssues.unload() disconnects the EVENT_SUPERVISOR_EVENT listener.
+
+    After calling unload(), dispatching supervisor events must not trigger
+    the listener — preventing listener accumulation on config-entry reload.
+    """
+    mock_resolution_info(supervisor_client)
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    # Get config entry
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    # Get issues instance
+    issues = get_issues_info(hass)
+    assert issues is not None
+    assert issues.unhealthy_reasons == set()
+
+    # While connected, a health_changed event updates unhealthy_reasons.
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": False, "unhealthy_reasons": ["docker"]},
             },
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
+    assert "docker" in issues.unhealthy_reasons
 
-    await client.send_json({"id": 4, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 1
-    assert_issue_repair_in_list(
-        msg["result"]["issues"],
-        uuid="1234",
-        context="system",
-        type_="reboot_required",
-        fixable=True,
-        reference=None,
-    )
+    # After config entry unload, the same event is silently ignored.
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
 
     await client.send_json(
         {
-            "id": 5,
+            "id": 2,
             "type": "supervisor/event",
             "data": {
-                "event": "issue_removed",
-                "data": {
-                    "uuid": "1234",
-                    "type": "reboot_required",
-                    "context": "system",
-                    "reference": None,
-                },
+                "event": "health_changed",
+                "data": {"healthy": True},
             },
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
-
-    await client.send_json({"id": 6, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {"issues": []}
-
-
-async def test_supervisor_issues_suggestions_fail(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test failing to get suggestions for issue skips it."""
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [
-                    {
-                        "uuid": "1234",
-                        "type": "reboot_required",
-                        "context": "system",
-                        "reference": None,
-                    }
-                ],
-                "checks": [
-                    {"enabled": True, "slug": "supervisor_trust"},
-                    {"enabled": True, "slug": "free_space"},
-                ],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/issue/1234/suggestions",
-        exc=TimeoutError(),
-    )
-
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
-
-    client = await hass_ws_client(hass)
-
-    await client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) == 0
-
-
-async def test_supervisor_remove_missing_issue_without_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test HA skips message to remove issue that it didn't know about (sync issue)."""
-    mock_resolution_info(aioclient_mock)
-
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
-
-    client = await hass_ws_client(hass)
-
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "supervisor/event",
-            "data": {
-                "event": "issue_removed",
-                "data": {
-                    "uuid": "1234",
-                    "type": "reboot_required",
-                    "context": "system",
-                    "reference": None,
-                },
-            },
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-
-async def test_system_is_not_ready(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Ensure hassio starts despite error."""
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "",
-            "message": "System is not ready with state: setup",
-        },
-    )
-
-    assert await async_setup_component(hass, "hassio", {})
-    assert "Failed to update supervisor issues" in caplog.text
+    # unhealthy_reasons unchanged — listener did not fire.
+    assert "docker" in issues.unhealthy_reasons

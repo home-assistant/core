@@ -1,0 +1,25 @@
+{
+  // Please keep this file (mostly!) in sync with settings in home-assistant/.devcontainer/devcontainer.json
+  // Added --no-cov to work around TypeError: message must be set
+  // https://github.com/microsoft/vscode-python/issues/14067
+  "python.testing.pytestArgs": ["--no-cov"],
+  // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
+  "python.testing.pytestEnabled": false,
+  // https://code.visualstudio.com/docs/python/linting#_general-settings
+  "pylint.importStrategy": "fromEnvironment",
+  // Pyright type checking is not compatible with mypy which Home Assistant uses for type checking
+  "python.analysis.typeCheckingMode": "off",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+  },
+  "[json][jsonc][yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "json.schemas": [
+    {
+      "fileMatch": ["homeassistant/components/*/manifest.json"],
+      // This value differs between working with devcontainer and locally, therefore this value should NOT be in sync!
+      "url": "./script/json_schemas/manifest_schema.json",
+    },
+  ],
+}

@@ -1,8 +1,8 @@
 """Support for Tailscale binary sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from tailscale import Device as TailscaleDevice
 
@@ -11,16 +11,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TailscaleEntity
-from .const import DOMAIN
+from .coordinator import TailscaleConfigEntry
+from .entity import TailscaleEntity
+
+PARALLEL_UPDATES = 0
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TailscaleBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Tailscale binary sensor entity."""
 
@@ -36,57 +37,71 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda device: device.update_available,
     ),
     TailscaleBinarySensorEntityDescription(
-        key="client_supports_hair_pinning",
-        translation_key="client_supports_hair_pinning",
-        icon="mdi:wan",
+        key="key_expiry_disabled",
+        translation_key="key_expiry_disabled",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.hair_pinning,
+        is_on_fn=lambda device: device.key_expiry_disabled,
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_ipv6",
         translation_key="client_supports_ipv6",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.ipv6,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.ipv6
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_pcp",
         translation_key="client_supports_pcp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.pcp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.pcp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_pmp",
         translation_key="client_supports_pmp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.pmp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.pmp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_udp",
         translation_key="client_supports_udp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.udp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.udp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_upnp",
         translation_key="client_supports_upnp",
-        icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: device.client_connectivity.client_supports.upnp,
+        is_on_fn=lambda device: (
+            device.client_connectivity.client_supports.upnp
+            if device.client_connectivity is not None
+            else None
+        ),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TailscaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Tailscale binary sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         TailscaleBinarySensorEntity(
             coordinator=coordinator,
@@ -104,6 +119,7 @@ class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
     entity_description: TailscaleBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data[self.device_id])

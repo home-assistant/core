@@ -1,39 +1,29 @@
 """Support for EZVIZ Switch sensors."""
-from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from pyezviz.constants import DeviceSwitchType, SupportExt
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi.constants import DeviceSwitchType, SupportExt
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 
-@dataclass
-class EzvizSwitchEntityDescriptionMixin:
-    """Mixin values for EZVIZ Switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizSwitchEntityDescription(SwitchEntityDescription):
+    """Describe a EZVIZ switch."""
 
     supported_ext: str | None
-
-
-@dataclass
-class EzvizSwitchEntityDescription(
-    SwitchEntityDescription, EzvizSwitchEntityDescriptionMixin
-):
-    """Describe a EZVIZ switch."""
 
 
 SWITCH_TYPES: dict[int, EzvizSwitchEntityDescription] = {
@@ -113,12 +103,12 @@ SWITCH_TYPES: dict[int, EzvizSwitchEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ switch based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         EzvizSwitch(coordinator, camera, switch_number)
@@ -146,6 +136,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
         self.entity_description = SWITCH_TYPES[switch_number]
         self._attr_is_on = self.data["switches"][switch_number]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
@@ -161,6 +152,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(f"Failed to turn on switch {self.name}") from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
@@ -177,6 +169,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
             raise HomeAssistantError(f"Failed to turn off switch {self.name}") from err
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.data["switches"].get(self._switch_number)

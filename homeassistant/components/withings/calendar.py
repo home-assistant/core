@@ -1,31 +1,30 @@
 """Calendar platform for Withings."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
+from typing import override
 
 from aiowithings import WithingsClient, WorkoutCategory
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, WithingsData
+from . import DOMAIN, WithingsConfigEntry
 from .coordinator import WithingsWorkoutDataUpdateCoordinator
 from .entity import WithingsEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: WithingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
     ent_reg = er.async_get(hass)
-    withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
+    withings_data = entry.runtime_data
 
     workout_coordinator = withings_data.workout_coordinator
 
@@ -66,7 +65,7 @@ def get_event_name(category: WorkoutCategory) -> str:
 
 
 class WithingsWorkoutCalendarEntity(
-    CalendarEntity, WithingsEntity[WithingsWorkoutDataUpdateCoordinator]
+    WithingsEntity[WithingsWorkoutDataUpdateCoordinator], CalendarEntity
 ):
     """A calendar entity."""
 
@@ -80,10 +79,12 @@ class WithingsWorkoutCalendarEntity(
         self.client = client
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return None
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

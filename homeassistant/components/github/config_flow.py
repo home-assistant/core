@@ -1,8 +1,7 @@
 """Config flow for GitHub integration."""
-from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiogithubapi import (
     GitHubAPI,
@@ -14,37 +13,43 @@ from aiogithubapi import (
 from aiogithubapi.const import OAUTH_USER_LOGIN
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CLIENT_ID,
-    CONF_ACCESS_TOKEN,
-    CONF_REPOSITORIES,
+    CONF_REPOSITORY,
     DEFAULT_REPOSITORIES,
     DOMAIN,
     LOGGER,
+    SUBENTRY_TYPE_REPOSITORY,
 )
 
 
 async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
     """Return a list of repositories that the user owns or has starred."""
     client = GitHubAPI(token=access_token, session=async_get_clientsession(hass))
-    repositories = set()
+    repositories: set[str] = set()
 
     async def _get_starred_repositories() -> None:
-        response = await client.user.starred(**{"params": {"per_page": 100}})
+        response = await client.user.starred(params={"per_page": 100})
         if not response.is_last_page:
             results = await asyncio.gather(
                 *(
                     client.user.starred(
-                        **{"params": {"per_page": 100, "page": page_number}},
+                        params={"per_page": 100, "page": page_number},
                     )
                     for page_number in range(
                         response.next_page_number, response.last_page_number + 1
@@ -54,15 +59,15 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
             for result in results:
                 response.data.extend(result.data)
 
-        repositories.update(response.data)
+        repositories.update(repo.full_name for repo in response.data)
 
     async def _get_personal_repositories() -> None:
-        response = await client.user.repos(**{"params": {"per_page": 100}})
+        response = await client.user.repos(params={"per_page": 100})
         if not response.is_last_page:
             results = await asyncio.gather(
                 *(
                     client.user.repos(
-                        **{"params": {"per_page": 100, "page": page_number}},
+                        params={"per_page": 100, "page": page_number},
                     )
                     for page_number in range(
                         response.next_page_number, response.last_page_number + 1
@@ -72,7 +77,7 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
             for result in results:
                 response.data.extend(result.data)
 
-        repositories.update(response.data)
+        repositories.update(repo.full_name for repo in response.data)
 
     try:
         await asyncio.gather(
@@ -83,21 +88,26 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
         )
 
     except GitHubException:
-        return DEFAULT_REPOSITORIES
+        repositories.update(DEFAULT_REPOSITORIES)
 
     if len(repositories) == 0:
-        return DEFAULT_REPOSITORIES
+        repositories.update(DEFAULT_REPOSITORIES)
 
-    return sorted(
-        (repo.full_name for repo in repositories),
-        key=str.casefold,
-    )
+    current_repositories = {
+        subentry.data[CONF_REPOSITORY]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_REPOSITORY
+    }
+    repositories = repositories - current_repositories
+
+    return sorted(repositories, key=str.casefold)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GitHub."""
 
-    VERSION = 1
+    MINOR_VERSION = 2
 
     login_task: asyncio.Task | None = None
 
@@ -107,10 +117,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._login: GitHubLoginOauthModel | None = None
         self._login_device: GitHubLoginDeviceModel | None = None
 
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {SUBENTRY_TYPE_REPOSITORY: RepositoryFlowHandler}
+
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
@@ -120,136 +140,103 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_device(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle device steps."""
 
         async def _wait_for_login() -> None:
-            # mypy is not aware that we can't get here without having these set already
-            assert self._device is not None
-            assert self._login_device is not None
+            if TYPE_CHECKING:
+                # mypy is not aware that we can't get here
+                # without having these set already
+                assert self._device is not None
+                assert self._login_device is not None
 
-            try:
-                response = await self._device.activation(
-                    device_code=self._login_device.device_code
-                )
-                self._login = response.data
-            finally:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-                )
+            response = await self._device.activation(
+                device_code=self._login_device.device_code
+            )
+            self._login = response.data
 
         if not self._device:
             self._device = GitHubDeviceAPI(
                 client_id=CLIENT_ID,
                 session=async_get_clientsession(self.hass),
-                **{"client_name": SERVER_SOFTWARE},
+                client_name=SERVER_SOFTWARE,
             )
 
-        try:
-            response = await self._device.register()
-            self._login_device = response.data
-        except GitHubException as exception:
-            LOGGER.exception(exception)
-            return self.async_abort(reason="could_not_register")
+            try:
+                response = await self._device.register()
+                self._login_device = response.data
+            except GitHubException as exception:
+                LOGGER.exception(exception)
+                return self.async_abort(reason="could_not_register")
 
-        if not self.login_task:
+        if self.login_task is None:
             self.login_task = self.hass.async_create_task(_wait_for_login())
-            return self.async_show_progress(
-                step_id="device",
-                progress_action="wait_for_device",
-                description_placeholders={
-                    "url": OAUTH_USER_LOGIN,
-                    "code": self._login_device.user_code,
-                },
-            )
 
-        try:
-            await self.login_task
-        except GitHubException as exception:
-            LOGGER.exception(exception)
-            return self.async_show_progress_done(next_step_id="could_not_register")
+        if self.login_task.done():
+            if self.login_task.exception():
+                return self.async_show_progress_done(next_step_id="could_not_register")
+            return self.async_show_progress_done(next_step_id="done")
 
-        return self.async_show_progress_done(next_step_id="repositories")
+        if TYPE_CHECKING:
+            # mypy is not aware that we can't get here without having this set already
+            assert self._login_device is not None
 
-    async def async_step_repositories(
+        return self.async_show_progress(
+            step_id="device",
+            progress_action="wait_for_device",
+            description_placeholders={
+                "url": OAUTH_USER_LOGIN,
+                "code": self._login_device.user_code,
+            },
+            progress_task=self.login_task,
+        )
+
+    async def async_step_done(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
-        """Handle repositories step."""
+    ) -> ConfigFlowResult:
+        """Create the config entry after successful device authentication."""
 
-        # mypy is not aware that we can't get here without having this set already
-        assert self._login is not None
-
-        if not user_input:
-            repositories = await get_repositories(self.hass, self._login.access_token)
-            return self.async_show_form(
-                step_id="repositories",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_REPOSITORIES): cv.multi_select(
-                            {k: k for k in repositories}
-                        ),
-                    }
-                ),
-            )
+        if TYPE_CHECKING:
+            assert self._login is not None
 
         return self.async_create_entry(
             title="",
             data={CONF_ACCESS_TOKEN: self._login.access_token},
-            options={CONF_REPOSITORIES: user_input[CONF_REPOSITORIES]},
         )
 
     async def async_step_could_not_register(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle issues that need transition await from progress step."""
         return self.async_abort(reason="could_not_register")
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
 
+class RepositoryFlowHandler(ConfigSubentryFlow):
+    """Handle repository subentry flow."""
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for GitHub."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
-        """Handle options flow."""
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle repository subentry flow."""
         if not user_input:
-            configured_repositories: list[str] = self.config_entry.options[
-                CONF_REPOSITORIES
-            ]
             repositories = await get_repositories(
-                self.hass, self.config_entry.data[CONF_ACCESS_TOKEN]
+                self.hass, self._get_entry().data[CONF_ACCESS_TOKEN]
             )
 
-            # In case the user has removed a starred repository that is already tracked
-            for repository in configured_repositories:
-                if repository not in repositories:
-                    repositories.append(repository)
-
             return self.async_show_form(
-                step_id="init",
+                step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required(
-                            CONF_REPOSITORIES,
-                            default=configured_repositories,
-                        ): cv.multi_select({k: k for k in repositories}),
+                        vol.Required(CONF_REPOSITORY): SelectSelector(
+                            SelectSelectorConfig(sort=True, options=repositories)
+                        ),
                     }
                 ),
             )
+        repository = user_input[CONF_REPOSITORY]
 
-        return self.async_create_entry(title="", data=user_input)
+        return self.async_create_entry(
+            title=repository, data=user_input, unique_id=repository
+        )

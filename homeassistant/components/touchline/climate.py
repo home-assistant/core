@@ -1,22 +1,34 @@
 """Platform for Roth Touchline floor heating controller."""
-from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
-from pytouchline import PyTouchline
+from pytouchline_extended import PyTouchline
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
+    PRESET_AWAY,
+    PRESET_NONE,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
+from .data import TouchlineConfigEntry
 
 
 class PresetMode(NamedTuple):
@@ -27,12 +39,12 @@ class PresetMode(NamedTuple):
 
 
 PRESET_MODES = {
-    "Normal": PresetMode(mode=0, program=0),
-    "Night": PresetMode(mode=1, program=0),
-    "Holiday": PresetMode(mode=2, program=0),
-    "Pro 1": PresetMode(mode=0, program=1),
-    "Pro 2": PresetMode(mode=0, program=2),
-    "Pro 3": PresetMode(mode=0, program=3),
+    PRESET_NONE: PresetMode(mode=0, program=0),
+    PRESET_SLEEP: PresetMode(mode=1, program=0),
+    PRESET_AWAY: PresetMode(mode=2, program=0),
+    "program_1": PresetMode(mode=0, program=1),
+    "program_2": PresetMode(mode=0, program=2),
+    "program_3": PresetMode(mode=0, program=3),
 }
 
 TOUCHLINE_HA_PRESETS = {
@@ -40,92 +52,141 @@ TOUCHLINE_HA_PRESETS = {
     for preset, settings in PRESET_MODES.items()
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
-def setup_platform(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: TouchlineConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Touchline devices from a config entry."""
+    host = entry.data[CONF_HOST]
+
+    devices = []
+    for device_id in range(entry.runtime_data.number_of_devices):
+        device = PyTouchline(id=device_id, url=host)
+        try:
+            await hass.async_add_executor_job(device.update)
+        except (OSError, ConnectionError, TimeoutError) as err:
+            raise ConfigEntryNotReady(
+                f"Error while connecting to Touchline controller at {host}"
+            ) from err
+        devices.append(Touchline(device))
+
+    async_add_entities(devices)
+
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Touchline devices."""
+    """Set up the Touchline devices from YAML.
 
-    host = config[CONF_HOST]
-    py_touchline = PyTouchline()
-    number_of_devices = int(py_touchline.get_number_of_devices(host))
-    devices = []
-    for device_id in range(0, number_of_devices):
-        devices.append(Touchline(PyTouchline(device_id)))
-    add_entities(devices, True)
+    Touchline now uses config entries. If an entry exists in configuration.yaml,
+    the import flow will attempt to import it and create a config entry.
+    """
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: config[CONF_HOST]},
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.10.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Roth Touchline",
+            },
+        )
+        return
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.10.0",
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Roth Touchline",
+        },
+    )
 
 
 class Touchline(ClimateEntity):
     """Representation of a Touchline device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_preset_modes = list(PRESET_MODES)
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "climate"
 
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
-        self._name = None
-        self._current_temperature = None
-        self._target_temperature = None
-        self._current_operation_mode = None
-        self._preset_mode = None
+        self._device_id = self.unit.get_device_id()
+        self._controller_id = self.unit.get_controller_id()
+        self._attr_unique_id = f"{self._controller_id}_{self._device_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=touchline_thermostat.get_name(),
+            manufacturer="Roth",
+        )
+        self._attr_current_temperature = self.unit.get_current_temperature()
+        self._attr_target_temperature = self.unit.get_target_temperature()
+        self._current_operation_mode = HVACMode.HEAT
+        self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
+            (self.unit.get_operation_mode(), self.unit.get_week_program())
+        )
 
     def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
-        self._name = self.unit.get_name()
-        self._current_temperature = self.unit.get_current_temperature()
-        self._target_temperature = self.unit.get_target_temperature()
-        self._preset_mode = TOUCHLINE_HA_PRESETS.get(
+        self._attr_current_temperature = self.unit.get_current_temperature()
+        self._attr_target_temperature = self.unit.get_target_temperature()
+        self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
 
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def preset_mode(self):
-        """Return the current preset mode."""
-        return self._preset_mode
-
-    @property
-    def preset_modes(self):
-        """Return available preset modes."""
-        return list(PRESET_MODES)
-
-    def set_preset_mode(self, preset_mode):
+    @override
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        preset_mode = PRESET_MODES[preset_mode]
-        self.unit.set_operation_mode(preset_mode.mode)
-        self.unit.set_week_program(preset_mode.program)
+        preset = PRESET_MODES[preset_mode]
+        self.unit.set_operation_mode(preset.mode)
+        self.unit.set_week_program(preset.program)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         self._current_operation_mode = HVACMode.HEAT
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.unit.set_target_temperature(self._target_temperature)
+            self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        self.unit.set_target_temperature(self._attr_target_temperature)

@@ -2,20 +2,14 @@
   "config": {
     "step": {
       "user": {
-        "description": "Do you want to configure the Launch Library?"
+        "description": "Do you want to configure Launch Library?"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {
     "sensor": {
-      "next_launch": {
-        "name": "Next launch"
-      },
-      "launch_time": {
-        "name": "Launch time"
+      "launch_mission": {
+        "name": "Launch mission"
       },
       "launch_probability": {
         "name": "Launch probability"
@@ -23,14 +17,17 @@
       "launch_status": {
         "name": "Launch status"
       },
-      "launch_mission": {
-        "name": "Launch mission"
+      "launch_time": {
+        "name": "Launch time"
       },
-      "starship_launch": {
-        "name": "Next Starship launch"
+      "next_launch": {
+        "name": "Next launch"
       },
       "starship_event": {
         "name": "Next Starship event"
+      },
+      "starship_launch": {
+        "name": "Next Starship launch"
       }
     }
   }

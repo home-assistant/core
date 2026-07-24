@@ -1,21 +1,19 @@
 """The Fjäråskupan integration."""
-from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 import logging
 
-from fjaraskupan import Device
+from fjaraskupan import UUID_SERVICE, Device
 
 from homeassistant.components.bluetooth import (
     BluetoothCallbackMatcher,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_discovered_service_info,
     async_rediscover_address,
     async_register_callback,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_DETECTION, DOMAIN
-from .coordinator import FjaraskupanCoordinator
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -39,58 +37,68 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+_UUID = str(UUID_SERVICE).lower()
 
 
-@dataclass
-class EntryState:
-    """Store state of config entry."""
-
-    coordinators: dict[str, FjaraskupanCoordinator]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FjaraskupanConfigEntry) -> bool:
     """Set up Fjäråskupan from a config entry."""
 
-    state = EntryState({})
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = state
+    entry.runtime_data = {}
 
-    def detection_callback(
-        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
+    def data_callback(
+        service_info: BluetoothServiceInfoBleak, change_: BluetoothChange
     ) -> None:
-        if change != BluetoothChange.ADVERTISEMENT:
+        if (data := entry.runtime_data.get(service_info.address)) is None:
+            _LOGGER.debug("Ignoring: %s", service_info)
             return
-        if data := state.coordinators.get(service_info.address):
-            _LOGGER.debug("Update: %s", service_info)
-            data.detection_callback(service_info)
-        else:
-            _LOGGER.debug("Detected: %s", service_info)
 
-            device = Device(service_info.device.address)
-            device_info = DeviceInfo(
-                connections={(dr.CONNECTION_BLUETOOTH, service_info.address)},
-                identifiers={(DOMAIN, service_info.address)},
-                manufacturer="Fjäråskupan",
-                name="Fjäråskupan",
-            )
+        _LOGGER.debug("Update: %s", service_info)
+        data.detection_callback(service_info)
 
-            coordinator: FjaraskupanCoordinator = FjaraskupanCoordinator(
-                hass, device, device_info
-            )
-            coordinator.detection_callback(service_info)
+    def detect_callback(
+        service_info: BluetoothServiceInfoBleak, change_: BluetoothChange
+    ) -> None:
+        if service_info.address in entry.runtime_data:
+            return
 
-            state.coordinators[service_info.address] = coordinator
-            async_dispatcher_send(
-                hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", coordinator
-            )
+        _LOGGER.debug("Detected: %s", service_info)
+        device = Device(service_info.device.address)
+        device_info = DeviceInfo(
+            connections={(dr.CONNECTION_BLUETOOTH, service_info.address)},
+            identifiers={(DOMAIN, service_info.address)},
+            manufacturer="Fjäråskupan",
+            name="Fjäråskupan",
+        )
+
+        coordinator: FjaraskupanCoordinator = FjaraskupanCoordinator(
+            hass, entry, device, device_info
+        )
+        coordinator.detection_callback(service_info)
+
+        entry.runtime_data[service_info.address] = coordinator
+        async_dispatcher_send(
+            hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", coordinator
+        )
 
     entry.async_on_unload(
         async_register_callback(
             hass,
-            detection_callback,
+            data_callback,
             BluetoothCallbackMatcher(
                 manufacturer_id=20296,
                 manufacturer_data_start=[79, 68, 70, 74, 65, 82],
+                connectable=False,
+            ),
+            BluetoothScanningMode.ACTIVE,
+        )
+    )
+
+    entry.async_on_unload(
+        async_register_callback(
+            hass,
+            detect_callback,
+            BluetoothCallbackMatcher(
+                service_uuid=_UUID,
                 connectable=False,
             ),
             BluetoothScanningMode.ACTIVE,
@@ -104,16 +112,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def async_setup_entry_platform(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FjaraskupanConfigEntry,
     async_add_entities: AddEntitiesCallback,
     constructor: Callable[[FjaraskupanCoordinator], list[Entity]],
 ) -> None:
     """Set up a platform with added entities."""
 
-    entry_state: EntryState = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         entity
-        for coordinator in entry_state.coordinators.values()
+        for coordinator in entry.runtime_data.values()
         for entity in constructor(coordinator)
     )
 
@@ -128,12 +135,12 @@ def async_setup_entry_platform(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: FjaraskupanConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
         for device_entry in dr.async_entries_for_config_entry(
             dr.async_get(hass), entry.entry_id
         ):
@@ -142,3 +149,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     async_rediscover_address(hass, conn[1])
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: FjaraskupanConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    for service_info in async_discovered_service_info(hass, False):
+        if (DOMAIN, service_info.address) in device_entry.identifiers:
+            return False
+
+    # No matching service info, so allow removal.
+    return True

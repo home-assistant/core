@@ -1,16 +1,14 @@
 """Provides functionality to interact with image processing services."""
-from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, TypedDict, final, override
 
 import voluptuous as vol
 
-from homeassistant.components.camera import Image
+from homeassistant.components.camera import async_get_image
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -20,12 +18,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.async_ import run_callback_threadsafe
+
+from .const import ImageProcessingEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,8 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@dataclass
-class ImageProcessingEntityDescription(EntityDescription):
+class ImageProcessingEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes sensor entities."""
 
     device_class: ImageProcessingDeviceClass | None = None
@@ -157,6 +155,7 @@ class ImageProcessingEntity(Entity):
         return None
 
     @property
+    @override
     def device_class(self) -> ImageProcessingDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -167,7 +166,7 @@ class ImageProcessingEntity(Entity):
 
     def process_image(self, image: bytes) -> None:
         """Process image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_process_image(self, image: bytes) -> None:
         """Process image."""
@@ -178,13 +177,16 @@ class ImageProcessingEntity(Entity):
 
         This method is a coroutine.
         """
-        camera = self.hass.components.camera
+        if self.camera_entity is None:
+            _LOGGER.error(
+                "No camera entity id was set by the image processing entity",
+            )
+            return
 
         try:
-            image: Image = await camera.async_get_image(
-                self.camera_entity, timeout=self.timeout
+            image = await async_get_image(
+                self.hass, self.camera_entity, timeout=self.timeout
             )
-
         except HomeAssistantError as err:
             _LOGGER.error("Error on receive image from entity: %s", err)
             return
@@ -204,6 +206,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         self.total_faces = 0
 
     @property
+    @override
     def state(self) -> str | int | None:
         """Return the state of the entity."""
         confidence: float = 0
@@ -222,22 +225,24 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 confidence = f_co
                 for attr in (ATTR_NAME, ATTR_MOTION):
                     if attr in face:
-                        state = face[attr]  # type: ignore[literal-required]
+                        state = face[attr]
                         break
 
         return state
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
-        return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
+        return {
+            ImageProcessingEntityStateAttribute.FACES: self.faces,
+            ImageProcessingEntityStateAttribute.TOTAL_FACES: self.total_faces,
+        }
 
     def process_faces(self, faces: list[FaceInformation], total: int) -> None:
         """Send event with detected faces and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_faces, faces, total
-        ).result()
+        self.hass.loop.call_soon_threadsafe(self.async_process_faces, faces, total)
 
     @callback
     def async_process_faces(self, faces: list[FaceInformation], total: int) -> None:
@@ -267,7 +272,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
-            self.hass.async_add_job(self.hass.bus.async_fire, EVENT_DETECT_FACE, face)
+            self.hass.bus.async_fire(EVENT_DETECT_FACE, face)
 
         # Update entity store
         self.faces = faces

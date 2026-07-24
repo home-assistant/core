@@ -1,7 +1,6 @@
 """Intellifire Climate Entities."""
-from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -9,13 +8,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IntellifireDataUpdateCoordinator
-from .const import DEFAULT_THERMOSTAT_TEMP, DOMAIN, LOGGER
+from .const import DEFAULT_THERMOSTAT_TEMP, LOGGER
+from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
@@ -25,11 +23,11 @@ INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: IntellifireConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure the fan entry.."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if coordinator.data.has_thermostat:
         async_add_entities(
@@ -49,7 +47,11 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_min_temp = 0
     _attr_max_temp = 37
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     last_temp = DEFAULT_THERMOSTAT_TEMP
@@ -59,19 +61,24 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         coordinator: IntellifireDataUpdateCoordinator,
         description: ClimateEntityDescription,
     ) -> None:
-        """Configure climate entry - and override last_temp if the thermostat is currently on."""
+        """Configure climate entry.
+
+        Override last_temp if the thermostat is currently on.
+        """
         super().__init__(coordinator, description)
 
         if coordinator.data.thermostat_on:
-            self.last_temp = coordinator.data.thermostat_setpoint_c
+            self.last_temp = int(coordinator.data.thermostat_setpoint_c)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current hvac mode."""
         if self.coordinator.read_api.data.thermostat_on:
             return HVACMode.HEAT
         return HVACMode.OFF
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Turn on thermostat by setting a target temperature."""
         raw_target_temp = kwargs[ATTR_TEMPERATURE]
@@ -86,15 +93,18 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return float(self.coordinator.read_api.data.temperature_c)
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return target temperature."""
         return float(self.coordinator.read_api.data.thermostat_setpoint_c)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode to normal or thermostat control."""
         LOGGER.debug(

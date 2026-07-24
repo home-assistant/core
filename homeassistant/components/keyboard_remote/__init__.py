@@ -1,5 +1,4 @@
 """Receive signals from a keyboard and use it as a remote control."""
-from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
@@ -13,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +74,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 class KeyboardRemote:
-    """Manage device connection/disconnection using inotify to asynchronously monitor."""
+    """Manage device connection/disconnection.
+
+    Uses inotify to asynchronously monitor.
+    """
 
     def __init__(self, hass: HomeAssistant, config: list[dict[str, Any]]) -> None:
         """Create handlers and setup dictionaries to keep track of them."""
@@ -195,7 +197,7 @@ class KeyboardRemote:
         return (dev, handler)
 
     async def async_monitor_devices(self):
-        """Monitor asynchronously for device connection/disconnection or permissions changes."""
+        """Monitor for device connection/disconnection or permissions changes."""
 
         _LOGGER.debug("Start monitoring loop")
 
@@ -254,7 +256,10 @@ class KeyboardRemote:
             self.descriptor = None
 
         async def async_device_keyrepeat(self, code, delay, repeat):
-            """Emulate keyboard delay/repeat behaviour by sending key events on a timer."""
+            """Emulate keyboard delay/repeat behaviour.
+
+            Sends key events on a timer.
+            """
 
             await asyncio.sleep(delay)
             while True:
@@ -274,7 +279,9 @@ class KeyboardRemote:
             _LOGGER.debug("Keyboard async_device_start_monitoring, %s", dev.name)
             if self.monitor_task is None:
                 self.dev = dev
-                # set the descriptor to the one provided to the config if any, falling back to the device path if not set
+                # set the descriptor to the one provided to
+                # the config if any, falling back to the
+                # device path if not set
                 if self.config_descriptor:
                     self.descriptor = self.config_descriptor
                 else:
@@ -363,7 +370,7 @@ class KeyboardRemote:
                         ):
                             repeat_tasks[event.code].cancel()
                             del repeat_tasks[event.code]
-            except (OSError, asyncio.CancelledError):
+            except OSError, asyncio.CancelledError:
                 # cancel key repeat tasks
                 for task in repeat_tasks.values():
                     task.cancel()

@@ -5,8 +5,8 @@ be stable between reboots and upgrades.
 
 This module generates and stores them in a HA storage.
 """
-from __future__ import annotations
 
+from typing import override
 from uuid import UUID
 
 from pyhap.util import uuid_to_hap_type
@@ -31,6 +31,7 @@ ACCESSORY_INFORMATION_SERVICE = "3E"
 class IIDStorage(Store):
     """Storage class for IIDManager."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -101,8 +102,8 @@ class AccessoryIIDStorage:
         char_hap_type: str | None = uuid_to_hap_type(char_uuid) if char_uuid else None
         # Allocation key must be a string since we are saving it to JSON
         allocation_key = (
-            f'{service_hap_type}_{service_unique_id or ""}_'
-            f'{char_hap_type or ""}_{char_unique_id or ""}'
+            f"{service_hap_type}_{service_unique_id or ''}_"
+            f"{char_hap_type or ''}_{char_unique_id or ''}"
         )
         # AID must be a string since JSON keys cannot be int
         aid_str = str(aid)

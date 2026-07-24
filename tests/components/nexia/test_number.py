@@ -1,4 +1,6 @@
-"""The number entity tests for the nexia platform."""
+"""Tests for the nexia number platform."""
+
+from nexia.home import NexiaHome
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -7,15 +9,18 @@ from homeassistant.components.number import (
 )
 from homeassistant.core import HomeAssistant
 
-from .util import async_init_integration
+from .conftest import setup_integration
 
 
-async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
+async def test_create_fan_speed_number_entities(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome
+) -> None:
     """Test creation of fan speed number entities."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, patch_nexia_home)
 
     state = hass.states.get("number.master_suite_fan_speed")
+    assert state is not None
     assert state.state == "35.0"
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -26,11 +31,12 @@ async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("number.downstairs_east_wing_fan_speed")
-    assert state.state == "35.0"
+    assert state is not None
+    assert state.state == "45.0"
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
         "friendly_name": "Downstairs East Wing Fan speed",
@@ -40,14 +46,14 @@ async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
 
-async def test_set_fan_speed(hass: HomeAssistant) -> None:
+async def test_set_fan_speed(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
     """Test setting fan speed."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, patch_nexia_home)
 
     state_before = hass.states.get("number.master_suite_fan_speed")
     assert state_before.state == "35.0"

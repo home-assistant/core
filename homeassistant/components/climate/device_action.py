@@ -1,5 +1,4 @@
 """Provides device automations for Climate."""
-from __future__ import annotations
 
 import voluptuous as vol
 
@@ -16,8 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -72,7 +70,7 @@ async def async_get_actions(
         }
 
         actions.append({**base_action, CONF_TYPE: "set_hvac_mode"})
-        if supported_features & const.SUPPORT_PRESET_MODE:
+        if supported_features & const.ClimateEntityFeature.PRESET_MODE:
             actions.append({**base_action, CONF_TYPE: "set_preset_mode"})
 
     return actions
@@ -112,7 +110,12 @@ async def async_get_action_capabilities(
         try:
             entry = async_get_entity_registry_entry_or_raise(hass, entity_id_or_uuid)
             hvac_modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_HVAC_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.ClimateEntityCapabilityAttribute.HVAC_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             hvac_modes = []
@@ -121,7 +124,12 @@ async def async_get_action_capabilities(
         try:
             entry = async_get_entity_registry_entry_or_raise(hass, entity_id_or_uuid)
             preset_modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_PRESET_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.ClimateEntityCapabilityAttribute.PRESET_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             preset_modes = []

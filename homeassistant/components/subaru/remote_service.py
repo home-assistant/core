@@ -1,11 +1,13 @@
 """Remote vehicle services for Subaru integration."""
+
 import logging
 
 from subarulink.exceptions import SubaruException
 
+from homeassistant.const import SERVICE_UNLOCK
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import SERVICE_UNLOCK, VEHICLE_NAME, VEHICLE_VIN
+from .const import SERVICE_REMOTE_START, VEHICLE_NAME, VEHICLE_VIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ async def async_call_remote_service(controller, cmd, vehicle_info, arg=None):
     success = False
     err_msg = ""
     try:
-        if cmd == SERVICE_UNLOCK:
+        if cmd in (SERVICE_UNLOCK, SERVICE_REMOTE_START):
             success = await getattr(controller, cmd)(vin, arg)
         else:
             success = await getattr(controller, cmd)(vin)

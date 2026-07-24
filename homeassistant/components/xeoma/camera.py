@@ -1,12 +1,15 @@
 """Support for Xeoma Cameras."""
-from __future__ import annotations
 
 import logging
+from typing import override
 
 from pyxeoma.xeoma import Xeoma, XeomaError
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -31,7 +34,7 @@ CAMERAS_SCHEMA = vol.Schema(
     required=False,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_CAMERAS): vol.Schema(
@@ -119,6 +122,7 @@ class XeomaCamera(Camera):
         self._password = password
         self._last_image = None
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -129,12 +133,14 @@ class XeomaCamera(Camera):
                 self._image, self._username, self._password
             )
             self._last_image = image
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except XeomaError as err:
             _LOGGER.error("Error fetching image: %s", err.message)
 
         return self._last_image
 
     @property
+    @override
     def name(self):
         """Return the name of this device."""
         return self._name

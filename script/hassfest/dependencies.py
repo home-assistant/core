@@ -1,5 +1,4 @@
 """Validate dependencies."""
-from __future__ import annotations
 
 import ast
 from collections import deque
@@ -9,7 +8,12 @@ from pathlib import Path
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
+from . import ast_parse_module
 from .model import Config, Integration
+
+# Duplicated from homeassistant.bootstrap to avoid importing bootstrap (and its
+# eager component pre-imports) into hassfest. Kept in sync via test_dependencies.
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
 
 class ImportCollector(ast.NodeVisitor):
@@ -31,13 +35,26 @@ class ImportCollector(ast.NodeVisitor):
 
             self._cur_fil_dir = fil.relative_to(self.integration.path)
             self.referenced[self._cur_fil_dir] = set()
-            self.visit(ast.parse(fil.read_text()))
+            try:
+                self.visit(ast_parse_module(fil))
+            except SyntaxError as e:
+                e.add_note(f"File: {fil}")
+                raise
             self._cur_fil_dir = None
 
     def _add_reference(self, reference_domain: str) -> None:
         """Add a reference."""
         assert self._cur_fil_dir
         self.referenced[self._cur_fil_dir].add(reference_domain)
+
+    def visit_If(self, node: ast.If) -> None:
+        """Visit If node."""
+        if isinstance(node.test, ast.Name) and node.test.id == "TYPE_CHECKING":
+            # Ignore TYPE_CHECKING block
+            return
+
+        # Have it visit other kids
+        self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Visit ImportFrom node."""
@@ -53,7 +70,8 @@ class ImportCollector(ast.NodeVisitor):
             return
 
         if node.module.startswith("homeassistant.components."):
-            # from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+            # from homeassistant.components.alexa.smart_home
+            #   import EVENT_ALEXA_SMART_HOME
             # from homeassistant.components.logbook import bla
             self._add_reference(node.module.split(".")[2])
 
@@ -69,59 +87,28 @@ class ImportCollector(ast.NodeVisitor):
             if name_node.name.startswith("homeassistant.components."):
                 self._add_reference(name_node.name.split(".")[2])
 
-    def visit_Attribute(self, node: ast.Attribute) -> None:
-        """Visit Attribute node."""
-        # hass.components.hue.async_create()
-        # Name(id=hass)
-        #   .Attribute(attr=hue)
-        #   .Attribute(attr=async_create)
-
-        # self.hass.components.hue.async_create()
-        # Name(id=self)
-        #   .Attribute(attr=hass) or .Attribute(attr=_hass)
-        #   .Attribute(attr=hue)
-        #   .Attribute(attr=async_create)
-        if (
-            isinstance(node.value, ast.Attribute)
-            and node.value.attr == "components"
-            and (
-                (
-                    isinstance(node.value.value, ast.Name)
-                    and node.value.value.id == "hass"
-                )
-                or (
-                    isinstance(node.value.value, ast.Attribute)
-                    and node.value.value.attr in ("hass", "_hass")
-                )
-            )
-        ):
-            self._add_reference(node.attr)
-        else:
-            # Have it visit other kids
-            self.generic_visit(node)
-
 
 ALLOWED_USED_COMPONENTS = {
+    *CORE_INTEGRATIONS,
     *{platform.value for platform in Platform},
     # Internal integrations
     "alert",
     "automation",
     "conversation",
+    "default_config",
     "device_automation",
     "frontend",
     "group",
-    "hassio",
-    "homeassistant",
     "input_boolean",
     "input_button",
     "input_datetime",
     "input_number",
     "input_select",
     "input_text",
+    "labs",
     "media_source",
     "onboarding",
     "panel_custom",
-    "persistent_notification",
     "person",
     "script",
     "shopping_list",
@@ -138,8 +125,6 @@ ALLOWED_USED_COMPONENTS = {
 }
 
 IGNORE_VIOLATIONS = {
-    # Has same requirement, gets defaults.
-    ("sql", "recorder"),
     # Sharing a base class
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),
@@ -147,10 +132,14 @@ IGNORE_VIOLATIONS = {
     ("demo", "manual"),
     # This would be a circular dep
     ("http", "network"),
+    ("http", "cloud"),
+    ("labs", "backup"),
     # This would be a circular dep
     ("zha", "homeassistant_hardware"),
     ("zha", "homeassistant_sky_connect"),
     ("zha", "homeassistant_yellow"),
+    ("homeassistant_sky_connect", "zha"),
+    ("homeassistant_hardware", "zha"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
@@ -291,7 +280,9 @@ def _check_circular_deps(
         if domain == start_domain:
             integrations[start_domain].add_error(
                 "dependencies",
-                f"Found a circular dependency with {integration.domain} ({', '.join(checking)})",
+                f"Found a circular dependency with"
+                f" {integration.domain}"
+                f" ({', '.join(checking)})",
             )
             break
 
@@ -303,7 +294,10 @@ def _check_circular_deps(
             if domain == start_domain:
                 integrations[start_domain].add_error(
                     "dependencies",
-                    f"Found a circular dependency with after dependencies of {integration.domain} ({', '.join(checking)})",
+                    f"Found a circular dependency"
+                    " with after dependencies of"
+                    f" {integration.domain}"
+                    f" ({', '.join(checking)})",
                 )
                 break
 
@@ -343,6 +337,13 @@ def _validate_dependencies(
             if dep not in integrations:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
+                )
+
+            if dep in CORE_INTEGRATIONS:
+                integration.add_error(
+                    "dependencies",
+                    f"Dependency {dep} is a core integration and is "
+                    "unconditionally loaded",
                 )
 
 

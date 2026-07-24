@@ -1,24 +1,23 @@
 """Support for UPnP/IGD Binary Sensors."""
-from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import UpnpDataUpdateCoordinator
-from .const import DOMAIN, LOGGER, WAN_STATUS
+from .const import LOGGER, WAN_STATUS
+from .coordinator import UpnpConfigEntry, UpnpDataUpdateCoordinator
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpBinarySensorEntityDescription(
     UpnpEntityDescription, BinarySensorEntityDescription
 ):
@@ -37,11 +36,11 @@ SENSOR_DESCRIPTIONS: tuple[UpnpBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: UpnpConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [
         UpnpStatusBinarySensor(
@@ -51,8 +50,8 @@ async def async_setup_entry(
         for entity_description in SENSOR_DESCRIPTIONS
         if coordinator.data.get(entity_description.key) is not None
     ]
-    LOGGER.debug("Adding binary_sensor entities: %s", entities)
     async_add_entities(entities)
+    LOGGER.debug("Added binary_sensor entities: %s", entities)
 
 
 class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
@@ -69,6 +68,18 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
         super().__init__(coordinator=coordinator, entity_description=entity_description)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.data[self.entity_description.key] == "Connected"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
+
+        # Register self at coordinator.
+        key = self.entity_description.key
+        entity_id = self.entity_id
+        unregister = self.coordinator.register_entity(key, entity_id)
+        self.async_on_remove(unregister)

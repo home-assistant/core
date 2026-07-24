@@ -1,18 +1,17 @@
 """Support for myStrom switches/plugs."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymystrom.exceptions import MyStromConnectionError
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
+from .models import MyStromConfigEntry
 
 DEFAULT_NAME = "myStrom Switch"
 
@@ -20,10 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MyStromConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
-    device = hass.data[DOMAIN][entry.entry_id].device
+    device = entry.runtime_data.device
     async_add_entities([MyStromSwitch(device, entry.title)])
 
 
@@ -42,19 +43,25 @@ class MyStromSwitch(SwitchEntity):
             name=name,
             manufacturer=MANUFACTURER,
             sw_version=self.plug.firmware,
+            connections={("mac", format_mac(self.plug.mac))},
+            configuration_url=self.plug.uri,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
             await self.plug.turn_on()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.error("No route to myStrom plug")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.plug.turn_off()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.error("No route to myStrom plug")
 

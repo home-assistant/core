@@ -1,7 +1,8 @@
 """Test the Dexcom config flow."""
+
 from unittest.mock import patch
 
-from pydexcom import AccountError, SessionError
+from pydexcom.errors import AccountError, SessionError
 
 from homeassistant.components.dexcom.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

@@ -1,10 +1,15 @@
 """Support for Envisalink zone states- represented as binary sensors."""
-from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any, override
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from pyenvisalink import EnvisalinkAlarmPanel
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -14,12 +19,13 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     CONF_ZONENAME,
+    CONF_ZONES,
     CONF_ZONETYPE,
     DATA_EVL,
     SIGNAL_ZONE_UPDATE,
     ZONE_SCHEMA,
-    EnvisalinkDevice,
 )
+from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +39,12 @@ async def async_setup_platform(
     """Set up the Envisalink binary sensor entities."""
     if not discovery_info:
         return
-    configured_zones = discovery_info["zones"]
+    configured_zones: dict[int, dict[str, Any]] = discovery_info[CONF_ZONES]
 
     entities = []
-    for zone_num in configured_zones:
-        entity_config_data = ZONE_SCHEMA(configured_zones[zone_num])
+    for zone_num, zone_data in configured_zones.items():
+        entity_config_data = ZONE_SCHEMA(zone_data)
         entity = EnvisalinkBinarySensor(
-            hass,
             zone_num,
             entity_config_data[CONF_ZONENAME],
             entity_config_data[CONF_ZONETYPE],
@@ -51,17 +56,25 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
+class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
-    def __init__(self, hass, zone_number, zone_name, zone_type, info, controller):
+    def __init__(
+        self,
+        zone_number: int,
+        zone_name: str,
+        zone_type: BinarySensorDeviceClass,
+        info: dict[str, Any],
+        controller: EnvisalinkAlarmPanel,
+    ) -> None:
         """Initialize the binary_sensor."""
-        self._zone_type = zone_type
+        self._attr_device_class = zone_type
         self._zone_number = zone_number
 
         _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -71,9 +84,10 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attr = {}
+        attr: dict[str, Any] = {}
 
         # The Envisalink library returns a "last_fault" value that's the
         # number of seconds since the last fault, up to a maximum of 327680
@@ -102,14 +116,10 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
         return attr
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._info["status"]["open"]
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
 
     @callback
     def async_update_callback(self, zone):

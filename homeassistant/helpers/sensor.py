@@ -1,5 +1,4 @@
 """Common functions related to sensor device management."""
-from __future__ import annotations
 
 from typing import TYPE_CHECKING
 

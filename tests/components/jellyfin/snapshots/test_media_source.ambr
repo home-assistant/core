@@ -1,8 +1,21 @@
 # serializer version: 1
+# name: test_audio_codec_resolve[aac]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=aac'
+# ---
+# name: test_audio_codec_resolve[mp3]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=mp3'
+# ---
+# name: test_audio_codec_resolve[vorbis]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=vorbis'
+# ---
+# name: test_audio_codec_resolve[wma]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=wma'
+# ---
 # name: test_movie_library
   dict({
     'can_expand': False,
     'can_play': True,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -11,6 +24,7 @@
     'media_content_id': 'media-source://jellyfin/MOVIE-UUID',
     'media_content_type': 'video/mp4',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': 'http://localhost/Items/MOVIE-UUID/Images/Primary.jpg',
     'title': 'MOVIE',
   })
@@ -19,6 +33,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -27,6 +42,7 @@
     'media_content_id': 'media-source://jellyfin/ALBUM-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'ALBUM',
   })
@@ -35,6 +51,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -43,6 +60,7 @@
     'media_content_id': 'media-source://jellyfin/ALBUM-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'ALBUM',
   })
@@ -51,6 +69,7 @@
   dict({
     'can_expand': False,
     'can_play': True,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -59,6 +78,7 @@
     'media_content_id': 'media-source://jellyfin/TRACK-UUID',
     'media_content_type': 'audio/flac',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': 'http://localhost/Items/TRACK-UUID/Images/Primary.jpg',
     'title': 'TRACK',
   })
@@ -73,6 +93,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -81,6 +102,7 @@
     'media_content_id': 'media-source://jellyfin/COLLECTION-FOLDER-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'COLLECTION FOLDER',
   })
@@ -89,6 +111,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -97,6 +120,7 @@
     'media_content_id': 'media-source://jellyfin/SERIES-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'SERIES',
   })
@@ -105,6 +129,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -113,6 +138,7 @@
     'media_content_id': 'media-source://jellyfin/SEASON-UUID',
     'media_content_type': '',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': None,
     'title': 'SEASON',
   })
@@ -121,6 +147,7 @@
   dict({
     'can_expand': False,
     'can_play': True,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -129,6 +156,7 @@
     'media_content_id': 'media-source://jellyfin/EPISODE-UUID',
     'media_content_type': 'video/mp4',
     'not_shown': 0,
+    'search_media_classes': None,
     'thumbnail': 'http://localhost/Items/EPISODE-UUID/Images/Primary.jpg',
     'title': 'EPISODE',
   })

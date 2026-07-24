@@ -1,21 +1,26 @@
 """Connection session."""
-from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.http import current_request
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
+from .messages import (
+    error_message,
+    event_message,
+    message_to_json_bytes,
+    result_message,
+)
 from .util import describe_request
 
 if TYPE_CHECKING:
@@ -26,51 +31,64 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
-MessageHandler = Callable[[HomeAssistant, "ActiveConnection", dict[str, Any]], None]
-BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
+REDACT_KEYS = {
+    "access_token",
+    "password",
+    "api_password",
+    "refresh_token",
+    "token",
+    "auth_token",
+}
+
+type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
+type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
 
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
     __slots__ = (
-        "logger",
-        "hass",
-        "send_message",
-        "user",
-        "refresh_token_id",
-        "subscriptions",
-        "last_id",
-        "can_coalesce",
-        "supported_features",
-        "handlers",
         "binary_handlers",
+        "can_coalesce",
+        "handlers",
+        "hass",
+        "last_id",
+        "logger",
+        "refresh_token_id",
+        "remote",
+        "send_message",
+        "subscriptions",
+        "supported_features",
+        "user",
     )
 
     def __init__(
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any]], None],
+        send_message: Callable[[bytes | str | dict[str, Any]], None],
         user: User,
-        refresh_token: RefreshToken,
+        refresh_token: RefreshToken | None,
+        remote: str | None,
     ) -> None:
         """Initialize an active connection."""
         self.logger = logger
         self.hass = hass
         self.send_message = send_message
         self.user = user
-        self.refresh_token_id = refresh_token.id
+        self.refresh_token_id = refresh_token.id if refresh_token else None
+        self.remote = remote
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
-            const.DOMAIN
-        ]
+        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
+            self.hass.data[const.DOMAIN]
+        )
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<ActiveConnection {self.get_description(None)}>"
@@ -126,12 +144,12 @@ class ActiveConnection:
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
-        self.send_message(messages.result_message(msg_id, result))
+        self.send_message(message_to_json_bytes(result_message(msg_id, result)))
 
     @callback
     def send_event(self, msg_id: int, event: Any | None = None) -> None:
         """Send a event message."""
-        self.send_message(messages.event_message(msg_id, event))
+        self.send_message(message_to_json_bytes(event_message(msg_id, event)))
 
     @callback
     def send_error(
@@ -145,13 +163,15 @@ class ActiveConnection:
     ) -> None:
         """Send an error message."""
         self.send_message(
-            messages.error_message(
-                msg_id,
-                code,
-                message,
-                translation_key=translation_key,
-                translation_domain=translation_domain,
-                translation_placeholders=translation_placeholders,
+            message_to_json_bytes(
+                error_message(
+                    msg_id,
+                    code,
+                    message,
+                    translation_key=translation_key,
+                    translation_domain=translation_domain,
+                    translation_placeholders=translation_placeholders,
+                )
             )
         )
 
@@ -171,7 +191,7 @@ class ActiveConnection:
 
         try:
             handler(self.hass, self, payload)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Error handling binary message")
             self.binary_handlers[index] = None
 
@@ -181,14 +201,16 @@ class ActiveConnection:
         if (
             # Not using isinstance as we don't care about children
             # as these are always coming from JSON
-            type(msg) is not dict  # noqa: E721
+            type(msg) is not dict
             or (
                 not (cur_id := msg.get("id"))
-                or type(cur_id) is not int  # noqa: E721
+                or type(cur_id) is not int
+                or cur_id < 0
                 or not (type_ := msg.get("type"))
-                or type(type_) is not str  # noqa: E721
+                or type(type_) is not str
             )
         ):
+            msg = async_redact_data(msg, REDACT_KEYS)
             self.logger.error("Received invalid command: %s", msg)
             id_ = msg.get("id") if isinstance(msg, dict) else 0
             self.send_message(
@@ -220,8 +242,13 @@ class ActiveConnection:
         handler, schema = handler_schema
 
         try:
-            handler(self.hass, self, schema(msg))
-        except Exception as err:  # pylint: disable=broad-except
+            if schema is False:
+                if len(msg) > 2:
+                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
+                handler(self.hass, self, msg)
+            else:
+                handler(self.hass, self, schema(msg))
+        except Exception as err:  # noqa: BLE001
             self.async_handle_exception(msg, err)
 
         self.last_id = cur_id
@@ -232,7 +259,7 @@ class ActiveConnection:
         for unsub in self.subscriptions.values():
             try:
                 unsub()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If one fails, make sure we still try the rest
                 self.logger.exception(
                     "Error unsubscribing from subscription: %s", unsub
@@ -244,9 +271,10 @@ class ActiveConnection:
 
     @callback
     def _connect_closed_error(
-        self, msg: str | dict[str, Any] | Callable[[], str]
+        self, msg: bytes | str | dict[str, Any] | Callable[[], str]
     ) -> None:
         """Send a message when the connection is closed."""
+        msg = async_redact_data(msg, REDACT_KEYS)
         self.logger.debug("Tried to send message %s on closed connection", msg)
 
     @callback
@@ -255,7 +283,12 @@ class ActiveConnection:
         log_handler = self.logger.error
 
         code = const.ERR_UNKNOWN_ERROR
-        err_message = None
+        err_message: str | None = None
+        translation_domain: str | None = None
+        translation_key: str | None = None
+        translation_placeholders: dict[str, Any] | None = None
+
+        msg = async_redact_data(msg, REDACT_KEYS)
 
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
@@ -263,11 +296,15 @@ class ActiveConnection:
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
-        elif isinstance(err, asyncio.TimeoutError):
+        elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):
             err_message = str(err)
+            code = const.ERR_HOME_ASSISTANT_ERROR
+            translation_domain = err.translation_domain
+            translation_key = err.translation_key
+            translation_placeholders = err.translation_placeholders
 
         # This if-check matches all other errors but also matches errors which
         # result in an empty message. In that case we will also log the stack
@@ -276,7 +313,16 @@ class ActiveConnection:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        self.send_message(messages.error_message(msg["id"], code, err_message))
+        self.send_message(
+            messages.error_message(
+                msg["id"],
+                code,
+                err_message,
+                translation_domain=translation_domain,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+        )
 
         if code:
             err_message += f" ({code})"

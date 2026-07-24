@@ -1,4 +1,5 @@
 """Constants for Daikin."""
+
 DOMAIN = "daikin"
 
 ATTR_TARGET_TEMPERATURE = "target_temperature"
@@ -23,4 +24,6 @@ ATTR_STATE_OFF = "off"
 KEY_MAC = "mac"
 KEY_IP = "ip"
 
-TIMEOUT = 60
+ZONE_NAME_UNCONFIGURED = "-"
+
+TIMEOUT_SEC = 120

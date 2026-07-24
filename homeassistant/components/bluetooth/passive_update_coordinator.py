@@ -1,7 +1,6 @@
 """Passive update coordinator for the Bluetooth integration."""
-from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import (
@@ -16,11 +15,6 @@ if TYPE_CHECKING:
     import logging
 
     from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
-
-_PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
-    "_PassiveBluetoothDataUpdateCoordinatorT",
-    bound="PassiveBluetoothDataUpdateCoordinator",
-)
 
 
 class PassiveBluetoothDataUpdateCoordinator(
@@ -44,6 +38,11 @@ class PassiveBluetoothDataUpdateCoordinator(
         super().__init__(hass, logger, address, mode, connectable)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
+    @property
+    def available(self) -> bool:
+        """Return if device is available."""
+        return self._available
+
     @callback
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
@@ -51,6 +50,7 @@ class PassiveBluetoothDataUpdateCoordinator(
             update_callback()
 
     @callback
+    @override
     def _async_handle_unavailable(
         self, service_info: BluetoothServiceInfoBleak
     ) -> None:
@@ -59,6 +59,7 @@ class PassiveBluetoothDataUpdateCoordinator(
         self.async_update_listeners()
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -72,13 +73,14 @@ class PassiveBluetoothDataUpdateCoordinator(
         self._listeners[remove_listener] = (update_callback, context)
         return remove_listener
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
         )
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,
@@ -89,15 +91,19 @@ class PassiveBluetoothDataUpdateCoordinator(
         self.async_update_listeners()
 
 
-class PassiveBluetoothCoordinatorEntity(
-    BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
-):
+class PassiveBluetoothCoordinatorEntity[  # pylint: disable=home-assistant-enforce-class-module
+    _PassiveBluetoothDataUpdateCoordinatorT: (
+        PassiveBluetoothDataUpdateCoordinator
+    ) = PassiveBluetoothDataUpdateCoordinator
+](BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
+    @override
     async def async_update(self) -> None:
         """All updates are passive."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.available

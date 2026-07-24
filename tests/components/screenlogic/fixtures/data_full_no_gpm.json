@@ -2,7 +2,9 @@
   "adapter": {
     "firmware": {
       "name": "Protocol Adapter Firmware",
-      "value": "POOL: 5.2 Build 738.0 Rel"
+      "value": "POOL: 5.2 Build 738.0 Rel",
+      "major": 5.2,
+      "minor": 738.0
     }
   },
   "controller": {
@@ -145,6 +147,14 @@
         "name": "Active Alert",
         "value": 0,
         "device_type": "alarm"
+      }
+    },
+    "date_time": {
+      "timestamp": 1700489169.0,
+      "timestamp_host": 1700517812.0,
+      "auto_dst": {
+        "name": "Automatic Daylight Saving Time",
+        "value": 1
       }
     }
   },
@@ -585,32 +595,44 @@
       "ph_setpoint": {
         "name": "pH Setpoint",
         "value": 0.0,
-        "unit": "pH"
+        "unit": "pH",
+        "max_setpoint": 7.6,
+        "min_setpoint": 7.2
       },
       "orp_setpoint": {
         "name": "ORP Setpoint",
         "value": 0,
-        "unit": "mV"
+        "unit": "mV",
+        "max_setpoint": 800,
+        "min_setpoint": 400
       },
       "calcium_harness": {
         "name": "Calcium Hardness",
         "value": 0,
-        "unit": "ppm"
+        "unit": "ppm",
+        "max_setpoint": 800,
+        "min_setpoint": 25
       },
       "cya": {
         "name": "Cyanuric Acid",
         "value": 0,
-        "unit": "ppm"
+        "unit": "ppm",
+        "max_setpoint": 201,
+        "min_setpoint": 0
       },
       "total_alkalinity": {
         "name": "Total Alkalinity",
         "value": 0,
-        "unit": "ppm"
+        "unit": "ppm",
+        "max_setpoint": 800,
+        "min_setpoint": 25
       },
       "salt_tds_ppm": {
         "name": "Salt/TDS",
         "value": 0,
-        "unit": "ppm"
+        "unit": "ppm",
+        "max_setpoint": 6500,
+        "min_setpoint": 500
       },
       "probe_is_celsius": 0,
       "flags": 0
@@ -718,7 +740,9 @@
     },
     "firmware": {
       "name": "IntelliChem Firmware",
-      "value": "0.000"
+      "value": "0.000",
+      "major": 0,
+      "minor": 0
     },
     "water_balance": {
       "flags": 0,
@@ -779,6 +803,10 @@
         "step": 1
       }
     },
-    "flags": 0
+    "flags": 0,
+    "super_chlorinate": {
+      "name": "Super Chlorinate",
+      "value": 0
+    }
   }
 }

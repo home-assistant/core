@@ -1,37 +1,29 @@
 """Support for ESPHome switches."""
-from __future__ import annotations
 
-from typing import Any
+from functools import partial
+from typing import Any, override
 
 from aioesphomeapi import EntityInfo, SwitchInfo, SwitchState
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome switches based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=SwitchInfo,
-        entity_type=EsphomeSwitch,
-        state_type=SwitchState,
-    )
+PARALLEL_UPDATES = 0
 
 
 class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -43,14 +35,31 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
 
     @property
     @esphome_state_property
-    def is_on(self) -> bool | None:
+    @override
+    def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self._state.state
 
+    @convert_api_error_ha_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._client.switch_command(self._key, True)
+        self._client.switch_command(
+            self._key, True, device_id=self._static_info.device_id
+        )
 
+    @convert_api_error_ha_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._client.switch_command(self._key, False)
+        self._client.switch_command(
+            self._key, False, device_id=self._static_info.device_id
+        )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=SwitchInfo,
+    entity_type=EsphomeSwitch,
+    state_type=SwitchState,
+)

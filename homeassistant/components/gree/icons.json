@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "switch": {
+      "health_mode": {
+        "default": "mdi:pine-tree"
+      },
+      "light": {
+        "default": "mdi:lightbulb"
+      }
+    }
+  }
+}

@@ -1,32 +1,19 @@
 """Tests for the Jellyfin integration."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import async_load_json_fixture
+from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 
 from tests.common import MockConfigEntry
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
-
-
-async def remove_device(
-    ws_client: MockHAClientWebSocket, device_id: str, config_entry_id: str
-) -> bool:
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
+from tests.typing import WebSocketGenerator
 
 
 async def test_config_entry_not_ready(
@@ -66,6 +53,7 @@ async def test_invalid_auth(
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -82,13 +70,38 @@ async def test_load_unload_config_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_migrate_strips_trailing_slash_from_url(
+    hass: HomeAssistant,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test migrating an entry strips a trailing slash from the stored URL."""
+    config_entry = MockConfigEntry(
+        title="Jellyfin",
+        domain=DOMAIN,
+        data={
+            CONF_URL: f"{TEST_URL}/",
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+        unique_id="USER-UUID",
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
+    assert config_entry.data[CONF_URL] == TEST_URL
 
 
 async def test_device_remove_devices(
@@ -114,19 +127,15 @@ async def test_device_remove_devices(
             )
         },
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, mock_config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
+    assert not response["success"]
+
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "OLD-DEVICE-UUID")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), old_device_entry.id, mock_config_entry.entry_id
-        )
-        is True
+    response = await client.remove_device(
+        old_device_entry.id, mock_config_entry.entry_id
     )
+    assert response["success"]

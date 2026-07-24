@@ -1,8 +1,7 @@
 """Support for ZhongHong HVAC Controller."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
@@ -10,7 +9,11 @@ from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    PLATFORM_SCHEMA,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_MIDDLE,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -23,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -41,7 +44,7 @@ DEFAULT_GATEWAY_ADDRRESS = 1
 SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
 SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -63,6 +66,17 @@ MODE_TO_STATE = {
     ZHONG_HONG_MODE_DRY: HVACMode.DRY,
     ZHONG_HONG_MODE_FAN_ONLY: HVACMode.FAN_ONLY,
 }
+
+# HA → zhong_hong
+FAN_MODE_MAP = {
+    FAN_LOW: "LOW",
+    FAN_MEDIUM: "MID",
+    FAN_HIGH: "HIGH",
+    FAN_MIDDLE: "MID",
+    "medium_high": "MIDHIGH",
+    "medium_low": "MIDLOW",
+}
+FAN_MODE_REVERSE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
 
 def setup_platform(
@@ -128,8 +142,12 @@ class ZhongHongClimate(ClimateEntity):
     ]
     _attr_should_poll = False
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, hub, addr_out, addr_in):
@@ -138,11 +156,12 @@ class ZhongHongClimate(ClimateEntity):
         self._device = ZhongHongHVAC(hub, addr_out, addr_in)
         self._hub = hub
         self._current_operation = None
-        self._current_temperature = None
-        self._target_temperature = None
         self._current_fan_mode = None
+        self._attr_unique_id = f"zhong_hong_hvac_{addr_out}_{addr_in}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_name = self._attr_unique_id
         self.is_initialized = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
@@ -157,24 +176,15 @@ class ZhongHongClimate(ClimateEntity):
                 self._device.current_operation.lower()
             ]
         if self._device.current_temperature:
-            self._current_temperature = self._device.current_temperature
+            self._attr_current_temperature = self._device.current_temperature
         if self._device.current_fan_mode:
             self._current_fan_mode = self._device.current_fan_mode
         if self._device.target_temperature:
-            self._target_temperature = self._device.target_temperature
+            self._attr_target_temperature = self._device.target_temperature
         self.schedule_update_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.unique_id
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the HVAC."""
-        return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
-
-    @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         if self.is_on:
@@ -182,53 +192,49 @@ class ZhongHongClimate(ClimateEntity):
         return HVACMode.OFF
 
     @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if on."""
         return self._device.is_on
 
     @property
-    def fan_mode(self):
+    @override
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return self._current_fan_mode
+        if not self._current_fan_mode:
+            return None
+        return FAN_MODE_REVERSE_MAP.get(self._current_fan_mode, self._current_fan_mode)
 
     @property
-    def fan_modes(self):
+    @override
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return self._device.fan_list
+        if not self._device.fan_list:
+            return []
+        return list({FAN_MODE_REVERSE_MAP.get(x, x) for x in self._device.fan_list})
 
     @property
-    def min_temp(self):
+    @override
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.min_temp
 
     @property
-    def max_temp(self):
+    @override
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temp
 
+    @override
     def turn_on(self) -> None:
         """Turn on ac."""
         return self._device.turn_on()
 
+    @override
     def turn_off(self) -> None:
         """Turn off ac."""
         return self._device.turn_off()
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -237,6 +243,7 @@ class ZhongHongClimate(ClimateEntity):
         if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self.set_hvac_mode(operation_mode)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -249,6 +256,10 @@ class ZhongHongClimate(ClimateEntity):
 
         self._device.set_operation_mode(hvac_mode.upper())
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.set_fan_mode(fan_mode)
+        mapped_mode = FAN_MODE_MAP.get(fan_mode)
+        if not mapped_mode:
+            _LOGGER.error("Unsupported fan mode: %s", fan_mode)
+        self._device.set_fan_mode(mapped_mode)

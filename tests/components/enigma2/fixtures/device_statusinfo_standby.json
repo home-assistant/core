@@ -1,0 +1,16 @@
+{
+  "volume": 100,
+  "muted": true,
+  "transcoding": true,
+  "currservice_filename": "",
+  "currservice_id": -1,
+  "currservice_name": "N/A",
+  "currservice_begin": "",
+  "currservice_end": "",
+  "currservice_description": "",
+  "currservice_fulldescription": "N/A",
+  "inStandby": "true",
+  "isRecording": "false",
+  "Streaming_list": "",
+  "isStreaming": "false"
+}

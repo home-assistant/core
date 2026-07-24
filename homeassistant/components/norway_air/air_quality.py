@@ -1,17 +1,20 @@
 """Sensor for checking the air quality forecast around Norway."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import metno
 import voluptuous as vol
 
-from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
+    AirQualityEntity,
+)
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -25,7 +28,7 @@ DEFAULT_NAME = "Air quality Norway"
 
 OVERRIDE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/airqualityforecast/0.1/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
         vol.Optional(CONF_LATITUDE): cv.latitude,
@@ -90,6 +93,7 @@ class AirSensor(AirQualityEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return {
@@ -98,41 +102,48 @@ class AirSensor(AirQualityEntity):
         }
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
     @round_state
+    @override
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._api.data.get("aqi")
 
     @property
     @round_state
+    @override
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
         return self._api.data.get("no2_concentration")
 
     @property
     @round_state
+    @override
     def ozone(self):
         """Return the O3 (ozone) level."""
         return self._api.data.get("o3_concentration")
 
     @property
     @round_state
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._api.data.get("pm25_concentration")
 
     @property
     @round_state
+    @override
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._api.data.get("pm10_concentration")
 
     @property
+    @override
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._api.units.get("pm25_concentration")

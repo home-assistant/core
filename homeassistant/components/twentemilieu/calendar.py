@@ -1,54 +1,47 @@
 """Support for Twente Milieu Calendar."""
-from __future__ import annotations
 
-from datetime import date, datetime, timedelta
-
-from twentemilieu import WasteType
+from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, WASTE_TYPE_TO_DESCRIPTION
+from .const import WASTE_TYPE_TO_DESCRIPTION
+from .coordinator import TwenteMilieuConfigEntry
 from .entity import TwenteMilieuEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TwenteMilieuConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu calendar based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.data[CONF_ID]]
-    async_add_entities([TwenteMilieuCalendar(coordinator, entry)])
+    async_add_entities([TwenteMilieuCalendar(entry)])
 
 
 class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
     """Defines a Twente Milieu calendar."""
 
-    _attr_has_entity_name = True
-    _attr_icon = "mdi:delete-empty"
     _attr_name = None
+    _attr_translation_key = "calendar"
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]],
-        entry: ConfigEntry,
-    ) -> None:
+    def __init__(self, entry: TwenteMilieuConfigEntry) -> None:
         """Initialize the Twente Milieu entity."""
-        super().__init__(coordinator, entry)
+        super().__init__(entry)
         self._attr_unique_id = str(entry.data[CONF_ID])
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -68,6 +61,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
         return events
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         next_waste_pickup_type = None
@@ -77,8 +71,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
                 waste_dates
                 and (
                     next_waste_pickup_date is None
-                    or waste_dates[0]  # type: ignore[unreachable]
-                    < next_waste_pickup_date
+                    or waste_dates[0] < next_waste_pickup_date
                 )
                 and waste_dates[0] >= dt_util.now().date()
             ):
@@ -95,6 +88,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

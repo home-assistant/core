@@ -1,9 +1,8 @@
 """Tests for the Bluetooth integration PassiveBluetoothDataUpdateCoordinator."""
-from __future__ import annotations
 
 import asyncio
 import logging
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from bleak import BleakError
 import pytest
@@ -16,6 +15,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.active_update_processor import (
     ActiveBluetoothProcessorCoordinator,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -48,11 +48,8 @@ GENERIC_BLUETOOTH_SERVICE_INFO_2 = BluetoothServiceInfo(
 )
 
 
-async def test_basic_usage(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_basic_usage(hass: HomeAssistant) -> None:
     """Test basic usage of the ActiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -83,7 +80,7 @@ async def test_basic_usage(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.available is True
 
@@ -97,11 +94,8 @@ async def test_basic_usage(
     cancel()
 
 
-async def test_poll_can_be_skipped(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_poll_can_be_skipped(hass: HomeAssistant) -> None:
     """Test need_poll callback works and can skip a poll if its not needed."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -126,10 +120,7 @@ async def test_poll_can_be_skipped(
         needs_poll_method=_poll_needed,
         poll_method=_poll,
         poll_debouncer=Debouncer(
-            hass,
-            _LOGGER,
-            cooldown=0,
-            immediate=True,
+            hass, _LOGGER, cooldown=0, immediate=True, background=True
         ),
     )
     assert coordinator.available is False  # no data yet
@@ -141,29 +132,27 @@ async def test_poll_can_be_skipped(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": True})
 
     flag = False
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": None}, True)
 
     flag = True
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": True})
 
     cancel()
 
 
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_bleak_error_and_recover(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test bleak error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -207,7 +196,7 @@ async def test_bleak_error_and_recover(
 
     # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": None}, False)
 
     assert (
@@ -218,17 +207,14 @@ async def test_bleak_error_and_recover(
     # Second poll works
     flag = False
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
 
 
-async def test_poll_failure_and_recover(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_poll_failure_and_recover(hass: HomeAssistant) -> None:
     """Test error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -271,23 +257,20 @@ async def test_poll_failure_and_recover(
 
     # First poll fails
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": None}, False)
 
     # Second poll works
     flag = False
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": False})
 
     cancel()
 
 
-async def test_second_poll_needed(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_second_poll_needed(hass: HomeAssistant) -> None:
     """If a poll is queued, by the time it starts it may no longer be needed."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -328,17 +311,14 @@ async def test_second_poll_needed(
     # Second poll gets stuck behind first poll
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
-    await hass.async_block_till_done()
-    assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert async_handle_update.mock_calls[1] == call({"testdata": 1})
 
     cancel()
 
 
-async def test_rate_limit(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_rate_limit(hass: HomeAssistant) -> None:
     """Test error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -380,17 +360,14 @@ async def test_rate_limit(
     # Third poll gets stuck behind first poll doesn't get queued
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert async_handle_update.mock_calls[-1] == call({"testdata": 1})
 
     cancel()
 
 
-async def test_no_polling_after_stop_event(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-) -> None:
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_no_polling_after_stop_event(hass: HomeAssistant) -> None:
     """Test we do not poll after the stop event."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     needs_poll_calls = 0
@@ -424,7 +401,7 @@ async def test_no_polling_after_stop_event(
     cancel = coordinator.async_start()
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     assert coordinator.available is True
@@ -436,13 +413,54 @@ async def test_no_polling_after_stop_event(
     assert async_handle_update.mock_calls[0] == call({"testdata": 0}, False)
     assert async_handle_update.mock_calls[1] == call({"testdata": 1})
 
-    hass.state = CoreState.stopping
-    await hass.async_block_till_done()
+    hass.set_state(CoreState.stopping)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     # Should not generate a poll now that CoreState is stopping
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert needs_poll_calls == 1
 
     cancel()
+
+
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
+async def test_scan_interval_and_duration_forwarded(hass: HomeAssistant) -> None:
+    """Test scan_interval and scan_duration reach the bluetooth manager."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    def _update_method(service_info: BluetoothServiceInfoBleak):
+        return {"testdata": 0}
+
+    def _poll_needed(*args, **kwargs):
+        return False
+
+    async def _poll(*args, **kwargs):
+        return {"testdata": 1}
+
+    coordinator = ActiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
+        scan_interval=165.0,
+        scan_duration=10.0,
+    )
+
+    cancel_scan = MagicMock()
+    with patch.object(
+        HomeAssistantBluetoothManager,
+        "async_register_active_scan",
+        return_value=cancel_scan,
+    ) as mock_register:
+        cancel = coordinator.async_start()
+
+    mock_register.assert_called_once_with("aa:bb:cc:dd:ee:ff", 165.0, 10.0)
+    cancel_scan.assert_not_called()
+
+    cancel()
+    cancel_scan.assert_called_once()

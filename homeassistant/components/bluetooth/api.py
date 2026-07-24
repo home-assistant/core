@@ -2,46 +2,58 @@
 
 These APIs are the only documented way to interact with the bluetooth integration.
 """
-from __future__ import annotations
 
 import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
+from contextlib import ExitStack
 from typing import TYPE_CHECKING, cast
 
+from bleak import BleakScanner
+from habluetooth import (
+    BaseHaScanner,
+    BluetoothReachabilityIntent,
+    BluetoothScannerDevice,
+    BluetoothScanningMode,
+    HaBleakScannerWrapper,
+    get_manager,
+)
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.helpers.singleton import singleton
 
-from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import DATA_MANAGER
-from .manager import BluetoothManager
+from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher
 from .models import (
     BluetoothCallback,
+    BluetoothCallbackReplay,
     BluetoothChange,
-    BluetoothScanningMode,
     ProcessAdvertisementCallback,
 )
-from .wrappers import HaBleakScannerWrapper
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
 
-def _get_manager(hass: HomeAssistant) -> BluetoothManager:
+@singleton(DATA_MANAGER)
+def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
     """Get the bluetooth manager."""
-    return cast(BluetoothManager, hass.data[DATA_MANAGER])
+    return cast(HomeAssistantBluetoothManager, get_manager())
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
-    """Return a HaBleakScannerWrapper.
+def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
+    """Return a HaBleakScannerWrapper cast to BleakScanner.
 
     This is a wrapper around our BleakScanner singleton that allows
     multiple integrations to share the same BleakScanner.
+
+    The wrapper is cast to BleakScanner for type compatibility with
+    libraries expecting a BleakScanner instance.
     """
-    return HaBleakScannerWrapper()
+    return cast(BleakScanner, HaBleakScannerWrapper())
 
 
 @hass_callback
@@ -64,12 +76,26 @@ def async_scanner_count(hass: HomeAssistant, connectable: bool = True) -> int:
 
 
 @hass_callback
+def async_current_scanners(hass: HomeAssistant) -> list[BaseHaScanner]:
+    """Return the list of currently active scanners.
+
+    This method returns a list of all active Bluetooth scanners registered
+    with Home Assistant, including both connectable and non-connectable scanners.
+
+    Args:
+        hass: Home Assistant instance
+
+    Returns:
+        List of all active scanner instances
+    """
+    return _get_manager(hass).async_current_scanners()
+
+
+@hass_callback
 def async_discovered_service_info(
     hass: HomeAssistant, connectable: bool = True
 ) -> Iterable[BluetoothServiceInfoBleak]:
     """Return the discovered devices list."""
-    if DATA_MANAGER not in hass.data:
-        return []
     return _get_manager(hass).async_discovered_service_info(connectable)
 
 
@@ -78,8 +104,6 @@ def async_last_service_info(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> BluetoothServiceInfoBleak | None:
     """Return the last service info for an address."""
-    if DATA_MANAGER not in hass.data:
-        return None
     return _get_manager(hass).async_last_service_info(address, connectable)
 
 
@@ -88,9 +112,15 @@ def async_ble_device_from_address(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> BLEDevice | None:
     """Return BLEDevice for an address if its present."""
-    if DATA_MANAGER not in hass.data:
-        return None
     return _get_manager(hass).async_ble_device_from_address(address, connectable)
+
+
+@hass_callback
+def async_address_reachability_diagnostics(
+    hass: HomeAssistant, address: str, intent: BluetoothReachabilityIntent
+) -> str:
+    """Return a human readable explanation of why an address may be unreachable."""
+    return _get_manager(hass).async_address_reachability_diagnostics(address, intent)
 
 
 @hass_callback
@@ -106,8 +136,6 @@ def async_address_present(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> bool:
     """Check if an address is present in the bluetooth device list."""
-    if DATA_MANAGER not in hass.data:
-        return False
     return _get_manager(hass).async_address_present(address, connectable)
 
 
@@ -117,17 +145,30 @@ def async_register_callback(
     callback: BluetoothCallback,
     match_dict: BluetoothCallbackMatcher | None,
     mode: BluetoothScanningMode,
+    *,
+    scan_interval: float | None = None,
+    scan_duration: float | None = None,
+    replay: BluetoothCallbackReplay = BluetoothCallbackReplay.OLDEST_FIRST,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
-    mode is currently not used as we only support active scanning.
-    Passive scanning will be available in the future. The flag
-    is required to be present to avoid a future breaking change
-    when we support passive scanning.
+    When ``mode`` is not PASSIVE and ``match_dict["address"]`` is set,
+    the address is registered with habluetooth's active-scan scheduler
+    so AUTO-mode scanners flip ACTIVE on demand for that device.
+    ``scan_interval`` / ``scan_duration`` default to habluetooth's
+    DEFAULT_ACTIVE_SCAN_* (5 minutes / 10 seconds) when not provided;
+    integrations that need a different cadence can pass explicit
+    values. Without an address in the matcher the active-scan request
+    is skipped; the callback itself still fires normally.
+
+    ``replay`` controls which cached advertisements are replayed to the
+    callback on registration; defaults to OLDEST_FIRST.
 
     Returns a callback that can be used to cancel the registration.
     """
-    return _get_manager(hass).async_register_callback(callback, match_dict)
+    return _get_manager(hass).async_register_callback(
+        callback, match_dict, mode, scan_interval, scan_duration, replay
+    )
 
 
 async def async_process_advertisements(
@@ -147,15 +188,20 @@ async def async_process_advertisements(
         if not done.done() and callback(service_info):
             done.set_result(service_info)
 
-    unload = _get_manager(hass).async_register_callback(
-        _async_discovered_device, match_dict
-    )
+    manager = _get_manager(hass)
 
-    try:
+    with ExitStack() as stack:
+        unload = manager.async_register_callback(
+            _async_discovered_device, match_dict, mode
+        )
+        stack.callback(unload)
+
+        if mode is BluetoothScanningMode.ACTIVE:
+            task = hass.async_create_task(manager.async_request_active_scan(timeout))
+            stack.callback(task.cancel)
+
         async with asyncio.timeout(timeout):
             return await done
-    finally:
-        unload()
 
 
 @hass_callback
@@ -179,16 +225,57 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
 
 
 @hass_callback
+def async_clear_address_from_match_history(hass: HomeAssistant, address: str) -> None:
+    """Clear an address from the integration matcher history.
+
+    This allows future advertisements from this address to trigger discovery
+    even if the advertisement content has changed but the service data UUIDs
+    remain the same.
+
+    Unlike async_rediscover_address, this does not immediately re-trigger
+    discovery with the current advertisement in history.
+    """
+    _get_manager(hass).async_clear_address_from_match_history(address)
+
+
+@hass_callback
+def async_clear_advertisement_history(hass: HomeAssistant, address: str) -> None:
+    """Clear cached advertisement history for a device.
+
+    Causes the next advertisement from this address to be treated as new
+    data, bypassing the change-detection guard in the Bluetooth manager.
+    Intended for devices that emit static advertisements as a wake-up
+    signal, for example, devices that require an active GATT connection
+    to read sensor data and whose advertisement payload never changes.
+    """
+    _get_manager(hass).async_clear_advertisement_history(address)
+
+
+@hass_callback
 def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,
-    connectable: bool,
     connection_slots: int | None = None,
+    source_domain: str | None = None,
+    source_model: str | None = None,
+    source_config_entry_id: str | None = None,
+    source_device_id: str | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
-    return _get_manager(hass).async_register_scanner(
-        scanner, connectable, connection_slots
+    return _get_manager(hass).async_register_hass_scanner(
+        scanner,
+        connection_slots,
+        source_domain,
+        source_model,
+        source_config_entry_id,
+        source_device_id,
     )
+
+
+@hass_callback
+def async_remove_scanner(hass: HomeAssistant, source: str) -> None:
+    """Permanently remove a BleakScanner by source address."""
+    return _get_manager(hass).async_remove_scanner(source)
 
 
 @hass_callback
@@ -221,3 +308,19 @@ def async_set_fallback_availability_interval(
 ) -> None:
     """Override the fallback availability timeout for a MAC address."""
     _get_manager(hass).async_set_fallback_availability_interval(address, interval)
+
+
+async def async_request_active_scan(
+    hass: HomeAssistant, duration: float | None = None
+) -> None:
+    """Run an on-demand active sweep across every AUTO scanner.
+
+    Intended for config-flow discovery and other one-shot probes that
+    need fresh advertisements without waiting for the periodic
+    rediscovery cadence. Awaits ``duration`` seconds so the caller can
+    then read newly discovered advertisements. Defaults to habluetooth's
+    on-demand sweep duration when ``duration`` is not provided; the
+    scheduler clamps the value to its allowed range. Concurrent callers
+    dedupe to a single bus-wide window.
+    """
+    await _get_manager(hass).async_request_active_scan(duration)

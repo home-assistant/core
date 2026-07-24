@@ -1,11 +1,9 @@
 """Support for the Electra climate."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
 from electrasmart.device import ElectraAirConditioner, OperationMode
@@ -24,13 +22,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ElectraSmartConfigEntry
 from .const import (
     API_DELAY,
     CONSECUTIVE_FAILURE_THRESHOLD,
@@ -89,10 +87,12 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ElectraSmartConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Electra AC devices."""
-    api: ElectraAPI = hass.data[DOMAIN][entry.entry_id]
+    api = entry.runtime_data
 
     _LOGGER.debug("Discovered %i Electra devices", len(api.devices))
     async_add_entities(
@@ -121,6 +121,8 @@ class ElectraClimateEntity(ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
         swing_modes: list = []
@@ -143,6 +145,7 @@ class ElectraClimateEntity(ClimateEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electra_ac_device.mac)},
+            connections={(CONNECTION_NETWORK_MAC, self._electra_ac_device.mac)},
             name=device.name,
             model=self._electra_ac_device.model,
             manufacturer=self._electra_ac_device.manufactor,
@@ -160,6 +163,7 @@ class ElectraClimateEntity(ClimateEntity):
         _LOGGER.debug("Added %s Electra AC device", self._attr_name)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the AC is available."""
         return (
@@ -182,7 +186,8 @@ class ElectraClimateEntity(ClimateEntity):
         self._last_state_update = 0
 
         try:
-            # skip the first update only as we already got the devices with their current state
+            # skip the first update only as we already got
+            # the devices with their current state
             if self._skip_update:
                 self._skip_update = False
             else:
@@ -192,7 +197,8 @@ class ElectraClimateEntity(ClimateEntity):
                 # show the warning once upon state change
                 if self._was_available:
                     _LOGGER.warning(
-                        "Electra AC %s (%s) is not available, check its status in the Electra Smart mobile app",
+                        "Electra AC %s (%s) is not available, check"
+                        " its status in the Electra Smart mobile app",
                         self.name,
                         self._electra_ac_device.mac,
                     )
@@ -200,7 +206,7 @@ class ElectraClimateEntity(ClimateEntity):
                 return
 
             if not self._was_available:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "%s (%s) is now available",
                     self._electra_ac_device.mac,
                     self.name,
@@ -216,7 +222,8 @@ class ElectraClimateEntity(ClimateEntity):
         except ElectraApiError as exp:
             self._consecutive_failures += 1
             _LOGGER.warning(
-                "Failed to get %s state: %s (try #%i since last success), keeping old state",
+                "Failed to get %s state: %s"
+                " (try #%i since last success), keeping old state",
                 self.name,
                 exp,
                 self._consecutive_failures,
@@ -224,18 +231,21 @@ class ElectraClimateEntity(ClimateEntity):
 
             if self._consecutive_failures >= CONSECUTIVE_FAILURE_THRESHOLD:
                 raise HomeAssistantError(
-                    f"Failed to get {self.name} state: {exp} for the {self._consecutive_failures} time",
+                    f"Failed to get {self.name} state: {exp}"
+                    f" for the {self._consecutive_failures} time",
                 ) from ElectraApiError
 
         self._consecutive_failures = 0
         self._update_device_attrs()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set AC fan mode."""
         mode = FAN_HASS_TO_ELECTRA[fan_mode]
         self._electra_ac_device.set_fan_speed(mode)
         await self._async_operate_electra_ac()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
@@ -247,6 +257,7 @@ class ElectraClimateEntity(ClimateEntity):
 
         await self._async_operate_electra_ac()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
 
@@ -287,6 +298,7 @@ class ElectraClimateEntity(ClimateEntity):
             PRESET_SHABAT if self._electra_ac_device.get_shabat_mode() else PRESET_NONE
         )
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set AC swing mdde."""
         if swing_mode == SWING_BOTH:
@@ -306,6 +318,7 @@ class ElectraClimateEntity(ClimateEntity):
 
         await self._async_operate_electra_ac()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode."""
         if preset_mode == PRESET_SHABAT:

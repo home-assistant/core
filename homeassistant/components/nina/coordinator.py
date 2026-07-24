@@ -1,18 +1,29 @@
 """DataUpdateCoordinator for the nina integration."""
-from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 import re
-from typing import Any
+from typing import Any, override
 
 from pynina import ApiError, Nina
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .const import (
+    _LOGGER,
+    CONF_AREA_FILTER,
+    CONF_FILTERS,
+    CONF_HEADLINE_FILTER,
+    CONF_REGIONS,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
+
+type NinaConfigEntry = ConfigEntry[NINADataUpdateCoordinator]
 
 
 @dataclass
@@ -23,12 +34,14 @@ class NinaWarningData:
     headline: str
     description: str
     sender: str
-    severity: str
+    severity: str | None
     recommended_actions: str
+    affected_areas_short: str
     affected_areas: str
-    sent: str
-    start: str
-    expires: str
+    more_info_url: str
+    sent: datetime
+    start: datetime | None
+    expires: datetime | None
     is_valid: bool
 
 
@@ -37,24 +50,33 @@ class NINADataUpdateCoordinator(
 ):
     """Class to manage fetching NINA data API."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        regions: dict[str, str],
-        headline_filter: str,
-        area_filter: str,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
-        self._regions: dict[str, str] = regions
         self._nina: Nina = Nina(async_get_clientsession(hass))
-        self.headline_filter: str = headline_filter
-        self.area_filter: str = area_filter
+        self.headline_filter: str = config_entry.data[CONF_FILTERS][
+            CONF_HEADLINE_FILTER
+        ]
+        self.area_filter: str = config_entry.data[CONF_FILTERS][CONF_AREA_FILTER]
 
+        regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:
-            self._nina.addRegion(region)
+            self._nina.add_region(region)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
         async with asyncio.timeout(10):
@@ -66,7 +88,7 @@ class NINADataUpdateCoordinator(
 
     @staticmethod
     def _remove_duplicate_warnings(
-        warnings: dict[str, list[Any]]
+        warnings: dict[str, list[Any]],
     ) -> dict[str, list[Any]]:
         """Remove warnings with the same title and expires timestamp in a region."""
         all_filtered_warnings: dict[str, list[Any]] = {}
@@ -102,7 +124,10 @@ class NINADataUpdateCoordinator(
                     self.headline_filter, raw_warn.headline, flags=re.IGNORECASE
                 ):
                     _LOGGER.debug(
-                        f"Ignore warning ({raw_warn.id}) by headline filter ({self.headline_filter}) with headline: {raw_warn.headline}"
+                        "Ignore warning (%s) by headline filter (%s) with headline: %s",
+                        raw_warn.id,
+                        self.headline_filter,
+                        raw_warn.headline,
                     )
                     continue
 
@@ -114,22 +139,41 @@ class NINADataUpdateCoordinator(
                     self.area_filter, affected_areas_string, flags=re.IGNORECASE
                 ):
                     _LOGGER.debug(
-                        f"Ignore warning ({raw_warn.id}) by area filter ({self.area_filter}) with area: {affected_areas_string}"
+                        "Ignore warning (%s) by area filter (%s) with area: %s",
+                        raw_warn.id,
+                        self.area_filter,
+                        affected_areas_string,
                     )
                     continue
+
+                shortened_affected_areas: str = (
+                    affected_areas_string[0:250] + "..."
+                    if len(affected_areas_string) > 250
+                    else affected_areas_string
+                )
+
+                severity = (
+                    None
+                    if raw_warn.severity.lower() == "unknown"
+                    else raw_warn.severity
+                )
 
                 warning_data: NinaWarningData = NinaWarningData(
                     raw_warn.id,
                     raw_warn.headline,
                     raw_warn.description,
-                    raw_warn.sender,
-                    raw_warn.severity,
+                    raw_warn.sender or "",
+                    severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
+                    shortened_affected_areas,
                     affected_areas_string,
-                    raw_warn.sent or "",
-                    raw_warn.start or "",
-                    raw_warn.expires or "",
-                    raw_warn.isValid(),
+                    raw_warn.web or "",
+                    datetime.fromisoformat(raw_warn.sent),
+                    datetime.fromisoformat(raw_warn.start) if raw_warn.start else None,
+                    datetime.fromisoformat(raw_warn.expires)
+                    if raw_warn.expires
+                    else None,
+                    raw_warn.is_valid,
                 )
                 warnings_for_regions.append(warning_data)
 

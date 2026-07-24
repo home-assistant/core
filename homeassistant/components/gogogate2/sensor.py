@@ -1,7 +1,7 @@
 """Support for Gogogate2 garage Doors."""
-from __future__ import annotations
 
 from itertools import chain
+from typing import Any, override
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
@@ -10,28 +10,24 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import (
-    DeviceDataUpdateCoordinator,
-    GoGoGate2Entity,
-    get_data_update_coordinator,
-    sensor_unique_id,
-)
+from .common import sensor_unique_id
+from .coordinator import DeviceDataUpdateCoordinator, GogoGateConfigEntry
+from .entity import GoGoGate2Entity
 
 SENSOR_ID_WIRED = "WIRE"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: GogoGateConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
-    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
+    data_update_coordinator = config_entry.runtime_data
 
     sensors = chain(
         [
@@ -52,7 +48,8 @@ class DoorSensorEntity(GoGoGate2Entity, SensorEntity):
     """Base class for door sensor entities."""
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         door = self.door
@@ -71,7 +68,7 @@ class DoorSensorBattery(DoorSensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: GogoGateConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
     ) -> None:
@@ -80,11 +77,13 @@ class DoorSensorBattery(DoorSensorEntity):
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
 
     @property
+    @override
     def name(self):
         """Return the name of the door."""
         return f"{self.door.name} battery"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the entity."""
         return self.door.voltage  # This is a percentage, not an absolute voltage
@@ -99,7 +98,7 @@ class DoorSensorTemperature(DoorSensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: GogoGateConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
     ) -> None:
@@ -108,11 +107,13 @@ class DoorSensorTemperature(DoorSensorEntity):
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
 
     @property
+    @override
     def name(self):
         """Return the name of the door."""
         return f"{self.door.name} temperature"
 
     @property
+    @override
     def native_value(self):
         """Return the state of the entity."""
         return self.door.temperature

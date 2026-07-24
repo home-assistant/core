@@ -4,6 +4,7 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/mvglive",
   "iot_class": "cloud_polling",
-  "loggers": ["MVGLive"],
-  "requirements": ["PyMVGLive==1.1.4"]
+  "loggers": ["MVG"],
+  "quality_scale": "legacy",
+  "requirements": ["mvg==1.4.0"]
 }

@@ -1,24 +1,25 @@
 """Test the default_config init."""
+
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant import bootstrap
+from homeassistant.components.default_config import DOMAIN
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(autouse=True)
 def mock_ssdp():
     """Mock ssdp."""
-    with patch("homeassistant.components.ssdp.Scanner.async_scan"), patch(
-        "homeassistant.components.ssdp.Server.async_start"
-    ), patch("homeassistant.components.ssdp.Server.async_stop"):
+    with (
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch("homeassistant.components.ssdp.Server.async_start"),
+        patch("homeassistant.components.ssdp.Server.async_stop"),
+    ):
         yield
 
 
@@ -29,9 +30,13 @@ def recorder_url_mock():
         yield
 
 
-async def test_setup(
-    hass: HomeAssistant, mock_zeroconf: None, mock_get_source_ip, mock_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_zeroconf", "socket_enabled")
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)
-    assert await async_setup_component(hass, "default_config", {"foo": "bar"})
+    # default_config needs the homeassistant integration, assert it will be
+    # automatically setup by bootstrap and set it up manually for this test
+    assert HOMEASSISTANT_DOMAIN in bootstrap.CORE_INTEGRATIONS
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {"foo": "bar"})
+
+    assert await async_setup_component(hass, DOMAIN, {"foo": "bar"})

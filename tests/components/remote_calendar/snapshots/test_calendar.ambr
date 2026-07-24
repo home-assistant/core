@@ -1,0 +1,19 @@
+# serializer version: 1
+# name: test_calendar_examples[office365_invalid_tzid]
+  list([
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2024-04-26T15:00:00-06:00',
+      }),
+      'location': '',
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-04-26T14:00:00-06:00',
+      }),
+      'summary': 'Uffe',
+      'uid': '040000008200E00074C5B7101A82E00800000000687C546B5596DA01000000000000000010000000309AE93C8C3A94489F90ADBEA30C2F2B',
+    }),
+  ])
+# ---

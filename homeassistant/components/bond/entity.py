@@ -1,13 +1,12 @@
 """An abstract class common to all Bond entities."""
-from __future__ import annotations
 
 from abc import abstractmethod
-from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
-from datetime import datetime, timedelta
+from asyncio import Lock
+from datetime import datetime
 import logging
+from typing import override
 
 from aiohttp import ClientError
-from bond_async import BPUPSubscriptions
 
 from homeassistant.const import (
     ATTR_HW_VERSION,
@@ -23,34 +22,36 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
-from .utils import BondDevice, BondHub
+from .models import BondData
+from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-_FALLBACK_SCAN_INTERVAL = timedelta(seconds=10)
-_BPUP_ALIVE_SCAN_INTERVAL = timedelta(seconds=60)
+_FALLBACK_SCAN_INTERVAL = 10
+_BPUP_ALIVE_SCAN_INTERVAL = 60
 
 
 class BondEntity(Entity):
-    """Generic Bond entity encapsulating common features of any Bond controlled device."""
+    """Generic Bond entity encapsulating common features of any Bond device."""
 
     _attr_should_poll = False
 
     def __init__(
         self,
-        hub: BondHub,
+        data: BondData,
         device: BondDevice,
-        bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
         sub_device_id: str | None = None,
     ) -> None:
         """Initialize entity with API and device info."""
+        hub = data.hub
         self._hub = hub
+        self._bond = hub.bond
         self._device = device
         self._device_id = device.device_id
         self._sub_device = sub_device
         self._attr_available = True
-        self._bpup_subs = bpup_subs
+        self._bpup_subs = data.bpup_subs
         self._update_lock = Lock()
         self._initialized = False
         if sub_device_id:
@@ -73,12 +74,13 @@ class BondEntity(Entity):
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Get a an HA device representing this Bond controlled device."""
         device_info = DeviceInfo(
             manufacturer=self._hub.make,
             # type ignore: tuple items should not be Optional
-            identifiers={(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, self._hub.bond_id, self._device_id)},  # type: ignore[arg-type]
             configuration_url=f"http://{self._hub.host}",
         )
         if self.name is not None:
@@ -113,11 +115,8 @@ class BondEntity(Entity):
     def _async_update_if_bpup_not_alive(self, now: datetime) -> None:
         """Fetch via the API if BPUP is not alive."""
         self._async_schedule_bpup_alive_or_poll()
-        if (
-            self.hass.is_stopping
-            or self._bpup_subs.alive
-            and self._initialized
-            and self.available
+        if self.hass.is_stopping or (
+            self._bpup_subs.alive and self._initialized and self.available
         ):
             return
         if self._update_lock.locked():
@@ -127,7 +126,9 @@ class BondEntity(Entity):
                 _FALLBACK_SCAN_INTERVAL,
             )
             return
-        self.hass.async_create_task(self._async_update())
+        self.hass.async_create_background_task(
+            self._async_update(), f"{DOMAIN} {self.name} update", eager_start=True
+        )
 
     async def _async_update(self) -> None:
         """Fetch via the API."""
@@ -138,8 +139,8 @@ class BondEntity(Entity):
     async def _async_update_from_api(self) -> None:
         """Fetch via the API."""
         try:
-            state: dict = await self._hub.bond.device_state(self._device_id)
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
+            state: dict = await self._bond.device_state(self._device_id)
+        except (ClientError, TimeoutError, OSError) as error:
             if self.available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error
@@ -175,6 +176,7 @@ class BondEntity(Entity):
         self._async_state_callback(json_msg["b"])
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
@@ -191,6 +193,7 @@ class BondEntity(Entity):
             self._async_update_if_bpup_not_alive_job,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from BPUP data on remove."""
         await super().async_will_remove_from_hass()

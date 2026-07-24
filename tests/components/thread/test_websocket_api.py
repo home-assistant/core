@@ -1,6 +1,6 @@
 """Test the thread websocket API."""
 
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -57,7 +57,10 @@ async def test_add_invalid_dataset(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"] == {"code": "invalid_format", "message": "unknown type 222"}
+    assert msg["error"] == {
+        "code": "invalid_format",
+        "message": "expected 173 bytes for tag 222, got 2",
+    }
 
 
 async def test_delete_dataset(
@@ -85,6 +88,17 @@ async def test_delete_dataset(
     msg = await client.receive_json()
     assert msg["success"]
     datasets = msg["result"]["datasets"]
+
+    # Set the first dataset as preferred
+    await client.send_json_auto_id(
+        {
+            "type": "thread/set_preferred_dataset",
+            "dataset_id": datasets[0]["dataset_id"],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
 
     # Try deleting the preferred dataset
     await client.send_json_auto_id(
@@ -139,6 +153,9 @@ async def test_list_get_dataset(
         await dataset_store.async_add_dataset(hass, dataset["source"], dataset["tlv"])
 
     store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+    store.preferred_dataset = dataset_id
+
     for dataset in store.datasets.values():
         if dataset.source == "Google":
             dataset_1 = dataset
@@ -161,6 +178,7 @@ async def test_list_get_dataset(
                 "pan_id": "1234",
                 "preferred": True,
                 "preferred_border_agent_id": None,
+                "preferred_extended_address": None,
                 "source": "Google",
             },
             {
@@ -172,6 +190,7 @@ async def test_list_get_dataset(
                 "pan_id": "1234",
                 "preferred": False,
                 "preferred_border_agent_id": None,
+                "preferred_extended_address": None,
                 "source": "Multipan",
             },
             {
@@ -183,6 +202,7 @@ async def test_list_get_dataset(
                 "pan_id": "1234",
                 "preferred": False,
                 "preferred_border_agent_id": None,
+                "preferred_extended_address": None,
                 "source": "🎅",
             },
         ]
@@ -203,7 +223,7 @@ async def test_list_get_dataset(
     assert msg["error"] == {"code": "not_found", "message": "unknown dataset"}
 
 
-async def test_set_preferred_border_agent_id(
+async def test_set_preferred_border_agent(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test setting the preferred border agent ID."""
@@ -225,12 +245,14 @@ async def test_set_preferred_border_agent_id(
     datasets = msg["result"]["datasets"]
     dataset_id = datasets[0]["dataset_id"]
     assert datasets[0]["preferred_border_agent_id"] is None
+    assert datasets[0]["preferred_extended_address"] is None
 
     await client.send_json_auto_id(
         {
-            "type": "thread/set_preferred_border_agent_id",
+            "type": "thread/set_preferred_border_agent",
             "dataset_id": dataset_id,
             "border_agent_id": "blah",
+            "extended_address": "bleh",
         }
     )
     msg = await client.receive_json()
@@ -242,6 +264,7 @@ async def test_set_preferred_border_agent_id(
     assert msg["success"]
     datasets = msg["result"]["datasets"]
     assert datasets[0]["preferred_border_agent_id"] == "blah"
+    assert datasets[0]["preferred_extended_address"] == "bleh"
 
 
 async def test_set_preferred_dataset(
@@ -295,7 +318,9 @@ async def test_set_preferred_dataset_wrong_id(
 
 
 async def test_discover_routers(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_async_zeroconf: MagicMock,
 ) -> None:
     """Test discovering thread routers."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -331,6 +356,7 @@ async def test_discover_routers(
     assert msg == {
         "event": {
             "data": {
+                "instance_name": "HomeAssistant OpenThreadBorderRouter #0BBF",
                 "addresses": ["192.168.0.115"],
                 "border_agent_id": "230c6a1ac57f6f4be262acf32e5ef52c",
                 "brand": "homeassistant",
@@ -366,6 +392,7 @@ async def test_discover_routers(
                 "brand": "google",
                 "extended_address": "f6a99b425a67abed",
                 "extended_pan_id": "9e75e256f61409a3",
+                "instance_name": "Google-Nest-Hub-#ABED",
                 "model_name": "Google Nest Hub",
                 "network_name": "NEST-PAN-E1AF",
                 "server": "2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",

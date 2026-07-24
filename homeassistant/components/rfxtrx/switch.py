@@ -1,8 +1,7 @@
 """Support for RFXtrx switches."""
-from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
@@ -11,21 +10,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
-    DOMAIN,
-    DeviceTuple,
-    RfxtrxCommandEntity,
-    async_setup_platform_entry,
-    get_pt2262_cmd,
-)
+from . import DeviceTuple, async_setup_platform_entry, get_pt2262_cmd
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
     CONF_DATA_BITS,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DOMAIN,
 )
+from .entity import RfxtrxCommandEntity
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
@@ -38,14 +33,13 @@ def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
         isinstance(event.device, rfxtrxmod.LightingDevice)
         and not event.device.known_to_be_dimmable
         and not event.device.known_to_be_rollershutter
-        or isinstance(event.device, rfxtrxmod.RfyDevice)
-    )
+    ) or isinstance(event.device, rfxtrxmod.RfyDevice)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
 
@@ -89,6 +83,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore device state."""
         await super().async_added_to_hass()
@@ -118,6 +113,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         elif event.values["Command"] in COMMAND_OFF_LIST:
             self._attr_is_on = False
 
+    @override
     def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
         super()._apply_event(event)
@@ -127,6 +123,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
             self._apply_event_standard(event)
 
     @callback
+    @override
     def _handle_event(
         self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
     ) -> None:
@@ -136,6 +133,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
 
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._cmd_on is not None:
@@ -145,6 +143,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._cmd_off is not None:

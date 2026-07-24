@@ -1,8 +1,8 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
-from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pycomfoconnect import (
     SENSOR_BYPASS_STATE,
@@ -30,7 +30,7 @@ from pycomfoconnect import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -47,7 +47,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -79,19 +79,11 @@ ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class ComfoconnectRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    sensor_id: int
-
-
-@dataclass
-class ComfoconnectSensorEntityDescription(
-    SensorEntityDescription, ComfoconnectRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class ComfoconnectSensorEntityDescription(SensorEntityDescription):
     """Describes Comfoconnect sensor entity."""
 
+    sensor_id: int
     multiplier: float = 1
 
 
@@ -270,7 +262,7 @@ SENSOR_TYPES = (
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default=[]): vol.All(
             cv.ensure_list, [vol.In([desc.key for desc in SENSOR_TYPES])]
@@ -314,6 +306,7 @@ class ComfoConnectSensor(SensorEntity):
         self._attr_name = f"{ccb.name} {description.name}"
         self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug(
@@ -334,7 +327,7 @@ class ComfoConnectSensor(SensorEntity):
             self._ccb.comfoconnect.register_sensor, self.entity_description.sensor_id
         )
 
-    def _handle_update(self, value):
+    def _handle_update(self, value: float) -> None:
         """Handle update callbacks."""
         _LOGGER.debug(
             "Handle update for sensor %s (%d): %s",

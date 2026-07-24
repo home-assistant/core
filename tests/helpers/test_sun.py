@@ -1,21 +1,22 @@
 """The tests for the Sun helpers."""
 
 from datetime import datetime, timedelta
-from unittest.mock import patch
 
+from astral import LocationInfo
+from astral.location import Location
+import astral.sun
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.sun as sun
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import sun
+from homeassistant.util import dt as dt_util
 
 
 def test_next_events(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -77,7 +78,7 @@ def test_next_events(hass: HomeAssistant) -> None:
             break
         mod += 1
 
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         assert next_dawn == sun.get_astral_event_next(hass, "dawn")
         assert next_dusk == sun.get_astral_event_next(hass, "dusk")
         assert next_midnight == sun.get_astral_event_next(hass, "midnight")
@@ -89,8 +90,6 @@ def test_next_events(hass: HomeAssistant) -> None:
 def test_date_events(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -116,8 +115,6 @@ def test_date_events(hass: HomeAssistant) -> None:
 def test_date_events_default_date(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -132,7 +129,7 @@ def test_date_events_default_date(hass: HomeAssistant) -> None:
     sunrise = astral.sun.sunrise(location.observer, date=utc_today)
     sunset = astral.sun.sunset(location.observer, date=utc_today)
 
-    with patch("homeassistant.util.dt.now", return_value=utc_now):
+    with freeze_time(utc_now):
         assert dawn == sun.get_astral_event_date(hass, "dawn", utc_today)
         assert dusk == sun.get_astral_event_date(hass, "dusk", utc_today)
         assert midnight == sun.get_astral_event_date(hass, "midnight", utc_today)
@@ -144,8 +141,6 @@ def test_date_events_default_date(hass: HomeAssistant) -> None:
 def test_date_events_accepts_datetime(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    from astral import LocationInfo
-    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -171,11 +166,11 @@ def test_date_events_accepts_datetime(hass: HomeAssistant) -> None:
 def test_is_up(hass: HomeAssistant) -> None:
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 12, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         assert not sun.is_up(hass)
 
     utc_now = datetime(2016, 11, 1, 18, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         assert sun.is_up(hass)
 
 
@@ -206,3 +201,44 @@ def test_impossible_elevation(hass: HomeAssistant) -> None:
 
     with pytest.raises(ValueError):
         sun.get_astral_event_next(hass, SUN_EVENT_SUNRISE, june)
+
+
+def test_deprecated_get_astral_location(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the deprecated get_astral_location helper."""
+    location, elevation = sun.get_astral_location(hass)
+
+    observer = sun.get_astral_observer(hass)
+    assert location.latitude == observer.latitude
+    assert location.longitude == observer.longitude
+    assert elevation == observer.elevation
+    assert (
+        "The deprecated function get_astral_location was called. It will be removed "
+        "in HA Core 2027.7. Use homeassistant.helpers.sun.get_astral_observer instead"
+    ) in caplog.text
+
+
+def test_deprecated_get_location_astral_event_next(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the deprecated get_location_astral_event_next helper."""
+    utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+    location = Location(
+        LocationInfo(
+            "",
+            "",
+            str(hass.config.time_zone),
+            hass.config.latitude,
+            hass.config.longitude,
+        )
+    )
+
+    assert sun.get_location_astral_event_next(
+        location, hass.config.elevation, SUN_EVENT_SUNRISE, utc_now
+    ) == sun.get_astral_event_next(hass, SUN_EVENT_SUNRISE, utc_now)
+    assert (
+        "The deprecated function get_location_astral_event_next was called. It will "
+        "be removed in HA Core 2027.7. Use "
+        "homeassistant.helpers.sun.get_observer_astral_event_next instead"
+    ) in caplog.text

@@ -7,7 +7,7 @@ details on Fitbit authorization.
 import base64
 from http import HTTPStatus
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 
@@ -33,6 +33,7 @@ class FitbitOAuth2Implementation(AuthImplementation):
     Authorization header.
     """
 
+    @override
     async def async_resolve_external_data(self, external_data: dict[str, Any]) -> dict:
         """Resolve the authorization code to tokens."""
         return await self._post(
@@ -43,6 +44,7 @@ class FitbitOAuth2Implementation(AuthImplementation):
             }
         )
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         return await self._post(
@@ -60,12 +62,17 @@ class FitbitOAuth2Implementation(AuthImplementation):
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                error_body = await resp.text() if not session.closed else ""
+                try:
+                    error_body = await resp.text()
+                except aiohttp.ClientError:
+                    error_body = ""
                 _LOGGER.debug(
                     "Client response error status=%s, body=%s", err.status, error_body
                 )
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise FitbitAuthException(f"Unauthorized error: {err}") from err
+            if err.status == HTTPStatus.BAD_REQUEST:
+                raise FitbitAuthException(f"Bad Request error: {err}") from err
             raise FitbitApiException(f"Server error response: {err}") from err
         except aiohttp.ClientError as err:
             raise FitbitApiException(f"Client connection error: {err}") from err

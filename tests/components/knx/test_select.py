@@ -1,8 +1,8 @@
 """Test KNX select."""
+
 import pytest
 
 from homeassistant.components.knx.const import (
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -10,8 +10,9 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SelectSchema
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import KNXTestKit
 
@@ -77,7 +78,7 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None
     assert state.state is STATE_UNKNOWN
 
     # select invalid option
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "select",
             "select_option",
@@ -122,6 +123,40 @@ async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit) -> Non
     # don't respond to passive address
     await knx.receive_read(test_passive_address)
     await knx.assert_no_telegram()
+
+
+async def test_select_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX select with state_address restores state until bus read completes."""
+    _options = [
+        {CONF_PAYLOAD: 0b00, SelectSchema.CONF_OPTION: "No control"},
+        {CONF_PAYLOAD: 0b10, SelectSchema.CONF_OPTION: "Control - Off"},
+        {CONF_PAYLOAD: 0b11, SelectSchema.CONF_OPTION: "Control - On"},
+    ]
+    test_address = "1/1/1"
+    test_state_address = "2/2/2"
+    fake_state = State("select.test", "Control - On")
+    mock_restore_cache(hass, (fake_state,))
+
+    await knx.setup_integration(
+        {
+            SelectSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: test_address,
+                CONF_STATE_ADDRESS: test_state_address,
+                CONF_PAYLOAD_LENGTH: 0,
+                SelectSchema.CONF_OPTIONS: _options,
+            }
+        }
+    )
+    # StateUpdater initialize state - restored value is used before response is received
+    await knx.assert_read(test_state_address)
+    state = hass.states.get("select.test")
+    assert state.state == "Control - On"
+
+    # bus reports a different value than restored - state updates to the real value
+    await knx.receive_response(test_state_address, 0b10)
+    state = hass.states.get("select.test")
+    assert state.state == "Control - Off"
 
 
 async def test_select_dpt_20_103_all_options(

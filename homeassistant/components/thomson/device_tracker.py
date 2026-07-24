@@ -1,20 +1,20 @@
 """Support for THOMSON routers."""
-from __future__ import annotations
 
 import logging
 import re
-import telnetlib  # pylint: disable=deprecated-module
+from typing import override
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ _DEVICES_REGEX = re.compile(
     r"(?P<host>([^\s]+))"
 )
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> ThomsonDeviceScanner | None:
     """Validate the configuration and return a THOMSON scanner."""
-    scanner = ThomsonDeviceScanner(config[DOMAIN])
+    scanner = ThomsonDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -59,11 +59,13 @@ class ThomsonDeviceScanner(DeviceScanner):
         data = self.get_thomson_data()
         self.success_init = data is not None
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client["mac"] for client in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:
@@ -81,7 +83,7 @@ class ThomsonDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Checking ARP")
+        _LOGGER.debug("Checking ARP")
         if not (data := self.get_thomson_data()):
             return False
 
@@ -106,10 +108,10 @@ class ThomsonDeviceScanner(DeviceScanner):
             telnet.write(b"exit\r\n")
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
-            return
+            return None
         except ConnectionRefusedError:
             _LOGGER.exception("Connection refused by router. Telnet enabled?")
-            return
+            return None
 
         devices = {}
         for device in devices_result:

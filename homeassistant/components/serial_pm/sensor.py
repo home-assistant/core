@@ -1,15 +1,18 @@
 """Support for particulate matter sensors connected to a serial port."""
-from __future__ import annotations
 
 import logging
+from typing import override
 
 from pmsensor import serial_pm as pm
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, UnitOfDensity
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -18,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_BRAND = "brand"
 CONF_SERIAL_DEVICE = "serial_device"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BRAND): cv.string,
         vol.Required(CONF_SERIAL_DEVICE): cv.string,
@@ -76,19 +79,22 @@ class ParticulateMatterSensor(SensorEntity):
         self._collector = pm_data_collector
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        return UnitOfDensity
 
     def update(self) -> None:
         """Read from sensor and update the state."""

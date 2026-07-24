@@ -1,10 +1,10 @@
 """Support for Magic home button."""
-from __future__ import annotations
+
+from typing import override
 
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.protocol import RemoteConfig
 
-from homeassistant import config_entries
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -12,10 +12,9 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry
 from .entity import FluxBaseEntity
 
 _RESTART_KEY = "restart"
@@ -28,17 +27,16 @@ RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
 UNPAIR_REMOTES_DESCRIPTION = ButtonEntityDescription(
     key=_UNPAIR_REMOTES_KEY,
     translation_key="unpair_remotes",
-    icon="mdi:remote-off",
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FluxLedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Magic Home button based on a config entry."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     device = coordinator.device
     entities: list[FluxButton] = [
         FluxButton(coordinator.device, entry, RESTART_BUTTON_DESCRIPTION)
@@ -59,7 +57,7 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
     def __init__(
         self,
         device: AIOWifiLedBulb,
-        entry: config_entries.ConfigEntry,
+        entry: FluxLedConfigEntry,
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
@@ -68,6 +66,7 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
         base_unique_id = entry.unique_id or entry.entry_id
         self._attr_unique_id = f"{base_unique_id}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Send out a command."""
         if self.entity_description.key == _RESTART_KEY:

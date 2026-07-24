@@ -1,20 +1,17 @@
 """Config flow for Wemo."""
 
-from __future__ import annotations
-
 from dataclasses import fields
-from typing import Any, get_type_hints
+from typing import Any, get_type_hints, override
 
 import pywemo
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
-from .wemo_device import Options, OptionsValidationError
+from .coordinator import Options, OptionsValidationError
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
@@ -31,21 +28,18 @@ class WemoFlow(DiscoveryFlowHandler, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return WemoOptionsFlow(config_entry)
+        return WemoOptionsFlow()
 
 
 class WemoOptionsFlow(OptionsFlow):
     """Options flow for the WeMo component."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage options for the WeMo component."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -69,11 +63,12 @@ def _schema_for_options(options: Options) -> vol.Schema:
     All values are optional. The default value is set to the current value and
     the type hint is set to the value of the field type annotation.
     """
+    type_hints = get_type_hints(type(options))
     return vol.Schema(
         {
-            vol.Optional(
-                field.name, default=getattr(options, field.name)
-            ): get_type_hints(options)[field.name]
+            vol.Optional(field.name, default=getattr(options, field.name)): type_hints[
+                field.name
+            ]
             for field in fields(options)
         }
     )

@@ -1,5 +1,4 @@
 """WiZ utils."""
-from __future__ import annotations
 
 from pywizlight import BulbType
 from pywizlight.bulblibrary import BulbClass

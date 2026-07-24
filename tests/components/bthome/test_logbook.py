@@ -1,4 +1,5 @@
 """The tests for bthome logbook."""
+
 from homeassistant.components.bthome.const import (
     BTHOME_BLE_EVENT,
     DOMAIN,

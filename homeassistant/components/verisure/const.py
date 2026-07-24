@@ -1,13 +1,9 @@
 """Constants for the Verisure integration."""
+
 from datetime import timedelta
 import logging
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 
 DOMAIN = "verisure"
 
@@ -19,6 +15,17 @@ CONF_LOCK_DEFAULT_CODE = "lock_default_code"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_LOCK_CODE_DIGITS = 4
+
+# vsure cookies are valid for ~15 minutes; refresh before expiry.
+COOKIE_REFRESH_INTERVAL = timedelta(minutes=10)
+
+# Exponential backoff when Verisure returns AUT_00021 / rate limits.
+RATE_LIMIT_BACKOFF = (
+    timedelta(minutes=5),
+    timedelta(minutes=15),
+    timedelta(minutes=30),
+    timedelta(hours=1),
+)
 
 SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
 SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
@@ -42,8 +49,8 @@ DEVICE_TYPE_NAME = {
 }
 
 ALARM_STATE_TO_HA = {
-    "DISARMED": STATE_ALARM_DISARMED,
-    "ARMED_HOME": STATE_ALARM_ARMED_HOME,
-    "ARMED_AWAY": STATE_ALARM_ARMED_AWAY,
-    "PENDING": STATE_ALARM_PENDING,
+    "DISARMED": AlarmControlPanelState.DISARMED,
+    "ARMED_HOME": AlarmControlPanelState.ARMED_HOME,
+    "ARMED_AWAY": AlarmControlPanelState.ARMED_AWAY,
+    "PENDING": AlarmControlPanelState.PENDING,
 }

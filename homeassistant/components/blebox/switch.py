@@ -1,32 +1,33 @@
 """BleBox switch implementation."""
-from datetime import timedelta
-from typing import Any
 
-from blebox_uniapi.box import Box
+from typing import Any, override
+
 import blebox_uniapi.switch
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BleBoxEntity
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
+from .coordinator import BleBoxCoordinator
+from .entity import BleBoxEntity
+from .util import blebox_command
 
-SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BleBoxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox switch entity."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
+    coordinator = config_entry.runtime_data
     entities = [
-        BleBoxSwitchEntity(feature) for feature in product.features.get("switches", [])
+        BleBoxSwitchEntity(coordinator, feature)
+        for feature in coordinator.box.features.get("switches", [])
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity):
@@ -34,15 +35,30 @@ class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
+    _attr_name = None
+
+    def __init__(
+        self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.switch.Switch
+    ) -> None:
+        """Initialize a BleBox switch feature."""
+        super().__init__(coordinator, feature)
+        if feature.name:
+            self._attr_name = feature.name
+
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool | None:
         """Return whether switch is on."""
         return self._feature.is_on
 
+    @blebox_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._feature.async_turn_on()
 
+    @blebox_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._feature.async_turn_off()

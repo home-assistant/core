@@ -1,5 +1,4 @@
 """Executor util helpers."""
-from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
@@ -8,7 +7,7 @@ import sys
 from threading import Thread
 import time
 import traceback
-from typing import Any
+from typing import Any, override
 
 from .thread import async_raise
 
@@ -23,7 +22,7 @@ EXECUTOR_SHUTDOWN_TIMEOUT = 10
 
 def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
     """Log the stack of a thread that was still running at shutdown."""
-    frames = sys._current_frames()  # pylint: disable=protected-access
+    frames = sys._current_frames()  # noqa: SLF001
     stack = frames.get(ident)
     formatted_stack = traceback.format_stack(stack)
     _LOGGER.warning(
@@ -50,10 +49,10 @@ def join_or_interrupt_threads(
         if log:
             _log_thread_running_at_shutdown(thread.name, thread.ident)
 
-        with contextlib.suppress(SystemError):
-            # SystemError at this stage is usually a race condition
-            # where the thread happens to die right before we force
-            # it to raise the exception
+        with contextlib.suppress(SystemError, ValueError):
+            # SystemError or ValueError at this stage is usually a benign
+            # race condition where the thread dies right before we force
+            # it to raise the exception.
             async_raise(thread.ident, SystemExit)
 
     return joined
@@ -62,10 +61,19 @@ def join_or_interrupt_threads(
 class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
     """A ThreadPoolExecutor instance that will not deadlock on shutdown."""
 
-    def shutdown(self, *args: Any, **kwargs: Any) -> None:
-        """Shutdown with interrupt support added."""
+    @override
+    def shutdown(
+        self, *args: Any, join_threads_or_timeout: bool = True, **kwargs: Any
+    ) -> None:
+        """Shutdown with interrupt support added.
+
+        By default shutdown will wait for threads to finish up
+        to the timeout before forcefully stopping them. This can
+        be disabled by setting `join_threads_or_timeout` to False.
+        """
         super().shutdown(wait=False, cancel_futures=True)
-        self.join_threads_or_timeout()
+        if join_threads_or_timeout:
+            self.join_threads_or_timeout()
 
     def join_threads_or_timeout(self) -> None:
         """Join threads or timeout."""

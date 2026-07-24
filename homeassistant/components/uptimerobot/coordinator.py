@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the uptimerobot integration."""
-from __future__ import annotations
+
+from typing import TYPE_CHECKING, override
 
 from pyuptimerobot import (
     UptimeRobot,
@@ -14,65 +15,66 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
+
+type UptimeRobotConfigEntry = ConfigEntry[UptimeRobotDataUpdateCoordinator]
 
 
-class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMonitor]]):
+class UptimeRobotDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[int, UptimeRobotMonitor]]
+):
     """Data update coordinator for UptimeRobot."""
 
-    config_entry: ConfigEntry
+    config_entry: UptimeRobotConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry_id: str,
-        dev_reg: dr.DeviceRegistry,
+        config_entry: UptimeRobotConfigEntry,
         api: UptimeRobot,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=COORDINATOR_UPDATE_INTERVAL,
         )
-        self._config_entry_id = config_entry_id
-        self._device_registry = dev_reg
         self.api = api
 
-    async def _async_update_data(self) -> list[UptimeRobotMonitor]:
+    @override
+    async def _async_update_data(self) -> dict[int, UptimeRobotMonitor]:
         """Update data."""
         try:
             response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication_exception",
+            ) from exception
         except UptimeRobotException as exception:
-            raise UpdateFailed(exception) from exception
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_generic_exception",
+                translation_placeholders={"error": "Generic UptimeRobot exception"},
+            ) from exception
 
-        if response.status != API_ATTR_OK:
-            raise UpdateFailed(response.error.message)
+        if TYPE_CHECKING:
+            assert isinstance(response.data, list)
 
-        monitors: list[UptimeRobotMonitor] = response.data
+        current_ids = self.data.keys() if self.data else ()
+        new_monitors = {monitor.id: monitor for monitor in response.data}
+        if stale_ids := set(current_ids) - new_monitors.keys():
+            device_registry = dr.async_get(self.hass)
 
-        current_monitors = {
-            list(device.identifiers)[0][1]
-            for device in dr.async_entries_for_config_entry(
-                self._device_registry, self._config_entry_id
-            )
-        }
-        new_monitors = {str(monitor.id) for monitor in monitors}
-        if stale_monitors := current_monitors - new_monitors:
-            for monitor_id in stale_monitors:
-                if device := self._device_registry.async_get_device(
-                    identifiers={(DOMAIN, monitor_id)}
+            for monitor_id in stale_ids:
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(monitor_id)), self.config_entry.entry_id
                 ):
-                    self._device_registry.async_remove_device(device.id)
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
 
-        # If there are new monitors, we should reload the config entry so we can
-        # create new devices and entities.
-        if self.data and new_monitors - {str(monitor.id) for monitor in self.data}:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._config_entry_id)
-            )
-
-        return monitors
+        return new_monitors

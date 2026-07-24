@@ -1,20 +1,19 @@
 """Support for loading picture from Neato."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
 from urllib3.response import HTTPResponse
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
+from . import NeatoConfigEntry
+from .const import SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
@@ -25,15 +24,17 @@ ATTR_GENERATED_AT = "generated_at"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NeatoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Neato camera with config entry."""
-    dev = []
-    neato: NeatoHub = hass.data[NEATO_LOGIN]
-    mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
-    for robot in hass.data[NEATO_ROBOTS]:
-        if "maps" in robot.traits:
-            dev.append(NeatoCleaningMap(neato, robot, mapdata))
+    hub = entry.runtime_data
+    dev = [
+        NeatoCleaningMap(hub, robot, hub.map_data)
+        for robot in hub.robots
+        if "maps" in robot.traits
+    ]
 
     if not dev:
         return
@@ -47,9 +48,7 @@ class NeatoCleaningMap(NeatoEntity, Camera):
 
     _attr_translation_key = "cleaning_map"
 
-    def __init__(
-        self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
-    ) -> None:
+    def __init__(self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any]) -> None:
         """Initialize Neato cleaning map."""
         super().__init__(robot)
         Camera.__init__(self)
@@ -62,6 +61,7 @@ class NeatoCleaningMap(NeatoEntity, Camera):
         self._image_url: str | None = None
         self._image: bytes | None = None
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -111,11 +111,13 @@ class NeatoCleaningMap(NeatoEntity, Camera):
         self._available = True
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the robot is available."""
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}

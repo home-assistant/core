@@ -1,7 +1,7 @@
 """MessageBird platform for notify component."""
-from __future__ import annotations
 
 import logging
+from typing import Any, override
 
 import messagebird
 from messagebird.client import ErrorException
@@ -9,17 +9,17 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_SENDER, default="HA"): vol.All(
@@ -54,7 +54,8 @@ class MessageBirdNotificationService(BaseNotificationService):
         self.sender = sender
         self.client = client
 
-    def send_message(self, message=None, **kwargs):
+    @override
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a specified target."""
         if not (targets := kwargs.get(ATTR_TARGET)):
             _LOGGER.error("No target specified")
@@ -65,6 +66,7 @@ class MessageBirdNotificationService(BaseNotificationService):
                 self.client.message_create(
                     self.sender, target, message, {"reference": "HA"}
                 )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ErrorException as exception:
                 _LOGGER.error("Failed to notify %s: %s", target, exception)
                 continue

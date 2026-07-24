@@ -1,17 +1,16 @@
 """Support for PoolSense binary sensors."""
-from __future__ import annotations
+
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import PoolSenseConfigEntry
 from .entity import PoolSenseEntity
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
@@ -30,24 +29,23 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: PoolSenseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
-    entities = [
-        PoolSenseBinarySensor(coordinator, config_entry.data[CONF_EMAIL], description)
+    async_add_entities(
+        PoolSenseBinarySensor(coordinator, description)
         for description in BINARY_SENSOR_TYPES
-    ]
-
-    async_add_entities(entities, False)
+    )
 
 
 class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     """Representation of PoolSense binary sensors."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.data[self.entity_description.key] == "red"

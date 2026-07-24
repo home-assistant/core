@@ -1,4 +1,5 @@
 """Tests for the Elgato switch platform."""
+
 from unittest.mock import MagicMock
 
 from elgato import ElgatoError
@@ -72,7 +73,8 @@ async def test_switches(
     mocked_method.side_effect = ElgatoError
 
     with pytest.raises(
-        HomeAssistantError, match="An error occurred while updating the Elgato Light"
+        HomeAssistantError,
+        match="An unknown error occurred while communicating with the Elgato device",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -84,7 +86,8 @@ async def test_switches(
     assert len(mocked_method.mock_calls) == 3
 
     with pytest.raises(
-        HomeAssistantError, match="An error occurred while updating the Elgato Light"
+        HomeAssistantError,
+        match="An unknown error occurred while communicating with the Elgato device",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

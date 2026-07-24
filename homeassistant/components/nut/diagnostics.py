@@ -1,32 +1,32 @@
 """Diagnostics support for Nut."""
-from __future__ import annotations
 
 from typing import Any
 
-import attr
-
-from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import PyNUTData
-from .const import DOMAIN, PYNUT_DATA, PYNUT_UNIQUE_ID, USER_AVAILABLE_COMMANDS
+from .const import DOMAIN
+from .coordinator import NutConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: NutConfigEntry
 ) -> dict[str, dict[str, Any]]:
     """Return diagnostics for a config entry."""
     data = {"entry": async_redact_data(entry.as_dict(), TO_REDACT)}
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     # Get information from Nut library
-    nut_data: PyNUTData = hass_data[PYNUT_DATA]
-    nut_cmd: set[str] = hass_data[USER_AVAILABLE_COMMANDS]
+    nut_data = hass_data.data
+    nut_cmd = hass_data.user_available_commands
     data["nut_data"] = {
         "ups_list": nut_data.ups_list,
         "status": nut_data.status,
@@ -36,14 +36,14 @@ async def async_get_config_entry_diagnostics(
     # Gather information how this Nut device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
-    hass_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, hass_data[PYNUT_UNIQUE_ID])}
+    hass_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, hass_data.unique_id), entry.entry_id
     )
-    if not hass_device:
-        return data
+    # Device is always created
+    assert hass_device is not None
 
     data["device"] = {
-        **attr.asdict(hass_device),
+        **device_entry_as_dict(hass_device),
         "entities": {},
     }
 
@@ -63,10 +63,11 @@ async def async_get_config_entry_diagnostics(
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
 
+        entity_dict = entity_entry_as_dict(entity_entry)
+        # The entity_id is already provided at root level (the key).
+        del entity_dict["entity_id"]
         data["device"]["entities"][entity_entry.entity_id] = {
-            **attr.asdict(
-                entity_entry, filter=lambda attr, value: attr.name != "entity_id"
-            ),
+            **entity_dict,
             "state": state_dict,
         }
 

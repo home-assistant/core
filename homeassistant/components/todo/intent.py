@@ -1,54 +1,161 @@
 """Intents for the todo integration."""
-from __future__ import annotations
+
+from typing import override
+
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
 
-from . import DOMAIN, TodoItem, TodoListEntity
+from . import TodoItem, TodoItemStatus, TodoListEntity
+from .const import DATA_COMPONENT, DOMAIN
 
 INTENT_LIST_ADD_ITEM = "HassListAddItem"
+INTENT_LIST_COMPLETE_ITEM = "HassListCompleteItem"
+INTENT_LIST_REMOVE_ITEM = "HassListRemoveItem"
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
-    """Set up the todo intents."""
-    intent.async_register(hass, ListAddItemIntent())
+    """Set up the todo intent handlers."""
+    intent.async_register(hass, ListAddItemIntentHandler())
+    intent.async_register(hass, ListCompleteItemIntentHandler())
+    intent.async_register(hass, ListRemoveItemIntentHandler())
 
 
-class ListAddItemIntent(intent.IntentHandler):
-    """Handle ListAddItem intents."""
+class ListBaseIntentHandler(intent.IntentHandler):
+    """Base class for toto intent handlers."""
 
-    intent_type = INTENT_LIST_ADD_ITEM
-    slot_schema = {"item": cv.string, "name": cv.string}
+    slot_schema = {
+        vol.Required("item"): intent.non_empty_string,
+        vol.Required("name"): intent.non_empty_string,
+    }
+    platforms = {DOMAIN}
 
-    async def async_handle(self, intent_obj: intent.Intent):
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
+        raise NotImplementedError
+
+    @override
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
-        component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
         target_list: TodoListEntity | None = None
 
         # Find matching list
-        for list_state in intent.async_match_states(
-            hass, name=list_name, domains=[DOMAIN]
-        ):
-            target_list = component.get_entity(list_state.entity_id)
-            if target_list is not None:
-                break
+        match_constraints = intent.MatchTargetsConstraints(
+            name=list_name, domains=[DOMAIN], assistant=intent_obj.assistant
+        )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
+        target_list = hass.data[DATA_COMPONENT].get_entity(
+            match_result.states[0].entity_id
+        )
         if target_list is None:
-            raise intent.IntentHandleError(f"No to-do list: {list_name}")
+            raise intent.IntentHandleError(
+                f"No to-do list: {list_name}", "list_not_found"
+            )
 
-        assert target_list is not None
+        # Execute specific action
+        await self._async_do_handle(target_list, item)
+
+        # Build intent response
+        response: intent.IntentResponse = intent_obj.create_response()
+        response.async_set_results(
+            [
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=list_name,
+                    id=target_list.entity_id,
+                )
+            ]
+        )
+        return response
+
+
+class ListAddItemIntentHandler(ListBaseIntentHandler):
+    """Handle ListAddItem intents."""
+
+    intent_type = INTENT_LIST_ADD_ITEM
+    description = "Add item to a todo list"
+
+    @override
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
+        # Format item summary with first letter capitalized and rest as-is
+        summary = item[:1].upper() + item[1:] if item else item
 
         # Add to list
-        await target_list.async_create_todo_item(TodoItem(item))
+        await target_list.async_create_todo_item(
+            TodoItem(summary=summary, status=TodoItemStatus.NEEDS_ACTION)
+        )
 
-        response = intent_obj.create_response()
-        response.response_type = intent.IntentResponseType.ACTION_DONE
-        return response
+
+class ListCompleteItemIntentHandler(ListBaseIntentHandler):
+    """Handle ListCompleteItem intents."""
+
+    intent_type = INTENT_LIST_COMPLETE_ITEM
+    description = "Complete item on a todo list"
+
+    @override
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
+
+        # Find item in list
+        matching_item = None
+        for todo_item in target_list.todo_items or ():
+            if (
+                item == todo_item.uid
+                or item.casefold() == (todo_item.summary or "").casefold()
+            ) and todo_item.status == TodoItemStatus.NEEDS_ACTION:
+                matching_item = todo_item
+                break
+        if not matching_item or not matching_item.uid:
+            raise intent.IntentHandleError(
+                f"Item '{item}' not found on list", "item_not_found"
+            )
+
+        # Mark as completed
+        await target_list.async_update_todo_item(
+            TodoItem(
+                uid=matching_item.uid,
+                summary=matching_item.summary,
+                status=TodoItemStatus.COMPLETED,
+            )
+        )
+
+
+class ListRemoveItemIntentHandler(ListBaseIntentHandler):
+    """Handle LisRemoveItemIntent intents."""
+
+    intent_type = INTENT_LIST_REMOVE_ITEM
+    description = "Remove one or more items from a todo list"
+
+    @override
+    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+        """Execute action specific to this intent handler."""
+
+        # Find item in list
+        matching_item = None
+        for todo_item in target_list.todo_items or ():
+            if (
+                item == todo_item.uid
+                or item.casefold() == (todo_item.summary or "").casefold()
+            ):
+                matching_item = todo_item
+                break
+        if not matching_item or not matching_item.uid:
+            raise intent.IntentHandleError(
+                f"Item '{item}' not found on list", "item_not_found"
+            )
+
+        # Remove items
+        await target_list.async_delete_todo_items(uids=[matching_item.uid])

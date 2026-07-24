@@ -1,10 +1,9 @@
 """Support for U.S. Geological Survey Earthquake Hazards Program Feeds."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeedManager
 from aio_geojson_usgs_earthquakes.feed_entry import (
@@ -12,7 +11,10 @@ from aio_geojson_usgs_earthquakes.feed_entry import (
 )
 import voluptuous as vol
 
-from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.components.geo_location import (
+    PLATFORM_SCHEMA as GEO_LOCATION_PLATFORM_SCHEMA,
+    GeolocationEvent,
+)
 from homeassistant.const import (
     ATTR_TIME,
     CONF_LATITUDE,
@@ -23,8 +25,7 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -80,7 +81,7 @@ VALID_FEED_TYPES = [
     "past_month_all_earthquakes",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FEED_TYPE): vol.In(VALID_FEED_TYPES),
         vol.Optional(CONF_LATITUDE): cv.latitude,
@@ -220,6 +221,7 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -270,19 +272,20 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._alert = feed_entry.alert
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_PLACE, self._place),
-            (ATTR_MAGNITUDE, self._magnitude),
-            (ATTR_TIME, self._time),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_STATUS, self._status),
-            (ATTR_TYPE, self._type),
-            (ATTR_ALERT, self._alert),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_PLACE, self._place),
+                (ATTR_MAGNITUDE, self._magnitude),
+                (ATTR_TIME, self._time),
+                (ATTR_UPDATED, self._updated),
+                (ATTR_STATUS, self._status),
+                (ATTR_TYPE, self._type),
+                (ATTR_ALERT, self._alert),
+            )
+            if value or isinstance(value, bool)
+        }

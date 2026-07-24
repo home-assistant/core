@@ -1,5 +1,4 @@
 """Support for the for Danfoss Air HRV binary sensors."""
-from __future__ import annotations
 
 from pydanfossair.commands import ReadCommand
 
@@ -11,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DANFOSS_AIR_DOMAIN
+from . import DOMAIN
 
 
 def setup_platform(
@@ -21,7 +20,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the available Danfoss Air sensors etc."""
-    data = hass.data[DANFOSS_AIR_DOMAIN]
+    data = hass.data[DOMAIN]
 
     sensors = [
         [
@@ -32,12 +31,13 @@ def setup_platform(
         ["Danfoss Air Away Mode Active", ReadCommand.away_mode, None],
     ]
 
-    dev = []
-
-    for sensor in sensors:
-        dev.append(DanfossAirBinarySensor(data, sensor[0], sensor[1], sensor[2]))
-
-    add_entities(dev, True)
+    add_entities(
+        (
+            DanfossAirBinarySensor(data, sensor[0], sensor[1], sensor[2])
+            for sensor in sensors
+        ),
+        True,
+    )
 
 
 class DanfossAirBinarySensor(BinarySensorEntity):

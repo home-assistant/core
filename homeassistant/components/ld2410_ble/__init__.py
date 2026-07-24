@@ -2,41 +2,55 @@
 
 import logging
 
-from bleak_retry_connector import BleakError, close_stale_connections, get_device
+from bleak_retry_connector import (
+    BleakError,
+    close_stale_connections_by_address,
+    get_device,
+)
 from ld2410_ble import LD2410BLE
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import LD2410BLECoordinator
-from .models import LD2410BLEData
+from .models import LD2410BLEConfigEntry, LD2410BLEData
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) -> bool:
     """Set up LD2410 BLE from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
+
+    await close_stale_connections_by_address(address)
+
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), True
     ) or await get_device(address)
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find LD2410B device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
-
-    await close_stale_connections(ble_device)
 
     ld2410_ble = LD2410BLE(ble_device)
 
-    coordinator = LD2410BLECoordinator(hass, ld2410_ble)
+    coordinator = LD2410BLECoordinator(hass, entry, ld2410_ble)
 
     try:
         await ld2410_ble.initialise()
@@ -64,9 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LD2410BLEData(
-        entry.title, ld2410_ble, coordinator
-    )
+    entry.runtime_data = LD2410BLEData(entry.title, ld2410_ble, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -81,17 +93,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: LD2410BLEConfigEntry
+) -> None:
     """Handle options update."""
-    data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.title:
+    if entry.title != entry.runtime_data.title:
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: LD2410BLEData = hass.data[DOMAIN].pop(entry.entry_id)
-        await data.device.stop()
+        await entry.runtime_data.device.stop()
 
     return unload_ok

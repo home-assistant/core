@@ -1,19 +1,17 @@
 """Auth provider that validates credentials via an external command."""
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any, cast
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from ..models import Credentials, UserMeta
+from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 CONF_ARGS = "args"
@@ -44,7 +42,11 @@ class CommandLineAuthProvider(AuthProvider):
     DEFAULT_TITLE = "Command Line Authentication"
 
     # which keys to accept from a program's stdout
-    ALLOWED_META_KEYS = ("name",)
+    ALLOWED_META_KEYS = (
+        "name",
+        "group",
+        "local_only",
+    )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Extend parent's __init__.
@@ -55,7 +57,10 @@ class CommandLineAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
 
-    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
+    @override
+    async def async_login_flow(
+        self, context: AuthFlowContext | None
+    ) -> CommandLineLoginFlow:
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
@@ -101,6 +106,7 @@ class CommandLineAuthProvider(AuthProvider):
                     meta[key] = value
             self._user_meta[username] = meta
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -113,32 +119,39 @@ class CommandLineAuthProvider(AuthProvider):
         # Create new credentials.
         return self.async_create_credentials({"username": username})
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
         """Return extra user metadata for credentials.
 
-        Currently, only name is supported.
+        Currently, supports name, group and local_only.
         """
         meta = self._user_meta.get(credentials.data["username"], {})
-        return UserMeta(name=meta.get("name"), is_active=True)
+        return UserMeta(
+            name=meta.get("name"),
+            is_active=True,
+            group=meta.get("group"),
+            local_only=meta.get("local_only") == "true",
+        )
 
 
-class CommandLineLoginFlow(LoginFlow):
+class CommandLineLoginFlow(LoginFlow[CommandLineAuthProvider]):
     """Handler for the login flow."""
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         errors = {}
 
         if user_input is not None:
             user_input["username"] = user_input["username"].strip()
             try:
-                await cast(
-                    CommandLineAuthProvider, self._auth_provider
-                ).async_validate_login(user_input["username"], user_input["password"])
+                await self._auth_provider.async_validate_login(
+                    user_input["username"], user_input["password"]
+                )
             except InvalidAuthError:
                 errors["base"] = "invalid_auth"
 

@@ -1,9 +1,10 @@
 """Test the NZBGet config flow."""
+
 from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
 
-from homeassistant.components.nzbget.const import DOMAIN
+from homeassistant.components.nzbget.const import CONF_MORE_OPTIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -27,47 +28,57 @@ async def test_user_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        _patch_version(),
+        _patch_status(),
+        _patch_history(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
-    assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: False}
+    assert result["data"][CONF_VERIFY_SSL] is False
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_show_advanced_options(hass: HomeAssistant) -> None:
-    """Test we get the user initiated form with advanced options shown."""
+async def test_user_form_with_verify_ssl(hass: HomeAssistant) -> None:
+    """Test the user flow with verify SSL option."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    user_input_advanced = {
+    user_input = {
         **USER_INPUT,
-        CONF_VERIFY_SSL: True,
+        CONF_MORE_OPTIONS: {CONF_VERIFY_SSL: True},
     }
 
-    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        _patch_version(),
+        _patch_status(),
+        _patch_history(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input_advanced,
+            user_input,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
-    assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: True}
+    assert result["data"][CONF_VERIFY_SSL] is True
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -87,7 +98,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
             USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -106,7 +117,7 @@ async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:
             USER_INPUT,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -120,5 +131,5 @@ async def test_user_form_single_instance_allowed(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
         data=USER_INPUT,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

@@ -1,15 +1,19 @@
 """Test zone component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import setup
-from homeassistant.components import zone
-from homeassistant.components.zone import DOMAIN
+from homeassistant.components import device_tracker, zone
+from homeassistant.components.zone import ATTR_RADIUS, DOMAIN
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_NAME,
     ATTR_PERSONS,
     SERVICE_RELOAD,
@@ -23,7 +27,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -61,7 +65,7 @@ def storage_setup(hass, hass_storage):
 async def test_setup_no_zones_still_adds_home_zone(hass: HomeAssistant) -> None:
     """Test if no config is passed in we still get the home zone."""
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": None})
-    assert len(hass.states.async_entity_ids("zone")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
     state = hass.states.get("zone.home")
     assert hass.config.location_name == state.name
     assert hass.config.latitude == state.attributes["latitude"]
@@ -80,7 +84,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     }
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids("zone")) == 2
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
     state = hass.states.get("zone.test_zone")
     assert info["name"] == state.name
     assert info["latitude"] == state.attributes["latitude"]
@@ -94,7 +98,7 @@ async def test_setup_zone_skips_home_zone(hass: HomeAssistant) -> None:
     info = {"name": "Home", "latitude": 1.1, "longitude": -2.2}
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids("zone")) == 1
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
     state = hass.states.get("zone.home")
     assert info["name"] == state.name
 
@@ -103,7 +107,7 @@ async def test_setup_name_can_be_same_on_multiple_zones(hass: HomeAssistant) -> 
     """Test that zone named Home should override hass home zone."""
     info = {"name": "Test Zone", "latitude": 1.1, "longitude": -2.2}
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": [info, info]})
-    assert len(hass.states.async_entity_ids("zone")) == 3
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 3
 
 
 async def test_active_zone_skips_passive_zones(hass: HomeAssistant) -> None:
@@ -124,8 +128,11 @@ async def test_active_zone_skips_passive_zones(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    active = zone.async_active_zone(hass, 32.880600, -117.237561)
-    assert active is None
+    active_zone = zone.async_active_zone(hass, 32.880600, -117.237561)
+    assert active_zone is None
+    active_zone, in_zones = zone.async_in_zones(hass, 32.880600, -117.237561)
+    assert active_zone is None
+    assert in_zones == ["zone.passive_zone"]
 
 
 async def test_active_zone_skips_passive_zones_2(hass: HomeAssistant) -> None:
@@ -145,8 +152,11 @@ async def test_active_zone_skips_passive_zones_2(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    active = zone.async_active_zone(hass, 32.880700, -117.237561)
-    assert active.entity_id == "zone.active_zone"
+    active_zone = zone.async_active_zone(hass, 32.880700, -117.237561)
+    assert active_zone.entity_id == "zone.active_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, 32.880600, -117.237561)
+    assert active_zone.entity_id == "zone.active_zone"
+    assert in_zones == ["zone.active_zone"]
 
 
 async def test_active_zone_prefers_smaller_zone_if_same_distance(
@@ -176,8 +186,11 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance(
         },
     )
 
-    active = zone.async_active_zone(hass, latitude, longitude)
-    assert active.entity_id == "zone.small_zone"
+    active_zone = zone.async_active_zone(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.small_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.small_zone"
+    assert in_zones == ["zone.small_zone", "zone.big_zone"]
 
 
 async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
@@ -201,8 +214,52 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
         },
     )
 
-    active = zone.async_active_zone(hass, latitude, longitude)
-    assert active.entity_id == "zone.smallest_zone"
+    active_zone = zone.async_active_zone(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.smallest_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.smallest_zone"
+    assert in_zones == ["zone.smallest_zone"]
+
+
+async def test_active_zone_prefers_smaller_zone_over_closer_zone(
+    hass: HomeAssistant,
+) -> None:
+    """Test the smallest containing zone wins over a larger, closer one.
+
+    A larger zone is centered on the point (distance 0) while a smaller zone is
+    offset but still contains the point. The smaller zone is farther from its
+    center, but it is preferred because it is smaller.
+    """
+    latitude = 32.880600
+    longitude = -117.237561
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Big Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 1000,
+                },
+                {
+                    # Offset ~111 m north; its 200 m radius still contains the
+                    # point. Farther from its center than Big Zone, but smaller.
+                    "name": "Small Zone",
+                    "latitude": latitude + 0.001,
+                    "longitude": longitude,
+                    "radius": 200,
+                },
+            ]
+        },
+    )
+
+    active_zone = zone.async_active_zone(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.small_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.small_zone"
+    assert in_zones == ["zone.small_zone", "zone.big_zone"]
 
 
 async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
@@ -228,6 +285,52 @@ async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
     assert zone.in_zone(hass.states.get("zone.passive_zone"), latitude, longitude)
 
 
+async def test_async_active_zone_with_non_zero_radius(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_active_zone with a non-zero radius."""
+    latitude = 32.880600
+    longitude = -117.237561
+
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Small Zone",
+                    "latitude": 32.980600,
+                    "longitude": -117.137561,
+                    "radius": 50000,
+                },
+                {
+                    "name": "Big Zone",
+                    "latitude": 32.980600,
+                    "longitude": -117.137561,
+                    "radius": 100000,
+                },
+            ]
+        },
+    )
+
+    home_state = hass.states.get("zone.home")
+    assert home_state.attributes["radius"] == 100
+    assert home_state.attributes["latitude"] == 32.87336
+    assert home_state.attributes["longitude"] == -117.22743
+
+    active_zone = zone.async_active_zone(hass, latitude, longitude, 5000)
+    assert active_zone.entity_id == "zone.home"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude, 5000)
+    assert active_zone.entity_id == "zone.home"
+    assert in_zones == ["zone.home", "zone.small_zone", "zone.big_zone"]
+
+    active_zone = zone.async_active_zone(hass, latitude, longitude, 0)
+    assert active_zone.entity_id == "zone.small_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude, 0)
+    assert active_zone.entity_id == "zone.small_zone"
+    assert in_zones == ["zone.small_zone", "zone.big_zone"]
+
+
 async def test_core_config_update(hass: HomeAssistant) -> None:
     """Test updating core config will update home zone."""
     assert await setup.async_setup_component(hass, "zone", {})
@@ -248,11 +351,13 @@ async def test_core_config_update(hass: HomeAssistant) -> None:
 
 
 async def test_reload(
-    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
 ) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = er.async_get(hass)
 
     assert await setup.async_setup_component(
         hass,
@@ -278,7 +383,7 @@ async def test_reload(
     assert state_2.attributes["latitude"] == 3
     assert state_2.attributes["longitude"] == 4
     assert state_3 is None
-    assert len(ent_reg.entities) == 0
+    assert len(entity_registry.entities) == 0
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -370,18 +475,20 @@ async def test_ws_list(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -393,11 +500,14 @@ async def test_ws_delete(
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
 async def test_update(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test updating min/max updates the state."""
 
@@ -415,12 +525,11 @@ async def test_update(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes["latitude"] == 1
     assert state.attributes["longitude"] == 2
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -444,18 +553,20 @@ async def test_update(
 
 
 async def test_ws_create(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
     client = await hass_ws_client(hass)
 
@@ -512,13 +623,222 @@ async def test_zone_empty_setup(hass: HomeAssistant) -> None:
 
 
 async def test_unavailable_zone(hass: HomeAssistant) -> None:
-    """Test active zone with unavailable zones."""
+    """Test active zone with unavailable zones.
+
+    Simulates the startup window where a zone has been pre-filled by the entity
+    registry as ``unavailable`` (``restored: True``) before the zone integration
+    has had a chance to write the zone's real state. Storage-created zones, and
+    YAML zones with an explicit ``id:``, get a unique_id and so are registered
+    in the entity registry; on ``EVENT_HOMEASSISTANT_START`` the registry writes
+    ``unavailable`` for any such registered entity that does not yet have a
+    state. The zone helpers must skip these placeholder states.
+    """
     assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
     hass.states.async_set("zone.bla", "unavailable", {"restored": True})
 
     assert zone.async_active_zone(hass, 0.0, 0.01) is None
+    active_zone, in_zones = zone.async_in_zones(hass, 0.0, 0.01)
+    assert active_zone is None
+    assert in_zones == []
 
     assert zone.in_zone(hass.states.get("zone.bla"), 0, 0) is False
+
+
+async def test_async_get_enclosing_zones(hass: HomeAssistant) -> None:
+    """Test async_get_enclosing_zones returns zones that fully contain the given zone."""
+    latitude = 32.880600
+    longitude = -117.237561
+
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Small Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 100,
+                },
+                {
+                    "name": "Medium Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 500,
+                },
+                {
+                    "name": "Big Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 2000,
+                },
+                {
+                    "name": "Passive Big Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 3000,
+                    "passive": True,
+                },
+            ]
+        },
+    )
+
+    # Small zone is enclosed by every larger concentric zone, sorted by radius.
+    # The queried zone itself is excluded.
+    assert zone.async_get_enclosing_zones(hass, "zone.small_zone") == [
+        "zone.medium_zone",
+        "zone.big_zone",
+        "zone.passive_big_zone",
+    ]
+
+    # Medium zone is enclosed only by the two bigger zones.
+    assert zone.async_get_enclosing_zones(hass, "zone.medium_zone") == [
+        "zone.big_zone",
+        "zone.passive_big_zone",
+    ]
+
+    # The biggest active zone is enclosed by the passive zone only.
+    assert zone.async_get_enclosing_zones(hass, "zone.big_zone") == [
+        "zone.passive_big_zone",
+    ]
+
+    # The largest zone of all is enclosed by nothing.
+    assert zone.async_get_enclosing_zones(hass, "zone.passive_big_zone") == []
+
+
+async def test_async_get_enclosing_zones_equal_radius(hass: HomeAssistant) -> None:
+    """Test that same-center same-radius zones enclose each other (<= predicate)."""
+    latitude = 32.880600
+    longitude = -117.237561
+
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Zone A",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 1000,
+                },
+                {
+                    "name": "Zone B",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 1000,
+                },
+            ]
+        },
+    )
+
+    assert zone.async_get_enclosing_zones(hass, "zone.zone_a") == ["zone.zone_b"]
+    assert zone.async_get_enclosing_zones(hass, "zone.zone_b") == ["zone.zone_a"]
+
+
+async def test_async_get_enclosing_zones_with_offset(hass: HomeAssistant) -> None:
+    """Test full containment accounts for distance from zone center."""
+    latitude = 32.880600
+    longitude = -117.237561
+
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Inner",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 100,
+                },
+                {
+                    "name": "Centered",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 1000,
+                },
+                {
+                    "name": "Offset",
+                    "latitude": 32.880600,
+                    "longitude": -117.245561,  # ~750m to the west
+                    "radius": 1000,
+                },
+            ]
+        },
+    )
+
+    # 100m radius zone at the center: both 1000m zones enclose it
+    # (centered trivially; offset has ~750 + 100 = 850 <= 1000).
+    assert zone.async_get_enclosing_zones(hass, "zone.inner") == [
+        "zone.centered",
+        "zone.offset",
+    ]
+
+
+async def test_async_get_enclosing_zones_missing_zone(hass: HomeAssistant) -> None:
+    """Test async_get_enclosing_zones returns [] for an unknown zone."""
+    assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
+
+    assert zone.async_get_enclosing_zones(hass, "zone.does_not_exist") == []
+
+
+async def test_async_get_enclosing_zones_unavailable_input(hass: HomeAssistant) -> None:
+    """Test async_get_enclosing_zones returns [] when the input zone is unavailable.
+
+    Simulates the startup window where a zone has been pre-filled by the entity
+    registry as ``unavailable`` (``restored: True``) before the zone integration
+    has had a chance to write the zone's real state. See ``test_unavailable_zone``
+    for the full explanation.
+    """
+    assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
+    hass.states.async_set(
+        "zone.bla",
+        "unavailable",
+        {"restored": True},
+    )
+
+    assert zone.async_get_enclosing_zones(hass, "zone.bla") == []
+
+
+async def test_async_get_enclosing_zones_skips_unavailable_other(
+    hass: HomeAssistant,
+) -> None:
+    """Test other zones that are unavailable are skipped when searching containers.
+
+    See ``test_unavailable_zone`` for why an unavailable zone can appear in the
+    state machine.
+    """
+    latitude = 32.880600
+    longitude = -117.237561
+
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Inner",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": 100,
+                },
+            ]
+        },
+    )
+    # A zone that would otherwise enclose Inner, but is unavailable.
+    hass.states.async_set(
+        "zone.bigger",
+        "unavailable",
+        {
+            ATTR_LATITUDE: latitude,
+            ATTR_LONGITUDE: longitude,
+            ATTR_RADIUS: 1000,
+            "restored": True,
+        },
+    )
+
+    assert zone.async_get_enclosing_zones(hass, "zone.inner") == []
 
 
 async def test_state(hass: HomeAssistant) -> None:
@@ -532,7 +852,7 @@ async def test_state(hass: HomeAssistant) -> None:
     }
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids("zone")) == 2
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
     state = hass.states.get("zone.test_zone")
     assert state.state == "0"
     assert state.attributes[ATTR_PERSONS] == []
@@ -541,6 +861,7 @@ async def test_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person1",
         "Test Zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
     await hass.async_block_till_done()
 
@@ -558,6 +879,7 @@ async def test_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person2",
         "TEST zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
     await hass.async_block_till_done()
 
@@ -578,6 +900,7 @@ async def test_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person1",
         "home",
+        {device_tracker.ATTR_IN_ZONES: ["zone.home"]},
     )
     await hass.async_block_till_done()
 
@@ -591,10 +914,32 @@ async def test_state(hass: HomeAssistant) -> None:
     assert state.state == "1"
     assert state.attributes[ATTR_PERSONS] == ["person.person1"]
 
+    # Person entity is in two zones
+    hass.states.async_set(
+        "person.person1",
+        "home",
+        {device_tracker.ATTR_IN_ZONES: ["zone.home", "zone.test_zone"]},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("zone.test_zone")
+    assert state
+    assert state.state == "2"
+    assert sorted(state.attributes[ATTR_PERSONS]) == [
+        "person.person1",
+        "person.person2",
+    ]
+
+    state = hass.states.get("zone.home")
+    assert state
+    assert state.state == "1"
+    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
+
     # Person entity enters not_home
     hass.states.async_set(
         "person.person1",
         "not_home",
+        {device_tracker.ATTR_IN_ZONES: []},
     )
     await hass.async_block_till_done()
 

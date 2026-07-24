@@ -1,29 +1,35 @@
 """Config flow to configure emulated_roku component."""
+
+from typing import Any, override
+
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_LISTEN_PORT, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 
 @callback
-def configured_servers(hass):
+def configured_servers(hass: HomeAssistant) -> set[str]:
     """Return a set of the configured servers."""
     return {
         entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
 
-class EmulatedRokuFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EmulatedRokuFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an emulated_roku config flow."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
@@ -42,6 +48,8 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME, default=default_name): str,
                     vol.Required(CONF_LISTEN_PORT, default=default_port): vol.Coerce(
                         int
@@ -51,6 +59,6 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow import."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)

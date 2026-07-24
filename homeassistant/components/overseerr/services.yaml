@@ -1,0 +1,67 @@
+get_requests:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    status:
+      selector:
+        select:
+          options:
+            - approved
+            - pending
+            - available
+            - processing
+            - unavailable
+            - failed
+          translation_key: request_status
+    sort_order:
+      selector:
+        select:
+          options:
+            - added
+            - modified
+          translation_key: request_sort_order
+    requested_by:
+      selector:
+        number:
+          min: 0
+          mode: box
+
+search_media:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    query:
+      required: true
+      selector:
+        text:
+
+request_media:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    media_type:
+      required: true
+      selector:
+        select:
+          options:
+            - movie
+            - tv
+          translation_key: request_media_type
+    media_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    seasons:
+      selector:
+        text:

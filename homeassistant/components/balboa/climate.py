@@ -1,8 +1,7 @@
 """Support for Balboa Spa Wifi adaptor."""
-from __future__ import annotations
 
 from enum import IntEnum
-from typing import Any
+from typing import Any, override
 
 from pybalboa import SpaClient, SpaControl
 from pybalboa.enums import HeatMode, HeatState, TemperatureUnit
@@ -13,7 +12,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -21,8 +19,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import BalboaConfigEntry
 from .const import DOMAIN
 from .entity import BalboaEntity
 
@@ -44,21 +43,26 @@ TEMPERATURE_UNIT_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BalboaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the spa climate entity."""
-    async_add_entities([BalboaClimateEntity(hass.data[DOMAIN][entry.entry_id])])
+    async_add_entities([BalboaClimateEntity(entry.runtime_data)])
 
 
 class BalboaClimateEntity(BalboaEntity, ClimateEntity):
     """Representation of a Balboa spa climate entity."""
 
-    _attr_icon = "mdi:hot-tub"
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_translation_key = DOMAIN
+    _attr_name = None
 
     def __init__(self, client: SpaClient) -> None:
         """Initialize the climate entity."""
@@ -73,16 +77,19 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
             self._attr_fan_modes = list(self._fan_mode_map)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         return HEAT_HVAC_MODE_MAP.get(self._client.heat_mode.state)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current operation mode."""
         return HEAT_STATE_HVAC_ACTION_MAP[self._client.heat_state]
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if (blower := self._blower) is not None:
@@ -90,6 +97,7 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def precision(self) -> float:
         """Return the precision of the system."""
         if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
@@ -97,48 +105,58 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
         return PRECISION_WHOLE
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return TEMPERATURE_UNIT_MAP[self._client.temperature_unit]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._client.temperature
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the target temperature we try to reach."""
         return self._client.target_temperature
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature supported by the spa."""
         return self._client.temperature_minimum
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the minimum temperature supported by the spa."""
         return self._client.temperature_maximum
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return current preset mode."""
         return self._client.heat_mode.state.name.lower()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         await self._client.set_temperature(kwargs[ATTR_TEMPERATURE])
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._client.heat_mode.set_state(HeatMode[preset_mode.upper()])
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if (blower := self._blower) is not None:
             await blower.set_state(self._fan_mode_map[fan_mode])
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self._client.heat_mode.set_state(HVAC_HEAT_MODE_MAP[hvac_mode])

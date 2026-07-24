@@ -1,6 +1,7 @@
 """API for Netatmo bound to HASS OAuth."""
+
 from collections.abc import Iterable
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 import pyatmo
@@ -37,8 +38,8 @@ class AsyncConfigEntryNetatmoAuth(pyatmo.AbstractAsyncAuth):
         super().__init__(websession)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token for Netatmo API."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
         return cast(str, self._oauth_session.token["access_token"])

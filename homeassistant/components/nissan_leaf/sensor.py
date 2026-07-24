@@ -1,7 +1,7 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
-from __future__ import annotations
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE, UnitOfLength
@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import LeafDataStore, LeafEntity
+from . import LeafDataStore
 from .const import (
     DATA_BATTERY,
     DATA_CHARGING,
@@ -20,6 +20,7 @@ from .const import (
     DATA_RANGE_AC,
     DATA_RANGE_AC_OFF,
 )
+from .entity import LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +57,13 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_soc"
 
     @property
+    @override
     def name(self) -> str:
         """Sensor Name."""
         return f"{self.car.leaf.nickname} Charge"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Battery state percentage."""
         if self.car.data[DATA_BATTERY] is None:
@@ -68,6 +71,7 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
         return round(self.car.data[DATA_BATTERY])  # type: ignore[no-any-return]
 
     @property
+    @override
     def icon(self) -> str:
         """Battery state icon handling."""
         chargestate = self.car.data[DATA_CHARGING]
@@ -89,12 +93,14 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
             self._attr_unique_id = f"{self.car.leaf.vin.lower()}_range"
 
     @property
+    @override
     def name(self) -> str:
         """Update sensor name depending on AC."""
         if self._ac_on is True:
             return f"{self.car.leaf.nickname} Range (AC)"
         return f"{self.car.leaf.nickname} Range"
 
+    @override
     def log_registration(self) -> None:
         """Log registration."""
         _LOGGER.debug(
@@ -103,6 +109,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Battery range in miles or kms."""
         ret: float | None
@@ -122,6 +129,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         return round(ret)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Battery range unit."""
         if self.car.hass.config.units is US_CUSTOMARY_SYSTEM or self.car.force_miles:

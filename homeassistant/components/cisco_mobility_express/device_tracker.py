@@ -1,14 +1,14 @@
 """Support for Cisco Mobility Express."""
-from __future__ import annotations
 
 import logging
+from typing import override
 
 from ciscomobilityexpress.ciscome import CiscoMobilityExpress
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoMEDeviceScanner | None:
     """Validate the configuration and return a Cisco ME scanner."""
 
-    config = config[DOMAIN]
+    config = config[DEVICE_TRACKER_DOMAIN]
 
     controller = CiscoMobilityExpress(
         config[CONF_HOST],
@@ -63,20 +63,22 @@ class CiscoMEDeviceScanner(DeviceScanner):
         self.controller = controller
         self.last_results = {}
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.macaddr for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.clId for result in self.last_results if result.macaddr == device),
             None,
         )
-        return name
 
+    @override
     def get_extra_attributes(self, device):
         """Get extra attributes of a device.
 

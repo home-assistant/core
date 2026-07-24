@@ -1,8 +1,8 @@
 """Support for RDW binary sensors."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from vehicle import Vehicle
 
@@ -11,19 +11,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import RDWConfigEntry, RDWDataUpdateCoordinator
+from .entity import RDWEntity
+
+PARALLEL_UPDATES = 0
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RDWBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes RDW binary sensor entity."""
 
@@ -34,7 +31,6 @@ BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="liability_insured",
         translation_key="liability_insured",
-        icon="mdi:shield-car",
         is_on_fn=lambda vehicle: vehicle.liability_insured,
     ),
     RDWBinarySensorEntityDescription(
@@ -48,50 +44,34 @@ BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: RDWConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RDW binary sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        RDWBinarySensorEntity(
-            coordinator=coordinator,
-            description=description,
-        )
+        RDWBinarySensorEntity(entry.runtime_data, description)
         for description in BINARY_SENSORS
-        if description.is_on_fn(coordinator.data) is not None
+        if description.is_on_fn(entry.runtime_data.data) is not None
     )
 
 
-class RDWBinarySensorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[Vehicle]], BinarySensorEntity
-):
+class RDWBinarySensorEntity(RDWEntity, BinarySensorEntity):
     """Defines an RDW binary sensor."""
 
     entity_description: RDWBinarySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        *,
-        coordinator: DataUpdateCoordinator[Vehicle],
+        coordinator: RDWDataUpdateCoordinator,
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.license_plate}_{description.key}"
 
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.data.license_plate)},
-            manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
-            model=coordinator.data.model,
-            configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
-        )
-
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return bool(self.entity_description.is_on_fn(self.coordinator.data))

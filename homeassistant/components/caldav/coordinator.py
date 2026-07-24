@@ -1,11 +1,11 @@
 """Data update coordinator for caldav."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta
-from functools import partial
 import logging
 import re
+from typing import TYPE_CHECKING, override
+
+import caldav
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
 from homeassistant.core import HomeAssistant
@@ -13,6 +13,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .api import get_attr_value
+
+if TYPE_CHECKING:
+    from . import CalDavConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +26,20 @@ OFFSET = "!!"
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, hass, calendar, days, include_all_day, search):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: CalDavConfigEntry | None,
+        calendar: caldav.Calendar,
+        days: int,
+        include_all_day: bool,
+        search: str | None,
+    ) -> None:
         """Set up how we are going to search the WebDav calendar."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"CalDAV {calendar.name}",
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
@@ -35,21 +47,23 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self.days = days
         self.include_all_day = include_all_day
         self.search = search
-        self.offset = None
+        self.offset: timedelta | None = None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        # Get event list from the current calendar
-        vevent_list = await hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_date,
-                end=end_date,
-                event=True,
-                expand=True,
-            )
+        return await hass.async_add_executor_job(self._get_events, start_date, end_date)
+
+    def _get_events(
+        self, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Fetch and parse events in a specific time frame."""
+        vevent_list = self.calendar.search(
+            start=start_date,
+            end=end_date,
+            event=True,
+            expand=True,
         )
         event_list = []
         for event in vevent_list:
@@ -66,30 +80,45 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     end=self.to_local(self.get_end_date(vevent)),
                     location=get_attr_value(vevent, "location"),
                     description=get_attr_value(vevent, "description"),
+                    uid=get_attr_value(vevent, "uid"),
+                    recurrence_id=(
+                        str(v)
+                        if (v := get_attr_value(vevent, "recurrence_id")) is not None
+                        else None
+                    ),
                 )
             )
 
         return event_list
 
+    @override
     async def _async_update_data(self) -> CalendarEvent | None:
         """Get the latest data."""
         start_of_today = dt_util.start_of_local_day()
         start_of_tomorrow = dt_util.start_of_local_day() + timedelta(days=self.days)
 
+        event, offset = await self.hass.async_add_executor_job(
+            self._get_next_event, start_of_today, start_of_tomorrow
+        )
+        self.offset = offset
+        return event
+
+    def _get_next_event(
+        self, start_of_today: datetime, start_of_tomorrow: datetime
+    ) -> tuple[CalendarEvent | None, timedelta | None]:
+        """Fetch and parse the next matching event."""
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = await self.hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_of_today,
-                end=start_of_tomorrow,
-                event=True,
-                expand=True,
-            ),
+        results = self.calendar.search(
+            start=start_of_today,
+            end=start_of_tomorrow,
+            event=True,
+            expand=True,
         )
 
         # Create new events for each recurrence of an event that happens today.
-        # For recurring events, some servers return the original event with recurrence rules
+        # For recurring events, some servers return the original
+        # event with recurrence rules
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:
@@ -109,7 +138,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                     _start_of_tomorrow = start_of_tomorrow
                 if _start_of_today <= start_dt < _start_of_tomorrow:
                     new_event = event.copy()
-                    new_vevent = new_event.instance.vevent
+                    new_vevent = new_event.instance.vevent  # type: ignore[attr-defined]
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
@@ -147,21 +176,26 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 len(vevents),
                 self.calendar.name,
             )
-            self.offset = None
-            return None
+            return None, None
 
         # Populate the entity attributes with the event values
         (summary, offset) = extract_offset(
             get_attr_value(vevent, "summary") or "", OFFSET
         )
-        self.offset = offset
-        return CalendarEvent(
+        next_event = CalendarEvent(
             summary=summary,
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
             location=get_attr_value(vevent, "location"),
             description=get_attr_value(vevent, "description"),
+            uid=get_attr_value(vevent, "uid"),
+            recurrence_id=(
+                str(v)
+                if (v := get_attr_value(vevent, "recurrence_id")) is not None
+                else None
+            ),
         )
+        return next_event, offset
 
     @staticmethod
     def is_matching(vevent, search):
@@ -171,12 +205,12 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         pattern = re.compile(search)
         return (
-            hasattr(vevent, "summary")
-            and pattern.match(vevent.summary.value)
-            or hasattr(vevent, "location")
-            and pattern.match(vevent.location.value)
-            or hasattr(vevent, "description")
-            and pattern.match(vevent.description.value)
+            (hasattr(vevent, "summary") and pattern.match(vevent.summary.value))
+            or (hasattr(vevent, "location") and pattern.match(vevent.location.value))
+            or (
+                hasattr(vevent, "description")
+                and pattern.match(vevent.description.value)
+            )
         )
 
     @staticmethod
@@ -196,7 +230,9 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         """Return a datetime."""
         if isinstance(obj, datetime):
             return CalDavUpdateCoordinator.to_local(obj)
-        return datetime.combine(obj, time.min).replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        return datetime.combine(obj, time.min).replace(
+            tzinfo=dt_util.get_default_time_zone()
+        )
 
     @staticmethod
     def to_local(obj: datetime | date) -> datetime | date:

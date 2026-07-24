@@ -1,4 +1,6 @@
 """The tests for the Input text component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,7 +37,7 @@ TEST_VAL_MAX = 22
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -69,7 +71,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def async_set_value(hass, entity_id, value):
+async def async_set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     """Set input_text to value."""
     await hass.services.async_call(
         DOMAIN,
@@ -79,16 +81,21 @@ async def async_set_value(hass, entity_id, value):
     )
 
 
-async def test_config(hass: HomeAssistant) -> None:
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "invalid_config",
+    [
         None,
-        {},
         {"name with space": None},
-        {"test_1": {"min": 50, "max": 50}},
-    ]
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+        {"test_1": {"min": 51, "max": 50}},
+        {"test_1": {"min": -1, "max": 100}},
+        {"test_1": {"min": 0, "max": 256}},
+        {"test_1": {"min": 0, "max": 3, "initial": "aaaaa"}},
+    ],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
+    """Test config."""
+
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_set_value(hass: HomeAssistant) -> None:
@@ -165,7 +172,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         (State("input_text.b1", "test"), State("input_text.b2", "testing too long")),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"b1": None, "b2": {"min": 0, "max": 10}}}
@@ -187,7 +194,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
         (State("input_text.b1", "testing"), State("input_text.b2", "testing too long")),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -211,7 +218,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}})
 
@@ -225,7 +232,7 @@ async def test_input_text_context(
 ) -> None:
     """Test that input_text context works."""
     assert await async_setup_component(
-        hass, "input_text", {"input_text": {"t1": {"initial": "bla"}}}
+        hass, DOMAIN, {"input_text": {"t1": {"initial": "bla"}}}
     )
 
     state = hass.states.get("input_text.t1")
@@ -290,7 +297,7 @@ async def test_reload(
         autospec=True,
         return_value={
             DOMAIN: {
-                "test_2": {"initial": "test reloaded", ATTR_MIN: 12},
+                "test_2": {"initial": "test reloaded", ATTR_MIN: 6},
                 "test_3": {"initial": "test 3", ATTR_MAX: 21},
             }
         },
@@ -319,7 +326,7 @@ async def test_reload(
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
-    assert state_2.attributes[ATTR_MIN] == 12
+    assert state_2.attributes[ATTR_MIN] == 6
     assert state_3.attributes[ATTR_MAX] == 21
 
 

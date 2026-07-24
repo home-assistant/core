@@ -1,9 +1,8 @@
 """Support for power sensors in WeMo Insight devices."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,15 +13,15 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import async_wemo_dispatcher_connect
+from .coordinator import DeviceCoordinator
 from .entity import WemoEntity
-from .wemo_device import DeviceCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
@@ -58,7 +57,7 @@ ATTRIBUTE_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     _config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeMo sensors."""
 
@@ -86,11 +85,13 @@ class AttributeSensor(WemoEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def name_suffix(self) -> str | None:
         """Return the name of the entity."""
         return self.entity_description.name
 
     @property
+    @override
     def unique_id_suffix(self) -> str | None:
         """Suffix to append to the WeMo device's unique ID."""
         return self.entity_description.unique_id_suffix
@@ -102,6 +103,7 @@ class AttributeSensor(WemoEntity, SensorEntity):
         return convert(value)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the device attribute."""
         return self.convert_state(getattr(self.wemo, self.entity_description.key))

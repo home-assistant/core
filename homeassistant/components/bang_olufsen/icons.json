@@ -1,0 +1,283 @@
+{
+  "entity": {
+    "event": {
+      "control_blue": {
+        "default": "mdi:remote"
+      },
+      "control_digit0": {
+        "default": "mdi:remote"
+      },
+      "control_digit1": {
+        "default": "mdi:remote"
+      },
+      "control_digit2": {
+        "default": "mdi:remote"
+      },
+      "control_digit3": {
+        "default": "mdi:remote"
+      },
+      "control_digit4": {
+        "default": "mdi:remote"
+      },
+      "control_digit5": {
+        "default": "mdi:remote"
+      },
+      "control_digit6": {
+        "default": "mdi:remote"
+      },
+      "control_digit7": {
+        "default": "mdi:remote"
+      },
+      "control_digit8": {
+        "default": "mdi:remote"
+      },
+      "control_digit9": {
+        "default": "mdi:remote"
+      },
+      "control_down": {
+        "default": "mdi:remote"
+      },
+      "control_func1": {
+        "default": "mdi:remote"
+      },
+      "control_func10": {
+        "default": "mdi:remote"
+      },
+      "control_func11": {
+        "default": "mdi:remote"
+      },
+      "control_func12": {
+        "default": "mdi:remote"
+      },
+      "control_func13": {
+        "default": "mdi:remote"
+      },
+      "control_func14": {
+        "default": "mdi:remote"
+      },
+      "control_func15": {
+        "default": "mdi:remote"
+      },
+      "control_func16": {
+        "default": "mdi:remote"
+      },
+      "control_func17": {
+        "default": "mdi:remote"
+      },
+      "control_func18": {
+        "default": "mdi:remote"
+      },
+      "control_func19": {
+        "default": "mdi:remote"
+      },
+      "control_func2": {
+        "default": "mdi:remote"
+      },
+      "control_func20": {
+        "default": "mdi:remote"
+      },
+      "control_func21": {
+        "default": "mdi:remote"
+      },
+      "control_func22": {
+        "default": "mdi:remote"
+      },
+      "control_func23": {
+        "default": "mdi:remote"
+      },
+      "control_func24": {
+        "default": "mdi:remote"
+      },
+      "control_func25": {
+        "default": "mdi:remote"
+      },
+      "control_func26": {
+        "default": "mdi:remote"
+      },
+      "control_func27": {
+        "default": "mdi:remote"
+      },
+      "control_func3": {
+        "default": "mdi:remote"
+      },
+      "control_func4": {
+        "default": "mdi:remote"
+      },
+      "control_func5": {
+        "default": "mdi:remote"
+      },
+      "control_func6": {
+        "default": "mdi:remote"
+      },
+      "control_func7": {
+        "default": "mdi:remote"
+      },
+      "control_func8": {
+        "default": "mdi:remote"
+      },
+      "control_func9": {
+        "default": "mdi:remote"
+      },
+      "control_green": {
+        "default": "mdi:remote"
+      },
+      "control_left": {
+        "default": "mdi:remote"
+      },
+      "control_play": {
+        "default": "mdi:remote"
+      },
+      "control_red": {
+        "default": "mdi:remote"
+      },
+      "control_rewind": {
+        "default": "mdi:remote"
+      },
+      "control_right": {
+        "default": "mdi:remote"
+      },
+      "control_select": {
+        "default": "mdi:remote"
+      },
+      "control_stop": {
+        "default": "mdi:remote"
+      },
+      "control_up": {
+        "default": "mdi:remote"
+      },
+      "control_wind": {
+        "default": "mdi:remote"
+      },
+      "control_yellow": {
+        "default": "mdi:remote"
+      },
+      "light_blue": {
+        "default": "mdi:remote"
+      },
+      "light_digit0": {
+        "default": "mdi:remote"
+      },
+      "light_digit1": {
+        "default": "mdi:remote"
+      },
+      "light_digit2": {
+        "default": "mdi:remote"
+      },
+      "light_digit3": {
+        "default": "mdi:remote"
+      },
+      "light_digit4": {
+        "default": "mdi:remote"
+      },
+      "light_digit5": {
+        "default": "mdi:remote"
+      },
+      "light_digit6": {
+        "default": "mdi:remote"
+      },
+      "light_digit7": {
+        "default": "mdi:remote"
+      },
+      "light_digit8": {
+        "default": "mdi:remote"
+      },
+      "light_digit9": {
+        "default": "mdi:remote"
+      },
+      "light_down": {
+        "default": "mdi:remote"
+      },
+      "light_func1": {
+        "default": "mdi:remote"
+      },
+      "light_func10": {
+        "default": "mdi:remote"
+      },
+      "light_func11": {
+        "default": "mdi:remote"
+      },
+      "light_func12": {
+        "default": "mdi:remote"
+      },
+      "light_func13": {
+        "default": "mdi:remote"
+      },
+      "light_func14": {
+        "default": "mdi:remote"
+      },
+      "light_func15": {
+        "default": "mdi:remote"
+      },
+      "light_func16": {
+        "default": "mdi:remote"
+      },
+      "light_func17": {
+        "default": "mdi:remote"
+      },
+      "light_func2": {
+        "default": "mdi:remote"
+      },
+      "light_func3": {
+        "default": "mdi:remote"
+      },
+      "light_func4": {
+        "default": "mdi:remote"
+      },
+      "light_func5": {
+        "default": "mdi:remote"
+      },
+      "light_func6": {
+        "default": "mdi:remote"
+      },
+      "light_func7": {
+        "default": "mdi:remote"
+      },
+      "light_func8": {
+        "default": "mdi:remote"
+      },
+      "light_func9": {
+        "default": "mdi:remote"
+      },
+      "light_green": {
+        "default": "mdi:remote"
+      },
+      "light_left": {
+        "default": "mdi:remote"
+      },
+      "light_play": {
+        "default": "mdi:remote"
+      },
+      "light_red": {
+        "default": "mdi:remote"
+      },
+      "light_rewind": {
+        "default": "mdi:remote"
+      },
+      "light_right": {
+        "default": "mdi:remote"
+      },
+      "light_select": {
+        "default": "mdi:remote"
+      },
+      "light_stop": {
+        "default": "mdi:remote"
+      },
+      "light_up": {
+        "default": "mdi:remote"
+      },
+      "light_wind": {
+        "default": "mdi:remote"
+      },
+      "light_yellow": {
+        "default": "mdi:remote"
+      }
+    }
+  },
+  "services": {
+    "beolink_allstandby": { "service": "mdi:close-circle-multiple-outline" },
+    "beolink_expand": { "service": "mdi:location-enter" },
+    "beolink_join": { "service": "mdi:location-enter" },
+    "beolink_leave": { "service": "mdi:close-circle-outline" },
+    "beolink_unexpand": { "service": "mdi:location-exit" }
+  }
+}

@@ -1,9 +1,8 @@
 """Fan representation of a Snooz device."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pysnooz.api import UnknownSnoozState
 from pysnooz.commands import (
@@ -15,14 +14,17 @@ from pysnooz.commands import (
 )
 import voluptuous as vol
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -33,11 +35,13 @@ from .const import (
     SERVICE_TRANSITION_OFF,
     SERVICE_TRANSITION_ON,
 )
-from .models import SnoozConfigurationData
+from .models import SnoozConfigEntry, SnoozConfigurationData
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SnoozConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Snooz device from a config entry."""
 
@@ -64,9 +68,7 @@ async def async_setup_entry(
         "async_transition_off",
     )
 
-    data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
-
-    async_add_entities([SnoozFan(data)])
+    async_add_entities([SnoozFan(entry.runtime_data)])
 
 
 class SnoozFan(FanEntity, RestoreEntity):
@@ -74,7 +76,11 @@ class SnoozFan(FanEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _attr_should_poll = False
     _is_on: bool | None = None
     _percentage: int | None = None
@@ -83,7 +89,10 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Initialize a Snooz fan entity."""
         self._device = data.device
         self._attr_unique_id = data.device.address
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, data.device.address)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.device.address)},
+            connections={(CONNECTION_BLUETOOTH, data.device.address)},
+        )
 
     @callback
     def _async_write_state_changed(self) -> None:
@@ -94,6 +103,7 @@ class SnoozFan(FanEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore state and subscribe to device events."""
         await super().async_added_to_hass()
@@ -103,7 +113,9 @@ class SnoozFan(FanEntity, RestoreEntity):
                 self._is_on = last_state.state == STATE_ON
             else:
                 self._is_on = None
-            self._percentage = last_state.attributes.get(ATTR_PERCENTAGE)
+            self._percentage = last_state.attributes.get(
+                FanEntityStateAttribute.PERCENTAGE
+            )
 
         self.async_on_remove(self._async_subscribe_to_device_change())
 
@@ -112,20 +124,24 @@ class SnoozFan(FanEntity, RestoreEntity):
         return self._device.subscribe_to_state_change(self._async_write_state_changed)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Volume level of the device."""
         return self._percentage if self.assumed_state else self._device.state.volume
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Power state of the device."""
         return self._is_on if self.assumed_state else self._device.state.on
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return not self._device.is_connected or self._device.state is UnknownSnoozState
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -135,10 +151,12 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Turn on the device."""
         await self._async_execute_command(turn_on(percentage))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self._async_execute_command(turn_off())
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the volume of the device. A value of 0 will turn off the device."""
         await self._async_execute_command(
@@ -160,9 +178,9 @@ class SnoozFan(FanEntity, RestoreEntity):
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
 
-        if result.status == SnoozCommandResultStatus.SUCCESSFUL:
+        if result.status is SnoozCommandResultStatus.SUCCESSFUL:
             self._async_write_state_changed()
-        elif result.status != SnoozCommandResultStatus.CANCELLED:
+        elif result.status is not SnoozCommandResultStatus.CANCELLED:
             raise HomeAssistantError(
                 f"Command {command} failed with status {result.status.name} after"
                 f" {result.duration}"

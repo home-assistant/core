@@ -1,0 +1,24 @@
+{
+  "result": "OK",
+  "product": "iQ3",
+  "dev_id": "_3c_e9_e_6d_21_84_",
+  "proto_ver": "0.1",
+  "door_num": 2,
+  "night_mode_en": 0,
+  "fw_ver": "10.10",
+  "led_brightness": 100,
+  "data": {
+    "door1": {
+      "index": 0,
+      "status": "open",
+      "lockup": 0,
+      "disabled": 0
+    },
+    "door2": {
+      "index": 1,
+      "status": "open",
+      "lockup": 0,
+      "disabled": 0
+    }
+  }
+}

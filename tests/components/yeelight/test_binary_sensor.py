@@ -1,4 +1,5 @@
 """Test the Yeelight binary sensor."""
+
 from unittest.mock import patch
 
 from homeassistant.components.yeelight import DOMAIN

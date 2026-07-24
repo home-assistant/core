@@ -1,5 +1,6 @@
 """Support for Nexia / Trane XL Thermostats."""
-from __future__ import annotations
+
+from typing import override
 
 from nexia.const import UNIT_CELSIUS
 from nexia.thermostat import NexiaThermostat
@@ -9,25 +10,23 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
+from .types import NexiaConfigEntry
 from .util import percent_conv
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: NexiaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for a Nexia device."""
 
-    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
     entities: list[NexiaThermostatEntity] = []
 
@@ -115,6 +114,35 @@ async def async_setup_entry(
                     percent_conv,
                 )
             )
+        # Heating Humidification Setpoint
+        if thermostat.has_humidify_support():
+            entities.append(
+                NexiaThermostatSensor(
+                    coordinator,
+                    thermostat,
+                    "get_humidify_setpoint",
+                    "get_humidify_setpoint",
+                    SensorDeviceClass.HUMIDITY,
+                    PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
+                    percent_conv,
+                )
+            )
+
+        # Cooling Dehumidification Setpoint
+        if thermostat.has_dehumidify_support():
+            entities.append(
+                NexiaThermostatSensor(
+                    coordinator,
+                    thermostat,
+                    "get_dehumidify_setpoint",
+                    "get_dehumidify_setpoint",
+                    SensorDeviceClass.HUMIDITY,
+                    PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
+                    percent_conv,
+                )
+            )
 
         # Zone Sensors
         for zone_id in thermostat.get_zone_ids():
@@ -187,6 +215,7 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
             self._attr_translation_key = translation_key
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         val = getattr(self._thermostat, self._call)()
@@ -227,6 +256,7 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
             self._attr_translation_key = translation_key
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         val = getattr(self._zone, self._call)()

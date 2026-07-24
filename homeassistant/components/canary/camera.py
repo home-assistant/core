@@ -1,9 +1,8 @@
 """Support for Canary camera."""
-from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohttp.web import Request, StreamResponse
 from canary.live_stream_api import LiveStreamSession
@@ -13,33 +12,26 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
     Camera,
 )
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_FFMPEG_ARGUMENTS,
-    DATA_COORDINATOR,
-    DEFAULT_FFMPEG_ARGUMENTS,
-    DOMAIN,
-    MANUFACTURER,
-)
-from .coordinator import CanaryDataUpdateCoordinator
+from .const import CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS, DOMAIN, MANUFACTURER
+from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
 FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
-    PARENT_PLATFORM_SCHEMA.extend(
+    CAMERA_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(
                 CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS
@@ -53,32 +45,29 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: CanaryConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Canary sensors based on a config entry."""
-    coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     ffmpeg_arguments: str = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )
-    cameras: list[CanaryCamera] = []
 
-    for location_id, location in coordinator.data["locations"].items():
-        for device in location.devices:
-            if device.is_online:
-                cameras.append(
-                    CanaryCamera(
-                        hass,
-                        coordinator,
-                        location_id,
-                        device,
-                        ffmpeg_arguments,
-                    )
-                )
-
-    async_add_entities(cameras, True)
+    async_add_entities(
+        (
+            CanaryCamera(
+                hass,
+                coordinator,
+                location_id,
+                device,
+                ffmpeg_arguments,
+            )
+            for location_id, location in coordinator.data["locations"].items()
+            for device in location.devices
+            if device.is_online
+        )
+    )
 
 
 class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
@@ -120,15 +109,18 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         return self.coordinator.data["locations"][self._location_id]
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self.location.is_recording  # type: ignore[no-any-return]
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -161,6 +153,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
         return self._image
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: Request
     ) -> StreamResponse | None:

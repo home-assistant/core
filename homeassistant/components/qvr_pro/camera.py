@@ -1,7 +1,7 @@
 """Support for QVR Pro streams."""
-from __future__ import annotations
 
 import logging
+from typing import Any, override
 
 from pyqvrpro.client import QVRResponseError
 
@@ -42,18 +42,17 @@ def get_stream_source(guid, client):
     """Get channel stream source."""
     try:
         resp = client.get_channel_live_stream(guid, protocol="rtsp")
-
-        full_url = resp["resourceUris"]
-
-        protocol = full_url[:7]
-        auth = f"{client.get_auth_string()}@"
-        url = full_url[7:]
-
-        return f"{protocol}{auth}{url}"
-
     except QVRResponseError as ex:
         _LOGGER.error(ex)
         return None
+
+    full_url = resp["resourceUris"]
+
+    protocol = full_url[:7]
+    auth = f"{client.get_auth_string()}@"
+    url = full_url[7:]
+
+    return f"{protocol}{auth}{url}"
 
 
 class QVRProCamera(Camera):
@@ -73,27 +72,30 @@ class QVRProCamera(Camera):
         super().__init__()
 
     @property
+    @override
     def name(self):
         """Return the name of the entity."""
         return self._name
 
     @property
+    @override
     def model(self):
         """Return the model of the entity."""
         return self._model
 
     @property
+    @override
     def brand(self):
         """Return the brand of the entity."""
         return self._brand
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes."""
-        attrs = {"qvr_guid": self.guid}
+        return {"qvr_guid": self.guid}
 
-        return attrs
-
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -101,12 +103,14 @@ class QVRProCamera(Camera):
         try:
             return self._client.get_snapshot(self.guid)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except QVRResponseError as ex:
             _LOGGER.error("Error getting image: %s", ex)
             self._client.connect()
 
         return self._client.get_snapshot(self.guid)
 
+    @override
     async def stream_source(self):
         """Get stream source."""
         return self._stream_source

@@ -1,8 +1,7 @@
 """Support for Tasmota sensors."""
-from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from hatasmota import const as hc, sensor as tasmota_sensor, status_sensor
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -16,16 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfApparentPower,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -34,16 +29,18 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 DEVICE_CLASS = "device_class"
 STATE_CLASS = "state_class"
@@ -52,24 +49,8 @@ ICON = "icon"
 # A Tasmota sensor type may be mapped to either a device class or an icon,
 # both can only be set if the default device class icon is not appropriate
 SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
-    hc.SENSOR_ACTIVE_ENERGYEXPORT: {
-        DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        STATE_CLASS: SensorStateClass.TOTAL,
-    },
-    hc.SENSOR_ACTIVE_ENERGYIMPORT: {
-        DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        STATE_CLASS: SensorStateClass.TOTAL,
-    },
-    hc.SENSOR_ACTIVE_POWERUSAGE: {
-        DEVICE_CLASS: SensorDeviceClass.POWER,
-        STATE_CLASS: SensorStateClass.MEASUREMENT,
-    },
     hc.SENSOR_AMBIENT: {
         DEVICE_CLASS: SensorDeviceClass.ILLUMINANCE,
-        STATE_CLASS: SensorStateClass.MEASUREMENT,
-    },
-    hc.SENSOR_APPARENT_POWERUSAGE: {
-        DEVICE_CLASS: SensorDeviceClass.APPARENT_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_BATTERY: {
@@ -91,7 +72,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_CURRENTNEUTRAL: {
+    hc.SENSOR_CURRENT_NEUTRAL: {
         DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -109,6 +90,34 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
         STATE_CLASS: SensorStateClass.TOTAL,
     },
+    hc.SENSOR_ENERGY_EXPORT_ACTIVE: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
+    hc.SENSOR_ENERGY_EXPORT_REACTIVE: {STATE_CLASS: SensorStateClass.TOTAL},
+    hc.SENSOR_ENERGY_EXPORT_TARIFF: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
+    hc.SENSOR_ENERGY_IMPORT_ACTIVE: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
+    hc.SENSOR_ENERGY_IMPORT_REACTIVE: {STATE_CLASS: SensorStateClass.TOTAL},
+    hc.SENSOR_ENERGY_IMPORT_TODAY: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    },
+    hc.SENSOR_ENERGY_IMPORT_TOTAL: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
+    hc.SENSOR_ENERGY_IMPORT_TOTAL_TARIFF: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
+    hc.SENSOR_ENERGY_IMPORT_YESTERDAY: {DEVICE_CLASS: SensorDeviceClass.ENERGY},
+    hc.SENSOR_ENERGY_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
     hc.SENSOR_FREQUENCY: {
         DEVICE_CLASS: SensorDeviceClass.FREQUENCY,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -119,6 +128,14 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_ILLUMINANCE: {
         DEVICE_CLASS: SensorDeviceClass.ILLUMINANCE,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
+    hc.SENSOR_POWER_ACTIVE: {
+        DEVICE_CLASS: SensorDeviceClass.POWER,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
+    hc.SENSOR_POWER_APPARENT: {
+        DEVICE_CLASS: SensorDeviceClass.APPARENT_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_STATUS_IP: {ICON: "mdi:ip-network"},
@@ -143,11 +160,11 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.PM25,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_POWERFACTOR: {
+    hc.SENSOR_POWER_FACTOR: {
         DEVICE_CLASS: SensorDeviceClass.POWER_FACTOR,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_POWERUSAGE: {
+    hc.SENSOR_POWER: {
         DEVICE_CLASS: SensorDeviceClass.POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -155,14 +172,12 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.PRESSURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_PRESSUREATSEALEVEL: {
+    hc.SENSOR_PRESSURE_AT_SEA_LEVEL: {
         DEVICE_CLASS: SensorDeviceClass.PRESSURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
-    hc.SENSOR_REACTIVE_ENERGYEXPORT: {STATE_CLASS: SensorStateClass.TOTAL},
-    hc.SENSOR_REACTIVE_ENERGYIMPORT: {STATE_CLASS: SensorStateClass.TOTAL},
-    hc.SENSOR_REACTIVE_POWERUSAGE: {
+    hc.SENSOR_POWER_REACTIVE: {
         DEVICE_CLASS: SensorDeviceClass.REACTIVE_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -181,15 +196,6 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_TODAY: {
-        DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-    },
-    hc.SENSOR_TOTAL: {
-        DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        STATE_CLASS: SensorStateClass.TOTAL,
-    },
-    hc.SENSOR_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
     hc.SENSOR_TVOC: {ICON: "mdi:air-filter"},
     hc.SENSOR_VOLTAGE: {
         DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
@@ -199,15 +205,14 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.WEIGHT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_YESTERDAY: {DEVICE_CLASS: SensorDeviceClass.ENERGY},
 }
 
 SENSOR_UNIT_MAP = {
     hc.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     ),
-    hc.CONCENTRATION_PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
-    hc.CONCENTRATION_PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
+    hc.CONCENTRATION_PARTS_PER_BILLION: UnitOfRatio.PARTS_PER_BILLION,
+    hc.CONCENTRATION_PARTS_PER_MILLION: UnitOfRatio.PARTS_PER_MILLION,
     hc.ELECTRICAL_CURRENT_AMPERE: UnitOfElectricCurrent.AMPERE,
     hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
     hc.ENERGY_KILO_WATT_HOUR: UnitOfEnergy.KILO_WATT_HOUR,
@@ -215,10 +220,10 @@ SENSOR_UNIT_MAP = {
     hc.LENGTH_CENTIMETERS: UnitOfLength.CENTIMETERS,
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
-    hc.PERCENTAGE: PERCENTAGE,
+    hc.PERCENTAGE: UnitOfRatio.PERCENTAGE,
     hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: UnitOfPressure.HPA,
-    hc.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,
+    hc.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     hc.SIGNAL_STRENGTH_DECIBELS: SIGNAL_STRENGTH_DECIBELS,
     hc.SIGNAL_STRENGTH_DECIBELS_MILLIWATT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     hc.SPEED_KILOMETERS_PER_HOUR: UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -234,7 +239,7 @@ SENSOR_UNIT_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tasmota sensor dynamically through discovery."""
 
@@ -251,12 +256,12 @@ async def async_setup_entry(
             ]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(sensor.DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(sensor.DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(sensor.DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(sensor.DOMAIN),
+            async_discover,
+        )
     )
 
 
@@ -293,7 +298,17 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self._attr_native_unit_of_measurement = SENSOR_UNIT_MAP.get(
             self._tasmota_entity.unit, self._tasmota_entity.unit
         )
+        if (
+            self._attr_device_class is None
+            and self._attr_state_class is None
+            and self._attr_native_unit_of_measurement is None
+        ):
+            # If the sensor has a numeric value, but we couldn't detect what it is,
+            # set state class to measurement.
+            if self._tasmota_entity.discovered_as_numeric:
+                self._attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.sensor_state_updated)
@@ -309,6 +324,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         if self._state_timestamp and self.device_class == SensorDeviceClass.TIMESTAMP:

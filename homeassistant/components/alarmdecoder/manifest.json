@@ -4,7 +4,8 @@
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/alarmdecoder",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["adext", "alarmdecoder"],
-  "requirements": ["adext==0.4.2"]
+  "requirements": ["adext==0.4.4"]
 }

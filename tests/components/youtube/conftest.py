@@ -1,4 +1,5 @@
 """Configure tests for the YouTube integration."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 import time
 from typing import Any
@@ -7,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -14,11 +16,12 @@ from homeassistant.components.youtube.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import MockYouTube
+
 from tests.common import MockConfigEntry
-from tests.components.youtube import MockYouTube
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-ComponentSetup = Callable[[], Awaitable[MockYouTube]]
+type ComponentSetup = Callable[[], Awaitable[MockYouTube]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -28,7 +31,10 @@ SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
 ]
 TITLE = "Google for Developers"
-TOKEN = "homeassistant.components.youtube.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+TOKEN = (
+    "homeassistant.components.youtube.api"
+    ".config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+)
 
 
 @pytest.fixture(name="scopes")
@@ -40,7 +46,7 @@ def mock_scopes() -> list[str]:
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -96,7 +102,7 @@ async def mock_setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -105,7 +111,7 @@ async def mock_setup_integration(
     )
 
     async def func() -> MockYouTube:
-        mock = MockYouTube()
+        mock = MockYouTube(hass)
         with patch("homeassistant.components.youtube.api.YouTube", return_value=mock):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()

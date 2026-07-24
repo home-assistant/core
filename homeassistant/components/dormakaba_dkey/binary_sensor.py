@@ -1,10 +1,9 @@
 """Dormakaba dKey integration binary sensor platform."""
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
-from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.commands import DoorPosition, Notifications, UnlockStatus
 
 from homeassistant.components.binary_sensor import (
@@ -12,28 +11,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import DormakabaDkeyConfigEntry, DormakabaDkeyCoordinator
 from .entity import DormakabaDkeyEntity
-from .models import DormakabaDkeyData
 
 
-@dataclass
-class DormakabaDkeyBinarySensorDescriptionMixin:
-    """Class for keys required by Dormakaba dKey binary sensor entity."""
+@dataclass(frozen=True, kw_only=True)
+class DormakabaDkeyBinarySensorDescription(BinarySensorEntityDescription):
+    """Describes Dormakaba dKey binary sensor entity."""
 
     is_on: Callable[[Notifications], bool]
-
-
-@dataclass
-class DormakabaDkeyBinarySensorDescription(
-    BinarySensorEntityDescription, DormakabaDkeyBinarySensorDescriptionMixin
-):
-    """Describes Dormakaba dKey binary sensor entity."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = (
@@ -46,21 +35,23 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key="security_locked",
         translation_key="deadbolt",
         device_class=BinarySensorDeviceClass.LOCK,
-        is_on=lambda state: state.unlock_status
-        not in (UnlockStatus.SECURITY_LOCKED, UnlockStatus.UNLOCKED_SECURITY_LOCKED),
+        is_on=lambda state: (
+            state.unlock_status
+            not in (UnlockStatus.SECURITY_LOCKED, UnlockStatus.UNLOCKED_SECURITY_LOCKED)
+        ),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: DormakabaDkeyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform for Dormakaba dKey."""
-    data: DormakabaDkeyData = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
-        DormakabaDkeyBinarySensor(data.coordinator, data.lock, description)
+        DormakabaDkeyBinarySensor(coordinator, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
     )
 
@@ -73,16 +64,16 @@ class DormakabaDkeyBinarySensor(DormakabaDkeyEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[None],
-        lock: DKEYLock,
+        coordinator: DormakabaDkeyCoordinator,
         description: DormakabaDkeyBinarySensorDescription,
     ) -> None:
         """Initialize a Dormakaba dKey binary sensor."""
         self.entity_description = description
-        self._attr_unique_id = f"{lock.address}_{description.key}"
-        super().__init__(coordinator, lock)
+        self._attr_unique_id = f"{coordinator.lock.address}_{description.key}"
+        super().__init__(coordinator)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        self._attr_is_on = self.entity_description.is_on(self._lock.state)
+        self._attr_is_on = self.entity_description.is_on(self.coordinator.lock.state)

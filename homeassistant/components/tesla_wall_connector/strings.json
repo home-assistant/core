@@ -1,44 +1,41 @@
 {
+  "common": {
+    "split_phase": "Single-phase / Split-phase electrical service",
+    "split_phase_description": "Enable if your Wall Connector is powered by single-phase / split-phase electrical service. This affects the calculation of the Total power sensor. Leave disabled for three-phase supply (default)."
+  },
   "config": {
-    "flow_title": "{serial_number} ({host})",
-    "step": {
-      "user": {
-        "title": "Configure Tesla Wall Connector",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "flow_title": "{serial_number} ({host})",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Tesla Wall Connector.",
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase_description%]"
+        },
+        "title": "Configure Tesla Wall Connector"
+      }
     }
   },
   "entity": {
     "binary_sensor": {
-      "vehicle_connected": {
-        "name": "Vehicle connected"
-      },
       "contactor_closed": {
         "name": "Contactor closed"
+      },
+      "vehicle_connected": {
+        "name": "Vehicle connected"
       }
     },
     "sensor": {
-      "evse_state": {
-        "name": "State"
-      },
-      "handle_temp_c": {
-        "name": "Handle temperature"
-      },
-      "grid_v": {
-        "name": "Grid voltage"
-      },
-      "grid_hz": {
-        "name": "Grid frequency"
-      },
       "current_a_a": {
         "name": "Phase A current"
       },
@@ -48,6 +45,51 @@
       "current_c_a": {
         "name": "Phase C current"
       },
+      "energy_kwh": {
+        "name": "Lifetime energy"
+      },
+      "grid_hz": {
+        "name": "Grid frequency"
+      },
+      "grid_v": {
+        "name": "Grid voltage"
+      },
+      "handle_temp_c": {
+        "name": "Handle temperature"
+      },
+      "mcu_temp_c": {
+        "name": "MCU temperature"
+      },
+      "pcba_temp_c": {
+        "name": "PCB temperature"
+      },
+      "session_energy_wh": {
+        "name": "Session energy"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "booting": "Booting",
+          "charging": "[%key:common::state::charging%]",
+          "charging_finished": "Charging finished",
+          "charging_reduced": "Charging (reduced)",
+          "connected": "Vehicle connected",
+          "error": "[%key:common::state::error%]",
+          "negotiating": "Negotiating connection",
+          "not_connected": "Vehicle not connected",
+          "ready": "Ready to charge",
+          "waiting_car": "Waiting for car"
+        }
+      },
+      "status_code": {
+        "name": "Status code"
+      },
+      "total_power_w": {
+        "name": "Total power"
+      },
+      "vehicle_current_a": {
+        "name": "Vehicle current"
+      },
       "voltage_a_v": {
         "name": "Phase A voltage"
       },
@@ -56,6 +98,21 @@
       },
       "voltage_c_v": {
         "name": "Phase C voltage"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase%]"
+        },
+        "data_description": {
+          "split_phase": "[%key:component::tesla_wall_connector::common::split_phase_description%]"
+        }
       }
     }
   }

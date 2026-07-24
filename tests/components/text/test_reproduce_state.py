@@ -1,14 +1,15 @@
 """Test reproduce state for Text entities."""
+
 import pytest
 
 from homeassistant.components.text.const import (
     ATTR_MAX,
     ATTR_MIN,
-    ATTR_MODE,
     ATTR_PATTERN,
     DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 

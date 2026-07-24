@@ -1,4 +1,5 @@
 """Constants for the ISY Platform."""
+
 import logging
 
 from pyisy.constants import PROP_ON_LEVEL, PROP_RAMP_RATE
@@ -14,32 +15,29 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.lock import LockState
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
     CURRENCY_DOLLAR,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_CLOSED,
     STATE_CLOSING,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
     STATE_PROBLEM,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
     UV_INDEX,
     Platform,
     UnitOfApparentPower,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -49,6 +47,8 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -68,13 +68,12 @@ CONF_NETWORK = "network"
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
 CONF_VAR_SENSOR_STRING = "variable_sensor_string"
-CONF_TLS_VER = "tls"
 CONF_RESTORE_LIGHT_STATE = "restore_light_state"
 
 DEFAULT_IGNORE_STRING = "{IGNORE ME}"
 DEFAULT_SENSOR_STRING = "sensor"
 DEFAULT_RESTORE_LIGHT_STATE = False
-DEFAULT_TLS_VERSION = 1.1
+DEFAULT_VERIFY_SSL = False
 DEFAULT_PROGRAM_STRING = "HA."
 DEFAULT_VAR_SENSOR_STRING = "HA."
 
@@ -213,19 +212,21 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
             "7.13.",
             TYPE_CATEGORY_SAFETY,
         ],  # Does a startswith() match; include the dot
-        FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
+        FILTER_ZWAVE_CAT: (["104", "112", "138", *map(str, range(148, 180))]),
     },
     Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
         # (Remember that range() is non-inclusive of the stop value)
         FILTER_UOM: (
-            ["1"]
-            + list(map(str, range(3, 11)))
-            + list(map(str, range(12, 51)))
-            + list(map(str, range(52, 66)))
-            + list(map(str, range(69, 78)))
-            + ["79"]
-            + list(map(str, range(82, 97)))
+            [
+                "1",
+                *map(str, range(3, 11)),
+                *map(str, range(12, 51)),
+                *map(str, range(52, 66)),
+                *map(str, range(69, 78)),
+                "79",
+                *map(str, range(82, 97)),
+            ]
         ),
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
@@ -237,7 +238,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
             "RemoteLinc2_ADV",
         ],
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
-        FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 186)))),
+        FILTER_ZWAVE_CAT: (["118", "143", *map(str, range(180, 186))]),
     },
     Platform.LOCK: {
         FILTER_UOM: ["11"],
@@ -339,8 +340,8 @@ UOM_FRIENDLY_NAME = {
     "18": UnitOfLength.FEET,
     "19": UnitOfTime.HOURS,
     "20": UnitOfTime.HOURS,
-    "21": PERCENTAGE,
-    "22": PERCENTAGE,
+    "21": UnitOfRatio.PERCENTAGE,
+    "22": UnitOfRatio.PERCENTAGE,
     "23": UnitOfPressure.INHG,
     "24": UnitOfVolumetricFlux.INCHES_PER_HOUR,
     UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
@@ -369,10 +370,10 @@ UOM_FRIENDLY_NAME = {
     "48": UnitOfSpeed.MILES_PER_HOUR,
     "49": UnitOfSpeed.METERS_PER_SECOND,
     "50": "Ω",
-    UOM_PERCENTAGE: PERCENTAGE,
+    UOM_PERCENTAGE: UnitOfRatio.PERCENTAGE,
     "52": UnitOfMass.POUNDS,
     "53": "pf",
-    "54": CONCENTRATION_PARTS_PER_MILLION,
+    "54": UnitOfRatio.PARTS_PER_MILLION,
     "55": "pulse count",
     "57": UnitOfTime.SECONDS,
     "58": UnitOfTime.SECONDS,
@@ -421,7 +422,7 @@ UOM_FRIENDLY_NAME = {
     "118": UnitOfPressure.HPA,
     "119": UnitOfEnergy.WATT_HOUR,
     "120": UnitOfVolumetricFlux.INCHES_PER_DAY,
-    "122": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # Microgram per cubic meter
+    "122": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,  # Microgram per cubic meter
     "123": f"bq/{UnitOfVolume.CUBIC_METERS}",  # Becquerel per cubic meter
     "124": f"pCi/{UnitOfVolume.LITERS}",  # Picocuries per liter
     "125": "pH",
@@ -429,27 +430,27 @@ UOM_FRIENDLY_NAME = {
     "127": UnitOfPressure.MMHG,
     "128": "J",
     "129": "BMI",  # Body Mass Index
-    "130": f"{UnitOfVolume.LITERS}/{UnitOfTime.HOURS}",
+    "130": UnitOfVolumeFlowRate.LITERS_PER_HOUR,
     "131": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     "132": "bpm",  # Breaths per minute
     "133": UnitOfFrequency.KILOHERTZ,
     "134": f"{UnitOfLength.METERS}/{UnitOfTime.SECONDS}²",
     "135": UnitOfApparentPower.VOLT_AMPERE,  # Volt-Amp
-    "136": POWER_VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
+    "136": UnitOfReactivePower.VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
     "137": "",  # NTP DateTime - Number of seconds since 1900
     "138": UnitOfPressure.PSI,
     "139": DEGREE,  # Degree 0-360
     "140": f"{UnitOfMass.MILLIGRAMS}/{UnitOfVolume.LITERS}",
     "141": "N",  # Netwon
     "142": f"{UnitOfVolume.GALLONS}/{UnitOfTime.SECONDS}",
-    "143": "gpm",  # Gallon per Minute
-    "144": "gph",  # Gallon per Hour
+    "143": UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+    "144": UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
 }
 
 UOM_TO_STATES = {
     "11": {  # Deadbolt Status
-        0: STATE_UNLOCKED,
-        100: STATE_LOCKED,
+        0: LockState.UNLOCKED,
+        100: LockState.LOCKED,
         101: STATE_UNKNOWN,
         102: STATE_PROBLEM,
     },
@@ -593,14 +594,12 @@ UOM_TO_STATES = {
         4: "highly polluted",
     },
     UOM_BARRIER: {  # Barrier Status
-        **{
-            0: STATE_CLOSED,
-            100: STATE_OPEN,
-            101: STATE_UNKNOWN,
-            102: "stopped",
-            103: STATE_CLOSING,
-            104: STATE_OPENING,
-        },
+        0: STATE_CLOSED,
+        100: STATE_OPEN,
+        101: STATE_UNKNOWN,
+        102: "stopped",
+        103: STATE_CLOSING,
+        104: STATE_OPENING,
         **{
             b: f"{b} %" for a, b in enumerate(list(range(1, 100)))
         },  # 1-99 are percentage open
@@ -652,6 +651,13 @@ HA_HVAC_TO_ISY = {
 }
 
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
+
+TOTAL_INCREASING_DEVICE_CLASSES = {
+    SensorDeviceClass.ENERGY,
+    SensorDeviceClass.WATER,
+    SensorDeviceClass.GAS,
+    SensorDeviceClass.PRECIPITATION,
+}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
     BinarySensorDeviceClass.MOISTURE: ["16.8.", "16.13.", "16.14."],

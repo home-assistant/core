@@ -1,12 +1,10 @@
 """Support for UV data from openuv.io."""
-from __future__ import annotations
 
 import asyncio
 from typing import Any
 
 from pyopenuv import Client
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -18,9 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_FROM_WINDOW,
@@ -29,15 +24,18 @@ from .const import (
     DATA_UV,
     DEFAULT_FROM_WINDOW,
     DEFAULT_TO_WINDOW,
-    DOMAIN,
     LOGGER,
 )
-from .coordinator import OpenUvCoordinator
+from .coordinator import (
+    OpenUvConfigEntry,
+    OpenUvCoordinator,
+    OpenUvProtectionWindowCoordinator,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(
@@ -56,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await client.uv_protection_window(low=low, high=high)
 
     coordinators: dict[str, OpenUvCoordinator] = {
-        coordinator_name: OpenUvCoordinator(
+        coordinator_name: coordinator_cls(
             hass,
             entry=entry,
             name=coordinator_name,
@@ -64,9 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             longitude=client.longitude,
             update_method=update_method,
         )
-        for coordinator_name, update_method in (
-            (DATA_UV, client.uv_index),
-            (DATA_PROTECTION_WINDOW, async_update_protection_data),
+        for coordinator_cls, coordinator_name, update_method in (
+            (OpenUvCoordinator, DATA_UV, client.uv_index),
+            (
+                OpenUvProtectionWindowCoordinator,
+                DATA_PROTECTION_WINDOW,
+                async_update_protection_data,
+            ),
         )
     }
 
@@ -76,24 +78,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
     await asyncio.gather(*init_tasks)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinators
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
     """Unload an OpenUV config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
     """Migrate the config entry upon new versions."""
     version = entry.version
     data = {**entry.data}
@@ -104,31 +101,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if version == 1:
         data.pop(CONF_BINARY_SENSORS, None)
         data.pop(CONF_SENSORS, None)
-        version = entry.version = 2
-        hass.config_entries.async_update_entry(entry, data=data)
+        version = 2
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
         LOGGER.debug("Migration to version %s successful", version)
 
     return True
-
-
-class OpenUvEntity(CoordinatorEntity):
-    """Define a generic OpenUV entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, coordinator: OpenUvCoordinator, description: EntityDescription
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_extra_state_attributes = {}
-        self._attr_unique_id = (
-            f"{coordinator.latitude}_{coordinator.longitude}_{description.key}"
-        )
-        self.entity_description = description
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.latitude}_{coordinator.longitude}")},
-            name="OpenUV",
-            entry_type=DeviceEntryType.SERVICE,
-        )

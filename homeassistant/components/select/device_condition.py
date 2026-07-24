@@ -1,5 +1,4 @@
 """Provide the device conditions for Select."""
-from __future__ import annotations
 
 import voluptuous as vol
 
@@ -25,7 +24,7 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import ATTR_OPTIONS, CONF_OPTION, DOMAIN
+from .const import CONF_OPTION, DOMAIN, SelectEntityCapabilityAttribute
 
 # nypy: disallow-any-generics
 
@@ -85,7 +84,12 @@ async def async_get_condition_capabilities(
 
     try:
         entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
-        options = get_capability(hass, entry.entity_id, ATTR_OPTIONS) or []
+        options = (
+            get_capability(
+                hass, entry.entity_id, SelectEntityCapabilityAttribute.OPTIONS
+            )
+            or []
+        )
     except HomeAssistantError:
         options = []
 

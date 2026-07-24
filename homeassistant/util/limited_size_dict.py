@@ -1,14 +1,10 @@
 """Helpers for script and automation tracing and debugging."""
-from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Any, TypeVar
-
-_KT = TypeVar("_KT")
-_VT = TypeVar("_VT")
+from typing import Any, override
 
 
-class LimitedSizeDict(OrderedDict[_KT, _VT]):
+class LimitedSizeDict[_KT, _VT](OrderedDict[_KT, _VT]):
     """OrderedDict limited in size."""
 
     def __init__(self, *args: Any, **kwds: Any) -> None:
@@ -17,6 +13,7 @@ class LimitedSizeDict(OrderedDict[_KT, _VT]):
         super().__init__(*args, **kwds)
         self._check_size_limit()
 
+    @override
     def __setitem__(self, key: _KT, value: _VT) -> None:
         """Set item and check dict size."""
         super().__setitem__(key, value)
