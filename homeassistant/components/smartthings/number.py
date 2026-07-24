@@ -48,6 +48,14 @@ async def async_setup_entry(
         ].value
         is not None
     )
+    entities.extend(
+        SmartThingsAudioVolumeLevelEntity(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if (
+            Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL in device.status[MAIN]
+            and Capability.AUDIO_VOLUME not in device.status[MAIN]
+        )
+    )
     async_add_entities(entities)
 
 
@@ -248,5 +256,65 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
         await self.execute_device_command(
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
+            int(value),
+        )
+
+
+class SmartThingsAudioVolumeLevelEntity(SmartThingsEntity, NumberEntity):
+    """Define a SmartThings number."""
+
+    _attr_translation_key = "audio_volume_level"
+    _attr_native_step = 1.0
+    _attr_mode = NumberMode.SLIDER
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+        """Initialize the instance."""
+        super().__init__(
+            client, device, {Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL}, component=MAIN
+        )
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}"
+            f"_{Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL}"
+            f"_{Attribute.VOLUME_LEVEL}"
+            f"_{Attribute.VOLUME_LEVEL}"
+        )
+
+    @property
+    def options(self) -> list[int]:
+        """Return the list of options."""
+        volume_range = self.get_attribute_value(
+            Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
+            Attribute.VOLUME_LEVEL_RANGE,
+        )
+        min_value = volume_range["minimum"]
+        max_value = volume_range["maximum"]
+        step = volume_range["step"]
+        return list(range(min_value, max_value + 1, step))
+
+    @property
+    def native_value(self) -> int:
+        """Return the current value."""
+        return int(
+            self.get_attribute_value(
+                Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL, Attribute.VOLUME_LEVEL
+            )
+        )
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        return min(self.options)
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        return max(self.options)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the value."""
+        await self.execute_device_command(
+            Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
+            Command.SET_VOLUME_LEVEL,
             int(value),
         )
