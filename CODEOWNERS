@@ -987,6 +987,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lamarzocco/ @zweckj
 /homeassistant/components/lametric/ @robbiet480 @frenck @bachya
 /tests/components/lametric/ @robbiet480 @frenck @bachya
+/homeassistant/components/lanbon/ @LANBON2026
+/tests/components/lanbon/ @LANBON2026
 /homeassistant/components/landisgyr_heat_meter/ @vpathuis
 /tests/components/landisgyr_heat_meter/ @vpathuis
 /homeassistant/components/lastfm/ @joostlek

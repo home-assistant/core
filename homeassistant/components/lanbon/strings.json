@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "LANBON host",
+        "description": "Enter the Mesh root panel IP and Bearer token (serial log or mDNS TXT).",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "token": "Token"
+        },
+        "data_description": {
+          "host": "LAN IP of the Mesh root panel.",
+          "port": "Local API port (default 8765).",
+          "token": "32-character hex token from the device log line containing token=."
+        }
+      },
+      "discovery_confirm": {
+        "title": "Discovered {name}",
+        "description": "Add {name} at {host}?",
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "Pre-filled from mDNS when available; confirm or paste from device log."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the LANBON host",
+      "invalid_auth": "Invalid token",
+      "not_root": "Device is not Mesh root — only the root panel exposes the local API",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This host is already configured"
+    }
+  },
+  "services": {
+    "set_channel_name": {
+      "name": "Set channel name",
+      "description": "Rename a LANBON switch channel on the panel (writes back to device).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "LANBON switch entity."
+        },
+        "name": {
+          "name": "Name",
+          "description": "New button name."
+        }
+      }
+    }
+  }
+}
