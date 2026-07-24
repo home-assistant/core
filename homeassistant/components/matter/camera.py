@@ -43,6 +43,16 @@ _FALLBACK_MAX_RESOLUTION = (
 )
 _FALLBACK_MAX_FRAME_RATE = 120
 _MIN_FRAME_RATE = 30
+_PREFERRED_AUDIO_CODEC = clusters.CameraAvStreamManagement.Enums.AudioCodecEnum.kOpus
+_PREFERRED_SAMPLE_RATE = 48000
+_PREFERRED_BIT_DEPTH = 24
+
+
+def _preferred_or_first[T](preferred: T, supported: list[T]) -> T:
+    """Return preferred if the device supports it, else the first supported value."""
+    if not supported:
+        return preferred
+    return preferred if preferred in supported else supported[0]
 
 
 async def async_setup_entry(
@@ -228,15 +238,35 @@ class MatterCamera(MatterEntity, Camera):
                 self._audio_stream_id = stream.audioStreamID
                 self._audio_stream_owned = False
                 return self._audio_stream_id
+        # Prefer the camera's own reported codec/sample-rate/bit-depth support
+        # over the preferred defaults, to avoid requesting a combination the
+        # microphone doesn't support.
+        mic_capabilities = self.get_matter_attribute_value(
+            clusters.CameraAvStreamManagement.Attributes.MicrophoneCapabilities
+        )
+        if mic_capabilities is not None:
+            audio_codec = _preferred_or_first(
+                _PREFERRED_AUDIO_CODEC, mic_capabilities.supportedCodecs
+            )
+            sample_rate = _preferred_or_first(
+                _PREFERRED_SAMPLE_RATE, mic_capabilities.supportedSampleRates
+            )
+            bit_depth = _preferred_or_first(
+                _PREFERRED_BIT_DEPTH, mic_capabilities.supportedBitDepths
+            )
+        else:
+            audio_codec = _PREFERRED_AUDIO_CODEC
+            sample_rate = _PREFERRED_SAMPLE_RATE
+            bit_depth = _PREFERRED_BIT_DEPTH
         try:
             response = await self.send_device_command(
                 clusters.CameraAvStreamManagement.Commands.AudioStreamAllocate(
                     streamUsage=_STREAM_USAGE,
-                    audioCodec=clusters.CameraAvStreamManagement.Enums.AudioCodecEnum.kOpus,
+                    audioCodec=audio_codec,
                     channelCount=1,
-                    sampleRate=48000,
+                    sampleRate=sample_rate,
                     bitRate=20000,
-                    bitDepth=24,
+                    bitDepth=bit_depth,
                 )
             )
         except HomeAssistantError:
