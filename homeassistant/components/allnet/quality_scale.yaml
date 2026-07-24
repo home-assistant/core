@@ -1,0 +1,77 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: The integration does not register any custom service actions.
+  appropriate-polling:
+    status: done
+    comment: >
+      Uses DataUpdateCoordinator with a fixed 30 s polling interval.
+  brands:
+    status: done
+    comment: Brands PR submitted at home-assistant/brands#10384.
+  common-modules:
+    status: done
+    comment: >
+      Coordinator in coordinator.py, shared entity base class in entity.py,
+      constants in const.py.
+  config-flow-test-coverage:
+    status: done
+    comment: >
+      Full config flow test coverage in tests/components/allnet/test_config_flow.py:
+      user step (success + all error paths), zeroconf flow, reauth flow.
+  config-flow:
+    status: done
+    comment: >
+      ConfigFlow with user, zeroconf_confirm and reauth_confirm steps.
+  dependency-transparency:
+    status: done
+    comment: >
+      External library allnet==0.1.0 on PyPI (https://pypi.org/project/allnet/).
+      Source at https://github.com/polsa/python-allnet.
+  docs-actions:
+    status: exempt
+    comment: The integration does not register any custom service actions.
+  docs-high-level-description:
+    status: done
+    comment: Documentation published at https://www.home-assistant.io/integrations/allnet.
+  docs-installation-instructions:
+    status: done
+    comment: Documentation published at https://www.home-assistant.io/integrations/allnet.
+  docs-removal-instructions:
+    status: done
+    comment: Documentation published at https://www.home-assistant.io/integrations/allnet.
+  entity-event-setup:
+    status: exempt
+    comment: >
+      The integration uses polling via DataUpdateCoordinator.
+      Entities do not subscribe to push events.
+  entity-unique-id:
+    status: done
+    comment: >
+      Every entity has a stable unique_id in the format
+      "{device_mac}_{channel_id}_{kind}" (e.g. "000fc90ecb31_181_sensor").
+  has-entity-name:
+    status: done
+    comment: >
+      All entities set _attr_has_entity_name = True via the AllnetEntity base
+      class.
+  runtime-data:
+    status: done
+    comment: >
+      Uses typed ConfigEntry[AllnetRuntimeData] with AllnetRuntimeData dataclass
+      storing client, coordinator and ha_device_info. No hass.data usage.
+  test-before-configure:
+    status: done
+    comment: >
+      _validate_and_get_unique_id() connects to the device and fetches
+      device_info before the config entry is created, covering all error paths.
+  test-before-setup:
+    status: done
+    comment: >
+      async_setup_entry fetches device_info and raises ConfigEntryAuthFailed /
+      ConfigEntryNotReady on failure before forwarding to platforms.
+  unique-config-entry:
+    status: done
+    comment: >
+      async_set_unique_id() with the device MAC address is called in all config
+      flow steps. _abort_if_unique_id_configured() prevents duplicates.
