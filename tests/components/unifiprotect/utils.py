@@ -361,6 +361,9 @@ def make_public_light(
     public = Mock(spec=PublicLight)
     public.id = light.id
     public.mac = light.mac
+    public.name = light.name
+    public.display_name = light.display_name
+    public.type = light.type
     public.model = ModelType.LIGHT
     public.state = DeviceState[light.state.name] if state is None else state
     public.is_light_on = light.is_light_on if is_light_on is None else is_light_on
@@ -477,6 +480,7 @@ def setup_public_sensor(
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 
@@ -496,14 +500,17 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
     pb.arm_profiles = {}
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        # One mock per id so command assertions hit the entity's cached object.
         if (
             model is ModelType.LIGHT
+            and obj_id not in public_bootstrap.lights
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
             public_bootstrap.lights[obj_id] = make_public_light(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 
@@ -531,6 +538,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
+    pb.all_devices = public_bootstrap.all_devices
     ufp.api.has_public_bootstrap = True
     ufp.api.public_bootstrap = pb
 

@@ -163,7 +163,7 @@ async def _async_setup_entry(
     # streams depend on it, so a failed prime retries instead of building
     # streamless cameras.
     try:
-        await data_service.api.update_public()
+        await data_service.async_update_public()
     except NotAuthorized as err:
         # A public 401 means a bad/revoked API key (independent of the private
         # session); route to reauth instead of retrying forever.

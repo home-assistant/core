@@ -1,8 +1,11 @@
 """Test the UniFi Protect light platform."""
 
-from unittest.mock import AsyncMock
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 
-from uiprotect.data import DeviceState, Light
+import pytest
+from uiprotect.data import DeviceState, Light, Permission, WSAction
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -27,6 +30,19 @@ from .utils import (
     remove_entities,
     setup_public_light,
 )
+
+
+def _use_public_only_bootstrap(ufp: MockUFPFixture, *publics: Mock) -> None:
+    """Serve setup and resync public refreshes from a public-only bootstrap."""
+    ufp.api.is_public_only = True
+
+    async def _prime() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        pb.lights = {public.id: public for public in publics}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
 
 
 async def test_light_remove(
@@ -141,23 +157,18 @@ async def test_light_brightness_none(
 async def test_light_turn_on(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ) -> None:
-    """Test light entity turn on."""
-
-    light._api = ufp.api
-    light.api.update_light_public = AsyncMock()
+    """Test light entity turn on (routes through the public setter)."""
 
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
-    entity_id = "light.test_light"
     await hass.services.async_call(
-        "light", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        "light", "turn_on", {ATTR_ENTITY_ID: "light.test_light"}, blocking=True
     )
 
-    assert light.api.update_light_public.called
-    light.api.update_light_public.assert_called_once_with(
-        light.id, is_light_force_enabled=True, light_device_settings=None
+    ufp.api.public_bootstrap.lights[light.id].set_light.assert_awaited_once_with(
+        True, None
     )
 
 
@@ -166,26 +177,21 @@ async def test_light_turn_on_with_brightness(
 ) -> None:
     """Test light entity turn on with brightness."""
 
-    light._api = ufp.api
-    light.api.update_light_public = AsyncMock()
-
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
-    entity_id = "light.test_light"
     await hass.services.async_call(
         "light",
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        {ATTR_ENTITY_ID: "light.test_light", ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
 
-    assert light.api.update_light_public.called
-    call_kwargs = light.api.update_light_public.call_args[1]
-    assert call_kwargs["is_light_force_enabled"] is True
-    assert call_kwargs["light_device_settings"] is not None
-    assert call_kwargs["light_device_settings"].led_level == 3  # 128/255 * 6 ≈ 3
+    # 128/255 * 6 ≈ 3
+    ufp.api.public_bootstrap.lights[light.id].set_light.assert_awaited_once_with(
+        True, 3
+    )
 
 
 async def test_light_turn_off(
@@ -193,19 +199,203 @@ async def test_light_turn_off(
 ) -> None:
     """Test light entity turn off."""
 
-    light._api = ufp.api
-    light.api.update_light_public = AsyncMock()
-
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
-    entity_id = "light.test_light"
     await hass.services.async_call(
-        "light", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        "light", "turn_off", {ATTR_ENTITY_ID: "light.test_light"}, blocking=True
     )
 
-    assert light.api.update_light_public.called
-    light.api.update_light_public.assert_called_once_with(
-        light.id, is_light_force_enabled=False
+    ufp.api.public_bootstrap.lights[light.id].set_light.assert_awaited_once_with(False)
+
+
+async def test_light_setup_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """In public-only mode lights are enumerated from the public bootstrap."""
+
+    public = make_public_light(light)
+    _use_public_only_bootstrap(ufp, public)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+
+    entity_id = "light.test_light"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.unique_id == light.mac
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_light_added_after_setup_public_only(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """In public-only mode a light added later is discovered from its frame.
+
+    There is no private adopt path without a local user, so the public devices
+    websocket ``add`` frame is the only discovery signal.
+    """
+
+    _use_public_only_bootstrap(ufp)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 0, 0)
+
+    # A new light appears on the public devices websocket.
+    public = make_public_light(light)
+    ufp.api.public_bootstrap.lights = {light.id: public}
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    state = hass.states.get("light.test_light")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    # A re-delivered add frame (e.g. the light was removed and re-added while
+    # its entity is still registered) is skipped before the platform has to
+    # reject the duplicate unique_id with an error.
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    assert "already exists" not in caplog.text
+
+
+async def test_light_recreated_after_entity_removal_public_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """A deleted entity is recreated when its device is offered again.
+
+    Removing the entity from the registry releases the device's dedup slot, so
+    a re-delivered ADD frame recreates the entity instead of being dropped.
+    """
+
+    public = make_public_light(light)
+    _use_public_only_bootstrap(ufp, public)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+
+    entity_registry.async_remove("light.test_light")
+    await hass.async_block_till_done()
+    assert hass.states.get("light.test_light") is None
+
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    assert hass.states.get("light.test_light") is not None
+
+
+async def test_light_added_during_gap_public_only(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A light added while the websocket was down enumerates on reconnect.
+
+    No add frame arrives for a light that appeared during the gap, so the
+    reconnect resync must dispatch it for enumeration itself.
+    """
+
+    first = make_public_light(light)
+    _use_public_only_bootstrap(ufp, first)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+
+    # A second light appears during the gap; the reconnect resync includes it.
+    second = make_public_light(light)
+    second.id = "gap-light"
+    second.mac = "FFEEDDCCBB02"
+    second.name = "Gap Light"
+    second.display_name = "Gap Light"
+
+    _use_public_only_bootstrap(ufp, first, second)
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.LIGHT, 2, 2)
+    assert hass.states.get("light.gap_light") is not None
+    # The resync re-offers the first light too; the dedup must drop it.
+    assert "already exists" not in caplog.text
+
+
+async def test_light_turn_on_with_brightness_public_only(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Turning on with brightness routes through the public setter in public-only."""
+
+    public = make_public_light(light)
+    _use_public_only_bootstrap(ufp, public)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {ATTR_ENTITY_ID: "light.test_light", ATTR_BRIGHTNESS: 128},
+        blocking=True,
     )
+
+    # 128/255 * 6 ≈ 3
+    public.set_light.assert_awaited_once_with(True, 3)
+
+
+async def test_light_setup_no_perm(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """A light the auth user cannot write to gets no entity in hybrid mode."""
+
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
+    ]
+
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.LIGHT, 0, 0)
+
+
+async def test_light_setup_defers_to_adopt_without_private(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Hybrid: a public light without its private object waits for the adopt.
+
+    Creating it public-only would collide on unique_id with the entity the
+    adopt dispatch creates once the private object arrives.
+    """
+
+    light._api = ufp.api
+    ufp.api.public_bootstrap.lights = {light.id: make_public_light(light)}
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 0, 0)
+
+    await adopt_devices(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    state = hass.states.get("light.test_light")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
