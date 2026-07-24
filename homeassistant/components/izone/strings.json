@@ -20,6 +20,14 @@
       }
     }
   },
+  "exceptions": {
+    "command_rejected": {
+      "message": "Controller {uid} rejected command: {error}"
+    },
+    "unable_to_connect": {
+      "message": "Unable to connect to controller {uid}"
+    }
+  },
   "services": {
     "airflow_max": {
       "description": "Sets the airflow maximum percent for a zone.",

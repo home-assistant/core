@@ -21,13 +21,14 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
     CONF_TRAFFIC_MODE,
+    DEFAULT_NAME,
     DOMAIN,
     ROUTE_MODE_FASTEST,
     TRAVEL_MODE_BICYCLE,
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PUBLIC,
 )
-from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -66,7 +67,6 @@ async def user_step_result_fixture(
         {
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_NAME: "test",
         },
     )
     await hass.async_block_till_done()
@@ -88,7 +88,6 @@ async def option_init_result_fixture(
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_PUBLIC,
-            CONF_NAME: "test",
         },
         version=HERETravelTimeConfigFlow.VERSION,
         minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
@@ -144,7 +143,6 @@ async def test_step_user(hass: HomeAssistant, menu_options) -> None:
         {
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_NAME: "test",
         },
     )
     await hass.async_block_till_done()
@@ -215,8 +213,8 @@ async def test_step_destination_coordinates(
     )
     assert location_selector_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == DEFAULT_NAME
     assert entry.data == {
-        CONF_NAME: "test",
         CONF_API_KEY: API_KEY,
         CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
         CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
@@ -243,8 +241,8 @@ async def test_step_destination_entity(
     )
     assert entity_selector_result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == DEFAULT_NAME
     assert entry.data == {
-        CONF_NAME: "test",
         CONF_API_KEY: API_KEY,
         CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
         CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
@@ -275,8 +273,8 @@ async def test_reconfigure_destination_entity(hass: HomeAssistant) -> None:
     assert destination_entity_selector_result["type"] is FlowResultType.ABORT
     assert destination_entity_selector_result["reason"] == "reconfigure_successful"
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == "Mock Title"
     assert entry.data == {
-        CONF_NAME: "test",
         CONF_API_KEY: API_KEY,
         CONF_ORIGIN_ENTITY_ID: "zone.home",
         CONF_DESTINATION_ENTITY_ID: "zone.home",
@@ -307,8 +305,8 @@ async def test_reconfigure_destination_coordinates(hass: HomeAssistant) -> None:
     assert destination_entity_selector_result["type"] is FlowResultType.ABORT
     assert destination_entity_selector_result["reason"] == "reconfigure_successful"
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == "Mock Title"
     assert entry.data == {
-        CONF_NAME: "test",
         CONF_API_KEY: API_KEY,
         CONF_ORIGIN_ENTITY_ID: "zone.home",
         CONF_DESTINATION_LATITUDE: 43.0,
@@ -341,7 +339,6 @@ async def do_common_reconfiguration_steps(hass: HomeAssistant) -> None:
         {
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_BICYCLE,
-            CONF_NAME: "test",
         },
     )
     await hass.async_block_till_done()
@@ -369,7 +366,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             {
                 CONF_API_KEY: API_KEY,
                 CONF_MODE: TRAVEL_MODE_CAR,
-                CONF_NAME: "test",
             },
         )
 
@@ -392,7 +388,6 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             {
                 CONF_API_KEY: API_KEY,
                 CONF_MODE: TRAVEL_MODE_CAR,
-                CONF_NAME: "test",
             },
         )
 

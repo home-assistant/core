@@ -4,7 +4,12 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components import mikrotik
-from homeassistant.components.mikrotik.const import DOMAIN
+from homeassistant.components.mikrotik.const import (
+    ATTR_ROUTERBOARD_FIRMWARE,
+    ATTR_SERIAL_NUMBER,
+    DOMAIN,
+)
+from homeassistant.const import ATTR_MODEL
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -38,11 +43,11 @@ def _build_command_responses(
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IDENTITY]: [
             {"name": "Mikrotik"}
         ],
-        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INFO]: [
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ROUTERBOARD]: [
             {
-                "model": TEST_MODEL,
-                "current-firmware": TEST_FIRMWARE,
-                "serial-number": TEST_SERIAL_NUMBER,
+                ATTR_MODEL: TEST_MODEL,
+                ATTR_ROUTERBOARD_FIRMWARE: TEST_FIRMWARE,
+                ATTR_SERIAL_NUMBER: TEST_SERIAL_NUMBER,
             }
         ],
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_CAPSMAN]: [],
@@ -56,7 +61,7 @@ def _build_command_responses(
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIFIWAVE2]: wifiwave2_data,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]: ARP_DATA,
         mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.HEALTH]: health_data,
-        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.SYSTEM]: system_data,
+        mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.RESOURCE]: system_data,
     }
 
 
@@ -77,10 +82,7 @@ async def setup_integration(
     ) -> Any:
         return command_responses.get(cmd, {})
 
-    with (
-        patch("librouteros.connect"),
-        patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command),
-    ):
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
