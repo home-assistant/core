@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not register custom service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not register custom service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Local RF transmitters do not require user authentication.
+  test-coverage: todo
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      RF devices cannot be discovered.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: |
+      The single entity represents the primary device function.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Generic RF switch has no dedicated device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The primary control entity should always be enabled.
+  entity-translations:
+    status: exempt
+    comment: |
+      The entity uses the device name; no additional translations needed.
+  exception-translations:
+    status: exempt
+    comment: |
+      No user-facing exceptions are raised.
+  icon-translations:
+    status: exempt
+    comment: |
+      No translated icons are used.
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: |
+      Each config entry represents a single static device.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration makes no web requests.
+  strict-typing: todo
