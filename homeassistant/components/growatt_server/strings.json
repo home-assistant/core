@@ -353,6 +353,12 @@
       "storage_output_voltage": {
         "name": "Output voltage"
       },
+      "storage_power_charge": {
+        "name": "Storage charging"
+      },
+      "storage_power_discharge": {
+        "name": "Storage discharging"
+      },
       "storage_power_flow": {
         "name": "Storage charging/ discharging(-ve)"
       },
