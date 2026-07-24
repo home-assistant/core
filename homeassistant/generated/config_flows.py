@@ -315,6 +315,7 @@ FLOWS = {
         "helty",
         "heos",
         "here_travel_time",
+        "hifiberry",
         "hikvision",
         "hisense_aehw4a1",
         "hive",

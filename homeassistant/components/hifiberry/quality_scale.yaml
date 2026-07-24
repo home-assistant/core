@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      The integration does not provide custom service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      The integration does not provide custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The integration uses local polling and does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      HiFiBerry OS / HBOS NG does not require authentication for the local
+      AudioControl API used by this integration.
+  test-coverage:
+    status: todo
+    comment: |
+      Increase media player service and edge-case coverage before moving beyond
+      Bronze.
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      The integration creates a single media player for one HiFiBerry OS device
+      per config entry.
+  entity-category:
+    status: exempt
+    comment: |
+      The integration only provides a primary media player entity.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Media player entities do not use device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The integration only provides one primary entity.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: |
+      The integration creates a single device per config entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
