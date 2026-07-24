@@ -1,10 +1,16 @@
 """Config flow for Somfy MyLink integration."""
 
+from collections.abc import Mapping
 from copy import deepcopy
 import logging
 from typing import Any, override
 
-from somfy_mylink_synergy import SomfyMyLinkSynergy
+from pysomfymylink import (
+    SomfyMyLink,
+    SomfyMyLinkApiError,
+    SomfyMyLinkAuthError,
+    SomfyMyLinkConnectionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -33,23 +39,22 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from schema with values provided by the user.
     """
-    somfy_mylink = SomfyMyLinkSynergy(
-        data[CONF_SYSTEM_ID], data[CONF_HOST], data[CONF_PORT]
+    somfy_mylink = SomfyMyLink(
+        data[CONF_HOST], data[CONF_SYSTEM_ID], port=data[CONF_PORT]
     )
 
     try:
-        status_info = await somfy_mylink.status_info()
-    except TimeoutError as ex:
+        await somfy_mylink.status_info()
+    except SomfyMyLinkAuthError as ex:
+        _LOGGER.debug("Auth error: %s", ex)
+        raise InvalidAuth from ex
+    except (SomfyMyLinkConnectionError, SomfyMyLinkApiError) as ex:
         raise CannotConnect from ex
-
-    if not status_info or "error" in status_info:
-        _LOGGER.debug("Auth error: %s", status_info)
-        raise InvalidAuth
 
     return {"title": f"MyLink {data[CONF_HOST]}"}
 
@@ -115,6 +120,43 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reauthentication flow triggered by an invalid System ID."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new System ID."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            data = {**reauth_entry.data, CONF_SYSTEM_ID: user_input[CONF_SYSTEM_ID]}
+            try:
+                await validate_input(self.hass, data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_SYSTEM_ID: user_input[CONF_SYSTEM_ID]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_SYSTEM_ID): str}),
+            errors=errors,
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+        )
+
     @staticmethod
     @callback
     @override
@@ -136,18 +178,13 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         self._target_id: str | None = None
 
     @callback
-    def _async_callback_targets(self):
-        """Return the list of targets."""
-        return self.config_entry.runtime_data.mylink_status["result"]
-
-    @callback
-    def _async_get_target_name(self, target_id) -> str:
+    def _async_get_target_name(self, target_id: str) -> str:
         """Find the name of a target in the api data."""
-        mylink_targets = self._async_callback_targets()
-        for cover in mylink_targets:
-            if cover["targetID"] == target_id:
-                return cover["name"]
-        raise KeyError
+        names = {
+            shade.target_id: shade.name
+            for shade in self.config_entry.runtime_data.shades
+        }
+        return names[target_id]
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -164,11 +201,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
             return self.async_create_entry(title="", data=self.options)
 
-        cover_dict = {None: None}
-        mylink_targets = self._async_callback_targets()
-        if mylink_targets:
-            for cover in mylink_targets:
-                cover_dict[cover["targetID"]] = cover["name"]
+        cover_dict: dict[str | None, str | None] = {None: None}
+        for shade in self.config_entry.runtime_data.shades:
+            cover_dict[shade.target_id] = shade.name
 
         data_schema = vol.Schema({vol.Optional(CONF_TARGET_ID): vol.In(cover_dict)})
 
@@ -188,6 +223,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             return await self.async_step_init()
 
         self._target_id = target_id
+        assert target_id is not None
 
         return self.async_show_form(
             step_id="target_config",

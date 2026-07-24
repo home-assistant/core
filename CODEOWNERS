@@ -1717,6 +1717,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/solax/ @squishykid @Darsstar
 /homeassistant/components/soma/ @ratsept
 /tests/components/soma/ @ratsept
+/homeassistant/components/somfy_mylink/ @sslivins
+/tests/components/somfy_mylink/ @sslivins
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
