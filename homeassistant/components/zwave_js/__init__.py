@@ -391,11 +391,15 @@ class DriverEvents:
             controller.on("identify", self.controller_events.async_on_identify)
         )
 
+        # One-shot protection of the device cleanup below, e.g. during migration.
+        # Capture before the branches below clear the flag from the entry data.
+        keep_old_devices = bool(self.config_entry.data.get(CONF_KEEP_OLD_DEVICES))
         if (
             old_unique_id := self.config_entry.unique_id
         ) is not None and old_unique_id != (
             new_unique_id := str(driver.controller.home_id)
         ):
+            keep_old_devices = True
             device_registry = dr.async_get(self.hass)
             controller_model = "Unknown model"
             if (
@@ -452,7 +456,7 @@ class DriverEvents:
 
         # Devices that are in the device registry that are not known by the controller
         # can be removed
-        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+        if not keep_old_devices:
             for device in stored_devices:
                 if device not in known_devices and device not in provisioned_devices:
                     self.dev_reg.async_remove_device(device.id)
