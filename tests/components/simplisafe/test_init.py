@@ -116,6 +116,30 @@ async def test_coordinator_update_failure_keeps_entity_available(
     assert hass.states.get("lock.front_door_lock").state != STATE_UNAVAILABLE
 
 
+async def test_camera_device_registration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+) -> None:
+    """Test that camera devices are registered in the device registry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    camera_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "1234567890")}
+    )
+    assert camera_device is not None
+    assert camera_device.manufacturer == "SimpliSafe"
+    assert camera_device.model == "Camera"
+    assert camera_device.name == "Camera Camera"
+
+    # Verify via_device points to the base station:
+    base_station = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    assert base_station is not None
+    assert camera_device.via_device_id == base_station.id
+
+
 async def test_websocket_event_updates_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
