@@ -5,7 +5,12 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 from awesomeversion import AwesomeVersion
-from go2rtc_client.rest import _SchemesClient, _StreamClient, _WebRTCClient
+from go2rtc_client.rest import (
+    _PreloadClient,
+    _SchemesClient,
+    _StreamClient,
+    _WebRTCClient,
+)
 import pytest
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -63,6 +68,7 @@ def rest_client() -> Generator[AsyncMock]:
             return_value=AwesomeVersion(RECOMMENDED_VERSION)
         )
         client.webrtc = Mock(spec_set=_WebRTCClient)
+        client.preload = Mock(spec_set=_PreloadClient)
         yield client
 
 
