@@ -25,7 +25,7 @@ from homeassistant.components.nina.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform
 from .const import DUMMY_USER_INPUT
@@ -320,3 +320,52 @@ async def test_options_flow_entity_removal(
     )
 
     assert len(entries) == new_slot_count * entities_per_slot
+
+
+async def test_options_flow_device_removal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_multiple_regions: MockConfigEntry,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
+) -> None:
+    """Test if old devices are removed."""
+    await setup_platform(
+        hass, mock_config_entry_multiple_regions, mock_nina_class, nina_warnings
+    )
+
+    old_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry_multiple_regions.entry_id
+    )
+
+    assert len(old_devices) == len(
+        mock_config_entry_multiple_regions.data.get(CONF_REGIONS, [])
+    )
+
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry_multiple_regions.entry_id
+    )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MESSAGE_SLOTS: 5,
+            CONST_REGION_A_TO_D: ["095760000000_0"],
+            CONST_REGION_E_TO_H: [],
+            CONST_REGION_I_TO_L: [],
+            CONST_REGION_M_TO_Q: [],
+            CONST_REGION_R_TO_U: [],
+            CONST_REGION_V_TO_Z: [],
+            CONF_FILTERS: {},
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry_multiple_regions.entry_id
+    )
+
+    assert not any(
+        old_device.id in (device.id for device in devices) for old_device in old_devices
+    )

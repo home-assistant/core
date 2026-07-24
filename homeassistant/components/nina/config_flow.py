@@ -13,7 +13,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import VolDictType
 
@@ -245,6 +249,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 )
 
                 await self.remove_unused_entities(user_input)
+                await self.remove_unused_devices(user_input)
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
@@ -263,6 +268,18 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             data_schema=schema_with_suggested,
             errors=errors,
         )
+
+    async def remove_unused_devices(self, user_input: dict[str, Any]) -> None:
+        """Remove devices from regions that are not selected."""
+        device_registry = dr.async_get(self.hass)
+
+        removed_regions = set(self.data[CONF_REGIONS]) - set(user_input[CONF_REGIONS])
+
+        for region in removed_regions:
+            if device := device_registry.async_get_device(
+                identifiers={(DOMAIN, region)}
+            ):
+                device_registry.async_remove_device(device.id)
 
     async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
         """Remove entities which are not used anymore."""
