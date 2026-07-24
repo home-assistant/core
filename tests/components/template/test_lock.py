@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -31,6 +32,8 @@ from .conftest import (
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry
@@ -998,3 +1001,157 @@ async def test_flow_preview(
     )
 
     assert state["state"] == LockState.LOCKED
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            LockState.JAMMED,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            LockState.JAMMED,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
+            LockState.LOCKED,
+            {
+                "code_format": ".+",
+                "is_locked": True,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": False,
+            },
+            LockState.LOCKED,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
+            LockState.LOCKING,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": True,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": False,
+            },
+            LockState.LOCKING,
+            {
+                "code_format": ".+",
+            },
+        ),
+        (
+            LockState.JAMMED,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            STATE_UNKNOWN,
+            {
+                "code_format": None,
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            STATE_UNKNOWN,
+            {
+                "code_format": None,
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "code_format": ".+",
+                "is_locked": False,
+                "is_locking": False,
+                "is_open": False,
+                "is_opening": False,
+                "is_unlocking": False,
+                "is_jammed": True,
+            },
+            STATE_UNKNOWN,
+            {
+                "code_format": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    saved_state: LockState | str,
+    saved_extra_data: dict | None,
+    initial_state: LockState | str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring state."""
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_LOCK,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_LOCK,
+        style,
+        {
+            "code_format": "{{ state_attr('sensor.test_state', 'code_format') }}",
+            "state": "{{ state_attr('sensor.test_state', 'lock_state') }}",
+            "lock": [],
+            "open": [],
+            "unlock": [],
+        },
+        "is_state_attr('sensor.test_state', 'lock_state', 'unlocked')",
+    )
+
+    assert_state_and_attributes(hass, TEST_LOCK, initial_state, initial_attributes)
+
+    await async_trigger(
+        hass,
+        "sensor.test_state",
+        "anything",
+        {"lock_state": LockState.UNLOCKED, "code_format": "\\\\d+"},
+    )
+
+    # The first trigger should replace the restored code_format attribute
+    assert_state_and_attributes(
+        hass, TEST_LOCK, LockState.UNLOCKED, {"code_format": "\\\\d+"}
+    )
