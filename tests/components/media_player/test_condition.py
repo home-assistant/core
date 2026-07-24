@@ -1,15 +1,28 @@
 """Test media player conditions."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
 )
-from homeassistant.components.media_player.const import MediaPlayerState
+from homeassistant.components.media_player.const import (
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+)
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 from tests.components.common import (
     ConditionStateDescription,
@@ -104,6 +117,7 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
         ("media_player.is_not_playing", {}, True, True),
         ("media_player.is_paused", {}, True, True),
         ("media_player.is_playing", {}, True, True),
+        ("media_player.is_source", {ATTR_INPUT_SOURCE: ["HDMI 1"]}, True, True),
         ("media_player.is_unmuted", {}, True, True),
         ("media_player.is_volume", _IS_VOLUME_THRESHOLD, True, True),
     ],
@@ -287,3 +301,138 @@ async def test_media_player_state_condition_behavior_all(
         condition_options=condition_options,
         states=states,
     )
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("media_player"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    parametrize_condition_states_any(
+        condition="media_player.is_source",
+        condition_options={ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
+        target_states=[
+            (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 1"}),
+            (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 2"}),
+        ],
+        other_states=[
+            (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
+        ],
+        required_filter_attributes={
+            ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SELECT_SOURCE
+        },
+    ),
+)
+async def test_media_player_attribute_condition_behavior_any(
+    hass: HomeAssistant,
+    target_media_players: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the media player attribute condition with the 'any' behavior."""
+    await assert_condition_behavior_any(
+        hass,
+        target_entities=target_media_players,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("condition_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("media_player"),
+)
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "states"),
+    parametrize_condition_states_all(
+        condition="media_player.is_source",
+        condition_options={ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
+        target_states=[
+            (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 1"}),
+            (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 2"}),
+        ],
+        other_states=[
+            (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
+        ],
+        required_filter_attributes={
+            ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SELECT_SOURCE
+        },
+    ),
+)
+async def test_media_player_attribute_condition_behavior_all(
+    hass: HomeAssistant,
+    target_media_players: dict[str, list[str]],
+    condition_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    condition: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
+) -> None:
+    """Test the media player attribute condition with the 'all' behavior."""
+    await assert_condition_behavior_all(
+        hass,
+        target_entities=target_media_players,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        condition=condition,
+        condition_options=condition_options,
+        states=states,
+    )
+
+
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "expected_result"),
+    [
+        # Valid configurations
+        (
+            "media_player.is_source",
+            {ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
+            does_not_raise(),
+        ),
+        (
+            "media_player.is_source",
+            {ATTR_INPUT_SOURCE: "HDMI 1"},
+            does_not_raise(),
+        ),
+        # Invalid configurations
+        (
+            "media_player.is_source",
+            # Empty source list
+            {ATTR_INPUT_SOURCE: []},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            "media_player.is_source",
+            # Missing source
+            {},
+            pytest.raises(vol.Invalid),
+        ),
+    ],
+)
+async def test_media_player_is_source_condition_validation(
+    hass: HomeAssistant,
+    condition: str,
+    condition_options: dict[str, Any],
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test media_player is_source condition config validation."""
+    with expected_result:
+        await async_validate_condition_config(
+            hass,
+            {
+                "condition": condition,
+                CONF_TARGET: {CONF_ENTITY_ID: "media_player.test"},
+                CONF_OPTIONS: condition_options,
+            },
+        )

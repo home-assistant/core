@@ -1,18 +1,33 @@
 """Provides conditions for media players."""
 
 from datetime import datetime
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
+import voluptuous as vol
+
+from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
+    ConditionConfig,
     EntityConditionBase,
     EntityNumericalConditionBase,
+    EntityStateConditionBase,
     make_entity_state_condition,
 )
+from homeassistant.helpers.entity import get_supported_features
 
-from .const import DOMAIN, MediaPlayerEntityStateAttribute, MediaPlayerState
+from .const import (
+    ATTR_INPUT_SOURCE,
+    DOMAIN,
+    MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
+    MediaPlayerState,
+)
 
 VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
     DOMAIN: DomainSpec(value_source=MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL),
@@ -104,6 +119,51 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
         )
 
 
+def _supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool:
+    """Test if an entity supports the specified features."""
+    try:
+        return bool(get_supported_features(hass, entity_id) & features)
+    except HomeAssistantError:
+        return False
+
+
+IS_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(ATTR_INPUT_SOURCE): vol.All(
+                cv.ensure_list, vol.Length(min=1), [str]
+            ),
+        },
+    }
+)
+
+
+class MediaPlayerIsSourceCondition(EntityStateConditionBase):
+    """Condition for the media player's selected source."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_INPUT_SOURCE)}
+    _schema = IS_SOURCE_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the source condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._states = set(config.options[ATTR_INPUT_SOURCE])
+
+    @override
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Only include media players that support source selection."""
+        entities = super().entity_filter(entities)
+        return {
+            entity_id
+            for entity_id in entities
+            if _supports_feature(
+                self._hass, entity_id, MediaPlayerEntityFeature.SELECT_SOURCE
+            )
+        }
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "is_muted": MediaPlayerIsMutedCondition,
     "is_not_playing": make_entity_state_condition(
@@ -129,6 +189,7 @@ CONDITIONS: dict[str, type[Condition]] = {
     ),
     "is_paused": make_entity_state_condition(DOMAIN, MediaPlayerState.PAUSED),
     "is_playing": make_entity_state_condition(DOMAIN, MediaPlayerState.PLAYING),
+    "is_source": MediaPlayerIsSourceCondition,
     "is_unmuted": MediaPlayerIsUnmutedCondition,
     "is_volume": MediaPlayerIsVolumeCondition,
 }
