@@ -2,18 +2,21 @@
 
 from datetime import timedelta
 from functools import partial
+import logging
 from time import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
+import pyatmo
 from pyatmo.const import ALL_SCOPES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.components.netatmo.coordinator import ACCOUNT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -749,3 +752,50 @@ async def test_entity_unavailable_when_device_unreachable(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_log_when_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that unavailability and recovery are each logged exactly once."""
+    should_fail = False
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if should_fail:
+            raise pyatmo.ApiError("boom")
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    data_handler = config_entry.runtime_data
+
+    with caplog.at_level(
+        logging.INFO, logger="homeassistant.components.netatmo.coordinator"
+    ):
+        should_fail = True
+        await data_handler.async_fetch_data(ACCOUNT)
+        await data_handler.async_fetch_data(ACCOUNT)
+
+        assert caplog.text.count("Error while fetching") == 1
+
+        should_fail = False
+        await data_handler.async_fetch_data(ACCOUNT)
+        await data_handler.async_fetch_data(ACCOUNT)
+
+        assert caplog.text.count("recovered") == 1

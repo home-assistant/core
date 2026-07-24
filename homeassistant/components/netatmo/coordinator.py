@@ -136,6 +136,7 @@ class NetatmoPublisher:
     method: str
     kwargs: dict
     available: bool = True
+    unavailable_logged: bool = False
 
 
 class NetatmoDataHandler:
@@ -249,11 +250,10 @@ class NetatmoDataHandler:
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""
         self.poll_count += 1
+        publisher = self.publisher[signal_name]
         has_error = False
         try:
-            await getattr(self.account, self.publisher[signal_name].method)(
-                **self.publisher[signal_name].kwargs
-            )
+            await getattr(self.account, publisher.method)(**publisher.kwargs)
 
         except (
             pyatmo.NoDeviceError,
@@ -261,10 +261,18 @@ class NetatmoDataHandler:
             TimeoutError,
             aiohttp.ClientConnectorError,
         ) as err:
-            _LOGGER.debug(err)
             has_error = True
+            if not publisher.unavailable_logged:
+                _LOGGER.info("Error while fetching %s data: %s", signal_name, err)
+                publisher.unavailable_logged = True
+            else:
+                _LOGGER.debug(err)
+        else:
+            if publisher.unavailable_logged:
+                _LOGGER.info("Fetching %s data recovered", signal_name)
+                publisher.unavailable_logged = False
 
-        self.publisher[signal_name].available = not has_error
+        publisher.available = not has_error
         self._notify_subscribers(signal_name)
         return has_error
 
