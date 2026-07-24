@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_life": {
+        "default": "mdi:battery"
+      },
+      "humidity": {
+        "default": "mdi:water-percent"
+      },
+      "last_reading": {
+        "default": "mdi:clock-outline"
+      },
+      "light": {
+        "default": "mdi:white-balance-sunny"
+      },
+      "moisture": {
+        "default": "mdi:water-percent"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      }
+    }
+  }
+}
