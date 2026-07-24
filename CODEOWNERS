@@ -437,6 +437,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/duco/ @ronaldvdmeer
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
+/homeassistant/components/dvla/ @jampez77
+/tests/components/dvla/ @jampez77
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192
 /tests/components/dwd_weather_warnings/ @runningman84 @stephan192
 /homeassistant/components/dynalite/ @ziv1234

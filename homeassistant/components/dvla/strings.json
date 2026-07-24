@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_registration": "Invalid or unknown vehicle registration number",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "reg_number": "Registration number"
+        },
+        "data_description": {
+          "reg_number": "The vehicle registration number to look up, for example AB12CDE."
+        }
+      }
+    }
+  }
+}
