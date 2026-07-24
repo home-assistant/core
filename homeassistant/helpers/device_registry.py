@@ -1683,18 +1683,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device_info_type = _determine_device_info_type(config_entry, device_info)
 
-        if via_device_id is not UNDEFINED and via_device_id is not None:
-            resolved_via_device_id = self._resolve_via_device_id(
-                via_device_id, config_entry_id
-            )
-            if resolved_via_device_id is None:
-                raise DeviceInfoError(
-                    config_entry.domain,
-                    device_info,
-                    f"via_device_id {via_device_id} is not a registered device id",
-                )
-            via_device_id = resolved_via_device_id
-
         if identifiers is None or identifiers is UNDEFINED:
             identifiers = set()
 
@@ -1708,6 +1696,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             identifiers=identifiers,
             config_entry_id=config_entry_id,
         )
+
+        if via_device_id is not UNDEFINED and via_device_id is not None:
+            resolved_via_device_id = self._resolve_via_device_id(
+                via_device_id, config_entry_id
+            )
+            if resolved_via_device_id is None:
+                raise DeviceInfoError(
+                    config_entry.domain,
+                    device_info,
+                    f"via_device_id {via_device_id} is not a registered device id",
+                )
+            via_device_id = resolved_via_device_id
 
         is_new = False
 
