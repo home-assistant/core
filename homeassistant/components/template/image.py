@@ -1,11 +1,12 @@
 """Support for image which integrates with other components."""
 
-import base64
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+import pathlib
 from typing import Any, Self, override
 
+import aiofiles
 import voluptuous as vol
 
 from homeassistant.components.image import (
@@ -13,6 +14,7 @@ from homeassistant.components.image import (
     ENTITY_ID_FORMAT,
     Image,
     ImageEntity,
+    infer_image_type,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
@@ -27,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_PICTURE
+from .const import CONF_PICTURE, DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
@@ -42,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
+IMAGES_DIR = "images"
 
 IMAGE_YAML_SCHEMA = vol.Schema(
     {
@@ -63,6 +66,13 @@ IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
+def _ensure_cache_dir_exists(hass: HomeAssistant) -> None:
+    if not (
+        images_dir := pathlib.Path(hass.config.cache_path(DOMAIN, IMAGES_DIR))
+    ).exists():
+        images_dir.mkdir(parents=True, exist_ok=True)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -70,6 +80,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template image."""
+    _ensure_cache_dir_exists(hass)
     await async_setup_template_platform(
         hass,
         IMAGE_DOMAIN,
@@ -87,6 +98,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
+    _ensure_cache_dir_exists(hass)
     await async_setup_template_entry(
         hass,
         config_entry,
@@ -102,19 +114,10 @@ class ImageExtraStoredData(ExtraStoredData):
 
     image_last_updated: datetime | None
     image_url: str | None
-    cached_image: Image | None
 
     @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the image data."""
-        cached_image: Image | dict[str, str] | None = self.cached_image
-        if isinstance(cached_image, Image):
-            cached_image = {
-                "__type": str(type(cached_image)),
-                "content_type": cached_image.content_type,
-                "content": base64.b64encode(cached_image.content).decode("utf-8"),
-            }
-
         image_last_updated: datetime | dict[str, str] | None = self.image_last_updated
         if isinstance(image_last_updated, datetime):
             image_last_updated = {
@@ -125,7 +128,6 @@ class ImageExtraStoredData(ExtraStoredData):
         return {
             "image_last_updated": image_last_updated,
             "image_url": self.image_url,
-            "cached_image": cached_image,
         }
 
     @classmethod
@@ -134,8 +136,10 @@ class ImageExtraStoredData(ExtraStoredData):
 
         try:
             image_last_updated = restored["image_last_updated"]
+            image_url = restored["image_url"]
         except KeyError:
             return None
+
         try:
             type_ = image_last_updated["__type"]
             if type_ == "<class 'datetime.datetime'>":
@@ -147,31 +151,9 @@ class ImageExtraStoredData(ExtraStoredData):
         except KeyError:
             return None
 
-        try:
-            cached_image = restored["cached_image"]
-        except KeyError:
-            return None
-        try:
-            type_ = cached_image["__type"]
-            if type_ == "<class 'homeassistant.components.image.Image'>":
-                cached_image = Image(
-                    content_type=cached_image["content_type"],
-                    content=base64.b64decode(cached_image["content"]),
-                )
-        except TypeError:
-            pass
-        except KeyError:
-            return None
-
-        try:
-            image_url = restored["image_url"]
-        except KeyError:
-            return None
-
         return cls(
             image_last_updated=image_last_updated,
             image_url=image_url,
-            cached_image=cached_image,
         )
 
 
@@ -182,6 +164,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     _attr_image_url: str | None = None
     _restore_state_extra_data = ImageExtraStoredData
     _restore_state_properties = ("_attr_image_last_updated",)
+    _restore_state_cache_data = bytes
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -211,7 +194,6 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
         return ImageExtraStoredData(
             image_last_updated=self._attr_image_last_updated,
             image_url=self._attr_image_url,
-            cached_image=self._cached_image,
         )
 
     @override
@@ -219,7 +201,38 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
         """Restore the extra data."""
         self._attr_image_last_updated = extra_data.image_last_updated
         self._attr_image_url = extra_data.image_url
-        self._cached_image = extra_data.cached_image
+
+    @override
+    async def async_dump_cache(self):
+        """Save image data."""
+        if self._cached_image:
+            image_path = (
+                pathlib.Path(self.hass.config.cache_path(DOMAIN, IMAGES_DIR))
+                / f"{self.entity_id}.bin"
+            )
+            async with aiofiles.open(image_path, "wb") as fh:
+                await fh.write(self._cached_image.content)
+
+    @override
+    async def async_get_cached_data(self) -> Image | None:
+        if (
+            image_path := (
+                pathlib.Path(self.hass.config.cache_path(DOMAIN, IMAGES_DIR))
+                / f"{self.entity_id}.bin"
+            )
+        ).exists():
+            async with aiofiles.open(image_path, "rb") as fh:
+                image_bytes = await fh.read()
+
+            if (content_type := infer_image_type(image_bytes)) is not None:
+                return Image(content_type=content_type, content=image_bytes)
+
+        return None
+
+    @override
+    def restore_cached_data(self, cached_data: Image) -> None:
+        """Restore cached data from the last state."""
+        self._cached_image = cached_data
 
 
 class StateImageEntity(TemplateEntity, AbstractTemplateImage):

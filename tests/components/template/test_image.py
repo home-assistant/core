@@ -1,6 +1,5 @@
 """The tests for the Template image platform."""
 
-import base64
 from datetime import UTC, datetime
 from http import HTTPStatus
 from io import BytesIO
@@ -615,21 +614,6 @@ async def test_device_id(
     assert template_entity.device_id == device_entry.id
 
 
-def _get_extra_saved_data(url: str, image_bytes: bytes) -> dict:
-    return {
-        "image_last_updated": {
-            "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
-        },
-        "image_url": url,
-        "cached_image": {
-            "__type": "<class 'homeassistant.components.image.Image'>",
-            "content_type": "image/jpeg",
-            "content": base64.b64encode(image_bytes).decode("utf-8"),
-        },
-    }
-
-
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
@@ -648,7 +632,13 @@ async def test_restore_state(
         stream=imgbytes_jpg, content_type="image/jpeg"
     )
 
-    saved_extra_data = _get_extra_saved_data("http://example2.com", imgbytes2_jpg)
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example2.com",
+    }
 
     fake_state = State(
         TEST_IMAGE.entity_id,
@@ -714,7 +704,13 @@ async def test_restore_bad_state_does_not_restore(
         stream=imgbytes_jpg, content_type="image/jpeg"
     )
 
-    saved_extra_data = _get_extra_saved_data("http://example2.com", imgbytes2_jpg)
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example2.com",
+    }
 
     fake_state = State(TEST_IMAGE.entity_id, saved_state)
     mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
@@ -766,7 +762,13 @@ async def test_saving_state(
         stream=imgbytes_jpg, content_type="image/jpeg"
     )
 
-    saved_extra_data = _get_extra_saved_data("http://example.com", imgbytes_jpg)
+    saved_extra_data = {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": "http://example.com",
+    }
 
     await setup_entity(
         hass,
@@ -811,11 +813,6 @@ async def test_saving_state(
                 "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
             },
             "image_url": "http://example.com",
-            "cached_image": {
-                "__type": "<class 'homeassistant.components.image.Image'>",
-                "content_type": "image/jpeg",
-                "content": "xxxx",
-            },
         },
         {
             "image_last_updated": {
@@ -823,35 +820,6 @@ async def test_saving_state(
                 "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
             },
             "image_url": "http://example.com",
-            "cached_image": {
-                "__type": "<class 'homeassistant.components.image.Image'>",
-                "content_type": "image/jpeg",
-                "content": "xxxx",
-            },
-        },
-        {
-            "image_last_updated": {
-                "__type": "<class 'datetime.datetime'>",
-                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
-            },
-            "image_url": "http://example.com",
-            "cached_imag": {
-                "__type": "<class 'homeassistant.components.image.Image'>",
-                "content_type": "image/jpeg",
-                "content": "xxxx",
-            },
-        },
-        {
-            "image_last_updated": {
-                "__type": "<class 'datetime.datetime'>",
-                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
-            },
-            "image_url": "http://example.com",
-            "cached_image": {
-                "__ty": "<class 'homeassistant.components.image.Image'>",
-                "content_type": "image/jpeg",
-                "content": "xxxx",
-            },
         },
         {
             "image_last_updated": {
@@ -859,11 +827,6 @@ async def test_saving_state(
                 "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
             },
             "image_ur": "http://example.com",
-            "cached_image": {
-                "__type": "<class 'homeassistant.components.image.Image'>",
-                "content_type": "image/jpeg",
-                "content": "xxxx",
-            },
         },
     ],
 )

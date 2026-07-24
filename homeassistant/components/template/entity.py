@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
@@ -45,6 +46,7 @@ class AbstractTemplateEntity(Entity):
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
+    _restore_state_cache_data: Any | None = None
 
     # Restore state properties. The state will be restored if set to None.
     # If a tuple is supplied, all properties must be None for the state to restore.
@@ -90,6 +92,15 @@ class AbstractTemplateEntity(Entity):
         device_registry = dr.async_get(hass)
         if (device_id := config.get(CONF_DEVICE_ID)) is not None:
             self.device_entry = device_registry.async_get(device_id)
+
+        if self._restore_state_cache_data is not None:
+
+            async def _async_dump_cache_at_stop(*_: Any) -> None:
+                await self.async_dump_cache()
+
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, _async_dump_cache_at_stop
+            )
 
     @property
     @abstractmethod
@@ -192,6 +203,9 @@ class AbstractTemplateEntity(Entity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up scripts when removing from Home Assistant."""
+        if self._restore_state_cache_data is not None:
+            await self.async_dump_cache()
+
         if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
             # Entity ID not changed, unload scripts as they will not be reused.
             for action_script in self._action_scripts.values():
@@ -220,6 +234,12 @@ class AbstractTemplateEntity(Entity):
             context=context,
         )
 
+    async def async_dump_cache(self) -> None:
+        """Save the current cached data."""
+
+    async def async_get_cached_data(self) -> Any | None:
+        """Get the cached data."""
+
     async def _async_get_last_template_data(
         self,
     ) -> Any | None:
@@ -238,6 +258,9 @@ class AbstractTemplateEntity(Entity):
 
     def restore_extra_data(self, extra_data: Any) -> None:
         """Restore extra data from the last state."""
+
+    def restore_cached_data(self, cached_data: Any) -> None:
+        """Restore cached data from the last state."""
 
     async def async_restore_last_state(self) -> None:
         """Restore the state from the last state."""
@@ -271,9 +294,14 @@ class AbstractTemplateEntity(Entity):
 
         self.restore_last_state_attributes(last_state)
 
-        # Extra data should be loaded last
+        # Extra data and cached data should be loaded last
         if extra_data is not _SENTINEL:
             self.restore_extra_data(extra_data)
+
+        if (self._restore_state_cache_data is not None) and (
+            cached_data := await self.async_get_cached_data()
+        ):
+            self.restore_cached_data(cached_data)
 
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
