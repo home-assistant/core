@@ -1,0 +1,210 @@
+"""Test alias template functions."""
+
+import pytest
+
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import (
+    area_registry as ar,
+    entity_registry as er,
+    floor_registry as fr,
+)
+from homeassistant.helpers.entity_registry import COMPUTED_NAME
+
+from tests.common import MockConfigEntry
+from tests.helpers.template.helpers import assert_result_info, render, render_to_info
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        pytest.param("{{ aliases('sensor.fake') }}", id="unknown-entity-global"),
+        pytest.param("{{ 'sensor.fake' | aliases }}", id="unknown-entity-filter"),
+        pytest.param("{{ aliases('unknown_slug') }}", id="unknown-slug-global"),
+        pytest.param("{{ 'unknown_slug' | aliases }}", id="unknown-slug-filter"),
+        pytest.param("{{ aliases(42) }}", id="non-string-global"),
+        pytest.param("{{ 42 | aliases }}", id="non-string-filter"),
+    ],
+)
+async def test_aliases_unknown(hass: HomeAssistant, template: str) -> None:
+    """Test aliases returns an empty list for unknown or invalid lookups."""
+    info = render_to_info(hass, template)
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
+async def test_aliases_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test aliases for an entity, sorted and with the sentinel filtered out."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry
+    )
+    entity_id = entity_entry.entity_id
+
+    # No aliases yet
+    info = render_to_info(hass, f"{{{{ aliases('{entity_id}') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{entity_id}' | aliases }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # The COMPUTED_NAME sentinel is not a str and must be filtered out
+    entity_registry.async_update_entity(
+        entity_id, aliases=["Office Light Switch", COMPUTED_NAME, "Another Alias"]
+    )
+    info = render_to_info(hass, f"{{{{ aliases('{entity_id}') }}}}")
+    assert_result_info(info, ["Another Alias", "Office Light Switch"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{entity_id}' | aliases }}}}")
+    assert_result_info(info, ["Another Alias", "Office Light Switch"])
+    assert info.rate_limit is None
+
+
+async def test_aliases_entity_case_insensitive(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a mixed-case entity ID is normalized before the registry lookup."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry
+    )
+    entity_registry.async_update_entity(entity_entry.entity_id, aliases=["Kitchen"])
+
+    upper_entity_id = entity_entry.entity_id.upper()
+    info = render_to_info(hass, f"{{{{ aliases('{upper_entity_id}') }}}}")
+    assert_result_info(info, ["Kitchen"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{upper_entity_id}' | aliases }}}}")
+    assert_result_info(info, ["Kitchen"])
+    assert info.rate_limit is None
+
+
+async def test_aliases_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test aliases for an area by ID, returned sorted."""
+    area = area_registry.async_create("Bedroom")
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_registry.async_update(area.id, aliases={"Sleeping Room", "Bedchamber"})
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}') }}}}")
+    assert_result_info(info, ["Bedchamber", "Sleeping Room"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area.id}' | aliases }}}}")
+    assert_result_info(info, ["Bedchamber", "Sleeping Room"])
+    assert info.rate_limit is None
+
+
+async def test_aliases_floor(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test aliases for a floor by ID, returned sorted."""
+    floor = floor_registry.async_create("Ground Floor")
+
+    info = render_to_info(hass, f"{{{{ aliases('{floor.floor_id}') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    floor_registry.async_update(floor.floor_id, aliases={"Erdgeschoss", "Downstairs"})
+    info = render_to_info(hass, f"{{{{ aliases('{floor.floor_id}') }}}}")
+    assert_result_info(info, ["Downstairs", "Erdgeschoss"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{floor.floor_id}' | aliases }}}}")
+    assert_result_info(info, ["Downstairs", "Erdgeschoss"])
+    assert info.rate_limit is None
+
+
+async def test_aliases_area_before_floor(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test an ID that is both an area and a floor resolves to the area."""
+    area = area_registry.async_create("Shared", aliases={"Area Alias"})
+    floor = floor_registry.async_create("Shared", aliases={"Floor Alias"})
+    # Both slugs collide; area must win the tiebreak
+    assert area.id == floor.floor_id
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}') }}}}")
+    assert_result_info(info, ["Area Alias"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area.id}' | aliases }}}}")
+    assert_result_info(info, ["Area Alias"])
+    assert info.rate_limit is None
+
+
+async def test_aliases_type_reaches_colliding_floor(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test the 'floor' selector reaches a floor whose ID collides with an area."""
+    area = area_registry.async_create("Shared", aliases={"Area Alias"})
+    floor = floor_registry.async_create("Shared", aliases={"Floor Alias"})
+    assert area.id == floor.floor_id
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}', 'area') }}}}")
+    assert_result_info(info, ["Area Alias"])
+    assert info.rate_limit is None
+
+    # Without the selector the area wins; 'floor' is the only way to reach it
+    info = render_to_info(hass, f"{{{{ aliases('{floor.floor_id}', 'floor') }}}}")
+    assert_result_info(info, ["Floor Alias"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{floor.floor_id}' | aliases('floor') }}}}")
+    assert_result_info(info, ["Floor Alias"])
+    assert info.rate_limit is None
+
+
+async def test_aliases_type_restricts_registry(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test a selector that does not match the target registry returns []."""
+    area = area_registry.async_create("Bedroom", aliases={"Sleeping Room"})
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}', 'entity') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area.id}' | aliases('entity') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}', 'floor') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        pytest.param("{{ aliases('sensor.fake', 'device') }}", id="global-unknown"),
+        pytest.param("{{ 'sensor.fake' | aliases('device') }}", id="filter-unknown"),
+        pytest.param("{{ aliases('sensor.fake', '') }}", id="global-empty"),
+        pytest.param("{{ 'sensor.fake' | aliases('') }}", id="filter-empty"),
+    ],
+)
+async def test_aliases_invalid_type(hass: HomeAssistant, template: str) -> None:
+    """Test an unknown alias_type raises a template error naming the valid values."""
+    with pytest.raises(TemplateError, match="alias_type must be omitted or one of"):
+        render(hass, template)

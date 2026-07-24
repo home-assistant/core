@@ -43,6 +43,7 @@ from .context import (
     template_cv,
 )
 from .extensions import (
+    AliasExtension,
     AreaExtension,
     Base64Extension,
     CollectionExtension,
@@ -805,6 +806,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         )
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
+        self.add_extension(AliasExtension)
         self.add_extension(AreaExtension)
         self.add_extension(Base64Extension)
         self.add_extension(CollectionExtension)
