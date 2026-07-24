@@ -60,6 +60,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     _attr_default_options: Mapping[str, Any] | None = None
     _attr_supported_languages: list[str]
     _attr_supported_options: list[str] | None = None
+    _attr_use_file_cache: bool | True = True
 
     @property
     @final
@@ -89,6 +90,11 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
         return self._attr_default_options
+
+    @property
+    def use_file_cache(self) -> bool:
+        """Whether generated audio should be stored on disk."""
+        return self._attr_use_file_cache
 
     def async_supports_streaming_input(self) -> bool:
         """Return if the TTS engine supports streaming input."""

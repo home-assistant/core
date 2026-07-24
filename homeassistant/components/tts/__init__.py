@@ -863,7 +863,11 @@ class SpeechManager:
         )
         language, options = self.process_options(engine_instance, language, options)
         if use_file_cache is None:
-            use_file_cache = self.use_file_cache
+            use_file_cache = getattr(
+                engine_instance,
+                "use_file_cache",
+                self.use_file_cache,
+            )
 
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
         token = f"{secrets.token_urlsafe(16)}.{extension}"

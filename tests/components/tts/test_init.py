@@ -2194,3 +2194,43 @@ async def test_stream_override_with_conversion(
         assert wav_reader.readframes(wav_reader.getnframes()) == bytes(
             22050 * 2 * 2
         )  # 1 second @ 22.5Khz/stereo
+
+
+async def test_result_stream_uses_entity_file_cache_setting(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test result stream inherits entity file cache preference."""
+
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.use_file_cache is True
+    mock_tts_entity._attr_use_file_cache = False
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.use_file_cache is False
+
+
+async def test_entity_disables_file_cache(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_entity: MockTTSEntity,
+    mock_tts_cache_dir: Path,
+) -> None:
+    """Test entity can disable file cache."""
+
+    mock_tts_entity._attr_use_file_cache = False
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    media_source_id = tts.generate_media_source_id(
+        hass,
+        "test message",
+        "tts.test",
+        "en_US",
+    )
+
+    url = await get_media_source_url(hass, media_source_id)
+    client = await hass_client()
+    resp = await client.get(url)
+    assert resp.status == HTTPStatus.OK
+    await hass.async_block_till_done()
+    assert list(mock_tts_cache_dir.iterdir()) == []
