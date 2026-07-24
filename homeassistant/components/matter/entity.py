@@ -322,9 +322,7 @@ class MatterEntity(Entity):
         # handle edge case where a Feature is removed from a cluster
         if (
             self._entity_info.discovery_schema.featuremap_contains is not None
-            and not bool(
-                data & self._entity_info.discovery_schema.featuremap_contains
-            )
+            and not bool(data & self._entity_info.discovery_schema.featuremap_contains)
         ):
             # this entity is no longer supported by the device
             ent_reg = er.async_get(self.hass)
