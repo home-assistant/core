@@ -415,6 +415,10 @@ class _HaltScript(Exception):
 class _AbortScript(_HaltScript):
     """Throw if script needs to abort because of an unexpected error."""
 
+    def __init__(self, message: str, throws: bool = False) -> None:
+        super().__init__(message)
+        self.throws = throws
+
 
 class _ConditionFail(_HaltScript):
     """Throw if script needs to stop because a condition evaluated to False."""
@@ -503,11 +507,13 @@ class _ScriptRun:
                 await self._async_step(log_exceptions=False)
             else:
                 script_execution_set("finished")
-        except _AbortScript:
+        except _AbortScript as err:
             script_execution_set("aborted")
-            # Let the _AbortScript bubble up if this is a sub-script
-            if not self._script.top_level:
+            # Let the _AbortScript bubble up if this is a sub-script or if it comes from
+            # a stop step with error option enabled
+            if not self._script.top_level or err.throws:
                 raise
+
         except _ConditionFail:
             script_execution_set("aborted")
         except _StopScript as err:
@@ -1020,7 +1026,7 @@ class _ScriptRun:
         trace_set_result(stop=stop, error=error)
         if error:
             self._log("Error script sequence: %s", stop)
-            raise _AbortScript(stop)
+            raise _AbortScript(message=stop, throws=True)
 
         self._log("Stop script sequence: %s", stop)
         if CONF_RESPONSE_VARIABLE in self._action:
