@@ -44,6 +44,7 @@ from .const import (
     MOCK_ALBUM_ASSETS,
     MOCK_FAVORITE_ASSETS,
     MOCK_PEOPLE_ASSETS,
+    MOCK_SEARCH_ASSETS,
     MOCK_TAGS_ASSETS,
 )
 
@@ -162,6 +163,7 @@ def mock_immich_search() -> AsyncMock:
     mock.async_get_all_by_album_ids.return_value = MOCK_ALBUM_ASSETS
     mock.async_get_all_by_person_ids.return_value = MOCK_PEOPLE_ASSETS
     mock.async_get_all_by_tag_ids.return_value = MOCK_TAGS_ASSETS
+    mock.async_smart_search.return_value = MOCK_SEARCH_ASSETS
     return mock
 
 

@@ -121,6 +121,7 @@ MOCK_ALBUM_ASSETS = [
         }
     ),
 ]
+
 MOCK_PEOPLE_ASSETS = [
     ImmichAsset.from_dict(
         {
@@ -350,4 +351,11 @@ MOCK_FAVORITE_ASSETS = [
             "isEdited": False,
         },
     ),
+]
+
+MOCK_SEARCH_ASSETS = [
+    MOCK_ALBUM_ASSETS[0],
+    MOCK_PEOPLE_ASSETS[0],
+    MOCK_TAGS_ASSETS[0],
+    MOCK_FAVORITE_ASSETS[0],
 ]
