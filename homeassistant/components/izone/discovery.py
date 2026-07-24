@@ -238,10 +238,12 @@ async def async_discover_endpoint(
 @callback
 def discovery_service_active(hass: HomeAssistant) -> bool:
     """Return True when the shared discovery service is running or starting."""
-    slot = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if isinstance(slot, DiscoveryRuntime):
+    state = hass.data.get(DATA_DISCOVERY_SERVICE)
+    if not isinstance(state, DiscoveryServiceState):
+        return False
+    if state.runtime is not None:
         return True
-    return isinstance(slot, asyncio.Future) and not slot.done()
+    return state.starting is not None and not state.starting.done()
 
 
 async def async_discover_by_host(

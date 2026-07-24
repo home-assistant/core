@@ -853,7 +853,13 @@ async def test_user_flow_returns_to_form_when_no_controllers_found(
     hass: HomeAssistant,
 ) -> None:
     """User flow loops back to the setup form when broadcast discovery finds nothing."""
-    with patch_discovered_controllers([]):
+    with (
+        patch_discovered_controllers([]),
+        patch(
+            "homeassistant.components.izone.discovery.async_stop_discovery",
+            new=AsyncMock(),
+        ) as mock_stop,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -863,6 +869,31 @@ async def test_user_flow_returns_to_form_when_no_controllers_found(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_devices_found"}
+    # Search must remain available after an empty scan (not host-only).
+    assert config_flow.CONF_SETUP_METHOD in result["data_schema"].schema
+    mock_stop.assert_awaited_once()
+
+
+async def test_user_flow_can_search_again_after_empty_discovery(
+    hass: HomeAssistant,
+) -> None:
+    """After an empty search, choosing Search again still runs discovery."""
+    controller = create_mock_controller("000000001", "192.0.2.1")
+    with patch_discovered_controllers([]) as (mock_discover_all, _):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await _configure_user_search(hass, result["flow_id"])
+        assert result["errors"] == {"base": "no_devices_found"}
+
+        mock_discover_all.side_effect = None
+        mock_discover_all.return_value = {
+            controller.device_uid: endpoint_from_controller(controller)
+        }
+        result = await _configure_user_search(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
@@ -973,20 +1004,14 @@ async def test_user_manual_host_already_configured_aborts(hass: HomeAssistant) -
         version=2,
     ).add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.async_discover_by_host",
-        ) as mock_discover_by_host,
-        patch(
-            "homeassistant.components.izone.discovery.discovery_service_active",
-            return_value=True,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+    ) as mock_discover_by_host:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "10.0.0.90"}
+            result["flow_id"], _user_manual_host_input("10.0.0.90")
         )
 
     mock_discover_by_host.assert_not_called()
@@ -996,43 +1021,44 @@ async def test_user_manual_host_already_configured_aborts(hass: HomeAssistant) -
 
 async def test_user_manual_host_claimed_controller_aborts(hass: HomeAssistant) -> None:
     """Claim-cache collision aborts when HA has no matching host entry yet."""
-    with (
-        patch(
-            "homeassistant.components.izone.discovery.async_discover_by_host",
-            new=AsyncMock(
-                side_effect=pizone.ControllerAlreadyClaimedError(
-                    "Controller 000025841 already created"
-                )
-            ),
-        ),
-        patch(
-            "homeassistant.components.izone.discovery.discovery_service_active",
-            return_value=True,
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(
+            side_effect=pizone.ControllerAlreadyClaimedError(
+                "Controller 000025841 already created"
+            )
         ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "10.0.0.90"}
+            result["flow_id"], _user_manual_host_input("10.0.0.90")
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_host_only_when_discovery_active(hass: HomeAssistant) -> None:
-    """When discovery is already active, the user step asks for a host only."""
-    with patch(
-        "homeassistant.components.izone.discovery.discovery_service_active",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_flow_host_only_when_entry_loaded(hass: HomeAssistant) -> None:
+    """When an iZone entry is already loaded, the user step asks for a host only."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
     assert result["step_id"] == "user"
     assert config_flow.CONF_SETUP_METHOD not in result["data_schema"].schema
+    assert CONF_HOST in result["data_schema"].schema
 
 
 async def test_user_manual_host_unpaired_aborts(hass: HomeAssistant) -> None:

@@ -55,9 +55,12 @@ async def test_ensure_discovery_starts_and_stops_on_homeassistant_stop(
     """Ensure starts discovery with an initial scan and closes on HA stop."""
     mock_create, mock_service = mock_pizone_create_discovery
 
+    assert not izone_discovery.discovery_service_active(hass)
+
     service = await izone_discovery.async_ensure_discovery(hass)
 
     assert service is mock_service
+    assert izone_discovery.discovery_service_active(hass)
     mock_create.assert_awaited_once()
     mock_service.scan.assert_awaited_once()
 
@@ -69,6 +72,7 @@ async def test_ensure_discovery_starts_and_stops_on_homeassistant_stop(
     await hass.async_block_till_done()
 
     mock_service.close.assert_awaited_once()
+    assert not izone_discovery.discovery_service_active(hass)
 
 
 async def test_ensure_discovery_recreates_after_stop(
