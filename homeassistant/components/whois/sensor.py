@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import cast, override
 
-from whois import Domain
+from whoisdomain import Domain
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
