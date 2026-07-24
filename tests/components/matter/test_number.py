@@ -432,6 +432,25 @@ async def test_matter_exception_on_door_lock_write_attribute(
     assert str(exc_info.value) == "Boom!"
 
 
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
+async def test_valve_default_open_duration_discovery_when_nullable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the DefaultOpenDuration number entity is discovered when the attribute is null."""
+    entity_id = "number.mock_valve_default_open_duration"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 129, 1, 30)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "30"
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor_pir"])
 async def test_occupancy_sensing_pir_attributes(
     hass: HomeAssistant,
