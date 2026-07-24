@@ -91,6 +91,7 @@ from .const import (
     HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
@@ -102,6 +103,7 @@ from .const import (
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
+    PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REASON,
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
@@ -131,6 +133,7 @@ UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 
 # Keys (type + context) of issues that when found should be made into a repair.
 ISSUE_KEYS_FOR_REPAIRS = {
+    ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_MOUNT_MOUNT_FAILED,
     "issue_system_multiple_data_disks",
@@ -346,6 +349,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
 
             if issue.key in {
+                ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
                 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
                 ISSUE_KEY_ADDON_PWNED,
             }:
@@ -358,6 +362,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                     if addon[ATTR_SLUG] == issue.reference:
                         placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
                         break
+
+                if (
+                    issue.key == ISSUE_KEY_ADDON_APP_PORT_CONFLICT
+                    and issue.reference_extra
+                ):
+                    placeholders[PLACEHOLDER_KEY_PORT] = str(
+                        issue.reference_extra["port"]
+                    )
 
         elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
             host_info = get_host_info(self.hass)
@@ -447,12 +459,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             type=str(data.type),
             context=data.context,
             reference=data.reference,
+            reference_extra=data.reference_extra,
             suggestions=[
                 Suggestion(
                     uuid=suggestion.uuid,
                     type=str(suggestion.type),
                     context=suggestion.context,
                     reference=suggestion.reference,
+                    reference_extra=suggestion.reference_extra,
                 )
                 for suggestion in suggestions
             ],
