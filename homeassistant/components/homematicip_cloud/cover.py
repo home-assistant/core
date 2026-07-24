@@ -399,6 +399,12 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         position = kwargs[ATTR_POSITION]
         # HmIP cover is closed:1 -> open:0
         level = 1 - position / 100.0
+        if level == HMIP_COVER_CLOSED:
+            # Route fully-closed position through the same slats-safe call
+            # as async_close_cover, otherwise slats get reset to 0 on FBL
+            # group members. See issue #114266.
+            await self.async_close_cover()
+            return
         await self._device.set_shutter_level_async(level)
 
     @override
@@ -411,13 +417,26 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
+        """Open the cover.
+
+        The slats-safe call used in async_close_cover is intentionally not
+        mirrored here: the regression reported in issue #114266 only
+        affects close, and for an open cover slats at 0 (horizontal) is
+        the natural rest position.
+        """
         await self._device.set_shutter_level_async(HMIP_COVER_OPEN)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        await self._device.set_shutter_level_async(HMIP_COVER_CLOSED)
+        """Close the cover.
+
+        Use setSlatsLevel instead of setShutterLevel so HMIP Cloud does
+        not reset slats to 0 (horizontal) on blind-capable group members
+        (e.g. HmIP-FBL with firmware >= 1.10.16). See issue #114266.
+        """
+        await self._device.set_slats_level_async(
+            slatsLevel=HMIP_SLATS_CLOSED, shutterLevel=HMIP_COVER_CLOSED
+        )
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
