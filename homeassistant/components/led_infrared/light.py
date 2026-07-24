@@ -2,9 +2,6 @@
 
 from typing import Any, override
 
-from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyCode
-
-from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.light import (
     ATTR_EFFECT,
     ColorMode,
@@ -13,17 +10,12 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDeviceType
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LEDIrDeviceType
+from .entity import LEDIrBaseEntity
 
 PARALLEL_UPDATES = 1
-
-CODES = {
-    LEDIrDeviceType.GENERIC_24_KEY: Generic24KeyCode,
-    LEDIrDeviceType.GENERIC_13_KEY: Generic13KeyCode,
-}
 
 
 SUPPORTED_EFFECTS = {
@@ -77,7 +69,7 @@ async def async_setup_entry(
     )
 
 
-class LEDIrLightEntity(InfraredEmitterConsumerEntity, LightEntity):
+class LEDIrLightEntity(LEDIrBaseEntity, LightEntity):
     """Represents a LED Infrared light entity."""
 
     _attr_assumed_state = True
@@ -96,15 +88,8 @@ class LEDIrLightEntity(InfraredEmitterConsumerEntity, LightEntity):
         infrared_entity_id: str,
     ) -> None:
         """Initialize the entity."""
+        super().__init__(entry, device_type, infrared_entity_id)
         self._attr_unique_id = entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
-        )
-
-        self._infrared_emitter_entity_id = infrared_entity_id
-
-        self._codes = CODES[device_type]
         self._attr_effect_list = SUPPORTED_EFFECTS.get(
             device_type, []
         ) + SUPPORTED_COLORS.get(device_type, [])

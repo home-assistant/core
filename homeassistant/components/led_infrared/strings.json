@@ -33,6 +33,17 @@
     }
   },
   "entity": {
+    "button": {
+      "brightness_down": {
+        "name": "Brightness down"
+      },
+      "brightness_up": {
+        "name": "Brightness up"
+      },
+      "timer": {
+        "name": "Timer"
+      }
+    },
     "light": {
       "light": {
         "state_attributes": {

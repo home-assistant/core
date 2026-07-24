@@ -1,5 +1,16 @@
 {
   "entity": {
+    "button": {
+      "brightness_down": {
+        "default": "mdi:brightness-5"
+      },
+      "brightness_up": {
+        "default": "mdi:brightness-7"
+      },
+      "timer": {
+        "default": "mdi:timer"
+      }
+    },
     "light": {
       "light": {
         "state_attributes": {
