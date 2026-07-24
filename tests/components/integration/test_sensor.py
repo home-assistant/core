@@ -749,6 +749,182 @@ async def test_units(hass: HomeAssistant) -> None:
     assert new_state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("source_config", "device_config", "expected_class"),
+    [
+        # Water supports the m³ unit, so it will be allowed
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.WATER,
+                }
+            },
+            SensorDeviceClass.WATER,
+        ),
+        # Energy does not support this unit, so the device class will not be applied
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.ENERGY,
+                }
+            },
+            None,
+        ),
+        # With no user-supplied device class, infer None from the class-less source sensor
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                }
+            },
+            None,
+        ),
+        # With no user-supplied device class, infer Energy from the source Power sensor
+        (
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            },
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.power",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                }
+            },
+            SensorDeviceClass.ENERGY,
+        ),
+        # User supplied Date class is ignored because it has no supported state class
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.DATE,
+                }
+            },
+            None,
+        ),
+        # Monetary allows any unit, so the device class will be applied even if the unit is nonsense
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.cubic_meters_per_hour",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                    "device_class": SensorDeviceClass.MONETARY,
+                }
+            },
+            SensorDeviceClass.MONETARY,
+        ),
+        # Cope with invalid device class in the source sensor. Should result in no inferred device class
+        (
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+                ATTR_DEVICE_CLASS: "NotADeviceClass",
+            },
+            {
+                "sensor": {
+                    "platform": "integration",
+                    "name": "integration",
+                    "source": "sensor.bad_sensor_class",
+                    "round": 2,
+                    "method": "trapezoidal",
+                    "unit_time": UnitOfTime.HOURS,
+                }
+            },
+            None,
+        ),
+    ],
+)
+async def test_device_class_user(
+    hass: HomeAssistant,
+    source_config: dict[str, Any],
+    device_config: dict[str, dict[str, Any]],
+    expected_class: SensorDeviceClass | None,
+) -> None:
+    """Test the user-supplied device class hint is applied based on unit and state class compatibility."""
+
+    assert await async_setup_component(hass, "sensor", device_config)
+
+    entity_id = device_config["sensor"]["source"]
+
+    await _setup_device_class_test(hass, entity_id)
+
+    hass.states.async_set(entity_id, 300, source_config, force_update=True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+
+    # Ensure user device class matches expected
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_class
+
+
+async def test_device_class_user_incompatible_logs_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an incompatible configured device class logs a warning."""
+    caplog.set_level("WARNING", logger="homeassistant.components.integration.sensor")
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.cubic_meters_per_hour",
+            "round": 2,
+            "method": "trapezoidal",
+            "unit_time": UnitOfTime.HOURS,
+            "device_class": SensorDeviceClass.ENERGY,
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+
+    await _setup_device_class_test(hass, entity_id)
+
+    hass.states.async_set(
+        entity_id, 300, {ATTR_UNIT_OF_MEASUREMENT: "m³/h"}, force_update=True
+    )
+
+    await hass.async_block_till_done()
+
+    # Ensure warning was emitted for invalid device class for unit
+    assert "Specified device class" in caplog.text
+
+
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
 async def test_device_class(hass: HomeAssistant, method) -> None:
     """Test integration sensor units using a power source."""
@@ -764,23 +940,8 @@ async def test_device_class(hass: HomeAssistant, method) -> None:
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    # This replicates the current sequence when HA starts up in a real runtime
-    # by updating the base sensor state before the base sensor's units
-    # or state have been correctly populated.  Those interim updates
-    # include states of None and Unknown
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert "device_class" not in state.attributes
+    await _setup_device_class_test(hass, entity_id)
 
     hass.states.async_set(
         entity_id,
@@ -937,6 +1098,26 @@ async def _setup_integral_sensor(
         hass, "sensor", _integral_sensor_config(max_sub_interval=max_sub_interval)
     )
     await hass.async_block_till_done()
+
+
+async def _setup_device_class_test(hass: HomeAssistant, entity_id: str) -> None:
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert "device_class" not in state.attributes
 
 
 async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:
