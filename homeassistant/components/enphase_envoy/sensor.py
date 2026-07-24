@@ -1,6 +1,6 @@
 """Support for Enphase Envoy solar energy monitor."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
 import datetime
 import logging
@@ -8,6 +8,7 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, override
 
 from pyenphase import (
+    EnvoyACB,
     EnvoyACBPower,
     EnvoyBatteryAggregate,
     EnvoyC6CC,
@@ -21,6 +22,7 @@ from pyenphase import (
     EnvoySystemProduction,
 )
 from pyenphase.const import PHASENAMES
+from pyenphase.models.acb import ACBChargeStatus, ACBSleepState
 from pyenphase.models.meters import (
     CtMeterStatus,
     CtState,
@@ -868,6 +870,109 @@ ACB_BATTERY_ENERGY_SENSORS = (
 
 
 @dataclass(frozen=True, kw_only=True)
+class EnvoyACBInventorySensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy per-device ACB Battery sensor entity."""
+
+    value_fn: Callable[[EnvoyACB], int | str | datetime.datetime | None]
+
+
+ACB_INVENTORY_SENSORS = (
+    EnvoyACBInventorySensorEntityDescription(
+        key="acb_battery_soc",
+        translation_key="acb_battery_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=attrgetter("percent_full"),
+    ),
+    EnvoyACBInventorySensorEntityDescription(
+        key="acb_battery_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=attrgetter("last_report_watts"),
+    ),
+    EnvoyACBInventorySensorEntityDescription(
+        key="acb_battery_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("max_cell_temp"),
+    ),
+    EnvoyACBInventorySensorEntityDescription(
+        key="acb_battery_charge_status",
+        translation_key="acb_battery_charge_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.value for status in ACBChargeStatus],
+        value_fn=attrgetter("charge_status"),
+    ),
+    EnvoyACBInventorySensorEntityDescription(
+        key="acb_battery_last_reported",
+        translation_key=LAST_REPORTED_KEY,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda acb: (
+            dt_util.utc_from_timestamp(acb.last_report_date)
+            if acb.last_report_date is not None
+            else None
+        ),
+    ),
+    EnvoyACBInventorySensorEntityDescription(
+        key="acb_battery_sleep_soc_target",
+        translation_key="acb_battery_sleep_soc_target",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda acb: (
+            f"{acb.sleep_min_soc}-{acb.sleep_max_soc}"
+            if acb.sleep_min_soc is not None and acb.sleep_max_soc is not None
+            else None
+        ),
+    ),
+    EnvoyACBInventorySensorEntityDescription(
+        key="acb_battery_sleep_state",
+        translation_key="acb_battery_sleep_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value for state in ACBSleepState],
+        value_fn=attrgetter("sleep_state"),
+    ),
+)
+
+ACB_AGGREGATE_SLEEP_STATE_MIXED = "mixed"
+ACB_AGGREGATE_SLEEP_STATES = [
+    *(state.value for state in ACBSleepState),
+    ACB_AGGREGATE_SLEEP_STATE_MIXED,
+]
+
+
+def aggregate_acb_sleep_state(acbs: Iterable[EnvoyACB]) -> str:
+    """Summarize the sleep state of all ACB batteries into a single value.
+
+    An in-progress transition takes priority, so the aggregate keeps reporting
+    going_to_sleep/waking until every battery has settled. Batteries check in at
+    different times, so a steady split (e.g. one asleep, one awake mid-changeover)
+    is reported as ``mixed`` rather than picking one battery's state.
+    """
+    states = {acb.sleep_state for acb in acbs}
+    if ACBSleepState.GOING_TO_SLEEP in states:
+        return ACBSleepState.GOING_TO_SLEEP.value
+    if ACBSleepState.WAKING in states:
+        return ACBSleepState.WAKING.value
+    if states == {ACBSleepState.ASLEEP}:
+        return ACBSleepState.ASLEEP.value
+    if states == {ACBSleepState.AWAKE}:
+        return ACBSleepState.AWAKE.value
+    return ACB_AGGREGATE_SLEEP_STATE_MIXED
+
+
+ACB_AGGREGATE_SLEEP_STATE_SENSOR = SensorEntityDescription(
+    key="acb_aggregate_sleep_state",
+    translation_key="acb_aggregate_sleep_state",
+    device_class=SensorDeviceClass.ENUM,
+    options=ACB_AGGREGATE_SLEEP_STATES,
+)
+
+
+@dataclass(frozen=True, kw_only=True)
 class EnvoyAggregateBatterySensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy aggregate Ensemble and ACB Battery sensor entity."""
 
@@ -1004,6 +1109,17 @@ async def async_setup_entry(
         entities.extend(
             EnvoyAcbBatteryEnergyEntity(coordinator, description)
             for description in ACB_BATTERY_ENERGY_SENSORS
+        )
+    if envoy_data.acb_inventory:
+        entities.extend(
+            EnvoyACBInventoryEntity(coordinator, description, serial_number)
+            for description in ACB_INVENTORY_SENSORS
+            for serial_number in envoy_data.acb_inventory
+        )
+        entities.append(
+            EnvoyACBAggregateSleepStateEntity(
+                coordinator, ACB_AGGREGATE_SLEEP_STATE_SENSOR
+            )
         )
     if envoy_data.battery_aggregate:
         entities.extend(
@@ -1409,6 +1525,69 @@ class AggregateBatteryEntity(EnvoySystemSensorEntity):
         battery_aggregate = self.data.battery_aggregate
         assert battery_aggregate is not None
         return self.entity_description.value_fn(battery_aggregate)
+
+
+class EnvoyACBInventoryEntity(EnvoySensorBaseEntity):
+    """Envoy per-device ACB Battery sensor entity."""
+
+    entity_description: EnvoyACBInventorySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyACBInventorySensorEntityDescription,
+        serial_number: str,
+    ) -> None:
+        """Initialize ACB battery inventory entity."""
+        super().__init__(coordinator, description)
+        self._serial_number = serial_number
+        self._attr_unique_id = f"{serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            manufacturer="Enphase",
+            model="AC Battery",
+            name=f"AC Battery {serial_number}",
+            via_device=(DOMAIN, f"{self.envoy_serial_num}_acb"),
+            serial_number=serial_number,
+        )
+
+    @property
+    @override
+    def native_value(self) -> int | str | datetime.datetime | None:
+        """Return the state of the per-device ACB battery sensors."""
+        acb_inventory = self.data.acb_inventory
+        if not acb_inventory or self._serial_number not in acb_inventory:
+            return None
+        return self.entity_description.value_fn(acb_inventory[self._serial_number])
+
+
+class EnvoyACBAggregateSleepStateEntity(EnvoySensorBaseEntity):
+    """Envoy aggregate sleep state across all ACB batteries."""
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the aggregate ACB sleep state entity."""
+        super().__init__(coordinator, description)
+        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self.envoy_serial_num}_acb")},
+            manufacturer="Enphase",
+            model="ACB",
+            name=f"ACB {self.envoy_serial_num}",
+            via_device=(DOMAIN, self.envoy_serial_num),
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the aggregate sleep state across all ACB batteries."""
+        acb_inventory = self.data.acb_inventory
+        if not acb_inventory:
+            return None
+        return aggregate_acb_sleep_state(acb_inventory.values())
 
 
 class EnvoyCollarEntity(EnvoySensorBaseEntity):

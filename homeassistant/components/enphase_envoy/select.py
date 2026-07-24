@@ -10,11 +10,12 @@ from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
 from pyenphase.models.tariff import EnvoyStorageMode, EnvoyStorageSettings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import ACB_SLEEP_SOC_BANDS, DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity, exception_handler
 
@@ -124,6 +125,13 @@ STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
     ),
 )
 
+ACB_SLEEP_SOC_ENTITY = SelectEntityDescription(
+    key="acb_sleep_soc",
+    translation_key="acb_sleep_soc",
+    options=ACB_SLEEP_SOC_BANDS,
+    entity_category=EntityCategory.CONFIG,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -149,6 +157,8 @@ async def async_setup_entry(
         entities.append(
             EnvoyStorageSettingsSelectEntity(coordinator, STORAGE_MODE_ENTITY)
         )
+    if envoy_data.acb_inventory:
+        entities.append(EnvoyACBSleepSocSelectEntity(coordinator, ACB_SLEEP_SOC_ENTITY))
     async_add_entities(entities)
 
 
@@ -252,3 +262,41 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
         """Update the relay."""
         await self.entity_description.update_fn(self.envoy, option)
         await self.coordinator.async_request_refresh()
+
+
+class EnvoyACBSleepSocSelectEntity(EnvoyBaseEntity, SelectEntity):
+    """Select for the SOC band applied when putting ACB batteries to sleep."""
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: SelectEntityDescription,
+    ) -> None:
+        """Initialize the ACB sleep SOC select entity."""
+        super().__init__(coordinator, description)
+        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self.envoy_serial_num}_acb")},
+            manufacturer="Enphase",
+            model="ACB",
+            name=f"ACB {self.envoy_serial_num}",
+            via_device=(DOMAIN, self.envoy_serial_num),
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the ACB sleep SOC select is available."""
+        return super().available and bool(self.data.acb_inventory)
+
+    @property
+    @override
+    def current_option(self) -> str:
+        """Return the selected ACB sleep SOC band."""
+        return self.coordinator.acb_sleep_soc_band
+
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Store the selected ACB sleep SOC band."""
+        self.coordinator.acb_sleep_soc_band = option
+        self.async_write_ha_state()

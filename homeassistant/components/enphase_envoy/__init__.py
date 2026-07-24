@@ -57,6 +57,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
         serial_number=envoy.serial_number,
     )
 
+    # register the ACB aggregate device before the individual batteries reference
+    # it as via_device, so they nest under it in the device hierarchy
+    if (envoy_data := coordinator.envoy.data) and envoy_data.acb_inventory:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{envoy.serial_number}_acb")},
+            manufacturer="Enphase",
+            model="ACB",
+            name=f"ACB {envoy.serial_number}",
+            via_device=(DOMAIN, envoy.serial_number),
+        )
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -95,4 +107,10 @@ async def async_remove_config_entry_device(
         if envoy_data.enpower:
             if str(envoy_data.enpower.serial_number) in dev_ids:
                 return False
+        if envoy_data.acb_inventory:
+            if f"{envoy_serial_num}_acb" in dev_ids:
+                return False
+            for acb_serial in envoy_data.acb_inventory:
+                if str(acb_serial) in dev_ids:
+                    return False
     return True

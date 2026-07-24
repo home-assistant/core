@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import multidict
 from pyenphase import (
+    EnvoyACB,
     EnvoyACBPower,
     EnvoyBatteryAggregate,
     EnvoyC6CC,
@@ -183,6 +184,7 @@ def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
     _load_json_2_meter_data(mock_envoy.data, json_fixture)
     _load_json_2_inverter_data(mock_envoy.data, json_fixture)
     _load_json_2_encharge_enpower_data(mock_envoy.data, json_fixture)
+    _load_json_2_acb_inventory_data(mock_envoy.data, json_fixture)
     _load_json_2_raw_data(mock_envoy.data, json_fixture)
 
     if item := json_fixture.get("interface_information"):
@@ -252,6 +254,16 @@ def _load_json_2_inverter_data(
         mocked_data.inverters = {}
         for sub_item, item_data in item.items():
             mocked_data.inverters[sub_item] = EnvoyInverter(**item_data)
+
+
+def _load_json_2_acb_inventory_data(
+    mocked_data: EnvoyData, json_fixture: dict[str, Any]
+) -> None:
+    """Fill envoy per-device ACB inventory data from fixture."""
+    if item := json_fixture["data"].get("acb_inventory"):
+        mocked_data.acb_inventory = {}
+        for sub_item, item_data in item.items():
+            mocked_data.acb_inventory[sub_item] = EnvoyACB(**item_data)
 
 
 def _load_json_2_encharge_enpower_data(

@@ -6,6 +6,7 @@ from operator import attrgetter
 from typing import override
 
 from pyenphase import EnvoyC6CC, EnvoyCollar, EnvoyEncharge, EnvoyEnpower
+from pyenphase.models.acb import EnvoyACB
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -107,6 +108,35 @@ C6CC_SENSORS = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class EnvoyACBBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes an Envoy per-device ACB Battery binary sensor entity."""
+
+    value_fn: Callable[[EnvoyACB], bool]
+
+
+ACB_INVENTORY_SENSORS = (
+    EnvoyACBBinarySensorEntityDescription(
+        key="communicating",
+        translation_key="communicating",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("communicating"),
+    ),
+    EnvoyACBBinarySensorEntityDescription(
+        key="operating",
+        translation_key="operating",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=attrgetter("operating"),
+    ),
+    EnvoyACBBinarySensorEntityDescription(
+        key="producing",
+        translation_key="producing",
+        value_fn=attrgetter("producing"),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnphaseConfigEntry,
@@ -140,6 +170,13 @@ async def async_setup_entry(
         entities.extend(
             EnvoyC6CCBinarySensorEntity(coordinator, description)
             for description in C6CC_SENSORS
+        )
+
+    if envoy_data.acb_inventory:
+        entities.extend(
+            EnvoyACBBinarySensorEntity(coordinator, description, serial_number)
+            for description in ACB_INVENTORY_SENSORS
+            for serial_number in envoy_data.acb_inventory
         )
 
     async_add_entities(entities)
@@ -285,3 +322,37 @@ class EnvoyC6CCBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         c6cc_data = self.data.c6cc
         assert c6cc_data is not None
         return self.entity_description.value_fn(c6cc_data)
+
+
+class EnvoyACBBinarySensorEntity(EnvoyBaseBinarySensorEntity):
+    """Defines a per-device ACB Battery binary_sensor entity."""
+
+    entity_description: EnvoyACBBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyACBBinarySensorEntityDescription,
+        serial_number: str,
+    ) -> None:
+        """Init the ACB battery base entity."""
+        super().__init__(coordinator, description)
+        self._serial_number = serial_number
+        self._attr_unique_id = f"{serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            manufacturer="Enphase",
+            model="AC Battery",
+            name=f"AC Battery {serial_number}",
+            via_device=(DOMAIN, f"{self.envoy_serial_num}_acb"),
+            serial_number=serial_number,
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return the state of the ACB battery binary_sensor."""
+        acb_inventory = self.data.acb_inventory
+        if not acb_inventory or self._serial_number not in acb_inventory:
+            return None
+        return self.entity_description.value_fn(acb_inventory[self._serial_number])

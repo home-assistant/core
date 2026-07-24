@@ -20,7 +20,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ACB_SLEEP_SOC_BANDS,
     CONF_MANUAL_TOKEN,
+    DEFAULT_ACB_SLEEP_SOC_BAND,
     DOMAIN,
     INVALID_AUTH_ERRORS,
     OPERATIONAL_RETRY_TIMEOUT,
@@ -66,6 +68,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._cancel_firmware_refresh: CALLBACK_TYPE | None = None
         self._cancel_mac_verification: CALLBACK_TYPE | None = None
         self.token_lifetime = 0
+        self._acb_sleep_soc_band: str | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -86,6 +89,36 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ),
         )
         return self.token_lifetime > STALE_TOKEN_THRESHOLD
+
+    @property
+    def acb_sleep_soc_band(self) -> str:
+        """Return the selected ACB sleep SOC band (e.g. ``95-100``).
+
+        This is the SOC band that the sleep buttons apply. It is kept as
+        in-memory state, since persisting it in the config entry options would
+        trigger a reload on every change. When not set by the user it defaults
+        to the first battery reporting a valid band (batteries are not
+        guaranteed to agree), else a default.
+        """
+        if self._acb_sleep_soc_band is not None:
+            return self._acb_sleep_soc_band
+        if (data := self.envoy.data) and data.acb_inventory:
+            for acb in data.acb_inventory.values():
+                if acb.sleep_min_soc is not None and acb.sleep_max_soc is not None:
+                    band = f"{acb.sleep_min_soc}-{acb.sleep_max_soc}"
+                    if band in ACB_SLEEP_SOC_BANDS:
+                        return band
+        return DEFAULT_ACB_SLEEP_SOC_BAND
+
+    @acb_sleep_soc_band.setter
+    def acb_sleep_soc_band(self, value: str) -> None:
+        """Store the selected ACB sleep SOC band."""
+        self._acb_sleep_soc_band = value
+
+    def acb_sleep_soc(self) -> tuple[int, int]:
+        """Return the selected ACB sleep SOC band as (min, max) integers."""
+        low, high = self.acb_sleep_soc_band.split("-")
+        return int(low), int(high)
 
     @callback
     def _async_refresh_token_if_needed(self, now: datetime.datetime) -> None:
