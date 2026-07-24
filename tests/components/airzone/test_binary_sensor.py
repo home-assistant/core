@@ -1,6 +1,7 @@
 """The sensor tests for the Airzone platform."""
 
 from aioairzone.const import API_ERROR_LOW_BATTERY
+import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -70,6 +71,19 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.salon_air_demand")
     assert state.state == STATE_OFF
 
+    state = hass.states.get("binary_sensor.salon_anti_freeze")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.dorm_ppal_anti_freeze")
+    assert state.state == STATE_OFF
+
+    # Cold/heat/generic demand binary sensors are disabled by default.
+    state = hass.states.get("binary_sensor.dorm_ppal_demand")
+    assert state is None
+
+    state = hass.states.get("binary_sensor.dorm_ppal_heat_demand")
+    assert state is None
+
     state = hass.states.get("binary_sensor.salon_battery")
     assert state is None
 
@@ -90,3 +104,30 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.dkn_plus_problem")
     assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_airzone_create_binary_sensors_disabled_by_default(
+    hass: HomeAssistant,
+) -> None:
+    """Test creation of binary sensors that are disabled by default."""
+
+    await async_init_integration(hass)
+
+    # Generic demand (air OR floor demand).
+    state = hass.states.get("binary_sensor.salon_demand")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.dorm_ppal_demand")
+    assert state.state == STATE_ON
+
+    # Cold demand.
+    state = hass.states.get("binary_sensor.salon_cold_demand")
+    assert state.state == STATE_OFF
+
+    # Heat demand.
+    state = hass.states.get("binary_sensor.salon_heat_demand")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.dorm_ppal_heat_demand")
+    assert state.state == STATE_ON

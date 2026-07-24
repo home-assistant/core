@@ -3,13 +3,18 @@
 from typing import Any, Final, override
 
 from aioairzone.const import (
+    AZD_ECO_ADAPT,
+    AZD_ENERGY,
     AZD_HOT_WATER,
     AZD_HUMIDITY,
+    AZD_SYSTEMS,
     AZD_TEMP,
     AZD_TEMP_UNIT,
     AZD_THERMOSTAT_BATTERY,
     AZD_THERMOSTAT_SIGNAL,
     AZD_WEBSERVER,
+    AZD_WIFI_CHANNEL,
+    AZD_WIFI_QUALITY,
     AZD_WIFI_RSSI,
     AZD_ZONES,
 )
@@ -25,6 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfPower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -35,6 +41,7 @@ from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import (
     AirzoneEntity,
     AirzoneHotWaterEntity,
+    AirzoneSystemEntity,
     AirzoneWebServerEntity,
     AirzoneZoneEntity,
 )
@@ -48,6 +55,24 @@ HOT_WATER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     ),
 )
 
+SYSTEM_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_ECO_ADAPT,
+        options=["off", "manual", "a", "a_p", "a_pp"],
+        translation_key="eco_adapt",
+    ),
+    # The aioairzone AZD_ENERGY value is the clamp meter instantaneous power
+    # reading (in watts), hence the power device class despite the name.
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.POWER,
+        key=AZD_ENERGY,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
 WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -57,6 +82,21 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_WIFI_CHANNEL,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="wifi_channel",
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_WIFI_QUALITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="wifi_quality",
     ),
 )
 
@@ -98,12 +138,31 @@ async def async_setup_entry(
     """Add Airzone sensors from a config_entry."""
     coordinator = entry.runtime_data
 
+    added_systems: set[str] = set()
     added_zones: set[str] = set()
 
     def _async_entity_listener() -> None:
         """Handle additions of sensors."""
 
         entities: list[AirzoneSensor] = []
+
+        systems_data = coordinator.data.get(AZD_SYSTEMS, {})
+        received_systems = set(systems_data)
+        new_systems = received_systems - added_systems
+        if new_systems:
+            entities.extend(
+                AirzoneSystemSensor(
+                    coordinator,
+                    description,
+                    entry,
+                    system_id,
+                    systems_data.get(system_id),
+                )
+                for system_id in new_systems
+                for description in SYSTEM_SENSOR_TYPES
+                if description.key in systems_data.get(system_id)
+            )
+            added_systems.update(new_systems)
 
         zones_data = coordinator.data.get(AZD_ZONES, {})
         received_zones = set(zones_data)
@@ -206,6 +265,26 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{self._attr_unique_id}_ws_{description.key}"
         self.entity_description = description
+        self._async_update_attrs()
+
+
+class AirzoneSystemSensor(AirzoneSystemEntity, AirzoneSensor):
+    """Define an Airzone System sensor."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        description: SensorEntityDescription,
+        entry: ConfigEntry,
+        system_id: str,
+        system_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, system_data)
+
+        self._attr_unique_id = f"{self._attr_unique_id}_{system_id}_{description.key}"
+        self.entity_description = description
+
         self._async_update_attrs()
 
 

@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+from aioairzone.common import EcoAdapt
 from aioairzone.const import (
     API_ACS_MAX_TEMP,
     API_ACS_MIN_TEMP,
@@ -11,8 +12,10 @@ from aioairzone.const import (
     API_ACS_SET_POINT,
     API_ACS_TEMP,
     API_AIR_DEMAND,
+    API_ANTI_FREEZE,
     API_BATTERY,
     API_COLD_ANGLE,
+    API_COLD_DEMAND,
     API_COLD_STAGE,
     API_COLD_STAGES,
     API_COOL_MAX_TEMP,
@@ -20,9 +23,11 @@ from aioairzone.const import (
     API_COOL_SET_POINT,
     API_COVERAGE,
     API_DATA,
+    API_ECO_ADAPT,
     API_ERRORS,
     API_FLOOR_DEMAND,
     API_HEAT_ANGLE,
+    API_HEAT_DEMAND,
     API_HEAT_MAX_TEMP,
     API_HEAT_MIN_TEMP,
     API_HEAT_SET_POINT,
@@ -32,6 +37,7 @@ from aioairzone.const import (
     API_MAC,
     API_MASTER_ZONE_ID,
     API_MAX_TEMP,
+    API_MC_CONNECTED,
     API_MIN_TEMP,
     API_MODE,
     API_MODES,
@@ -54,6 +60,7 @@ from aioairzone.const import (
     API_UNITS,
     API_VERSION,
     API_WIFI_CHANNEL,
+    API_WIFI_QUALITY,
     API_WIFI_RSSI,
     API_WS_AZ,
     API_WS_TYPE,
@@ -110,6 +117,10 @@ HVAC_MOCK = {
                     API_ERRORS: [],
                     API_AIR_DEMAND: 0,
                     API_FLOOR_DEMAND: 0,
+                    API_ANTI_FREEZE: 0,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 0,
+                    API_ECO_ADAPT: EcoAdapt.MANUAL,
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
                     API_SPEED: 0,
@@ -140,6 +151,9 @@ HVAC_MOCK = {
                     API_ERRORS: [],
                     API_AIR_DEMAND: 1,
                     API_FLOOR_DEMAND: 1,
+                    API_ANTI_FREEZE: 0,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 1,
                     API_HEAT_ANGLE: 1,
                     API_COLD_ANGLE: 2,
                     API_SPEED: 0,
@@ -351,7 +365,8 @@ HVAC_SYSTEMS_MOCK = {
     API_SYSTEMS: [
         {
             API_SYSTEM_ID: 1,
-            API_POWER: 0,
+            API_POWER: 100,
+            API_MC_CONNECTED: 1,
             API_SYSTEM_FIRMWARE: "3.31",
             API_SYSTEM_TYPE: 1,
             API_Q_ADAPT: 0,
@@ -367,6 +382,7 @@ HVAC_WEBSERVER_MOCK = {
     API_MAC: "11:22:33:44:55:66",
     API_WS_TYPE: API_WS_AZ,
     API_WIFI_CHANNEL: 6,
+    API_WIFI_QUALITY: 84,
     API_WIFI_RSSI: -42,
 }
 

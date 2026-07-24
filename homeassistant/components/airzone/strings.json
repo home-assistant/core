@@ -29,11 +29,31 @@
       "air_demand": {
         "name": "Air demand"
       },
+      "anti_freeze": {
+        "name": "Anti-freeze"
+      },
+      "cold_demand": {
+        "name": "Cold demand"
+      },
+      "demand": {
+        "name": "Demand"
+      },
       "floor_demand": {
         "name": "Floor demand"
+      },
+      "heat_demand": {
+        "name": "Heat demand"
       }
     },
     "select": {
+      "cold_stage": {
+        "name": "Cooling emission type",
+        "state": {
+          "air": "Air",
+          "combined": "Combined",
+          "radiant": "Radiant"
+        }
+      },
       "grille_angles": {
         "name": "Cold angle",
         "state": {
@@ -50,6 +70,14 @@
           "45deg": "[%key:component::airzone::entity::select::grille_angles::state::45deg%]",
           "50deg": "[%key:component::airzone::entity::select::grille_angles::state::50deg%]",
           "90deg": "[%key:component::airzone::entity::select::grille_angles::state::90deg%]"
+        }
+      },
+      "heat_stage": {
+        "name": "Heating emission type",
+        "state": {
+          "air": "[%key:component::airzone::entity::select::cold_stage::state::air%]",
+          "combined": "[%key:component::airzone::entity::select::cold_stage::state::combined%]",
+          "radiant": "[%key:component::airzone::entity::select::cold_stage::state::radiant%]"
         }
       },
       "modes": {
@@ -84,11 +112,27 @@
       }
     },
     "sensor": {
+      "eco_adapt": {
+        "name": "Eco-Adapt",
+        "state": {
+          "a": "A",
+          "a_p": "A+",
+          "a_pp": "A++",
+          "manual": "Manual",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "rssi": {
         "name": "RSSI"
       },
       "thermostat_signal": {
         "name": "Signal strength"
+      },
+      "wifi_channel": {
+        "name": "Wi-Fi channel"
+      },
+      "wifi_quality": {
+        "name": "Wi-Fi quality"
       }
     }
   }
