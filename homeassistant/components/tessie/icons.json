@@ -95,6 +95,9 @@
       }
     },
     "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "default": "mdi:sun-thermometer"
+      },
       "primary": {
         "state_attributes": {
           "preset_mode": {
