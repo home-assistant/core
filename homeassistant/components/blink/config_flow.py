@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import aiohttp
 from blinkpy.auth import Auth, BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
@@ -17,7 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN, HARDWARE_ID
 
@@ -49,15 +50,23 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the blink flow."""
         self.auth: Auth | None = None
         self.blink: Blink | None = None
+        self._blink_session: aiohttp.ClientSession | None = None
 
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
+        # Use a dedicated session with a real CookieJar.
+        # The shared HA aiohttp session may drop OAuth cookies between steps,
+        # causing silent 2FA failures on some Blink account configurations.
+        # async_create_clientsession handles lifecycle management automatically.
+        self._blink_session = async_create_clientsession(
+            self.hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
+        )
         self.auth = Auth(
             {**user_input, "hardware_id": HARDWARE_ID},
             no_prompt=True,
-            session=async_get_clientsession(self.hass),
+            session=self._blink_session,
         )
-        self.blink = Blink(session=async_get_clientsession(self.hass))
+        self.blink = Blink(session=self._blink_session)
         self.blink.auth = self.auth
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
