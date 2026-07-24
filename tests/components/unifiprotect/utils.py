@@ -23,18 +23,24 @@ from uiprotect.data import (
     ProtectModelWithId,
     PublicBootstrap,
     Sensor,
+    SmartDetectAudioType,
+    SmartDetectObjectType,
+    VideoMode,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
     PublicCamera,
+    PublicCameraLedSettings,
     PublicHdrMode,
     PublicLight,
     PublicLightDeviceSettings,
     PublicLightModeSettings,
+    PublicOsdSettings,
     PublicSensor,
     PublicSensorLeakSettings,
     PublicSensorMotionSettingsRead,
+    PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
     SensorFeatureCapability,
@@ -412,14 +418,26 @@ def make_public_camera(
     camera: Camera,
     *,
     state: DeviceState | None = None,
+    status_light: bool = False,
+    osd_name: bool = False,
+    osd_date: bool = False,
+    osd_logo: bool = False,
+    osd_debug: bool = False,
+    video_mode: VideoMode | None = None,
+    object_types: list[SmartDetectObjectType] | None = None,
+    audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
-    """Build a public-API camera mirroring a private camera's migrated fields.
+    """Build a public-API camera for a private camera's migrated fields.
 
-    ``mic_volume`` and ``hdr_type`` default to values derived from the private
-    fixture so the public mirror matches it; pass an override to assert a value
-    the private object would not produce.
+    Only ``state``, ``video_mode``, ``mic_volume``, and ``hdr_type`` (derived
+    from the private ``hdr_mode_display``) mirror the private camera when not
+    overridden. The other fields deliberately default to off/empty
+    (``status_light``/``osd_*`` disabled, no smart-detect types) instead of
+    mirroring, so a test overriding one sets a value the private object would
+    not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
+    the test.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -429,7 +447,39 @@ def make_public_camera(
     public.type = camera.type
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
+    public.led_settings = PublicCameraLedSettings(is_enabled=status_light)
+    public.osd_settings = PublicOsdSettings(
+        is_name_enabled=osd_name,
+        is_date_enabled=osd_date,
+        is_logo_enabled=osd_logo,
+        is_debug_enabled=osd_debug,
+    )
+    public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.smart_detect_settings = PublicSmartDetectSettings(
+        object_types=object_types or [],
+        audio_types=audio_types or [],
+    )
+    # A Mock(spec) does not evaluate properties, so mirror the PublicCamera
+    # parity properties the migrated switches read using the library's own logic.
+    for name in (
+        "is_high_fps_enabled",
+        "is_person_detection_on",
+        "is_vehicle_detection_on",
+        "is_animal_detection_on",
+        "is_package_detection_on",
+        "is_license_plate_detection_on",
+        "is_smoke_detection_on",
+        "is_co_detection_on",
+        "is_siren_detection_on",
+        "is_baby_cry_detection_on",
+        "is_speaking_detection_on",
+        "is_bark_detection_on",
+        "is_car_alarm_detection_on",
+        "is_car_horn_detection_on",
+        "is_glass_break_detection_on",
+    ):
+        setattr(public, name, getattr(PublicCamera, name).fget(public))
     public.hdr_type = (
         _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
         if hdr_type is None
