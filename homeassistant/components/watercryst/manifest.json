@@ -1,0 +1,11 @@
+{
+  "domain": "watercryst",
+  "name": "WATERCryst",
+  "codeowners": ["@WATERCryst"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/watercryst",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyocat==1.2.0"]
+}
