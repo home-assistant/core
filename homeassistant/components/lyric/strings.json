@@ -67,6 +67,9 @@
       "room_temperature": {
         "name": "Room temperature"
       },
+      "schedule_status": {
+        "name": "Schedule status"
+      },
       "setpoint_status": {
         "name": "Setpoint status"
       }
