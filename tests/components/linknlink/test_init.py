@@ -55,6 +55,8 @@ async def test_setup_preserves_custom_title(
 
 async def test_setup_and_unload(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_position_subscription: tuple[MagicMock, MagicMock],
@@ -72,10 +74,10 @@ async def test_setup_and_unload(
     subscription_class.assert_called_once()
     subscription.start.assert_awaited_once()
     subscription.wait_confirmed.assert_awaited_once_with(60.0)
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, MAC)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MAC)})
     assert device is not None
     assert device.model == DISPLAY_MODEL
-    sensor_id = er.async_get(hass).async_get_entity_id(
+    sensor_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{MAC}_nearest_distance"
     )
     assert sensor_id is not None
