@@ -1,0 +1,13 @@
+{
+  "domain": "flow_it",
+  "name": "Flow-it",
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@albertogeniola"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flow_it",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["flow-it-api==0.0.1.0"],
+  "zeroconf": ["_tbk_vmc._tcp.local."]
+}

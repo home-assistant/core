@@ -241,6 +241,7 @@ FLOWS = {
         "flexit_bacnet",
         "flipr",
         "flo",
+        "flow_it",
         "flume",
         "fluss",
         "flux_led",
