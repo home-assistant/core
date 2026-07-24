@@ -1,0 +1,197 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/brands#10770 (icon +
+      hDPI icon; no dark variant, it was byte-identical to the light one).
+      Kept todo rather than done since the PR is open, not yet merged.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage:
+    status: done
+    comment: >-
+      test_config_flow.py covers: duplicate-abort, full auto-login flow,
+      token-exchange failure, reauth (auto-login). Also covers the
+      manual_login/manual_paste fallback flow (SOURCE_USER success,
+      invalid-redirect-URL error, token-exchange-failure error, the
+      diagnostic_cloud_api_override field's valid/invalid paths, and
+      manual_login entered via SOURCE_REAUTH), plus async_step_reconfigure
+      via both the manual_login and auto_login paths — asserting the
+      existing entry is updated in place (no duplicate entry created,
+      options preserved) rather than a new one.
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  docs-high-level-description:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864,
+      which covers this rule and every other docs-* rule in this file. Kept
+      todo rather than done since the PR is open, not yet merged.
+  docs-installation-instructions:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-removal-instructions:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-installation-parameters:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: >-
+      144 test functions / 261 snapshots exist, but no coverage-percentage
+      tool has actually been run against this tree this session (no
+      .coveragerc / stored coverage report / CI run available to verify
+      against). A previously-claimed "99%" figure could not be
+      re-substantiated and is not carried forward without a fresh run.
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Bosch cloud is the source of truth; devices added via OAuth flow. No local discovery protocol applies.
+  discovery-update-info:
+    status: exempt
+    comment: See discovery.
+  docs-data-update:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-examples:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-known-limitations:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-supported-devices:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-supported-functions:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-troubleshooting:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  docs-use-cases:
+    status: todo
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
+  dynamic-devices:
+    status: todo
+    comment: >-
+      A camera removed from the Bosch account is cleaned up
+      (dev_reg.async_remove_device), but a camera newly added to the
+      account is not picked up at runtime — async_add_entities is only
+      called once at platform setup, so a config entry reload is required.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: >-
+      switch.py's privacy-mode-blocks-stream ServiceValidationError fixed
+      this session (now uses translation_domain/translation_key). Two
+      remaining raw f-string HomeAssistantError raises in camera.py
+      (play_stream / async_handle_async_webrtc_offer, both "stream
+      unavailable - privacy mode is ON") are still unfixed: camera.py has
+      a pre-existing, unrelated ruff C901 complexity violation
+      (_async_camera_image_impl, 50 > 25) that blocks this repo's
+      pre-commit hook on ANY change to the file, so fixing these 2 sites
+      needs that complexity debt paid down first, out of scope this
+      session.
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: >-
+      Researched 2026-07-15: cloud_ssl.py builds its own
+      aiohttp.ClientSession(connector=TCPConnector(ssl=...)) directly (cached
+      in hass.data) instead of going through
+      homeassistant.helpers.aiohttp_client.async_create_clientsession(hass,
+      ...). Confirmed this is not a cosmetic gap but a real capability
+      limit: async_create_clientsession's connector is always built by
+      _async_get_connector(), which is hardcoded to
+      homeassistant.util.ssl.client_context()/client_context_no_verify() --
+      neither accepts a custom ssl.SSLContext or cadata, so there is no
+      supported way to pin our private Bosch intermediate CA
+      (BOSCH_CLOUD_CA_PEM) through that helper. Searched Core for precedent
+      of custom/pinned TLS alongside the aiohttp_client helpers: elmax
+      (homeassistant/components/elmax/common.py build_direct_ssl_context)
+      and mikrotik (coordinator.py, raw ssl.create_default_context() for a
+      librouteros socket) both need a custom SSLContext too, but neither
+      routes it through aiohttp_client at all -- elmax hands its context
+      straight to the third-party elmax_api client's own session, mikrotik
+      isn't HTTP/aiohttp in the first place. Neither integration lists
+      inject-websession in its own quality_scale.yaml, so neither is a
+      precedent for reconciling CA pinning with this rule, only for
+      side-stepping it. Dropping BOSCH_CLOUD_CA_PEM to comply would
+      reintroduce the verify_ssl=False MITM hole this module was written to
+      close (GHSA-6qh5-x5m5-vj6v/CWE-295) -- not acceptable, so this stays
+      todo rather than a dishonest done. One real improvement was still
+      possible and is shipped: the session's cleanup listener now fires on
+      EVENT_HOMEASSISTANT_CLOSE (matching
+      _async_register_clientsession_shutdown /
+      _async_register_default_clientsession_shutdown and the connector's own
+      close listener in aiohttp_client.py) instead of the earlier
+      EVENT_HOMEASSISTANT_STOP, so this session is no longer torn down
+      before other integrations' stop-phase cleanup has run.
+  strict-typing:
+    status: done
+    comment: >-
+      .strict-typing entry present; 0 mypy --strict errors attributable to
+      homeassistant/components/bosch_shc_camera (re-verified 2026-07-15).

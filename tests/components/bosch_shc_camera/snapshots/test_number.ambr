@@ -1,0 +1,1678 @@
+# serializer version: 1
+# name: test_all_entities[number.bosch_flur_alarm_activation_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_alarm_activation_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm activation delay',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm activation delay',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_activation_delay',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_alarm_activation_delay',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_alarm_activation_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Alarm activation delay',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_alarm_activation_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_intrusion_detection_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 8,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_intrusion_detection_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Intrusion detection range',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intrusion detection range',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'intrusion_distance',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_intrusion_distance',
+    'unit_of_measurement': 'm',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_intrusion_detection_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Intrusion detection range',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 8,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_intrusion_detection_range',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_intrusion_detection_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_intrusion_detection_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Intrusion detection sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intrusion detection sensitivity',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'intrusion_sensitivity',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_intrusion_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_intrusion_detection_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Intrusion detection sensitivity',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_intrusion_detection_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_lens_elevation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.05,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_lens_elevation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lens elevation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lens elevation',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lens_elevation',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_lens_elevation',
+    'unit_of_measurement': 'm',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_lens_elevation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Lens elevation',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.05,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_lens_elevation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_microphone_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_microphone_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Microphone level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Microphone level',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'microphone_level',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_mic_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_microphone_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Microphone level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_microphone_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_power_led_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 4,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_power_led_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power LED brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power LED brightness',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_led_brightness',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_power_led_brightness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_power_led_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Power LED brightness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 4,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_power_led_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_pre_alarm_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_pre_alarm_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pre-alarm duration',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pre-alarm duration',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pre_alarm_delay',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_prealarm_delay',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_pre_alarm_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Pre-alarm duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_pre_alarm_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_siren_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_siren_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Siren duration',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren duration',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_delay',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_alarm_delay',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_siren_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Siren duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_siren_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_speaker_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_speaker_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speaker level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speaker level',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_level',
+    'unique_id': 'bosch_shc_camera_44444444-4444-4444-4444-444444444444_speaker_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_speaker_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Speaker level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_speaker_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_stream_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_flur_stream_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stream volume',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'bosch_shc_audio_volume_44444444-4444-4444-4444-444444444444',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_flur_stream_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Flur Stream volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_flur_stream_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_garten_front_light_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_garten_front_light_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Front light intensity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Front light intensity',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_light_intensity',
+    'unique_id': 'bosch_shc_front_light_intensity_22222222-2222-2222-2222-222222222222',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_garten_front_light_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Garten Front light intensity',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_garten_front_light_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_garten_speaker_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_garten_speaker_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speaker level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speaker level',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_level',
+    'unique_id': 'bosch_shc_camera_22222222-2222-2222-2222-222222222222_speaker_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_garten_speaker_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Garten Speaker level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_garten_speaker_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_garten_stream_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_garten_stream_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stream volume',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'bosch_shc_audio_volume_22222222-2222-2222-2222-222222222222',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_garten_stream_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Garten Stream volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_garten_stream_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_bottom_led_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_bottom_led_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bottom LED brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:brightness-6',
+    'original_name': 'Bottom LED brightness',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bottom_led_brightness',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_bottom_led_brightness',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_bottom_led_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Bottom LED brightness',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-6',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_bottom_led_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_darkness_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_darkness_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Darkness threshold',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Darkness threshold',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'darkness_threshold',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_darkness_threshold',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_darkness_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Darkness threshold',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_darkness_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_front_light_color_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.05,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_front_light_color_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Front light color temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Front light color temperature',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_balance',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_white_balance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_front_light_color_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Front light color temperature',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.05,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_front_light_color_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_front_light_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_front_light_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Front light intensity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Front light intensity',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_light_intensity',
+    'unique_id': 'bosch_shc_front_light_intensity_33333333-3333-3333-3333-333333333333',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_front_light_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Front light intensity',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_front_light_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_intrusion_detection_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 8,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_intrusion_detection_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Intrusion detection range',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intrusion detection range',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'intrusion_distance',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_intrusion_distance',
+    'unit_of_measurement': 'm',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_intrusion_detection_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Intrusion detection range',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 8,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_intrusion_detection_range',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_intrusion_detection_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_intrusion_detection_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Intrusion detection sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intrusion detection sensitivity',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'intrusion_sensitivity',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_intrusion_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_intrusion_detection_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Intrusion detection sensitivity',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_intrusion_detection_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_lens_elevation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.05,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_lens_elevation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lens elevation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lens elevation',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lens_elevation',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_lens_elevation',
+    'unit_of_measurement': 'm',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_lens_elevation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Lens elevation',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.05,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_lens_elevation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_microphone_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_microphone_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Microphone level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Microphone level',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'microphone_level',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_mic_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_microphone_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Microphone level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_microphone_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_motion_light_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_motion_light_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion light sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion light sensitivity',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_light_sensitivity',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_motion_light_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_motion_light_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Motion light sensitivity',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_motion_light_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_speaker_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_speaker_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speaker level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speaker level',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_level',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_speaker_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_speaker_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Speaker level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_speaker_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_stream_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_stream_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stream volume',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'bosch_shc_audio_volume_33333333-3333-3333-3333-333333333333',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_stream_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Stream volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_stream_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_top_led_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_terrasse_top_led_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top LED brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:brightness-6',
+    'original_name': 'Top LED brightness',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'top_led_brightness',
+    'unique_id': 'bosch_shc_camera_33333333-3333-3333-3333-333333333333_top_led_brightness',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_terrasse_top_led_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Top LED brightness',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-6',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_terrasse_top_led_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_wohnzimmer_pan_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 120,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -120,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_wohnzimmer_pan_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pan position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pan position',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pan_position',
+    'unique_id': 'bosch_shc_pan_11111111-1111-1111-1111-111111111111',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_all_entities[number.bosch_wohnzimmer_pan_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Pan position',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 120,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -120,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_wohnzimmer_pan_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_wohnzimmer_speaker_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_wohnzimmer_speaker_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speaker level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speaker level',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_level',
+    'unique_id': 'bosch_shc_camera_11111111-1111-1111-1111-111111111111_speaker_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_wohnzimmer_speaker_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Speaker level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_wohnzimmer_speaker_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.bosch_wohnzimmer_stream_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bosch_wohnzimmer_stream_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stream volume',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'bosch_shc_audio_volume_11111111-1111-1111-1111-111111111111',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[number.bosch_wohnzimmer_stream_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Stream volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bosch_wohnzimmer_stream_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

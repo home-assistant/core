@@ -254,6 +254,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/bosch_alarm/ @mag1024 @sanjay900
 /homeassistant/components/bosch_shc/ @tschamm @mosandlt
 /tests/components/bosch_shc/ @tschamm @mosandlt
+/homeassistant/components/bosch_shc_camera/ @mosandlt
+/tests/components/bosch_shc_camera/ @mosandlt
 /homeassistant/components/brands/ @home-assistant/core
 /tests/components/brands/ @home-assistant/core
 /homeassistant/components/braviatv/ @bieniu @Drafteed

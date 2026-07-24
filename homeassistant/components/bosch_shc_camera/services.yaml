@@ -1,0 +1,285 @@
+trigger_snapshot:
+  fields:
+    entity_id:
+      required: false
+      example: camera.bosch_terrasse
+      selector:
+        entity:
+          integration: bosch_shc_camera
+          domain: camera
+
+open_live_connection:
+  fields:
+    camera_id:
+      required: true
+      example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      selector:
+        text:
+
+create_rule:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    name:
+      required: false
+      default: "HA Rule"
+      selector:
+        text:
+    start_time:
+      required: false
+      default: "00:00:00"
+      selector:
+        text:
+    end_time:
+      required: false
+      default: "23:59:00"
+      selector:
+        text:
+    weekdays:
+      required: false
+      default: [0, 1, 2, 3, 4, 5, 6]
+      selector:
+        object:
+    is_active:
+      required: false
+      default: true
+      selector:
+        boolean:
+
+delete_rule:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    rule_id:
+      required: true
+      selector:
+        text:
+
+update_rule:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    rule_id:
+      required: true
+      selector:
+        text:
+    name:
+      required: false
+      selector:
+        text:
+    start_time:
+      required: false
+      selector:
+        text:
+    end_time:
+      required: false
+      selector:
+        text:
+    weekdays:
+      required: false
+      selector:
+        object:
+    is_active:
+      required: false
+      selector:
+        boolean:
+
+set_motion_zones:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    zones:
+      required: true
+      selector:
+        object:
+
+get_motion_zones:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+
+share_camera:
+  fields:
+    friend_id:
+      required: true
+      selector:
+        text:
+    camera_ids:
+      required: true
+      selector:
+        object:
+    days:
+      required: false
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 365
+          mode: box
+
+delete_motion_zone:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    zone_index:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
+
+get_lighting_schedule:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+
+set_lighting_schedule:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    on_time:
+      example: "18:00"
+      selector:
+        text:
+    off_time:
+      example: "23:00"
+      selector:
+        text:
+    motion:
+      selector:
+        boolean:
+    threshold:
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.05
+
+get_privacy_masks:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+
+set_privacy_masks:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    masks:
+      required: true
+      selector:
+        object:
+
+rename_camera:
+  fields:
+    camera_id:
+      required: true
+      selector:
+        text:
+    new_name:
+      required: true
+      selector:
+        text:
+
+invite_friend:
+  fields:
+    email:
+      required: true
+      selector:
+        text:
+
+list_friends:
+  fields: {}
+
+remove_friend:
+  fields:
+    friend_id:
+      required: true
+      selector:
+        text:
+
+send_event_webhook:
+  fields:
+    entity_id:
+      required: false
+      example: "camera.bosch_terrasse"
+      selector:
+        entity:
+          domain: camera
+    event_type:
+      required: true
+      default: "MOVEMENT"
+      example: "MOVEMENT"
+      selector:
+        select:
+          options:
+            - "MOVEMENT"
+            - "AUDIO_ALARM"
+            - "PERSON"
+            - "INTRUSION"
+
+migrate_flat_events:
+  fields: {}
+
+delete_event:
+  fields:
+    file_path:
+      required: false
+      selector:
+        text:
+    camera:
+      required: false
+      selector:
+        text:
+    date:
+      required: false
+      example: "2026-05-06"
+      selector:
+        text:
+describe_snapshot:
+  fields:
+    camera_id:
+      required: false
+      example: "11111111-2222-3333-4444-555555555555"
+      selector:
+        text:
+    entity_id:
+      required: false
+      example: "camera.bosch_terrasse"
+      selector:
+        entity:
+          domain: camera
+    instructions:
+      required: false
+      selector:
+        text:
+          multiline: true
+    language:
+      required: false
+      selector:
+        text:
+    ai_task_entity:
+      required: false
+      selector:
+        entity:
+          domain: ai_task

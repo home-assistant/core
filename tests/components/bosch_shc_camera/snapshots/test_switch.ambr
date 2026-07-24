@@ -1,0 +1,1604 @@
+# serializer version: 1
+# name: test_all_entities[switch.bosch_terrasse_alarm_system-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.bosch_terrasse_alarm_system',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm system',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm system',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_system_arm',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_alarm_arm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_alarm_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Alarm system',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_alarm_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_ambient_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_ambient_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ambient light',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_light',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_ambient_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_ambient_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Ambient light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_ambient_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_audio_notifications-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_audio_notifications',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Audio Notifications',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio Notifications',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_type_audio',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_notif_audio',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_audio_notifications-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Audio Notifications',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_audio_notifications',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_camera_alarm_notifications-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_camera_alarm_notifications',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Camera Alarm Notifications',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Camera Alarm Notifications',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_type_camera_alarm',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_notif_cameraAlarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_camera_alarm_notifications-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Camera Alarm Notifications',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_camera_alarm_notifications',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_camera_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.bosch_terrasse_camera_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Camera light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Camera light',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'camera_light',
+    'unique_id': 'bosch_shc_light_11112222-3333-4444-5555-666677778888',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_camera_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Camera light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_camera_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_frigate_stream_high-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_frigate_stream_high',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Frigate stream high',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cctv',
+    'original_name': 'Frigate stream high',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frigate_high',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_frigate_high',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_frigate_stream_high-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Frigate stream high',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cctv',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_frigate_stream_high',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_frigate_stream_low-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_frigate_stream_low',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Frigate stream low',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cctv',
+    'original_name': 'Frigate stream low',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frigate_low',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_frigate_low',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_frigate_stream_low-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Frigate stream low',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cctv',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_frigate_stream_low',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_front_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_front_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Front light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Front light',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_light',
+    'unique_id': 'bosch_shc_front_light_11112222-3333-4444-5555-666677778888',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_front_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Front light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_front_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_glass_break_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_glass_break_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Glass break detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Glass break detection',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'glass_break_detection',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_glass_break_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_glass_break_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Glass break detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_glass_break_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_intrusion_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_intrusion_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Intrusion detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intrusion detection',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'intrusion_detection',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_intrusion_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_intrusion_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Intrusion detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_intrusion_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_live_stream-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.bosch_terrasse_live_stream',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Live stream',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Live stream',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'live_stream',
+    'unique_id': 'bosch_shc_live_11112222-3333-4444-5555-666677778888',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_live_stream-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Live stream',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_live_stream',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_motion_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_motion_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion detection',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_detection',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_motion_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_motion_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Motion detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_motion_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_motion_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_motion_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion light',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_light',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_motion_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_motion_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Motion light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_motion_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_movement_notifications-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_movement_notifications',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Movement Notifications',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Movement Notifications',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_type_movement',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_notif_movement',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_movement_notifications-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Movement Notifications',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_movement_notifications',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_notifications-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_notifications',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Notifications',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Notifications',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'notifications',
+    'unique_id': 'bosch_shc_notifications_11112222-3333-4444-5555-666677778888',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_notifications-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Notifications',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_notifications',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_person_notifications-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_person_notifications',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Person Notifications',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Person Notifications',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_type_person',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_notif_person',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_person_notifications-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Person Notifications',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_person_notifications',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_pre_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_pre_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pre-alarm',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pre-alarm',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pre_alarm',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_prealarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_pre_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Pre-alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_pre_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_privacy_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.bosch_terrasse_privacy_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Privacy mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Privacy mode',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'privacy_mode',
+    'unique_id': 'bosch_shc_privacy_11112222-3333-4444-5555-666677778888',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_privacy_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Privacy mode',
+      'rcp_state': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_privacy_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_privacy_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_privacy_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Privacy sound',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Privacy sound',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'privacy_sound',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_privacy_sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_privacy_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Privacy sound',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_privacy_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_publish_external_stream_url-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_publish_external_stream_url',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Publish external stream URL',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Publish external stream URL',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_stream',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_external_stream',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_publish_external_stream_url-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Publish external stream URL',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_publish_external_stream_url',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_record_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_record_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Record sound',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Record sound',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'record_sound',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_record_sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_record_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Record sound',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_record_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_rotate_image_180deg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_rotate_image_180deg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rotate image 180°',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rotate image 180°',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image_rotation_180',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_image_rotation_180',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_rotate_image_180deg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Rotate image 180°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_rotate_image_180deg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Siren',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_mode',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_alarm_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Siren',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_smoke_alarm_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_smoke_alarm_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Smoke alarm detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smoke alarm detection',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fire_alarm_detection',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_fire_alarm_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_smoke_alarm_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Smoke alarm detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_smoke_alarm_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_soft_light_fading-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_soft_light_fading',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Soft light fading',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Soft light fading',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'soft_light_fading',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_soft_light_fading',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_soft_light_fading-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Soft light fading',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_soft_light_fading',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_status_led-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_status_led',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status LED',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status LED',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status_led',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_ledlights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_status_led-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Status LED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_status_led',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_stream_audio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_stream_audio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream audio',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stream audio',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio',
+    'unique_id': 'bosch_shc_audio_11112222-3333-4444-5555-666677778888',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_stream_audio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Stream audio',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_stream_audio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_timestamp_overlay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_timestamp_overlay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timestamp overlay',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timestamp overlay',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timestamp_overlay',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_timestamp_overlay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Timestamp overlay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_timestamp_overlay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_trigger_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_trigger_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Trigger siren',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trigger siren',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'panic_alarm',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_panic_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_trigger_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Trigger siren',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_trigger_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_trouble_notifications_email-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_trouble_notifications_email',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Trouble Notifications (Email)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trouble Notifications (Email)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_type_trouble_email',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_notif_troubleEmail',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_trouble_notifications_email-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Trouble Notifications (Email)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_trouble_notifications_email',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_trouble_notifications_push-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_trouble_notifications_push',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Trouble Notifications (Push)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trouble Notifications (Push)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_type_trouble',
+    'unique_id': 'bosch_shc_camera_11112222-3333-4444-5555-666677778888_notif_trouble',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_trouble_notifications_push-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Trouble Notifications (Push)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_trouble_notifications_push',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_wallwasher-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.bosch_terrasse_wallwasher',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wallwasher',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wallwasher',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wallwasher',
+    'unique_id': 'bosch_shc_wallwasher_11112222-3333-4444-5555-666677778888',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.bosch_terrasse_wallwasher-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Wallwasher',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.bosch_terrasse_wallwasher',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
