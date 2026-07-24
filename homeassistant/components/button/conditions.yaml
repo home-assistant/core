@@ -1,0 +1,16 @@
+was_pressed:
+  target:
+    entity:
+      domain: button
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: condition
+    within:
+      selector:
+        duration:
+          allow_negative: false
+          enable_day: true

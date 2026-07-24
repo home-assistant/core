@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "was_pressed": {
+      "condition": "mdi:gesture-tap-button"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:button-pointer"
