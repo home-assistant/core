@@ -8,7 +8,7 @@ from freebox_api.exceptions import HttpRequestError
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, PLATFORMS
@@ -113,3 +113,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: FreeboxConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Return True if the device can be removed from this config entry."""
+    router = config_entry.runtime_data
+    router_mac = dr.format_mac(router.mac)
+    # device_entry.connections values are auto-normalised by the device
+    # registry; normalise router.devices keys (raw API casing) here so the
+    # comparison happens on a level playing field.
+    active_macs = {dr.format_mac(mac) for mac in router.devices}
+
+    # Never allow removal of the Freebox router itself. Identifiers are not
+    # auto-normalised, so compare the format_mac()-normalised value to cover
+    # registries that may have stored the MAC in any casing.
+    for domain, identifier in device_entry.identifiers:
+        if domain == DOMAIN and dr.format_mac(identifier) == router_mac:
+            return False
+
+    # Block removal of a LAN device whose MAC is still reported by the Freebox.
+    for connection_type, connection_value in device_entry.connections:
+        if connection_type == dr.CONNECTION_NETWORK_MAC and (
+            connection_value == router_mac or connection_value in active_macs
+        ):
+            return False
+
+    return True

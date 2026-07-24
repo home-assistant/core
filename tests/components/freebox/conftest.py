@@ -48,17 +48,14 @@ def mock_device_registry_devices(
 
     for idx, device in enumerate(
         (
-            "68:A3:78:00:00:00",
-            "8C:97:EA:00:00:00",
-            "DE:00:B0:00:00:00",
-            "DC:00:B0:00:00:00",
-            "5E:65:55:00:00:00",
+            DATA_SYSTEM_GET_CONFIG["mac"],
+            *(host["l2ident"]["id"] for host in DATA_LAN_GET_HOSTS_LIST),
         )
     ):
         device_registry.async_get_or_create(
             name=f"Device {idx}",
             config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, device)},
+            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(device))},
         )
 
 
