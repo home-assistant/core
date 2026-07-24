@@ -13,13 +13,21 @@ from voluptuous import MultipleInvalid
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.fritz.services import (
     SERVICE_DIAL,
+    SERVICE_GET_MESH_INFO,
     SERVICE_SET_GUEST_WIFI_PW,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
+from .const import (
+    MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_MESH_DATA,
+    MOCK_SERIAL_NUMBER,
+    MOCK_USER_DATA,
+)
 
 from tests.common import MockConfigEntry
 
@@ -352,4 +360,56 @@ async def test_service_dial_unloaded(
             "ServiceValidationError: Failed to perform action"
             f' "{SERVICE_DIAL}".'
             " Config entry for target not found" in caplog.text
+        )
+
+
+async def test_get_mesh_info_service_returns_stored_values(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test entry services return stored values per config entry."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    )
+    assert device
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_MESH_INFO,
+        {"device_id": device.id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "mesh_topology": MOCK_MESH_DATA,
+        "hosts_attributes": MOCK_HOST_ATTRIBUTES_DATA,
+    }
+
+
+async def test_get_mesh_info_service_raises_on_invalid_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Service should raise when no matching device target is found."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_MESH_INFO,
+            {"device_id": "non_existent_device_id"},
+            blocking=True,
+            return_response=True,
         )

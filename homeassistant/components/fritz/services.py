@@ -11,7 +11,13 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
@@ -37,6 +43,13 @@ SERVICE_SCHEMA_DIAL = vol.Schema(
         vol.Required("device_id"): str,
         vol.Required("number"): str,
         vol.Required("max_ring_seconds"): vol.Range(min=1, max=300),
+    }
+)
+
+SERVICE_GET_MESH_INFO = "get_mesh_info"
+SERVICE_SCHEMA_GET_MESH_INFO = vol.Schema(
+    {
+        vol.Required("device_id"): str,
     }
 )
 
@@ -117,6 +130,31 @@ async def _async_dial(service_call: ServiceCall) -> None:
             ) from ex
 
 
+async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
+    """Return the most recent mesh info for targeted config entry."""
+    target_entry_ids = await async_extract_config_entry_ids(service_call)
+    target_entries: list[FritzConfigEntry] = [
+        loaded_entry
+        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
+        if loaded_entry.entry_id in target_entry_ids
+    ]
+
+    if not target_entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={"service": service_call.service},
+        )
+
+    target_entry = target_entries[0]
+    return {
+        "mesh_topology": target_entry.runtime_data.mesh_topology_raw,
+        "hosts_attributes": target_entry.runtime_data.hosts_attributes_raw,
+    }
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Fritz integration."""
@@ -129,3 +167,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SCHEMA_SET_GUEST_WIFI_PW,
     )
     hass.services.async_register(DOMAIN, SERVICE_DIAL, _async_dial, SERVICE_SCHEMA_DIAL)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_MESH_INFO,
+        _async_get_mesh_info,
+        SERVICE_SCHEMA_GET_MESH_INFO,
+        supports_response=SupportsResponse.ONLY,
+    )
