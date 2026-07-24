@@ -15389,7 +15389,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-02-11T09:00:17+00:00',
+    'state': '2025-02-11T08:21:17+00:00',
   })
 # ---
 # name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy-entry]
@@ -15661,7 +15661,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -15702,7 +15705,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirDresser Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -15880,7 +15886,202 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-02-08T19:25:10+00:00',
+    'state': '2025-02-08T18:10:10+00:00',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_dryer_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '01',
+        '9c',
+        'a5',
+        '9e',
+        '9b',
+        '27',
+        'e5',
+        'a0',
+        'a4',
+        'a6',
+        'a3',
+        'a2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.theater_dryer_dryer_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dryer cycle',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:tumble-dryer',
+    'original_name': 'Dryer cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_cycle',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_samsungce.dryerCycle_dryerCycle_dryerCycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_dryer_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Dryer cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:tumble-dryer',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '01',
+        '9c',
+        'a5',
+        '9e',
+        '9b',
+        '27',
+        'e5',
+        'a0',
+        'a4',
+        'a6',
+        'a3',
+        'a2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.theater_dryer_dryer_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '01',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_dryer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.theater_dryer_dryer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dryer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Dryer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_remaining_time',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_samsungce.dryerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_dryer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Dryer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.theater_dryer_dryer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_drying_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.theater_dryer_drying_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drying progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:tumble-dryer',
+    'original_name': 'Drying progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_progress',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_samsungce.dryerOperatingState_progress_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_drying_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Drying progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:tumble-dryer',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.theater_dryer_drying_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_000001][sensor.theater_dryer_energy-entry]
@@ -16152,7 +16353,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -16193,7 +16397,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -16371,7 +16578,206 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-03-09T22:55:37+00:00',
+    'state': '2025-03-09T19:47:37+00:00',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_dryer_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '9a',
+        'ca',
+        'db',
+        '99',
+        '93',
+        'b5',
+        'd7',
+        'a5',
+        '96',
+        '97',
+        '7f',
+        '98',
+        'eb',
+        'b6',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.seca_roupa_dryer_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dryer cycle',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:tumble-dryer',
+    'original_name': 'Dryer cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_cycle',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_samsungce.dryerCycle_dryerCycle_dryerCycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_dryer_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa Dryer cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:tumble-dryer',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '9a',
+        'ca',
+        'db',
+        '99',
+        '93',
+        'b5',
+        'd7',
+        'a5',
+        '96',
+        '97',
+        '7f',
+        '98',
+        'eb',
+        'b6',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.seca_roupa_dryer_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9a',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_dryer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.seca_roupa_dryer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dryer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Dryer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_remaining_time',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_samsungce.dryerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_dryer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa Dryer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.seca_roupa_dryer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_drying_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.seca_roupa_drying_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drying progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:tumble-dryer',
+    'original_name': 'Drying progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_progress',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_samsungce.dryerOperatingState_progress_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_drying_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa Drying progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:tumble-dryer',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.seca_roupa_drying_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][sensor.seca_roupa_energy-entry]
@@ -16643,7 +17049,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -16684,7 +17093,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -16862,7 +17274,216 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-10-16T14:15:07+00:00',
+    'state': '2025-10-16T09:03:25+00:00',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][sensor.trockner_dryer_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '51',
+        '53',
+        '23',
+        '17',
+        '18',
+        '19',
+        '1d',
+        '1b',
+        '1c',
+        '21',
+        '1a',
+        '1e',
+        '22',
+        '20',
+        '27',
+        '25',
+        '24',
+        '4e',
+        '4c',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.trockner_dryer_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dryer cycle',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:tumble-dryer',
+    'original_name': 'Dryer cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_cycle',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_samsungce.dryerCycle_dryerCycle_dryerCycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][sensor.trockner_dryer_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner Dryer cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:tumble-dryer',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '51',
+        '53',
+        '23',
+        '17',
+        '18',
+        '19',
+        '1d',
+        '1b',
+        '1c',
+        '21',
+        '1a',
+        '1e',
+        '22',
+        '20',
+        '27',
+        '25',
+        '24',
+        '4e',
+        '4c',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.trockner_dryer_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '51',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][sensor.trockner_dryer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.trockner_dryer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dryer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Dryer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_remaining_time',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_samsungce.dryerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][sensor.trockner_dryer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner Dryer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.trockner_dryer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][sensor.trockner_drying_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.trockner_drying_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Drying progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:tumble-dryer',
+    'original_name': 'Drying progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_progress',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_samsungce.dryerOperatingState_progress_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][sensor.trockner_drying_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner Drying progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:tumble-dryer',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.trockner_drying_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wd_01011][sensor.trockner_energy-entry]
@@ -17134,7 +17755,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -17175,7 +17799,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -17353,7 +17980,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-02-07T03:54:45+00:00',
+    'state': '2025-02-07T03:09:45+00:00',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_energy-entry]
@@ -17627,7 +18254,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -17668,7 +18298,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -17796,6 +18429,201 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_washer_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '01',
+        '70',
+        '55',
+        '71',
+        '72',
+        '77',
+        'e5',
+        '57',
+        '73',
+        '74',
+        '75',
+        '78',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.theater_washer_washer_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer cycle',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washer cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_cycle',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_samsungce.washerCycle_washerCycle_washerCycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_washer_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Washer cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '01',
+        '70',
+        '55',
+        '71',
+        '72',
+        '77',
+        'e5',
+        '57',
+        '73',
+        '74',
+        '75',
+        '78',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.theater_washer_washer_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '01',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_washer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.theater_washer_washer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Washer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_remaining_time',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_samsungce.washerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_washer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Washer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.theater_washer_washer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_washing_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.theater_washer_washing_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washing progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washing progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_progress',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_samsungce.washerOperatingState_progress_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][sensor.theater_washer_washing_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Washing progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.theater_washer_washing_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_completion_time-entry]
@@ -18120,7 +18948,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -18161,7 +18992,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -18289,6 +19123,205 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_washer_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'd0',
+        'dc',
+        'e3',
+        'e4',
+        '50',
+        '51',
+        'ca',
+        'e7',
+        'c7',
+        'd8',
+        'd4',
+        'd3',
+        'da',
+        'd2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washing_machine_washer_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer cycle',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washer cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_cycle',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_samsungce.washerCycle_washerCycle_washerCycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_washer_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Washer cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'd0',
+        'dc',
+        'e3',
+        'e4',
+        '50',
+        '51',
+        'ca',
+        'e7',
+        'c7',
+        'd8',
+        'd4',
+        'd3',
+        'da',
+        'd2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_washer_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'e3',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_washer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washing_machine_washer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Washer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_remaining_time',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_samsungce.washerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_washer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Washer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_washer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_washing_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washing_machine_washing_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washing progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washing progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_progress',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_samsungce.washerOperatingState_progress_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][sensor.washing_machine_washing_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Washing progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_washing_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36',
   })
 # ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_completion_time-entry]
@@ -18613,7 +19646,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -18654,7 +19690,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -18784,6 +19823,225 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_washer_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1c',
+        '2b',
+        '1b',
+        '1e',
+        '1d',
+        '96',
+        '8f',
+        '25',
+        '26',
+        '33',
+        '24',
+        '32',
+        '20',
+        '22',
+        '23',
+        '2f',
+        '21',
+        '2a',
+        '2e',
+        '2d',
+        '30',
+        '29',
+        '27',
+        '28',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_washer_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer cycle',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washer cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_cycle',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.washerCycle_washerCycle_washerCycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_washer_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Washer cycle',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        '1c',
+        '2b',
+        '1b',
+        '1e',
+        '1d',
+        '96',
+        '8f',
+        '25',
+        '26',
+        '33',
+        '24',
+        '32',
+        '20',
+        '22',
+        '23',
+        '2f',
+        '21',
+        '2a',
+        '2e',
+        '2d',
+        '30',
+        '29',
+        '27',
+        '28',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_washer_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1c',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_washer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_washer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Washer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_remaining_time',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.washerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_washer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Washer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_washer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_washing_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.machine_a_laver_washing_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washing progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washing progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_progress',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.washerOperatingState_progress_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_washing_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Washing progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.machine_a_laver_washing_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_01011][sensor.machine_a_laver_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -18890,7 +20148,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-04-18T14:14:00+00:00',
+    'state': '2025-04-18T13:17:00+00:00',
   })
 # ---
 # name: test_all_entities[da_wm_wm_100001][sensor.washer_1_job_state-entry]
@@ -18990,7 +20248,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -19031,7 +20292,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 1 Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -19041,6 +20305,120 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_washer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_1_washer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Washer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_remaining_time',
+    'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_samsungce.washerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_washer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 1 Washer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_1_washer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_washing_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_1_washing_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washing progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washing progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_progress',
+    'unique_id': 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_main_samsungce.washerOperatingState_progress_progress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_washing_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 1 Washing progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_1_washing_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_completion_time-entry]
@@ -19191,7 +20569,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -19232,7 +20613,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 2 Machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -19292,7 +20676,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-11-14T03:10:39+00:00',
+    'state': '2025-11-14T02:27:39+00:00',
   })
 # ---
 # name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_job_state-entry]
@@ -19392,7 +20776,10 @@
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -19433,7 +20820,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 2 Upper washer machine state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pause',
+        'paused',
+        'ready',
         'run',
+        'running',
         'stop',
       ]),
     }),
@@ -19443,6 +20833,120 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_washer_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_2_washer_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washer remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:timer-sand',
+    'original_name': 'Washer remaining time',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_remaining_time',
+    'unique_id': 'C097276D-C8D4-0000-0000-000000000000_main_samsungce.washerOperatingState_remainingTime_remainingTime',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_washer_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 2 Washer remaining time',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-sand',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_2_washer_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_washing_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_2_washing_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Washing progress',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:washing-machine',
+    'original_name': 'Washing progress',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'washer_progress',
+    'unique_id': 'C097276D-C8D4-0000-0000-000000000000_main_samsungce.washerOperatingState_progress_progress',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_washing_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 2 Washing progress',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:washing-machine',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_2_washing_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[ecobee_sensor][sensor.child_bedroom_temperature-entry]

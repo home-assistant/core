@@ -505,6 +505,29 @@
           "tank": "Tank"
         }
       },
+      "dryer_cycle": {
+        "name": "Dryer cycle",
+        "state": {
+          "1a": "Wool",
+          "1b": "Bedding",
+          "1c": "Shirts",
+          "1d": "Towels",
+          "1e": "Outdoor",
+          "4c": "Air Refresh",
+          "4e": "Self Dry",
+          "17": "Super Speed",
+          "18": "Synthetics",
+          "19": "Delicates",
+          "20": "Iron Dry",
+          "21": "Hygiene Care",
+          "23": "Quick Dry 35'",
+          "24": "Cool Air",
+          "25": "Warm Air",
+          "27": "Time Dry",
+          "51": "Eco Cotton",
+          "53": "AI Dry+"
+        }
+      },
       "dryer_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
         "state": {
@@ -529,12 +552,21 @@
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
         "state": {
           "pause": "[%key:common::state::paused%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
         }
       },
       "dryer_mode": {
         "name": "Dryer mode"
+      },
+      "dryer_progress": {
+        "name": "Drying progress"
+      },
+      "dryer_remaining_time": {
+        "name": "Dryer remaining time"
       },
       "energy_difference": {
         "name": "Energy difference"
@@ -918,6 +950,35 @@
       "uv_index": {
         "name": "UV index"
       },
+      "washer_cycle": {
+        "name": "Washer cycle",
+        "state": {
+          "1b": "Cotton",
+          "1c": "Eco 40-60",
+          "1d": "Super Speed",
+          "1e": "15' Quick Wash",
+          "2b": "AI Wash",
+          "2d": "Silent Wash",
+          "2e": "Baby Care",
+          "2f": "Activewear",
+          "8f": "Intense Cold",
+          "20": "Hygiene Steam",
+          "21": "Colors",
+          "22": "Wool",
+          "23": "Outdoor",
+          "24": "Bedding",
+          "25": "Synthetics",
+          "26": "Delicates",
+          "27": "Rinse+Spin",
+          "28": "Drain/Spin",
+          "29": "Drum Clean+",
+          "30": "Cloudy day",
+          "32": "Shirts",
+          "33": "Towels",
+          "66": "Denim",
+          "96": "Less Microfiber"
+        }
+      },
       "washer_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
         "state": {
@@ -943,12 +1004,21 @@
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
         "state": {
           "pause": "[%key:common::state::paused%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
         }
       },
       "washer_mode": {
         "name": "Washer mode"
+      },
+      "washer_progress": {
+        "name": "Washing progress"
+      },
+      "washer_remaining_time": {
+        "name": "Washer remaining time"
       },
       "washer_sub_completion_time": {
         "name": "Upper washer completion time"
@@ -978,7 +1048,10 @@
         "name": "Upper washer machine state",
         "state": {
           "pause": "[%key:common::state::paused%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
         }
       },

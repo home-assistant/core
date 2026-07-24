@@ -5,7 +5,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast, override
 
-from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
+from pysmartthings import (
+    Attribute,
+    Capability,
+    ComponentStatus,
+    DeviceEvent,
+    SmartThings,
+    Status,
+)
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -25,6 +32,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -141,7 +149,95 @@ STICK_CLEANER_STATUS = {
     "UVPaused": "uv_paused",
 }
 
-WASHER_OPTIONS = ["pause", "run", "stop"]
+DISHWASHER_MACHINE_STATE_OPTIONS = ["pause", "run", "stop"]
+WASHER_MACHINE_STATE_OPTIONS = [
+    "pause",
+    "paused",
+    "ready",
+    "run",
+    "running",
+    "stop",
+]
+
+
+WASHER_CYCLES = [
+    "1c",
+    "2b",
+    "1b",
+    "1e",
+    "1d",
+    "96",
+    "8f",
+    "25",
+    "26",
+    "33",
+    "24",
+    "32",
+    "20",
+    "22",
+    "23",
+    "2f",
+    "21",
+    "66",
+    "2e",
+    "2d",
+    "30",
+    "29",
+    "27",
+    "28",
+]
+
+DRYER_CYCLES = [
+    "51",
+    "53",
+    "23",
+    "17",
+    "18",
+    "19",
+    "1d",
+    "1b",
+    "1c",
+    "21",
+    "1a",
+    "1e",
+    "20",
+    "27",
+    "25",
+    "24",
+    "4e",
+    "4c",
+]
+
+APPLIANCE_IDLE_OPERATING_STATES = {"ready", "stop"}
+APPLIANCE_IDLE_JOB_STATES = {"finish", "finished", "none"}
+APPLIANCE_IDLE_VALUE_ATTRIBUTES = {
+    Attribute.COMPLETION_TIME,
+    Attribute.PROGRESS,
+    Attribute.REMAINING_TIME,
+}
+APPLIANCE_IDLE_STATE_ATTRIBUTES = {
+    Capability.WASHER_OPERATING_STATE: (
+        Attribute.MACHINE_STATE,
+        Attribute.WASHER_JOB_STATE,
+    ),
+    Capability.DRYER_OPERATING_STATE: (
+        Attribute.MACHINE_STATE,
+        Attribute.DRYER_JOB_STATE,
+    ),
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: (
+        Attribute.OPERATING_STATE,
+        Attribute.WASHER_JOB_STATE,
+    ),
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: (
+        Attribute.OPERATING_STATE,
+        Attribute.DRYER_JOB_STATE,
+    ),
+}
+SAMSUNG_CE_IDLE_VALUE_ATTRIBUTES = {Attribute.PROGRESS, Attribute.REMAINING_TIME}
+SAMSUNG_CE_APPLIANCE_STATE_CAPABILITIES = {
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: Capability.WASHER_OPERATING_STATE,
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: Capability.DRYER_OPERATING_STATE,
+}
 
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
@@ -151,6 +247,18 @@ def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
         if (value := status.get(attribute)) is not None:
             state[f"power_consumption_{attribute}"] = value
     return state
+
+
+def _normalize_cycle_value(value: Any) -> str | None:
+    """Normalize washer/dryer cycle names."""
+    if not value:
+        return None
+    value_str = str(value)
+    return (
+        value_str.rsplit("_", maxsplit=1)[-1].lower()
+        if "_" in value_str
+        else value_str.lower()
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -365,7 +473,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dishwasher_machine_state",
-                options=WASHER_OPTIONS,
+                options=DISHWASHER_MACHINE_STATE_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -413,7 +521,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dryer_machine_state",
-                options=WASHER_OPTIONS,
+                options=WASHER_MACHINE_STATE_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -1153,7 +1261,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="washer_machine_state",
-                options=WASHER_OPTIONS,
+                options=WASHER_MACHINE_STATE_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
                 component_fn=lambda component: component == "sub",
                 component_translation_key={
@@ -1277,6 +1385,74 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ]
+    },
+    Capability.SAMSUNG_CE_WASHER_CYCLE: {
+        Attribute.WASHER_CYCLE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WASHER_CYCLE,
+                translation_key="washer_cycle",
+                icon="mdi:washing-machine",
+                options=WASHER_CYCLES,
+                options_attribute=Attribute.SUPPORTED_CYCLES,
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=_normalize_cycle_value,
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_DRYER_CYCLE: {
+        Attribute.DRYER_CYCLE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DRYER_CYCLE,
+                translation_key="dryer_cycle",
+                icon="mdi:tumble-dryer",
+                options=DRYER_CYCLES,
+                options_attribute=Attribute.SUPPORTED_CYCLES,
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=_normalize_cycle_value,
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PROGRESS,
+                translation_key="washer_progress",
+                icon="mdi:washing-machine",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            )
+        ],
+        Attribute.REMAINING_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.REMAINING_TIME,
+                translation_key="washer_remaining_time",
+                icon="mdi:timer-sand",
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.DURATION,
+                native_unit_of_measurement=UnitOfTime.MINUTES,
+            )
+        ],
+    },
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PROGRESS,
+                translation_key="dryer_progress",
+                icon="mdi:tumble-dryer",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            )
+        ],
+        Attribute.REMAINING_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.REMAINING_TIME,
+                translation_key="dryer_remaining_time",
+                icon="mdi:timer-sand",
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.DURATION,
+                native_unit_of_measurement=UnitOfTime.MINUTES,
+            )
+        ],
     },
     Capability.MIRRORHAPPY40050_COPPER_WATER_METER: {
         Attribute.ENERGY_USAGE_DAY: [
@@ -1429,6 +1605,18 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     ) -> None:
         """Init the class."""
         capabilities_to_subscribe = {capability}
+        self._idle_state_capability = capability
+        if (
+            attribute in SAMSUNG_CE_IDLE_VALUE_ATTRIBUTES
+            and (
+                idle_state_capability := SAMSUNG_CE_APPLIANCE_STATE_CAPABILITIES.get(
+                    capability
+                )
+            )
+            and idle_state_capability in device.status[component]
+        ):
+            capabilities_to_subscribe.add(idle_state_capability)
+            self._idle_state_capability = idle_state_capability
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
         super().__init__(client, device, capabilities_to_subscribe, component=component)
@@ -1448,6 +1636,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             self._attr_translation_key = (
                 self.entity_description.component_translation_key.get(component)
             )
+        self._last_completion_time: datetime | None = None
+        if (
+            self._attribute == Attribute.COMPLETION_TIME
+            and (idle_status := self._get_idle_appliance_status()) is not None
+        ):
+            self._last_completion_time = idle_status[1].timestamp
 
     @property
     @override
@@ -1457,11 +1651,97 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if options_map := self.entity_description.options_map:
             return options_map.get(res)
         value = self.entity_description.value_fn(res)
+        if (
+            self._attribute in APPLIANCE_IDLE_VALUE_ATTRIBUTES
+            and (idle_status := self._get_idle_appliance_status()) is not None
+        ):
+            if self._attribute == Attribute.COMPLETION_TIME:
+                return self._last_completion_time or idle_status[1].timestamp
+            if value is not None:
+                value = 0
         if self.entity_description.presentation_fn:
             value = self.entity_description.presentation_fn(
                 self.device.device.presentation_id, value
             )
         return value
+
+    def _get_idle_appliance_status(self) -> tuple[Attribute, Status] | None:
+        """Return the status that indicates the appliance is idle."""
+        if (
+            state_attributes := APPLIANCE_IDLE_STATE_ATTRIBUTES.get(
+                self._idle_state_capability
+            )
+        ) is None:
+            return None
+
+        capability_status = self._internal_state.get(self._idle_state_capability)
+        if capability_status is None:
+            return None
+
+        state_attribute, job_state_attribute = state_attributes
+        if (
+            state_status := capability_status.get(state_attribute)
+        ) is not None and state_status.value is not None:
+            return (
+                (state_attribute, state_status)
+                if str(state_status.value).lower() in APPLIANCE_IDLE_OPERATING_STATES
+                else None
+            )
+
+        if (
+            (job_status := capability_status.get(job_state_attribute)) is not None
+            and job_status.value is not None
+            and str(job_status.value).lower() in APPLIANCE_IDLE_JOB_STATES
+        ):
+            return job_state_attribute, job_status
+        return None
+
+    @override
+    def _update_handler(self, event: DeviceEvent) -> None:
+        """Update the sensor from a live event."""
+        if self._attribute != Attribute.COMPLETION_TIME:
+            super()._update_handler(event)
+            return
+        status = self._internal_state[event.capability][event.attribute]
+        status.value = event.value
+        status.data = event.data
+        status.timestamp = dt_util.utcnow()
+        self._update_completion_time(event, status)
+        self._handle_update()
+
+    def _update_completion_time(self, event: DeviceEvent, status: Status) -> None:
+        """Store the actual completion time from an idle state event."""
+        if (
+            event.capability != self._idle_state_capability
+            or (
+                state_attributes := APPLIANCE_IDLE_STATE_ATTRIBUTES.get(
+                    self._idle_state_capability
+                )
+            )
+            is None
+            or event.value is None
+        ):
+            return
+
+        state_attribute, job_state_attribute = state_attributes
+        value = str(event.value).lower()
+        if event.attribute == state_attribute:
+            if value in APPLIANCE_IDLE_OPERATING_STATES:
+                self._last_completion_time = (
+                    self._last_completion_time or status.timestamp
+                )
+            else:
+                self._last_completion_time = None
+        elif event.attribute == job_state_attribute:
+            state_status = self._internal_state[self._idle_state_capability].get(
+                state_attribute
+            )
+            if value in APPLIANCE_IDLE_JOB_STATES:
+                self._last_completion_time = (
+                    self._last_completion_time or status.timestamp
+                )
+            elif state_status is None or state_status.value is None:
+                self._last_completion_time = None
 
     @property
     @override
@@ -1494,13 +1774,48 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     def options(self) -> list[str] | None:
         """Return the options for this sensor."""
         if self.entity_description.options_attribute:
-            if (
-                options := self.get_attribute_value(
-                    self.capability, self.entity_description.options_attribute
-                )
-            ) is None:
+            options_val = self.get_attribute_value(
+                self.capability, self.entity_description.options_attribute
+            )
+            if options_val is not None:
+                options_list = []
+                for option in options_val:
+                    if isinstance(option, dict):
+                        opt_val = option.get("cycle")
+                    else:
+                        opt_val = option
+                    if opt_val is not None:
+                        if options_map := self.entity_description.options_map:
+                            opt_val = options_map.get(opt_val, opt_val)
+                        else:
+                            opt_val = self.entity_description.value_fn(opt_val)
+                        if self.entity_description.presentation_fn:
+                            opt_val = self.entity_description.presentation_fn(
+                                self.device.device.presentation_id, opt_val
+                            )
+                        if opt_val is not None:
+                            options_list.append(str(opt_val).lower())
+            # Fall back to static options in description if attribute is missing/None
+            elif (static_options := super().options) is not None:
+                options_list = [str(opt).lower() for opt in static_options]
+            else:
                 return []
-            if options_map := self.entity_description.options_map:
-                return [options_map[option] for option in options]
-            return [option.lower() for option in options]
-        return super().options
+        elif (static_options := super().options) is not None:
+            options_list = [str(opt).lower() for opt in static_options]
+        else:
+            return None
+
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        unique_options: list[str] = []
+        for opt in options_list:
+            if opt not in seen:
+                seen.add(opt)
+                unique_options.append(opt)
+
+        if (current_value := self.native_value) is not None:
+            current_value_str = str(current_value).lower()
+            if current_value_str not in seen:
+                unique_options.append(current_value_str)
+
+        return unique_options
