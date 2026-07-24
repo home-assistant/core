@@ -26,6 +26,7 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
     SelectEntityCapabilityAttribute,
+    SelectServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ __all__ = [
     "SelectEntity",
     "SelectEntityCapabilityAttribute",
     "SelectEntityDescription",
+    "SelectServiceArgument",
 ]
 
 # mypy: disallow-any-generics
@@ -79,19 +81,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_NEXT,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        {vol.Optional(SelectServiceArgument.CYCLE, default=True): bool},
         SelectEntity.async_next.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
+        {vol.Required(SelectServiceArgument.OPTION): cv.string},
         SelectEntity.async_handle_select_option.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_PREVIOUS,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        {vol.Optional(SelectServiceArgument.CYCLE, default=True): bool},
         SelectEntity.async_previous.__name__,
     )
 
