@@ -40,6 +40,7 @@ from .const import (
     NAME,
     RESOURCE,
     ROUTERBOARD,
+    UPDATE,
     WIFI,
     WIFIWAVE2,
     WIRELESS,
@@ -168,6 +169,10 @@ class MikrotikData:
 
             # get hub details and system info
             self._get_system_details()
+
+            self.system[UPDATE] = (
+                self.command(MIKROTIK_SERVICES[UPDATE], suppress_errors=True) or [{}]
+            )[0]
 
             self.sensors[HEALTH] = (
                 self.command(MIKROTIK_SERVICES[HEALTH], suppress_errors=True) or []

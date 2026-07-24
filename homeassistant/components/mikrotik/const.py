@@ -10,6 +10,7 @@ DEFAULT_DETECTION_TIME: Final = 300
 ATTR_MANUFACTURER: Final = "Mikrotik"
 ATTR_SERIAL_NUMBER: Final = "serial-number"
 ATTR_ROUTERBOARD_FIRMWARE: Final = "current-firmware"
+ATTR_SYSTEM_FIRMWARE: Final = "installed-version"
 
 CONF_ARP_PING: Final = "arp_ping"
 CONF_FORCE_DHCP: Final = "force_dhcp"
@@ -21,6 +22,7 @@ ARP: Final = "arp"
 BACKUP: Final = "backup"
 CAPSMAN: Final = "capsman"
 DHCP: Final = "dhcp"
+FIRMWARE_UPDATE: Final = "fw-update"
 HEALTH: Final = "health"
 IDENTITY: Final = "identity"
 IS_CAPSMAN: Final = "is_capsman"
@@ -29,8 +31,10 @@ IS_WIFIWAVE2: Final = "is_wifiwave2"
 IS_WIRELESS: Final = "is_wireless"
 REBOOT: Final = "reboot"
 RESOURCE: Final = "resource"
+ROUTERBOARD_UPDATE: Final = "routerboard-update"
 ROUTERBOARD: Final = "routerboard"
 SHUTDOWN: Final = "shutdown"
+UPDATE: Final = "update"
 WIFI: Final = "wifi"
 WIFIWAVE2: Final = "wifiwave2"
 WIRELESS: Final = "wireless"
@@ -41,6 +45,7 @@ MIKROTIK_SERVICES: Final = {
     BACKUP: "/system/backup/save",
     CAPSMAN: "/caps-man/registration-table/getall",
     DHCP: "/ip/dhcp-server/lease/getall",
+    FIRMWARE_UPDATE: "/system/package/update/install",
     HEALTH: "/system/health/print",
     IDENTITY: "/system/identity/getall",
     IS_CAPSMAN: "/caps-man/interface/print",
@@ -49,8 +54,10 @@ MIKROTIK_SERVICES: Final = {
     IS_WIRELESS: "/interface/wireless/print",
     REBOOT: "/system/reboot",
     RESOURCE: "/system/resource/print",
+    ROUTERBOARD_UPDATE: "/system/routerboard/upgrade",
     ROUTERBOARD: "/system/routerboard/getall",
     SHUTDOWN: "/system/shutdown",
+    UPDATE: "/system/package/update/print",
     WIFI: "/interface/wifi/registration-table/print",
     WIFIWAVE2: "/interface/wifiwave2/registration-table/print",
     WIRELESS: "/interface/wireless/registration-table/getall",
