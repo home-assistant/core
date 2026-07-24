@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
     area_registry as ar,
     entity_registry as er,
@@ -144,3 +145,56 @@ async def test_aliases_area_before_floor(
     info = render_to_info(hass, f"{{{{ aliases('{area.id}') }}}}")
     assert_result_info(info, ["Area Alias"])
     assert info.rate_limit is None
+
+
+async def test_aliases_type_reaches_colliding_floor(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test the 'floor' selector reaches a floor whose ID collides with an area."""
+    area = area_registry.async_create("Shared", aliases={"Area Alias"})
+    floor = floor_registry.async_create("Shared", aliases={"Floor Alias"})
+    assert area.id == floor.floor_id
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}', 'area') }}}}")
+    assert_result_info(info, ["Area Alias"])
+    assert info.rate_limit is None
+
+    # Without the selector the area wins; 'floor' is the only way to reach it
+    info = render_to_info(hass, f"{{{{ aliases('{floor.floor_id}', 'floor') }}}}")
+    assert_result_info(info, ["Floor Alias"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{floor.floor_id}' | aliases('floor') }}}}")
+    assert_result_info(info, ["Floor Alias"])
+    assert info.rate_limit is None
+
+
+async def test_aliases_type_restricts_registry(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test a selector that does not match the target registry returns []."""
+    area = area_registry.async_create("Bedroom", aliases={"Sleeping Room"})
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}', 'entity') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ aliases('{area.id}', 'floor') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "{{ aliases('sensor.fake', 'device') }}",
+        "{{ 'sensor.fake' | aliases('') }}",
+    ],
+)
+async def test_aliases_invalid_type(hass: HomeAssistant, template: str) -> None:
+    """Test an unknown alias_type raises a template error."""
+    with pytest.raises(TemplateError):
+        render_to_info(hass, template).result()
