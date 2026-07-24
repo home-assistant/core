@@ -300,29 +300,36 @@ class MatterCamera(MatterEntity, Camera):
             # A null videoStreamID/audioStreamID in ProvideOffer only asks the
             # camera to auto-select among streams it has *already* allocated for
             # this StreamUsage (Matter spec 11.2.1.2.1); with none allocated yet,
-            # the camera has nothing to select and fails the offer with a
-            # DynamicConstraintError. Ensure a matching stream exists (reusing
-            # one if already allocated) before offering.
+            # the camera has nothing to select and fails the whole offer with
+            # InvalidInState. Ensure a matching stream exists (reusing one if
+            # already allocated) before offering.
             video_stream_id = await self._async_ensure_video_stream()
             audio_stream_id = await self._async_ensure_audio_stream()
         except HomeAssistantError:
             self._sessions.pop(session_id, None)
             raise
         self._pending_offers += 1
+        payload: dict[str, Any] = {
+            # null session id requests a new session
+            "webRtcSessionID": None,
+            "sdp": offer_sdp,
+            "streamUsage": clusters.Globals.Enums.StreamUsageEnum.kLiveView,
+            "videoStreamID": video_stream_id,
+            "iceServers": ice_servers,
+        }
+        # Omit rather than send a null audioStreamID: a null id asks the camera
+        # to auto-select an already-allocated audio stream (Matter spec
+        # 11.2.1.2.1), which fails the whole offer with InvalidInState if none
+        # exists at all, instead of the video-only fallback intended when audio
+        # allocation failed or isn't supported.
+        if audio_stream_id is not None:
+            payload["audioStreamID"] = audio_stream_id
         try:
             response = await self.matter_client.send_webrtc_provider_command(
                 node_id=self._endpoint.node.node_id,
                 endpoint_id=self._endpoint.endpoint_id,
                 command_name="ProvideOffer",
-                payload={
-                    # null session id requests a new session
-                    "webRtcSessionID": None,
-                    "sdp": offer_sdp,
-                    "streamUsage": clusters.Globals.Enums.StreamUsageEnum.kLiveView,
-                    "videoStreamID": video_stream_id,
-                    "audioStreamID": audio_stream_id,
-                    "iceServers": ice_servers,
-                },
+                payload=payload,
             )
         except MatterError as err:
             self._sessions.pop(session_id, None)

@@ -646,7 +646,10 @@ async def test_camera_webrtc_audio_allocate_failure_is_video_only(
 
     payload = matter_client.send_webrtc_provider_command.call_args.kwargs["payload"]
     assert payload["videoStreamID"] == 10
-    assert payload["audioStreamID"] is None
+    # audioStreamID is omitted (not sent as null): a null id would ask the
+    # camera to auto-select an already-allocated audio stream, which fails the
+    # whole offer with InvalidInState when none exists at all.
+    assert "audioStreamID" not in payload
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
