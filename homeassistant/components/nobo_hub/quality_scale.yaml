@@ -82,4 +82,4 @@ rules:
   inject-websession:
     status: exempt
     comment: This integration uses a local TCP socket (via pynobo); no HTTP client is used.
-  strict-typing: todo
+  strict-typing: done
