@@ -35,7 +35,12 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
+from aiohttp.web_exceptions import (
+    HTTPBadRequest,
+    HTTPGatewayTimeout,
+    HTTPInternalServerError,
+    HTTPNotFound,
+)
 from aiohttp_sse import sse_response
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -281,12 +286,32 @@ async def _async_handle_streamable_message(
                 streams.read_stream, streams.write_stream, options, stateless=True
             )
 
-        async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
-            tg.start_soon(run_server)
+        try:
+            async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
+                tg.start_soon(run_server)
 
-            await streams.read_stream_writer.send(SessionMessage(message))
-            session_message = await anext(streams.write_stream_reader)
-            tg.cancel_scope.cancel()
+                await streams.read_stream_writer.send(SessionMessage(message))
+                session_message = await anext(streams.write_stream_reader)
+                tg.cancel_scope.cancel()
+        except* TimeoutError as eg:
+            # The MCP server never produced a response within TIMEOUT, e.g. an
+            # out-of-sequence or malformed probe that the session can't turn
+            # into a reply. This is a request-caused failure, not a server bug.
+            _LOGGER.debug(
+                "Timed out waiting for MCP server response: %s", eg.exceptions
+            )
+            raise HTTPGatewayTimeout(text="Timed out waiting for a response") from eg
+        except* Exception as eg:
+            # Anything else is unexpected (a defect in our code or the MCP
+            # SDK), so surface it as a server error and log it loudly instead
+            # of hiding it behind a client-error status at debug level.
+            _LOGGER.exception(
+                "Unexpected error processing streamable MCP request",
+                exc_info=eg,
+            )
+            raise HTTPInternalServerError(
+                text="Internal error processing request"
+            ) from eg
 
         _LOGGER.debug("Sending response: %s", session_message)
         return web.json_response(
