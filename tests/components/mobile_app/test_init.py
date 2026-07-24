@@ -15,6 +15,7 @@ from homeassistant.components.mobile_app.const import (
     CONF_USER_ID,
     DATA_DELETED_IDS,
     DATA_LIVE_ACTIVITY_TOKENS,
+    DATA_PUSH_SUBSCRIPTIONS,
     DATA_STORE,
     DOMAIN,
     STORAGE_KEY,
@@ -729,6 +730,32 @@ async def test_storage_migration_adds_live_activity_tokens(
     await hass.async_block_till_done()
 
     assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
+
+
+async def test_storage_migration_adds_push_subscriptions(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that minor-version-2 storage is migrated to seed push_subscriptions."""
+    hass_storage[STORAGE_KEY] = {
+        "key": STORAGE_KEY,
+        "version": 1,
+        "minor_version": 2,
+        "data": {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}},
+    }
+
+    entry = MockConfigEntry(
+        data={**REGISTER_CLEARTEXT, CONF_USER_ID: hass_admin_user.id},
+        domain=DOMAIN,
+        source="registration",
+        title="Test",
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert hass.data[DOMAIN][DATA_PUSH_SUBSCRIPTIONS] == {}
 
 
 async def test_live_activity_expired_tokens_cleaned_at_startup(
