@@ -12,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["python-aidot==0.3.54"]
+  "requirements": ["python-aidot==0.3.55"]
 }
