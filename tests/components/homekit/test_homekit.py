@@ -42,6 +42,11 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
 )
+from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE_LIST,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF
@@ -49,12 +54,15 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
+    STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     EntityCategory,
     UnitOfDensity,
     UnitOfRatio,
@@ -1061,6 +1069,194 @@ async def test_homekit_reload_accessory_same_class(
         await hass.async_block_till_done()
         light_accessory_color_and_temp = next(iter(bridge.accessories.values()))
         assert hasattr(light_accessory_color_and_temp, "char_color_temp")
+
+        await homekit.async_stop()
+
+
+TV_FEATURES_OFF = (
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+)
+TV_FEATURES_ON = TV_FEATURES_OFF & ~MediaPlayerEntityFeature.TURN_ON
+TV_ATTRS_OFF = {
+    ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+    ATTR_SUPPORTED_FEATURES: TV_FEATURES_OFF,
+    ATTR_INPUT_SOURCE_LIST: ["Live TV"],
+}
+TV_ATTRS_ON = {
+    ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+    ATTR_SUPPORTED_FEATURES: TV_FEATURES_ON,
+    ATTR_INPUT_SOURCE_LIST: ["Live TV", "HDMI 1", "HDMI 2", "Netflix"],
+}
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "mock_hap")
+@pytest.mark.parametrize(
+    (
+        "initial_state",
+        "initial_attrs",
+        "initial_sources",
+        "initial_support_select_source",
+        "events",
+        "expected_sources",
+    ),
+    [
+        pytest.param(
+            STATE_UNAVAILABLE,
+            {
+                ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+                ATTR_SUPPORTED_FEATURES: TV_FEATURES_ON,
+                ATTR_INPUT_SOURCE_LIST: ["Live TV"],
+            },
+            ["Live TV"],
+            True,
+            [(STATE_ON, TV_ATTRS_ON)],
+            ["Live TV", "HDMI 1", "HDMI 2", "Netflix"],
+            id="created_while_unavailable",
+        ),
+        pytest.param(
+            STATE_OFF,
+            TV_ATTRS_OFF,
+            ["Live TV"],
+            True,
+            [(STATE_ON, TV_ATTRS_ON)],
+            ["Live TV", "HDMI 1", "HDMI 2", "Netflix"],
+            id="source_list_grows_while_available",
+        ),
+        pytest.param(
+            STATE_OFF,
+            TV_ATTRS_OFF,
+            ["Live TV"],
+            True,
+            [
+                (
+                    STATE_ON,
+                    {
+                        ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+                        ATTR_SUPPORTED_FEATURES: TV_FEATURES_ON,
+                        ATTR_INPUT_SOURCE_LIST: ["Live TV"],
+                    },
+                ),
+                (STATE_ON, TV_ATTRS_ON),
+            ],
+            ["Live TV", "HDMI 1", "HDMI 2", "Netflix"],
+            id="rapid_state_changes",
+        ),
+    ],
+)
+async def test_homekit_reload_tv_accessory_on_attr_change(
+    hass: HomeAssistant,
+    initial_state: str,
+    initial_attrs: dict[str, Any],
+    initial_sources: list[str],
+    initial_support_select_source: bool,
+    events: list[tuple[str, dict[str, Any]]],
+    expected_sources: list[str],
+) -> None:
+    """Test a TV accessory in accessory mode is recreated when reload attrs change.
+
+    A webOS-style TV that is off/unreachable at startup reports only the
+    "Live TV" fallback in its source list; turning the TV on delivers
+    the full source list (and drops TURN_ON support) in a transition the
+    old code either skipped (unavailable) or must not miss (off -> on).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "media_player.television"
+    hass.states.async_set(entity_id, initial_state, initial_attrs)
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        acc = homekit.driver.accessory
+        acc.run()
+        assert type(acc).__name__ == "TelevisionMediaPlayer"
+        assert acc.sources == initial_sources
+        assert acc.support_select_source is initial_support_select_source
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        config_version = homekit.driver.state.config_version
+        for event_state, event_attrs in events:
+            hass.states.async_set(entity_id, event_state, event_attrs)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        new_acc = homekit.driver.accessory
+        assert new_acc is not acc
+        assert new_acc.support_select_source is True
+        assert new_acc.sources == expected_sources
+        assert homekit.driver.state.config_version > config_version
+
+        await homekit.async_stop()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "mock_hap")
+async def test_homekit_reload_tv_accessory_attrs_changed_before_run(
+    hass: HomeAssistant,
+) -> None:
+    """Test catch-up reload for changes between accessory creation and run.
+
+    The replaced accessory must not keep any state subscriptions behind.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "media_player.television"
+    hass.states.async_set(entity_id, STATE_OFF, TV_ATTRS_OFF)
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        acc = homekit.driver.accessory
+        assert acc.sources == ["Live TV"]
+        hass.states.async_set(entity_id, STATE_ON, TV_ATTRS_ON)
+        acc.run()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        new_acc = homekit.driver.accessory
+        assert new_acc is not acc
+        assert new_acc.sources == ["Live TV", "HDMI 1", "HDMI 2", "Netflix"]
+        assert not acc._subscriptions
+
+        await homekit.async_stop()
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "mock_hap")
+async def test_homekit_reload_bridged_tv_when_source_list_grows(
+    hass: HomeAssistant,
+) -> None:
+    """Test reloading a bridged TV accessory when the source list grows."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "media_player.television"
+    hass.states.async_set(entity_id, STATE_OFF, TV_ATTRS_OFF)
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
+        await async_init_entry(hass, entry)
+        bridge: HomeBridge = homekit.driver.accessory
+        await bridge.run()
+        acc = next(iter(bridge.accessories.values()))
+        assert type(acc).__name__ == "TelevisionMediaPlayer"
+        assert acc.sources == ["Live TV"]
+        await hass.async_block_till_done()
+        assert homekit.status == STATUS_RUNNING
+        homekit.driver.aio_stop_event = MagicMock()
+        hass.states.async_set(entity_id, STATE_ON, TV_ATTRS_ON)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        new_acc = next(iter(bridge.accessories.values()))
+        assert new_acc is not acc
+        assert new_acc.sources == ["Live TV", "HDMI 1", "HDMI 2", "Netflix"]
 
         await homekit.async_stop()
 
