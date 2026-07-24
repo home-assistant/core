@@ -126,7 +126,7 @@ async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> No
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     sensor_is_in_bed = ent_reg.async_get(ENTITY_IS_IN_BED)
     assert sensor_is_in_bed.unique_id == f"{SLEEPER_L_ID}_{IS_IN_BED}"

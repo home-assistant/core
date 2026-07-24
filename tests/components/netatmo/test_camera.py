@@ -697,7 +697,7 @@ async def test_setup_component_no_devices(
     """Test setup with no devices."""
     fake_post_hits = 0
 
-    async def fake_post_no_data(*args, **kwargs):
+    async def fake_post_no_data(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1

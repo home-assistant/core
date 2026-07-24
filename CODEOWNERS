@@ -719,6 +719,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/habitica/ @tr4nt0r
 /homeassistant/components/hanna/ @bestycame
 /tests/components/hanna/ @bestycame
+/homeassistant/components/harbor/ @Lash-L @afgarcia86
+/tests/components/harbor/ @Lash-L @afgarcia86
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
@@ -1034,6 +1036,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
+/homeassistant/components/litellm/ @luismalves
+/tests/components/litellm/ @luismalves
 /homeassistant/components/litterrobot/ @natekspencer @tkdrob
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
@@ -1130,6 +1134,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
+/homeassistant/components/midea/ @chemelli74 @rokam @wuwentao
+/tests/components/midea/ @chemelli74 @rokam @wuwentao
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
@@ -1715,8 +1721,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
-/homeassistant/components/sonos/ @jjlawren @peterager
-/tests/components/sonos/ @jjlawren @peterager
+/homeassistant/components/sonos/ @peterager @jjlawren
+/tests/components/sonos/ @peterager @jjlawren
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff

@@ -708,13 +708,11 @@ async def async_migrate_entry(
             updated,
         )
 
-    # version 1.2 -> 1.3: move each chat's notify entity onto its own per-chat device
-    # (linked to the bot device) and strip the chat subentries from the bot device, leaving
-    # it associated with only (entry, None).
+    # version 1.2 -> 1.3: give each chat its own device, linked to the shared bot device,
+    # and make sure the bot device is tied to (entry, None).
     if version == 1 and config_entry.minor_version < 3:
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
-        # Up to 1.2 the entry has a single device, the bot device, shared by every chat
         devices = dr.async_entries_for_config_entry(
             device_registry, config_entry.entry_id
         )
@@ -738,18 +736,16 @@ async def async_migrate_entry(
                     config_entry_id=config_entry.entry_id,
                     config_subentry_id=subentry_id,
                     identifiers={(DOMAIN, f"{bot_id}_{subentry.data[CONF_CHAT_ID]}")},
-                    via_device=(DOMAIN, bot_id),
+                    via_device_id=bot_device.id,
                 )
                 if entity := notify_entities.get(subentry_id):
                     entity_registry.async_update_entity(
                         entity.entity_id, device_id=per_chat_device.id
                     )
-                # Strip this chat's subentry from the bot device, leaving (entry, None)
-                device_registry.async_update_device(
-                    bot_device.id,
-                    remove_config_entry_id=config_entry.entry_id,
-                    remove_config_subentry_id=subentry_id,
-                )
+            # Hand the bot device back to (entry, None), keeping the event entity
+            device_registry.async_update_device(
+                bot_device.id, new_config_subentry_id=None
+            )
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
     return True

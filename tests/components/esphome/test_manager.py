@@ -21,6 +21,7 @@ from aioesphomeapi import (
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     LogLevel,
+    ReconnectLogic,
     RequiresEncryptionAPIError,
     SubDeviceInfo,
     SupportsResponseType,
@@ -180,6 +181,33 @@ async def test_esphome_device_service_calls_not_allowed(
         "for it to make Home Assistant service calls, you can "
         "enable this functionality in the options flow"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("has_deep_sleep", [True, False])
+async def test_reconnect_logic_seeds_deep_sleep_from_restored_device_info(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    has_deep_sleep: bool,
+) -> None:
+    """Restored device_info seeds reconnect_logic.deep_sleep before the first connect."""
+    deep_sleep_at_start: list[bool] = []
+    real_start = ReconnectLogic.start
+
+    async def _start(self: ReconnectLogic) -> None:
+        # Captured before the first connect refreshes it, so this is the
+        # pre-populated value from the restored device_info.
+        deep_sleep_at_start.append(self.deep_sleep)
+        await real_start(self)
+
+    with patch.object(ReconnectLogic, "start", _start):
+        await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={"has_deep_sleep": has_deep_sleep},
+            mock_storage=True,
+        )
+
+    assert deep_sleep_at_start == [has_deep_sleep]
 
 
 async def test_esphome_device_service_calls_allowed(
@@ -1892,7 +1920,7 @@ async def test_device_adds_friendly_name(
         device_info={"name": "nofriendlyname", "friendly_name": ""},
     )
     await hass.async_block_till_done()
-    dev_reg = dr.async_get(hass)
+    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     dev = dev_reg.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
     )
@@ -1978,7 +2006,7 @@ async def test_sub_device_creation(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices are created in device registry."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define areas
     areas = [
@@ -2048,7 +2076,7 @@ async def test_sub_device_cleanup(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices are removed when they no longer exist."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Initial sub devices
     sub_devices_initial = [
@@ -2139,7 +2167,7 @@ async def test_sub_device_with_empty_name(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices with empty names are handled correctly."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define sub devices with empty names
     sub_devices = [
@@ -2183,7 +2211,7 @@ async def test_sub_device_references_main_device_area(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test sub devices can reference the main device's area."""
-    device_registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Define areas - note we don't include area_id=0 in the areas list
     areas = [
