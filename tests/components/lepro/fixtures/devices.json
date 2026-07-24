@@ -1,0 +1,23 @@
+{
+  "code": 0,
+  "data": {
+    "list": [
+      {
+        "did": 12345,
+        "name": "Living Room Light",
+        "series": "Smart Bulb A19",
+        "switch": 1,
+        "brightness": 800,
+        "temp": 500
+      },
+      {
+        "did": 67890,
+        "name": "Bedroom Light",
+        "series": "Smart Strip",
+        "switch": 0,
+        "brightness": 0,
+        "temp": 0
+      }
+    ]
+  }
+}
