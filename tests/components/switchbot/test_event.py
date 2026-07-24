@@ -14,7 +14,11 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from . import CONTACT_SENSOR_SERVICE_INFO, KEYPAD_VISION_PRO_INFO
+from . import (
+    CLIMATE_PANEL_SERVICE_INFO,
+    CONTACT_SENSOR_SERVICE_INFO,
+    KEYPAD_VISION_PRO_INFO,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import (
@@ -241,3 +245,160 @@ async def test_contact_sensor_button_event(
         )
         await hass.async_block_till_done()
         assert len(press_states) == 4
+
+
+def _with_climate_panel_keystate(
+    info: BluetoothServiceInfoBleak,
+    *,
+    on_counter: int = 0,
+    off_counter: int = 0,
+    on_mode: int | None = None,
+    off_mode: int | None = None,
+) -> BluetoothServiceInfoBleak:
+    """Return a BLE service info with the Climate Panel keystate bytes set."""
+    mfr_data = bytearray(info.manufacturer_data[2409])
+    # Byte 13 = ON keystate, byte 14 = OFF keystate: bits[7:5] are the press
+    # mode and bits[4:0] the counter. Default to single-click mode (1) whenever
+    # a press counter is set so the bytes resemble a real button press; an
+    # explicit mode can be supplied to model a mode change (e.g. single→double).
+    if on_mode is None:
+        on_mode = 1 if on_counter else 0
+    if off_mode is None:
+        off_mode = 1 if off_counter else 0
+    mfr_data[13] = ((on_mode & 0x07) << 5) | (on_counter & 0x1F)
+    mfr_data[14] = ((off_mode & 0x07) << 5) | (off_counter & 0x1F)
+    updated_mfr_data = {2409: bytes(mfr_data)}
+    return BluetoothServiceInfoBleak(
+        name=info.name,
+        manufacturer_data=updated_mfr_data,
+        service_data=info.service_data,
+        service_uuids=info.service_uuids,
+        address=info.address,
+        rssi=info.rssi,
+        source=info.source,
+        advertisement=generate_advertisement_data(
+            local_name=info.name,
+            manufacturer_data=updated_mfr_data,
+            service_data=info.service_data,
+            service_uuids=info.service_uuids,
+        ),
+        device=generate_ble_device(info.address, info.name),
+        time=info.time,
+        connectable=info.connectable,
+        tx_power=info.tx_power,
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_panel_keystate_event(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test Climate Panel ON/OFF button events fire on keystate counter changes."""
+    # Make each press's timestamp distinct so the entity's state value (the
+    # iso-formatted timestamp) differs between presses, ensuring state_changed
+    # fires each time. See test_keypad_vision_pro_doorbell_event for why the
+    # `freezer` fixture is avoided here.
+    timestamps = (
+        datetime(2026, 1, 1, tzinfo=UTC) + timedelta(seconds=i) for i in count()
+    )
+
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, CLIMATE_PANEL_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="climate_panel")
+    entry.add_to_hass(hass)
+
+    on_entity_id = "event.test_name_on_button"
+    off_entity_id = "event.test_name_off_button"
+    on_states: list[str] = []
+    off_states: list[str] = []
+
+    @callback
+    def _track_on(event: Event[EventStateChangedData]) -> None:
+        new_state = event.data["new_state"]
+        if new_state and new_state.attributes.get("event_type") == "press":
+            on_states.append(new_state.state)
+
+    @callback
+    def _track_off(event: Event[EventStateChangedData]) -> None:
+        new_state = event.data["new_state"]
+        if new_state and new_state.attributes.get("event_type") == "press":
+            off_states.append(new_state.state)
+
+    with patch(
+        "homeassistant.components.event.dt_util.utcnow",
+        side_effect=lambda: next(timestamps),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        async_track_state_change_event(hass, on_entity_id, _track_on)
+        async_track_state_change_event(hass, off_entity_id, _track_off)
+
+        # Both entities exist and start in the unknown (power-on) state.
+        on_state = hass.states.get(on_entity_id)
+        off_state = hass.states.get(off_entity_id)
+        assert on_state
+        assert off_state
+        assert on_state.state == STATE_UNKNOWN
+        assert off_state.state == STATE_UNKNOWN
+
+        # ON press: on counter 0 → 1 fires; off counter stays 0.
+        inject_bluetooth_service_info(
+            hass, _with_climate_panel_keystate(CLIMATE_PANEL_SERVICE_INFO, on_counter=1)
+        )
+        await hass.async_block_till_done()
+        assert len(on_states) == 1
+        assert len(off_states) == 0
+
+        # Same ON counter repeated — no new event.
+        inject_bluetooth_service_info(
+            hass, _with_climate_panel_keystate(CLIMATE_PANEL_SERVICE_INFO, on_counter=1)
+        )
+        await hass.async_block_till_done()
+        assert len(on_states) == 1
+
+        # OFF press: off counter 0 → 1 fires; on counter unchanged at 1.
+        inject_bluetooth_service_info(
+            hass,
+            _with_climate_panel_keystate(
+                CLIMATE_PANEL_SERVICE_INFO, on_counter=1, off_counter=1
+            ),
+        )
+        await hass.async_block_till_done()
+        assert len(on_states) == 1
+        assert len(off_states) == 1
+
+        # ON counter wraps from 30 back to 1 — still a press.
+        inject_bluetooth_service_info(
+            hass,
+            _with_climate_panel_keystate(
+                CLIMATE_PANEL_SERVICE_INFO, on_counter=30, off_counter=1
+            ),
+        )
+        await hass.async_block_till_done()
+        assert len(on_states) == 2
+        inject_bluetooth_service_info(
+            hass,
+            _with_climate_panel_keystate(
+                CLIMATE_PANEL_SERVICE_INFO, on_counter=1, off_counter=1
+            ),
+        )
+        await hass.async_block_till_done()
+        assert len(on_states) == 3
+
+        # Press mode changes single → double while the counter stays at 1.
+        # The raw keystate byte still changes, so the press is not missed.
+        inject_bluetooth_service_info(
+            hass,
+            _with_climate_panel_keystate(
+                CLIMATE_PANEL_SERVICE_INFO,
+                on_counter=1,
+                on_mode=2,
+                off_counter=1,
+            ),
+        )
+        await hass.async_block_till_done()
+        assert len(on_states) == 4
+        assert len(off_states) == 1

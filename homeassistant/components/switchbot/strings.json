@@ -149,6 +149,20 @@
         }
       }
     },
+    "event": {
+      "off_button": {
+        "name": "OFF button",
+        "state": {
+          "press": "Press"
+        }
+      },
+      "on_button": {
+        "name": "ON button",
+        "state": {
+          "press": "Press"
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "state_attributes": {
