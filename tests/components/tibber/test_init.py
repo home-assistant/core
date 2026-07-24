@@ -1,5 +1,7 @@
 """Test loading of the Tibber config entry."""
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,7 +23,39 @@ async def test_entry_unload(
     entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "tibber")
     assert entry.state is ConfigEntryState.LOADED
 
+    mock_tibber_setup.set_access_token.reset_mock()
     await hass.config_entries.async_unload(entry.entry_id)
+    mock_tibber_setup.rt_disconnect.assert_called_once()
+    mock_tibber_setup.set_access_token.assert_not_called()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def _hang_forever() -> None:
+    """Simulate a realtime disconnect that never completes."""
+    await asyncio.Event().wait()
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(_hang_forever, id="timeout"),
+        pytest.param(Exception("Disconnect failed"), id="exception"),
+    ],
+)
+async def test_entry_unload_rt_disconnect_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_tibber_setup: MagicMock,
+    side_effect: Exception | Callable[[], Awaitable[None]],
+) -> None:
+    """Test the entry unloads even if disconnecting the client fails."""
+    entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "tibber")
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_tibber_setup.rt_disconnect.side_effect = side_effect
+    with patch("homeassistant.components.tibber.DISCONNECT_TIMEOUT", 0.05):
+        await hass.config_entries.async_unload(entry.entry_id)
     mock_tibber_setup.rt_disconnect.assert_called_once()
     await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -69,6 +103,38 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
         session.async_ensure_token_valid.assert_awaited_once()
         mock_client.set_access_token.assert_awaited_once_with("access-token")
         assert cached_client is client
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_get_client_propagates_rotated_token(hass: HomeAssistant) -> None:
+    """Ensure a rotated OAuth token is pushed to the cached client on next fetch."""
+    session = MagicMock()
+    session.async_ensure_token_valid = AsyncMock()
+    session.token = {CONF_ACCESS_TOKEN: "token-1"}
+
+    runtime = TibberRuntimeData(
+        session=session,
+    )
+
+    with patch("homeassistant.components.tibber.tibber.Tibber") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.set_access_token = AsyncMock()
+        mock_client_cls.return_value = mock_client
+
+        await runtime.async_get_client(hass)
+        mock_client_cls.assert_called_once_with(
+            access_token="token-1",
+            websession=ANY,
+            time_zone=ANY,
+            ssl=ANY,
+            refresh_access_token=ANY,
+        )
+
+        session.token = {CONF_ACCESS_TOKEN: "token-2"}
+        await runtime.async_get_client(hass)
+
+        mock_client_cls.assert_called_once()
+        mock_client.set_access_token.assert_awaited_once_with("token-2")
 
 
 @pytest.mark.usefixtures("recorder_mock")
