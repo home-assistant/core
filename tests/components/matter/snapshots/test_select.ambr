@@ -2156,6 +2156,67 @@
     'state': 'Celsius',
   })
 # ---
+# name: test_selects[mock_chime][select.mock_chime_chime_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Classic Ding Dong',
+        'Merry Melodies',
+        'Digital Alert',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_chime_chime_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chime sound',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chime sound',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_chime',
+    'unique_id': '00000000000004D2-000000000000009E-MatterNodeDevice-1-ChimeSelectedChime-1366-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_chime][select.mock_chime_chime_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Chime Chime sound',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Classic Ding Dong',
+        'Merry Melodies',
+        'Digital Alert',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_chime_chime_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Classic Ding Dong',
+  })
+# ---
 # name: test_selects[mock_cooktop][select.mock_cooktop_temperature_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
