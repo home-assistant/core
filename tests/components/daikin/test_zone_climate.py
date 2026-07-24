@@ -13,14 +13,22 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CONF_HOST,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -60,6 +68,17 @@ def _zone_entity_id(
         CLIMATE_DOMAIN,
         DOMAIN,
         f"{zone_device.mac}-zone{zone_id}-temperature",
+    )
+
+
+def _zone_switch_entity_id(
+    entity_registry: er.EntityRegistry, zone_device: ZoneDevice, zone_id: int
+) -> str | None:
+    """Return the entity id for a zone switch unique id."""
+    return entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{zone_device.mac}-zone{zone_id}",
     )
 
 
@@ -145,12 +164,16 @@ async def test_zone_climate_sets_temperature_for_active_mode(
     """Setting temperature updates the active mode zone value."""
     configure_zone_device(
         zone_device,
-        zones=[["Living", "1", 22], ["Office", "1", 21]],
+        zones=[["Living", "0", 22], ["Office", "1", 21]],
         mode=mode,
     )
     await _async_setup_daikin(hass, zone_device)
     entity_id = _zone_entity_id(entity_registry, zone_device, 0)
     assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
     await _async_set_zone_temperature(hass, entity_id, 23)
 
@@ -302,15 +325,25 @@ async def test_zone_climate_set_temperature_requires_heat_or_cool(
     assert err.value.translation_key == "zone_hvac_mode_unsupported"
 
 
+@pytest.mark.parametrize(
+    ("zone_state", "expected_state", "expected_action"),
+    [
+        pytest.param("1", HVACMode.COOL, HVACAction.COOLING, id="zone-on"),
+        pytest.param("0", HVACMode.OFF, HVACAction.OFF, id="zone-off"),
+    ],
+)
 async def test_zone_climate_properties(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     zone_device: ZoneDevice,
+    zone_state: str,
+    expected_state: HVACMode,
+    expected_action: HVACAction,
 ) -> None:
     """Zone climate exposes expected state attributes."""
     configure_zone_device(
         zone_device,
-        zones=[["Living", "1", 22]],
+        zones=[["Living", zone_state, 22]],
         target_temperature=24,
         mode="cool",
         heating_values="20",
@@ -322,25 +355,173 @@ async def test_zone_climate_properties(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == HVACMode.COOL
-    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
+    assert state.state == expected_state
+    assert state.attributes[ATTR_HVAC_ACTION] == expected_action
     assert state.attributes[ATTR_TEMPERATURE] == 18.0
     assert state.attributes[ATTR_MIN_TEMP] == 22.0
     assert state.attributes[ATTR_MAX_TEMP] == 26.0
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.COOL]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     assert state.attributes["zone_id"] == 0
 
 
+@pytest.mark.parametrize(
+    (
+        "service",
+        "initial_zone_state",
+        "expected_zone_state",
+        "expected_climate_state",
+        "expected_switch_state",
+        "main_mode",
+    ),
+    [
+        pytest.param(
+            SERVICE_TURN_ON,
+            "0",
+            "1",
+            HVACMode.COOL,
+            STATE_ON,
+            "cool",
+            id="climate-turn-on",
+        ),
+        pytest.param(
+            SERVICE_TURN_OFF,
+            "1",
+            "0",
+            HVACMode.OFF,
+            STATE_OFF,
+            "cool",
+            id="climate-turn-off",
+        ),
+        pytest.param(
+            SERVICE_TOGGLE,
+            "1",
+            "0",
+            HVACMode.OFF,
+            STATE_OFF,
+            "cool",
+            id="climate-toggle-off",
+        ),
+        pytest.param(
+            SERVICE_TOGGLE,
+            "1",
+            "0",
+            HVACMode.OFF,
+            STATE_OFF,
+            "off",
+            id="climate-toggle-zone-on-main-off",
+        ),
+    ],
+)
+async def test_zone_climate_power_controls(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zone_device: ZoneDevice,
+    service: str,
+    initial_zone_state: str,
+    expected_zone_state: str,
+    expected_climate_state: HVACMode,
+    expected_switch_state: str,
+    main_mode: str,
+) -> None:
+    """Zone climate and switch power controls stay synchronized."""
+    configure_zone_device(
+        zone_device,
+        zones=[["Living", initial_zone_state, 22]],
+        mode=main_mode,
+    )
+
+    async def set_zone(zone_id: int, key: str, value: str) -> None:
+        assert key == "zone_onoff"
+        zone_device.zones[zone_id][1] = value
+
+    zone_device.set_zone.side_effect = set_zone
+    await _async_setup_daikin(hass, zone_device)
+    climate_entity_id = _zone_entity_id(entity_registry, zone_device, 0)
+    switch_entity_id = _zone_switch_entity_id(entity_registry, zone_device, 0)
+    assert climate_entity_id is not None
+    assert switch_entity_id is not None
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: climate_entity_id},
+        blocking=True,
+    )
+
+    zone_device.set_zone.assert_awaited_once_with(0, "zone_onoff", expected_zone_state)
+    zone_device.set.assert_not_awaited()
+    climate_state = hass.states.get(climate_entity_id)
+    switch_state = hass.states.get(switch_entity_id)
+    assert climate_state is not None
+    assert switch_state is not None
+    assert climate_state.state == expected_climate_state
+    assert switch_state.state == expected_switch_state
+
+
+async def test_zone_switch_updates_zone_climate(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zone_device: ZoneDevice,
+) -> None:
+    """The existing zone switch updates the zone climate state."""
+    configure_zone_device(
+        zone_device,
+        zones=[["Living", "1", 22]],
+        mode="cool",
+    )
+
+    async def set_zone(zone_id: int, key: str, value: str) -> None:
+        assert key == "zone_onoff"
+        zone_device.zones[zone_id][1] = value
+
+    zone_device.set_zone.side_effect = set_zone
+    await _async_setup_daikin(hass, zone_device)
+    climate_entity_id = _zone_entity_id(entity_registry, zone_device, 0)
+    switch_entity_id = _zone_switch_entity_id(entity_registry, zone_device, 0)
+    assert climate_entity_id is not None
+    assert switch_entity_id is not None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: switch_entity_id},
+        blocking=True,
+    )
+
+    zone_device.set_zone.assert_awaited_once_with(0, "zone_onoff", "0")
+    zone_device.set.assert_not_awaited()
+    climate_state = hass.states.get(climate_entity_id)
+    switch_state = hass.states.get(switch_entity_id)
+    assert climate_state is not None
+    assert switch_state is not None
+    assert climate_state.state == HVACMode.OFF
+    assert switch_state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected_state"),
+    [
+        pytest.param("auto", HVACMode.HEAT_COOL, id="auto"),
+        pytest.param("off", HVACMode.OFF, id="off"),
+    ],
+)
 async def test_zone_climate_target_temperature_inactive_mode(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     zone_device: ZoneDevice,
+    mode: str,
+    expected_state: HVACMode,
 ) -> None:
     """In non-heating/cooling modes, zone target temperature is None."""
     configure_zone_device(
         zone_device,
         zones=[["Living", "1", 22]],
-        mode="auto",
+        mode=mode,
         heating_values="bad",
         cooling_values="19",
     )
@@ -350,7 +531,7 @@ async def test_zone_climate_target_temperature_inactive_mode(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == HVACMode.HEAT_COOL
+    assert state.state == expected_state
     assert state.attributes[ATTR_TEMPERATURE] is None
 
 
