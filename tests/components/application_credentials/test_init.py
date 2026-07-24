@@ -14,6 +14,7 @@ from homeassistant.components.application_credentials import (
     DOMAIN,
     AuthImplementation,
     AuthorizationServer,
+    AuthorizationTypes,
     ClientCredential,
     async_import_client_credential,
 )
@@ -77,6 +78,10 @@ async def setup_application_credentials_integration(
         async_get_authorization_server=AsyncMock(return_value=authorization_server),
     )
     del mock_platform_impl.async_get_auth_implementation  # return False on hasattr
+    del (
+        mock_platform_impl.async_get_device_flow_authorization_server
+    )  # return False on hasattr
+    del mock_platform_impl.async_get_description_placeholders  # return False on hasattr
     mock_platform(
         hass,
         f"{domain}.application_credentials",
@@ -697,6 +702,7 @@ async def test_websocket_without_authorization_server(
     # Platform does not implemenent async_get_authorization_server
     platform = Mock()
     del platform.async_get_authorization_server
+    del platform.async_get_device_flow_authorization_server
     del platform.async_get_auth_implementation
     mock_platform(
         hass,
@@ -768,13 +774,13 @@ async def test_websocket_integration_list(ws_client: ClientFixture) -> None:
     """Test websocket integration list command."""
     client = await ws_client()
     with patch(
-        "homeassistant.loader.APPLICATION_CREDENTIALS", ["example1", "example2"]
+        "homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN, "example1"]
     ):
         assert await client.cmd_result("config") == {
-            "domains": ["example1", "example2"],
+            "domains": [TEST_DOMAIN, "example1"],
             "integrations": {
+                TEST_DOMAIN: {"auth_type": AuthorizationTypes.CLIENT_CREDENTIALS},
                 "example1": {},
-                "example2": {},
             },
         }
 
