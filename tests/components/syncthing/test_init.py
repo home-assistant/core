@@ -1,19 +1,21 @@
 """Tests for the syncthing integration setup and client."""
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.syncthing.const import (
+    DEVICE_EVENTS,
     DOMAIN,
-    EVENTS,
+    FOLDER_EVENTS,
     RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import dispatcher
 
@@ -98,6 +100,10 @@ async def test_syncthing_client_reconnect_on_error(
         "folder_summary_event.json",
         "state_changed_event.json",
         "folder_paused_event.json",
+        "device_connected_event.json",
+        "device_disconnected_event.json",
+        "device_paused_event.json",
+        "device_resumed_event.json",
     ],
 )
 async def test_client_dispatches_event(
@@ -118,8 +124,13 @@ async def test_client_dispatches_event(
     mock_syncthing_client.events.listen = mock_listen
     mock_syncthing_client.events.last_seen_id = 10
 
-    folder = event["data"].get("folder") or event["data"]["id"]
-    signal = f"{EVENTS[event['type']]}-{SERVER_ID}-{folder}"
+    target = (
+        event["data"].get("folder")
+        or event["data"].get("device")
+        or event["data"]["id"]
+    )
+    signal_name = FOLDER_EVENTS.get(event["type"]) or DEVICE_EVENTS.get(event["type"])
+    signal = f"{signal_name}-{SERVER_ID}-{target}"
 
     received = asyncio.Event()
     captured: list[dict] = []
@@ -141,3 +152,21 @@ async def test_client_dispatches_event(
         await received.wait()
 
     assert captured == [event]
+
+
+async def test_setup_raises_config_entry_not_ready(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    mock_syncthing_client: MagicMock,
+) -> None:
+    """Test setup raises ConfigEntryNotReady when server is unreachable."""
+    mock_syncthing_client.system.status = AsyncMock(
+        side_effect=SyncthingError("Connection refused")
+    )
+    with patch(
+        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
+        autospec=True,
+    ) as mock_class:
+        mock_class.return_value = mock_syncthing_client
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY

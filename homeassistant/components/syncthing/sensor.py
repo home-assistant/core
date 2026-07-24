@@ -15,9 +15,14 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from . import SyncthingClient, SyncthingConfigEntry
 from .const import (
+    DEVICE_CONNECTED_RECEIVED,
+    DEVICE_DISCONNECTED_RECEIVED,
+    DEVICE_PAUSED_RECEIVED,
+    DEVICE_RESUMED_RECEIVED,
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
     FOLDER_SUMMARY_RECEIVED,
+    INITIAL_EVENTS_READY,
     SCAN_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
@@ -34,13 +39,15 @@ async def async_setup_entry(
     syncthing = config_entry.runtime_data
 
     try:
-        config = await syncthing.system.config()
+        config = await syncthing.config.config()
         version = await syncthing.system.version()
     except aiosyncthing.exceptions.SyncthingError as exception:
         raise PlatformNotReady from exception
 
     server_id = syncthing.server_id
-    entities = [
+    entities: list[SensorEntity] = []
+
+    entities.extend(
         FolderSensor(
             syncthing,
             server_id,
@@ -49,7 +56,18 @@ async def async_setup_entry(
             version["version"],
         )
         for folder in config["folders"]
-    ]
+    )
+
+    entities.extend(
+        DeviceSensor(
+            syncthing,
+            server_id,
+            device["deviceID"],
+            device["name"],
+            version["version"],
+        )
+        for device in config["devices"]
+    )
 
     async_add_entities(entities)
 
@@ -58,7 +76,7 @@ class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
     _attr_should_poll = False
-    _attr_translation_key = "syncthing"
+    _attr_translation_key = "syncthing_folder"
 
     STATE_ATTRIBUTES = {
         "errors": "errors",
@@ -148,7 +166,7 @@ class FolderSensor(SensorEntity):
         """Start polling syncthing folder status."""
         if self._unsub_timer is None:
 
-            async def refresh(event_time) -> None:
+            async def refresh(event_time: Any) -> None:
                 """Get the latest data from Syncthing."""
                 await self.async_update_status()
 
@@ -260,5 +278,269 @@ class FolderSensor(SensorEntity):
         # Add some useful attributes
         filtered_state["id"] = self._folder_id
         filtered_state["label"] = self._folder_label
+
+        return filtered_state
+
+
+class DeviceSensor(SensorEntity):
+    """A Syncthing device sensor."""
+
+    _attr_should_poll = False
+    _attr_translation_key = "syncthing_device"
+
+    STATE_ATTRIBUTES = {
+        "deviceID": "device_id",
+        "name": "name",
+        "addresses": "addresses",
+        "compression": "compression",
+        "certName": "cert_name",
+        "introducer": "introducer",
+        "skipIntroductionRemovals": "skip_introduction_removals",
+        "introducedBy": "introduced_by",
+        "paused": "paused",
+        "allowedNetworks": "allowed_networks",
+        "autoAcceptFolders": "auto_accept_folders",
+        "maxSendKbps": "max_send_kbps",
+        "maxRecvKbps": "max_recv_kbps",
+        "ignoredFolders": "ignored_folders",
+        "maxRequestKiB": "max_request_kib",
+        "untrusted": "untrusted",
+        "remoteGUIPort": "remote_gui_port",
+        "deviceName": "device_name",
+        "clientName": "client_name",
+        "clientVersion": "client_version",
+        "addr": "addr",
+        "state": "state",
+    }
+
+    def __init__(
+        self,
+        syncthing: SyncthingClient,
+        server_id: str,
+        device_id: str,
+        device_label: str,
+        version: str,
+    ) -> None:
+        """Initialize the sensor."""
+        self._syncthing = syncthing
+        self._server_id = server_id
+        self._device_id = device_id
+        self._device_label = device_label
+        self._state: dict[str, Any] | None = None
+        self._unsub_timer: CALLBACK_TYPE | None = None
+
+        self._short_server_id = server_id.split("-", maxsplit=1)[0]
+        short_device_id = device_id.split("-", maxsplit=1)[0]
+        self._attr_name = f"{self._short_server_id} {short_device_id} {device_label}"
+        self._attr_unique_id = f"{self._short_server_id}-{device_id}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._server_id)},
+            manufacturer="Syncthing Team",
+            name=f"Syncthing ({syncthing.url})",
+            sw_version=version,
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the state of the sensor."""
+        return self._state["state"] if self._state else None
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Could the device be accessed during the last update call."""
+        return self._state is not None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the state attributes."""
+        return self._state
+
+    async def async_update_status(self) -> None:
+        """Request device status and update state."""
+        try:
+            state = await self._syncthing.config.devices(self._device_id)
+        except aiosyncthing.exceptions.SyncthingError:
+            self._state = None
+        else:
+            if state["deviceID"] == self._server_id:
+                state["state"] = "online"
+            else:
+                state["state"] = (self._state or {}).get("state", "unknown")
+
+            self._state = self._filter_state(state)
+
+        self.async_write_ha_state()
+
+    def subscribe(self) -> None:
+        """Start polling syncthing device status."""
+        if self._unsub_timer is None:
+
+            async def refresh(event_time: Any) -> None:
+                """Get the latest data from Syncthing."""
+                await self.async_update_status()
+
+            self._unsub_timer = async_track_time_interval(
+                self.hass, refresh, SCAN_INTERVAL
+            )
+
+    @callback
+    def unsubscribe(self) -> None:
+        """Stop polling syncthing device status."""
+        if self._unsub_timer is not None:
+            self._unsub_timer()
+            self._unsub_timer = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+
+        @callback
+        def handle_device_connected(event: dict[str, Any]) -> None:
+            """Handle device connected event."""
+            if self._state:
+                self._state = self._filter_state(event["data"])
+                self._state["state"] = "connected"
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_CONNECTED_RECEIVED}-{self._server_id}-{self._device_id}",
+                handle_device_connected,
+            )
+        )
+
+        @callback
+        def handle_device_disconnected(event: dict[str, Any]) -> None:
+            """Handle device disconnected event."""
+            if self._state and self._state["state"] != "paused":
+                self._state["state"] = "disconnected"
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_DISCONNECTED_RECEIVED}-{self._server_id}-{self._device_id}",
+                handle_device_disconnected,
+            )
+        )
+
+        @callback
+        def handle_device_paused(event: dict[str, Any]) -> None:
+            """Handle device paused event."""
+            if self._state:
+                self._state["state"] = "paused"
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_PAUSED_RECEIVED}-{self._server_id}-{self._device_id}",
+                handle_device_paused,
+            )
+        )
+
+        @callback
+        def handle_device_resumed(event: dict[str, Any]) -> None:
+            """Handle device resumed event."""
+            if self._state:
+                self._state["state"] = "disconnected"
+                self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DEVICE_RESUMED_RECEIVED}-{self._server_id}-{self._device_id}",
+                handle_device_resumed,
+            )
+        )
+
+        @callback
+        def handle_initial_events_ready() -> None:
+            """Handle initial events ready."""
+            self._state = self._get_initial_device_state()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{INITIAL_EVENTS_READY}-{self._server_id}",
+                handle_initial_events_ready,
+            )
+        )
+
+        @callback
+        def handle_server_unavailable() -> None:
+            """Handle server becoming unavailable."""
+            self._state = None
+
+            self.unsubscribe()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_UNAVAILABLE}-{self._server_id}",
+                handle_server_unavailable,
+            )
+        )
+
+        async def handle_server_available() -> None:
+            """Handle server becoming available."""
+            self.subscribe()
+            await self.async_update_status()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_AVAILABLE}-{self._server_id}",
+                handle_server_available,
+            )
+        )
+
+        self.subscribe()
+        self.async_on_remove(self.unsubscribe)
+
+        if self._syncthing.initial_events_processed:
+            self._state = self._get_initial_device_state()
+
+        await self.async_update_status()
+
+    def _get_initial_device_state(self) -> dict[str, Any]:
+        """Compute initial device state from stored events on startup."""
+        state = "online" if self._server_id == self._device_id else "unknown"
+        last_data: dict[str, Any] = {}
+        for event in self._syncthing.get_initial_events():
+            data = event["data"]
+            if (
+                data.get("device") != self._device_id
+                and data.get("id") != self._device_id
+            ):
+                continue
+            event_type = event["type"]
+            if event_type == "DeviceConnected":
+                last_data = data
+                state = "connected"
+            elif event_type == "DeviceDisconnected":
+                last_data = data
+                if state != "paused":
+                    state = "disconnected"
+            elif event_type == "DevicePaused":
+                state = "paused"
+            elif event_type == "DeviceResumed":
+                state = "disconnected"
+        return self._filter_state({**last_data, "state": state})
+
+    def _filter_state(self, updates: dict[str, Any]) -> dict[str, Any]:
+        """Filter and map state attributes."""
+        filtered_state = self._state or {}
+
+        for key, value in updates.items():
+            if key in self.STATE_ATTRIBUTES:
+                filtered_state[self.STATE_ATTRIBUTES[key]] = value
 
         return filtered_state

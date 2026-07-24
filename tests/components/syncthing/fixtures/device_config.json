@@ -1,0 +1,19 @@
+{
+  "deviceID": "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD",
+  "name": "Test Device",
+  "addresses": ["dynamic"],
+  "compression": "metadata",
+  "certName": "",
+  "introducer": false,
+  "skipIntroductionRemovals": false,
+  "introducedBy": "",
+  "paused": false,
+  "allowedNetworks": [],
+  "autoAcceptFolders": false,
+  "maxSendKbps": 0,
+  "maxRecvKbps": 0,
+  "ignoredFolders": [],
+  "maxRequestKiB": 0,
+  "untrusted": false,
+  "remoteGUIPort": 0
+}

@@ -1,0 +1,14 @@
+{
+  "id": 3,
+  "globalID": 3,
+  "type": "DeviceConnected",
+  "time": "2024-01-01T00:02:00.000000000Z",
+  "data": {
+    "id": "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD",
+    "addr": "192.168.1.100:22000",
+    "clientName": "syncthing",
+    "clientVersion": "v1.29.0",
+    "deviceName": "Test Device",
+    "type": "tcp-client"
+  }
+}
