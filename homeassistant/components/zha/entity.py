@@ -164,11 +164,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.remove_future = self.hass.loop.create_future()
-        self._unsubs.append(
-            self.entity_data.entity.on_event(
-                EntityStateChangedEvent.event, self._handle_zha_entity_state_changed
-            )
-        )
         remove_signal = (
             f"{SIGNAL_REMOVE_ENTITIES}_group_{self.entity_data.group_proxy.group.group_id}"
             if self.entity_data.is_group_entity
@@ -199,11 +194,16 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self.remove_future,
         )
 
-        if (state := await self.async_get_last_state()) is None:
-            return
+        if (state := await self.async_get_last_state()) is not None:
+            self.restore_external_state_attributes(state)
 
-        self.restore_external_state_attributes(state)
-        self._zha_state = self.entity_data.entity.state
+        # The subscription synchronously delivers the full current state as its
+        # first event, establishing a baseline coherent with subsequent diffs.
+        self._unsubs.append(
+            self.entity_data.entity.subscribe_state(
+                self._handle_zha_entity_state_changed
+            )
+        )
 
     @callback
     def restore_external_state_attributes(self, state: State) -> None:
