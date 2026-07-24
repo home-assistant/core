@@ -392,6 +392,44 @@ async def test_discovery_ignored_hk_bridge(
     assert result["reason"] == "ignored_model"
 
 
+async def test_discovery_ignored_hk_bridge_shared_mac(
+    hass: HomeAssistant, controller, device_registry: dr.DeviceRegistry
+) -> None:
+    """Ignore a homekit bridge even when another config entry shares its MAC.
+
+    Several config entries can each own a device for the same MAC; the bridge must be
+    found among them, not just the first matching device.
+    """
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
+
+    # A non-bridge entry owns a device with the MAC, registered first so it is the first
+    # match; the bridge's device is registered second.
+    other_entry = MockConfigEntry(domain="not_homekit", data={})
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
+    )
+    bridge_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
+    bridge_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=bridge_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
+    )
+
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "ignored_model"
+
+
 async def test_discovery_does_not_ignore_non_homekit(
     hass: HomeAssistant, controller, device_registry: dr.DeviceRegistry
 ) -> None:

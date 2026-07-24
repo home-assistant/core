@@ -10,6 +10,7 @@ from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
+import attr
 import pytest
 
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
@@ -181,6 +182,69 @@ async def test_migrate_device_id_no_serial(
 
     assert device.identifiers == variant.after
     assert device.manufacturer == variant.manufacturer
+
+
+async def test_migrate_device_id_shared_identifier_only_migrates_own(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Migrate this config entry's own split when the legacy identifier is shared.
+
+    When several homekit config entries own a device with the same legacy identifier the
+    registry resolves the identifier to a read-only composite. The migration must still
+    rename this config entry's own device and leave the other entry's device untouched.
+    """
+    before = {(DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, "00:00:00:00:00:00")}
+    after = {(IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1")}
+
+    accessories = await setup_accessories_from_file(
+        hass, "ryse_smart_bridge_four_shades.json"
+    )
+    fake_controller = await setup_platform(hass)
+    await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
+    config_entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id="TestData",
+        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        title="test",
+    )
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers=before,
+        manufacturer="Dummy Manufacturer",
+        model="Dummy Model",
+        name="Dummy Name",
+    )
+    # A second homekit config entry owns a device with the same legacy identifier; both
+    # are splits of one pre-migration composite.
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers=before,
+        manufacturer="Other",
+        model="Other",
+        name="Other",
+    )
+    old_id = "composite00000000000000000000ab"
+    device_registry.devices[device.id] = attr.evolve(device, composite_device_id=old_id)
+    device_registry.devices[other_device.id] = attr.evolve(
+        other_device, composite_device_id=old_id
+    )
+    # The shared identifier now resolves to the read-only composite
+    resolved = device_registry.async_get_device(identifiers=before)  # type: ignore[arg-type]
+    assert resolved is not None
+    assert resolved.id == old_id
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # This entry's own device was migrated; the other entry's device was left untouched.
+    assert device_registry.async_get(device.id).identifiers == after
+    assert device_registry.async_get(other_device.id).identifiers == before
 
 
 async def test_migrate_ble_unique_id(hass: HomeAssistant) -> None:

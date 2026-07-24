@@ -484,19 +484,29 @@ class HKDevice:
                     (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, accessory.serial_number)
                 )
 
-            device = device_registry.async_get_device(identifiers=identifiers)  # type: ignore[arg-type]
+            # Resolve to this config entry's own device. Several config entries can share
+            # the legacy identifier, in which case async_get_device returns a read-only
+            # composite spanning them and async_update_device would silently drop the
+            # identifier rename; scope the lookup to this entry instead.
+            candidates = device_registry.async_get_devices(identifiers=identifiers)  # type: ignore[arg-type]
+            device = next(
+                (
+                    candidate
+                    for candidate in candidates
+                    if candidate.config_entry_id == self.config_entry.entry_id
+                ),
+                None,
+            )
             if not device:
-                continue
-
-            if self.config_entry.entry_id not in device.config_entries:
-                _LOGGER.warning(
-                    (
-                        "Found candidate device for %s:aid:%s, but owned by a different"
-                        " config entry, skipping"
-                    ),
-                    self.unique_id,
-                    accessory.aid,
-                )
+                if candidates:
+                    _LOGGER.warning(
+                        (
+                            "Found candidate device for %s:aid:%s, but owned by a"
+                            " different config entry, skipping"
+                        ),
+                        self.unique_id,
+                        accessory.aid,
+                    )
                 continue
 
             _LOGGER.debug(
@@ -575,22 +585,22 @@ class HKDevice:
 
         device_registry = dr.async_get(self.hass)
         for accessory in self.entity_map.accessories:
-            identifiers = {
-                (
-                    IDENTIFIER_ACCESSORY_ID,
-                    f"{self.unique_id}:aid:{accessory.aid}",
-                )
-            }
+            identifier = (
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self.unique_id}:aid:{accessory.aid}",
+            )
             legacy_serial_identifier = (
                 IDENTIFIER_SERIAL_NUMBER,
                 accessory.serial_number,
             )
 
-            device = device_registry.async_get_device(identifiers=identifiers)
+            device = device_registry.async_get_device_by_identifier(
+                identifier, self.config_entry.entry_id
+            )
             if not device or legacy_serial_identifier not in device.identifiers:
                 continue
 
-            device_registry.async_update_device(device.id, new_identifiers=identifiers)
+            device_registry.async_update_device(device.id, new_identifiers={identifier})
 
     @callback
     def async_reap_stale_entity_registry_entries(self) -> None:
