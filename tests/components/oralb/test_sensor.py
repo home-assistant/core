@@ -10,20 +10,31 @@ from homeassistant.components.bluetooth import (
     async_address_present,
 )
 from homeassistant.components.oralb.const import DOMAIN
-from homeassistant.components.sensor import ATTR_OPTIONS
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_OPTIONS,
+    ATTR_STATE_CLASS,
+    SensorStateClass,
+)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
 from . import (
+    ORALB_HIGH_DURATION_SERVICE_INFO,
     ORALB_IO_SERIES_4_SERVICE_INFO,
     ORALB_IO_SERIES_6_SERVICE_INFO,
     ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO,
     ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO,
+    ORALB_LOW_DURATION_SERVICE_INFO,
     ORALB_SERVICE_INFO,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
@@ -56,6 +67,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "Triumph D36 48BE"
     assert ATTR_ASSUMED_STATE not in toothbrush_sensor_attrs
 
+    # The session duration restarts at the beginning of each brushing session.
+    # It is reported as TOTAL so the lifetime sum survives the reset, with the
+    # integration flagging the session boundary via last_reset.
+    duration_sensor = hass.states.get("sensor.triumph_d36_48be_duration")
+    assert duration_sensor.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -81,6 +98,98 @@ async def test_sensors(hass: HomeAssistant) -> None:
     # All of these devices are sleepy so we should still be available
     toothbrush_sensor = hass.states.get("sensor.triumph_d36_48be")
     assert toothbrush_sensor.state == "running"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_duration_last_reset_on_session_restart(hass: HomeAssistant) -> None:
+    """Test the duration sensor sets last_reset when a new session starts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ORALB_HIGH_DURATION_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, ORALB_HIGH_DURATION_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    duration_sensor = hass.states.get("sensor.triumph_d36_48be_duration")
+    assert duration_sensor.state == "130"
+    assert duration_sensor.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
+    # No decrease has been observed yet, so no reset is flagged.
+    assert ATTR_LAST_RESET not in duration_sensor.attributes
+
+    # A new brushing session starts and the counter drops: the integration
+    # flags the boundary so the lifetime sum starts a fresh cycle.
+    inject_bluetooth_service_info(hass, ORALB_LOW_DURATION_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    duration_sensor = hass.states.get("sensor.triumph_d36_48be_duration")
+    assert duration_sensor.state == "5"
+    assert ATTR_LAST_RESET in duration_sensor.attributes
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_duration_restores_last_reset_across_reload(hass: HomeAssistant) -> None:
+    """Test the duration sensor restores its cycle marker after a reload.
+
+    Without restoring the previous value and last_reset, a reload would drop
+    the active cycle marker and the next session start (a decrease) could be
+    missed, corrupting the lifetime sum.
+    """
+    restored_reset = dt_util.utcnow() - timedelta(hours=1)
+    entity_id = "sensor.triumph_d36_48be_duration"
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    entity_id,
+                    "130",
+                    {"last_reset": restored_reset.isoformat()},
+                ),
+                {
+                    "native_value": 130,
+                    "native_unit_of_measurement": UnitOfTime.SECONDS,
+                },
+            ),
+        ),
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ORALB_HIGH_DURATION_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # First advertisement (still session 1, no decrease): the restored
+    # last_reset must survive rather than reset to None.
+    inject_bluetooth_service_info(hass, ORALB_HIGH_DURATION_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    duration_sensor = hass.states.get(entity_id)
+    assert duration_sensor.attributes[ATTR_LAST_RESET] == restored_reset.isoformat()
+
+    # A new session starts. Because the previous value (130) was restored, the
+    # decrease is detected even though it is the first update after the reload.
+    inject_bluetooth_service_info(hass, ORALB_LOW_DURATION_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    duration_sensor = hass.states.get(entity_id)
+    assert duration_sensor.state == "5"
+    assert duration_sensor.attributes[ATTR_LAST_RESET] != restored_reset.isoformat()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
