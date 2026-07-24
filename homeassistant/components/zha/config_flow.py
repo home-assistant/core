@@ -860,14 +860,28 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_verify_radio()
 
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders={
-                CONF_NAME: self.context.get("title_placeholders", {}).get(
-                    CONF_NAME, self._radio_mgr.device_path or ""
-                )
-            },
+        name = self.context.get("title_placeholders", {}).get(
+            CONF_NAME, self._radio_mgr.device_path or ""
         )
+
+        # ZHA is single-instance: confirming a discovery while a network already
+        # exists switches ZHA to the discovered radio. Warn before re-homing a
+        # working coordinator (e.g. one already used by another integration).
+        if zha_config_entries:
+            return self.async_show_form(
+                step_id="confirm_migration",
+                description_placeholders={CONF_NAME: name},
+            )
+
+        return self.async_show_form(
+            step_id="confirm", description_placeholders={CONF_NAME: name}
+        )
+
+    async def async_step_confirm_migration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm a discovery that migrates the existing network to a new radio."""
+        return await self.async_step_confirm(user_input)
 
     @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:

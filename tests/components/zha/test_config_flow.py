@@ -815,7 +815,7 @@ async def test_discovery_via_usb_duplicate_unique_id(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "confirm_migration"
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
@@ -986,12 +986,14 @@ async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> N
     )
     await hass.async_block_till_done()
 
+    assert init_result["type"] is FlowResultType.FORM
+    assert init_result["step_id"] == "confirm_migration"
+
     confirm_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"],
         user_input={},
     )
 
-    # When we have an existing config entry, we migrate
     assert confirm_result["type"] is FlowResultType.MENU
     assert confirm_result["step_id"] == "choose_migration_strategy"
 
@@ -1512,7 +1514,7 @@ async def test_hardware_migration_flow_strategy_advanced(
         )
 
         assert result_hardware["type"] is FlowResultType.FORM
-        assert result_hardware["step_id"] == "confirm"
+        assert result_hardware["step_id"] == "confirm_migration"
 
         result_confirm = await hass.config_entries.flow.async_configure(
             result_hardware["flow_id"], user_input={}
@@ -1592,7 +1594,7 @@ async def test_hardware_migration_flow_strategy_recommended(
         )
 
         assert result_hardware["type"] is FlowResultType.FORM
-        assert result_hardware["step_id"] == "confirm"
+        assert result_hardware["step_id"] == "confirm_migration"
 
         result_migrate = await hass.config_entries.flow.async_configure(
             result_hardware["flow_id"], user_input={}
