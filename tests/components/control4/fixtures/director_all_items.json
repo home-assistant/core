@@ -19,11 +19,13 @@
     "id": 123,
     "name": "Residential Thermostat V2",
     "type": 7,
+    "proxy": "thermostatV2",
     "parentId": 456,
     "categories": ["comfort"]
   },
   {
     "id": 456,
+    "name": "Test Controller",
     "manufacturer": "Control4",
     "roomName": "Studio",
     "model": "C4-TSTAT"
@@ -32,11 +34,14 @@
     "id": 234,
     "name": "Living Room Shade",
     "type": 7,
+    "proxy": "blind",
+    "protocolFilename": "blind_qmotion_qadvanced_roller_shade.c4z",
     "parentId": 567,
     "categories": ["blinds_shades"]
   },
   {
     "id": 567,
+    "name": "Test Controller",
     "manufacturer": "Lutron",
     "roomName": "Living Room",
     "model": "QSWS2-1BRLI"
