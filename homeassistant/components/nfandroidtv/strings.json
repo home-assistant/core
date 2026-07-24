@@ -40,11 +40,94 @@
     "invalid_notification_image": {
       "message": "Invalid image data provided. Got {type}"
     },
+    "media_source_not_supported": {
+      "message": "Media source currently not supported"
+    },
     "notify_connection_error": {
       "message": "Failed to send notification to {name} due to a connection error"
     },
     "setup_connection_error": {
       "message": "Failed to connect to {name}"
+    }
+  },
+  "selector": {
+    "background_color": {
+      "options": {
+        "amber": "Amber",
+        "black": "Black",
+        "cyan": "Cyan",
+        "green": "Green",
+        "grey": "Grey",
+        "indigo": "Indigo",
+        "pink": "Pink",
+        "red": "Red",
+        "teal": "Teal"
+      }
+    },
+    "fontsize": {
+      "options": {
+        "large": "Large",
+        "max": "Maximum",
+        "medium": "[%key:common::state::medium%]",
+        "small": "Small"
+      }
+    },
+    "position": {
+      "options": {
+        "bottom-left": "Bottom left",
+        "bottom-right": "Bottom right",
+        "center": "Center",
+        "top-left": "Top left",
+        "top-right": "Top right"
+      }
+    }
+  },
+  "services": {
+    "send_message": {
+      "description": "Sends a notification to your Android TV or Fire TV device.",
+      "fields": {
+        "background_color": {
+          "description": "The color of the notification dialog background.",
+          "name": "Background color"
+        },
+        "duration": {
+          "description": "The time the notification remains visible.",
+          "name": "Duration"
+        },
+        "fontsize": {
+          "description": "The size of the title and message text.",
+          "name": "Font size"
+        },
+        "icon": {
+          "description": "The image displayed as the notification icon to the left of the notification text.",
+          "name": "Icon"
+        },
+        "image": {
+          "description": "The image displayed above the notification text.",
+          "name": "Image"
+        },
+        "interactive": {
+          "description": "Interactive mode that enables manual dismissal or expansion for additional details via the remote control.",
+          "name": "Interactive"
+        },
+        "message": {
+          "description": "[%key:component::notify::services::send_message::fields::message::description%]",
+          "name": "[%key:component::notify::services::send_message::fields::message::name%]"
+        },
+        "position": {
+          "description": "The screen location where the notification dialog appears.",
+          "name": "Position"
+        },
+        "title": {
+          "description": "[%key:component::notify::services::send_message::fields::title::description%]",
+          "name": "[%key:component::notify::services::send_message::fields::title::name%]"
+        },
+        "transparency": {
+          "description": "The opacity of the background, from 0% (solid) to 100% (invisible).",
+          "name": "Transparency"
+        }
+      },
+      "name": "[%key:component::notify::services::send_message::name%]"
     }
   }
 }

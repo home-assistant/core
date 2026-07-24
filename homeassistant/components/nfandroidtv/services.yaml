@@ -1,0 +1,101 @@
+send_message:
+  target:
+    entity:
+      domain: notify
+      integration: nfandroidtv
+  fields:
+    title:
+      required: false
+      selector:
+        text:
+      example: Hello
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+      example: World
+    image:
+      required: false
+      selector:
+        media:
+          accept:
+            - image/*
+            - video/*
+    icon:
+      required: false
+      selector:
+        media:
+          accept:
+            - image/*
+            - video/*
+    position:
+      required: false
+      selector:
+        select:
+          options:
+            - bottom-right
+            - bottom-left
+            - top-right
+            - top-left
+            - center
+          mode: dropdown
+          translation_key: position
+          sort: false
+      example: top-right
+    duration:
+      required: false
+      selector:
+        duration:
+      example: '{"seconds": 16}'
+    interactive:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
+      example: true
+    background_color:
+      required: false
+      selector:
+        select:
+          options:
+            - grey
+            - black
+            - indigo
+            - green
+            - red
+            - cyan
+            - teal
+            - amber
+            - pink
+          mode: dropdown
+          translation_key: background_color
+          sort: false
+      example: pink
+    fontsize:
+      required: false
+      selector:
+        select:
+          options:
+            - small
+            - medium
+            - large
+            - max
+          mode: dropdown
+          translation_key: fontsize
+          sort: false
+      example: medium
+    transparency:
+      required: false
+      selector:
+        select:
+          options:
+            - 0%
+            - 25%
+            - 50%
+            - 75%
+            - 100%
+          mode: dropdown
+          sort: false
+      example: 50%

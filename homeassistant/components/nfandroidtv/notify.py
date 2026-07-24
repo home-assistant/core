@@ -1,5 +1,6 @@
 """Notifications for Android TV notification service."""
 
+from datetime import timedelta
 from io import BufferedReader
 import logging
 from typing import Any, override
@@ -9,6 +10,8 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
+from homeassistant.components import camera, image
+from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -27,6 +30,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NFAndroidTVConfigEntry
 from .const import (
+    ATTR_BGCOLOR,
+    ATTR_BKGCOLOR,
     ATTR_COLOR,
     ATTR_DURATION,
     ATTR_FONTSIZE,
@@ -43,6 +48,7 @@ from .const import (
     ATTR_IMAGE_PATH,
     ATTR_IMAGE_URL,
     ATTR_IMAGE_USERNAME,
+    ATTR_INTERACTIVE,
     ATTR_INTERRUPT,
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
@@ -94,6 +100,61 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
                 translation_key="notify_connection_error",
                 translation_placeholders={CONF_NAME: self.entry.title},
             ) from e
+
+    async def nfandroidtv_send_message(self, message: str, **kwargs: Any) -> None:
+        """Send a message via nfandroidtv.send_message."""
+        params: dict[str, Any] = kwargs
+
+        if ATTR_INTERACTIVE in kwargs:
+            params[ATTR_INTERRUPT] = kwargs.pop(ATTR_INTERACTIVE)
+        if ATTR_IMAGE in kwargs:
+            params["image_file"] = await _resolve_media(
+                self.hass, kwargs.pop(ATTR_IMAGE)
+            )
+        if ATTR_ICON in kwargs:
+            params[ATTR_ICON] = await _resolve_media(self.hass, kwargs.pop(ATTR_ICON))
+        if ATTR_DURATION in kwargs:
+            duration: timedelta = kwargs.pop(ATTR_DURATION)
+            params[ATTR_DURATION] = int(duration.total_seconds())
+        if ATTR_BGCOLOR in kwargs:
+            params[ATTR_BKGCOLOR] = kwargs.pop(ATTR_BGCOLOR)
+
+        try:
+            await self.hass.async_add_executor_job(
+                lambda: self.client.send(message=message, **params)
+            )
+        except ConnectError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_connection_error",
+                translation_placeholders={CONF_NAME: self.entry.title},
+            ) from e
+        self._async_record_notification()
+
+
+async def _resolve_media(hass: HomeAssistant, media_source: dict[str, Any]) -> bytes:
+    """Resolve media from a media source."""
+    media_content_id: str = media_source["media_content_id"]
+
+    if media_content_id.startswith("media-source://camera/"):
+        entity_id = media_content_id.removeprefix("media-source://camera/")
+        snapshot = await camera.async_get_image(hass, entity_id)
+        return snapshot.content
+
+    if media_content_id.startswith("media-source://image/"):
+        entity_id = media_content_id.removeprefix("media-source://image/")
+        img = await image.async_get_image(hass, entity_id)
+        return img.content
+
+    media = await async_resolve_media(hass, media_content_id, None)
+
+    if media.path is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="media_source_not_supported",
+        )
+
+    return await hass.async_add_executor_job(media.path.read_bytes)
 
 
 async def async_get_service(
