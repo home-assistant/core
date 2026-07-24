@@ -248,6 +248,12 @@ def leviton_zw4sf_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("leviton_zw4sf_state.json", DOMAIN)
 
 
+@pytest.fixture(name="leviton_vrf01_state", scope="package")
+def leviton_vrf01_state_fixture() -> dict[str, Any]:
+    """Load the Leviton VRF01 node state fixture data."""
+    return load_json_object_fixture("leviton_vrf01_state.json", DOMAIN)
+
+
 @pytest.fixture(name="fan_honeywell_39358_state", scope="package")
 def fan_honeywell_39358_state_fixture() -> dict[str, Any]:
     """Load the fan node state fixture data."""
@@ -1046,6 +1052,14 @@ def hs_fc200_fixture(client, hs_fc200_state) -> Node:
 def leviton_zw4sf_fixture(client, leviton_zw4sf_state) -> Node:
     """Mock a fan node."""
     node = Node(client, copy.deepcopy(leviton_zw4sf_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="leviton_vrf01")
+def leviton_vrf01_fixture(client, leviton_vrf01_state) -> Node:
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(leviton_vrf01_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
