@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
+import pytest
 
+from homeassistant.components.vistapool import coordinator as vp_coordinator
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -13,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _SECOND_POOL_ID = "ZYXWVU9876543210"
 _SECOND_POOL_NAME = "Spa"
@@ -299,6 +301,148 @@ async def test_apply_optimistic_creates_missing_intermediate_dicts(
 
     assert coordinator.data["filtration"]["intel"]["temp"] == 27
     assert coordinator.data["existing"] == {"nested": {"key": 1}}
+
+
+@pytest.mark.parametrize(
+    "remote_status",
+    [
+        pytest.param(0, id="numeric_disagreement"),
+        pytest.param(None, id="non_coercible"),
+    ],
+)
+async def test_apply_optimistic_suppresses_stale_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    remote_status: int | None,
+) -> None:
+    """Test a Firestore push that disagrees within the TTL keeps the optimistic value."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+    coordinator.apply_optimistic("light.status", 1)
+    assert coordinator.data["light"]["status"] == 1
+
+    on_data({"light": {"status": remote_status}})
+    await hass.async_block_till_done()
+
+    assert coordinator.data["light"]["status"] == 1
+
+
+async def test_apply_optimistic_accepts_confirming_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a confirming push lets the protection expire so later disagreements stick."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+    coordinator.apply_optimistic("light.status", 1)
+    on_data({"light": {"status": "1"}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == "1"
+
+    # Protection should have lifted; a later push (real off command) must stick.
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 0
+
+
+async def test_apply_optimistic_yields_to_push_after_ttl(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a disagreeing Firestore push after the TTL window overrides the optimistic value."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+    with patch.object(
+        vp_coordinator,
+        "monotonic",
+        side_effect=[100.0, 100.0 + vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1.0],
+    ):
+        coordinator.apply_optimistic("light.status", 1)
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
+
+    assert coordinator.data["light"]["status"] == 0
+
+
+async def test_apply_optimistic_self_expires_without_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the optimistic value clears via the scheduled timer when no push arrives."""
+    # Return a fresh dict per call so apply_optimistic's in-place mutation
+    # doesn't leak back into the mock's payload on the next fetch.
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+
+    coordinator.apply_optimistic("light.status", 1)
+    assert coordinator.data["light"]["status"] == 1
+
+    # The expiry is a raw loop timer, so force-fire scheduled handles instead
+    # of waiting on wall-clock time.
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+
+    mock_vistapool_client.fetch_pool_data.assert_called()
+    assert coordinator.data["light"]["status"] == 0
+
+
+async def test_refresh_preserves_other_pending_optimistic_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a self-heal refresh keeps writes still inside their own TTL window."""
+    # Return a fresh dict per call so apply_optimistic's in-place mutation
+    # doesn't leak back into the mock's payload on the next fetch.
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0},
+        "relays": {"filtration": {"status": 0}},
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+
+    coordinator.apply_optimistic("light.status", 1)
+    coordinator.apply_optimistic("relays.filtration.status", 1)
+
+    # A full refresh (the path a self-heal takes) must not clobber the
+    # filtration write, which is still inside its own TTL window.
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.data["light"]["status"] == 1
+    assert coordinator.data["relays"]["filtration"]["status"] == 1
 
 
 async def test_unload_entry(
