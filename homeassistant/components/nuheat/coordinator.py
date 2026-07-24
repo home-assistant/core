@@ -1,47 +1,71 @@
-"""DataUpdateCoordinator for NuHeat thermostats."""
+"""Data coordinator for NuHeat."""
 
-from datetime import timedelta
 import logging
 from typing import override
 
-import nuheat
+from chemelex_nuheat import (
+    NuHeatApiError,
+    NuHeatAuthError,
+    NuHeatClient,
+    NuHeatDataError,
+    Thermostat,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERIAL_NUMBER
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
 
-
-type NuHeatConfigEntry = ConfigEntry[NuHeatCoordinator]
-
-
-class NuHeatCoordinator(DataUpdateCoordinator[None]):
-    """Coordinator for NuHeat thermostat data."""
-
-    config_entry: NuHeatConfigEntry
+class NuHeatCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
+    """Poll and retain all thermostats belonging to the linked account."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: NuHeatConfigEntry,
-        thermostat: nuheat.NuHeatThermostat,
+        self, hass: HomeAssistant, entry: ConfigEntry, api: NuHeatClient
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the NuHeat coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            logger=_LOGGER,
+            name=DOMAIN,
             config_entry=entry,
-            name=f"nuheat {entry.data[CONF_SERIAL_NUMBER]}",
             update_interval=SCAN_INTERVAL,
         )
-        self.thermostat = thermostat
+        self.api = api
+        self._present_serials: set[str] = set()
 
     @override
-    async def _async_update_data(self) -> None:
-        """Fetch data from API endpoint."""
-        await self.hass.async_add_executor_job(self.thermostat.get_data)
+    async def _async_update_data(self) -> dict[str, Thermostat]:
+        try:
+            thermostats = await self.api.list_thermostats()
+        except NuHeatAuthError as err:
+            raise ConfigEntryAuthFailed("NuHeat authorization expired") from err
+        except (NuHeatApiError, NuHeatDataError) as err:
+            raise UpdateFailed("Unable to update NuHeat thermostats") from err
+
+        fresh = {item.serial_number: item for item in thermostats}
+        self._present_serials = set(fresh)
+        # Retain previously discovered devices when an otherwise successful
+        # account response temporarily omits one of them.
+        return {**(self.data or {}), **fresh}
+
+    def is_thermostat_available(self, serial_number: str) -> bool:
+        """Return cloud and device availability without removing entities."""
+        thermostat = (self.data or {}).get(serial_number)
+        return (
+            self.last_update_success
+            and serial_number in self._present_serials
+            and thermostat is not None
+            and thermostat.online
+        )
+
+    def async_update_thermostat(self, thermostat: Thermostat) -> None:
+        """Apply state returned by a successful write."""
+        data = dict(self.data or {})
+        data[thermostat.serial_number] = thermostat
+        self._present_serials.add(thermostat.serial_number)
+        self.async_set_updated_data(data)
