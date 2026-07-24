@@ -93,3 +93,16 @@ class MockDeviceWrongPassword(MockDevice):
         """Bring mock in a well defined state."""
         super().__init__(ip, zeroconf_instance)
         self.device.async_uptime = AsyncMock(side_effect=DevicePasswordProtected)
+
+
+class MockAltDevice(MockDevice):
+    """Mock an alternative devolo Home Network device for tests with two devices in the same network."""
+
+    async def async_connect(
+        self, session_instance: httpx.AsyncClient | None = None
+    ) -> None:
+        """Give a mocked device the needed properties."""
+        self.mac = "00:00:5E:00:53:05"
+        self.mt_number = DISCOVERY_INFO.properties["MT"]
+        self.product = DISCOVERY_INFO.properties["Product"]
+        self.serial_number = "0987654321"
