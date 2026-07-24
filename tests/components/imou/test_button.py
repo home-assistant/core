@@ -58,7 +58,7 @@ async def test_setup_ignores_unknown_button_types(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Unknown button keys from the API are not turned into entities."""
-    registry = er.async_get(hass)
+    registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
     assert len(entries) == 1
     assert entries[0].translation_key == PARAM_MUTE
