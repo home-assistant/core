@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     CONF_USERNAME,
 )
@@ -234,13 +233,6 @@ class RiscoOptionsFlowHandler(OptionsFlow):
                 vol.Required(CONF_MORE_OPTIONS): section(
                     vol.Schema(
                         {
-                            # Polling interval is user-configurable,
-                            # which is no longer allowed
-                            # pylint: disable-next=home-assistant-config-flow-polling-field
-                            vol.Required(
-                                CONF_SCAN_INTERVAL,
-                                default=self._data[CONF_SCAN_INTERVAL],
-                            ): int,
                             vol.Required(
                                 CONF_CONCURRENCY,
                                 default=self._data[CONF_CONCURRENCY],

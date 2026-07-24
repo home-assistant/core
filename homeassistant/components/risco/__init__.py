@@ -5,6 +5,7 @@ import logging
 
 from pyrisco import (
     CannotConnectError,
+    MaxRetriesError,
     OperationError,
     RiscoCloud,
     RiscoLocal,
@@ -37,7 +38,6 @@ from .const import (
     SYSTEM_UPDATE_SIGNAL,
     TYPE_LOCAL,
 )
-from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
 from .models import CloudData, LocalData, RiscoConfigEntry, RiscoData
 from .services import async_setup_services
 
@@ -162,21 +162,47 @@ async def _async_setup_cloud_entry(
     except UnauthorizedError as error:
         raise ConfigEntryAuthFailed from error
 
-    coordinator = RiscoDataUpdateCoordinator(hass, entry, risco)
-    await coordinator.async_config_entry_first_refresh()
-    events_coordinator = RiscoEventsDataUpdateCoordinator(hass, entry, risco)
+    try:
+        alarm = await risco.get_state()
+    except (CannotConnectError, UnauthorizedError, OperationError) as error:
+        await risco.close()
+        raise ConfigEntryNotReady from error
+
+    cloud_data = CloudData(system=risco, alarm=alarm)
+
+    async def _error(error: Exception) -> None:
+        if isinstance(error, MaxRetriesError):
+            _LOGGER.error(
+                "Risco cloud SSE exhausted retries, reloading integration",
+                exc_info=(
+                    type(error.last_error),
+                    error.last_error,
+                    error.last_error.__traceback__,
+                ),
+            )
+            if not hass.is_stopping:
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        else:
+            _LOGGER.warning(
+                "Risco cloud SSE error (reconnecting automatically)",
+                exc_info=(type(error), error, error.__traceback__),
+            )
+
+    remove_error_handler = risco.add_error_handler(_error)
+    try:
+        await risco.subscribe_states()
+    except (CannotConnectError, UnauthorizedError, OperationError) as error:
+        await risco.close()
+        raise ConfigEntryNotReady from error
+
+    entry.async_on_unload(risco.close)
+    entry.async_on_unload(remove_error_handler)
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
-    entry.runtime_data = RiscoData(
-        cloud_data=CloudData(
-            coordinator=coordinator,
-            events_coordinator=events_coordinator,
-        )
-    )
+    entry.runtime_data = RiscoData(cloud_data=cloud_data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await events_coordinator.async_refresh()
 
     return True
 

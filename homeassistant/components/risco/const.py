@@ -1,7 +1,6 @@
 """Constants for the Risco integration."""
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.const import CONF_SCAN_INTERVAL
 
 DOMAIN = "risco"
 
@@ -10,7 +9,6 @@ RISCO_EVENT = "risco_event"
 DATA_COORDINATOR = "risco"
 EVENTS_COORDINATOR = "risco_events"
 
-DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_CONCURRENCY = 4
 
 TYPE_LOCAL = "local"
@@ -53,7 +51,6 @@ DEFAULT_OPTIONS = {
 }
 
 DEFAULT_ADVANCED_OPTIONS = {
-    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
     CONF_CONCURRENCY: DEFAULT_CONCURRENCY,
 }
 
