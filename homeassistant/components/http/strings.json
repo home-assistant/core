@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "unban_invalid_ip_address": {
+      "message": "Unable to unban {ip_address}: Invalid IP address"
+    },
+    "unban_not_banned_ip_address": {
+      "message": "Unable to unban {ip_address}: IP address is not banned"
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "description": "Your existing HTTP configuration from `configuration.yaml` has been imported. The `http` integration is now configured from the UI under **Settings** > **System** > **Network**.\n\nPlease remove the `http:` block from your `configuration.yaml` and restart Home Assistant.",
@@ -19,6 +27,18 @@
     "yaml_still_present_after_migration": {
       "description": "The HTTP configuration in `configuration.yaml` has already been migrated and is now being ignored. Please remove the `http:` block from your `configuration.yaml`. Manage the HTTP configuration from the UI under **Settings** > **System** > **Network**.",
       "title": "HTTP YAML configuration is ignored after migration"
+    }
+  },
+  "services": {
+    "unban": {
+      "description": "Removes an IP address from the list of banned IP addresses.",
+      "fields": {
+        "ip_address": {
+          "description": "IP address to remove from the list of banned IP addresses.",
+          "name": "IP address"
+        }
+      },
+      "name": "Unban IP address"
     }
   }
 }
