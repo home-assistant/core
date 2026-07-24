@@ -2,7 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, cast, override
+
+from google_health_api.model import PairedDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,11 +20,12 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import GoogleHealthConfigEntry
 from .const import DOMAIN
@@ -29,6 +33,7 @@ from .coordinator import (
     GoogleHealthActivityCoordinator,
     GoogleHealthBodyCoordinator,
     GoogleHealthDataUpdateCoordinator,
+    GoogleHealthDeviceCoordinator,
     GoogleHealthSleepCoordinator,
 )
 
@@ -191,6 +196,34 @@ SLEEP_SENSORS: list[
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class GoogleHealthDeviceSensorEntityDescription(SensorEntityDescription):
+    """Class describing Google Health device sensor entities."""
+
+    value_fn: Callable[[PairedDevice], datetime | StateType]
+
+
+DEVICE_SENSORS: list[GoogleHealthDeviceSensorEntityDescription] = [
+    GoogleHealthDeviceSensorEntityDescription(
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.battery_level,
+    ),
+    GoogleHealthDeviceSensorEntityDescription(
+        key="last_sync_time",
+        translation_key="last_sync_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: (
+            dt_util.parse_datetime(device.last_sync_time)
+            if device.last_sync_time
+            else None
+        ),
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GoogleHealthConfigEntry,
@@ -215,9 +248,36 @@ async def async_setup_entry(
             GoogleHealthSensor(sleep_coordinator, entry.entry_id, description)
             for description in SLEEP_SENSORS
         )
-
     if entities:
         async_add_entities(entities)
+
+    if (device_coordinator := data.device_coordinator) is not None:
+        added_device_ids: set[str] = set()
+
+        @callback
+        def async_add_device_entities() -> None:
+            """Add entities for new devices."""
+            new_entities: list[SensorEntity] = []
+            for device in device_coordinator.data.values():
+                if device.device_id in added_device_ids:
+                    continue
+                added_device_ids.add(device.device_id)
+                new_entities.extend(
+                    GoogleHealthDeviceSensor(
+                        device_coordinator,
+                        entry.entry_id,
+                        device,
+                        description,
+                    )
+                    for description in DEVICE_SENSORS
+                )
+            if new_entities:
+                async_add_entities(new_entities)
+
+        async_add_device_entities()
+        entry.async_on_unload(
+            device_coordinator.async_add_listener(async_add_device_entities)
+        )
 
 
 class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
@@ -248,3 +308,52 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return cast(StateType, self.entity_description.value_fn(self.coordinator.data))
+
+
+class GoogleHealthDeviceSensor(
+    CoordinatorEntity[GoogleHealthDeviceCoordinator], SensorEntity
+):
+    """Device-specific Google Health sensor entity."""
+
+    _attr_has_entity_name = True
+    entity_description: GoogleHealthDeviceSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: GoogleHealthDeviceCoordinator,
+        entry_id: str,
+        device: PairedDevice,
+        description: GoogleHealthDeviceSensorEntityDescription,
+    ) -> None:
+        """Initialize the device sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.device_id = device.device_id
+        self._attr_unique_id = f"{device.device_id}_{description.key}"
+
+        # device_version is the product name (e.g. 'Fitbit Charge 6', 'Pixel Watch 3')
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.device_id)},
+            name=device.device_version
+            or (device.device_type.title() if device.device_type else "Device"),
+            model=device.device_type.title() if device.device_type else None,
+            sw_version=device.device_version,
+            via_device=(DOMAIN, entry_id),
+        )
+
+        if device.mac_address:
+            device_info["connections"] = {(CONNECTION_NETWORK_MAC, device.mac_address)}
+        self._attr_device_info = device_info
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.device_id in self.coordinator.data
+
+    @property
+    @override
+    def native_value(self) -> datetime | StateType:
+        """Return the state of the sensor."""
+        device = self.coordinator.data[self.device_id]
+        return self.entity_description.value_fn(device)

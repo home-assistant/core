@@ -24,6 +24,7 @@ from .coordinator import (
     GoogleHealthActivityCoordinator,
     GoogleHealthBodyCoordinator,
     GoogleHealthDataUpdateCoordinator,
+    GoogleHealthDeviceCoordinator,
     GoogleHealthSleepCoordinator,
 )
 
@@ -36,6 +37,7 @@ class GoogleHealthData:
 
     activity_coordinator: GoogleHealthActivityCoordinator | None = None
     body_coordinator: GoogleHealthBodyCoordinator | None = None
+    device_coordinator: GoogleHealthDeviceCoordinator | None = None
     sleep_coordinator: GoogleHealthSleepCoordinator | None = None
 
 
@@ -91,9 +93,15 @@ async def async_setup_entry(
             *(coord.async_config_entry_first_refresh() for coord in coordinators)
         )
 
+    device_coordinator = None
+    if all(scope in scopes for scope in api_client.paired_devices.required_read_scopes):
+        device_coordinator = GoogleHealthDeviceCoordinator(hass, entry, api_client)
+        await device_coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = GoogleHealthData(
         activity_coordinator=activity_coordinator,
         body_coordinator=body_coordinator,
+        device_coordinator=device_coordinator,
         sleep_coordinator=sleep_coordinator,
     )
 

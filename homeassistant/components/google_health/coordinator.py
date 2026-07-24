@@ -18,6 +18,7 @@ from google_health_api.model import (
     DailyRestingHeartRate,
     DistanceRollupValue,
     FloorsRollupValue,
+    PairedDevice,
     Sleep,
     StepsRollupValue,
     TotalCaloriesRollupValue,
@@ -37,6 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 POLLING_INTERVAL = timedelta(minutes=15)
 BODY_POLLING_INTERVAL = timedelta(hours=1)
+DEVICE_POLLING_INTERVAL = timedelta(hours=1)
 DEFAULT_PAGE_SIZE = 1
 
 
@@ -212,6 +214,38 @@ class GoogleHealthBodyCoordinator(
             resting_heart_rate=resting_heart_rate,
             body_fat=body_fat,
         )
+
+
+class GoogleHealthDeviceCoordinator(
+    GoogleHealthDataUpdateCoordinator[dict[str, PairedDevice]]
+):
+    """Coordinator to fetch paired devices from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_devices",
+            update_interval=DEVICE_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> dict[str, PairedDevice]:
+        """Fetch paired devices."""
+        devices: dict[str, PairedDevice] = {}
+        result = await self.api.paired_devices.list()
+        async for page in result:
+            for device in page.paired_devices:
+                devices[device.device_id] = device
+        return devices
 
 
 @dataclass

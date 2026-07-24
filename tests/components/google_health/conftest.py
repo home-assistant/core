@@ -18,10 +18,12 @@ from google_health_api.model import (
     FloorsRollupValue,
     Identity,
     ListDataPointResult,
+    ListPairedDevicesResult,
     StepsRollupValue,
     TotalCaloriesRollupValue,
     UserInfo,
     _ListDataPointsModel,
+    _ListPairedDevicesModel,
 )
 import pytest
 
@@ -59,6 +61,12 @@ def _list_fixture(filename: str, data_type: DataType) -> ListDataPointResult:
         for item in load_json_object_fixture(filename, DOMAIN)["dataPoints"]
     ]
     return ListDataPointResult(_ListDataPointsModel(data_points=data_points))
+
+
+def _paired_devices_fixture(filename: str) -> ListPairedDevicesResult:
+    """Build a list of paired devices result from a fixture."""
+    raw_json = load_json_object_fixture(filename, DOMAIN)
+    return ListPairedDevicesResult(_ListPairedDevicesModel.from_dict(raw_json))
 
 
 @pytest.fixture(name="expires_at")
@@ -159,6 +167,13 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         )
         client.body_fat = AsyncMock()
         client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
+        client.paired_devices = AsyncMock()
+        client.paired_devices.list.return_value = _paired_devices_fixture(
+            "paired_devices.json"
+        )
+        client.paired_devices.required_read_scopes = [
+            "https://www.googleapis.com/auth/googlehealth.settings.readonly"
+        ]
         client.sleep = AsyncMock()
         client.sleep.list.return_value = _list_fixture("sleep.json", SLEEP)
         client.sleep.required_read_scopes = [
@@ -170,6 +185,7 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.get_user_info.return_value = UserInfo.from_dict(
             load_json_object_fixture("userinfo.json", DOMAIN)
         )
+
         yield client
 
 
