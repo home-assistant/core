@@ -69,10 +69,10 @@ type SelectOptionsType = Literal[
     "zone_profiles",
 ]
 type WaterHeaterType = Literal[
-    "boiler_temperature",
-    "dhw_temperature",
+    "maximum_boiler_temperature",
+    "max_dhw_temperature",
 ]
-type WaterHeaterOptionsType = Literal["dhw_modes"] | None
+type WaterHeaterOptionsType = Literal["dhw_modes"]
 
 # Default directives
 DEFAULT_MAX_TEMP: Final = 30

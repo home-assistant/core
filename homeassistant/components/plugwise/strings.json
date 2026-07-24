@@ -307,11 +307,8 @@
       }
     },
     "water_heater": {
-      "maximum_boiler_temperature": {
-        "name": "Boiler"
-      }
       "max_dhw_temperature": {
-        "name": "Doestic hot water",
+        "name": "Domestic hot water",
         "state": {
           "auto": "[%key:common::state::auto%]",
           "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
@@ -319,6 +316,9 @@
           "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
           "off": "[%key:common::state::off%]"
         }
+      },
+      "maximum_boiler_temperature": {
+        "name": "Boiler"
       }
     }
   },

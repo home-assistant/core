@@ -48,7 +48,7 @@ async def test_adam_water_heater_setpoint_change(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+            ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
             ATTR_TEMPERATURE: 65,
         },
         blocking=True,
@@ -64,7 +64,7 @@ async def test_adam_water_heater_setpoint_change(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.opentherm_boiler_temperature",
+            ATTR_ENTITY_ID: "water_heater.opentherm_boiler",
             ATTR_TEMPERATURE: 85,
         },
         blocking=True,
@@ -81,7 +81,7 @@ async def test_adam_water_heater_setpoint_change(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.opentherm_boiler_temperature",
+                ATTR_ENTITY_ID: "water_heater.opentherm_boiler",
                 ATTR_OPERATION_MODE: "eco",
             },
             blocking=True,
@@ -92,7 +92,7 @@ async def test_adam_water_heater_setpoint_change(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+            ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
             ATTR_OPERATION_MODE: "eco",
         },
         blocking=True,
@@ -131,7 +131,7 @@ async def test_anna_water_heater_mode_change(
         WATER_HEATER_DOMAIN,
         SERVICE_SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+            ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
             ATTR_OPERATION_MODE: "off",
         },
         blocking=True,
@@ -152,7 +152,7 @@ async def test_anna_water_heater_mode_change(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.opentherm_dhw_temperature",
+                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
                 ATTR_OPERATION_MODE: "boost",
             },
             blocking=True,
