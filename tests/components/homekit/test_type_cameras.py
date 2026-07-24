@@ -486,6 +486,98 @@ async def test_camera_stream_source_found(hass: HomeAssistant, run_driver) -> No
     )
 
 
+async def test_camera_stream_source_via_go2rtc(hass: HomeAssistant, run_driver) -> None:
+    """The go2rtc restream URL is preferred over the camera's raw source."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "camera.demo_camera"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {},
+    )
+    acc.run()
+
+    await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+
+    with (
+        patch(
+            "homeassistant.components.homekit.type_cameras.async_get_rtsp_stream_url",
+            return_value="rtsp://127.0.0.1:18554/demo_camera",
+        ) as mock_rtsp_url,
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        ) as mock_stream_source,
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
+    ):
+        await _async_start_streaming(hass, acc)
+        await _async_stop_all_streams(hass, acc)
+
+    mock_rtsp_url.assert_called_once_with(hass, entity_id)
+    mock_stream_source.assert_not_called()
+    assert (
+        working_ffmpeg.open.call_args.kwargs["input_source"]
+        == "-i rtsp://127.0.0.1:18554/demo_camera"
+    )
+
+
+async def test_camera_stream_source_configured_skips_go2rtc(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """A manually configured stream source bypasses the go2rtc restream."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "camera.demo_camera"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {CONF_STREAM_SOURCE: "/dev/null"},
+    )
+    acc.run()
+
+    await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+
+    with (
+        patch(
+            "homeassistant.components.homekit.type_cameras.async_get_rtsp_stream_url",
+        ) as mock_rtsp_url,
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
+    ):
+        await _async_start_streaming(hass, acc)
+        await _async_stop_all_streams(hass, acc)
+
+    mock_rtsp_url.assert_not_called()
+    assert working_ffmpeg.open.call_args.kwargs["input_source"] == "-i /dev/null"
+
+
 async def test_camera_stream_source_fails(hass: HomeAssistant, run_driver) -> None:
     """Test a camera that can stream and we cannot get the source from the entity."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
