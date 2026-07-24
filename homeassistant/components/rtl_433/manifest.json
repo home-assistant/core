@@ -1,0 +1,11 @@
+{
+  "domain": "rtl_433",
+  "name": "rtl_433",
+  "codeowners": ["@deviantintegral"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rtl_433",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["pyrtl_433==0.1.1"]
+}
