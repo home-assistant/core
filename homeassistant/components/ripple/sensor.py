@@ -3,8 +3,9 @@
 from datetime import timedelta
 from typing import override
 
-from pyripple import get_balance
 import voluptuous as vol
+from xrpl.account import get_balance
+from xrpl.clients import JsonRpcClient
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -48,6 +49,7 @@ class RippleSensor(SensorEntity):
 
     def __init__(self, name, address):
         """Initialize the sensor."""
+        self._client = JsonRpcClient("https://s1.ripple.com:51234/")
         self._name = name
         self.address = address
         self._state = None
@@ -73,5 +75,5 @@ class RippleSensor(SensorEntity):
 
     def update(self) -> None:
         """Get the latest state of the sensor."""
-        if (balance := get_balance(self.address)) is not None:
+        if (balance := get_balance(self.address, self._client)) is not None:
             self._state = balance
