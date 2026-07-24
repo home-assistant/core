@@ -1,6 +1,6 @@
 """Config flow for izone."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 import logging
 from typing import Any, Self, override
 
@@ -27,6 +27,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SELECTED_CONTROLLER_UID = "selected_controller_uid"
+CONF_SETUP_METHOD = "setup_method"
+SETUP_METHOD_SEARCH = "search"
+SETUP_METHOD_MANUAL_HOST = "manual_host"
 
 
 def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
@@ -44,6 +47,13 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _user_discovered_endpoints: list[pizone.ControllerEndpoint] | None = None
     _discovered_controller_ip: str | None = None
+    _user_form_errors: dict[str, str]
+    _user_form_defaults: dict[str, Any]
+
+    def __init__(self) -> None:
+        """Initialize flow instance state."""
+        self._user_form_errors = {}
+        self._user_form_defaults = {}
 
     @override
     def is_matching(self, other_flow: Self) -> bool:
@@ -83,30 +93,89 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         # not misleadingly show "No devices found" when setup is actually in progress.
         return self.async_abort(reason="discovery_started")
 
+    @callback
+    def _async_abort_other_user_flows(self) -> None:
+        """Drop stale interactive user flows (e.g. after a browser refresh)."""
+        for flow in self._async_in_progress(include_uninitialized=True):
+            if flow["context"].get("source") != config_entries.SOURCE_USER:
+                continue
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
+    @callback
+    def _async_user_setup_host_only(self) -> bool:
+        """Return True when Add integration should skip Search.
+
+        Host-only is for when a loaded entry already owns shared discovery.
+        A failed/aborted search may leave the UDP service running briefly; still
+        offer Search until an entry is loaded so the user can try again.
+        """
+        return bool(self.hass.config_entries.async_loaded_entries(DOMAIN))
+
     @override
     async def async_step_user(
-        self, _user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """User-started flow: offer configuration choices for discovered controllers.
-
-        Discovery is started if not yet running, then a fresh discovery cycle is triggered
-        and this step waits briefly for replies.
+        """User-started flow: search the LAN or enter a controller host manually.
 
         While this interactive flow is active, runtime integration discovery remains
         blocked by ``_async_blocks_runtime_integration_discovery`` to avoid UI races.
         """
+        self._async_abort_other_user_flows()
 
-        if self._async_in_progress(include_uninitialized=True):
-            return self.async_abort(reason="already_in_progress")
+        host_only = self._async_user_setup_host_only()
+        errors = dict(self._user_form_errors)
+        self._user_form_errors = {}
+        defaults = dict(self._user_form_defaults)
+        self._user_form_defaults = {}
+        form_defaults = defaults or (user_input or {})
 
+        if user_input is not None:
+            if host_only:
+                host = str(user_input.get(CONF_HOST, "")).strip()
+                if not host:
+                    errors[CONF_HOST] = "required"
+                else:
+                    return await self._async_probe_host_and_confirm(host)
+            else:
+                setup_method = user_input.get(CONF_SETUP_METHOD, SETUP_METHOD_SEARCH)
+                host = str(user_input.get(CONF_HOST, "")).strip()
+
+                if setup_method == SETUP_METHOD_MANUAL_HOST:
+                    if not host:
+                        errors[CONF_HOST] = "required"
+                    else:
+                        return await self._async_probe_host_and_confirm(host)
+                else:
+                    return await self.async_step_discover()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self._user_setup_schema(
+                host_only=host_only,
+                defaults=form_defaults,
+            ),
+            errors=errors or None,
+        )
+
+    async def async_step_discover(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Broadcast discovery and offer unconfigured controllers."""
         try:
             endpoints = await izone_discovery.async_discover_all_endpoints(self.hass)
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
+
         if not endpoints:
             _LOGGER.debug("No controllers found")
-            return self.async_abort(reason="no_devices_found")
+            self._user_form_errors = {"base": "no_devices_found"}
+            self._user_form_defaults = {CONF_SETUP_METHOD: SETUP_METHOD_MANUAL_HOST}
+            # Search started discovery; drop it when nothing is using it so the
+            # follow-up form (and a later Add integration) can offer Search again.
+            if not self._async_user_setup_host_only():
+                await izone_discovery.async_stop_discovery(self.hass)
+            return await self.async_step_user(None)
 
         self._user_discovered_endpoints = self._async_get_unconfigured_endpoints(
             endpoints
@@ -245,29 +314,112 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm adding a controller found via HomeKit or discovery."""
+        if user_input is not None:
+            return await self._async_finalize_confirm()
+
+        controller_uid = self.unique_id
+        assert isinstance(controller_uid, str)
+        if self._async_is_readding_ignored_controller(controller_uid):
+            return await self.async_step_confirm_ignored()
+        return self._async_show_confirm_form("confirm")
+
+    async def async_step_confirm_ignored(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-adding a controller that was previously ignored."""
+        if user_input is not None:
+            return await self._async_finalize_confirm()
+        return self._async_show_confirm_form("confirm_ignored")
+
+    @callback
+    def _async_show_confirm_form(self, step_id: str) -> ConfigFlowResult:
+        """Show the confirm-only form for the given step."""
         controller_uid = self.unique_id
         host = self._discovered_controller_ip
         assert isinstance(controller_uid, str)
         assert controller_uid
         assert host is not None
-
-        if user_input is None:
-            self.context["title_placeholders"] = {
-                "name": self._entry_title(controller_uid),
-            }
-            return self.async_show_form(
-                step_id="confirm",
-                description_placeholders={
-                    "controller_uid": controller_uid,
-                    "host": str(host),
-                },
-            )
-
-        return await self._async_create_controller_entry(
-            pizone.ControllerEndpoint(uid=controller_uid, host=str(host))
+        self._set_confirm_only()
+        self.context["title_placeholders"] = {
+            "name": self._entry_title(controller_uid),
+        }
+        return self.async_show_form(
+            step_id=step_id,
+            description_placeholders={
+                "controller_uid": controller_uid,
+                "host": str(host),
+            },
         )
 
     # -- Private helpers
+
+    def _user_setup_schema(
+        self,
+        *,
+        host_only: bool,
+        defaults: Mapping[str, Any],
+    ) -> vol.Schema:
+        """Build the user step schema for host-only vs search/manual paths."""
+        if host_only:
+            host_default: Any = defaults.get(CONF_HOST, vol.UNDEFINED)
+            return vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=host_default): str,
+                }
+            )
+
+        method_default = defaults.get(CONF_SETUP_METHOD, SETUP_METHOD_SEARCH)
+        host_default = defaults.get(CONF_HOST, "")
+        return vol.Schema(
+            {
+                vol.Required(CONF_SETUP_METHOD, default=method_default): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(
+                                value=SETUP_METHOD_SEARCH,
+                                label="Search for devices",
+                            ),
+                            SelectOptionDict(
+                                value=SETUP_METHOD_MANUAL_HOST,
+                                label="Enter host",
+                            ),
+                        ],
+                        mode=SelectSelectorMode.LIST,
+                    )
+                ),
+                vol.Optional(CONF_HOST, default=host_default): str,
+            }
+        )
+
+    async def _async_probe_host_and_confirm(self, host: str) -> ConfigFlowResult:
+        """Validate *host* and continue to confirm when a controller responds."""
+        self._async_abort_entries_match({CONF_HOST: host})
+        host_only = self._async_user_setup_host_only()
+        try:
+            endpoint = await izone_discovery.async_discover_by_host(self.hass, host)
+        except OSError:
+            _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
+            return self.async_abort(reason="discovery_failed")
+        except pizone.UnpairedBridgeError:
+            return self.async_abort(reason="unpaired_bridge")
+        except pizone.ControllerAlreadyClaimedError:
+            return self.async_abort(reason="already_configured")
+
+        if endpoint is None:
+            self._user_form_errors = {"base": "cannot_connect"}
+            if host_only:
+                self._user_form_defaults = {CONF_HOST: host}
+            else:
+                self._user_form_defaults = {
+                    CONF_SETUP_METHOD: SETUP_METHOD_MANUAL_HOST,
+                    CONF_HOST: host,
+                }
+            return await self.async_step_user(None)
+
+        await self.async_set_unique_id(endpoint.uid)
+        self._abort_if_unique_id_configured()
+        self._discovered_controller_ip = endpoint.host
+        return await self.async_step_confirm()
 
     @callback
     def _async_schedule_integration_discovery_flow(
@@ -311,9 +463,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> list[pizone.ControllerEndpoint]:
         """Return sorted unconfigured endpoints for the interactive user flow."""
         endpoints = self._filter_yaml_exclude(self.hass, endpoints)
-        # include_ignore=True ensures controllers whose entries have been explicitly
-        # ignored by the user (SOURCE_IGNORE) are not re-offered as configurable.
-        configured_uids = self._async_current_ids(include_ignore=True)
+        configured_uids = self._async_current_ids(include_ignore=False)
         return sorted(
             (
                 endpoint
@@ -322,6 +472,27 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             key=lambda endpoint: (endpoint.uid, endpoint.host),
         )
+
+    async def _async_finalize_confirm(self) -> ConfigFlowResult:
+        """Validate confirm state and create the config entry."""
+        controller_uid = self.unique_id
+        host = self._discovered_controller_ip
+        assert isinstance(controller_uid, str)
+        assert controller_uid
+        assert host is not None
+        return await self._async_create_controller_entry(
+            pizone.ControllerEndpoint(uid=controller_uid, host=str(host))
+        )
+
+    @callback
+    def _async_is_readding_ignored_controller(self, controller_uid: str) -> bool:
+        """Return True when the user is explicitly re-adding an ignored controller."""
+        if self.context.get("source") != config_entries.SOURCE_USER:
+            return False
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            self.handler, controller_uid
+        )
+        return entry is not None and entry.source == config_entries.SOURCE_IGNORE
 
     async def _async_create_controller_entry(
         self,

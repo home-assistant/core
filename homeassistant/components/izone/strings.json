@@ -5,18 +5,34 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "discovery_failed": "Failed to start iZone discovery. Make sure your network is properly configured.",
       "discovery_started": "iZone discovery has started. Your controllers will appear as discovered devices under Settings \u003e Devices \u0026 services.",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unpaired_bridge": "This iZone bridge is not paired with an air conditioner."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to an iZone controller at that address.",
+      "no_devices_found": "No iZone controllers were found on your network. Enter the controller IP address below or check your network settings.",
+      "required": "Enter the controller IP address or hostname."
     },
     "flow_title": "{name}",
     "step": {
       "confirm": {
         "description": "Do you want to set up iZone?\n\nController UID: {controller_uid}\nController IP: {host}"
       },
+      "confirm_ignored": {
+        "description": "This iZone controller was previously ignored. Do you want to set it up?\n\nController UID: {controller_uid}\nController IP: {host}"
+      },
       "select_controller": {
         "data": {
           "selected_controller_uid": "Controller"
         },
         "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any controller you do not select will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
+      },
+      "user": {
+        "data": {
+          "host": "Controller IP address or hostname",
+          "setup_method": "Setup method"
+        },
+        "description": "Choose how to find your iZone controller."
       }
     }
   },

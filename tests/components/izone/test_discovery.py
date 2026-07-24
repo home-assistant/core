@@ -55,9 +55,12 @@ async def test_ensure_discovery_starts_and_stops_on_homeassistant_stop(
     """Ensure starts discovery with an initial scan and closes on HA stop."""
     mock_create, mock_service = mock_pizone_create_discovery
 
+    assert not izone_discovery.discovery_service_active(hass)
+
     service = await izone_discovery.async_ensure_discovery(hass)
 
     assert service is mock_service
+    assert izone_discovery.discovery_service_active(hass)
     mock_create.assert_awaited_once()
     mock_service.scan.assert_awaited_once()
 
@@ -69,6 +72,21 @@ async def test_ensure_discovery_starts_and_stops_on_homeassistant_stop(
     await hass.async_block_till_done()
 
     mock_service.close.assert_awaited_once()
+    assert not izone_discovery.discovery_service_active(hass)
+
+
+async def test_discovery_service_active_while_starting(hass: HomeAssistant) -> None:
+    """discovery_service_active is true while create_discovery is in flight."""
+    starting: asyncio.Future[DiscoveryService] = hass.loop.create_future()
+    hass.data[DATA_DISCOVERY_SERVICE] = izone_discovery.DiscoveryServiceState(
+        starting=starting
+    )
+
+    assert izone_discovery.discovery_service_active(hass)
+
+    starting.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await starting
 
 
 async def test_ensure_discovery_recreates_after_stop(

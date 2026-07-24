@@ -235,6 +235,33 @@ async def async_discover_endpoint(
     return await service.discover_by_uid(uid)
 
 
+@callback
+def discovery_service_active(hass: HomeAssistant) -> bool:
+    """Return True when the shared discovery service is running or starting."""
+    state = hass.data.get(DATA_DISCOVERY_SERVICE)
+    if not isinstance(state, DiscoveryServiceState):
+        return False
+    if state.runtime is not None:
+        return True
+    return state.starting is not None and not state.starting.done()
+
+
+async def async_discover_by_host(
+    hass: HomeAssistant, host: str
+) -> pizone.ControllerEndpoint | None:
+    """HTTP-probe a controller at *host* for config-flow validation.
+
+    Starts shared discovery if needed.
+
+    Raises:
+        OSError: Discovery UDP socket could not be bound.
+        UnpairedBridgeError: Probed UID is the unpaired placeholder.
+        ControllerAlreadyClaimedError: Host or UID is already claimed on the service.
+    """
+    service = await async_ensure_discovery(hass)
+    return await service.discover_by_host(host)
+
+
 async def async_maybe_stop_discovery(hass: HomeAssistant) -> None:
     """Stop discovery when nothing actionable remains.
 
