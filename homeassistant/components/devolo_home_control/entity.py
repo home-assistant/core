@@ -103,16 +103,8 @@ class DevoloDeviceEntity(Entity):
                     ].name,
                 )
             self._attr_available = state
-        elif message[1] == "del" and self.platform.config_entry:
-            device_registry = dr.async_get(self.hass)
-            device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self._device_instance.uid)}
-            )
-            if device:
-                device_registry.async_update_device(
-                    device.id,
-                    remove_config_entry_id=self.platform.config_entry.entry_id,
-                )
+        elif message[1] == "del" and self.device_entry:
+            dr.async_get(self.hass).async_remove_device(self.device_entry.id)
         else:
             _LOGGER.debug("No valid message received: %s", message)
 

@@ -20,7 +20,10 @@ from homeassistant.components.knx.const import (
     KNX_TELEGRAM_BACKEND_POSTGRES,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
 )
-from homeassistant.components.knx.telegrams import TelegramDict
+from homeassistant.components.knx.telegrams import (
+    STORE_INIT_RETRY_BACKOFF,
+    TelegramDict,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
@@ -135,7 +138,6 @@ async def test_store_telegram_history_sqlite(
     "side_effect",
     [
         pytest.param(KnxTelegramStoreException("DB init failure"), id="db_error"),
-        pytest.param(TimeoutError(), id="timeout"),
         pytest.param(ValueError("unexpected"), id="generic_error"),
     ],
 )
@@ -155,7 +157,7 @@ async def test_store_telegram_history_error_handling(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
 
@@ -164,7 +166,7 @@ async def test_store_telegram_history_needs_migration_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
 ) -> None:
-    """Test that store initialization is aborted when needs_migration times out."""
+    """Test store init aborts when needs_migration times out and retries are off."""
 
     async def hanging_probe() -> bool:
         await asyncio.Event().wait()
@@ -172,6 +174,7 @@ async def test_store_telegram_history_needs_migration_timeout(
 
     with (
         patch("homeassistant.components.knx.telegrams.STORE_INIT_TIMEOUT", 0.05),
+        patch("homeassistant.components.knx.telegrams.STORE_INIT_MAX_RETRIES", 0),
         patch(
             "knx_telegram_store.BufferedSqliteStore.needs_migration",
             side_effect=hanging_probe,
@@ -183,9 +186,139 @@ async def test_store_telegram_history_needs_migration_timeout(
     assert telegrams_module.store is None
 
     # Check that the repair issue was created
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
+
+
+async def test_store_init_timeout_retries_and_succeeds(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A transient init timeout is retried in the background and then succeeds."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    with (
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.initialize",
+            side_effect=[TimeoutError(), None],
+        ),
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.get_last_unique_telegrams",
+            return_value=[],
+        ),
+    ):
+        await knx.setup_integration()
+
+        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+
+        assert telegrams_module.store is None
+        assert (
+            issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+            is None
+        )
+
+        freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert telegrams_module.store is not None
+        assert (
+            issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+            is None
+        )
+
+
+async def test_store_init_timeout_exhausts_retries_and_aborts(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A persistent init timeout disables the store once the retry budget is spent."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    with (
+        patch("homeassistant.components.knx.telegrams.STORE_INIT_MAX_RETRIES", 1),
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.initialize",
+            side_effect=TimeoutError(),
+        ),
+    ):
+        await knx.setup_integration()
+
+        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+
+        assert telegrams_module.store is None
+        assert (
+            issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+            is None
+        )
+
+        freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert telegrams_module.store is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        is not None
+    )
+
+
+async def test_stop_cancels_pending_retry_timer(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Unloading while a retry timer is scheduled (not yet fired) tears down cleanly."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    with patch(
+        "knx_telegram_store.BufferedSqliteStore.initialize",
+        side_effect=TimeoutError(),
+    ):
+        await knx.setup_integration()
+        assert hass.data[KNX_MODULE_KEY].telegrams.store is None
+
+        assert await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+        assert KNX_MODULE_KEY not in hass.data
+
+        # The cancelled timer must not fire later and try to (re)initialize.
+        freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+
+async def test_stop_cancels_in_flight_retry_task(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Unloading while a retry attempt is actively running cancels it cleanly."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    attempts = 0
+
+    async def initialize_side_effect() -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise TimeoutError
+        await asyncio.Event().wait()
+
+    with patch(
+        "knx_telegram_store.BufferedSqliteStore.initialize",
+        side_effect=initialize_side_effect,
+    ):
+        await knx.setup_integration()
+
+        freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
+        async_fire_time_changed(hass)
+
+        # The retry fired and is now suspended inside the hanging initialize()
+        # call (eager task start runs synchronously up to that point) - unload
+        # must cancel it instead of hanging or leaking the task.
+        assert await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+        assert KNX_MODULE_KEY not in hass.data
 
 
 async def test_migrate_telegrams_from_json(
@@ -546,7 +679,7 @@ async def test_postgres_backend_init_error(
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is None
 
-    issue_registry = ir.async_get(hass)
+    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         is not None

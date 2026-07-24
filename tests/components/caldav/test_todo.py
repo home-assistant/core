@@ -292,6 +292,8 @@ async def test_add_item(
         target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
+    # Wait for the fire-and-forget state refresh
+    await hass.async_block_till_done()
 
     assert calendar.save_todo.call_args
     assert calendar.save_todo.call_args.kwargs == expcted_save_args
@@ -518,6 +520,8 @@ async def test_update_item(
         target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
+    # Wait for the fire-and-forget state refresh
+    await hass.async_block_till_done()
 
     assert dav_client.put.call_args
     ics = dav_client.put.call_args.args[1]
@@ -796,13 +800,17 @@ async def test_subscribe(
         target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
-    # Verify update is published
-    msg = await client.receive_json()
-    assert msg["id"] == subscription_id
-    assert msg["type"] == "event"
-    items = msg["event"].get("items")
-    assert items
+    # An earlier state write may re-publish the pre-update list; read until the
+    # refreshed item arrives.
+    items = []
+    while not items or items[0]["summary"] != "Milk":
+        msg = await client.receive_json()
+        assert msg["id"] == subscription_id
+        assert msg["type"] == "event"
+        items = msg["event"].get("items")
+
     assert len(items) == 1
     assert items[0]["summary"] == "Milk"
     assert items[0]["status"] == "needs_action"

@@ -21,6 +21,7 @@ from ..const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
@@ -31,6 +32,7 @@ from ..const import (
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
+    DEFAULT_IGNORE_LOCAL_MAC,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
@@ -68,6 +70,8 @@ class UnifiConfig:
     """Config entry option defining number of seconds from last seen to away"""
     option_ignore_wired_bug: bool
     """Config entry option to ignore wired bug."""
+    option_ignore_local_mac: bool
+    """Config entry option to ignore clients with locally-administered (randomized) MACs."""
 
     # Client control options
 
@@ -108,6 +112,9 @@ class UnifiConfig:
             ),
             option_ignore_wired_bug=options.get(
                 CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
+            ),
+            option_ignore_local_mac=options.get(
+                CONF_IGNORE_LOCAL_MAC, DEFAULT_IGNORE_LOCAL_MAC
             ),
             option_block_clients=options.get(CONF_BLOCK_CLIENT, []),
             option_dpi_restrictions=options.get(

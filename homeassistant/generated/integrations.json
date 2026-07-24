@@ -971,12 +971,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "ccm15": {
-      "name": "Midea ccm15 AC Controller",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "centriconnect": {
       "name": "CentriConnect/MyPropane",
       "integration_type": "device",
@@ -2758,6 +2752,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "harbor": {
+      "name": "Harbor Sleep",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "hardkernel": {
       "name": "Hardkernel",
       "integration_type": "hardware",
@@ -3911,6 +3911,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "litellm": {
+      "name": "LiteLLM",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "litterrobot": {
       "name": "Whisker",
       "integration_type": "hub",
@@ -4326,6 +4332,23 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Xbox"
+        }
+      }
+    },
+    "midea": {
+      "name": "Midea",
+      "integrations": {
+        "ccm15": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Midea ccm15 AC Controller"
+        },
+        "midea": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Midea"
         }
       }
     },
