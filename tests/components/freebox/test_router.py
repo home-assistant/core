@@ -54,6 +54,18 @@ async def test_get_hosts_list_if_supported_bridge(
     assert fbx_devices == []
 
 
+async def test_get_hosts_list_if_supported_timeout(
+    router: Mock,
+) -> None:
+    """Timeouts during host list updates are retried on the next update."""
+    router().lan.get_hosts_list.side_effect = TimeoutError
+
+    supports_hosts, fbx_devices = await get_hosts_list_if_supported(router())
+
+    assert supports_hosts is True
+    assert fbx_devices == []
+
+
 async def test_get_hosts_list_if_supported_bridge_error(
     mock_router_bridge_mode_error: Mock,
 ) -> None:
