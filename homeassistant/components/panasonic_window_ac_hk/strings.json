@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This air conditioner is already configured with this infrared transmitter.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_emitter_entity_id": "Infrared transmitter"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "The infrared transmitter entity used to send commands."
+        },
+        "description": "Set up a Panasonic window air conditioner sold in Hong Kong or Macau (CW-HU, CW-HZ, CW-SU and CW-SUL series). Choose the infrared transmitter that should send the commands.",
+        "title": "Panasonic Window Air Conditioner"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "powerful": {
+        "name": "Powerful"
+      },
+      "quiet": {
+        "name": "Quiet"
+      }
+    },
+    "switch": {
+      "nanoex": {
+        "name": "nanoeX"
+      }
+    }
+  }
+}

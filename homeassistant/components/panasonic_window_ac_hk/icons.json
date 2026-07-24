@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "button": {
+      "powerful": {
+        "default": "mdi:rocket-launch"
+      },
+      "quiet": {
+        "default": "mdi:volume-mute"
+      }
+    },
+    "switch": {
+      "nanoex": {
+        "default": "mdi:air-purifier"
+      }
+    }
+  }
+}
