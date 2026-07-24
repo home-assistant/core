@@ -1,0 +1,45 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_accounts_found": "Login succeeded but no National Grid accounts were found on this profile."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "select_account": {
+        "data": {
+          "account_id": "Billing account"
+        },
+        "data_description": {
+          "account_id": "The billing account to monitor. Add the integration again to monitor additional accounts."
+        },
+        "description": "Select which billing account to monitor."
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your National Grid account.",
+          "username": "The username for your National Grid account."
+        },
+        "description": "Enter your National Grid account credentials."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_cost": {
+        "name": "Last billing cost"
+      },
+      "energy_usage": {
+        "name": "Last billing usage"
+      }
+    }
+  }
+}
