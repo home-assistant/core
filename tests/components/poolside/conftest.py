@@ -18,6 +18,7 @@ from homeassistant.components.poolside.const import (
 )
 from homeassistant.components.poolside.models import (
     PoolsideControl,
+    PoolsideDevice,
     PoolsideGroup,
     PoolsideSite,
 )
@@ -92,6 +93,7 @@ class FakePoolsideClient:
         self.async_connect = AsyncMock()
         self.async_disconnect = AsyncMock()
         self.async_get_control_layout = AsyncMock(return_value=(TEST_SITE, []))
+        self.async_get_pool_devices = AsyncMock(return_value=[])
         self.async_set_desired_state = AsyncMock()
 
     def set_auth_failure_callback(self, callback: Callable[[], None]) -> None:
@@ -170,10 +172,19 @@ def controls() -> list[PoolsideControl]:
 
 
 @pytest.fixture
-def fake_client(controls: list[PoolsideControl]) -> FakePoolsideClient:
+def pool_devices() -> list[PoolsideDevice]:
+    """Devices returned by Site.getPoolDevices; override in test modules."""
+    return []
+
+
+@pytest.fixture
+def fake_client(
+    controls: list[PoolsideControl], pool_devices: list[PoolsideDevice]
+) -> FakePoolsideClient:
     """Return a fresh fake Poolside client pre-loaded with `controls`."""
     client = FakePoolsideClient()
     client.async_get_control_layout.return_value = (TEST_SITE, controls)
+    client.async_get_pool_devices.return_value = pool_devices
     return client
 
 

@@ -12,7 +12,7 @@ from homeassistant.components.poolside.const import (
     ControlType,
     GroupKind,
 )
-from homeassistant.components.poolside.models import PoolsideSite
+from homeassistant.components.poolside.models import PoolsideDevice, PoolsideSite
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -208,6 +208,37 @@ async def test_stale_device_removed_when_group_leaves_layout(
     assert device_registry.async_get_device({(DOMAIN, "group-spa")}) is not None
     assert entity_registry.async_get("light.pool_glow") is None
     assert entity_registry.async_get("sensor.pool_temperature") is None
+
+
+async def test_stale_pool_device_removed_when_it_leaves_the_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_poolside_client: FakePoolsideClient,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A pool device missing from a re-fetched list takes its device and sensors."""
+    pump = PoolsideDevice(uuid="device-pump-1", device_type="Pump")
+    mock_poolside_client.async_get_pool_devices.return_value = [pump]
+    mock_poolside_client.set_status(
+        "device-pump-1",
+        "InformationFields",
+        '[{"Name": "Watts", "DisplayName": "Power",'
+        ' "DisplayProcessingLogic": "WATTAGE", "FieldTypes": ["INFORMATION"]}]',
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device({(DOMAIN, "device-pump-1")}) is not None
+    assert entity_registry.async_get("sensor.pump_power") is not None
+
+    mock_poolside_client.async_get_pool_devices.return_value = []
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device({(DOMAIN, "device-pump-1")}) is None
+    assert entity_registry.async_get("sensor.pump_power") is None
 
 
 async def test_reloads_when_site_configuration_changes(

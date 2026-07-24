@@ -46,6 +46,37 @@ class PoolsideGroup:
 
 
 @dataclass
+class PoolsideDevice:
+    """A physical pool device, as rendered from Site.getPoolDevices.
+
+    Users operate controls, not devices - the controller translates every
+    control request into device operations under the hood - so devices only
+    surface as read-only telemetry. `uuid` is the key that telemetry is
+    pushed under, including the InformationFields document describing which
+    fields the device reports.
+    """
+
+    uuid: str
+    device_type: str
+
+
+def parse_pool_devices(data: dict[str, Any] | None) -> list[PoolsideDevice]:
+    """Parse a Site.getPoolDevices response into pool devices."""
+    devices: list[PoolsideDevice] = []
+    for item in (data or {}).get("Devices") or []:
+        uuid = item.get("UUID")
+        if not uuid:
+            LOGGER.debug("Skipping pool device without a UUID: %s", item)
+            continue
+        devices.append(
+            PoolsideDevice(
+                uuid=str(uuid), device_type=str(item.get("DeviceType") or "")
+            )
+        )
+    return devices
+
+
+@dataclass
 class PoolsideControl:
     """A single control, as rendered from Site.getControlLayout.
 

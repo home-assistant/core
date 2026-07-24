@@ -1,7 +1,9 @@
-"""Sensor platform for Poolside site and body-of-water telemetry."""
+"""Sensor platform for Poolside site, body-of-water, and pool device telemetry."""
 
 from dataclasses import dataclass
-from typing import override
+from datetime import datetime
+import json
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,14 +13,19 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfPower,
+    UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import PoolsideConfigEntry
 from .client import PoolsideClient
@@ -26,12 +33,20 @@ from .const import (
     CURRENT_STATE_FIELD,
     CURRENT_TEMPERATURE_FIELD,
     DOMAIN,
+    FIELD_DISPLAY_NAME_KEY,
+    FIELD_DISPLAY_ORDER_KEY,
+    FIELD_NAME_KEY,
+    FIELD_PROCESSING_LOGIC_KEY,
+    FIELD_TYPES_KEY,
+    INFORMATION_FIELD_TYPE,
+    INFORMATION_FIELDS_FIELD,
+    LOGGER,
     SITE_MODE_KEY,
     BodyOfWaterState,
     SiteMode,
 )
-from .entity import PoolsideBaseEntity, PoolsideGroupEntity
-from .models import PoolsideGroup, PoolsideSite
+from .entity import PoolsideBaseEntity, PoolsideDeviceEntity, PoolsideGroupEntity
+from .models import PoolsideDevice, PoolsideGroup, PoolsideSite
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -106,17 +121,89 @@ CHEMISTRY_SENSORS = (
 )
 
 
+# DisplayProcessingLogic values that mark numeric telemetry, mapped to the
+# device class and unit they render with.
+NUMERIC_PROCESSING_LOGIC: dict[str, tuple[SensorDeviceClass | None, str | None]] = {
+    "WATTAGE": (SensorDeviceClass.POWER, UnitOfPower.WATT),
+    "RPM": (None, REVOLUTIONS_PER_MINUTE),
+    "GPM": (
+        SensorDeviceClass.VOLUME_FLOW_RATE,
+        UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+    ),
+    "PSI": (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI),
+}
+
+DATETIME_PROCESSING_LOGIC = "DATETIME"
+
+
+def _device_field_description(field: dict[str, Any]) -> SensorEntityDescription:
+    """Build the sensor description for one InformationFields entry.
+
+    LONG_STRING and any processing logic this integration doesn't recognize
+    render as plain text, so new controller-side field types degrade
+    gracefully instead of being dropped.
+    """
+    name: str = field[FIELD_NAME_KEY]
+    logic = field.get(FIELD_PROCESSING_LOGIC_KEY)
+    if logic in NUMERIC_PROCESSING_LOGIC:
+        device_class, unit = NUMERIC_PROCESSING_LOGIC[logic]
+        return SensorEntityDescription(
+            key=name,
+            device_class=device_class,
+            native_unit_of_measurement=unit,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
+    if logic == DATETIME_PROCESSING_LOGIC:
+        return SensorEntityDescription(
+            key=name, device_class=SensorDeviceClass.TIMESTAMP
+        )
+    return SensorEntityDescription(key=name)
+
+
+def _information_fields(
+    client: PoolsideClient, device: PoolsideDevice
+) -> list[dict[str, Any]]:
+    """Return a pool device's telemetry field descriptors, in display order.
+
+    The InformationFields document is a JSON list (possibly encoded inside a
+    string, like other capability documents) pushed under the device's UUID.
+    Entries without the INFORMATION field type aren't telemetry and are
+    skipped.
+    """
+    value = client.get_status(device.uuid, INFORMATION_FIELDS_FIELD)
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except ValueError:
+            LOGGER.warning(
+                "%s: unparsable %s: %r", device.uuid, INFORMATION_FIELDS_FIELD, value
+            )
+            return []
+    if not isinstance(value, list):
+        return []
+    fields = [
+        field
+        for field in value
+        if isinstance(field, dict)
+        and field.get(FIELD_NAME_KEY)
+        and INFORMATION_FIELD_TYPE in (field.get(FIELD_TYPES_KEY) or [])
+    ]
+    fields.sort(key=lambda field: field.get(FIELD_DISPLAY_ORDER_KEY) or 0)
+    return fields
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PoolsideConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors per body of water plus the site mode sensor.
+    """Set up sensors per body of water, per pool device, and the site mode sensor.
 
     Every body gets a temperature sensor. Chemistry sensors are added the
     first time their field is reported - usually straight from the initial
     status snapshot, otherwise on a later push - since probes are optional
-    equipment a body may simply not have.
+    equipment a body may simply not have. Pool device sensors follow the
+    same pattern, keyed on the device's InformationFields document.
     """
     data = entry.runtime_data
     client = data.client
@@ -161,6 +248,27 @@ async def async_setup_entry(
     for _group, body_of_water_uuid in bodies:
         entry.async_on_unload(
             client.subscribe_status(body_of_water_uuid, _async_add_reported_chemistry)
+        )
+
+    added_device_fields: set[str] = set()
+
+    @callback
+    def _async_add_described_device_sensors() -> None:
+        new_entities: list[PoolsideDeviceSensor] = []
+        for device in data.pool_devices:
+            for field in _information_fields(client, device):
+                added_key = f"{device.uuid}_{field[FIELD_NAME_KEY]}"
+                if added_key in added_device_fields:
+                    continue
+                added_device_fields.add(added_key)
+                new_entities.append(PoolsideDeviceSensor(client, device, field))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _async_add_described_device_sensors()
+    for device in data.pool_devices:
+        entry.async_on_unload(
+            client.subscribe_status(device.uuid, _async_add_described_device_sensors)
         )
 
 
@@ -236,6 +344,45 @@ class PoolsideBodyStateSensor(PoolsideGroupEntity, SensorEntity):
             return BodyOfWaterState(value).value.lower()
         except ValueError:
             return None
+
+
+class PoolsideDeviceSensor(PoolsideDeviceEntity, SensorEntity):
+    """One telemetry field of a physical pool device.
+
+    Synthesized from the device's InformationFields descriptor rather than a
+    fixed catalog: the descriptor names the status field and how to render
+    it, and the value itself streams in under the device's UUID.
+    """
+
+    def __init__(
+        self, client: PoolsideClient, device: PoolsideDevice, field: dict[str, Any]
+    ) -> None:
+        """Set up one telemetry sensor from its InformationFields entry."""
+        super().__init__(client, device)
+        field_name: str = field[FIELD_NAME_KEY]
+        self.entity_description = _device_field_description(field)
+        self._attr_name = str(field.get(FIELD_DISPLAY_NAME_KEY) or field_name)
+        self._attr_unique_id = f"{client.controller_uuid}_{device.uuid}_{field_name}"
+
+    @property
+    @override
+    def native_value(self) -> float | str | datetime | None:
+        """Return the last reported value, coerced per the field's processing logic."""
+        value = self._client.get_status(self._device.uuid, self.entity_description.key)
+        if value is None:
+            return None
+        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
+            parsed = dt_util.parse_datetime(str(value))
+            if parsed is not None and parsed.tzinfo is None:
+                # Naive timestamps are in the controller's (= HA's) local time.
+                parsed = parsed.replace(tzinfo=dt_util.get_default_time_zone())
+            return parsed
+        if self.entity_description.state_class is SensorStateClass.MEASUREMENT:
+            try:
+                return float(value)
+            except TypeError, ValueError:
+                return None
+        return str(value)
 
 
 class PoolsideSiteModeSensor(PoolsideBaseEntity, SensorEntity):

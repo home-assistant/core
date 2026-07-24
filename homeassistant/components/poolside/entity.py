@@ -18,7 +18,7 @@ from .const import (
     UNKNOWN_POWER_STATE,
     SiteMode,
 )
-from .models import PoolsideControl, PoolsideGroup
+from .models import PoolsideControl, PoolsideDevice, PoolsideGroup
 
 
 def confirmed_status(
@@ -102,6 +102,26 @@ class PoolsideGroupEntity(PoolsideBaseEntity):
             manufacturer="Poolside",
             model=group.body_of_water_type or group.kind,
         )
+
+
+class PoolsideDeviceEntity(PoolsideBaseEntity):
+    """Base class for entities attached to a physical pool device.
+
+    The device registry entry itself is registered up front during setup
+    (pool devices exist even before any telemetry arrives), so only the
+    identifiers are needed here to attach to it.
+    """
+
+    def __init__(self, client: PoolsideClient, device: PoolsideDevice) -> None:
+        """Set up the entity on the pool device's sub-device."""
+        super().__init__(client)
+        self._device = device
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.uuid)})
+
+    @override
+    def _status_keys(self) -> set[str]:
+        """Return the pool device's key its telemetry arrives under."""
+        return {self._device.uuid}
 
 
 class PoolsideEntity(PoolsideGroupEntity):

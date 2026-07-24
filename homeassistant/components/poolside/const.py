@@ -216,6 +216,26 @@ LIGHT_NAME_FIELD = "LightName"
 SPEED_FIELD = "Speed"
 TWINKLE_FIELD = "Twinkle"
 
+# Pool devices are the physical hardware (pumps, heaters, ...) the controller
+# operates to satisfy control requests; users never command them directly, so
+# they surface only as read-only telemetry. Site.getPoolDevices lists them
+# (UUID + DeviceType); everything else arrives as status pushes keyed by the
+# device's UUID. InformationFields is itself such a push: a JSON list
+# describing which of the device's status fields carry displayable telemetry
+# and how to interpret each one.
+INFORMATION_FIELDS_FIELD = "InformationFields"
+DEVICE_NAME_FIELD = "Name"
+
+# Keys of an InformationFields entry.
+FIELD_NAME_KEY = "Name"
+FIELD_DISPLAY_NAME_KEY = "DisplayName"
+FIELD_DISPLAY_ORDER_KEY = "DisplayOrder"
+FIELD_PROCESSING_LOGIC_KEY = "DisplayProcessingLogic"
+FIELD_TYPES_KEY = "FieldTypes"
+
+# The FieldTypes entry marking a field as read-only telemetry.
+INFORMATION_FIELD_TYPE = "INFORMATION"
+
 # LIGHT control capabilities pushed by Device.setStatus keyed by the
 # control's own UUID, each as a JSON document encoded inside the string
 # value rather than as native JSON: the full catalog of named light shows

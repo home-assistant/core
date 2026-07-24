@@ -18,7 +18,13 @@ from .const import (
     SITE_MODE_FIELD,
     # STATUS_REFRESH_INTERVAL,  # periodic re-sync disabled for now, see below
 )
-from .models import PoolsideControl, PoolsideSite, parse_control_layout
+from .models import (
+    PoolsideControl,
+    PoolsideDevice,
+    PoolsideSite,
+    parse_control_layout,
+    parse_pool_devices,
+)
 from .noise_transport import NoiseSession, NoiseTransportError
 
 
@@ -345,6 +351,16 @@ class PoolsideClient:
         site, controls = parse_control_layout(result)
         self.site_uuid = site.uuid
         return site, controls
+
+    async def async_get_pool_devices(self) -> list[PoolsideDevice]:
+        """Fetch the physical pool devices via Site.getPoolDevices.
+
+        Controller firmware that predates the method rejects the request,
+        which surfaces as a PoolsideCommandError for the caller to treat as
+        "no pool devices".
+        """
+        result = await self.async_send_request("Site.getPoolDevices", {})
+        return parse_pool_devices(result)
 
     async def async_refresh_status(self) -> None:
         """Fetch every current status item via Device.getStatus and apply it.

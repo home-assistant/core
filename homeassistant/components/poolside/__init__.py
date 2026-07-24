@@ -24,13 +24,14 @@ from .const import (
     CONF_CLIENT_PRIVATE_KEY,
     CONF_CONTROLLER_PUBLIC_KEY,
     CONF_CONTROLLER_UUID,
+    DEVICE_NAME_FIELD,
     DOMAIN,
     LAST_TIME_SITE_WAS_LOADED_FIELD,
     LOGGER,
     SITE_MODE_KEY,
     ControlType,
 )
-from .models import PoolsideControl, PoolsideSite
+from .models import PoolsideControl, PoolsideDevice, PoolsideSite
 
 PLATFORMS = [
     Platform.CLIMATE,
@@ -49,6 +50,7 @@ class PoolsideData:
     client: PoolsideClient
     site: PoolsideSite
     controls: list[PoolsideControl]
+    pool_devices: list[PoolsideDevice]
 
 
 type PoolsideConfigEntry = ConfigEntry[PoolsideData]
@@ -80,9 +82,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolsideConfigEntry) -> 
         await client.async_disconnect()
         raise ConfigEntryNotReady from err
 
-    entry.runtime_data = PoolsideData(client=client, site=site, controls=controls)
+    try:
+        pool_devices = await client.async_get_pool_devices()
+    except PoolsideCommandError:
+        # Older controller firmware without Site.getPoolDevices.
+        pool_devices = []
+    except PoolsideConnectionError as err:
+        await client.async_disconnect()
+        raise ConfigEntryNotReady from err
 
-    _async_prune_stale_registry_entries(hass, entry, controls)
+    entry.runtime_data = PoolsideData(
+        client=client, site=site, controls=controls, pool_devices=pool_devices
+    )
+
+    _async_prune_stale_registry_entries(hass, entry, controls, pool_devices)
+    _async_register_devices(hass, entry, client, site, pool_devices)
 
     if site.uuid is not None:
         entry.async_on_unload(_watch_for_site_reload(hass, entry, client, site.uuid))
@@ -92,10 +106,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolsideConfigEntry) -> 
 
 
 @callback
+def _async_register_devices(
+    hass: HomeAssistant,
+    entry: PoolsideConfigEntry,
+    client: PoolsideClient,
+    site: PoolsideSite,
+    pool_devices: list[PoolsideDevice],
+) -> None:
+    """Register the controller hub and its pool device sub-devices up front.
+
+    Pool devices may carry no entities until their InformationFields state
+    arrives, and via_device needs the hub to already exist, so both are
+    created explicitly instead of as a side effect of entity setup. A pool
+    device's name comes from its streamed Name state when the controller
+    reports one (the getPoolDevices list itself only carries UUID and type).
+    """
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, client.controller_uuid)},
+        name=site.name,
+        manufacturer="Poolside",
+        model="Controller",
+    )
+    for device in pool_devices:
+        name = client.get_status(device.uuid, DEVICE_NAME_FIELD)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, device.uuid)},
+            via_device=(DOMAIN, client.controller_uuid),
+            name=str(name) if name else device.device_type,
+            manufacturer="Poolside",
+            model=device.device_type,
+        )
+
+
+@callback
 def _async_prune_stale_registry_entries(
     hass: HomeAssistant,
     entry: PoolsideConfigEntry,
     controls: list[PoolsideControl],
+    pool_devices: list[PoolsideDevice],
 ) -> None:
     """Remove registry entries that no longer match the control layout.
 
@@ -109,10 +160,10 @@ def _async_prune_stale_registry_entries(
     have, not just for existence.
 
     Entity unique_ids are `{controller}_{uuid}` or `{controller}_{uuid}_{key}`
-    where the UUID is a control's or a body of water's; the site mode sensor
-    (`{controller}_site_mode`) is the one exception. Group devices are
-    identified by their group UUID, the controller device by the controller
-    UUID.
+    where the UUID is a control's, a body of water's, or a pool device's; the
+    site mode sensor (`{controller}_site_mode`) is the one exception. Group
+    and pool devices are identified by their own UUID, the controller device
+    by the controller UUID.
     """
     controller_uuid: str = entry.data[CONF_CONTROLLER_UUID]
     allowed_domains: dict[str, set[str]] = {}
@@ -127,6 +178,9 @@ def _async_prune_stale_registry_entries(
             allowed_domains.setdefault(body_of_water_uuid, set()).add(
                 Platform.SENSOR.value
             )
+    for device in pool_devices:
+        allowed_domains.setdefault(device.uuid, set()).add(Platform.SENSOR.value)
+        valid_identifiers.add((DOMAIN, device.uuid))
 
     entity_registry = er.async_get(hass)
     prefix = f"{controller_uuid}_"
