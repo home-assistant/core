@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import device_registry as dr, discovery, issue_registry as ir
 from homeassistant.helpers.helper_integration import async_remove_helper_devices
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.service import async_register_admin_service
@@ -91,14 +91,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
+    device_id = entry.options.get(CONF_DEVICE_ID)
+
     # Clean up devices this helper created for previously selected source devices;
     # this can be removed in HA Core 2027.8.
     async_remove_helper_devices(
         hass,
         helper_config_entry_id=entry.entry_id,
-        source_device_id=entry.options.get(CONF_DEVICE_ID),
+        source_device_id=device_id,
         remove_all_devices=True,
     )
+
+    if device_id is not None and dr.async_get(hass).async_is_composite_device_id(
+        device_id
+    ):
+        # The device was split into one device per config entry; ask the user to
+        # select a device again
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"composite_device_id_{entry.entry_id}",
+            data={"entry_id": entry.entry_id},
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="composite_device_id",
+            translation_placeholders={"name": entry.title},
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, f"composite_device_id_{entry.entry_id}")
 
     for key in (CONF_MAX, CONF_MIN, CONF_STEP):
         if key not in entry.options:
@@ -121,6 +141,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, (entry.options["template_type"],)
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"composite_device_id_{entry.entry_id}")
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
