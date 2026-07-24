@@ -1,7 +1,6 @@
 """Support for ESPHome water heaters."""
 
 from functools import partial
-import logging
 from typing import Any, override
 
 from aioesphomeapi import (
@@ -17,22 +16,20 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import callback
 
-from .const import TEMPERATURE_UNIT_MAP
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
     esphome_float_state_property,
     esphome_state_property,
+    get_temperature_unit,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 _WATER_HEATER_MODES: EsphomeEnumMapper[WaterHeaterMode, str] = EsphomeEnumMapper(
     {
@@ -60,18 +57,7 @@ class EsphomeWaterHeater(
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
-        if (
-            static_info.temperature_unit is None
-            or (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit))
-            is None
-        ):
-            _LOGGER.debug(
-                "%s: Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
-                self.entity_id,
-                static_info.temperature_unit,
-            )
-            ha_unit = UnitOfTemperature.CELSIUS
-        self._attr_temperature_unit = ha_unit
+        self._attr_temperature_unit = get_temperature_unit(static_info)
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step

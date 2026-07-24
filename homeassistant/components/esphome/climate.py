@@ -1,7 +1,6 @@
 """Support for ESPHome climate devices."""
 
 from functools import partial
-import logging
 from math import isfinite
 from typing import Any, cast, override
 
@@ -52,24 +51,22 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    UnitOfTemperature,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import DOMAIN, TEMPERATURE_UNIT_MAP
+from .const import DOMAIN
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
     esphome_float_state_property,
     esphome_state_property,
+    get_temperature_unit,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 FAN_QUIET = "quiet"
 
@@ -146,18 +143,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
-        if (
-            static_info.temperature_unit is None
-            or (ha_unit := TEMPERATURE_UNIT_MAP.get(static_info.temperature_unit))
-            is None
-        ):
-            _LOGGER.debug(
-                "%s: Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
-                self.entity_id,
-                static_info.temperature_unit,
-            )
-            ha_unit = UnitOfTemperature.CELSIUS
-        self._attr_temperature_unit = ha_unit
+        self._attr_temperature_unit = get_temperature_unit(static_info)
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes

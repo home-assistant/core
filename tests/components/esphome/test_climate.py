@@ -25,7 +25,9 @@ from homeassistant.components.climate import (
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_MAX_HUMIDITY,
+    ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -42,9 +44,10 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import MockGenericDeviceEntryType
 
@@ -706,7 +709,6 @@ async def test_climate_entity_temperature_unit(
     expected_temperature: float,
 ) -> None:
     """Test that the temperature unit is passed through correctly."""
-    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     entity_info = [
         ClimateInfo(
             object_id="myclimate",
@@ -724,3 +726,87 @@ async def test_climate_entity_temperature_unit(
     state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
+
+
+async def test_climate_entity_fahrenheit_unit(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that a Fahrenheit climate entity converts temperatures correctly."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            temperature_unit=TemperatureUnit.FAHRENHEIT,
+            visual_min_temperature=32.0,
+            visual_max_temperature=212.0,
+        )
+    ]
+    states = [ClimateState(key=1, mode=ClimateMode.COOL, target_temperature=32.0)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    # 32 °F and 212 °F displayed in the HA system unit (°C)
+    assert state.attributes[ATTR_MIN_TEMP] == 0.0
+    assert state.attributes[ATTR_MAX_TEMP] == 100.0
+    # 32 °F target displayed in °C
+    assert state.attributes[ATTR_TEMPERATURE] == 0.0
+
+    # set_temperature is called in °C; ESPHome must receive the °F equivalent
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 10},
+        blocking=True,
+    )
+    mock_client.climate_command.assert_called_once_with(
+        key=1, target_temperature=50.0, device_id=0
+    )
+
+
+async def test_climate_entity_fahrenheit_unit_fahrenheit_system(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a Fahrenheit climate entity under a Fahrenheit HA system passes through unchanged."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            temperature_unit=TemperatureUnit.FAHRENHEIT,
+            visual_min_temperature=32.0,
+            visual_max_temperature=212.0,
+        )
+    ]
+    states = [ClimateState(key=1, mode=ClimateMode.COOL, target_temperature=72.0)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    # No conversion — device and system are both °F
+    assert state.attributes[ATTR_MIN_TEMP] == 32.0
+    assert state.attributes[ATTR_MAX_TEMP] == 212.0
+    assert state.attributes[ATTR_TEMPERATURE] == 72.0
+
+    # set_temperature is called in °F; ESPHome must receive the same value
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 86},
+        blocking=True,
+    )
+    mock_client.climate_command.assert_called_once_with(
+        key=1, target_temperature=86.0, device_id=0
+    )
