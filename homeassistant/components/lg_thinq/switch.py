@@ -44,7 +44,21 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             key=ThinQProperty.AIR_CON_OPERATION_MODE,
             translation_key="operation_power",
             entity_category=EntityCategory.CONFIG,
+            ThinQSwitchEntityDescription(
+            key=ThinQProperty.WIND_ROTATE_UP_DOWN,
+            translation_key=ThinQProperty.WIND_ROTATE_UP_DOWN,
+            on_key="true",
+            off_key="false",
+            entity_category=EntityCategory.CONFIG,
         ),
+        ThinQSwitchEntityDescription(
+            key=ThinQProperty.WIND_ROTATE_LEFT_RIGHT,
+            translation_key=ThinQProperty.WIND_ROTATE_LEFT_RIGHT,
+            on_key="true",
+            off_key="false",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
         ThinQSwitchEntityDescription(
             key=ThinQProperty.DISPLAY_LIGHT,
             translation_key=ThinQProperty.DISPLAY_LIGHT,
