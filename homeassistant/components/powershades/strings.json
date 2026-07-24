@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "The device did not respond to a PowerShades probe"
+    },
+    "error": {
+      "cannot_connect": "The device did not respond. Check the IP address and make sure the shade is awake.",
+      "invalid_ip": "Invalid IPv4 address"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name} ({ip})?",
+        "title": "Discovered PowerShades device"
+      },
+      "manual": {
+        "data": {
+          "ip": "IP address"
+        },
+        "data_description": {
+          "ip": "The IP address of your PowerShades device."
+        },
+        "description": "Enter the IP address of your PowerShades device.",
+        "title": "Connect to a PowerShades device"
+      },
+      "pick_device": {
+        "data": {
+          "device": "Device"
+        },
+        "data_description": {
+          "device": "The PowerShades device to set up, discovered on your network."
+        },
+        "title": "Select your PowerShades device"
+      }
+    }
+  },
+  "exceptions": {
+    "command_not_acknowledged": {
+      "message": "Shade at {ip_address} did not acknowledge the command."
+    },
+    "update_malformed_reply": {
+      "message": "Malformed status reply from {ip_address}"
+    },
+    "update_timeout": {
+      "message": "Shade at {ip_address} did not reply: {error}"
+    }
+  }
+}

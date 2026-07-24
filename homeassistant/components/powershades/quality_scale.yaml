@@ -1,0 +1,105 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: no custom actions in the initial release; planned for a follow-up PR
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: no custom actions in the initial release; planned for a follow-up PR
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: no custom actions in the initial release; planned for a follow-up PR
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: the device has no concept of authentication, nothing to re-authenticate
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: planned for a follow-up PR
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: >-
+      One device per config entry, at least for PoE PowerShades. It is
+      unknown whether the RF hub exposes multiple devices, since it cannot
+      be tested by the maintainer. This is documented, with a request for
+      RF hub owners to help properly integrate it.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: >-
+      The only entity is the primary cover, which must be enabled by
+      default. There are no secondary/diagnostic entities to disable.
+  entity-translations:
+    status: exempt
+    comment: >-
+      The only entity (cover) has `_attr_name = None` and relies on the
+      cover device class's built-in name. There's nothing for the
+      integration to translate.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: >-
+      The cover entity has no custom icon, it uses the default
+      device-class icon, so there's nothing state-dependent to translate.
+  reconfiguration-flow:
+    status: todo
+    comment: planned for a follow-up PR
+  repair-issues:
+    status: exempt
+    comment: >-
+      A device not responding is handled by
+      ConfigEntryNotReady's built-in retry; it isn't something the user
+      needs to act on, so it doesn't warrant a repair issue.
+  stale-devices:
+    status: exempt
+    comment: >-
+      Single device per config entry, nothing to go stale independently, at
+      least for PoE PowerShades. It is unknown whether the RF hub exposes
+      multiple devices, since it cannot be tested by the maintainer. This is
+      documented, with a request for RF hub owners to help properly
+      integrate it.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: uses UDP, not http(s), so there's no aiohttp session to inject
+  strict-typing: done

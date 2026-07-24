@@ -789,6 +789,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "kommspot",
     },
     {
+        "domain": "powershades",
+        "hostname": "ps-*",
+        "macaddress": "D83AF5*",
+    },
+    {
+        "domain": "powershades",
+        "registered_devices": True,
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
     },
