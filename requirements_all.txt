@@ -332,6 +332,9 @@ aiolifx-themes==1.0.4
 # homeassistant.components.lifx
 aiolifx==1.2.2
 
+# homeassistant.components.linknlink
+aiolinknlink==0.3.2
+
 # homeassistant.components.lookin
 aiolookin==1.0.0
 
