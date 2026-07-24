@@ -1,5 +1,6 @@
 """Common fixtures for the Amcrest tests."""
 
+import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import contextmanager
 import threading
@@ -23,6 +24,15 @@ TEST_USERNAME = "admin"
 TEST_PASSWORD = "password123"
 TEST_SERIAL = "12345"
 TEST_CONFIG_ENTRY_TITLE = f"Amcrest {TEST_SERIAL}"
+
+
+async def _mock_async_event_actions(
+    eventcodes: str,
+) -> AsyncGenerator[tuple[str, dict[str, Any]]]:
+    """Block until cancelled, mimicking a long-lived Amcrest event stream."""
+    while True:
+        await asyncio.sleep(3600)
+        yield "VideoMotion", {"action": "Start"}
 
 
 class _AsyncPropertyValue:
@@ -62,6 +72,9 @@ def setup_mock_amcrest_checker(mock_class: MagicMock) -> MagicMock:
     api.available = True
     api.available_flag = threading.Event()
     api.available_flag.set()
+    api.async_available_flag = asyncio.Event()
+    api.async_available_flag.set()
+    api.async_event_actions = _mock_async_event_actions
     api.get_base_url.return_value = f"http://{TEST_HOST}:{TEST_PORT}"
     mock_async_property(api, "async_current_time", return_value=None)
     mock_async_property(api, "async_serial_number", return_value=TEST_SERIAL)
@@ -144,10 +157,7 @@ async def loaded_config_entry(
     """Return a loaded config entry with platforms set up."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("homeassistant.components.amcrest.AmcrestChecker") as mock_checker,
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
+    with patch("homeassistant.components.amcrest.AmcrestChecker") as mock_checker:
         setup_mock_amcrest_checker(mock_checker)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

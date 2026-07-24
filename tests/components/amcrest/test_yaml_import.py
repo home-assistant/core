@@ -1,7 +1,7 @@
 """Test Amcrest YAML import."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from amcrest import AmcrestError, LoginError
 import pytest
@@ -90,10 +90,7 @@ async def test_yaml_import_success(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test YAML import creates a config entry and deprecation issue."""
-    with (
-        patch_amcrest_checker(),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
+    with patch_amcrest_checker():
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -127,10 +124,7 @@ async def test_yaml_import_full_config(
     sensors = ["ptz_preset", "sdcard"]
     switches = ["privacy_mode"]
 
-    with (
-        patch_amcrest_checker(),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
+    with patch_amcrest_checker():
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -180,10 +174,7 @@ async def test_yaml_import_entity_subset(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test YAML import honors configured entity subsets."""
-    with (
-        patch_amcrest_checker(),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
+    with patch_amcrest_checker():
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -236,10 +227,7 @@ async def test_yaml_import_without_optional_platforms(
     camera_config: dict[str, Any],
 ) -> None:
     """Test YAML import without optional platforms creates only the camera."""
-    with (
-        patch_amcrest_checker(),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
+    with patch_amcrest_checker():
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -343,10 +331,7 @@ async def test_yaml_import_continue_on_failure(
             mock_async_property(api, "async_serial_number", return_value=good_serial)
         return api
 
-    with (
-        patch_amcrest_checker(side_effect=_factory),
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
+    with patch_amcrest_checker(side_effect=_factory):
         assert await async_setup_component(
             hass,
             DOMAIN,

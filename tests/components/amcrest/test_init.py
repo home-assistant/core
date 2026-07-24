@@ -30,16 +30,15 @@ async def test_setup_entry_loads_platforms(
     """Test config entry setup loads all platforms and stores runtime data."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("homeassistant.components.amcrest.AmcrestChecker") as mock_checker,
-        patch("homeassistant.components.amcrest._start_event_monitor"),
-    ):
+    with patch("homeassistant.components.amcrest.AmcrestChecker") as mock_checker:
         setup_mock_amcrest_checker(mock_checker)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.device is not None
+    assert mock_config_entry.runtime_data.event_monitor_task is not None
+    assert not mock_config_entry.runtime_data.event_monitor_task.done()
 
     entity_ids = hass.states.async_entity_ids()
     title_slug = TEST_CONFIG_ENTRY_TITLE.lower().replace(" ", "_")
@@ -58,10 +57,58 @@ async def test_unload_entry(
     loaded_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry unload unloads platforms."""
+    monitor_task = loaded_config_entry.runtime_data.event_monitor_task
+    assert monitor_task is not None
+    assert not monitor_task.done()
+
     assert await hass.config_entries.async_unload(loaded_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert loaded_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert monitor_task.done()
+
+
+async def test_setup_entry_starts_event_monitor_task(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test config entry setup starts the event monitor background task."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.amcrest.AmcrestChecker") as mock_checker:
+        setup_mock_amcrest_checker(mock_checker)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    task = mock_config_entry.runtime_data.event_monitor_task
+    assert task is not None
+    assert not task.done()
+
+
+async def test_reload_does_not_duplicate_monitors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reload cancels the previous monitor before starting a new one."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.amcrest.AmcrestChecker") as mock_checker:
+        setup_mock_amcrest_checker(mock_checker)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        first_task = mock_config_entry.runtime_data.event_monitor_task
+        assert first_task is not None
+        assert not first_task.done()
+
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    second_task = mock_config_entry.runtime_data.event_monitor_task
+    assert second_task is not None
+    assert first_task.done()
+    assert not second_task.done()
+    assert second_task is not first_task
 
 
 async def test_binary_sensor_assigns_unique_id_on_update(

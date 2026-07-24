@@ -32,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -327,18 +327,19 @@ class AmcrestChecker(ApiWrapper):
             await self.async_current_time
 
 
-def _monitor_events(
+async def _async_monitor_events(
     hass: HomeAssistant,
     name: str,
     api: AmcrestChecker,
     event_codes: set[str],
 ) -> None:
+    """Monitor camera events until the config entry background task is cancelled."""
     while True:
-        api.available_flag.wait()
+        await api.async_available_flag.wait()
         try:
-            for code, payload in api.event_actions("All"):
+            async for code, payload in api.async_event_actions("All"):
                 event_data = {"camera": name, "event": code, "payload": payload}
-                hass.bus.fire("amcrest", event_data)
+                hass.bus.async_fire("amcrest", event_data)
                 if code in event_codes:
                     signal = service_signal(SERVICE_EVENT, name, code)
                     start = any(
@@ -346,26 +347,13 @@ def _monitor_events(
                         for key, val in payload.items()
                     )
                     _LOGGER.debug("Sending signal: '%s': %s", signal, start)
-                    dispatcher_send(hass, signal, start)
+                    async_dispatcher_send(hass, signal, start)
         except AmcrestError as error:
             _LOGGER.warning(
                 "Error while processing events from %s camera: %r", name, error
             )
-
-
-def _start_event_monitor(
-    hass: HomeAssistant,
-    name: str,
-    api: AmcrestChecker,
-    event_codes: set[str],
-) -> None:
-    thread = threading.Thread(
-        target=_monitor_events,
-        name=f"Amcrest {name}",
-        args=(hass, name, api, event_codes),
-        daemon=True,
-    )
-    thread.start()
+        except asyncio.CancelledError:
+            raise
 
 
 @dataclass
@@ -387,6 +375,7 @@ class AmcrestRuntimeData:
     """Runtime data stored on the config entry."""
 
     device: AmcrestDevice
+    event_monitor_task: asyncio.Task[None] | None = None
 
 
 type AmcrestConfigEntry = ConfigEntry[AmcrestRuntimeData]
@@ -508,10 +497,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    _start_event_monitor(hass, name, api, event_codes)
+    runtime_data.event_monitor_task = entry.async_create_background_task(
+        hass,
+        _async_monitor_events(hass, name, api, event_codes),
+        f"amcrest_{entry.entry_id}_events",
+    )
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> bool:
     """Unload a config entry."""
+    if task := entry.runtime_data.event_monitor_task:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+        entry.runtime_data.event_monitor_task = None
+
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
