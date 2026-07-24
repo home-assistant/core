@@ -571,6 +571,7 @@ FLOWS = {
         "oralb",
         "orvibo",
         "osoenergy",
+        "osram_infrared",
         "otbr",
         "ouman_eh_800",
         "ourgroceries",
