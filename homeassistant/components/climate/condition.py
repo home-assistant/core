@@ -58,7 +58,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
 
     _base_unit = UnitOfTemperature.CELSIUS
     _domain_specs = {
-        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TEMPERATURE)
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TARGET_TEMPERATURE)
     }
     _unit_converter = TemperatureConverter
 
@@ -67,7 +67,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
         """Skip climate entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE)
+            and state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
             is not None
         )
 
@@ -82,7 +82,7 @@ class ClimateTargetHumidityCondition(EntityNumericalConditionBase):
     """Condition for climate target humidity."""
 
     _domain_specs = {
-        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.HUMIDITY)
+        DOMAIN: DomainSpec(value_source=ClimateEntityStateAttribute.TARGET_HUMIDITY)
     }
     _valid_unit = "%"
 
@@ -91,7 +91,8 @@ class ClimateTargetHumidityCondition(EntityNumericalConditionBase):
         """Skip climate entities that do not expose a target humidity."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ClimateEntityStateAttribute.HUMIDITY) is not None
+            and state.attributes.get(ClimateEntityStateAttribute.TARGET_HUMIDITY)
+            is not None
         )
 
 

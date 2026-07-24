@@ -373,7 +373,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         }
 
         if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
-            data[ClimateEntityStateAttribute.TEMPERATURE] = show_temp(
+            data[ClimateEntityStateAttribute.TARGET_TEMPERATURE] = show_temp(
                 hass,
                 self.target_temperature,
                 temperature_unit,
@@ -392,7 +392,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ClimateEntityStateAttribute.CURRENT_HUMIDITY] = current_humidity
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
-            data[ClimateEntityStateAttribute.HUMIDITY] = self.target_humidity
+            data[ClimateEntityStateAttribute.TARGET_HUMIDITY] = self.target_humidity
 
         if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ClimateEntityStateAttribute.FAN_MODE] = self.fan_mode

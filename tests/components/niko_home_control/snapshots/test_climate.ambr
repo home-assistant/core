@@ -74,7 +74,7 @@
         'prog3',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 145>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 200,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 200,
     }),
     'context': <ANY>,
     'entity_id': 'climate.room_thermostat',

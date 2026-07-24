@@ -70,7 +70,7 @@
         'program_3',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.zone_1',
