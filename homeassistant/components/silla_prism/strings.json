@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_discovery_info": "Invalid discovery information received."
+    },
+    "error": {
+      "invalid_base_topic": "This is not a valid MQTT topic. Enter the plain topic prefix from the Silla app, without wildcards.",
+      "mqtt_unavailable": "The MQTT integration is not available. Set it up first.",
+      "no_device": "No Prism messages were received on this base topic. Check that the topic matches the one configured in the Silla app and that Prism is online."
+    },
+    "flow_title": "{serial}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the discovered Prism {serial}?",
+        "title": "Set up Silla Prism"
+      },
+      "user": {
+        "data": {
+          "base_topic": "Base topic"
+        },
+        "data_description": {
+          "base_topic": "The MQTT topic prefix Prism publishes to, without a trailing slash."
+        },
+        "description": "Enter the MQTT base topic configured on the Prism (in the Silla app, under the MQTT settings). The default is \"prism\".",
+        "title": "Connect your Silla Prism"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "error": {
+        "name": "Error code"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "pilot": {
+        "name": "Pilot current"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "session_time": {
+        "name": "Session time"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "Charging",
+          "idle": "Idle",
+          "pause": "Paused",
+          "waiting": "Waiting"
+        }
+      },
+      "total_energy": {
+        "name": "Total energy"
+      }
+    }
+  }
+}
