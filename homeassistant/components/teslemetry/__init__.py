@@ -54,6 +54,7 @@ from .coordinator import (
 )
 from .helpers import async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
+from .oauth import async_ensure_client_credential
 from .services import async_setup_services
 
 PLATFORMS: Final = [
@@ -79,11 +80,18 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, "", name="Teslemetry"),
-    )
+    # A v1 entry migrates using the legacy static client_id (async_migrate_entry);
+    # registering a DCR client first would leave auth_implementation pointing at
+    # a client_id that never minted that entry's refresh token.
+    if not any(
+        entry.version == 1 for entry in hass.config_entries.async_entries(DOMAIN)
+    ):
+        try:
+            await async_ensure_client_credential(hass)
+        except ClientError as err:
+            # Registration is retried when the user starts the config flow, so a
+            # transient failure here must not block integration setup.
+            LOGGER.debug("Deferring Teslemetry client registration: %s", err)
     async_setup_services(hass)
     return True
 
@@ -555,6 +563,12 @@ async def async_migrate_entry(
     if config_entry.version == 1:
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
         session = async_get_clientsession(hass)
+
+        # The migrate grant only accepts the legacy static client_id, so that
+        # client must back auth_implementation, not a dynamically registered one.
+        await async_import_client_credential(
+            hass, DOMAIN, ClientCredential(CLIENT_ID, "", name="Teslemetry")
+        )
 
         # Convert legacy access token to OAuth tokens using migrate endpoint
         try:

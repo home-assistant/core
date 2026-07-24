@@ -20,7 +20,7 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.teslemetry import _get_access_token
-from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
+from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN, REGISTER_URL
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
@@ -48,7 +48,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -68,6 +68,7 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -381,7 +382,9 @@ async def test_device_retention_during_reload(
     assert post_identifiers == original_identifiers
 
 
-async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
+async def test_migrate_from_version_1_success(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test successful config migration from version 1."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -410,6 +413,17 @@ async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         mock_migrate.assert_called_once_with(CLIENT_ID, hass.config.location_name)
+
+    # The migrate grant only accepts the legacy static client_id, so no DCR
+    # client should be registered, and the implementation backing the migrated
+    # entry must be the one that minted its refresh token.
+    assert not [
+        call for call in aioclient_mock.mock_calls if str(call[1]) == REGISTER_URL
+    ]
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert implementations[DOMAIN].client_id == CLIENT_ID
 
     assert mock_entry is not None
     assert mock_entry.version == 2
