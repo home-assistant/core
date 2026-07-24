@@ -43,8 +43,9 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_peblar() -> Generator[MagicMock]:
+def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Peblar client."""
+    system_info_fixture = getattr(request, "param", "system_information.json")
     with (
         patch("homeassistant.components.peblar.Peblar", autospec=True) as peblar_mock,
         patch("homeassistant.components.peblar.config_flow.Peblar", new=peblar_mock),
@@ -60,7 +61,7 @@ def mock_peblar() -> Generator[MagicMock]:
             load_fixture("user_configuration.json", DOMAIN)
         )
         peblar.system_information.return_value = PeblarSystemInformation.from_json(
-            load_fixture("system_information.json", DOMAIN)
+            load_fixture(system_info_fixture, DOMAIN)
         )
 
         api = peblar.rest_api.return_value

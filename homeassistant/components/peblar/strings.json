@@ -70,6 +70,26 @@
       }
     },
     "select": {
+      "buzzer_volume": {
+        "name": "Buzzer volume",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "low_medium": "Low medium",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "led_brightness": {
+        "name": "LED brightness",
+        "state": {
+          "automatic": "[%key:common::state::auto%]",
+          "bright": "Bright",
+          "dim": "Dim",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "smart_charging": {
         "name": "Smart charging",
         "state": {
