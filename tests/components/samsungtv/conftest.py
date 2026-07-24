@@ -11,6 +11,7 @@ from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
 from samsungctl import Remote
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
+from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
@@ -154,7 +155,8 @@ def remote_legacy_fixture() -> Generator[Mock]:
     remote_legacy.__enter__ = Mock()
     remote_legacy.__exit__ = Mock()
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", return_value=remote_legacy
+        "homeassistant.components.samsungtv.bridge.legacy.Remote",
+        return_value=remote_legacy,
     ):
         yield remote_legacy
 
@@ -162,14 +164,19 @@ def remote_legacy_fixture() -> Generator[Mock]:
 @pytest.fixture(name="rest_api")
 def rest_api_fixture() -> Generator[Mock]:
     """Patch the samsungtvws SamsungTVAsyncRest."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-        autospec=True,
-    ) as rest_api_class:
-        rest_api_class.return_value.rest_device_info.return_value = (
-            SAMPLE_DEVICE_INFO_WIFI
-        )
-        yield rest_api_class.return_value
+    rest_api_instance = Mock(spec=SamsungTVAsyncRest)
+    rest_api_instance.rest_device_info = AsyncMock(return_value=SAMPLE_DEVICE_INFO_WIFI)
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.websocket.SamsungTVAsyncRest",
+            return_value=rest_api_instance,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.encrypted.SamsungTVAsyncRest",
+            return_value=rest_api_instance,
+        ),
+    ):
+        yield rest_api_instance
 
 
 @pytest.fixture(name="rest_api_non_ssl_only")
@@ -192,9 +199,15 @@ def rest_api_fixture_non_ssl_only(hass: HomeAssistant) -> Generator[None]:
                 hass, "device_info_UE48JU6400.json", DOMAIN
             )
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-        MockSamsungTVAsyncRest,
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.websocket.SamsungTVAsyncRest",
+            MockSamsungTVAsyncRest,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.encrypted.SamsungTVAsyncRest",
+            MockSamsungTVAsyncRest,
+        ),
     ):
         yield
 
@@ -202,11 +215,18 @@ def rest_api_fixture_non_ssl_only(hass: HomeAssistant) -> Generator[None]:
 @pytest.fixture(name="rest_api_failing")
 def rest_api_failure_fixture() -> Generator[None]:
     """Patch the samsungtvws SamsungTVAsyncRest."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",
-        autospec=True,
-    ) as rest_api_class:
-        rest_api_class.return_value.rest_device_info.side_effect = ResponseError
+    rest_api_instance = Mock(spec=SamsungTVAsyncRest)
+    rest_api_instance.rest_device_info = AsyncMock(side_effect=ResponseError)
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.websocket.SamsungTVAsyncRest",
+            return_value=rest_api_instance,
+        ),
+        patch(
+            "homeassistant.components.samsungtv.bridge.encrypted.SamsungTVAsyncRest",
+            return_value=rest_api_instance,
+        ),
+    ):
         yield
 
 
@@ -214,7 +234,7 @@ def rest_api_failure_fixture() -> Generator[None]:
 def remote_encrypted_websocket_failing_fixture() -> Generator[None]:
     """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
+        "homeassistant.components.samsungtv.bridge.encrypted.SamsungTVEncryptedWSAsyncRemote.start_listening",
         side_effect=OSError,
     ):
         yield
@@ -257,7 +277,7 @@ def remote_websocket_fixture() -> Generator[Mock]:
     )
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
+        "homeassistant.components.samsungtv.bridge.websocket.SamsungTVWSAsyncRemote",
         return_value=remote_websocket,
     ):
         yield remote_websocket
@@ -287,7 +307,7 @@ def remote_encrypted_websocket_fixture() -> Generator[Mock]:
     )
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote",
+        "homeassistant.components.samsungtv.bridge.encrypted.SamsungTVEncryptedWSAsyncRemote",
     ) as remotews_class:
         remotews_class.return_value = remote_encrypted_websocket
         yield remote_encrypted_websocket
