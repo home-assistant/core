@@ -1225,6 +1225,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/netgear/ @Quentame @starkillerOG
 /homeassistant/components/netgear_lte/ @tkdrob
 /tests/components/netgear_lte/ @tkdrob
+/homeassistant/components/netio/ @agners
+/tests/components/netio/ @agners
 /homeassistant/components/network/ @home-assistant/core
 /tests/components/network/ @home-assistant/core
 /homeassistant/components/nexia/ @bdraco
