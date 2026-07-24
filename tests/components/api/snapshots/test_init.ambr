@@ -16,6 +16,7 @@
               'selector': dict({
                 'object': dict({
                   'multiple': False,
+                  'overview_labels': False,
                 }),
               }),
             }),
