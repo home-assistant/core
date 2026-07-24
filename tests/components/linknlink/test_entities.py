@@ -19,13 +19,12 @@ from .conftest import ENVIRONMENT_STATE, MAC, POSITION_STATE, POSITION_UPDATE
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def _position_entity_ids(hass: HomeAssistant) -> tuple[str, str]:
+def _position_entity_ids(entity_registry: er.EntityRegistry) -> tuple[str, str]:
     """Return the two distance sensor IDs."""
-    registry = er.async_get(hass)
-    horizontal_id = registry.async_get_entity_id(
+    horizontal_id = entity_registry.async_get_entity_id(
         "sensor", "linknlink", f"{MAC}_nearest_horizontal_distance"
     )
-    distance_id = registry.async_get_entity_id(
+    distance_id = entity_registry.async_get_entity_id(
         "sensor", "linknlink", f"{MAC}_nearest_distance"
     )
     assert horizontal_id is not None
@@ -35,12 +34,12 @@ def _position_entity_ids(hass: HomeAssistant) -> tuple[str, str]:
 
 async def test_sensor_setup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test all sensors are registered with their initial states."""
     await setup_integration(hass, mock_config_entry)
-    registry = er.async_get(hass)
 
     expected_states = {
         "nearest_horizontal_distance": "0.5",
@@ -56,17 +55,21 @@ async def test_sensor_setup(
         "zone_4_target_counts": "0",
     }
     for key, expected in expected_states.items():
-        entity_id = registry.async_get_entity_id("sensor", "linknlink", f"{MAC}_{key}")
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", "linknlink", f"{MAC}_{key}"
+        )
         assert entity_id is not None
         assert hass.states.get(entity_id).state == expected
 
-    wifi_id = registry.async_get_entity_id("sensor", "linknlink", f"{MAC}_wifi_signal")
+    wifi_id = entity_registry.async_get_entity_id(
+        "sensor", "linknlink", f"{MAC}_wifi_signal"
+    )
     assert wifi_id is not None
     assert hass.states.get(wifi_id) is None
 
     assert {
         entry.unique_id
-        for entry in registry.entities.get_entries_for_config_entry_id(
+        for entry in entity_registry.entities.get_entries_for_config_entry_id(
             mock_config_entry.entry_id
         )
     } == {
@@ -88,6 +91,7 @@ async def test_sensor_setup(
 
 async def test_position_updates_and_availability(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_position_subscription: tuple[MagicMock, MagicMock],
@@ -99,7 +103,7 @@ async def test_position_updates_and_availability(
     subscription_class, subscription = mock_position_subscription
     position_callback = subscription_class.call_args.kwargs["callback"]
     status_callback = subscription_class.call_args.kwargs["status_callback"]
-    horizontal_id, distance_id = _position_entity_ids(hass)
+    horizontal_id, distance_id = _position_entity_ids(entity_registry)
 
     subscription.state = POSITION_STATE
     position_callback(POSITION_UPDATE)
@@ -134,6 +138,7 @@ async def test_position_updates_and_availability(
 
 async def test_empty_position_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_position_subscription: tuple[MagicMock, MagicMock],
@@ -142,8 +147,8 @@ async def test_empty_position_update(
     await setup_integration(hass, mock_config_entry)
     subscription_class, subscription = mock_position_subscription
     position_callback = subscription_class.call_args.kwargs["callback"]
-    horizontal_id, distance_id = _position_entity_ids(hass)
-    target_count_id = er.async_get(hass).async_get_entity_id(
+    horizontal_id, distance_id = _position_entity_ids(entity_registry)
+    target_count_id = entity_registry.async_get_entity_id(
         "sensor", "linknlink", f"{MAC}_target_count"
     )
     assert target_count_id is not None
@@ -160,6 +165,7 @@ async def test_empty_position_update(
 
 async def test_position_updates_are_coalesced(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_position_subscription: tuple[MagicMock, MagicMock],
@@ -168,7 +174,7 @@ async def test_position_updates_are_coalesced(
     await setup_integration(hass, mock_config_entry)
     subscription_class, subscription = mock_position_subscription
     position_callback = subscription_class.call_args.kwargs["callback"]
-    target_count_id = er.async_get(hass).async_get_entity_id(
+    target_count_id = entity_registry.async_get_entity_id(
         "sensor", "linknlink", f"{MAC}_target_count"
     )
     assert target_count_id is not None
@@ -187,16 +193,16 @@ async def test_position_updates_are_coalesced(
 
 async def test_environment_failure_does_not_disable_position_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test independent availability for the environment API."""
     await setup_integration(hass, mock_config_entry)
-    registry = er.async_get(hass)
-    temperature_id = registry.async_get_entity_id(
+    temperature_id = entity_registry.async_get_entity_id(
         "sensor", "linknlink", f"{MAC}_temperature"
     )
-    horizontal_id, _ = _position_entity_ids(hass)
+    horizontal_id, _ = _position_entity_ids(entity_registry)
     assert temperature_id is not None
 
     mock_linknlink_client.get_environment_state.side_effect = UltraConnectionError(
@@ -212,12 +218,12 @@ async def test_environment_failure_does_not_disable_position_entities(
 
 async def test_missing_environment_values_are_unknown(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test supported fields with omitted values remain available."""
     await setup_integration(hass, mock_config_entry)
-    registry = er.async_get(hass)
     missing_keys = {"temperature", "humidity", "illuminance"}
     mock_linknlink_client.get_environment_state.return_value = replace(
         ENVIRONMENT_STATE,
@@ -232,13 +238,16 @@ async def test_missing_environment_values_are_unknown(
     await hass.async_block_till_done()
 
     for key in missing_keys:
-        entity_id = registry.async_get_entity_id("sensor", "linknlink", f"{MAC}_{key}")
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", "linknlink", f"{MAC}_{key}"
+        )
         assert entity_id is not None
         assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_missing_optional_sensor_cable_is_unavailable(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -255,16 +264,17 @@ async def test_missing_optional_sensor_cable_is_unavailable(
     )
 
     await setup_integration(hass, mock_config_entry)
-    registry = er.async_get(hass)
-
     for key in missing_keys:
-        entity_id = registry.async_get_entity_id("sensor", "linknlink", f"{MAC}_{key}")
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", "linknlink", f"{MAC}_{key}"
+        )
         assert entity_id is not None
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_entities_registered_when_initial_environment_read_fails(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
@@ -276,10 +286,10 @@ async def test_entities_registered_when_initial_environment_read_fails(
     )
 
     await setup_integration(hass, mock_config_entry)
-    registry = er.async_get(hass)
-
     for key in ("temperature", "zone_4_target_counts"):
-        entity_id = registry.async_get_entity_id("sensor", "linknlink", f"{MAC}_{key}")
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", "linknlink", f"{MAC}_{key}"
+        )
         assert entity_id is not None
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
