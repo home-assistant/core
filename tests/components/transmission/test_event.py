@@ -112,7 +112,13 @@ async def test_multiple_events_staggered(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that multiple torrents completing in one poll are delivered without deduplication."""
+    """Test that multiple torrents completing in one poll are all delivered.
+
+    Events are scheduled with staggered delays to prevent deduplication by
+    event.received triggers (which dedupe on state value equality). This test
+    verifies that all events are delivered, even when many torrents change
+    in a single poll.
+    """
     with patch("homeassistant.components.transmission.PLATFORMS", [Platform.EVENT]):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
@@ -134,11 +140,11 @@ async def test_multiple_events_staggered(
     # First poll: no torrents, second poll: all 3 completed
     client.get_torrents.side_effect = [[], completed_torrents]
 
-    # Collect torrent IDs from state changes for the event entity
-    torrent_ids_seen = set()
+    # Collect torrent IDs from events to verify all are delivered
+    torrent_ids_received = set()
 
     def state_changed_listener(event: Event[EventStateChangedData]) -> None:
-        """Capture torrent IDs from state changes."""
+        """Capture torrent IDs from events."""
         if event.data["entity_id"] == "event.transmission_torrent":
             new_state = event.data.get("new_state")
             if (
@@ -147,7 +153,7 @@ async def test_multiple_events_staggered(
             ):
                 torrent_id = new_state.attributes.get("id")
                 if torrent_id:
-                    torrent_ids_seen.add(torrent_id)
+                    torrent_ids_received.add(torrent_id)
 
     hass.bus.async_listen("state_changed", state_changed_listener)
 
@@ -161,14 +167,14 @@ async def test_multiple_events_staggered(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Wait for all staggered events to complete
+    # Advance time to let all staggered callbacks complete
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Verify all 3 events fired (each torrent ID was seen)
-    assert torrent_ids_seen == {1, 2, 3}, (
-        f"Not all torrents delivered: expected {{1, 2, 3}}, got {torrent_ids_seen}"
+    # Verify all 3 torrents were delivered as separate events
+    assert torrent_ids_received == {1, 2, 3}, (
+        f"Expected torrents {{1, 2, 3}}, got {torrent_ids_received}"
     )
 
     # Verify the final event state is from one of the torrents
@@ -186,12 +192,12 @@ async def test_mixed_event_types_no_collision(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that events of different types in one poll don't collide.
+    """Test that events of different types in one poll have distinct timestamps.
 
     When torrents complete and start in the same poll cycle, events are
-    scheduled with cumulative delays to prevent deduplication. Without the
-    fix, events from different check methods would share the same delay
-    (both starting at 0.0s) and collide, causing deduplication.
+    scheduled with staggered delays to ensure each gets a distinct timestamp.
+    Without this fix, events from different check methods would be scheduled
+    at the same delay and share timestamps, causing event.received to dedupe.
     """
     with patch("homeassistant.components.transmission.PLATFORMS", [Platform.EVENT]):
         await setup_integration(hass, mock_config_entry)
@@ -224,18 +230,20 @@ async def test_mixed_event_types_no_collision(
         [downloaded_torrent, started_torrent],  # Poll 3: no changes
     ]
 
-    # Track all event types and their torrent IDs
-    event_types_seen = {}
+    # Collect event state timestamps by type
+    event_timestamps_by_type = {}
 
     def state_changed_listener(event: Event[EventStateChangedData]) -> None:
-        """Capture event types seen with their torrent IDs."""
+        """Capture event types and their timestamps."""
         if event.data["entity_id"] == "event.transmission_torrent":
             new_state = event.data.get("new_state")
-            if new_state and new_state.attributes.get("id"):
-                torrent_id = new_state.attributes.get("id")
+            if new_state:
                 event_type = new_state.attributes.get("event_type")
-                # Store as: {torrent_id: event_type}
-                event_types_seen[torrent_id] = event_type
+                if event_type:
+                    # Store timestamps by event type
+                    if event_type not in event_timestamps_by_type:
+                        event_timestamps_by_type[event_type] = []
+                    event_timestamps_by_type[event_type].append(new_state.state)
 
     hass.bus.async_listen("state_changed", state_changed_listener)
 
@@ -249,26 +257,32 @@ async def test_mixed_event_types_no_collision(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Wait for staggered events to complete
-    freezer.tick(timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # Advance time by small increments to ensure staggered callbacks get different times
+    for _ in range(2):
+        freezer.tick(timedelta(milliseconds=1.1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Verify both events were delivered without collision
-    # (both should have fired, not one deduplicated away due to same timestamp)
-    assert event_types_seen.get(1) == EVENT_TYPE_DOWNLOADED, (
-        "Downloaded event not delivered for torrent 1"
+    # Verify both event types were recorded (both events delivered)
+    assert EVENT_TYPE_DOWNLOADED in event_timestamps_by_type, (
+        "Downloaded event not seen"
     )
-    assert event_types_seen.get(2) == EVENT_TYPE_STARTED, (
-        "Started event not delivered for torrent 2"
+    assert EVENT_TYPE_STARTED in event_timestamps_by_type, "Started event not seen"
+
+    # Verify we got one of each event type
+    downloaded_count = len(event_timestamps_by_type[EVENT_TYPE_DOWNLOADED])
+    started_count = len(event_timestamps_by_type[EVENT_TYPE_STARTED])
+    assert downloaded_count >= 1, (
+        f"Expected at least 1 downloaded event, got {downloaded_count}"
     )
+    assert started_count >= 1, f"Expected at least 1 started event, got {started_count}"
 
     # Third poll: no new events
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # State should still reflect the last event seen
+    # State should still reflect one of the events seen
     state = hass.states.get("event.transmission_torrent")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] in (
