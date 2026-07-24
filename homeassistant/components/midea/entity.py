@@ -1,4 +1,4 @@
-"""Base entity for Midea Lan."""
+"""Base entity for Midea."""
 
 import logging
 from typing import Any, override
@@ -14,7 +14,7 @@ from .device_catalog import MIDEA_DEVICE_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
-type MideaLanConfigEntry = ConfigEntry[MideaDevice]
+type MideaConfigEntry = ConfigEntry[MideaDevice]
 
 
 class MideaEntity(Entity):

@@ -9,7 +9,7 @@ DEFAULT_DETECTION_TIME: Final = 300
 
 ATTR_MANUFACTURER: Final = "Mikrotik"
 ATTR_SERIAL_NUMBER: Final = "serial-number"
-ATTR_SYSTEM_FIRMWARE: Final = "installed-version"
+ATTR_ROUTERBOARD_FIRMWARE: Final = "current-firmware"
 
 CONF_ARP_PING: Final = "arp_ping"
 CONF_FORCE_DHCP: Final = "force_dhcp"
@@ -18,6 +18,7 @@ CONF_DETECTION_TIME: Final = "detection_time"
 NAME: Final = "name"
 
 ARP: Final = "arp"
+BACKUP: Final = "backup"
 CAPSMAN: Final = "capsman"
 DHCP: Final = "dhcp"
 HEALTH: Final = "health"
@@ -37,6 +38,7 @@ WIRELESS: Final = "wireless"
 
 MIKROTIK_SERVICES: Final = {
     ARP: "/ip/arp/getall",
+    BACKUP: "/system/backup/save",
     CAPSMAN: "/caps-man/registration-table/getall",
     DHCP: "/ip/dhcp-server/lease/getall",
     HEALTH: "/system/health/print",

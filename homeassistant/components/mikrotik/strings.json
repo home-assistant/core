@@ -43,6 +43,9 @@
   },
   "entity": {
     "button": {
+      "backup": {
+        "name": "Backup"
+      },
       "shutdown": {
         "name": "Shutdown"
       }
