@@ -1358,13 +1358,15 @@ async def test_missing_supported_components(
     )
     assert warning_msg in caplog.text
 
-    # Clear caplog and call async_get_calendars again to verify
-    # warning is not logged again
-    caplog.clear()
+    # Call async_get_calendars twice with a shared de-duplication store to
+    # verify the warning is not logged again
     client = MagicMock()
     client.principal().calendars.return_value = calendars
+    warned_calendars: set[tuple[str, str]] = set()
 
-    await async_get_calendars(hass, client, "VEVENT")
+    await async_get_calendars(hass, client, "VEVENT", warned_calendars)
+    caplog.clear()
+    await async_get_calendars(hass, client, "VEVENT", warned_calendars)
     assert warning_msg not in caplog.text
 
     # Verify that querying a *different* component for the same
@@ -1374,7 +1376,7 @@ async def test_missing_supported_components(
         "CalDAV server does not report supported components for calendar Example. "
         "Not assuming support for requested component 'VJOURNAL'"
     )
-    await async_get_calendars(hass, client, "VJOURNAL")
+    await async_get_calendars(hass, client, "VJOURNAL", warned_calendars)
     assert vjournal_warning in caplog.text
 
 
@@ -1397,7 +1399,10 @@ async def test_missing_supported_components_not_assumed(
     client = MagicMock()
     client.principal().calendars.return_value = calendars
 
-    returned_calendars = await async_get_calendars(hass, client, "VJOURNAL")
+    warned_calendars: set[tuple[str, str]] = set()
+    returned_calendars = await async_get_calendars(
+        hass, client, "VJOURNAL", warned_calendars
+    )
 
     assert len(returned_calendars) == 0
     warning_msg = (
@@ -1406,8 +1411,8 @@ async def test_missing_supported_components_not_assumed(
     )
     assert warning_msg in caplog.text
 
-    # Clear caplog and call async_get_calendars again to verify
-    # warning is not logged again
+    # Clear caplog and call async_get_calendars again with the same store to
+    # verify the warning is not logged again
     caplog.clear()
-    await async_get_calendars(hass, client, "VJOURNAL")
+    await async_get_calendars(hass, client, "VJOURNAL", warned_calendars)
     assert warning_msg not in caplog.text
