@@ -43,9 +43,9 @@ class MockPairingHandler(interface.PairingHandler):
         self.service.credentials = self.service.protocol.name.lower() + "_creds"
 
 
-def create_conf(name, address, *services):
+def create_conf(address, name, *services, device_info=None):
     """Create an Apple TV configuration."""
-    atv = conf.AppleTV(name, address)
+    atv = conf.AppleTV(address, name, device_info=device_info)
     for service in services:
         atv.add_service(service)
     return atv

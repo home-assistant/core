@@ -1,9 +1,10 @@
 """Tests for the Apple TV media player."""
 
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from pyatv.const import FeatureName, FeatureState
+from pyatv.const import FeatureName, FeatureState, Protocol
 from pyatv.exceptions import (
     BlockedStateError,
     ConnectionLostError,
@@ -13,24 +14,239 @@ from pyatv.exceptions import (
     PlaybackError,
     ProtocolError,
 )
+from pyatv.interface import DeviceInfo, FeatureInfo
 import pytest
 
-from homeassistant.components.apple_tv.const import DOMAIN
+from homeassistant.components.apple_tv.const import CONF_OUTPUT_DEVICE_ID, DOMAIN
 from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as MP_DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
+    SERVICE_UNJOIN,
     BrowseMedia,
     MediaClass,
     MediaType,
 )
 from homeassistant.components.media_source import PlayMedia
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
+from .common import create_conf, mrp_service
+
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+_GROUPING_FEATURES = (
+    FeatureName.AddOutputDevices,
+    FeatureName.RemoveOutputDevices,
+    FeatureName.SetOutputDevices,
+)
+
+
+class _GroupingFeatures:
+    """Minimal Features stub advertising only the output-device features.
+
+    Reporting these as available enables the GROUPING entity feature so the
+    join/unjoin services target the entity. Everything else is unavailable.
+    Kept local so the grouping tests do not depend on the shared conftest
+    fixtures.
+    """
+
+    def all_features(self) -> dict[FeatureName, FeatureInfo]:
+        """Report the output-device features as available."""
+        return {
+            feature: FeatureInfo(state=FeatureState.Available)
+            for feature in _GROUPING_FEATURES
+        }
+
+    def in_state(self, states, *features) -> bool:
+        """Report that no feature is in the requested state."""
+        return False
+
+
+@pytest.fixture
+def create_player(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> Callable[[str], Awaitable[tuple[str, AsyncMock]]]:
+    """Set up an Apple TV media player through a real config entry.
+
+    Kept self-contained (no shared conftest fixtures) so upstream changes to
+    the shared fixtures do not conflict with these grouping tests.
+    """
+
+    async def create(name: str) -> tuple[str, AsyncMock]:
+        unique_id = f"{name}-uid"
+        output_device_id = f"{name}-output-device-id"
+
+        atv = AsyncMock()
+        atv.features = _GroupingFeatures()
+        atv.audio.output_devices = []
+        atv.device_info.output_device_id = output_device_id
+        atv.device_info.mac = f"{name}-mac"
+
+        async def set_output_devices(*devices):
+            old_devices = atv.audio.output_devices
+            new_devices = [Mock(identifier=ident) for ident in devices]
+            atv.audio.output_devices = new_devices
+            # Mimic pyatv notifying the AudioListener of the change.
+            atv.audio.listener.outputdevices_update(old_devices, new_devices)
+
+        atv.audio.set_output_devices = AsyncMock(side_effect=set_output_devices)
+        atv.audio.remove_output_devices = AsyncMock()
+
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=unique_id,
+            data={
+                CONF_ADDRESS: "127.0.0.1",
+                CONF_NAME: name,
+                CONF_OUTPUT_DEVICE_ID: output_device_id,
+                "credentials": {str(Protocol.MRP.value): "mrp_creds"},
+                "identifiers": [unique_id],
+            },
+        )
+        entry.add_to_hass(hass)
+
+        device_info = DeviceInfo({DeviceInfo.OUTPUT_DEVICE_ID: output_device_id})
+        scan_result = create_conf(
+            "127.0.0.1", name, mrp_service(unique_id=unique_id), device_info=device_info
+        )
+
+        with (
+            patch("homeassistant.components.apple_tv.scan", return_value=[scan_result]),
+            patch("homeassistant.components.apple_tv.connect", return_value=atv),
+        ):
+            await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+
+        entity_id = entity_registry.async_get_entity_id(
+            MEDIA_PLAYER_DOMAIN, DOMAIN, unique_id
+        )
+        assert entity_id is not None
+        return entity_id, atv
+
+    return create
+
+
+def _group_members(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return the current group_members state attribute for an entity."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    return state.attributes.get(ATTR_GROUP_MEMBERS, [])
+
+
+async def test_async_join_players(hass: HomeAssistant, create_player) -> None:
+    """Media players are joined and atv is called with the correct output device ids."""
+    entity_1, atv_1 = await create_player("player_1")
+    entity_2, _ = await create_player("player_2")
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {ATTR_ENTITY_ID: entity_1, ATTR_GROUP_MEMBERS: [entity_1, entity_2]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    atv_1.audio.set_output_devices.assert_called_with(
+        "player_1-output-device-id", "player_2-output-device-id"
+    )
+    assert _group_members(hass, entity_1) == [entity_1, entity_2]
+
+
+async def test_async_join_players_throws(hass: HomeAssistant, create_player) -> None:
+    """Joining raises on unknown entity ids, but still joins the valid entities."""
+    entity_1, atv_1 = await create_player("player_1")
+    entity_2, _ = await create_player("player_2")
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: entity_1,
+                ATTR_GROUP_MEMBERS: [entity_1, entity_2, "media_player.does_not_exist"],
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    # The valid entities are still captured and joined.
+    atv_1.audio.set_output_devices.assert_called_with(
+        "player_1-output-device-id", "player_2-output-device-id"
+    )
+    assert _group_members(hass, entity_1) == [entity_1, entity_2]
+
+
+async def test_async_unjoin_player(hass: HomeAssistant, create_player) -> None:
+    """Leader players remove all members from their own group during unjoin."""
+    entity_1, atv_1 = await create_player("player_1")
+    entity_2, _ = await create_player("player_2")
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {ATTR_ENTITY_ID: entity_1, ATTR_GROUP_MEMBERS: [entity_1, entity_2]},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {ATTR_ENTITY_ID: entity_1},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    atv_1.audio.set_output_devices.assert_called_with("player_1-output-device-id")
+    assert _group_members(hass, entity_1) == [entity_1]
+
+
+async def test_async_unjoin_player_delegated(
+    hass: HomeAssistant, create_player
+) -> None:
+    """Non-leader players are removed from another player's group during unjoin."""
+    entity_1, atv_1 = await create_player("player_1")
+    entity_2, _ = await create_player("player_2")
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {ATTR_ENTITY_ID: entity_1, ATTR_GROUP_MEMBERS: [entity_1, entity_2]},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {ATTR_ENTITY_ID: entity_2},
+        blocking=True,
+    )
+
+    atv_1.audio.remove_output_devices.assert_called_with("player_2-output-device-id")
+
+
+async def test_outputdevices_update(hass: HomeAssistant, create_player) -> None:
+    """When atv signals an outputdevices update, the group_members are updated."""
+    entity_1, atv_1 = await create_player("player_1")
+    entity_2, _ = await create_player("player_2")
+
+    new_devices = [
+        Mock(identifier="player_1-output-device-id"),
+        Mock(identifier="player_2-output-device-id"),
+        Mock(identifier="non-hass-player-output-device-id"),
+    ]
+    atv_1.audio.output_devices = new_devices
+    atv_1.audio.listener.outputdevices_update([], new_devices)
+    await hass.async_block_till_done()
+
+    assert _group_members(hass, entity_1) == [entity_1, entity_2]
+
 
 ENTITY_ID = "media_player.living_room_living_room"
 _MUSIC_URL = "http://example.local:8123/api/tts_proxy/abc.mp3"
@@ -71,7 +287,7 @@ async def test_play_media_from_media_source(
         return_value=play_item,
     ):
         await hass.services.async_call(
-            MP_DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
@@ -92,7 +308,7 @@ async def test_play_media_launches_app(
 ) -> None:
     """App and URL media types launch the corresponding app on the device."""
     await hass.services.async_call(
-        MP_DOMAIN,
+        MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -137,7 +353,7 @@ async def test_play_media_selects_streaming_method(
     mock_atv.features.set_state(FeatureName.StreamFile, stream_file_state)
 
     await hass.services.async_call(
-        MP_DOMAIN,
+        MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -158,7 +374,7 @@ async def test_play_media_falls_back_to_play_url(
     mock_atv.features.set_state(FeatureName.StreamFile, FeatureState.Unsupported)
 
     await hass.services.async_call(
-        MP_DOMAIN,
+        MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -182,7 +398,7 @@ async def test_play_media_raises_when_no_streaming_method(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            MP_DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
@@ -243,7 +459,7 @@ async def test_play_media_raises_ha_error_on_pyatv_failure(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            MP_DOMAIN,
+            MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
