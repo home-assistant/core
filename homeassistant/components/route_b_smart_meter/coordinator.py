@@ -5,7 +5,7 @@ import logging
 import time
 from typing import override
 
-from momonga import Momonga, MomongaError
+from momonga import Momonga, MomongaError, MomongaNeedToReopen
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
@@ -43,6 +43,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     """The B Route update coordinator."""
 
     device_info_data: BRouteDeviceInfo
+    _port_locked: bool = False
 
     def __init__(
         self,
@@ -108,7 +109,40 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     @override
     async def _async_update_data(self) -> BRouteData:
         """Update data."""
+
+        def fetch_with_reopen() -> BRouteData:
+            try:
+                if self._port_locked:
+                    _LOGGER.info("Serial port was previously locked. Reopening session")
+                    self.api.open()
+                    self._port_locked = False
+                return self._get_data()
+            except MomongaNeedToReopen:
+                _LOGGER.info(
+                    "Route-B API is closed (likely from a previous recovery). "
+                    "Reopening session"
+                )
+                self.api.open()
+                return self._get_data()
+
         try:
-            return await self.hass.async_add_executor_job(self._get_data)
-        except MomongaError as error:
+            return await self.hass.async_add_executor_job(fetch_with_reopen)
+        except (
+            MomongaError,
+            RuntimeError,  # The momonga library raises RuntimeError for session/comm failures
+        ) as error:
+            _LOGGER.warning(
+                "Route-B poll failed. Attempting to force-close the serial port to "
+                "prevent lockup"
+            )
+            try:
+                await self.hass.async_add_executor_job(self.api.close)
+                _LOGGER.info(
+                    "Serial port closed cleanly; ready for the next polling cycle"
+                )
+                self._port_locked = False
+            except Exception:
+                # If close fails, mark the port as locked so the next cycle attempts a fresh open
+                self._port_locked = True
+                _LOGGER.exception("Could not close serial port")
             raise UpdateFailed(error) from error
