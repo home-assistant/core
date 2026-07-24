@@ -1,17 +1,19 @@
 """Config flow for solax integration."""
 
+import asyncio
 import logging
 from typing import Any, override
 
-from solax import real_time_api
+from solax import RealTimeAPI, discover
 from solax.discovery import DiscoveryError
+from solax.inverter import Inverter, InverterError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+from homeassistant.helpers import config_validation as cv, selector
 
-from .const import DOMAIN
+from .const import DOMAIN, model_name_for_inverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,42 +29,118 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_api(data) -> str:
-    """Validate the credentials."""
-
-    api = await real_time_api(
-        data[CONF_IP_ADDRESS], data[CONF_PORT], data[CONF_PASSWORD]
-    )
-    response = await api.get_data()
-    return response.serial_number
-
-
 class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Solax."""
+    """Handle a config flow for Solax.
+
+    Two step flow:
+    1. Get connection data and do a discovery
+    2. If multiple inverters are returned from step 1, then show them to the user to choose one. If one is returned, skip this step.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        super().__init__()
+        self._connection_data: dict[str, Any] = {}
+        self._potential_types: dict[str, Inverter] = {}
+
+    def _select_model_schema(self) -> vol.Schema:
+        """Return the schema listing only the discovered inverters."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_MODEL): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=sorted(self._potential_types),
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            }
+        )
+
+    async def _async_finalize(
+        self, model: str, inverter: Inverter, *, step_id: str, data_schema: vol.Schema
+    ) -> ConfigFlowResult:
+        """Fetch the serial number and create the entry, or redisplay on error."""
+        errors: dict[str, str] = {}
+        try:
+            response = await RealTimeAPI(inverter).get_data()
+        except ConnectionError, DiscoveryError:
+            errors["base"] = "cannot_connect"
+        except InverterError as err:
+            _LOGGER.debug("Inverter communication error: %s", err)
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            await self.async_set_unique_id(response.serial_number)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=response.serial_number,
+                data={**self._connection_data, CONF_MODEL: model},
+            )
+
+        return self.async_show_form(
+            step_id=step_id, data_schema=data_schema, errors=errors
+        )
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        errors: dict[str, Any] = {}
+        """Shows the connection form, and do the discovery.
+
+        If discovery resulted in multiple inverters, show the select_model form,
+        If only one skip and finalize.
+        """
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
+        errors: dict[str, str] = {}
         try:
-            serial_number = await validate_api(user_input)
+            potentials = await discover(
+                user_input[CONF_IP_ADDRESS],
+                user_input[CONF_PORT],
+                user_input[CONF_PASSWORD],
+                return_when=asyncio.ALL_COMPLETED,
+            )
         except ConnectionError, DiscoveryError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(serial_number)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=serial_number, data=user_input)
+            self._potential_types = {
+                model_name_for_inverter(inverter): inverter for inverter in potentials
+            }
+            self._connection_data = user_input
+
+            if len(self._potential_types) > 1:
+                return await self.async_step_select_model()
+
+            model, inverter = next(iter(self._potential_types.items()))
+            return await self._async_finalize(
+                model, inverter, step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_select_model(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle model selection when multiple inverters matched."""
+        if user_input is not None:
+            model = user_input[CONF_MODEL]
+            return await self._async_finalize(
+                model,
+                self._potential_types[model],
+                step_id="select_model",
+                data_schema=self._select_model_schema(),
+            )
+
+        return self.async_show_form(
+            step_id="select_model", data_schema=self._select_model_schema()
         )

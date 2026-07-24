@@ -8,6 +8,14 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "select_model": {
+        "data": {
+          "model": "Inverter model"
+        },
+        "data_description": {
+          "model": "Multiple inverter models responded at this address. Select the one that matches your device."
+        }
+      },
       "user": {
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
