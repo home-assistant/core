@@ -93,6 +93,7 @@ NO_IOT_CLASS = [
     "image_upload",
     "input_boolean",
     "input_button",
+    "input_color",
     "input_datetime",
     "input_number",
     "input_select",

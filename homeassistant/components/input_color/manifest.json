@@ -1,0 +1,8 @@
+{
+  "domain": "input_color",
+  "name": "Input Color",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/input_color",
+  "integration_type": "helper",
+  "quality_scale": "internal"
+}
