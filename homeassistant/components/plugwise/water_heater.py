@@ -177,4 +177,3 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
         await self.coordinator.api.set_dhw_mode(
             DHW_MODE, self._dev_id, self._dhw_modes_count, STATE_ECO
         )
-

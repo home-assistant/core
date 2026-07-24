@@ -161,4 +161,3 @@ async def test_anna_water_heater_mode_change(
         mock_smile_anna.set_dhw_mode.assert_called_with(
             "dhw_mode", "bfb5ee0a88e14e5f97bfa725a760cc49", 5, "boost"
         )
-
