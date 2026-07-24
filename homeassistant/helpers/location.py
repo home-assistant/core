@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 import logging
+from typing import NamedTuple
 
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
@@ -10,20 +11,37 @@ from homeassistant.util import location as location_util
 _LOGGER = logging.getLogger(__name__)
 
 
+class Location(NamedTuple):
+    """A latitude/longitude coordinate pair."""
+
+    latitude: float
+    longitude: float
+
+
+def get_location(state: State) -> Location | None:
+    """Return the state's location, or None.
+
+    Returns None if the state does not contain a valid location.
+
+    Async friendly.
+    """
+    if isinstance(
+        latitude := state.attributes.get(EntityStateAttribute.LATITUDE),
+        (float, int),
+    ) and isinstance(
+        longitude := state.attributes.get(EntityStateAttribute.LONGITUDE),
+        (float, int),
+    ):
+        return Location(latitude, longitude)
+    return None
+
+
 def has_location(state: State) -> bool:
     """Test if state contains a valid location.
 
     Async friendly.
     """
-    return (
-        isinstance(state, State)
-        and isinstance(
-            state.attributes.get(EntityStateAttribute.LATITUDE), (float, int)
-        )
-        and isinstance(
-            state.attributes.get(EntityStateAttribute.LONGITUDE), (float, int)
-        )
-    )
+    return isinstance(state, State) and get_location(state) is not None
 
 
 def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:

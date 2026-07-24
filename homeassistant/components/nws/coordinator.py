@@ -8,11 +8,11 @@ import aiohttp
 from aiohttp import ClientResponseError
 from pynws import NwsError, NwsNoDataError, SimpleNWS, call_with_retry
 
-from homeassistant.const import CONF_API_KEY, EntityStateAttribute
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import Location, get_location
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -49,7 +49,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         nws: SimpleNWS,
         *,
         location_entity_id: str | None = None,
-        initial_position: tuple[float, float] | None = None,
+        initial_position: Location | None = None,
     ) -> None:
         """Initialize."""
         self.nws = nws
@@ -84,26 +84,30 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             return
         self._location_state_warned = False
 
-        if not has_location(state):
+        if (location := get_location(state)) is None:
             _LOGGER.debug(
                 "Location entity %s has no location attributes; skipping location update",
                 self._location_entity_id,
             )
             return
-        new_lat = state.attributes[EntityStateAttribute.LATITUDE]
-        new_lon = state.attributes[EntityStateAttribute.LONGITUDE]
-        if self._previous_position is not None:
-            prev_lat, prev_lon = self._previous_position
-            if new_lat == prev_lat and new_lon == prev_lon:
+        if (previous := self._previous_position) is not None:
+            if location == previous:
                 return
-            dist = location_util.distance(prev_lat, prev_lon, new_lat, new_lon)
+            dist = location_util.distance(
+                previous.latitude,
+                previous.longitude,
+                location.latitude,
+                location.longitude,
+            )
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
         client_session = async_get_clientsession(self.hass)
         api_key = self.config_entry.data[CONF_API_KEY]
         station = self.config_entry.data.get(CONF_STATION)
         try:
-            new_nws = SimpleNWS(new_lat, new_lon, api_key, client_session)
+            new_nws = SimpleNWS(
+                location.latitude, location.longitude, api_key, client_session
+            )
             await new_nws.set_station(station)
         except aiohttp.ClientError, NwsError:
             _LOGGER.exception(
@@ -114,16 +118,16 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         _LOGGER.info(
             "NWS API updated: station %s at (%.4f, %.4f)",
             new_nws.station,
-            new_lat,
-            new_lon,
+            location.latitude,
+            location.longitude,
         )
         self.nws = new_nws
         self.name = f"NWS observation station {new_nws.station}"
         runtime_data = self.config_entry.runtime_data
         runtime_data.api = new_nws
-        runtime_data.latitude = new_lat
-        runtime_data.longitude = new_lon
-        self._previous_position = (new_lat, new_lon)
+        runtime_data.latitude = location.latitude
+        runtime_data.longitude = location.longitude
+        self._previous_position = location
         self.initialized = False
         self.last_api_success_time = None
         runtime_data.coordinator_forecast.name = (

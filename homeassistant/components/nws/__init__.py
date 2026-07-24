@@ -8,13 +8,7 @@ import logging
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    EntityStateAttribute,
-    Platform,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import debounce, entity_registry as er
@@ -24,7 +18,7 @@ from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import Location, get_location
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -95,14 +89,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             )
         location_entity_id = entity_entry.entity_id
         state = hass.states.get(location_entity_id)
-        if state is None or not has_location(state):
+        if state is None or (location := get_location(state)) is None:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="entity_unavailable",
                 translation_placeholders={"entity_id": location_entity_id},
             )
-        latitude = state.attributes[EntityStateAttribute.LATITUDE]
-        longitude = state.attributes[EntityStateAttribute.LONGITUDE]
+        latitude = location.latitude
+        longitude = location.longitude
         station = None
     else:
         latitude = entry.data[CONF_LATITUDE]
@@ -156,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         entry,
         nws_data,
         location_entity_id=location_entity_id,
-        initial_position=(latitude, longitude) if location_entity_id else None,
+        initial_position=Location(latitude, longitude) if location_entity_id else None,
     )
 
     # Don't use retries in setup
@@ -214,20 +208,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         ) -> None:
             """Request coordinator refresh when the location entity moves."""
             new_state = event.data["new_state"]
-            if new_state is None or not has_location(new_state):
+            if new_state is None or (location := get_location(new_state)) is None:
                 return
-            new_lat = new_state.attributes[EntityStateAttribute.LATITUDE]
-            new_lon = new_state.attributes[EntityStateAttribute.LONGITUDE]
             if (
-                new_lat == entry.runtime_data.latitude
-                and new_lon == entry.runtime_data.longitude
+                location.latitude == entry.runtime_data.latitude
+                and location.longitude == entry.runtime_data.longitude
             ):
                 return
             dist = location_util.distance(
                 entry.runtime_data.latitude,
                 entry.runtime_data.longitude,
-                new_lat,
-                new_lon,
+                location.latitude,
+                location.longitude,
             )
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
