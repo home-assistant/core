@@ -45,6 +45,8 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.BRUSH, 80, 60 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.FILTER, 56, 40 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
+    event_bus.notify(LifeSpanEvent(LifeSpan.CLEANING_SOLUTION, 100, 100))
+    event_bus.notify(LifeSpanEvent(LifeSpan.SEWAGE_BOX, 75, 2700))
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
     event_bus.notify(station.StationEvent(station.State.EMPTYING_DUSTBIN))
     await block_till_done(hass, event_bus)
@@ -110,8 +112,31 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.dusty_error",
             ],
         ),
+        (
+            "9eamof",
+            [
+                "sensor.t80_omni_area_cleaned",
+                "sensor.t80_omni_cleaning_duration",
+                "sensor.t80_omni_total_area_cleaned",
+                "sensor.t80_omni_total_cleaning_duration",
+                "sensor.t80_omni_total_cleanings",
+                "sensor.t80_omni_battery",
+                "sensor.t80_omni_ip_address",
+                "sensor.t80_omni_wi_fi_rssi",
+                "sensor.t80_omni_wi_fi_ssid",
+                "sensor.t80_omni_station_state",
+                "sensor.t80_omni_main_brush_lifespan",
+                "sensor.t80_omni_cleaning_solution_lifespan",
+                "sensor.t80_omni_filter_lifespan",
+                "sensor.t80_omni_hand_filter_lifespan",
+                "sensor.t80_omni_sewage_box_lifespan",
+                "sensor.t80_omni_side_brush_lifespan",
+                "sensor.t80_omni_unit_care_lifespan",
+                "sensor.t80_omni_error",
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3", "qhe2o2"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2", "9eamof"],
 )
 async def test_sensors(
     hass: HomeAssistant,
