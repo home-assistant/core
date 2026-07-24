@@ -52,11 +52,32 @@ async def test_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize(
+    ("input_url", "expected_url", "expected_title"),
+    [
+        pytest.param(
+            "https://192.168.1.189",
+            "https://192.168.1.189:443/",
+            "192.168.1.189",
+            id="ip_without_port",
+        ),
+        pytest.param(
+            "https://sonarr-anime.example.com/",
+            "https://sonarr-anime.example.com:443/",
+            "sonarr-anime.example.com",
+            id="hyphenated_hostname",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_url_rewrite(
-    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
+    hass: HomeAssistant,
+    mock_sonarr_config_flow: MagicMock,
+    input_url: str,
+    expected_url: str,
+    expected_title: str,
 ) -> None:
-    """Test the full manual user flow from start to finish."""
+    """Test auth flow url rewrite."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
@@ -66,17 +87,17 @@ async def test_url_rewrite(
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
-    user_input[CONF_URL] = "https://192.168.1.189"
+    user_input[CONF_URL] = input_url
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=user_input,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "192.168.1.189"
+    assert result["title"] == expected_title
 
     assert result["data"]
-    assert result["data"][CONF_URL] == "https://192.168.1.189:443/"
+    assert result["data"][CONF_URL] == expected_url
 
 
 async def test_invalid_auth(
