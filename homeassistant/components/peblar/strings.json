@@ -173,8 +173,55 @@
     "communication_error": {
       "message": "An error occurred while communicating with the Peblar EV charger: {error}"
     },
+    "invalid_config_entry": {
+      "message": "Config entry {config_entry_id} is not a valid Peblar config entry or is not loaded."
+    },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Peblar EV charger: {error}"
+    }
+  },
+  "services": {
+    "add_rfid_token": {
+      "description": "Adds an RFID token to the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to add the RFID token to.",
+          "name": "Config entry"
+        },
+        "description": {
+          "description": "A human-readable label for this RFID token.",
+          "name": "Description"
+        },
+        "uid": {
+          "description": "The unique identifier of the RFID token.",
+          "name": "UID"
+        }
+      },
+      "name": "Add RFID token"
+    },
+    "delete_rfid_token": {
+      "description": "Deletes an RFID token from the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to delete the RFID token from.",
+          "name": "Config entry"
+        },
+        "uid": {
+          "description": "The unique identifier of the RFID token to delete.",
+          "name": "UID"
+        }
+      },
+      "name": "Delete RFID token"
+    },
+    "list_rfid_tokens": {
+      "description": "Returns the RFID tokens configured in the charger's standalone authorization list.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Peblar EV charger to list RFID tokens for.",
+          "name": "Config entry"
+        }
+      },
+      "name": "List RFID tokens"
     }
   }
 }
