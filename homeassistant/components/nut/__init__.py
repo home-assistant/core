@@ -29,6 +29,34 @@ NUT_FAKE_SERIAL = ["unknown", "blank"]
 _LOGGER = logging.getLogger(__name__)
 
 
+def outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
+    """Return the outlet numbers reported by the device.
+
+    Use ``outlet.count`` when the device reports it. Otherwise fall back to
+    discovering outlets from ``outlet.<n>.*`` status keys, so devices that
+    expose switchable outlets without reporting a count are still detected.
+    """
+    if (num_outlets := status.get("outlet.count")) is not None:
+        try:
+            count = int(num_outlets)
+        except ValueError:
+            _LOGGER.debug("Invalid outlet.count value: %s", num_outlets)
+        else:
+            return set(range(1, count + 1))
+
+    outlet_numbers: set[int] = set()
+    prefix = "outlet."
+    for key in status:
+        rest = key.removeprefix(prefix)
+        if rest == key:
+            continue
+        number = rest.split(".", 1)[0]
+        if number.isdigit() and int(number) > 0:
+            outlet_numbers.add(int(number))
+
+    return outlet_numbers
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
@@ -79,16 +107,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     if username is not None and password is not None:
-        # Dynamically add outlet integration commands
+        # Dynamically add outlet integration commands for every detected outlet
         additional_integration_commands = set()
-        if (num_outlets := status.get("outlet.count")) is not None:
-            for outlet_num in range(1, int(num_outlets) + 1):
-                outlet_num_str: str = str(outlet_num)
-                additional_integration_commands |= {
-                    f"outlet.{outlet_num_str}.load.cycle",
-                    f"outlet.{outlet_num_str}.load.on",
-                    f"outlet.{outlet_num_str}.load.off",
-                }
+        for outlet_num in outlet_numbers_from_status(status):
+            additional_integration_commands |= {
+                f"outlet.{outlet_num}.load.cycle",
+                f"outlet.{outlet_num}.load.on",
+                f"outlet.{outlet_num}.load.off",
+            }
 
         valid_integration_commands = (
             INTEGRATION_SUPPORTED_COMMANDS | additional_integration_commands
