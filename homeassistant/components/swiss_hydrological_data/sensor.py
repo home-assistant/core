@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+from requests.exceptions import RequestException
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
 
@@ -11,12 +12,19 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+
+from .const import CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +36,7 @@ ATTR_STATION_UPDATE = "station_update"
 ATTR_WATER_BODY = "water_body"
 ATTR_WATER_BODY_TYPE = "water_body_type"
 
-CONF_STATION = "station"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_DISCHARGE = "discharge"
 SENSOR_LEVEL = "level"
@@ -58,30 +64,87 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Swiss hydrological sensor."""
-    station: int = config[CONF_STATION]
-    monitored_conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
-
-    hydro_data = HydrologicalData(station)
-    hydro_data.update()
-
-    if hydro_data.data is None:
-        _LOGGER.error("The station doesn't exists: %s", station)
+    """Import Swiss Hydrological Data configuration from YAML."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.11.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Swiss Hydrological Data",
+            },
+        )
         return
 
-    add_entities(
-        (
-            SwissHydrologicalDataSensor(hydro_data, station, condition)
-            for condition in monitored_conditions
-        ),
-        True,
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.11.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Swiss Hydrological Data",
+        },
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Swiss Hydrological Data sensors from a config entry."""
+    hydro_data: HydrologicalData = entry.runtime_data
+    station_id: int = entry.data[CONF_STATION]
+
+    if hydro_data.data is None:
+        return
+
+    async_add_entities(
+        SwissHydrologicalDataSensor(hydro_data, station_id, condition)
+        for condition in CONDITIONS
+        if condition in hydro_data.data.get("parameters", {})
+    )
+
+
+class HydrologicalData:
+    """The Class for handling the data retrieval."""
+
+    def __init__(self, station: int) -> None:
+        """Initialize the data object."""
+        self.station = station
+        self.data: dict[str, Any] | None = None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self) -> None:
+        """Get the latest data."""
+        try:
+            self.data = SwissHydroData().get_station(self.station)
+        except RequestException:
+            _LOGGER.exception("Error retrieving data for station %s", self.station)
+            self.data = None
 
 
 class SwissHydrologicalDataSensor(SensorEntity):
@@ -98,7 +161,6 @@ class SwissHydrologicalDataSensor(SensorEntity):
         self.hydro_data = hydro_data
         data = hydro_data.data
         if TYPE_CHECKING:
-            # Setup will fail in setup_platform if the data is None.
             assert data is not None
 
         self._condition = condition
@@ -108,6 +170,10 @@ class SwissHydrologicalDataSensor(SensorEntity):
         self._attr_native_unit_of_measurement = data["parameters"][condition]["unit"]
         self._attr_unique_id = f"{station}_{condition}"
         self._station = station
+        value = data["parameters"][condition]["value"]
+        self._attr_native_value = (
+            round(value, 2) if isinstance(value, (int, float)) else None
+        )
 
     @property
     @override
@@ -141,19 +207,3 @@ class SwissHydrologicalDataSensor(SensorEntity):
             state = self._data["parameters"][self._condition]["value"]
             if isinstance(state, (int, float)):
                 self._attr_native_value = round(state, 2)
-
-
-class HydrologicalData:
-    """The Class for handling the data retrieval."""
-
-    def __init__(self, station: int) -> None:
-        """Initialize the data object."""
-        self.station = station
-        self.data: dict[str, Any] | None = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self) -> None:
-        """Get the latest data."""
-
-        shd = SwissHydroData()
-        self.data = shd.get_station(self.station)
