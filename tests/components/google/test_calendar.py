@@ -530,6 +530,76 @@ async def test_http_api_all_day_event(
     }
 
 
+@pytest.mark.parametrize("calendar_access_role", ["freeBusyReader"])
+async def test_free_busy_calendar_serves_from_cache(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items: ApiResult,
+    component_setup: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test repeated requests for a free-busy calendar are served from cache."""
+    now = dt_util.now()
+    event = {
+        **TEST_EVENT,
+        "transparency": "opaque",
+        "start": {"dateTime": (now + datetime.timedelta(hours=1)).isoformat()},
+        "end": {"dateTime": (now + datetime.timedelta(hours=2)).isoformat()},
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    # The initial coordinator refresh has populated the local cache.
+    aioclient_mock.clear_requests()
+    mock_events_list_items([event])
+
+    client = await hass_client()
+    start = (now - datetime.timedelta(hours=1)).isoformat()
+    end = (now + datetime.timedelta(days=1)).isoformat()
+    for _ in range(3):
+        response = await client.get(get_events_url(TEST_API_ENTITY, start, end))
+        assert response.status == HTTPStatus.OK
+        events = await response.json()
+        assert len(events) == 1
+        assert events[0]["summary"] == TEST_EVENT["summary"]
+
+    # Requests within the cached window do not hit the API.
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.parametrize("calendar_access_role", ["freeBusyReader"])
+async def test_free_busy_calendar_queries_outside_cache_window(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items: ApiResult,
+    component_setup: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a free-busy calendar falls back to a live query outside the cache."""
+    now = dt_util.now()
+    event = {
+        **TEST_EVENT,
+        "transparency": "opaque",
+        "start": {"dateTime": (now + datetime.timedelta(hours=1)).isoformat()},
+        "end": {"dateTime": (now + datetime.timedelta(hours=2)).isoformat()},
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_events_list_items([event])
+
+    client = await hass_client()
+    # Request a range beyond the locally cached window.
+    start = (now + datetime.timedelta(days=180)).isoformat()
+    end = (now + datetime.timedelta(days=181)).isoformat()
+    response = await client.get(get_events_url(TEST_API_ENTITY, start, end))
+    assert response.status == HTTPStatus.OK
+
+    # Out-of-window ranges trigger a single live API call.
+    assert len(aioclient_mock.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     ("calendars_config_ignore_availability", "transparency", "expect_visible_event"),
     [
