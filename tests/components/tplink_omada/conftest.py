@@ -56,7 +56,7 @@ def _mock_controller_info() -> OmadaControllerInfo:
             "controllerVer": "6.2.10.17",
             "configured": True,
             "omadacId": "12345",
-            "type": "OC200",
+            "omadacCategory": "hardware",
         }
     )
 
