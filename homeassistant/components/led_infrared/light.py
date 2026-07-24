@@ -2,7 +2,12 @@
 
 from typing import Any, override
 
-from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyCode
+from infrared_protocols.codes.generic.led import (
+    Generic13KeyCode,
+    Generic24KeyCode,
+    Generic40KeyCode,
+    Generic44KeyCode,
+)
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.light import (
@@ -21,8 +26,10 @@ from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDevic
 PARALLEL_UPDATES = 1
 
 CODES = {
-    LEDIrDeviceType.GENERIC_24_KEY: Generic24KeyCode,
     LEDIrDeviceType.GENERIC_13_KEY: Generic13KeyCode,
+    LEDIrDeviceType.GENERIC_24_KEY: Generic24KeyCode,
+    LEDIrDeviceType.GENERIC_40_KEY: Generic40KeyCode,
+    LEDIrDeviceType.GENERIC_44_KEY: Generic44KeyCode,
 }
 
 
@@ -37,6 +44,28 @@ SUPPORTED_EFFECTS = {
         "mode_6",
         "mode_7",
         "mode_8",
+    ],
+    LEDIrDeviceType.GENERIC_40_KEY: [
+        "auto",
+        "fade3",
+        "fade7",
+        "flash",
+        "jump3",
+        "jump7",
+    ],
+    LEDIrDeviceType.GENERIC_44_KEY: [
+        "auto",
+        "fade3",
+        "fade7",
+        "flash",
+        "jump3",
+        "jump7",
+        "diy1",
+        "diy2",
+        "diy3",
+        "diy4",
+        "diy5",
+        "diy6",
     ],
 }
 
@@ -59,6 +88,50 @@ SUPPORTED_COLORS = {
         "yellow",
         "dark_cyan",
         "plum",
+    ],
+    LEDIrDeviceType.GENERIC_40_KEY: [
+        "red",
+        "green",
+        "blue",
+        "white",
+        "tomato",
+        "light_green",
+        "deep_blue",
+        "floral_white",
+        "orange",
+        "turquoise",
+        "purple",
+        "lavender_blush",
+        "yellowish",
+        "cyan",
+        "magenta",
+        "ghost_white",
+        "yellow",
+        "aqua",
+        "pink",
+        "light_cyan",
+    ],
+    LEDIrDeviceType.GENERIC_44_KEY: [
+        "red",
+        "green",
+        "blue",
+        "white",
+        "tomato",
+        "light_green",
+        "deep_blue",
+        "floral_white",
+        "orange",
+        "turquoise",
+        "purple",
+        "lavender_blush",
+        "yellowish",
+        "cyan",
+        "magenta",
+        "ghost_white",
+        "yellow",
+        "aqua",
+        "pink",
+        "light_cyan",
     ],
 }
 

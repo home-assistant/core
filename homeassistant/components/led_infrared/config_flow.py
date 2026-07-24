@@ -23,6 +23,8 @@ from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDevic
 DEVICE_NAMES = {
     LEDIrDeviceType.GENERIC_24_KEY: "24-key remote",
     LEDIrDeviceType.GENERIC_13_KEY: "13-key remote",
+    LEDIrDeviceType.GENERIC_40_KEY: "40-key remote",
+    LEDIrDeviceType.GENERIC_44_KEY: "44-key remote",
 }
 
 

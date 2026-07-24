@@ -26,14 +26,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="LED Infrared via Test IR emitter",
         entry_id="1234567890",
         data={
-            CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
+            CONF_DEVICE_TYPE: (
+                request.param
+                if hasattr(request, "param")
+                else LEDIrDeviceType.GENERIC_24_KEY
+            ),
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
         },
     )
@@ -54,6 +58,14 @@ def mock_infrared_code_to_command() -> Generator[None]:
         ) as mock_to_command,
         patch(
             "infrared_protocols.codes.generic.led.Generic13KeyCode.to_command",
+            new=mock_to_command,
+        ),
+        patch(
+            "infrared_protocols.codes.generic.led.Generic40KeyCode.to_command",
+            new=mock_to_command,
+        ),
+        patch(
+            "infrared_protocols.codes.generic.led.Generic44KeyCode.to_command",
             new=mock_to_command,
         ),
     ):

@@ -5,13 +5,31 @@
         "state_attributes": {
           "effect": {
             "state": {
+              "aqua": "mdi:palette",
+              "auto": "mdi:auto-mode",
               "blue": "mdi:palette",
               "cyan": "mdi:palette",
               "dark_cyan": "mdi:palette",
+              "deep_blue": "mdi:palette",
+              "diy1": "mdi:numeric-1-box",
+              "diy2": "mdi:numeric-2-box",
+              "diy3": "mdi:numeric-3-box",
+              "diy4": "mdi:numeric-4-box",
+              "diy5": "mdi:numeric-5-box",
+              "diy6": "mdi:numeric-6-box",
               "fade": "mdi:gradient-horizontal",
+              "fade3": "mdi:gradient-horizontal",
+              "fade7": "mdi:gradient-horizontal",
               "flash": "mdi:flash",
+              "floral_white": "mdi:palette",
+              "ghost_white": "mdi:palette",
               "green": "mdi:palette",
+              "jump3": "mdi:dots-circle",
+              "jump7": "mdi:dots-circle",
+              "lavender_blush": "mdi:palette",
+              "light_cyan": "mdi:palette",
               "light_green": "mdi:palette",
+              "magenta": "mdi:palette",
               "mode_1": "mdi:numeric-1-box",
               "mode_2": "mdi:numeric-2-box",
               "mode_3": "mdi:numeric-3-box",
@@ -22,6 +40,7 @@
               "mode_8": "mdi:numeric-8-box",
               "orange": "mdi:palette",
               "orange_red": "mdi:palette",
+              "pink": "mdi:palette",
               "plum": "mdi:palette",
               "purple": "mdi:palette",
               "rebecca_purple": "mdi:palette",
@@ -32,7 +51,8 @@
               "tomato": "mdi:palette",
               "turquoise": "mdi:palette",
               "white": "mdi:palette",
-              "yellow": "mdi:palette"
+              "yellow": "mdi:palette",
+              "yellowish": "mdi:palette"
             }
           }
         }
