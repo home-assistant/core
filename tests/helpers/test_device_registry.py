@@ -27,7 +27,12 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_capture_events, flush_store
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    flush_store,
+    mock_device_registry,
+)
 
 
 def _get_device_for_config_entry(
@@ -42,6 +47,29 @@ def _get_device_for_config_entry(
         if device.config_entry_id == config_entry_id:
             return device
     return None
+
+
+def _mock_deleted_device(
+    device_id: str,
+    config_entry_id: str,
+    identifiers: set[tuple[str, str]],
+) -> dr.DeletedDeviceEntry:
+    """Create a deleted device entry for seeding stored registry states."""
+    return dr.DeletedDeviceEntry(
+        area_id=None,
+        config_entry_id=config_entry_id,
+        config_subentry_id=None,
+        connections=set(),
+        created_at=utcnow(),
+        disabled_by=None,
+        id=device_id,
+        identifiers=identifiers,
+        labels=set(),
+        modified_at=utcnow(),
+        name_by_user=None,
+        orphaned_timestamp=None,
+        domain="test",
+    )
 
 
 @pytest.fixture
@@ -7100,22 +7128,23 @@ async def test_device_registry_connections_collision(
     assert device2_refetched.id == device1_refetched.id
     assert len(device_registry.devices) == 2
 
-    # Attempt to implicitly merge connection for device3 with the same
-    # connection that already exists in device1
-    device4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("bridgeid", "0123")},
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE"),
-            (dr.CONNECTION_NETWORK_MAC, "none"),
-        },
-    )
+    # Implicitly merging a connection registered to another device of the same
+    # config entry raises
+    with pytest.raises(dr.DeviceInfoError, match="already registered"):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("bridgeid", "0123")},
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE"),
+                (dr.CONNECTION_NETWORK_MAC, "none"),
+            },
+        )
     assert len(device_registry.devices) == 2
-    assert device4.id in (device1.id, device3.id)
 
     device3_refetched = device_registry.async_get(device3.id)
+    assert device3_refetched.connections == set()
     device1_refetched = device_registry.async_get(device1.id)
-    assert not device1_refetched.connections.isdisjoint(device3_refetched.connections)
+    assert device1_refetched.connections == {(dr.CONNECTION_NETWORK_MAC, "none")}
 
 
 async def test_device_registry_identifiers_collision(
@@ -7180,18 +7209,19 @@ async def test_device_registry_identifiers_collision(
     assert device2_refetched.id == device1_refetched.id
     assert len(device_registry.devices) == 2
 
-    # Attempt to implicitly merge identifiers for device3 with the same
-    # connection that already exists in device1
-    device4 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("bridgeid", "4567"), ("bridgeid", "0123")},
-    )
+    # Implicitly merging an identifier registered to another device of the same
+    # config entry raises
+    with pytest.raises(dr.DeviceInfoError, match="already registered"):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("bridgeid", "4567"), ("bridgeid", "0123")},
+        )
     assert len(device_registry.devices) == 2
-    assert device4.id in (device1.id, device3.id)
 
     device3_refetched = device_registry.async_get(device3.id)
+    assert device3_refetched.identifiers == {("bridgeid", "4567")}
     device1_refetched = device_registry.async_get(device1.id)
-    assert not device1_refetched.identifiers.isdisjoint(device3_refetched.identifiers)
+    assert device1_refetched.identifiers == {("bridgeid", "0123")}
 
 
 async def test_device_registry_deleted_device_collision(
@@ -7456,6 +7486,293 @@ async def test_remove_shadowed_collision_keeps_index_consistent(
         device_registry.async_get_device(identifiers={("test", "2")})
         is other_entry_device
     )
+
+
+async def test_remove_device_promotes_shadowed_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Removing the indexed holder of a duplicate key promotes the shadowed one."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "shadowed": dr.DeviceEntry(
+                id="shadowed",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "shared")},
+            ),
+            "winner": dr.DeviceEntry(
+                id="winner",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "shared")},
+            ),
+        },
+    )
+    assert (
+        device_registry.async_get_device(identifiers={("test", "shared")}).id
+        == "winner"
+    )
+
+    device_registry.async_remove_device("winner")
+
+    assert (
+        device_registry.async_get_device(identifiers={("test", "shared")}).id
+        == "shadowed"
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_extra", "stale_extra", "register_extra"),
+    [
+        pytest.param(
+            {"identifiers": {("test", "device"), ("test", "shared")}},
+            {"identifiers": {("test", "stale"), ("test", "shared")}},
+            {"identifiers": {("test", "device")}},
+            id="identifiers",
+        ),
+        pytest.param(
+            {
+                "identifiers": {("test", "device")},
+                "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+            },
+            {
+                "identifiers": {("test", "stale")},
+                "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+            },
+            {
+                "identifiers": {("test", "device")},
+                "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+            },
+            id="connections",
+        ),
+    ],
+)
+async def test_legacy_duplicate_keys_stripped_on_registration(
+    hass: HomeAssistant,
+    device_extra: dict[str, set[tuple[str, str]]],
+    stale_extra: dict[str, set[tuple[str, str]]],
+    register_extra: dict[str, set[tuple[str, str]]],
+) -> None:
+    """Registering a device strips its keys from stale same-entry duplicates.
+
+    The stale duplicate keeps its other keys; another config entry is not affected.
+    """
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="test")
+    other_entry.add_to_hass(hass)
+    shared_keys = device_extra.keys() & stale_extra.keys()
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "device": dr.DeviceEntry(
+                id="device", config_entry_id=entry.entry_id, **device_extra
+            ),
+            "stale": dr.DeviceEntry(
+                id="stale", config_entry_id=entry.entry_id, **stale_extra
+            ),
+            "other": dr.DeviceEntry(
+                id="other",
+                config_entry_id=other_entry.entry_id,
+                **{key: device_extra[key] & stale_extra[key] for key in shared_keys},
+            ),
+        },
+    )
+
+    registered = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, **register_extra
+    )
+
+    assert registered.id == "device"
+    assert registered.identifiers == device_extra["identifiers"]
+    assert registered.connections == device_extra.get("connections", set())
+    # The stale duplicate lost the shared keys but keeps its own
+    stale = device_registry.async_get("stale")
+    assert stale.identifiers == {("test", "stale")}
+    assert stale.connections == set()
+    # The registered device is reachable by the previously shared keys
+    assert (
+        _get_device_for_config_entry(
+            device_registry,
+            entry.entry_id,
+            identifiers=device_extra["identifiers"],
+            connections=device_extra.get("connections"),
+        ).id
+        == "device"
+    )
+    # A device of another config entry sharing a key is not affected
+    other = device_registry.async_get("other")
+    assert other.identifiers == device_extra["identifiers"] & stale_extra["identifiers"]
+    assert other.connections == device_extra.get(
+        "connections", set()
+    ) & stale_extra.get("connections", set())
+    # Registering again is a no-op
+    registered = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, **register_extra
+    )
+    assert registered.id == "device"
+    assert len(device_registry.devices) == 3
+
+
+async def test_legacy_duplicate_fully_stripped_device_removed(
+    hass: HomeAssistant,
+) -> None:
+    """A stale duplicate left without any keys is removed, also from deleted devices."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "device": dr.DeviceEntry(
+                id="device",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "device"), ("test", "shared")},
+            ),
+            "stale": dr.DeviceEntry(
+                id="stale",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "shared")},
+            ),
+        },
+    )
+
+    registered = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "device")}
+    )
+
+    assert registered.id == "device"
+    assert registered.identifiers == {("test", "device"), ("test", "shared")}
+    assert device_registry.async_get("stale") is None
+    assert "stale" not in device_registry.deleted_devices
+    assert (
+        device_registry.async_get_device(identifiers={("test", "shared")}).id
+        == "device"
+    )
+
+
+async def test_registration_purges_same_entry_deleted_duplicates(
+    hass: HomeAssistant,
+) -> None:
+    """Registering a device purges same-entry deleted devices holding its keys.
+
+    Whole records are purged, shadowed included; another config entry is not affected.
+    """
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="test")
+    other_entry.add_to_hass(hass)
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "device": dr.DeviceEntry(
+                id="device",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "device"), ("test", "shared")},
+            ),
+        },
+    )
+    device_registry.deleted_devices["deleted_shadowed"] = _mock_deleted_device(
+        "deleted_shadowed", entry.entry_id, {("test", "shared"), ("test", "other")}
+    )
+    device_registry.deleted_devices["deleted_winner"] = _mock_deleted_device(
+        "deleted_winner", entry.entry_id, {("test", "shared")}
+    )
+    device_registry.deleted_devices["deleted_other_entry"] = _mock_deleted_device(
+        "deleted_other_entry", other_entry.entry_id, {("test", "shared")}
+    )
+
+    registered = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "device")}
+    )
+
+    assert registered.id == "device"
+    assert "deleted_winner" not in device_registry.deleted_devices
+    assert "deleted_shadowed" not in device_registry.deleted_devices
+    assert "deleted_other_entry" in device_registry.deleted_devices
+
+
+async def test_restore_purges_same_entry_deleted_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Restoring a deleted device purges its same-entry deleted duplicates."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_registry = mock_device_registry(hass)
+    device_registry.deleted_devices["deleted_shadowed"] = _mock_deleted_device(
+        "deleted_shadowed", entry.entry_id, {("test", "shared")}
+    )
+    device_registry.deleted_devices["deleted_winner"] = _mock_deleted_device(
+        "deleted_winner", entry.entry_id, {("test", "shared")}
+    )
+
+    restored = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "shared")}
+    )
+
+    assert restored.id == "deleted_winner"
+    assert "deleted_winner" not in device_registry.deleted_devices
+    assert "deleted_shadowed" not in device_registry.deleted_devices
+    assert len(device_registry.devices) == 1
+
+
+async def test_add_identifier_prunes_shadowed_deleted_duplicates(
+    hass: HomeAssistant,
+) -> None:
+    """Gaining an identifier removes all matching same-entry deleted devices.
+
+    Whole records are removed, shadowed duplicates included.
+    """
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_registry = mock_device_registry(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "device")}
+    )
+    device_registry.deleted_devices["deleted_shadowed"] = _mock_deleted_device(
+        "deleted_shadowed", entry.entry_id, {("test", "shared")}
+    )
+    device_registry.deleted_devices["deleted_winner"] = _mock_deleted_device(
+        "deleted_winner", entry.entry_id, {("test", "shared"), ("test", "other")}
+    )
+
+    device_registry.async_update_device(
+        device.id, merge_identifiers={("test", "shared")}
+    )
+
+    assert "deleted_winner" not in device_registry.deleted_devices
+    assert "deleted_shadowed" not in device_registry.deleted_devices
+
+
+async def test_via_device_id_to_removed_stale_duplicate_raises(
+    hass: HomeAssistant,
+) -> None:
+    """A via_device_id to a stale duplicate removed by reconciliation raises."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "device": dr.DeviceEntry(
+                id="device",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "device"), ("test", "shared")},
+            ),
+            "stale": dr.DeviceEntry(
+                id="stale",
+                config_entry_id=entry.entry_id,
+                identifiers={("test", "shared")},
+            ),
+        },
+    )
+
+    with pytest.raises(dr.DeviceInfoError, match="not a registered device id"):
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={("test", "device")},
+            via_device_id="stale",
+        )
+    assert device_registry.async_get("stale") is None
 
 
 @pytest.mark.parametrize(
