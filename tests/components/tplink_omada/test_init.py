@@ -2,17 +2,22 @@
 
 from datetime import UTC, datetime
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tplink_omada_client import OmadaControllerInfo
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
 
-from homeassistant.components.tplink_omada import config_entry_owns_controller_entities
+from homeassistant.components.tplink_omada import (
+    async_unload_entry,
+    config_entry_owns_controller_entities,
+)
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.entity import controller_model
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -129,9 +134,33 @@ async def test_controller_device_registered_at_startup(
     assert controller_device is not None
     assert controller_device.config_entries == {init_integration.entry_id}
     assert controller_device.manufacturer == "TP-Link"
-    assert controller_device.model == "OC200"
+    assert controller_device.model == "Hardware"
     assert controller_device.name == "OC200"
     assert controller_device.sw_version == "6.2.10.17"
+
+
+@pytest.mark.parametrize(
+    ("omadac_category", "expected_model"),
+    [
+        pytest.param("hardware", "Hardware", id="hardware"),
+        pytest.param("software", "Software", id="software"),
+        pytest.param(None, None, id="unknown"),
+    ],
+)
+def test_controller_model(
+    omadac_category: str | None,
+    expected_model: str | None,
+) -> None:
+    """Test controller model is derived from the controller category."""
+    data = {
+        "controllerVer": "6.2.10.17",
+        "configured": True,
+        "omadacId": "12345",
+    }
+    if omadac_category is not None:
+        data["omadacCategory"] = omadac_category
+
+    assert controller_model(OmadaControllerInfo(data)) == expected_model
 
 
 async def test_omada_devices_link_to_controller_device(
@@ -228,6 +257,43 @@ async def test_controller_owner_tie_breaks_by_entry_id(
 
     assert config_entry_owns_controller_entities(hass, owner_entry)
     assert not config_entry_owns_controller_entities(hass, other_entry)
+
+
+async def test_controller_owner_reload_transfers_to_next_active_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test unloading the owner reloads the next active controller entry."""
+    owner_entry = _mock_controller_entry(
+        hass,
+        entry_id="01",
+        site_id="Default",
+        created_at=datetime(2026, 7, 8, tzinfo=UTC),
+        state=ConfigEntryState.LOADED,
+    )
+    next_entry = _mock_controller_entry(
+        hass,
+        entry_id="02",
+        site_id="Second",
+        created_at=datetime(2026, 7, 9, tzinfo=UTC),
+        state=ConfigEntryState.LOADED,
+    )
+
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            AsyncMock(return_value=True),
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_reload",
+            AsyncMock(),
+        ) as mock_reload,
+    ):
+        assert await async_unload_entry(hass, owner_entry)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_awaited_once_with(next_entry.entry_id)
 
 
 async def test_migrate_entry_v1_to_v2(

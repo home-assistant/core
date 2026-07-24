@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
+from .entity import controller_model
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +94,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    controller_id = entry.runtime_data.controller_id
+    reload_owner = config_entry_owns_controller_entities(hass, entry)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok and reload_owner:
+        _reload_controller_entities_owner(hass, entry, controller_id)
+
+    return unload_ok
 
 
 def config_entry_owns_controller_entities(
@@ -101,24 +109,53 @@ def config_entry_owns_controller_entities(
     entry: OmadaConfigEntry,
 ) -> bool:
     """Return if this entry should own controller-level entities."""
-    controller_id = entry.runtime_data.controller_id
+    owner = _controller_entities_owner(hass, entry.runtime_data.controller_id)
+    return owner is not None and owner.entry_id == entry.entry_id
+
+
+def _controller_entities_owner(
+    hass: HomeAssistant,
+    controller_id: str,
+    exclude_entry: OmadaConfigEntry | None = None,
+    active_only: bool = False,
+) -> ConfigEntry | None:
+    """Return the config entry that should own controller-level entities."""
     entries = [
         config_entry
         for config_entry in hass.config_entries.async_entries(DOMAIN)
         if _config_entry_matches_controller(config_entry, controller_id)
+        and (exclude_entry is None or config_entry.entry_id != exclude_entry.entry_id)
     ]
     active_entries = [
         config_entry
         for config_entry in entries
         if config_entry.state in _CONTROLLER_OWNER_STATES
     ]
+    if active_only:
+        candidate_entries = active_entries
+    else:
+        candidate_entries = active_entries or entries
+    if not candidate_entries:
+        return None
 
     # Omada supports clustering internally, but the public Northbound API does
     # not document how to determine the current Primary controller.
     # Until a documented API is available, use a deterministic stable owner.
-    candidate_entries = active_entries or entries
-    owner = min(candidate_entries, key=lambda item: (item.created_at, item.entry_id))
-    return owner.entry_id == entry.entry_id
+    return min(candidate_entries, key=lambda item: (item.created_at, item.entry_id))
+
+
+def _reload_controller_entities_owner(
+    hass: HomeAssistant,
+    entry: OmadaConfigEntry,
+    controller_id: str,
+) -> None:
+    """Reload the next active owner so controller-level entities are recreated."""
+    if (
+        owner := _controller_entities_owner(
+            hass, controller_id, exclude_entry=entry, active_only=True
+        )
+    ) is not None:
+        hass.async_create_task(hass.config_entries.async_reload(owner.entry_id))
 
 
 def _config_entry_matches_controller(
@@ -144,7 +181,7 @@ def _register_controller_device(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller.controller_id)},
         manufacturer="TP-Link",
-        model=controller.controller_name,
+        model=controller_model(controller_info),
         name=controller.controller_name,
         sw_version=controller_info.controller_version,
     )

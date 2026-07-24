@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from tplink_omada_client import OmadaControllerInfo
 from tplink_omada_client.devices import OmadaDevice
 
 from homeassistant.helpers import device_registry as dr
@@ -9,6 +10,18 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OmadaControllerCoordinator, OmadaCoordinator
+
+
+def controller_model(controller_info: OmadaControllerInfo) -> str | None:
+    """Return the controller model."""
+    match controller_info.omadac_category:
+        case "hardware":
+            # The Omada API does not expose a hardware product model here.
+            return "Hardware"
+        case "software":
+            return "Software"
+        case _:
+            return None
 
 
 class OmadaControllerEntity(CoordinatorEntity[OmadaControllerCoordinator]):
@@ -24,7 +37,7 @@ class OmadaControllerEntity(CoordinatorEntity[OmadaControllerCoordinator]):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, controller.controller_id)},
             manufacturer="TP-Link",
-            model=controller.controller_name,
+            model=controller_model(info),
             name=controller.controller_name,
             sw_version=info.controller_version,
         )
