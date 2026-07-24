@@ -26,13 +26,18 @@ from uiprotect.data import (
     Sensor,
     SmartDetectObjectType,
     StateType,
+    Version,
     VideoMode,
     Viewer,
     WSSubscriptionMessage,
 )
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_CONNECTION_MODE,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DOMAIN,
+)
 from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
 from homeassistant.const import (
     CONF_API_KEY,
@@ -169,6 +174,13 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.has_public_bootstrap = True
     client.is_public_only = False
 
+    # Only consulted on the public-only setup path (tests that flip
+    # ``is_public_only`` on this client); a valid version and NVR mac let
+    # that path complete instead of requiring per-test setup.
+    meta = Mock()
+    meta.version = Version("7.1.83")
+    client.get_meta_info = AsyncMock(return_value=meta)
+
     # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
     # them in ``update_public()``; the integration reads them synchronously. Start
     # with empty collections; the ``update_public`` side effect (see ``mock_entry``)
@@ -179,6 +191,12 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
+    client.public_bootstrap.nvr = Mock()
+    client.public_bootstrap.nvr.mac = nvr.mac
+    client.public_bootstrap.nvr.name = nvr.name
+    client.public_bootstrap.nvr.display_name = nvr.name
+    client.public_bootstrap.nvr.device_type = None
+    client.public_bootstrap.nvr.type = None
 
     # Cameras resolve to their primed public model (see ``update_public`` in
     # ``mock_entry``); other device types opt in via the ``setup_public_*``
@@ -542,6 +560,23 @@ def mock_ufp_reauth_entry_alt():
             "id": "UnifiProtect",
             CONF_PORT: 8443,
             CONF_VERIFY_SSL: True,
+        },
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
+    )
+
+
+@pytest.fixture(name="ufp_public_only_entry")
+def mock_ufp_public_only_entry():
+    """Mock a public-API-only (API key, no local user) config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_API_KEY: DEFAULT_API_KEY,
+            "id": DEFAULT_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
         },
         unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
     )

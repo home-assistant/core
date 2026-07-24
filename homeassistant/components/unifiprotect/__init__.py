@@ -2,10 +2,12 @@
 
 from datetime import timedelta
 import logging
+from typing import NoReturn
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
+from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 
 # Import the test_util.anonymize module from the uiprotect package
@@ -32,10 +34,12 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
+    DEFAULT_BRAND,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
     PLATFORMS,
+    PUBLIC_ONLY_PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
 from .migrate import async_migrate_data
@@ -78,6 +82,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     else:
         data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
         entry.runtime_data = data_service
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
+    )
+
+    if protect.is_public_only:
+        await _async_setup_public_only_entry(hass, entry, data_service)
+        return True
 
     try:
         await protect.update()
@@ -122,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
             "cloud_user",
             is_fixable=True,
             is_persistent=False,
-            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#local-user",
+            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#full-access",
             severity=IssueSeverity.ERROR,
             translation_key="cloud_user",
             data={"entry_id": entry.entry_id},
@@ -141,13 +153,107 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
-    )
-
     await _async_setup_entry(hass, entry, data_service, bootstrap)
 
     return True
+
+
+def _raise_buffered_public_auth_error(
+    data_service: ProtectData, err: NotAuthorized
+) -> NoReturn:
+    """Buffer spurious 401s (console updating) like the private login path."""
+    data_service.auth_retries += 1
+    if data_service.auth_retries > AUTH_RETRIES:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        ) from err
+    raise ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="cannot_connect",
+    ) from err
+
+
+async def _async_setup_public_only_entry(
+    hass: HomeAssistant, entry: UFPConfigEntry, data_service: ProtectData
+) -> None:
+    """Set up an API-key-only (public Integration API) config entry.
+
+    The private bootstrap is never fetched: the NVR identity is resolved from
+    the public API and only public-API-backed platforms are forwarded.
+    """
+    protect = data_service.api
+
+    try:
+        meta = await protect.get_meta_info()
+    except NotAuthorized as err:
+        _raise_buffered_public_auth_error(data_service, err)
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
+
+    if meta.version < MIN_REQUIRED_PROTECT_V:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="protect_version",
+            translation_placeholders={
+                "current_version": str(meta.version),
+                "min_version": str(MIN_REQUIRED_PROTECT_V),
+            },
+        )
+
+    data_service.async_setup()
+
+    try:
+        await data_service.async_update_public()
+    except NotAuthorized as err:
+        await data_service.async_stop()
+        _raise_buffered_public_auth_error(data_service, err)
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        await data_service.async_stop()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="public_bootstrap_failed",
+        ) from err
+
+    # update_public() backfills the NVR mac from the console fallback on
+    # firmware that omits it, so it is available here for the device identity.
+    nvr = protect.public_bootstrap.nvr
+    if nvr is None or not nvr.mac:
+        await data_service.async_stop()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="public_bootstrap_failed",
+        )
+    unifi_mac = _async_unifi_mac_from_hass(nvr.mac)
+
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=unifi_mac)
+
+    # Registry migrations are mode-independent; an entry flipped from full
+    # access must not skip them.
+    await async_migrate_data(hass, entry)
+
+    data_service.async_subscribe_public_events()
+
+    # Register the NVR device up front: it must exist even when no entity
+    # attaches (old firmware without the alarm manager), and it carries the
+    # firmware version, which no public-only entity provides. ``type`` is only
+    # present on newer firmware; market name and console URL are private-only.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
+        identifiers={(DOMAIN, unifi_mac)},
+        manufacturer=DEFAULT_BRAND,
+        name=nvr.display_name or None,
+        model=nvr.type,
+        sw_version=str(meta.version),
+    )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PUBLIC_ONLY_PLATFORMS)
 
 
 async def _async_setup_entry(
@@ -156,14 +262,14 @@ async def _async_setup_entry(
     data_service: ProtectData,
     bootstrap: Bootstrap,
 ) -> None:
-    await async_migrate_data(hass, entry, data_service.api, bootstrap)
+    await async_migrate_data(hass, entry)
     data_service.async_setup()
 
     # Prime the public bootstrap (subscribe-then-prime, per library docs). Camera
     # streams depend on it, so a failed prime retries instead of building
     # streamless cameras.
     try:
-        await data_service.api.update_public()
+        await data_service.async_update_public()
     except NotAuthorized as err:
         # A public 401 means a bad/revoked API key (independent of the private
         # session); route to reauth instead of retrying forever.
@@ -197,7 +303,7 @@ async def _async_setup_entry(
         connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
         identifiers={(DOMAIN, nvr.mac)},
         manufacturer="Ubiquiti",
-        name=nvr.display_name,
+        name=nvr.display_name or None,
         model=nvr.type,
         sw_version=str(nvr.version),
         configuration_url=nvr.api.base_url,
@@ -212,7 +318,10 @@ async def _async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Unload UniFi Protect config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    platforms = (
+        PUBLIC_ONLY_PLATFORMS if entry.runtime_data.api.is_public_only else PLATFORMS
+    )
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         await entry.runtime_data.async_stop()
     return unload_ok
 
@@ -245,6 +354,15 @@ async def async_remove_config_entry_device(
         if connection[0] == dr.CONNECTION_NETWORK_MAC
     }
     api = config_entry.runtime_data.api
+    if api.is_public_only:
+        # No private bootstrap: judge against the public cache. all_devices()
+        # walks every public device family (and the NVR), so new families are
+        # covered without changes here.
+        return not any(
+            device.mac and _async_unifi_mac_from_hass(device.mac) in unifi_macs
+            for device in api.public_bootstrap.all_devices(include_nvr=True)
+            if isinstance(device, PublicDeviceModel | PublicNVR)
+        )
     if api.bootstrap.nvr.mac in unifi_macs:
         return False
     for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):

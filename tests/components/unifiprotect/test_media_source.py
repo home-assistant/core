@@ -213,6 +213,7 @@ async def test_browse_media_root_multiple_consoles(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
@@ -280,6 +281,7 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
