@@ -2048,7 +2048,7 @@ pyblu==2.0.8
 pybotvac==0.0.29
 
 # homeassistant.components.braviatv
-pybravia==0.4.1
+pybravia==0.5.1
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.14
@@ -2298,7 +2298,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.4.2
+pylamarzocco==2.4.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -3414,7 +3414,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==4.3.1
+yoto-api==4.3.2
 
 # homeassistant.components.youless
 youless-api==2.2.0
