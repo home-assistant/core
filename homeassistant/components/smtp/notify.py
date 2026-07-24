@@ -55,6 +55,7 @@ from .const import (
     ATTR_HTML,
     ATTR_IMAGES,
     CONF_ENCRYPTION,
+    CONF_ENTRY,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_DEBUG,
@@ -117,12 +118,15 @@ async def async_get_service(
 
     ssl_context = (
         await hass.async_add_executor_job(create_client_context)
-        if discovery_info[CONF_VERIFY_SSL]
+        if discovery_info[CONF_ENTRY].data[CONF_VERIFY_SSL]
         else None
     )
     mail_service = MailNotificationService(discovery_info, ssl_context)
 
+    entry: SmtpConfigEntry = discovery_info[CONF_ENTRY]
+
     if await hass.async_add_executor_job(mail_service.connection_is_valid):
+        entry.async_on_unload(mail_service.async_unregister_services)
         return mail_service
 
     return None
@@ -255,16 +259,18 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
     ) -> None:
         """Initialize the SMTP service."""
         self.recipients = config[CONF_RECIPIENT]
+        entry: SmtpConfigEntry = config[CONF_ENTRY]
+
         super().__init__(
-            server=config[CONF_SERVER],
-            port=config[CONF_PORT],
-            timeout=config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-            sender=config[CONF_SENDER],
-            encryption=config[CONF_ENCRYPTION],
-            username=config.get(CONF_USERNAME),
-            password=config.get(CONF_PASSWORD),
-            sender_name=config.get(CONF_SENDER_NAME),
-            verify_ssl=config[CONF_VERIFY_SSL],
+            server=entry.data[CONF_SERVER],
+            port=entry.data[CONF_PORT],
+            timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            sender=entry.data[CONF_SENDER],
+            encryption=entry.data[CONF_ENCRYPTION],
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+            sender_name=entry.data.get(CONF_SENDER_NAME),
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
             ssl_context=ssl_context,
         )
 

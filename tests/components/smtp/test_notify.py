@@ -21,25 +21,10 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
-from homeassistant.components.smtp.const import (
-    CONF_ENCRYPTION,
-    CONF_SENDER_NAME,
-    CONF_SERVER,
-    DOMAIN,
-)
+from homeassistant.components.smtp.const import CONF_ENTRY, DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_RECIPIENT,
-    CONF_SENDER,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_RECIPIENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -57,20 +42,15 @@ class MockSMTP(MailNotificationService):
 
 
 @pytest.fixture
-def message():
+def message(
+    config_entry: MockConfigEntry,
+):
     """Return MockSMTP object with test data."""
     return MockSMTP(
         config={
-            CONF_SERVER: "localhost",
-            CONF_PORT: 25,
-            CONF_TIMEOUT: 5,
-            CONF_SENDER: "test@test.com",
-            CONF_ENCRYPTION: 1,
-            CONF_USERNAME: "testuser",
-            CONF_PASSWORD: "testpass",
+            CONF_NAME: config_entry.title,
+            CONF_ENTRY: config_entry,
             CONF_RECIPIENT: ["recip1@example.com", "testrecip@test.com"],
-            CONF_SENDER_NAME: "Home Assistant",
-            CONF_VERIFY_SSL: True,
         },
         ssl_context=create_client_context(),
     )
@@ -181,7 +161,7 @@ def test_send_text_message(hass: HomeAssistant, message) -> None:
         "Content-Transfer-Encoding: 7bit\n"
         "Subject: Home Assistant\n"
         "To: recip1@example.com,testrecip@test.com\n"
-        "From: Home Assistant <test@test.com>\n"
+        "From: Home Assistant <email@example.com>\n"
         "X-Mailer: Home Assistant\n"
         "Date: [^\n]+\n"
         "Message-Id: <[^@]+@[^>]+>\n"
