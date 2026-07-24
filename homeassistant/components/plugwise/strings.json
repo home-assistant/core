@@ -307,10 +307,10 @@
       }
     },
     "water_heater": {
-      "boiler_temperature": {
+      "maximum_boiler_temperature": {
         "name": "Boiler"
       }
-      "dhw_temperature": {
+      "max_dhw_temperature": {
         "name": "Doestic hot water",
         "state": {
           "auto": "[%key:common::state::auto%]",
