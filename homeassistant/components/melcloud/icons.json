@@ -20,6 +20,11 @@
         }
       }
     },
+    "select": {
+      "operation_mode": {
+        "default": "mdi:sun-thermometer"
+      }
+    },
     "sensor": {
       "daily_cooling_energy_consumed": {
         "default": "mdi:snowflake"
