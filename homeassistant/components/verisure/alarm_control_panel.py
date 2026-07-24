@@ -115,7 +115,8 @@ class VerisureAlarm(
         self._attr_alarm_state = AlarmControlPanelState.ARMING
         self.async_write_ha_state()
         await self._async_set_arm_state(
-            "ARMED_HOME", self.coordinator.verisure.arm_home(code)
+            "ARMED_HOME",
+            self.coordinator.verisure.arm_home(code, force_arm=True),
         )
 
     @override
@@ -124,7 +125,8 @@ class VerisureAlarm(
         self._attr_alarm_state = AlarmControlPanelState.ARMING
         self.async_write_ha_state()
         await self._async_set_arm_state(
-            "ARMED_AWAY", self.coordinator.verisure.arm_away(code)
+            "ARMED_AWAY",
+            self.coordinator.verisure.arm_away(code, force_arm=True),
         )
 
     def _update_alarm_attributes(self) -> None:
