@@ -438,13 +438,7 @@ async def test_valve_default_open_duration_discovery_when_nullable(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test the DefaultOpenDuration number entity is created when the attribute is null.
-
-    DefaultOpenDuration is nullable per the Matter spec (its minimum value is 1,
-    so "no default duration configured" is represented as null on the wire).
-    The entity should still be discovered and report an unknown state instead of
-    being skipped entirely.
-    """
+    """Test the DefaultOpenDuration number entity is discovered when the attribute is null."""
     entity_id = "number.mock_valve_default_open_duration"
     state = hass.states.get(entity_id)
     assert state
