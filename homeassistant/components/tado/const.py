@@ -40,6 +40,8 @@ CONF_HOME_ID = "home_id"
 CONF_REFRESH_TOKEN = "refresh_token"
 DATA = "data"
 
+TIMETABLE_TRANSLATION_KEY = "timetable"
+
 # Weather
 CONDITIONS_MAP = {
     "clear-night": {"NIGHT_CLEAR"},

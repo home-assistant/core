@@ -6,6 +6,7 @@ from typing import Any, override
 from zoneinfo import ZoneInfo
 
 from PyTado.interface import Tado
+from PyTado.interface.api.my_tado import Timetable
 from PyTado.zone import TadoZone
 from requests import RequestException
 
@@ -13,6 +14,7 @@ from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -24,6 +26,7 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     TEMP_OFFSET,
+    TIMETABLE_TRANSLATION_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +75,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "device": {},
             "weather": {},
             "geofence": {},
+            "timetable": {},
             "zone": {},
         }
 
@@ -83,6 +87,19 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def fallback(self) -> str:
         """Return fallback flag to Smart Schedule."""
         return self._fallback
+
+    @property
+    def _enabled_timetable_zone_ids(self) -> set[int]:
+        """Return the zone IDs whose timetable select entity is enabled."""
+        registry = er.async_get(self.hass)
+        return {
+            int(entry.unique_id.split(" ")[0])
+            for entry in er.async_entries_for_config_entry(
+                registry, self.config_entry.entry_id
+            )
+            if entry.translation_key == TIMETABLE_TRANSLATION_KEY
+            and entry.disabled_by is None
+        }
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -123,6 +140,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
 
+        enabled_timetable_zones = self._enabled_timetable_zone_ids
+        if enabled_timetable_zones:
+            self.data["timetable"] = await self._async_update_timetables(
+                enabled_timetable_zones
+            )
+
         refresh_token = await self.hass.async_add_executor_job(
             self._tado.get_refresh_token
         )
@@ -136,7 +159,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         # Calculate the most recent update interval
-        self._calculate_update_interval()
+        self._calculate_update_interval(len(enabled_timetable_zones))
 
         return self.data
 
@@ -152,7 +175,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for zone_data in self.data.get("zone", {}).values()
         )
 
-    def _calculate_update_interval(self) -> None:
+    def _calculate_update_interval(self, timetable_zone_count: int) -> None:
         """Calculate an update interval based on remaining calls and estimates."""
 
         # Tado resets somewhere between 12:00 and 13:00, Berlin time
@@ -190,11 +213,13 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             return
 
-        # Each refresh cycle costs 9 + len(zones) calls
-        # Also take 10% of the remaining calls as buffer
+        # Each refresh cycle costs 9 + len(zones) calls (zone state per zone),
+        # plus one extra call per zone whose timetable entity is enabled.
+        # Also take 10% of the remaining calls as buffer.
         self._current_interval = max(
             min_interval,
-            (self._time_until_reset * (9 + len(self.zones))) / (remaining_calls * 0.9),
+            (self._time_until_reset * (9 + len(self.zones) + timetable_zone_count))
+            / (remaining_calls * 0.9),
         )
 
         self._next_update = reset_time + timedelta(seconds=self._current_interval)
@@ -269,6 +294,25 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             mapped_zones[zone_id] = await self._build_zone(zone_id, raw_state)
 
         return mapped_zones
+
+    async def _async_update_timetables(
+        self, zone_ids: set[int]
+    ) -> dict[int, Timetable]:
+        """Update the timetable data from Tado."""
+        try:
+            return await self.hass.async_add_executor_job(
+                self._load_timetables, list(zone_ids)
+            )
+        except RequestException as err:
+            _LOGGER.warning("Error updating Tado timetables: %s", err)
+            return self.data.get("timetable", {})
+
+    def _load_timetables(self, zone_ids: list[int]) -> dict[int, Timetable]:
+        """Load the active timetable for each zone."""
+        timetables: dict[int, Timetable] = {}
+        for zone_id in zone_ids:
+            timetables[zone_id] = self._tado.get_timetable(zone_id)
+        return timetables
 
     async def _build_zone(self, zone_id: int, raw_state: dict[str, Any]) -> TadoZone:
         """Fetch defaultOverlay for a zone and construct a TadoZone."""
@@ -473,3 +517,17 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_rate_limit(self) -> dict[str, str]:
         """Get the current rate limit status from Tado."""
         return self._tado.rate_limit_info()
+
+    async def set_timetable(self, zone_id: int, timetable: Timetable) -> None:
+        """Set timetable of a zone."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._tado.set_timetable,
+                zone_id,
+                timetable,
+            )
+        except RequestException as exc:
+            raise HomeAssistantError(
+                f"Error setting Tado timetable {timetable} for zone {zone_id}: {exc}"
+            ) from exc
+        self.data["timetable"][zone_id] = timetable

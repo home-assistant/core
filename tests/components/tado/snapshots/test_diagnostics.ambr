@@ -62,6 +62,8 @@
         'presence': 'HOME',
         'presenceLocked': False,
       }),
+      'timetable': dict({
+      }),
       'weather': dict({
         'outsideTemperature': dict({
           'celsius': 7.46,
