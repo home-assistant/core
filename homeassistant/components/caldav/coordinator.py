@@ -6,13 +6,14 @@ import re
 from typing import TYPE_CHECKING, override
 
 import caldav
+import icalendar
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .api import get_attr_value
+from .api import get_attr_dt, get_attr_str
 
 if TYPE_CHECKING:
     from . import CalDavConfigEntry
@@ -21,6 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
+
+
+def _get_vevent(event: caldav.CalendarObjectResource) -> icalendar.cal.Component | None:
+    """Return the VEVENT component of a caldav object, or None if it has none."""
+    if (instance := event.icalendar_instance) is None:
+        return None
+    return next(iter(instance.walk("VEVENT")), None)
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
@@ -67,25 +75,20 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         )
         event_list = []
         for event in vevent_list:
-            if not hasattr(event.instance, "vevent"):
+            if (vevent := _get_vevent(event)) is None:
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
             event_list.append(
                 CalendarEvent(
-                    summary=get_attr_value(vevent, "summary") or "",
-                    start=self.to_local(vevent.dtstart.value),
+                    summary=get_attr_str(vevent, "summary") or "",
+                    start=self.to_local(vevent["DTSTART"].dt),
                     end=self.to_local(self.get_end_date(vevent)),
-                    location=get_attr_value(vevent, "location"),
-                    description=get_attr_value(vevent, "description"),
-                    uid=get_attr_value(vevent, "uid"),
-                    recurrence_id=(
-                        str(v)
-                        if (v := get_attr_value(vevent, "recurrence_id")) is not None
-                        else None
-                    ),
+                    location=get_attr_str(vevent, "location"),
+                    description=get_attr_str(vevent, "description"),
+                    uid=get_attr_str(vevent, "uid"),
+                    recurrence_id=get_attr_str(vevent, "recurrence_id"),
                 )
             )
 
@@ -116,45 +119,24 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             expand=True,
         )
 
-        # Create new events for each recurrence of an event that happens today.
-        # For recurring events, some servers return the original
-        # event with recurrence rules
-        # and they would not be properly parsed using their original start/end dates.
-        new_events = []
+        # Some servers return the recurring master unexpanded; expand it locally
+        # into the individual occurrences that fall within the window.
+        vevents = []
         for event in results:
-            if not hasattr(event.instance, "vevent"):
+            if (vevent := _get_vevent(event)) is None:
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            vevent = event.instance.vevent
-            for start_dt in vevent.getrruleset() or []:
-                _start_of_today: date | datetime
-                _start_of_tomorrow: datetime | date
-                if self.is_all_day(vevent):
-                    start_dt = start_dt.date()
-                    _start_of_today = start_of_today.date()
-                    _start_of_tomorrow = start_of_tomorrow.date()
-                else:
-                    _start_of_today = start_of_today
-                    _start_of_tomorrow = start_of_tomorrow
-                if _start_of_today <= start_dt < _start_of_tomorrow:
-                    new_event = event.copy()
-                    new_vevent = new_event.instance.vevent  # type: ignore[attr-defined]
-                    if hasattr(new_vevent, "dtend"):
-                        dur = new_vevent.dtend.value - new_vevent.dtstart.value
-                        new_vevent.dtend.value = start_dt + dur
-                    new_vevent.dtstart.value = start_dt
-                    new_events.append(new_event)
-                elif _start_of_tomorrow <= start_dt:
-                    break
-        vevents = [
-            event.instance.vevent
-            for event in results + new_events
-            if hasattr(event.instance, "vevent")
-        ]
+            if "RRULE" in vevent or "RDATE" in vevent:
+                # Expand a copy so the fetched result is not mutated in place.
+                expanded = event.copy()
+                expanded.expand_rrule(start_of_today, start_of_tomorrow)
+                vevents.extend(expanded.icalendar_instance.walk("VEVENT"))
+            else:
+                vevents.append(vevent)
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
-        vevents.sort(key=lambda x: self.to_datetime(x.dtstart.value))
+        vevents.sort(key=lambda x: self.to_datetime(x["DTSTART"].dt))
 
         vevent = next(
             (
@@ -180,20 +162,16 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         # Populate the entity attributes with the event values
         (summary, offset) = extract_offset(
-            get_attr_value(vevent, "summary") or "", OFFSET
+            get_attr_str(vevent, "summary") or "", OFFSET
         )
         next_event = CalendarEvent(
             summary=summary,
-            start=self.to_local(vevent.dtstart.value),
+            start=self.to_local(vevent["DTSTART"].dt),
             end=self.to_local(self.get_end_date(vevent)),
-            location=get_attr_value(vevent, "location"),
-            description=get_attr_value(vevent, "description"),
-            uid=get_attr_value(vevent, "uid"),
-            recurrence_id=(
-                str(v)
-                if (v := get_attr_value(vevent, "recurrence_id")) is not None
-                else None
-            ),
+            location=get_attr_str(vevent, "location"),
+            description=get_attr_str(vevent, "description"),
+            uid=get_attr_str(vevent, "uid"),
+            recurrence_id=get_attr_str(vevent, "recurrence_id"),
         )
         return next_event, offset
 
@@ -204,19 +182,15 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             return True
 
         pattern = re.compile(search)
-        return (
-            (hasattr(vevent, "summary") and pattern.match(vevent.summary.value))
-            or (hasattr(vevent, "location") and pattern.match(vevent.location.value))
-            or (
-                hasattr(vevent, "description")
-                and pattern.match(vevent.description.value)
-            )
+        return any(
+            (value := vevent.get(field)) is not None and pattern.match(str(value))
+            for field in ("SUMMARY", "LOCATION", "DESCRIPTION")
         )
 
     @staticmethod
     def is_all_day(vevent):
-        """Return if the event last the whole day."""
-        return not isinstance(vevent.dtstart.value, datetime)
+        """Return if the event lasts the whole day."""
+        return not isinstance(vevent["DTSTART"].dt, datetime)
 
     @staticmethod
     def is_over(vevent):
@@ -247,19 +221,20 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         return obj
 
     @staticmethod
-    def get_end_date(obj):
+    def get_end_date(obj: icalendar.cal.Component) -> date | datetime:
         """Return the end datetime as determined by dtend or duration."""
-        if hasattr(obj, "dtend"):
-            enddate = obj.dtend.value
-        elif hasattr(obj, "duration"):
-            enddate = obj.dtstart.value + obj.duration.value
+        dtstart = obj["DTSTART"].dt
+        if (dtend := get_attr_dt(obj, "dtend")) is not None:
+            enddate = dtend
+        elif (duration := obj.get("DURATION")) is not None:
+            enddate = dtstart + duration.dt
         else:
-            enddate = obj.dtstart.value + timedelta(days=1)
+            enddate = dtstart + timedelta(days=1)
 
         # End date for an all day event is exclusive. This fixes the case where
         # an all day event has a start and end values are the same, or the event
         # has a zero duration.
-        if not isinstance(enddate, datetime) and obj.dtstart.value == enddate:
+        if not isinstance(enddate, datetime) and dtstart == enddate:
             enddate += timedelta(days=1)
 
         return enddate
