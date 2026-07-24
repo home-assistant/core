@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["midealocal"],
   "quality_scale": "bronze",
-  "requirements": ["midea-local==6.10.0"]
+  "requirements": ["midea-local==6.11.0"]
 }
