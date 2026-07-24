@@ -421,6 +421,7 @@ homeassistant.components.oncue.*
 homeassistant.components.onedrive.*
 homeassistant.components.onedrive_for_business.*
 homeassistant.components.onewire.*
+homeassistant.components.onida_infrared.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.open_router.*

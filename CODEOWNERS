@@ -1312,6 +1312,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/onedrive_for_business/ @zweckj
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
+/homeassistant/components/onida_infrared/ @Dr-Blank
+/tests/components/onida_infrared/ @Dr-Blank
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
 /tests/components/onkyo/ @arturpragacz @eclair4151
 /homeassistant/components/onvif/ @jterrace
