@@ -8078,3 +8078,211 @@ async def test_dict_repr_dual_writes_deprecated_keys(
     assert "composite_primary_config_entry" not in repr_
     assert "split_at" not in repr_
     assert "has_composite_identifiers" not in repr_
+
+
+@pytest.mark.parametrize(
+    ("areas", "name", "current_area_id", "expected"),
+    [
+        pytest.param(
+            [("Living Room", [])],
+            "Living Room Thermostat",
+            None,
+            dr.DeviceAreaSuggestion("Thermostat", "living_room"),
+            id="prefix",
+        ),
+        pytest.param(
+            [("Living Room", [])],
+            "Thermostat Living Room",
+            None,
+            dr.DeviceAreaSuggestion("Thermostat", "living_room"),
+            id="suffix",
+        ),
+        pytest.param(
+            [("Master", []), ("Master Bedroom", [])],
+            "Master Bedroom Lamp",
+            None,
+            dr.DeviceAreaSuggestion("Lamp", "master_bedroom"),
+            id="longest-label-wins",
+        ),
+        pytest.param(
+            [("Master", []), ("Master Bedroom", [])],
+            "Master Bedroom",
+            None,
+            None,
+            id="name-equals-area-no-fallback",
+        ),
+        pytest.param(
+            [("Kitchen", [])],
+            "Kitchenette Sensor",
+            None,
+            None,
+            id="word-boundary",
+        ),
+        pytest.param(
+            [("Living Room", ["Lounge"])],
+            "Lounge TV",
+            None,
+            dr.DeviceAreaSuggestion("TV", "living_room"),
+            id="alias-match",
+        ),
+        pytest.param(
+            [("Living Room", [])],
+            "living room thermostat",
+            None,
+            dr.DeviceAreaSuggestion("thermostat", "living_room"),
+            id="case-insensitive",
+        ),
+        pytest.param(
+            [("Living Room", [])],
+            "Thermostat",
+            None,
+            None,
+            id="no-match",
+        ),
+        pytest.param(
+            [("Kitchen", [])],
+            "Kitchen Sensor",
+            "kitchen",
+            dr.DeviceAreaSuggestion("Sensor"),
+            id="current-area-cleans-name-only",
+        ),
+        pytest.param(
+            [("Kitchen", []), ("Living Room", [])],
+            "Living Room Sensor",
+            "kitchen",
+            None,
+            id="current-area-never-overridden",
+        ),
+        pytest.param(
+            [("Kitchen", [])],
+            "   ",
+            None,
+            None,
+            id="blank-name",
+        ),
+    ],
+)
+async def test_suggest_device_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    areas: list[tuple[str, list[str]]],
+    name: str,
+    current_area_id: str | None,
+    expected: dr.DeviceAreaSuggestion | None,
+) -> None:
+    """Test suggesting a cleaned device name and area from a known area label."""
+    for area_name, aliases in areas:
+        area_registry.async_create(area_name, aliases=set(aliases))
+
+    assert (
+        dr.suggest_device_area(name, current_area_id, area_registry.async_list_areas())
+        == expected
+    )
+
+
+async def test_get_or_create_strips_area_from_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a new device is assigned the area in its name and gets a cleaned name."""
+    living_room = area_registry.async_create("Living Room")
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bla", "123")},
+        name="Living Room Thermostat",
+    )
+
+    # The integration's raw name is kept, the cleaned name is stored as name_by_user.
+    assert device.name == "Living Room Thermostat"
+    assert device.name_by_user == "Thermostat"
+    assert device.area_id == living_room.id
+
+    # Re-registering with the original name keeps the cleaned name and area.
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bla", "123")},
+        name="Living Room Thermostat",
+    )
+
+    assert device.name == "Living Room Thermostat"
+    assert device.name_by_user == "Thermostat"
+    assert device.area_id == living_room.id
+
+
+async def test_get_or_create_strips_suggested_area_from_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the suggested area is stripped from the name without being overridden."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bla", "123")},
+        name="Kitchen Sensor",
+        suggested_area="Kitchen",
+    )
+
+    kitchen = area_registry.async_get_area_by_name("Kitchen")
+    assert kitchen is not None
+    assert device.name == "Kitchen Sensor"
+    assert device.name_by_user == "Sensor"
+    assert device.area_id == kitchen.id
+
+
+async def test_get_or_create_keeps_name_when_it_matches_another_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a name matching an area other than the device's own is left untouched."""
+    area_registry.async_create("Living Room")
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bla", "123")},
+        name="Living Room Sensor",
+        suggested_area="Kitchen",
+    )
+
+    kitchen = area_registry.async_get_area_by_name("Kitchen")
+    assert kitchen is not None
+    assert device.name == "Living Room Sensor"
+    assert device.name_by_user is None
+    assert device.area_id == kitchen.id
+
+
+async def test_get_or_create_does_not_reclean_restored_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a restored device keeps its user name instead of being re-cleaned."""
+    living_room = area_registry.async_create("Living Room")
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bla", "123")},
+        name="Living Room Thermostat",
+    )
+    device_registry.async_update_device(device.id, name_by_user="My Thermostat")
+
+    # Removing the config entry orphans the device so re-registering restores it.
+    device_registry.async_clear_config_entry(mock_config_entry.entry_id)
+
+    new_entry = MockConfigEntry()
+    new_entry.add_to_hass(hass)
+    restored = device_registry.async_get_or_create(
+        config_entry_id=new_entry.entry_id,
+        identifiers={("bla", "123")},
+        name="Living Room Thermostat",
+    )
+
+    assert restored.id == device.id
+    assert restored.name_by_user == "My Thermostat"
+    assert restored.area_id == living_room.id

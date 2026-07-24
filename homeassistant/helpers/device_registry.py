@@ -12,7 +12,7 @@ import logging
 import os
 import shutil
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack, override
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypedDict, Unpack, override
 
 import attr
 from yarl import URL
@@ -27,7 +27,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
-from homeassistant.util import uuid as uuid_util
+from homeassistant.util import strip_boundary_label, uuid as uuid_util
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
+    from .area_registry import AreaEntry
 else:
     from propcache.api import under_cached_property
 
@@ -1268,6 +1269,61 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
         return None
 
 
+class DeviceAreaSuggestion(NamedTuple):
+    """A cleaned device name and an optional area to assign."""
+
+    name: str
+    area_id: str | None = None
+
+
+def _match_area(name: str, area: AreaEntry) -> tuple[str, int] | None:
+    """Return the stripped name and length of the area's longest matching label."""
+    best: tuple[str, int] | None = None
+    for label in (area.name, *area.aliases):
+        if not label:
+            continue
+        stripped = strip_boundary_label(name, label)
+        if stripped is None:
+            continue
+        if best is None or len(label) > best[1]:
+            best = (stripped, len(label))
+    return best
+
+
+def suggest_device_area(
+    name: str | None,
+    current_area_id: str | None,
+    areas: Iterable[AreaEntry],
+) -> DeviceAreaSuggestion | None:
+    """Suggest a cleaned device name and area from a known area label.
+
+    When the device already has an area, only that area's label is stripped, so
+    an assigned area is never overridden. Otherwise the area with the longest
+    matching name or alias wins and is suggested along with the cleaned name.
+
+    A match that strips the whole name (name equals the label) is a no-op, with
+    no fallback to a shorter label. Returns None when nothing should change.
+    """
+    if not (name := (name or "").strip()):
+        return None
+
+    if current_area_id:
+        area = next((area for area in areas if area.id == current_area_id), None)
+        if area and (match := _match_area(name, area)) and match[0]:
+            return DeviceAreaSuggestion(name=match[0])
+        return None
+
+    best: tuple[str, str] | None = None
+    best_length = 0
+    for area in areas:
+        if (match := _match_area(name, area)) and match[1] > best_length:
+            best = (area.id, match[0])
+            best_length = match[1]
+    if best and best[1]:
+        return DeviceAreaSuggestion(name=best[1], area_id=best[0])
+    return None
+
+
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
@@ -1759,13 +1815,33 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "merge_identifiers": identifiers or UNDEFINED,
             }
 
+        # On creation, strip a known area label from the device name into
+        # name_by_user and, when the device has no area, assign the matching area.
+        # Storing the cleaned name as name_by_user leaves the integration's raw name
+        # in name and lets the cleaned name survive re-registration untouched, so
+        # this only runs for new devices. A device restored with a user-set name is
+        # left alone.
+        device_area_id: str | None | UndefinedType = UNDEFINED
+        device_name_by_user: str | UndefinedType = UNDEFINED
+        if is_new and name is not UNDEFINED and name and device.name_by_user is None:
+            from . import area_registry as ar  # noqa: PLC0415  # Circular dependency
+
+            if suggestion := suggest_device_area(
+                name, device.area_id, ar.async_get(self.hass).async_list_areas()
+            ):
+                device_name_by_user = suggestion.name
+                if suggestion.area_id is not None:
+                    device_area_id = suggestion.area_id
+
         device = self._async_update_device(
             device.id,
             allow_collisions=True,
+            area_id=device_area_id,
             disabled_by=disabled_by,
             entry_type=entry_type,
             is_new=is_new,
             name=name,
+            name_by_user=device_name_by_user,
             has_composite_identifiers=has_composite_identifiers,
             # Move the device if the integration re-registers it under a different
             # subentry; UNDEFINED leaves the subentry unchanged. Also validates an

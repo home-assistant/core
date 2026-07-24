@@ -261,3 +261,28 @@ async def test_throttle_async() -> None:
 def test_snakecase(input, expected) -> None:
     """Test snake casing a string."""
     assert util.snakecase(input) == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "label", "expected"),
+    [
+        ("Living Room Thermostat", "Living Room", "Thermostat"),
+        ("Thermostat Living Room", "Living Room", "Thermostat"),
+        ("Living Room", "Living Room", ""),
+        ("living room thermostat", "Living Room", "thermostat"),
+        ("LIVING ROOM Thermostat", "living room", "Thermostat"),
+        ("Kitchen-Sensor", "Kitchen", "Sensor"),
+        ("Kitchen_Sensor", "Kitchen", "Sensor"),
+        ("Kitchen.Sensor", "Kitchen", "Sensor"),
+        ("Sensor-Kitchen", "Kitchen", "Sensor"),
+        ("Kitchen   Sensor", "Kitchen", "Sensor"),
+        ("Kitchenette Sensor", "Kitchen", None),
+        ("My Kitchen Sensor", "Kitchen", None),
+        ("Thermostat", "Living Room", None),
+        ("Kitchen -", "Kitchen", ""),
+        ("- Kitchen", "Kitchen", ""),
+    ],
+)
+def test_strip_boundary_label(text: str, label: str, expected: str | None) -> None:
+    """Test stripping a label from the boundary of a string."""
+    assert util.strip_boundary_label(text, label) == expected

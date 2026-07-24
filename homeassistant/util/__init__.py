@@ -110,6 +110,42 @@ def snakecase(text: str) -> str:
     return text.lower()
 
 
+_SEPARATOR_CLASS = r"\s\-_."
+_LEADING_SEPARATORS = re.compile(rf"^[{_SEPARATOR_CLASS}]+")
+_TRAILING_SEPARATORS = re.compile(rf"[{_SEPARATOR_CLASS}]+$")
+_STARTS_WITH_SEPARATOR = re.compile(rf"^[{_SEPARATOR_CLASS}]")
+_ENDS_WITH_SEPARATOR = re.compile(rf"[{_SEPARATOR_CLASS}]$")
+
+
+def strip_boundary_label(text: str, label: str) -> str | None:
+    """Strip label from the start or end of text on a word boundary.
+
+    Matching is case-insensitive and only made on a separator boundary (any of
+    whitespace, ``-``, ``_`` or ``.``), so "Kitchen" is not stripped from
+    "Kitchenette". Surrounding separators are trimmed from the remainder.
+
+    Returns an empty string when text equals label, the trimmed remainder for a
+    prefix or suffix match, or None when label is neither.
+    """
+    lower_text = text.lower()
+    lower_label = label.lower()
+
+    if lower_text == lower_label:
+        return ""
+
+    if lower_text.startswith(lower_label):
+        rest = text[len(label) :]
+        if _STARTS_WITH_SEPARATOR.match(rest):
+            return _LEADING_SEPARATORS.sub("", rest).strip()
+
+    if lower_text.endswith(lower_label):
+        rest = text[: len(text) - len(label)]
+        if _ENDS_WITH_SEPARATOR.search(rest):
+            return _TRAILING_SEPARATORS.sub("", rest).strip()
+
+    return None
+
+
 class Throttle:
     """A class for throttling the execution of tasks.
 
