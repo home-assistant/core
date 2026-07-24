@@ -1142,6 +1142,13 @@ def get_zha_data(hass: HomeAssistant) -> HAZHAData:
     return hass.data[DATA_ZHA]
 
 
+def get_zigpy_database_path(hass: HomeAssistant) -> str:
+    """Get the path to the zigpy database (`zigbee.db`)."""
+    return get_zha_data(hass).yaml_config.get(
+        CONF_DATABASE, hass.config.path(DEFAULT_DATABASE_NAME)
+    )
+
+
 def get_zha_gateway(hass: HomeAssistant) -> Gateway:
     """Get the ZHA gateway object."""
     if (gateway_proxy := get_zha_data(hass).gateway_proxy) is None:
@@ -1344,11 +1351,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     # deep copy the yaml config to avoid modifying the original and to safely
     # pass it to the ZHA library
     app_config = copy.deepcopy(ha_zha_data.yaml_config.get(CONF_ZIGPY, {}))
-    database = ha_zha_data.yaml_config.get(
-        CONF_DATABASE,
-        hass.config.path(DEFAULT_DATABASE_NAME),
-    )
-    app_config[CONF_DATABASE] = database
+    app_config[CONF_DATABASE] = get_zigpy_database_path(hass)
     app_config[CONF_DEVICE] = ha_zha_data.config_entry.data[CONF_DEVICE]
 
     radio_type = RadioType[ha_zha_data.config_entry.data[CONF_RADIO_TYPE]]

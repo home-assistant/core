@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import logging
+from pathlib import Path
 import typing
 from unittest.mock import AsyncMock, patch
 import zoneinfo
@@ -27,6 +28,7 @@ from homeassistant.components.zha.const import (
     CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
+    DEFAULT_DATABASE_NAME,
     DOMAIN,
 )
 from homeassistant.components.zha.helpers import (
@@ -569,3 +571,43 @@ async def test_gateway_created_with_migrated_device_path(
     zha_data = mock_create_config.call_args.args[1]
 
     assert zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == unique_path
+
+
+async def test_remove_entry_deletes_database(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that removing the ZHA entry deletes the zigbee database and its sidecars."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    database_files = [
+        Path(hass.config.path(f"{DEFAULT_DATABASE_NAME}{suffix}"))
+        for suffix in ("", "-shm", "-wal")
+    ]
+    for database_file in database_files:
+        database_file.write_bytes(b"")
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for database_file in database_files:
+        assert not database_file.exists()
+
+
+async def test_remove_entry_no_database(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that removing the ZHA entry succeeds when no database files exist."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not Path(hass.config.path(DEFAULT_DATABASE_NAME)).exists()
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
