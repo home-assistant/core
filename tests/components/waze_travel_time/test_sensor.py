@@ -64,6 +64,27 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert state.attributes["unit_of_measurement"] == "min"
 
 
+@pytest.mark.usefixtures("mock_update")
+async def test_sensor_name_from_entry_title(hass: HomeAssistant) -> None:
+    """Test that the sensor name is taken from the config entry title."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home to work",
+        data=MOCK_CONFIG,
+        options=DEFAULT_OPTIONS,
+        entry_id="test",
+        version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.waze_home_to_work"))
+    assert state.name == "Waze Home to work"
+    assert state.state == "150"
+
+
 @pytest.mark.parametrize(
     ("data", "options"),
     [

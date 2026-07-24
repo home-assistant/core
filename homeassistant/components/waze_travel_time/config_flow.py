@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_REGION
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -101,9 +101,6 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_ORIGIN): TextSelector(),
         vol.Required(CONF_DESTINATION): TextSelector(),
         vol.Required(CONF_REGION): SelectSelector(
@@ -193,11 +190,10 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
-                        title=user_input[CONF_NAME],
                         data=user_input,
                     )
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=DEFAULT_NAME,
                     data=user_input,
                     options=default_options(self.hass),
                 )

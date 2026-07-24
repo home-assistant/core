@@ -22,7 +22,7 @@ from homeassistant.components.waze_travel_time.const import (
     DOMAIN,
     IMPERIAL_UNITS,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_REGION
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -50,7 +50,6 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEFAULT_NAME
     assert result2["data"] == {
-        CONF_NAME: DEFAULT_NAME,
         CONF_ORIGIN: "location1",
         CONF_DESTINATION: "location2",
         CONF_REGION: "US",
@@ -78,7 +77,6 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     user_step_result = await hass.config_entries.flow.async_configure(
         reconfigure_result["flow_id"],
         {
-            CONF_NAME: DEFAULT_NAME,
             CONF_ORIGIN: "location3",
             CONF_DESTINATION: "location4",
             CONF_REGION: "us",
@@ -89,8 +87,8 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == "Mock Title"
     assert entry.data == {
-        CONF_NAME: DEFAULT_NAME,
         CONF_ORIGIN: "location3",
         CONF_DESTINATION: "location4",
         CONF_REGION: "US",
