@@ -899,6 +899,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/intent_script/ @arturpragacz
 /tests/components/intent_script/ @arturpragacz
 /homeassistant/components/intesishome/ @jnimmo
+/tests/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
 /homeassistant/components/ios/ @robbiet480
