@@ -1,0 +1,11 @@
+{
+  "domain": "evolviot",
+  "name": "EvolvIOT",
+  "codeowners": ["@system-buru"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/evolviot",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["pyevolviot==0.2.0"]
+}
