@@ -188,6 +188,12 @@
       "occupancy_with_channel_name": {
         "name": "{channel_name} occupancy"
       },
+      "output": {
+        "name": "Output"
+      },
+      "output_with_channel_name": {
+        "name": "{channel_name} output"
+      },
       "overcurrent": {
         "name": "Overcurrent"
       },
@@ -217,6 +223,12 @@
       },
       "rotation": {
         "name": "Rotation"
+      },
+      "safety_switch": {
+        "name": "Safety switch"
+      },
+      "safety_switch_with_channel_name": {
+        "name": "{channel_name} safety switch"
       },
       "smoke_with_channel_name": {
         "name": "{channel_name} smoke"
@@ -615,6 +627,9 @@
   "exceptions": {
     "auth_error": {
       "message": "Authentication failed for {device}, please update your credentials"
+    },
+    "circuit_breaker_remote_disabled": {
+      "message": "Circuit breaker for {entity} of {device} is tripped and cannot be turned on remotely"
     },
     "config_entry_not_found": {
       "message": "Config entry for device ID {device_id} not found"
