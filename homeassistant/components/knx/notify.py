@@ -7,7 +7,7 @@ from xknx.devices import Notification as XknxNotification
 
 from homeassistant import config_entries
 from homeassistant.components.notify import NotifyEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
+from homeassistant.const import CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -50,8 +50,7 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.remote_value.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
 
     @override

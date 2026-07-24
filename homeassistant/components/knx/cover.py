@@ -13,12 +13,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -226,8 +221,7 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
                 f"{self._device.updown.group_address}_"
                 f"{self._device.position_target.group_address}"
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         self.init_base()
         if custom_device_class := config.get(CONF_DEVICE_CLASS):
