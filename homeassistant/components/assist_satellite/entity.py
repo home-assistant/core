@@ -506,6 +506,7 @@ class AssistSatelliteEntity(entity.Entity):
             # Store the conversation ID. If it is no longer valid,
             # get_chat_session will reset it
             self._conversation_id = session.conversation_id
+            vad_sensitivity = self._resolve_vad_sensitivity()
             self._pipeline_task = (
                 self.platform.config_entry.async_create_background_task(
                     self.hass,
@@ -529,7 +530,14 @@ class AssistSatelliteEntity(entity.Entity):
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
                         audio_settings=AudioSettings(
-                            silence_seconds=self._resolve_vad_sensitivity()
+                            silence_seconds=vad.VadSensitivity.to_seconds(
+                                vad_sensitivity
+                            ),
+                            in_command_silence_threshold=(
+                                vad.VadSensitivity.to_in_command_silence_threshold(
+                                    vad_sensitivity
+                                )
+                            ),
                         ),
                         start_stage=start_stage,
                         end_stage=end_stage,
@@ -627,7 +635,7 @@ class AssistSatelliteEntity(entity.Entity):
         return None
 
     @callback
-    def _resolve_vad_sensitivity(self) -> float:
+    def _resolve_vad_sensitivity(self) -> vad.VadSensitivity:
         """Resolve VAD sensitivity from select entity to enum."""
         vad_sensitivity = vad.VadSensitivity.DEFAULT
 
@@ -639,7 +647,7 @@ class AssistSatelliteEntity(entity.Entity):
 
             vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
 
-        return vad.VadSensitivity.to_seconds(vad_sensitivity)
+        return vad_sensitivity
 
     async def _resolve_announcement_media_id(
         self,

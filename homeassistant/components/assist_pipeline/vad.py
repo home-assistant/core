@@ -29,6 +29,23 @@ class VadSensitivity(StrEnum):
 
         return 0.7
 
+    @staticmethod
+    def to_in_command_silence_threshold(sensitivity: VadSensitivity | str) -> float:
+        """Return in-command silence probability threshold for sensitivity level.
+
+        Lower values keep the command open through thinking pauses (more pause
+        tolerance, more hang-on in noise); a value equal to the in-command speech
+        threshold disables the dead band entirely.
+        """
+        sensitivity = VadSensitivity(sensitivity)
+        if sensitivity == VadSensitivity.RELAXED:
+            return 0.1
+
+        if sensitivity == VadSensitivity.AGGRESSIVE:
+            return 0.5
+
+        return 0.2
+
 
 class AudioBuffer:
     """Fixed-sized audio buffer with variable internal length."""
@@ -100,8 +117,20 @@ class VoiceCommandSegmenter:
     in_command_speech_threshold: float = 0.5
     """Probability threshold for speech during voice command."""
 
+    in_command_silence_threshold: float = 0.2
+    """Probability below which an in-command chunk counts toward ending the command."""
+
+    min_command_speech_seconds: float = 0.05
+    """Confident speech required before a command may finish on silence."""
+
+    false_start_timeout_seconds: float = 5.0
+    """Seconds to wait for confident speech before giving up (a false activation)."""
+
     _speech_seconds_left: float = 0.0
     """Seconds left before considering voice command as started."""
+
+    _command_speech_seconds_left: float = 0.0
+    """Confident speech still required before the command may finish."""
 
     _command_seconds_left: float = 0.0
     """Seconds left before voice command could stop."""
@@ -123,6 +152,7 @@ class VoiceCommandSegmenter:
         """Reset all counters and state."""
         self._speech_seconds_left = self.speech_seconds
         self._command_seconds_left = self.command_seconds - self.speech_seconds
+        self._command_speech_seconds_left = self.min_command_speech_seconds
         self._silence_seconds_left = self.silence_seconds
         self._timeout_seconds_left = self.timeout_seconds
         self._reset_seconds_left = self.reset_seconds
@@ -137,10 +167,15 @@ class VoiceCommandSegmenter:
             self.timed_out = False
 
         self._timeout_seconds_left -= chunk_seconds
-        if self._timeout_seconds_left <= 0:
+        no_speech_yet = self._command_speech_seconds_left > 0
+        elapsed = self.timeout_seconds - self._timeout_seconds_left
+        if (self._timeout_seconds_left <= 0) or (
+            no_speech_yet and (elapsed >= self.false_start_timeout_seconds)
+        ):
             _LOGGER.debug(
-                "VAD end of speech detection timed out after %s seconds",
-                self.timeout_seconds,
+                "VAD timed out after %.2f seconds (no_speech_yet=%s)",
+                elapsed,
+                no_speech_yet,
             )
             self.reset()
             self.timed_out = True
@@ -148,6 +183,9 @@ class VoiceCommandSegmenter:
 
         if speech_probability is None:
             speech_probability = 0.0
+        else:
+            # MicroVad returns -1.0 as a "no result yet" sentinel; clamp to [0, 1]
+            speech_probability = min(1.0, max(0.0, speech_probability))
 
         if not self.in_command:
             # Before command
@@ -155,6 +193,9 @@ class VoiceCommandSegmenter:
             if is_speech:
                 self._reset_seconds_left = self.reset_seconds
                 self._speech_seconds_left -= chunk_seconds
+                if speech_probability > self.in_command_speech_threshold:
+                    # Confident speech during onset also counts toward confirmation
+                    self._command_speech_seconds_left -= chunk_seconds
                 if self._speech_seconds_left <= 0:
                     # Inside voice command
                     self.in_command = True
@@ -168,30 +209,37 @@ class VoiceCommandSegmenter:
                 self._reset_seconds_left -= chunk_seconds
                 if self._reset_seconds_left <= 0:
                     self._speech_seconds_left = self.speech_seconds
+                    self._command_speech_seconds_left = self.min_command_speech_seconds
                     self._reset_seconds_left = self.reset_seconds
         else:
             # In command
-            is_speech = speech_probability > self.in_command_speech_threshold
-            if not is_speech:
-                # Silence in command
-                self._reset_seconds_left = self.reset_seconds
-                self._silence_seconds_left -= chunk_seconds
-                self._command_seconds_left -= chunk_seconds
-                if (self._silence_seconds_left <= 0) and (
-                    self._command_seconds_left <= 0
-                ):
-                    # Command finished successfully
-                    self.reset()
-                    _LOGGER.debug("Voice command finished")
-                    return False
-            else:
+            self._command_seconds_left -= chunk_seconds
+            if speech_probability > self.in_command_speech_threshold:
                 # Speech in command.
+                self._command_speech_seconds_left -= chunk_seconds
                 # Reset silence counter if enough speech.
                 self._reset_seconds_left -= chunk_seconds
-                self._command_seconds_left -= chunk_seconds
                 if self._reset_seconds_left <= 0:
                     self._silence_seconds_left = self.silence_seconds
                     self._reset_seconds_left = self.reset_seconds
+            elif speech_probability < self.in_command_silence_threshold:
+                # Silence in command
+                self._reset_seconds_left = self.reset_seconds
+                self._silence_seconds_left -= chunk_seconds
+                if (self._silence_seconds_left <= 0) and (
+                    self._command_seconds_left <= 0
+                ):
+                    if self._command_speech_seconds_left <= 0:
+                        # Command finished successfully
+                        self.reset()
+                        _LOGGER.debug("Voice command finished")
+                        return False
+                    # Triggered without real speech: false start, resume listening
+                    _LOGGER.debug("Discarding false start (no speech detected)")
+                    timeout_seconds_left = self._timeout_seconds_left
+                    self.reset()
+                    self._timeout_seconds_left = timeout_seconds_left
+            # else: dead-band activity holds the command open without refreshing
 
         return True
 
