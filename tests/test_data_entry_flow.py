@@ -1301,3 +1301,37 @@ async def test_show_advanced_options(
         "removed in HA Core 2027.6. Use a user friendly way to present additional "
         "options in the UI, for example a section instead"
     ) in caplog.text
+
+
+async def test_step_id_is_none(manager: MockFlowManager) -> None:
+    """Test that step_id can always be None."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+        data: list[str] | None = None
+
+        async def async_step_first(self, user_input=None):
+            if user_input is not None:
+                self.data = user_input
+                return await self.async_step_second()
+            return self.async_show_form(data_schema=vol.Schema([str]))
+
+        async def async_step_second(self, user_input=None):
+            return await self.async_step_third()
+
+        async def async_step_third(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title="Test Entry", data=self.data + user_input
+                )
+            return self.async_show_form(data_schema=vol.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+    form = await manager.async_configure(form["flow_id"], ["FIRST-DATA"])
+    assert form["step_id"] == "third"
+    form = await manager.async_configure(form["flow_id"], ["THIRD-DATA"])
+    assert form["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert form["title"] == "Test Entry"
+    assert form["data"] == ["FIRST-DATA", "THIRD-DATA"]
