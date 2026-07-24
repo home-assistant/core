@@ -31,14 +31,18 @@ from .models import MatterDiscoverySchema
 PLACEHOLDER = Path(__file__).parent / "placeholder.png"
 
 _STREAM_USAGE = clusters.Globals.Enums.StreamUsageEnum.kLiveView
-# Conservative bounds for the video stream requested for live view; the
-# camera negotiates the actual encoding parameters within these bounds.
+# Minimum resolution requested for the video stream; the camera negotiates the
+# actual encoding within this and the (sensor-derived, when available) max bound.
 _MIN_RESOLUTION = clusters.CameraAvStreamManagement.Structs.VideoResolutionStruct(
     width=640, height=480
 )
-_MAX_RESOLUTION = clusters.CameraAvStreamManagement.Structs.VideoResolutionStruct(
-    width=1920, height=1080
+_FALLBACK_MAX_RESOLUTION = (
+    clusters.CameraAvStreamManagement.Structs.VideoResolutionStruct(
+        width=1920, height=1080
+    )
 )
+_FALLBACK_MAX_FRAME_RATE = 120
+_MIN_FRAME_RATE = 30
 
 
 async def async_setup_entry(
@@ -156,13 +160,39 @@ class MatterCamera(MatterEntity, Camera):
         feature_map = self.get_matter_attribute_value(
             clusters.CameraAvStreamManagement.Attributes.FeatureMap
         )
+        # Prefer the camera's own reported sensor bounds (native resolution and
+        # frame rate) over the fallback constants when available.
+        video_sensor_params = self.get_matter_attribute_value(
+            clusters.CameraAvStreamManagement.Attributes.VideoSensorParams
+        )
+        if video_sensor_params is not None:
+            max_resolution = (
+                clusters.CameraAvStreamManagement.Structs.VideoResolutionStruct(
+                    width=video_sensor_params.sensorWidth,
+                    height=video_sensor_params.sensorHeight,
+                )
+            )
+            max_frame_rate = video_sensor_params.maxFps
+        else:
+            max_resolution = _FALLBACK_MAX_RESOLUTION
+            max_frame_rate = _FALLBACK_MAX_FRAME_RATE
+        # MaxEncodedPixelRate reflects what the encoder can actually sustain at a
+        # given resolution, which can be lower than the sensor's absolute max fps.
+        max_encoded_pixel_rate = self.get_matter_attribute_value(
+            clusters.CameraAvStreamManagement.Attributes.MaxEncodedPixelRate
+        )
+        if max_encoded_pixel_rate is not None:
+            pixel_rate_fps = max_encoded_pixel_rate // (
+                max_resolution.width * max_resolution.height
+            )
+            max_frame_rate = min(max_frame_rate, pixel_rate_fps)
         allocate_kwargs: dict[str, Any] = {
             "streamUsage": _STREAM_USAGE,
             "videoCodec": clusters.CameraAvStreamManagement.Enums.VideoCodecEnum.kH264,
-            "minFrameRate": 30,
-            "maxFrameRate": 120,
+            "minFrameRate": min(_MIN_FRAME_RATE, max_frame_rate),
+            "maxFrameRate": max_frame_rate,
             "minResolution": _MIN_RESOLUTION,
-            "maxResolution": _MAX_RESOLUTION,
+            "maxResolution": max_resolution,
             "minBitRate": 10000,
             "maxBitRate": 10000,
             "keyFrameInterval": 4000,
