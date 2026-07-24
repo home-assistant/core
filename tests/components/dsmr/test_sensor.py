@@ -6,6 +6,7 @@ Entity to be updated with new values.
 """
 
 import asyncio
+from collections.abc import Callable
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
@@ -19,13 +20,18 @@ from dsmr_parser.obis_references import (
     ELECTRICITY_ACTIVE_TARIFF,
     ELECTRICITY_EXPORTED_TOTAL,
     ELECTRICITY_IMPORTED_TOTAL,
+    ELECTRICITY_USED_TARIFF_1,
+    ELECTRICITY_USED_TARIFF_3,
     GAS_METER_READING,
     HOURLY_GAS_METER_READING,
+    INSTANTANEOUS_CURRENT_L1,
+    INSTANTANEOUS_VOLTAGE_L1,
     MBUS_DEVICE_TYPE,
     MBUS_EQUIPMENT_IDENTIFIER,
     MBUS_METER_READING,
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.dsmr.sensor import SENSORS, SENSORS_MBUS_DEVICE_TYPE
@@ -40,7 +46,10 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -48,7 +57,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, patch
+from tests.common import MockConfigEntry, async_fire_time_changed, patch
 
 
 async def test_default_setup(
@@ -1797,3 +1806,455 @@ def test_all_obis_references_exists() -> None:
     for sensors in SENSORS_MBUS_DEVICE_TYPE.values():
         for sensor in sensors:
             assert hasattr(obis_references, sensor.obis_reference)
+
+
+POWER_ENTITY_ID = "sensor.electricity_meter_power_consumption"
+ENERGY_ENTITY_ID = "sensor.electricity_meter_energy_consumption_tarif_1"
+CURRENT_ENTITY_ID = "sensor.electricity_meter_current_phase_l1"
+VOLTAGE_ENTITY_ID = "sensor.electricity_meter_voltage_phase_l1"
+
+UPDATE_INTERVAL = 30
+
+
+def _create_power_and_energy_telegram(power: str, energy: str) -> Telegram:
+    """Create a telegram with power and energy readings."""
+    telegram = Telegram()
+    telegram.add(
+        CURRENT_ELECTRICITY_USAGE,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(power), "unit": UnitOfPower.WATT}],
+        ),
+        "CURRENT_ELECTRICITY_USAGE",
+    )
+    telegram.add(
+        ELECTRICITY_USED_TARIFF_1,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(energy), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_USED_TARIFF_1",
+    )
+    return telegram
+
+
+def _create_current_and_voltage_telegram(current: str, voltage: str) -> Telegram:
+    """Create a telegram with a current and a voltage reading.
+
+    Both are fluctuating measurements that are averaged over the update interval.
+    """
+    telegram = Telegram()
+    telegram.add(
+        INSTANTANEOUS_CURRENT_L1,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(current), "unit": UnitOfElectricCurrent.AMPERE}],
+        ),
+        "INSTANTANEOUS_CURRENT_L1",
+    )
+    telegram.add(
+        INSTANTANEOUS_VOLTAGE_L1,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(voltage), "unit": UnitOfElectricPotential.VOLT}],
+        ),
+        "INSTANTANEOUS_VOLTAGE_L1",
+    )
+    return telegram
+
+
+def _create_energy_only_telegram(energy: str) -> Telegram:
+    """Create a telegram with an energy reading but no power reading.
+
+    Used to exercise an averaged sensor (power) whose object is absent from the
+    telegrams arriving during an interval.
+    """
+    telegram = Telegram()
+    telegram.add(
+        ELECTRICITY_USED_TARIFF_1,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(energy), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_USED_TARIFF_1",
+    )
+    return telegram
+
+
+def _create_power_only_telegram(power: str) -> Telegram:
+    """Create a telegram with a power reading but no energy reading.
+
+    Used to exercise a non-averaged sensor (energy) whose object is absent from
+    a telegram arriving later in the interval.
+    """
+    telegram = Telegram()
+    telegram.add(
+        CURRENT_ELECTRICITY_USAGE,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(power), "unit": UnitOfPower.WATT}],
+        ),
+        "CURRENT_ELECTRICITY_USAGE",
+    )
+    return telegram
+
+
+async def _setup_dsmr_for_averaging(
+    hass: HomeAssistant,
+    connection_factory: MagicMock,
+    time_between_update: int,
+) -> Callable[[Telegram | None], None]:
+    """Set up a DSMR config entry and return the telegram push callback.
+
+    The connection fixture keeps the mocked connection open (``wait_closed``
+    blocks until fixture teardown), so the background reconnect loop does not
+    push empty telegrams that would reset the values accumulated for averaging
+    while the test is running.
+    """
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "2.2",
+            "serial_id": "1234",
+            "serial_id_gas": "5678",
+        },
+        options={"time_between_update": time_between_update},
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # For a serial connection the telegram callback is the third argument.
+    return connection_factory.call_args_list[0][0][2]
+
+
+async def _advance_to_next_update(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Advance past the update interval so the timer publishes the values."""
+    freezer.tick(datetime.timedelta(seconds=UPDATE_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def test_power_readings_are_averaged_over_the_update_interval(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test that power readings are averaged over the configured interval."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
+    )
+
+    telegram_callback(_create_power_and_energy_telegram("1.0", "100.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "1.0"
+
+    # More telegrams arrive within the same interval. They are accumulated but
+    # not published until the timer fires, so the reported state does not change.
+    telegram_callback(_create_power_and_energy_telegram("2.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("4.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("6.0", "100.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "1.0"
+
+    # When the interval elapses the timer publishes the mean of the values
+    # accumulated during the window: mean(2, 4, 6) == 4.
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "4.0"
+
+    # A new interval starts with an empty accumulator: values from the previous
+    # window are not carried over. mean(8, 10, 12) == 10.
+    telegram_callback(_create_power_and_energy_telegram("8.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("10.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("12.0", "100.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "10.0"
+
+
+async def test_averaged_sensor_unavailable_without_readings_in_interval(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test that an averaged sensor with no reading for an interval is unavailable.
+
+    A whole interval can pass without any reading either because no telegram
+    arrives or because the telegrams that do arrive omit the averaged object.
+    In both cases keeping the previous interval's value would be misleading, so
+    the sensor becomes unavailable; it recovers once a reading returns. A
+    non-averaged sensor present in the same telegrams keeps reporting throughout.
+    """
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
+    )
+
+    # Establish and publish an average for the first window: mean(2, 4, 6) == 4.
+    telegram_callback(_create_power_and_energy_telegram("1.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("2.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("4.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("6.0", "100.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "4.0"
+
+    # No telegram arrives during the next interval: there is no reading to
+    # report, so the sensor is unavailable instead of holding the previous value.
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Telegrams keep arriving but omit the power object for the whole interval:
+    # the averaged sensor stays unavailable, while the non-averaged energy sensor
+    # carried by the same telegrams keeps reporting its latest value.
+    telegram_callback(_create_energy_only_telegram("110.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_energy_only_telegram("120.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "120.0"
+
+    # A power reading restores the sensor: mean(8, 10) == 9.
+    telegram_callback(_create_power_and_energy_telegram("8.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("10.0", "100.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "9.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_current_and_voltage_readings_are_averaged(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test that current and voltage readings are averaged like power."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
+    )
+
+    telegram_callback(_create_current_and_voltage_telegram("1.0", "230.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(CURRENT_ENTITY_ID).state == "1.0"
+    assert hass.states.get(VOLTAGE_ENTITY_ID).state == "230.0"
+
+    telegram_callback(_create_current_and_voltage_telegram("2.0", "231.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_current_and_voltage_telegram("4.0", "233.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_current_and_voltage_telegram("6.0", "235.0"))
+    await hass.async_block_till_done()
+
+    # mean(2, 4, 6) == 4 amps; mean(231, 233, 235) == 233 volts.
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(CURRENT_ENTITY_ID).state == "4.0"
+    assert hass.states.get(VOLTAGE_ENTITY_ID).state == "233.0"
+
+
+async def test_averaged_power_value_is_rounded_to_default_precision(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test that the averaged power value is rounded to the default precision."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
+    )
+
+    telegram_callback(_create_power_and_energy_telegram("1.0", "100.0"))
+    await hass.async_block_till_done()
+
+    # Accumulate values whose mean is not exactly representable:
+    # mean(1, 2, 2) == 1.6666... which is rounded to 3 decimals -> 1.667.
+    telegram_callback(_create_power_and_energy_telegram("1.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("2.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("2.0", "100.0"))
+    await hass.async_block_till_done()
+
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "1.667"
+
+
+async def test_energy_readings_are_not_averaged(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test that non-averaged readings keep their last value instead of averaging."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
+    )
+
+    telegram_callback(_create_power_and_energy_telegram("1.0", "10.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "10.0"
+
+    # Several telegrams arrive within the interval. The energy reading is not
+    # accumulated and the state is not published until the interval elapses.
+    telegram_callback(_create_power_and_energy_telegram("2.0", "20.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("4.0", "30.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("6.0", "40.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "10.0"
+
+    # After the interval the energy sensor reports the last received value (40),
+    # not the mean of the values seen during the window.
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "40.0"
+
+    # The power sensor on the very same telegrams *is* averaged: mean(2, 4, 6).
+    assert hass.states.get(POWER_ENTITY_ID).state == "4.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_non_averaged_value_survives_later_partial_telegram(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test a non-averaged reading is kept when a later telegram omits its object.
+
+    A non-averaged value that appears earlier in the interval must be published
+    at the timer tick even if the last telegram of the interval is a partial one
+    that omits the object, instead of falling back to the previous value.
+    """
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
+    )
+
+    # First telegram creates the entities and sets the initial energy value.
+    telegram_callback(_create_power_and_energy_telegram("1.0", "10.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "10.0"
+
+    # A new energy reading (50) arrives within the interval, followed by a
+    # partial telegram that omits the energy object before the timer fires.
+    telegram_callback(_create_power_and_energy_telegram("2.0", "50.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_only_telegram("4.0"))
+    await hass.async_block_till_done()
+
+    # The latest energy value seen during the interval (50) is published, not
+    # the stale 10 from before: the partial telegram must not drop the reading.
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "50.0"
+
+
+async def test_force_update_sensor_not_rewritten_without_new_reading(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test a force_update sensor is only rewritten after a new reading.
+
+    The EON HU tariff totals use force_update, so rewriting their cached value
+    on every timer tick would fire state-change events every interval even when
+    telegrams (or their objects) stop arriving. Ticks without a new reading must
+    not rewrite the state; a fresh reading (even an unchanged one) must.
+    """
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "5EONHU",
+            "serial_id": "1234",
+        },
+        options={"time_between_update": UPDATE_INTERVAL},
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    tariff_telegram = Telegram()
+    tariff_telegram.add(
+        ELECTRICITY_USED_TARIFF_3,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("100.0"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_USED_TARIFF_3",
+    )
+    telegram_callback(tariff_telegram)
+    await hass.async_block_till_done()
+
+    tariff_entity_id = "sensor.electricity_meter_energy_consumption_tarif_3"
+    state = hass.states.get(tariff_entity_id)
+    assert state.state == "100.0"
+    last_updated = state.last_updated
+
+    # Ticks without any telegram must not rewrite the cached value: with
+    # force_update every rewrite would fire a state-change event.
+    await _advance_to_next_update(hass, freezer)
+    await _advance_to_next_update(hass, freezer)
+    state = hass.states.get(tariff_entity_id)
+    assert state.state == "100.0"
+    assert state.last_updated == last_updated
+
+    # Telegrams resume but omit the tariff object: still no rewrite.
+    telegram_callback(_create_power_only_telegram("5.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    state = hass.states.get(tariff_entity_id)
+    assert state.last_updated == last_updated
+
+    # A fresh reading with the same value is published again (force_update).
+    telegram_callback(tariff_telegram)
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    state = hass.states.get(tariff_entity_id)
+    assert state.state == "100.0"
+    assert state.last_updated > last_updated
+
+
+async def test_no_averaging_when_update_interval_is_zero(
+    hass: HomeAssistant,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test that with a zero interval every telegram is published unchanged."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, connection_factory, time_between_update=0
+    )
+
+    telegram_callback(_create_power_and_energy_telegram("5.0", "100.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "5.0"
+
+    # Without an averaging window each telegram is published immediately with
+    # its own value (15), not averaged with the previous one (which would be 10).
+    telegram_callback(_create_power_and_energy_telegram("15.0", "100.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_ENTITY_ID).state == "15.0"
