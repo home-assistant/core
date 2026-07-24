@@ -1,0 +1,303 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide custom actions. It uses existing
+      remote entity services such as remote.send_command.
+
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Virtual remote entities do not poll external devices. Availability is
+      derived from the linked infrared entity state.
+
+  brands:
+    status: exempt
+    comment: |
+      This helper integration does not require dedicated branding assets.
+
+  common-modules:
+    status: done
+    comment: |
+      The integration uses the standard Home Assistant integration file layout.
+
+  config-flow:
+    status: done
+    comment: |
+      The integration supports full UI configuration flows.
+
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      Config flow tests cover successful setup, no available infrared entities,
+      invalid infrared entity selection, duplicate remote handling, and
+      reconfiguration.
+
+  dependency-transparency:
+    status: exempt
+    comment: |
+      This integration has no external Python package dependencies.
+
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide custom actions. Users call the standard
+      remote.send_command service.
+
+  docs-high-level-description:
+    status: done
+    comment: |
+      The integration documentation explains that Virtual Remote creates remote
+      entities backed by infrared entities.
+
+  docs-installation-instructions:
+    status: done
+    comment: |
+      The integration documentation includes UI setup steps and prerequisites.
+
+  docs-removal-instructions:
+    status: done
+    comment: |
+      The integration documentation explains how to delete the integration and
+      what data is removed.
+
+  entity-event-setup:
+    status: done
+    comment: |
+      Entity event listeners are registered from async_added_to_hass and removed
+      through async_on_remove.
+
+  entity-unique-id:
+    status: done
+    comment: |
+      Each virtual remote entity has a stable unique ID derived from the config
+      entry and virtual remote ID.
+
+  has-entity-name:
+    status: done
+    comment: |
+      Virtual remote entities set has_entity_name so entity names follow Home
+      Assistant naming conventions.
+
+  runtime-data:
+    status: exempt
+    comment: |
+      This helper integration does not create or maintain a runtime API client
+      or coordinator that needs to be stored in entry.runtime_data.
+
+  test-before-configure:
+    status: done
+    comment: |
+      The config flow validates that at least one infrared entity exists and
+      rejects unavailable infrared entity selections before creating an entry.
+
+  test-before-setup:
+    status: exempt
+    comment: |
+      This helper integration has no external API connection to validate before
+      setup. Linked infrared entity availability is represented by entity
+      availability and repair issues at runtime.
+
+  unique-config-entry:
+    status: done
+    comment: |
+      Each virtual remote config entry gets a stable unique ID derived from the
+      normalized remote name, and duplicate remote names are rejected.
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: |
+      Standardize all service errors with translated HomeAssistantError
+      exceptions.
+
+  config-entry-unloading:
+    status: done
+    comment: |
+      The integration unloads the forwarded remote platform on config entry
+      unload.
+
+  diagnostics:
+    status: done
+    comment: |
+      The integration provides diagnostics with sensitive and large command
+      payload data redacted.
+
+  docs-configuration-parameters:
+    status: done
+    comment: |
+      Expand documentation for all options-flow configuration parameters.
+
+  docs-installation-parameters:
+    status: done
+    comment: |
+      Expand documentation for all config-flow fields.
+
+  entity-unavailable:
+    status: done
+    comment: |
+      Virtual remote entities become unavailable when their linked infrared
+      entity is unavailable or missing.
+
+  integration-owner:
+    status: done
+    comment: |
+      The manifest declares a code owner for the integration.
+
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      The virtual remote does not maintain its own connection. Availability
+      follows the linked infrared entity and repair issues guide the user.
+
+  parallel-updates:
+    status: done
+    comment: |
+      The remote platform sets PARALLEL_UPDATES to avoid unnecessary update
+      throttling for service-only helper entities.
+
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration has no authentication.
+
+  repair-issues:
+    status: done
+    comment: |
+      The integration creates and clears repair issues when a configured virtual
+      remote references a missing or unavailable infrared entity.
+
+  stale-devices:
+    status: done
+    comment: |
+      The remote platform cleans up stale entity and device registry entries for
+      virtual remotes removed from the config entry options.
+
+  strict-typing:
+    status: todo
+    comment: |
+      Strict typing can be enabled after the integration is added to
+      .strict-typing and the remaining typed ConfigEntry work is completed.
+
+  test-coverage:
+    status: done
+    comment: >
+      Unit tests cover runtime paths, config flows, options flows,
+      diagnostics, repairs, and remote entity behavior.
+
+  # Gold
+  devices:
+    status: done
+    comment: |
+      Each configured virtual remote is represented as its own device.
+
+  discovery:
+    status: exempt
+    comment: |
+      This is a helper integration. There is no physical device or network
+      service to discover.
+
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This helper integration has no discovery information to update.
+
+  docs-data-update:
+    status: exempt
+    comment: |
+      The integration does not fetch external data. It forwards commands to a
+      linked infrared entity.
+
+  docs-examples:
+    status: done
+    comment: |
+      Documentation includes automation examples, command sequences,
+      repeat and delay examples, and raw command usage.
+
+  docs-known-limitations:
+    status: done
+    comment: |
+      Documentation describes integration limitations including hardware
+      dependencies, lack of infrared learning, and infrared backend
+      requirements.
+
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This integration is not tied to a specific physical device. It supports
+      Home Assistant infrared entities.
+
+  docs-supported-functions:
+    status: done
+    comment: |
+      Documentation covers supported remote services, command formats,
+      repeat handling, delays, and named command behavior.
+
+  docs-troubleshooting:
+    status: done
+    comment: |
+      Documentation includes troubleshooting guidance for unavailable
+      infrared entities, invalid commands, and configuration issues.
+
+  docs-use-cases:
+    status: done
+    comment: |
+      Documentation includes automation, scripting, reusable command,
+      and raw infrared transmission use cases.
+
+  dynamic-devices:
+    status: done
+    comment: |
+      Devices are user-managed through config and options flows and stale
+      devices are cleaned up when removed.
+
+  entity-category:
+    status: exempt
+    comment: |
+      This integration only provides primary user-facing remote entities.
+
+  entity-device-class:
+    status: exempt
+    comment: |
+      The remote platform does not use device classes for these entities.
+
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The configured virtual remote is the primary entity created by this helper
+      integration and should be enabled by default.
+
+  entity-translations:
+    status: exempt
+    comment: |
+      The remote entity uses the configured device name and does not define
+      translated entity names.
+
+  exception-translations:
+    status: done
+    comment: |
+      User-facing HomeAssistantError exceptions use translation keys in
+      strings.json.
+
+  icon-translations:
+    status: exempt
+    comment: |
+      The integration does not define custom icons.
+
+  reconfiguration-flow:
+    status: done
+    comment: |
+      The integration implements a reconfiguration flow for the first configured
+      virtual remote.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: |
+      This integration has no external dependency.
+
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not create an HTTP client session.
