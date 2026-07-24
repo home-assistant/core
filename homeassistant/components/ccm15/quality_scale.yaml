@@ -39,21 +39,27 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: This integration has no options flow.
-  docs-installation-parameters: todo
-  entity-unavailable: todo
+  docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: The device connection is unauthenticated; revisit when optional password (pwd=) support lands.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: The device is not discoverable, so there is no discovery data to update.
+  discovery:
+    status: exempt
+    comment: >-
+      The CCM15 is a local-polling hub configured by host/IP; it is not
+      discoverable on the network (no mDNS/SSDP/DHCP).
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -61,7 +67,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category:
     status: exempt
     comment: The single climate entity does not need a non-default category.
@@ -74,7 +80,11 @@ rules:
   entity-translations:
     status: exempt
     comment: The climate entity uses the device name; no entity names to translate.
-  exception-translations: todo
+  exception-translations:
+    status: exempt
+    comment: >-
+      The integration raises no user-facing exceptions; the only failure path is
+      an internal UpdateFailed from the coordinator.
   icon-translations:
     status: exempt
     comment: The integration uses default entity icons.
