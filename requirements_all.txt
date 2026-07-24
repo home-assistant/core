@@ -882,6 +882,9 @@ earn-e-p1==0.2.0
 # homeassistant.components.easyenergy
 easyenergy==3.0.1
 
+# homeassistant.components.easywave
+easywave-home-control==0.3.0
+
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
 
@@ -2558,6 +2561,9 @@ pysensibo==1.2.1
 
 # homeassistant.components.senz
 pysenz==1.0.2
+
+# homeassistant.components.easywave
+pyserial==3.5
 
 # homeassistant.components.sesame
 pysesame2==1.0.2

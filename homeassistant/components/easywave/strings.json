@@ -1,0 +1,239 @@
+{
+  "config": {
+    "abort": {
+      "frequency_not_permitted": "This device operates on {frequency}, which is not permitted in your configured Home Assistant region ({country}).",
+      "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system."
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the RX11 USB Transceiver. Make sure it is plugged in and no other application is using the port.",
+      "device_no_longer_available": "The selected device is no longer available. Please try again."
+    },
+    "step": {
+      "confirm": {
+        "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}",
+        "title": "Set up RX11 USB Transceiver"
+      },
+      "ports": {
+        "data": {
+          "device_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "data_description": {
+          "device_path": "The serial port your RX11 USB Transceiver is connected to."
+        },
+        "description": "Select the serial port of the RX11 USB Transceiver.",
+        "title": "Select Easywave device"
+      }
+    }
+  },
+  "config_subentries": {
+    "easywave_neo_sensor": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "device_added": "The device was added successfully.",
+        "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
+        "learning_cancelled": "Learning mode was cancelled.",
+        "no_device_learned": "No device was detected."
+      },
+      "entry_type": "Easywave neo sensor",
+      "initiate_flow": {
+        "user": "Add Easywave neo sensor"
+      },
+      "progress": {
+        "waiting_for_sensor": "Waiting for learn signal... Press the learn button on the Easywave neo sensor NOW!"
+      },
+      "step": {
+        "learn_sensor": {
+          "title": "Press Learn Button!"
+        },
+        "learn_timeout_sensor": {
+          "description": "No radio signal received!\nReduce the distance between sensor and server and try again.",
+          "menu_options": {
+            "abort_learn": "Cancel",
+            "learn": "Learn Sensor",
+            "sensor_learn_intro": "Back"
+          },
+          "title": "Timeout"
+        },
+        "sensor_confirm": {
+          "data": {
+            "title": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "title": "The name for this Easywave neo sensor."
+          },
+          "description": "The sensor was successfully learned!\n\nDetected sensors:\n{sensor_list}\n\nEnter a name for the new device:",
+          "title": "Learning Successful"
+        },
+        "sensor_learn_intro": {
+          "description": "Home Assistant automatically detects which measurement data the sensor provides.\n\nPlease press the learn button on the back of the sensor in the next step.",
+          "menu_options": {
+            "learn": "Continue"
+          },
+          "title": "Learn Sensor"
+        }
+      }
+    },
+    "easywave_transmitter": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "device_added": "The device was added successfully.",
+        "device_not_connected": "The RX11 USB Transceiver is not connected.\n\nTo add a new device, the RX11 must be reachable.\nPlease check the USB connection.",
+        "learning_cancelled": "Learning mode was cancelled.",
+        "no_device_learned": "No device was detected."
+      },
+      "entry_type": "Easywave transmitter",
+      "initiate_flow": {
+        "user": "Add Easywave transmitter"
+      },
+      "progress": {
+        "waiting_for_transmitter": "Waiting for transmitter signal... Press a button on the Easywave transmitter NOW!"
+      },
+      "step": {
+        "button_count_select": {
+          "description": "Please specify the number of available buttons.",
+          "menu_option_descriptions": {
+            "buttons_1": "The transmitter/channel has only 1 button with any button code.",
+            "buttons_2": "The transmitter/channel has 2 buttons with button codes A and B.",
+            "buttons_3": "The transmitter/channel has 3 buttons with button codes A, B and C.",
+            "buttons_4": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
+          },
+          "menu_options": {
+            "buttons_1": "1 Button",
+            "buttons_2": "2 Buttons",
+            "buttons_3": "3 Buttons",
+            "buttons_4": "4 Buttons",
+            "transmitter_learn_intro": "Back"
+          },
+          "title": "Button Count"
+        },
+        "learn_timeout_transmitter": {
+          "description": "No radio signal received!\nReduce the distance between transmitter and server and try again.",
+          "menu_options": {
+            "abort_learn": "Cancel",
+            "learn": "Learn Transmitter",
+            "transmitter_learn_intro": "Back"
+          },
+          "title": "Timeout"
+        },
+        "learn_transmitter": {
+          "title": "Press transmitter button!"
+        },
+        "transmitter_confirm": {
+          "data": {
+            "title": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "title": "The name for this transmitter device."
+          },
+          "description": "The transmitter was successfully learned!\n\nEnter a name for the new device:",
+          "title": "Learning Successful"
+        },
+        "transmitter_learn_intro": {
+          "description": "Please specify the number of buttons in the next step, then press a button on the Easywave transmitter.",
+          "menu_options": {
+            "button_count_select": "Continue"
+          },
+          "title": "Learn Transmitter"
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "a": "Button A",
+      "b": "Button B",
+      "c": "Button C",
+      "connected": "Connected",
+      "d": "Button D",
+      "disconnected": "Disconnected",
+      "low": "Low",
+      "ok": "OK",
+      "released": "Not pressed"
+    },
+    "trigger_type": {
+      "battery_low": "Battery low",
+      "battery_normal": "Battery OK",
+      "button_press": "Button pressed ({subtype})",
+      "button_release": "Button released",
+      "gateway_connected": "Gateway connected",
+      "gateway_disconnected": "Gateway disconnected"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_warning": {
+        "name": "Battery",
+        "state": {
+          "low": "Low",
+          "ok": "OK"
+        }
+      },
+      "gateway_status": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        }
+      },
+      "neo_sensor_humidity": {
+        "name": "Humidity"
+      },
+      "neo_sensor_temperature": {
+        "name": "Temperature"
+      },
+      "transmitter_last_button": {
+        "name": "State",
+        "state": {
+          "a": "Button A",
+          "b": "Button B",
+          "c": "Button C",
+          "d": "Button D",
+          "released": "Not pressed"
+        }
+      }
+    }
+  },
+  "issues": {
+    "frequency_not_permitted": {
+      "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf you believe this is incorrect, verify your country setting under **Settings → System → General → Country**. The 868 MHz band is permitted in EU/EEA countries, the UK, Switzerland, Norway, and Liechtenstein.",
+      "title": "Easywave: {frequency} not permitted in {country}"
+    }
+  },
+  "selector": {
+    "sensor_type": {
+      "options": {
+        "unknown": "Unknown"
+      }
+    }
+  },
+  "triggers": {
+    "button_press_a": {
+      "description": "Triggers when button A is pressed.",
+      "name": "Button A pressed"
+    },
+    "button_press_b": {
+      "description": "Triggers when button B is pressed.",
+      "name": "Button B pressed"
+    },
+    "button_press_c": {
+      "description": "Triggers when button C is pressed.",
+      "name": "Button C pressed"
+    },
+    "button_press_d": {
+      "description": "Triggers when button D is pressed.",
+      "name": "Button D pressed"
+    },
+    "button_release": {
+      "description": "Triggers when the button is released (impulse mode only).",
+      "name": "Button released"
+    },
+    "gateway_connected": {
+      "description": "Triggers when the RX11 USB transceiver is connected.",
+      "name": "Gateway connected"
+    },
+    "gateway_disconnected": {
+      "description": "Triggers when the RX11 USB transceiver is disconnected.",
+      "name": "Gateway disconnected"
+    }
+  }
+}

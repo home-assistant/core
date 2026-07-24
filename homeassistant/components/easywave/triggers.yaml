@@ -1,0 +1,69 @@
+button_press_a:
+  target:
+    primary_entities_only: true
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveTransmitterFeature.BUTTON_A
+
+button_press_b:
+  target:
+    primary_entities_only: true
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveTransmitterFeature.BUTTON_B
+
+button_press_c:
+  target:
+    primary_entities_only: true
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveTransmitterFeature.BUTTON_C
+
+button_press_d:
+  target:
+    primary_entities_only: true
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveTransmitterFeature.BUTTON_D
+
+button_release:
+  target:
+    primary_entities_only: true
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveTransmitterFeature.BUTTON_RELEASE
+
+gateway_connected:
+  target:
+    primary_entities_only: false
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveGatewayFeature.GATEWAY_STATUS
+
+gateway_disconnected:
+  target:
+    primary_entities_only: false
+    entity:
+      - integration: easywave
+        domain: sensor
+        device_class: enum
+        supported_features:
+          - easywave.EasywaveGatewayFeature.GATEWAY_STATUS
