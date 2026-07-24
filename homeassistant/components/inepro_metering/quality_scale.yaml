@@ -1,0 +1,28 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities are coordinator-polled and do not subscribe to external event streams.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: exempt
+    comment: |
+      Duplicate prevention is implemented in config-flow mixins and shared
+      helpers, and covered by config-flow tests. The automated rule only
+      inspects config_flow.py.

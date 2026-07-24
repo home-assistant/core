@@ -1,0 +1,20 @@
+set_wifi_credentials:
+  fields:
+    serial_number:
+      required: true
+      selector:
+        text:
+    ssid:
+      required: true
+      selector:
+        text:
+    password:
+      required: true
+      selector:
+        text:
+          type: password
+    apply:
+      required: false
+      default: true
+      selector:
+        boolean:
