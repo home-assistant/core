@@ -172,7 +172,22 @@
         "name": "Smoothed available current"
       },
       "status": {
-        "name": "Charging status"
+        "name": "Charging status",
+        "state": {
+          "charging": "Charging",
+          "connected": "Connected",
+          "diode_check_failed": "Diode check failed",
+          "disabled": "Disabled",
+          "gfci_fault": "GFCI fault",
+          "gfci_self_test_failure": "GFCI self test failure",
+          "no_ground": "No ground",
+          "not_connected": "Not connected",
+          "over_temperature": "Over temperature",
+          "sleeping": "Sleeping",
+          "stuck_relay": "Stuck relay",
+          "unknown": "Unknown",
+          "vent_required": "Vent required"
+        }
       },
       "stuck_relay_trip_count": {
         "name": "Stuck relay trip count"
