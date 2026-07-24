@@ -94,6 +94,7 @@
           "high_temperature": "High temperature",
           "household_power_limit": "Household power limit",
           "installation_limit": "Installation limit",
+          "internal_power_limit": "Internal power limit",
           "local_modbus_api": "Modbus API",
           "local_rest_api": "REST API",
           "local_scheduled_charging": "Scheduled charging",
