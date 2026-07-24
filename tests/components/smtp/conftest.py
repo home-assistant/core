@@ -72,6 +72,17 @@ def mock_make_msgid() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="randrange")
+def mock_randrange() -> Generator[None]:
+    """Mock random.randrange."""
+
+    with patch(
+        "random.randrange",
+        return_value=1234567890123456789,
+    ):
+        yield
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Mock smtp configuration entry."""

@@ -125,6 +125,12 @@
     "connection_error": {
       "message": "Failed to connect to SMTP server."
     },
+    "media_source_missing_filename": {
+      "message": "Cannot attach {media_content_id}. This media source does not provide a filename, you must explicitly specify a filename."
+    },
+    "media_source_not_supported": {
+      "message": "Media source {media_content_id} is not supported."
+    },
     "remote_path_not_allowed": {
       "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
     },
@@ -133,6 +139,10 @@
     }
   },
   "issues": {
+    "deprecated_notify_action": {
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nPlease update your automations and scripts to use the notify entities with the `{new_action_1}` or `{new_action_2}` actions instead.\n\n## Example automation using `{new_action_1}` action:\n\n{example_yaml_1}\n\n## Example automation using `{new_action_2}` action:\n\n{example_yaml_2}",
+      "title": "Detected use of deprecated action {action}"
+    },
     "deprecated_yaml_import_issue_error": {
       "description": "YAML configuration for SMTP is being deprecated, but an error occurred while importing your existing configuration.\n\nVerify that the YAML configuration is valid, then restart Home Assistant to try again. Alternatively remove the SMTP YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.\n\n**Configuration that could not be imported:**\n\n```{config}```",
       "title": "Failed to import SMTP YAML configuration"
@@ -151,12 +161,52 @@
     }
   },
   "selector": {
+    "attachments": {
+      "fields": {
+        "content_id": {
+          "description": "A unique identifier used to embed this image directly inside an HTML email body.",
+          "name": "Content-ID"
+        },
+        "filename": {
+          "description": "Specify the filename for the attachment. This is required for camera, image, and TTS media sources, and optional for local media sources.",
+          "name": "Filename"
+        },
+        "media_source": {
+          "description": "Select a camera, image, TTS, or a local media source to attach. Camera sources are captured as an image snapshot when the email is sent.",
+          "name": "Media source"
+        }
+      }
+    },
     "encryption": {
       "options": {
         "none": "None",
         "starttls": "STARTTLS",
         "tls": "SSL/TLS"
       }
+    }
+  },
+  "services": {
+    "send_message": {
+      "description": "Sends an email notification",
+      "fields": {
+        "attachments": {
+          "description": "Attach images or other files from camera, image, TTS, or local media source. When selecting a camera entity, a snapshot of the current view will be captured and attached to the email.",
+          "name": "Attachments"
+        },
+        "html": {
+          "description": "The HTML body of the email notification. Use HTML to create rich email content with formatting, images, links, tables, and custom styling.",
+          "name": "HTML message"
+        },
+        "message": {
+          "description": "The plain text message body of the email notification.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "Subject for your email notification.",
+          "name": "Title"
+        }
+      },
+      "name": "Send message"
     }
   }
 }
