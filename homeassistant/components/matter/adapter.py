@@ -28,6 +28,31 @@ def get_clean_name(name: str | None) -> str | None:
     return name.strip() or None
 
 
+def _get_mac_addresses(node: MatterNode) -> set[str]:
+    """Return the MAC addresses of the node's operational WiFi/Ethernet interfaces."""
+    interfaces = node.get_attribute_value(
+        0,
+        clusters.GeneralDiagnostics,
+        clusters.GeneralDiagnostics.Attributes.NetworkInterfaces,
+    )
+    interface_type = clusters.GeneralDiagnostics.Enums.InterfaceTypeEnum
+    mac_addresses: set[str] = set()
+    for interface in interfaces or []:
+        if not interface.isOperational:
+            continue
+        # Thread (and other non-WiFi/Ethernet) interfaces don't have a MAC
+        # address (e.g. Thread reports an 8-byte EUI-64 instead).
+        if interface.type not in (interface_type.kWiFi, interface_type.kEthernet):
+            continue
+        if (
+            len(interface.hardwareAddress) != 6
+            or interface.hardwareAddress == b"\x00" * 6
+        ):
+            continue
+        mac_addresses.add(dr.format_mac(interface.hardwareAddress.hex()))
+    return mac_addresses
+
+
 class MatterAdapter:
     """Connect Matter into Home Assistant."""
 
@@ -214,10 +239,18 @@ class MatterAdapter:
         else:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
+        connections: set[tuple[str, str]] = set()
+        if not endpoint.is_bridged_device:
+            connections = {
+                (dr.CONNECTION_NETWORK_MAC, mac_address)
+                for mac_address in _get_mac_addresses(endpoint.node)
+            }
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
+            connections=connections,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
