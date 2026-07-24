@@ -895,22 +895,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     composite_splits.setdefault(old_id, {})[config_entry_id] = split[
                         "id"
                     ]
-            # Rewrite via_device_id links that pointed at a now-split composite parent
-            # to a live split: the parent's split in the child's own config entry when
-            # there is one, otherwise any of the parent's splits, so the link never
-            # dangles on the removed composite id. A link to a retained unsplit parent is
-            # left unchanged; a link to a dropped parent is detached below.
-            for device in devices:
-                if (
-                    splits := composite_splits.get(device["via_device_id"])
-                ) is not None:
-                    device["via_device_id"] = splits.get(
-                        device["config_entry_id"], next(iter(splits.values()))
-                    )
-                elif device["via_device_id"] in dropped_device_ids:
-                    # The parent was dropped (no config entries); detach the link as
-                    # async_remove_device would, so it does not dangle on a removed id.
-                    device["via_device_id"] = None
             old_data["devices"] = devices
             # A split inherited the composite's disabled_by, which may not match its
             # single config entry (e.g. a split owned by an enabled entry must not stay
@@ -926,6 +910,40 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         _migrate_device_disabled_by(
                             split, config_entry.disabled_by is not None
                         )
+
+            def _split_for_via_device(
+                config_entry_id: str, splits: dict[str, str]
+            ) -> str:
+                """Pick the split for via device."""
+                if (split_id := splits.get(config_entry_id)) is not None:
+                    return split_id
+                config_entries = self.hass.config_entries
+                self_entry = config_entries.async_get_entry(config_entry_id)
+                if self_entry is not None:
+                    for split_entry_id, split_id in splits.items():
+                        split_entry = config_entries.async_get_entry(split_entry_id)
+                        if (
+                            split_entry is not None
+                            and split_entry.domain == self_entry.domain
+                        ):
+                            return split_id
+                return next(iter(splits.values()))
+
+            # Rewrite via_device_id links that pointed at a now-split composite parent
+            # to a live split, so the link never dangles on the removed composite id.
+            # The domain rung needs the config entries, which are initialized above
+            # whenever splits exist. A link to a retained unsplit parent is left
+            # unchanged; a link to a dropped parent is detached.
+            for device in devices:
+                if (
+                    splits := composite_splits.get(device["via_device_id"])
+                ) is not None:
+                    device["via_device_id"] = _split_for_via_device(
+                        device["config_entry_id"], splits
+                    )
+                elif device["via_device_id"] in dropped_device_ids:
+                    device["via_device_id"] = None
+
             deleted_devices: list[dict[str, Any]] = []
             for device in old_data["deleted_devices"]:
                 # One target per config entry. config_entries_subentries was a set, so
@@ -1004,6 +1022,12 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
     connection or identifier to the devices that have it, keyed by config entry id:
     - (connection_type, connection identifier) -> {config_entry_id: entry}
     - (DOMAIN, identifier) -> {config_entry_id: entry}
+
+    Registry bugs used to allow duplicate keys within a config entry, so old stores
+    can hold them. Only the last indexed device occupies the slot (matching historic
+    lookup behavior); the others are recorded as shadowed until reconciled:
+    - (config_entry_id, (connection_type, connection identifier)) -> {device_id}
+    - (config_entry_id, (DOMAIN, identifier)) -> {device_id}
     """
 
     def __init__(self) -> None:
@@ -1011,44 +1035,95 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         super().__init__()
         self._connections: dict[tuple[str, str], dict[str | None, _EntryTypeT]] = {}
         self._identifiers: dict[tuple[str, str], dict[str | None, _EntryTypeT]] = {}
+        self._shadowed_connections: dict[
+            tuple[str | None, tuple[str, str]], set[str]
+        ] = {}
+        self._shadowed_identifiers: dict[
+            tuple[str | None, tuple[str, str]], set[str]
+        ] = {}
 
     @override
     def _index_entry(self, key: str, entry: _EntryTypeT) -> None:
         """Index an entry."""
-        config_entry_id = entry.config_entry_id
         for connection in entry.connections:
-            self._connections.setdefault(connection, {})[config_entry_id] = entry
+            self._index_key(
+                connection,
+                entry,
+                self._connections,
+                self._shadowed_connections,
+            )
         for identifier in entry.identifiers:
-            self._identifiers.setdefault(identifier, {})[config_entry_id] = entry
+            self._index_key(
+                identifier,
+                entry,
+                self._identifiers,
+                self._shadowed_identifiers,
+            )
+
+    def _index_key(
+        self,
+        key: tuple[str, str],
+        new_device: _EntryTypeT,
+        index: dict[tuple[str, str], dict[str | None, _EntryTypeT]],
+        shadowed_index: dict[tuple[str | None, tuple[str, str]], set[str]],
+    ) -> None:
+        """Index one key, recording a displaced device as shadowed."""
+        by_config_entry = index.setdefault(key, {})
+        config_entry_id = new_device.config_entry_id
+        if (
+            existing := by_config_entry.get(config_entry_id)
+        ) is not None and existing.id != new_device.id:
+            shadowed_index.setdefault((config_entry_id, key), set()).add(existing.id)
+        by_config_entry[config_entry_id] = new_device
 
     @override
     def _unindex_entry(
         self, key: str, replacement_entry: _EntryTypeT | None = None
     ) -> None:
-        """Unindex an entry.
+        """Unindex an entry."""
+        old_device = self.data[key]
+        for connection in old_device.connections:
+            self._unindex_key(
+                connection,
+                old_device,
+                self._connections,
+                self._shadowed_connections,
+            )
+        for identifier in old_device.identifiers:
+            self._unindex_key(
+                identifier,
+                old_device,
+                self._identifiers,
+                self._shadowed_identifiers,
+            )
 
-        Guards against collisions, the code below can be simplified once
-        collisions are not longer allowed, refer to commit history in PR
-        175785.
-        """
-        old_entry = self.data[key]
-        config_entry_id = old_entry.config_entry_id
-        for connection in old_entry.connections:
-            by_config_entry = self._connections.get(connection)
-            if by_config_entry is not None and (
-                by_config_entry.get(config_entry_id) is old_entry
-            ):
+    def _unindex_key(
+        self,
+        key: tuple[str, str],
+        old_device: _EntryTypeT,
+        index: dict[tuple[str, str], dict[str | None, _EntryTypeT]],
+        shadowed_index: dict[tuple[str | None, tuple[str, str]], set[str]],
+    ) -> None:
+        """Unindex one key, promoting a shadowed device into the slot."""
+        by_config_entry = index[key]
+        config_entry_id = old_device.config_entry_id
+        shadow_key = (config_entry_id, key)
+        shadowed_ids = shadowed_index.get(shadow_key)
+
+        if by_config_entry[config_entry_id] is old_device:
+            if shadowed_ids:
+                by_config_entry[config_entry_id] = self.data[shadowed_ids.pop()]
+            else:
                 del by_config_entry[config_entry_id]
                 if not by_config_entry:
-                    del self._connections[connection]
-        for identifier in old_entry.identifiers:
-            by_config_entry = self._identifiers.get(identifier)
-            if by_config_entry is not None and (
-                by_config_entry.get(config_entry_id) is old_entry
-            ):
-                del by_config_entry[config_entry_id]
-                if not by_config_entry:
-                    del self._identifiers[identifier]
+                    del index[key]
+        else:
+            # Not the slot holder, so it must be shadowed
+            assert shadowed_ids is not None
+            shadowed_ids.remove(old_device.id)
+
+        if shadowed_ids is not None and not shadowed_ids:
+            del shadowed_index[shadow_key]
 
     def get_entry(
         self,
@@ -1109,6 +1184,66 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
                     elif (scoped := by_config_entry.get(config_entry_id)) is not None:
                         entries[scoped.id] = scoped
         return list(entries.values())
+
+    def get_colliding_entries(
+        self,
+        identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
+        *,
+        config_entry_id: str,
+        exclude_device_id: str | None,
+    ) -> dict[str, tuple[set[tuple[str, str]], set[tuple[str, str]]]]:
+        """Map other same-config-entry holders of the given keys to the shared keys.
+
+        Includes holders shadowed in the index. connections must be normalized.
+        """
+        colliding: dict[str, tuple[set[tuple[str, str]], set[tuple[str, str]]]] = {}
+        for identifier in identifiers:
+            for holder_id in self._holder_ids(
+                identifier,
+                config_entry_id,
+                self._identifiers,
+                self._shadowed_identifiers,
+            ):
+                if holder_id != exclude_device_id:
+                    colliding.setdefault(holder_id, (set(), set()))[0].add(identifier)
+        for connection in connections:
+            for holder_id in self._holder_ids(
+                connection,
+                config_entry_id,
+                self._connections,
+                self._shadowed_connections,
+            ):
+                if holder_id != exclude_device_id:
+                    colliding.setdefault(holder_id, (set(), set()))[1].add(connection)
+        return colliding
+
+    def _holder_ids(
+        self,
+        key: tuple[str, str],
+        config_entry_id: str | None,
+        index: dict[tuple[str, str], dict[str | None, _EntryTypeT]],
+        shadowed_index: dict[tuple[str | None, tuple[str, str]], set[str]],
+    ) -> list[str]:
+        """Get the ids of all devices of a config entry holding a key."""
+        holder_ids: list[str] = []
+        if (by_config_entry := index.get(key)) is not None and (
+            slot_holder := by_config_entry.get(config_entry_id)
+        ) is not None:
+            holder_ids.append(slot_holder.id)
+        holder_ids.extend(shadowed_index.get((config_entry_id, key), ()))
+        return holder_ids
+
+    def count_shadowed(self) -> int:
+        """Count keys registered to multiple devices of one config entry."""
+        return sum(
+            len(device_ids)
+            for shadowed_index in (
+                self._shadowed_connections,
+                self._shadowed_identifiers,
+            )
+            for device_ids in shadowed_index.values()
+        )
 
 
 class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
@@ -1278,6 +1413,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
+        # Devices registered through async_get_or_create this run. A key collision
+        # with one of these raises; one with a not yet registered device is reconciled.
+        self._live_device_ids: set[str] = set()
         self._loaded_event = asyncio.Event()
         self._store = DeviceRegistryStore(
             hass,
@@ -1497,6 +1635,43 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self.devices.get_devices_for_composite_device_id(device_id)
         )
 
+    @callback
+    def _resolve_via_device_id(
+        self, via_device_id: str, config_entry_id: str
+    ) -> str | None:
+        """Resolve a via_device_id to the id of a registered device.
+
+        The id of a pre-migration composite device is resolved to one of the devices
+        it was split into - preferring the split owned by config_entry_id, then one
+        owned by the same domain, then any of them. Returns None for an unknown id.
+        """
+        if via_device_id in self.devices:
+            return via_device_id
+        if splits := self.devices.get_devices_for_composite_device_id(via_device_id):
+            # The composite resolution can be removed in HA Core 2027.8
+            report_usage(
+                f"passes the id of a pre-migration composite device {via_device_id} "
+                "as `via_device_id`; pass the id of a single device instead, e.g. "
+                "one returned by async_get_device_by_identifier",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2027.8",
+            )
+            for split in splits:
+                if split.config_entry_id == config_entry_id:
+                    return split.id
+            if (
+                config_entry := self.hass.config_entries.async_get_entry(
+                    config_entry_id
+                )
+            ) is not None and (
+                split_in_domain := self._first_device_in_domain(
+                    splits, config_entry.domain
+                )
+            ) is not None:
+                return split_in_domain.id
+            return splits[0].id
+        return None
+
     def _substitute_name_placeholders(
         self,
         domain: str,
@@ -1642,6 +1817,26 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entry_id=config_entry_id,
         )
 
+        self._async_reconcile_collisions(
+            device, config_entry, device_info, identifiers, connections
+        )
+        if device is not None:
+            # Reconciliation can update the matched device (e.g. detach its via link)
+            device = self.devices[device.id]
+
+        # Resolved after reconciliation so a removed stale duplicate can't be linked
+        if via_device_id is not UNDEFINED and via_device_id is not None:
+            resolved_via_device_id = self._resolve_via_device_id(
+                via_device_id, config_entry_id
+            )
+            if resolved_via_device_id is None:
+                raise DeviceInfoError(
+                    config_entry.domain,
+                    device_info,
+                    f"via_device_id {via_device_id} is not a registered device id",
+                )
+            via_device_id = resolved_via_device_id
+
         is_new = False
 
         if device is None:
@@ -1701,6 +1896,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if device_info_type == "primary" and (not name or name is UNDEFINED):
                 name = config_entry.title
 
+        self._async_purge_colliding_deleted_devices(device, identifiers, connections)
+
         if default_manufacturer is not UNDEFINED and device.manufacturer is None:
             validated_fields["manufacturer"] = default_manufacturer
 
@@ -1747,7 +1944,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # can be removed in HA Core 2027.8.
         identifiers_connections: dict[str, Any]
         has_composite_identifiers: bool | UndefinedType = UNDEFINED
-        if not is_new and device.has_composite_identifiers:
+        if device.has_composite_identifiers:
             identifiers_connections = {
                 "new_connections": connections,
                 "new_identifiers": identifiers,
@@ -1761,7 +1958,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self._async_update_device(
             device.id,
-            allow_collisions=True,
             disabled_by=disabled_by,
             entry_type=entry_type,
             is_new=is_new,
@@ -1780,6 +1976,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # This is safe because _async_update_device will always return a device
         # in this use case.
         assert device
+        self._live_device_ids.add(device.id)
         return device
 
     @callback
@@ -1789,8 +1986,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         add_config_subentry_id: str | None | UndefinedType = UNDEFINED,
-        # Temporary flag so we don't blow up when collisions are implicitly introduced
-        # by calls to async_get_or_create.
+        # Only set when stripping colliding keys from a stale device: its retained
+        # keys can still be duplicated in other stale devices and must not validate.
         allow_collisions: bool = False,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | URL | None | UndefinedType = UNDEFINED,
@@ -2031,6 +2228,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         is_move = effective_config_entry_id != old.config_entry_id
 
+        if via_device_id is not UNDEFINED and via_device_id is not None:
+            resolved_via_device_id = self._resolve_via_device_id(
+                via_device_id, effective_config_entry_id
+            )
+            if resolved_via_device_id is None:
+                raise HomeAssistantError(
+                    f"Can't link device to unknown via device {via_device_id}"
+                )
+            via_device_id = resolved_via_device_id
+
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
 
@@ -2062,13 +2269,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         if new_connections is not UNDEFINED:
             added_connections = new_values["connections"] = self._validate_connections(
-                device_id, effective_config_entry_id, new_connections, False
+                device_id, effective_config_entry_id, new_connections, allow_collisions
             )
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
             added_identifiers = new_values["identifiers"] = self._validate_identifiers(
-                device_id, effective_config_entry_id, new_identifiers, False
+                device_id, effective_config_entry_id, new_identifiers, allow_collisions
             )
             old_values["identifiers"] = old.identifiers
 
@@ -2184,17 +2391,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             match_identifiers = added_identifiers
             match_connections = added_connections
-        for deleted_device in self.deleted_devices.get_entries(
-            match_identifiers, match_connections
+        # A deleted device holding an identity the device now owns can never restore
+        for deleted_device_id in self.deleted_devices.get_colliding_entries(
+            match_identifiers or set(),
+            match_connections or set(),
+            config_entry_id=effective_config_entry_id,
+            exclude_device_id=None,
         ):
-            # get_entries matches across config entries, but identifiers/connections are
-            # unique per config entry - only remove the deleted device owned by this
-            # device's config entry, so another entry can still restore its own.
-            if (
-                deleted_device.config_entry_id == effective_config_entry_id
-                and deleted_device.id in self.deleted_devices
-            ):
-                del self.deleted_devices[deleted_device.id]
+            del self.deleted_devices[deleted_device_id]
 
         # If its only run time attributes (suggested_area)
         # that do not get saved we do not want to write
@@ -2350,6 +2554,97 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id=via_device_id,
             **validated_fields,
         )
+
+    @callback
+    def _async_reconcile_collisions(
+        self,
+        matched_device: DeviceEntry | None,
+        config_entry: ConfigEntry,
+        device_info: DeviceInfo,
+        identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
+    ) -> None:
+        """Resolve device key collisions with the registering device.
+
+        Shared keys are stripped from stale duplicates (devices not registered this
+        run); a duplicate left without any keys is removed. A collision with a device
+        registered this run raises.
+        """
+        matched_device_id: str | None = None
+        if matched_device is not None:
+            matched_device_id = matched_device.id
+            if not matched_device.has_composite_identifiers:
+                identifiers = matched_device.identifiers | identifiers
+                connections = matched_device.connections | connections
+        colliding = self.devices.get_colliding_entries(
+            identifiers,
+            connections,
+            config_entry_id=config_entry.entry_id,
+            exclude_device_id=matched_device_id,
+        )
+        for holder_id, (shared_identifiers, shared_connections) in colliding.items():
+            if holder_id not in self._live_device_ids:
+                continue
+            raise DeviceInfoError(
+                config_entry.domain,
+                device_info,
+                f"identifiers or connections "
+                f"{sorted(shared_identifiers | shared_connections)} are already "
+                f"registered for device {holder_id} of the same config entry",
+            )
+        for holder_id, (shared_identifiers, shared_connections) in colliding.items():
+            holder = self.devices[holder_id]
+            remaining_identifiers = holder.identifiers - shared_identifiers
+            remaining_connections = holder.connections - shared_connections
+            if not remaining_identifiers and not remaining_connections:
+                _LOGGER.debug(
+                    "Removing device %s, its identifiers and connections are all "
+                    "registered by another device of the same config entry",
+                    holder_id,
+                )
+                self.async_remove_device(holder_id)
+                continue
+            _LOGGER.debug(
+                "Stripping %s from device %s, registered by another device of the "
+                "same config entry",
+                sorted(shared_identifiers | shared_connections),
+                holder_id,
+            )
+            strip_values: dict[str, Any] = {}
+            if shared_identifiers:
+                strip_values["new_identifiers"] = remaining_identifiers
+            if shared_connections:
+                strip_values["new_connections"] = remaining_connections
+            self._async_update_device(holder_id, allow_collisions=True, **strip_values)
+
+    @callback
+    def _async_purge_colliding_deleted_devices(
+        self,
+        device: DeviceEntry,
+        identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
+    ) -> None:
+        """Purge deleted devices with key collisions."""
+        if not device.has_composite_identifiers:
+            identifiers = device.identifiers | identifiers
+            connections = device.connections | connections
+        colliding = self.deleted_devices.get_colliding_entries(
+            identifiers,
+            connections,
+            config_entry_id=device.config_entry_id,
+            exclude_device_id=None,
+        )
+        if not colliding:
+            return
+        for deleted_device_id in colliding:
+            _LOGGER.debug(
+                "Removing deleted device %s, its identifiers or connections are "
+                "registered by device %s of the same config entry",
+                deleted_device_id,
+                device.id,
+            )
+            del self.deleted_devices[deleted_device_id]
+        self.async_schedule_save()
 
     @callback
     def _validate_connections(
@@ -2588,6 +2883,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     orphaned_timestamp=device["orphaned_timestamp"],
                     domain=device["domain"],
                 )
+
+        if (
+            shadowed_count := devices.count_shadowed()
+            + deleted_devices.count_shadowed()
+        ):
+            _LOGGER.info(
+                "Loaded %d identifiers/connections registered to multiple devices of "
+                "one config entry; they will be reconciled as integrations register "
+                "their devices",
+                shadowed_count,
+            )
 
         self.devices = devices
         self.deleted_devices = deleted_devices
