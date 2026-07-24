@@ -1,22 +1,23 @@
 """The tests for the nx584 sensor platform."""
 
-from typing import Any
+import logging
+import threading
+import time
 from unittest import mock
+from unittest.mock import MagicMock
 
-from nx584 import client as nx584_client
 import pytest
 import requests
 
 from homeassistant.components.nx584 import binary_sensor as nx584
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.components.nx584.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.helpers import issue_registry as ir
 
-DEFAULT_CONFIG = {
-    "host": nx584.DEFAULT_HOST,
-    "port": nx584.DEFAULT_PORT,
-    "exclude_zones": [],
-    "zone_types": {},
-}
+from tests.common import MockConfigEntry
 
 
 class StopMe(Exception):
@@ -24,7 +25,7 @@ class StopMe(Exception):
 
 
 @pytest.fixture
-def fake_zones():
+def fake_zones() -> list[dict[str, object]]:
     """Fixture for fake zones.
 
     Returns:
@@ -32,132 +33,249 @@ def fake_zones():
 
     """
     return [
-        {"name": "front", "number": 1},
-        {"name": "back", "number": 2},
-        {"name": "inside", "number": 3},
+        {"name": "front", "number": 1, "state": False},
+        {"name": "back", "number": 2, "state": False},
+        {"name": "inside", "number": 3, "state": False},
     ]
 
 
 @pytest.fixture
-def client(fake_zones):
-    """Fixture for client.
-
-    Args:
-        fake_zones (list): Fixture of fake zones
-
-    Yields:
-        MagicMock: Client Mock
-
-    """
-    with mock.patch.object(nx584_client, "Client") as _mock_client:
-        client = nx584_client.Client.return_value
-        client.list_zones.return_value = fake_zones
-        client.get_version.return_value = "1.1"
-
-        yield _mock_client
+def fake_client(fake_zones: list[dict[str, object]]) -> MagicMock:
+    """Fixture for a fake nx584 client."""
+    client = mock.MagicMock()
+    client.list_zones.return_value = fake_zones
+    client.get_version.return_value = "1.1"
+    return client
 
 
-@pytest.mark.usefixtures("client")
-@mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher")
-@mock.patch("homeassistant.components.nx584.binary_sensor.NX584ZoneSensor")
-def test_nx584_sensor_setup_defaults(
-    mock_nx, mock_watcher, hass: HomeAssistant, fake_zones
+def test_build_zone_sensors_defaults(
+    fake_client: MagicMock, fake_zones: list[dict[str, object]]
 ) -> None:
-    """Test the setup with no configuration."""
-    add_entities = mock.MagicMock()
-    config = DEFAULT_CONFIG
-    nx584.setup_platform(hass, config, add_entities)
-    mock_nx.assert_has_calls([mock.call(zone, "opening") for zone in fake_zones])
-    assert add_entities.called
-    assert nx584_client.Client.call_count == 1
-    assert nx584_client.Client.call_args == mock.call("http://localhost:5007")
+    """Test building zone sensors with no exclusions or overrides."""
+    zone_sensors = nx584._build_zone_sensors(fake_client, [], {})
+
+    assert set(zone_sensors) == {1, 2, 3}
+    for number, sensor in zone_sensors.items():
+        assert sensor.name == next(
+            zone["name"] for zone in fake_zones if zone["number"] == number
+        )
+        assert sensor.device_class == "opening"
 
 
-@pytest.mark.usefixtures("client")
-@mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher")
-@mock.patch("homeassistant.components.nx584.binary_sensor.NX584ZoneSensor")
-def test_nx584_sensor_setup_full_config(
-    mock_nx, mock_watcher, hass: HomeAssistant, fake_zones
+def test_build_zone_sensors_excludes_and_overrides(
+    fake_client: MagicMock, fake_zones: list[dict[str, object]]
 ) -> None:
-    """Test the setup with full configuration."""
+    """Test building zone sensors with exclusions and type overrides."""
+    zone_sensors = nx584._build_zone_sensors(fake_client, [2], {3: "motion"})
+
+    assert set(zone_sensors) == {1, 3}
+    assert zone_sensors[1].device_class == "opening"
+    assert zone_sensors[3].device_class == "motion"
+
+
+def test_build_zone_sensors_connection_error(fake_client: MagicMock) -> None:
+    """Test building zone sensors when the panel can't be reached."""
+    fake_client.list_zones.side_effect = requests.exceptions.ConnectionError
+
+    assert nx584._build_zone_sensors(fake_client, [], {}) is None
+
+
+def test_build_zone_sensors_version_too_old(fake_client: MagicMock) -> None:
+    """Test building zone sensors when the panel firmware is too old."""
+    fake_client.get_version.return_value = "1.0"
+
+    assert nx584._build_zone_sensors(fake_client, [], {}) is None
+
+
+def test_build_zone_sensors_no_zones(fake_client: MagicMock) -> None:
+    """Test building zone sensors when the panel reports no zones."""
+    fake_client.list_zones.return_value = []
+
+    assert nx584._build_zone_sensors(fake_client, [], {}) == {}
+
+
+@pytest.mark.parametrize(
+    ("reason", "issue_domain", "issue_id"),
+    [
+        pytest.param(
+            "already_configured",
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            id="already_configured",
+        ),
+        pytest.param(
+            "cannot_connect",
+            DOMAIN,
+            "deprecated_yaml_import_issue_cannot_connect",
+            id="import_failed",
+        ),
+    ],
+)
+async def test_async_setup_platform_imports_config(
+    hass: HomeAssistant, reason: str, issue_domain: str, issue_id: str
+) -> None:
+    """Test the YAML platform triggers the config entry import flow and raises an issue."""
     config = {
-        "host": "foo",
-        "port": 123,
-        "exclude_zones": [2],
-        "zone_types": {3: "motion"},
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 5007,
+        "exclude_zones": [],
+        "zone_types": {},
     }
-    add_entities = mock.MagicMock()
-    nx584.setup_platform(hass, config, add_entities)
-    mock_nx.assert_has_calls(
-        [
-            mock.call(fake_zones[0], "opening"),
-            mock.call(fake_zones[2], "motion"),
+
+    with mock.patch(
+        "homeassistant.config_entries.ConfigEntriesFlowManager.async_init",
+        return_value=FlowResult(type=FlowResultType.ABORT, reason=reason),
+    ) as mock_init:
+        await nx584.async_setup_platform(hass, config, mock.MagicMock())
+
+    mock_init.assert_called_once_with(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    assert ir.async_get(hass).async_get_issue(issue_domain, issue_id) is not None
+
+
+async def test_async_setup_entry_creates_zone_sensors(
+    hass: HomeAssistant, fake_zones: list[dict[str, object]]
+) -> None:
+    """Test setting up the binary_sensor platform from a config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        title="NX584",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("nx584.client.Client") as mock_client_cls,
+        mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.list_partitions.return_value = [
+            {"armed": False, "condition_flags": []}
         ]
-    )
-    assert add_entities.called
-    assert nx584_client.Client.call_count == 1
-    assert nx584_client.Client.call_args == mock.call("http://foo:123")
-    assert mock_watcher.called
+        mock_client.get_version.return_value = "1.1"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for zone in fake_zones:
+        assert hass.states.get(f"binary_sensor.{zone['name']}") is not None
 
 
-async def _test_assert_graceful_fail(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> None:
-    """Test the failing."""
-    assert not await async_setup_component(hass, "nx584", config)
-
-
-@pytest.mark.usefixtures("client")
 @pytest.mark.parametrize(
-    "config",
+    "zone_types",
     [
-        ({"exclude_zones": ["a"]}),
-        ({"zone_types": {"a": "b"}}),
-        ({"zone_types": {1: "notatype"}}),
-        ({"zone_types": {"notazone": "motion"}}),
+        pytest.param({3: "motion"}, id="python_types"),
+        pytest.param(
+            {"3": "motion"},
+            id="json_roundtripped_types",
+        ),
     ],
 )
-async def test_nx584_sensor_setup_bad_config(
-    hass: HomeAssistant, config: dict[str, Any]
+async def test_async_setup_entry_applies_options(
+    hass: HomeAssistant,
+    fake_zones: list[dict[str, object]],
+    zone_types: dict[int | str, str],
 ) -> None:
-    """Test the setup with bad configuration."""
-    await _test_assert_graceful_fail(hass, config)
+    """Test the binary_sensor platform applies exclude_zones and zone_types options.
 
-
-@pytest.mark.usefixtures("client")
-@pytest.mark.parametrize(
-    "exception_type",
-    [
-        pytest.param(requests.exceptions.ConnectionError, id="connect_failed"),
-        pytest.param(IndexError, id="no_partitions"),
-    ],
-)
-async def test_nx584_sensor_setup_with_exceptions(
-    hass: HomeAssistant, exception_type
-) -> None:
-    """Test the setup handles exceptions."""
-    nx584_client.Client.return_value.list_zones.side_effect = exception_type
-    await _test_assert_graceful_fail(hass, {})
-
-
-@pytest.mark.usefixtures("client")
-async def test_nx584_sensor_setup_version_too_old(hass: HomeAssistant) -> None:
-    """Test if version is too old."""
-    nx584_client.Client.return_value.get_version.return_value = "1.0"
-    await _test_assert_graceful_fail(hass, {})
-
-
-@pytest.mark.usefixtures("client")
-def test_nx584_sensor_setup_no_zones(hass: HomeAssistant) -> None:
-    """Test the setup with no zones."""
-    nx584_client.Client.return_value.list_zones.return_value = []
-    add_entities = mock.MagicMock()
-    nx584.setup_platform(
-        hass,
-        DEFAULT_CONFIG,
-        add_entities,
+    Config entry options are persisted as JSON, so after a reload the
+    zone_types keys come back as strings instead of ints.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        options={"exclude_zones": [2], "zone_types": zone_types},
+        title="NX584",
     )
-    assert not add_entities.called
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("nx584.client.Client") as mock_client_cls,
+        mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.list_partitions.return_value = [
+            {"armed": False, "condition_flags": []}
+        ]
+        mock_client.get_version.return_value = "1.1"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.front") is not None
+    assert hass.states.get("binary_sensor.back") is None
+    assert hass.states.get("binary_sensor.inside") is not None
+    assert (
+        hass.states.get("binary_sensor.inside").attributes["device_class"] == "motion"
+    )
+
+
+async def test_async_setup_entry_skips_zone_sensors_on_version_too_old(
+    hass: HomeAssistant,
+    fake_zones: list[dict[str, object]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an old firmware version isn't misreported as 'no zones found'."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        title="NX584",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("nx584.client.Client") as mock_client_cls,
+        mock.patch(
+            "homeassistant.components.nx584.binary_sensor.NX584Watcher"
+        ) as mock_watcher_cls,
+        caplog.at_level(logging.WARNING),
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.get_version.return_value = "1.0"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not mock_watcher_cls.called
+    assert "No zones found on NX584" not in caplog.text
+
+
+async def test_async_setup_entry_stops_watcher_on_unload(
+    hass: HomeAssistant, fake_zones: list[dict[str, object]]
+) -> None:
+    """Test the watcher thread is signalled to stop when the config entry unloads."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
+        title="NX584",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        mock.patch("nx584.client.Client") as mock_client_cls,
+        mock.patch(
+            "homeassistant.components.nx584.binary_sensor.NX584Watcher"
+        ) as mock_watcher_cls,
+    ):
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = fake_zones
+        mock_client.get_version.return_value = "1.1"
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_watcher = mock_watcher_cls.return_value
+        assert mock_watcher.start.called
+        assert not mock_watcher.stop.called
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_watcher.stop.assert_called_once()
 
 
 def test_nx584_zone_sensor_normal() -> None:
@@ -191,7 +309,7 @@ def test_nx584_zone_sensor_bypassed() -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event(mock_update) -> None:
+def test_nx584_watcher_process_zone_event(mock_update: MagicMock) -> None:
     """Test the processing of zone events."""
     zone1 = {"number": 1, "name": "foo", "state": True}
     zone2 = {"number": 2, "name": "bar", "state": True}
@@ -206,7 +324,9 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
+def test_nx584_watcher_process_zone_event_updates_bypass(
+    mock_update: MagicMock,
+) -> None:
     """Test the processing of zone events updates bypass state."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": False}
     zones = {1: nx584.NX584ZoneSensor(zone, "motion")}
@@ -227,7 +347,7 @@ def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-def test_nx584_watcher_process_zone_event_missing_zone(mock_update) -> None:
+def test_nx584_watcher_process_zone_event_missing_zone(mock_update: MagicMock) -> None:
     """Test the processing of zone events with missing zones."""
     watcher = nx584.NX584Watcher(None, {})
     watcher._process_zone_event({"zone": 1, "zone_state": False})
@@ -266,8 +386,7 @@ def test_nx584_watcher_run_with_zone_events() -> None:
     assert client.get_events.call_count == 3
 
 
-@mock.patch("time.sleep")
-def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
+def test_nx584_watcher_run_retries_failures() -> None:
     """Test the retries with failures."""
     empty_me = [1, 2]
 
@@ -279,9 +398,105 @@ def test_nx584_watcher_run_retries_failures(mock_sleep) -> None:
         raise StopMe
 
     watcher = nx584.NX584Watcher(None, {})
-    with mock.patch.object(watcher, "_run") as mock_inner:
+    with (
+        mock.patch.object(watcher._stop_event, "wait") as mock_wait,
+        mock.patch.object(watcher, "_run") as mock_inner,
+    ):
         mock_inner.side_effect = fake_run
         with pytest.raises(StopMe):
             watcher.run()
         assert mock_inner.call_count == 3
-    mock_sleep.assert_has_calls([mock.call(10), mock.call(10)])
+    mock_wait.assert_has_calls([mock.call(10), mock.call(10)])
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
+    mock_update: MagicMock,
+) -> None:
+    """Test zone sensors are marked unavailable when the host disconnects."""
+    zone_sensor = nx584.NX584ZoneSensor(
+        {"number": 1, "name": "foo", "state": False},
+        "motion",
+    )
+    watcher = nx584.NX584Watcher(None, {1: zone_sensor})
+
+    with (
+        mock.patch.object(watcher._stop_event, "wait"),
+        mock.patch.object(watcher, "_run") as mock_inner,
+    ):
+        mock_inner.side_effect = [requests.exceptions.ConnectionError, StopMe]
+        with pytest.raises(StopMe):
+            watcher.run()
+
+    assert zone_sensor.available is False
+    assert mock_update.called
+
+
+def test_nx584_watcher_stop_interrupts_retry_wait() -> None:
+    """Test stop() wakes the watcher out of the post-error retry wait promptly."""
+    client = mock.MagicMock()
+    hit_connection_error = threading.Event()
+
+    def raise_connection_error():
+        hit_connection_error.set()
+        raise requests.exceptions.ConnectionError
+
+    client.get_events.side_effect = raise_connection_error
+    watcher = nx584.NX584Watcher(client, {})
+
+    watcher.start()
+    assert hit_connection_error.wait(timeout=1)
+
+    started_stop = time.monotonic()
+    watcher.stop()
+    watcher.join(timeout=1)
+
+    assert not watcher.is_alive()
+    assert time.monotonic() - started_stop < 1
+
+
+def test_nx584_watcher_stop_signals_run_loop_to_exit() -> None:
+    """Test stop() causes the outer run loop to exit without polling further."""
+    watcher = nx584.NX584Watcher(mock.MagicMock(), {})
+    watcher.stop()
+
+    with mock.patch.object(watcher, "_run") as mock_inner:
+        watcher.run()
+
+    assert not mock_inner.called
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_stop_signals_inner_loop_to_exit(mock_update: MagicMock) -> None:
+    """Test stop() causes _run() to exit after the current poll instead of looping."""
+    client = mock.MagicMock()
+    client.get_events.return_value = None
+    watcher = nx584.NX584Watcher(client, {})
+    watcher.stop()
+
+    watcher._run()
+
+    # Only the initial throwaway call is made; the polling loop never runs.
+    assert client.get_events.call_count == 1
+
+
+@mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
+def test_nx584_watcher_run_marks_zones_available_after_reconnect(
+    mock_update: MagicMock,
+) -> None:
+    """Test zone sensors become available again once the panel is reachable."""
+    zone_sensor = nx584.NX584ZoneSensor(
+        {"number": 1, "name": "foo", "state": False},
+        "motion",
+    )
+    zone_sensor._attr_available = False
+
+    client = mock.MagicMock()
+    client.get_events.side_effect = [None, StopMe]
+    watcher = nx584.NX584Watcher(client, {1: zone_sensor})
+
+    with pytest.raises(StopMe):
+        watcher._run()
+
+    assert zone_sensor.available is True
+    assert mock_update.called
