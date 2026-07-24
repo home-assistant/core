@@ -234,7 +234,9 @@ async def test_multiple_config_entries(
 
 
 async def test_multiple_config_subentries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test re-registering a device under different subentries of one config entry."""
     config_entry = MockConfigEntry(
@@ -265,29 +267,33 @@ async def test_multiple_config_subentries(
         manufacturer="manufacturer",
         model="model",
     )
+    # Re-registering under the same subentry is idempotent
     entry2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        config_subentry_id="mock-subentry-id-2",
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
-    )
-    entry3 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         config_subentry_id="mock-subentry-id-1",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
     )
+    assert entry2.id == entry.id
+    assert entry2.config_subentry_id == "mock-subentry-id-1"
 
     # A device belongs to a single subentry; re-registering the same identifiers under
-    # another subentry of the same config entry moves the device rather than duplicating
+    # another subentry of the same config entry is deprecated. For now it warns and moves
+    # the existing device (rather than duplicating); from HA Core 2027.8 it will raise.
+    entry3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        config_subentry_id="mock-subentry-id-2",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+    assert "A device belongs to one subentry" in caplog.text
+
+    # Still one device, now moved to the new subentry
+    assert entry3.id == entry.id
     assert len(device_registry.devices) == 1
-    assert entry.id == entry2.id == entry3.id
-    assert entry2.config_subentry_id == "mock-subentry-id-2"
-    assert entry3.config_subentry_id == "mock-subentry-id-1"
+    assert (
+        device_registry.async_get(entry.id).config_subentry_id == "mock-subentry-id-2"
+    )
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -2176,15 +2182,18 @@ async def test_migration_collapses_multi_subentry_device(
     )
 
 
-async def test_async_get_or_create_moves_device_between_subentries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+async def test_async_get_or_create_warns_on_subentry_reassignment(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Re-registering under a different subentry moves the device, not duplicates it.
+    """Re-registering under a different subentry warns and moves the device.
 
     Identifiers and connections are unique per config entry (not per subentry), so a
     second async_get_or_create with the same identifier/connection but a different
-    subentry of the same config entry moves the existing device - it neither creates a
-    duplicate nor raises.
+    subentry of the same config entry can neither create a duplicate nor keep two
+    devices - it moves the existing device to the new subentry. This implicit move is
+    deprecated (logs a warning now, will raise in HA Core 2027.8).
     """
     entry = MockConfigEntry(
         subentries_data=[
@@ -2206,7 +2215,7 @@ async def test_async_get_or_create_moves_device_between_subentries(
     )
     entry.add_to_hass(hass)
 
-    # Same identifier, different subentry -> the existing device is moved
+    # Same identifier, different subentry -> warns and moves the existing device
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id="sub-1",
@@ -2218,23 +2227,23 @@ async def test_async_get_or_create_moves_device_between_subentries(
         config_subentry_id="sub-2",
         identifiers={("test", "1")},
     )
+    assert "A device belongs to one subentry" in caplog.text
     assert moved.id == device.id
-    assert moved.config_subentry_id == "sub-2"
+    assert device_registry.async_get(device.id).config_subentry_id == "sub-2"
     assert len(device_registry.devices) == 1
 
-    # Same connection, different subentry -> also moved, not duplicated
+    # Same connection, different subentry -> also moves
     device_2 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id="sub-1",
         connections={("mac", "12:34:56:ab:cd:ef")},
     )
-    moved_2 = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         config_subentry_id="sub-2",
         connections={("mac", "12:34:56:ab:cd:ef")},
     )
-    assert moved_2.id == device_2.id
-    assert moved_2.config_subentry_id == "sub-2"
+    assert device_registry.async_get(device_2.id).config_subentry_id == "sub-2"
     assert len(device_registry.devices) == 2
 
 
