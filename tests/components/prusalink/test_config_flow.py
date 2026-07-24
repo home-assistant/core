@@ -1,6 +1,10 @@
 """Test the PrusaLink config flow."""
 
+from typing import Any
 from unittest.mock import patch
+
+from httpx import HTTPError, InvalidURL
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.prusalink.config_flow import InvalidAuth
@@ -8,8 +12,14 @@ from homeassistant.components.prusalink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 
-async def test_form(hass: HomeAssistant, mock_version_api) -> None:
+
+async def test_form(
+    hass: HomeAssistant,
+    mock_version_api: dict[str, str],
+    mock_info_api: dict[str, Any],
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -38,10 +48,15 @@ async def test_form(hass: HomeAssistant, mock_version_api) -> None:
         "username": "abcdefg",
         "password": "abcdefg",
     }
+    assert result2["result"].unique_id == "serial-1337"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_mk3(hass: HomeAssistant, mock_version_api) -> None:
+async def test_form_mk3(
+    hass: HomeAssistant,
+    mock_version_api: dict[str, str],
+    mock_info_api: dict[str, Any],
+) -> None:
     """Test it works for MK2/MK3."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -67,6 +82,36 @@ async def test_form_mk3(hass: HomeAssistant, mock_version_api) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    mock_version_api: dict[str, str],
+    mock_info_api: dict[str, Any],
+) -> None:
+    """Test we abort if the printer is already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="serial-1337",
+        data={"host": "http://2.2.2.2", "username": "maker", "password": "secret"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "abcdefg",
+            "password": "abcdefg",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -191,6 +236,63 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.prusalink.config_flow.PrusaLink.get_version",
         side_effect=TimeoutError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "abcdefg",
+                "password": "abcdefg",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [HTTPError("request failed"), InvalidURL("bad url")],
+)
+async def test_form_cannot_connect_get_info(
+    hass: HomeAssistant,
+    mock_version_api: dict[str, str],
+    exception: Exception,
+) -> None:
+    """Test we handle cannot connect error from info endpoint."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.prusalink.config_flow.PrusaLink.get_info",
+        side_effect=exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "abcdefg",
+                "password": "abcdefg",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect_missing_serial(
+    hass: HomeAssistant,
+    mock_version_api: dict[str, str],
+) -> None:
+    """Test we handle missing serial from info endpoint as cannot_connect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.prusalink.config_flow.PrusaLink.get_info",
+        return_value={"hostname": "PrusaXL"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

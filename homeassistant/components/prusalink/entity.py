@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -18,6 +19,11 @@ class PrusaLinkEntityDescription(EntityDescription):
 
     available_fn: Callable[[Any], bool] = lambda _: True
     supported_fn: Callable[[Any], bool] = lambda _: True
+
+
+def get_entry_unique_identifier(config_entry: ConfigEntry) -> str:
+    """Return the stable identifier used for entities/devices."""
+    return config_entry.unique_id or config_entry.entry_id
 
 
 class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
@@ -45,12 +51,13 @@ class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this PrusaLink device."""
-        coordinators = self.coordinator.config_entry.runtime_data
+        config_entry = self.coordinator.config_entry
+        coordinators = config_entry.runtime_data
         info_data = coordinators["info"].data or {}
         version_data = coordinators["version"].data or {}
         return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
-            name=self.coordinator.config_entry.title,
+            identifiers={(DOMAIN, get_entry_unique_identifier(config_entry))},
+            name=config_entry.title,
             manufacturer="Prusa",
             serial_number=info_data.get("serial"),
             sw_version=version_data.get("firmware"),

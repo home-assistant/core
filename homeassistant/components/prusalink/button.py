@@ -13,7 +13,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
-from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
+from .entity import (
+    PrusaLinkEntity,
+    PrusaLinkEntityDescription,
+    get_entry_unique_identifier,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -100,7 +104,9 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
         """Initialize a PrusaLink sensor entity."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{get_entry_unique_identifier(coordinator.config_entry)}_{description.key}"
+        )
 
     @override
     async def async_press(self) -> None:
