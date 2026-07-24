@@ -37,6 +37,32 @@
       }
     }
   },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "direction": {
+            "name": "Direction",
+            "state": {
+              "down": "Down",
+              "up": "Up"
+            }
+          },
+          "event_type": {
+            "state": {
+              "long_press_end": "Long press end",
+              "long_press_start": "Long press start",
+              "multi_press_end": "Multi-press end",
+              "press_end": "Press"
+            }
+          },
+          "multi_press_count": {
+            "name": "Multi-press count"
+          }
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

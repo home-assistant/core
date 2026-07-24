@@ -39,6 +39,7 @@ from .const import (
     KEY_STATUS,
     NODE_AUX_FILTERS,
     NODE_FILTERS,
+    NODE_PARALLEL_PLATFORMS,
     NODE_PLATFORMS,
     PROGRAM_PLATFORMS,
     SUBNODE_CLIMATE_COOL,
@@ -362,6 +363,17 @@ def _categorize_nodes(
                 if control in SKIP_AUX_PROPS:
                     continue
                 isy_data.aux_properties[Platform.SENSOR].append((node, control))
+
+        # Must run before the sensor_identifier override below -- Platform.EVENT
+        # is additive, not exclusive with a name/path-forced Platform.SENSOR.
+        for parallel_platform in NODE_PARALLEL_PLATFORMS:
+            if _check_for_node_def(isy_data, node, single_platform=parallel_platform):
+                continue
+            if _check_for_insteon_type(
+                isy_data, node, single_platform=parallel_platform
+            ):
+                continue
+            _check_for_zwave_cat(isy_data, node, single_platform=parallel_platform)
 
         if sensor_identifier in path or sensor_identifier in node.name:
             # User has specified to treat this as a sensor. First we need to
