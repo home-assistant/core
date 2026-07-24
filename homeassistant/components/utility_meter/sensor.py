@@ -469,6 +469,13 @@ class UtilityMeterSensor(RestoreSensor):
             return new_state_val - self._last_valid_state
 
         if (old_state_val := self._validate_state(old_state)) is not None:
+            if (
+                self._sensor_periodically_resetting
+                and not self._sensor_net_consumption
+                and new_state_val < old_state_val
+            ):
+                # Sensor has reset, so capture the state from zero
+                return new_state_val
             return new_state_val - old_state_val
 
         _LOGGER.debug(
