@@ -5,8 +5,6 @@ import functools
 import logging
 from typing import Any, override
 
-from zha.application.platforms.sensor import ElectricalMeasurementState
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -153,31 +151,16 @@ class Sensor(ZHAEntity, SensorEntity):
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
-        entity = self.entity_data.entity
-        if self._zha_state.extra_state_attribute_names is None:
+        if not self._zha_state.extra_state_attribute_names:
             return None
 
-        if not self._zha_state.extra_state_attribute_names <= _EXTRA_STATE_ATTRIBUTES:
+        extra_state_attributes = self._zha_state.extra_state_attributes
+
+        if not extra_state_attributes.keys() <= _EXTRA_STATE_ATTRIBUTES:
             _LOGGER.warning(
                 "Unexpected extra state attributes found for sensor %s: %s",
-                entity,
-                self._zha_state.extra_state_attribute_names - _EXTRA_STATE_ATTRIBUTES,
+                self.entity_data.entity,
+                extra_state_attributes.keys() - _EXTRA_STATE_ATTRIBUTES,
             )
 
-        max_attribute_name: str | None = None
-        max_value: float | int | None = None
-
-        if isinstance(self._zha_state, ElectricalMeasurementState):
-            max_attribute_name = self._zha_state.max_attribute_name
-            max_value = self._zha_state.max_value
-
-        return exclude_none_values(
-            {
-                name: (
-                    max_value
-                    if name == max_attribute_name
-                    else getattr(self._zha_state, name)
-                )
-                for name in self._zha_state.extra_state_attribute_names
-            }
-        )
+        return exclude_none_values(extra_state_attributes)
