@@ -47,9 +47,57 @@
         "name": "Secure mode"
       }
     },
+    "select": {
+      "auto_lock_when": {
+        "name": "Auto-lock when",
+        "state": {
+          "instant": "Instant",
+          "on_timer": "On a timer"
+        }
+      },
+      "auto_lock_timing": {
+        "name": "Auto-lock timing",
+        "state": {
+          "10_s": "10 s",
+          "30_s": "30 s",
+          "1_min": "1 min",
+          "1_min_30_s": "1 min 30 s",
+          "2_min": "2 min",
+          "2_min_30_s": "2 min 30 s",
+          "3_min": "3 min",
+          "4_min": "4 min",
+          "5_min": "5 min",
+          "10_min": "10 min",
+          "20_min": "20 min",
+          "30_min": "30 min"
+        }
+      },
+      "relock_timing": {
+        "name": "Re-lock timing",
+        "state": {
+          "10_s": "10 s",
+          "30_s": "30 s",
+          "1_min": "1 min",
+          "1_min_30_s": "1 min 30 s",
+          "2_min": "2 min",
+          "2_min_30_s": "2 min 30 s",
+          "3_min": "3 min",
+          "4_min": "4 min",
+          "5_min": "5 min",
+          "10_min": "10 min",
+          "20_min": "20 min",
+          "30_min": "30 min"
+        }
+      }
+    },
     "sensor": {
       "battery_voltage": {
         "name": "Battery voltage"
+      }
+    },
+    "switch": {
+      "auto_lock": {
+        "name": "Auto-lock enabled"
       }
     }
   },
