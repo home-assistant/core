@@ -64,6 +64,20 @@
         "name": "WAN status"
       }
     },
+    "event": {
+      "voip_callhistorylist": {
+        "name": "VoIP call history",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "incoming": "Incoming",
+              "missed": "Missed",
+              "outgoing": "Outgoing"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "dsl_attenuation_down": {
         "name": "DSL attenuation down"
