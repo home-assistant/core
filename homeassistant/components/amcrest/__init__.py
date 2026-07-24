@@ -81,7 +81,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 AUTHENTICATION_LIST = {"basic": "basic"}
 
 INTEGRATION_TITLE = "Amcrest"
-DEPRECATED_YAML_BREAKS_IN = "2026.9.0"
+DEPRECATED_YAML_BREAKS_IN = "2027.2.0"
 
 
 def _has_unique_names(devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
