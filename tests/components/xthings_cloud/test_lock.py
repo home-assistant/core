@@ -95,7 +95,8 @@ async def test_updating_state(
     mock_websocket.call_args[1]["on_device_status"](
         "dev_lock_001",
         {
-            "locked": False,
+            "locked": True,
+            "is_locked": False,
             "jammed": False,
             "battery": 80,
         },
