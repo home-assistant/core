@@ -16,7 +16,11 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import init_integration
 from .const import PORT_TCP
@@ -224,6 +228,66 @@ async def test_device_registry(
 
     device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "2")})
     assert device_no_sub.via_device_id is None
+
+
+async def test_connection_lost_creates_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Test that a disconnect callback creates an issue in the repair registry."""
+    await init_integration(hass, config_entry)
+
+    on_disconnect = controller.return_value.add_disconnect_callback.call_args[0][0]
+    await on_disconnect()
+
+    issue_registry = ir.async_get(hass)
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+
+async def test_connection_restored_deletes_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Test that a reconnect callback removes the connection_lost issue."""
+    await init_integration(hass, config_entry)
+
+    on_disconnect = controller.return_value.add_disconnect_callback.call_args[0][0]
+    on_reconnect = controller.return_value.add_connect_callback.call_args[0][0]
+    await on_disconnect()
+
+    issue_registry = ir.async_get(hass)
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    await on_reconnect()
+    assert (DOMAIN, issue_id) not in issue_registry.issues
+
+
+async def test_setup_deletes_stale_issue(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Test that a successful setup removes a connection_lost issue from a previous run."""
+    issue_registry = ir.async_get(hass)
+    issue_id = f"connection_lost_{config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="connection_lost",
+    )
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    await init_integration(hass, config_entry)
+
+    assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
 async def test_remove_config_entry_device(
