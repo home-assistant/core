@@ -129,6 +129,11 @@
           'name': 'Bron',
           'power': False,
           'problems': False,
+          'slats-v-conf': 'fixed',
+          'slats-v-values': list([
+            'swing',
+            'fixed',
+          ]),
           'speed': 6,
           'speed-type': 0,
           'speeds': dict({
@@ -182,6 +187,11 @@
           'outdoor-temperature': 29.0,
           'power': True,
           'problems': False,
+          'slats-v-conf': 'swing',
+          'slats-v-values': list([
+            'swing',
+            'fixed',
+          ]),
           'speed': 3,
           'speed-type': 0,
           'speeds': dict({
