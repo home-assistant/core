@@ -3,11 +3,13 @@
 from dataclasses import dataclass
 from typing import override
 
+from infrared_protocols.codes.lg.ac import LgAcButton
 from infrared_protocols.codes.lg.tv import LGTVCode
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -21,7 +23,7 @@ PARALLEL_UPDATES = 1
 class LgIrButtonEntityDescription(ButtonEntityDescription):
     """Describes LG IR button entity."""
 
-    command_code: LGTVCode
+    command_code: LGTVCode | LgAcButton
 
 
 TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
@@ -114,6 +116,62 @@ TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     ),
 )
 
+# One-shot AC actions with no discrete on/off code, so each is a momentary button.
+AC_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
+    LgIrButtonEntityDescription(
+        key="jet", translation_key="jet", command_code=LgAcButton.JET
+    ),
+    LgIrButtonEntityDescription(
+        key="diet", translation_key="diet", command_code=LgAcButton.DIET
+    ),
+    LgIrButtonEntityDescription(
+        key="ai_convertible",
+        translation_key="ai_convertible",
+        command_code=LgAcButton.AI_CONVERTIBLE,
+    ),
+    LgIrButtonEntityDescription(
+        key="light",
+        translation_key="light",
+        command_code=LgAcButton.LIGHT_TOGGLE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    LgIrButtonEntityDescription(
+        key="wifi",
+        translation_key="wifi",
+        command_code=LgAcButton.WIFI_TOGGLE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    LgIrButtonEntityDescription(
+        key="audio",
+        translation_key="audio",
+        command_code=LgAcButton.AUDIO_TOGGLE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    LgIrButtonEntityDescription(
+        key="diagnose",
+        translation_key="diagnose",
+        command_code=LgAcButton.DIAGNOSE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Only flips between auto-swing and off; the climate swing dropdown supersedes it,
+    # so it is kept for older units but disabled by default.
+    LgIrButtonEntityDescription(
+        key="swing_v_toggle",
+        translation_key="swing_v_toggle",
+        command_code=LgAcButton.SWING_V_TOGGLE,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+_DEVICE_BUTTONS: dict[LGDeviceType, tuple[LgIrButtonEntityDescription, ...]] = {
+    LGDeviceType.TV: TV_BUTTON_DESCRIPTIONS,
+    LGDeviceType.AC: AC_BUTTON_DESCRIPTIONS,
+}
+_DEVICE_NAMES: dict[LGDeviceType, str] = {
+    LGDeviceType.TV: "LG TV",
+    LGDeviceType.AC: "LG AC",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -125,11 +183,11 @@ async def async_setup_entry(
         return
 
     device_type = entry.data[CONF_DEVICE_TYPE]
-    if device_type == LGDeviceType.TV:
-        async_add_entities(
-            LgIrButton(entry, infrared_entity_id, description)
-            for description in TV_BUTTON_DESCRIPTIONS
-        )
+    device_name = _DEVICE_NAMES[device_type]
+    async_add_entities(
+        LgIrButton(entry, infrared_entity_id, description, device_name)
+        for description in _DEVICE_BUTTONS[device_type]
+    )
 
 
 class LgIrButton(LgIrEntity, InfraredEmitterConsumerEntity, ButtonEntity):
@@ -142,9 +200,12 @@ class LgIrButton(LgIrEntity, InfraredEmitterConsumerEntity, ButtonEntity):
         entry: ConfigEntry,
         infrared_entity_id: str,
         description: LgIrButtonEntityDescription,
+        device_name: str,
     ) -> None:
         """Initialize LG IR button."""
-        super().__init__(entry, unique_id_suffix=description.key)
+        super().__init__(
+            entry, unique_id_suffix=description.key, device_name=device_name
+        )
         self._infrared_emitter_entity_id = infrared_entity_id
         self.entity_description = description
 

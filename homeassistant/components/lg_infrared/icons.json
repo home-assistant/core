@@ -1,8 +1,20 @@
 {
   "entity": {
     "button": {
+      "ai_convertible": {
+        "default": "mdi:brain"
+      },
+      "audio": {
+        "default": "mdi:volume-high"
+      },
       "back": {
         "default": "mdi:keyboard-backspace"
+      },
+      "diagnose": {
+        "default": "mdi:stethoscope"
+      },
+      "diet": {
+        "default": "mdi:leaf"
       },
       "down": {
         "default": "mdi:arrow-down"
@@ -34,8 +46,14 @@
       "input": {
         "default": "mdi:import"
       },
+      "jet": {
+        "default": "mdi:fan-chevron-up"
+      },
       "left": {
         "default": "mdi:arrow-left"
+      },
+      "light": {
+        "default": "mdi:led-on"
       },
       "menu": {
         "default": "mdi:menu"
@@ -85,8 +103,60 @@
       "right": {
         "default": "mdi:arrow-right"
       },
+      "swing_v_toggle": {
+        "default": "mdi:arrow-up-down"
+      },
       "up": {
         "default": "mdi:arrow-up"
+      },
+      "wifi": {
+        "default": "mdi:wifi"
+      }
+    },
+    "climate": {
+      "lg_ac": {
+        "state_attributes": {
+          "swing_horizontal_mode": {
+            "default": "mdi:circle-medium",
+            "state": {
+              "left": "mdi:chevron-double-left",
+              "left_half": "mdi:arrow-left",
+              "middle": "mdi:circle-small",
+              "middle_left": "mdi:chevron-left",
+              "middle_right": "mdi:chevron-right",
+              "off": "mdi:arrow-oscillating-off",
+              "right": "mdi:chevron-double-right",
+              "right_half": "mdi:arrow-right",
+              "swing": "mdi:arrow-expand-horizontal"
+            }
+          },
+          "swing_mode": {
+            "default": "mdi:circle-medium",
+            "state": {
+              "high": "mdi:chevron-up",
+              "highest": "mdi:chevron-double-up",
+              "low": "mdi:chevron-down",
+              "lowest": "mdi:chevron-double-down",
+              "middle_high": "mdi:arrow-up-thin",
+              "middle_low": "mdi:arrow-down-thin",
+              "off": "mdi:arrow-oscillating-off",
+              "swing": "mdi:arrow-oscillating"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "energy_limit": {
+        "default": "mdi:lightning-bolt-outline"
+      }
+    },
+    "switch": {
+      "auto_clean": {
+        "default": "mdi:broom"
+      },
+      "ion_generator": {
+        "default": "mdi:air-purifier"
       }
     }
   }
