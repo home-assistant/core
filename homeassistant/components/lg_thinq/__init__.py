@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass, field
 import logging
 
+from aiohttp import ClientError
 from thinqconnect import ThinQApi, ThinQAPIException
 from thinqconnect.integration import async_get_ha_bridge_list
 
@@ -93,6 +94,9 @@ async def async_setup_coordinators(
         bridge_list = await async_get_ha_bridge_list(thinq_api)
     except ThinQAPIException as exc:
         raise ConfigEntryNotReady(exc.message) from exc
+    except (ClientError, TimeoutError) as exc:
+        # Transient network/DNS errors aren't ThinQAPIException; retry setup.
+        raise ConfigEntryNotReady from exc
 
     if not bridge_list:
         _LOGGER.warning("No devices registered with the correct profile")
