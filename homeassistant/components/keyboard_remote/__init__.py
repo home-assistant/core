@@ -35,6 +35,7 @@ TYPE = "type"
 EMULATE_KEY_HOLD = "emulate_key_hold"
 EMULATE_KEY_HOLD_DELAY = "emulate_key_hold_delay"
 EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
+EXCLUSIVE = "exclusive"
 
 DEVINPUT = "/dev/input"
 
@@ -47,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
                         vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
+                        vol.Optional(EXCLUSIVE, default=True): cv.boolean,
                         vol.Optional(TYPE, default=["key_up"]): vol.All(
                             cv.ensure_list, [vol.In(KEY_VALUE)]
                         ),
@@ -250,6 +252,7 @@ class KeyboardRemote:
             self.emulate_key_hold = dev_block[EMULATE_KEY_HOLD]
             self.emulate_key_hold_delay = dev_block[EMULATE_KEY_HOLD_DELAY]
             self.emulate_key_hold_repeat = dev_block[EMULATE_KEY_HOLD_REPEAT]
+            self.exclusive = dev_block[EXCLUSIVE]
             self.monitor_task = None
             self.dev = None
             self.config_descriptor = dev_block.get(DEVICE_DESCRIPTOR)
@@ -302,8 +305,9 @@ class KeyboardRemote:
         async def async_device_stop_monitoring(self):
             """Stop event monitoring task and issue event."""
             if self.monitor_task is not None:
-                with suppress(OSError):
-                    await self.hass.async_add_executor_job(self.dev.ungrab)
+                if self.exclusive:
+                    with suppress(OSError):
+                        await self.hass.async_add_executor_job(self.dev.ungrab)
                 # monitoring of the device form the event loop and closing of the
                 # device has to occur before cancelling the task to avoid
                 # triggering unhandled exceptions inside evdev coroutines
@@ -334,8 +338,11 @@ class KeyboardRemote:
             repeat_tasks = {}
 
             try:
-                _LOGGER.debug("Start device monitoring")
-                await self.hass.async_add_executor_job(self.dev.grab)
+                if self.exclusive:
+                    _LOGGER.debug("Start exclusive monitoring of %s", self.dev.path)
+                    await self.hass.async_add_executor_job(self.dev.grab)
+                else:
+                    _LOGGER.debug("Start non-exclusive monitoring of %s", self.dev.path)
                 async for event in self.dev.async_read_loop():
                     if event.type is ecodes.EV_KEY:
                         if event.value in self.key_values:
