@@ -734,7 +734,7 @@ async def test_restore_state(
         "number.test_state",
         "anything",
         {
-            "native_value": 30,
+            "native_value": 30.0,
             "step": 3,
             "min": 3,
             "max": 60,
