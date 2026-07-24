@@ -208,8 +208,9 @@ class _MockTrigger(Trigger):
     Fires when the bus event ``mock_trigger_fire`` is observed, emitting
     an ``extra_var`` in the extra_trigger_payload and a ``rendered_option``
     field containing the result of rendering a config-supplied template
-    against the variables the Trigger class has access to at attach time
-    — which is none.
+    against ``TriggerConfig.variables`` — the variables the Trigger class
+    has access to at attach time (``this`` plus automation-level
+    ``trigger_variables``). Per-trigger ``variables`` are not in scope here.
     """
 
     @classmethod
@@ -223,6 +224,7 @@ class _MockTrigger(Trigger):
         """Initialize the mock trigger."""
         super().__init__(hass, config)
         self._options = config.options or {}
+        self._variables = config.variables
 
     async def async_attach_runner(
         self,
@@ -232,7 +234,9 @@ class _MockTrigger(Trigger):
         """Attach the trigger to a bus event."""
         raw_template = self._options.get("option_template")
         if raw_template is not None:
-            rendered_option = Template(raw_template, self._hass).async_render({})
+            rendered_option = Template(raw_template, self._hass).async_render(
+                self._variables
+            )
         else:
             rendered_option = "<no_template>"
 
@@ -311,11 +315,13 @@ _MOCK_EXPECTED = {
     # trigger dict and not to top level
     "top_level_extra": "NOT_AT_TOP_LEVEL",
     "trigger_extra_var": "from_extra_payload",
-    # Variables injected by the user (typically an automation) and per
-    # trigger variables are not visible to the trigger
+    # Automation-level trigger_variables are visible to the trigger via
+    # TriggerConfig.variables.
+    # Per-trigger variables are not visible to the trigger — they are merged
+    # into the action payload only.
     # Note: It's a documented feature that per trigger variables are
     # not meant to be consumed by the trigger
-    "trigger_rendered_option": ("automation=NOT_VISIBLE per_trigger=NOT_VISIBLE"),
+    "trigger_rendered_option": ("automation=automation_value per_trigger=NOT_VISIBLE"),
     "automation_in_action": "automation_value",
     "per_trigger_in_action": "per_trigger_value",
 }
