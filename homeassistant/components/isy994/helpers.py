@@ -357,7 +357,7 @@ def _categorize_nodes(
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)
             continue
 
-        if node.protocol == PROTO_INSTEON:
+        if node.protocol in (PROTO_INSTEON, PROTO_ZWAVE):
             for control in node.aux_properties:
                 if control in SKIP_AUX_PROPS:
                     continue
