@@ -26,12 +26,7 @@ BASE_URL = "https://api.honeywellhome.com/v2"
 # not the ones aiolyric happens to read, so tests exercise real parsing
 # rather than hiding behind pre-parsed mocks.
 LOCATION_ID = "35202000168931"
-# Deliberately "LCC-"-prefixed: this branch is intentionally cut from a
-# clean base without the coordinator fix from home-assistant/core#177022
-# (which removes a device-ID-prefix heuristic gating the /priority fetch).
-# Using a non-"LCC-" ID here would make room-level entities fail to be
-# created for that unrelated, separately-tracked reason, muddying what
-# these tests are actually checking.
+# Use an LCC-prefixed ID so the current coordinator fetches room data.
 DEVICE_ID = "LCC-7f86b153-8480-f111-b78f-6045bdb25006"
 MAC_ID = "5CFCE1B67035"
 
