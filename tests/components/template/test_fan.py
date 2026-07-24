@@ -1436,6 +1436,21 @@ async def test_flow_preview(
             },
         ),
         (
+            # Missing Key
+            STATE_ON,
+            {
+                "is_on": True,
+                "percentage": 0,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
             STATE_UNAVAILABLE,
             {
                 "is_on": True,

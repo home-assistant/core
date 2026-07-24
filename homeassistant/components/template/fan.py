@@ -175,28 +175,16 @@ class FanExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored fan data from a dict."""
-        is_on = restored.get("is_on")
-        percentage = restored.get("percentage")
-        preset_mode = restored.get("preset_mode")
-        oscillating = restored.get("oscillating")
-        direction = restored.get("direction")
-        if is_on is not None and not isinstance(is_on, bool):
+        try:
+            return cls(
+                is_on=restored["is_on"],
+                percentage=restored["percentage"],
+                preset_mode=restored["preset_mode"],
+                oscillating=restored["oscillating"],
+                direction=restored["direction"],
+            )
+        except KeyError:
             return None
-        if percentage is not None and not isinstance(percentage, int):
-            return None
-        if preset_mode is not None and not isinstance(preset_mode, str):
-            return None
-        if oscillating is not None and not isinstance(oscillating, bool):
-            return None
-        if direction is not None and not isinstance(direction, str):
-            return None
-        return cls(
-            is_on=is_on,
-            percentage=percentage,
-            preset_mode=preset_mode,
-            oscillating=oscillating,
-            direction=direction,
-        )
 
 
 class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
