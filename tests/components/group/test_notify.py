@@ -11,7 +11,9 @@ from homeassistant import config as hass_config
 from homeassistant.components import notify
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_MESSAGE,
+    ATTR_TARGET,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
@@ -202,6 +204,67 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
             ),
         ],
         any_order=True,
+    )
+
+
+async def test_send_message_with_default_notify_data(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test sending a message with default notify data to a notify group."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    group_setup = [
+        {
+            "platform": "group",
+            "name": "My notification group",
+            "services": [
+                {
+                    "action": "test_service1",
+                    ATTR_DATA: {
+                        ATTR_TARGET: "unnamed device",
+                        "push": {"sound": "default"},
+                    },
+                },
+            ],
+        }
+    ]
+    send_message_mock = await help_setup_notify(
+        hass, tmp_path, {"service1": 1}, group_setup
+    )
+    assert hass.services.has_service("notify", "my_notification_group")
+
+    await hass.services.async_call(
+        "notify",
+        "my_notification_group",
+        {ATTR_MESSAGE: "Hello"},
+        blocking=True,
+    )
+    send_message_mock.assert_called_once_with(
+        "Hello",
+        {
+            ATTR_TARGET: [1],
+            ATTR_DATA: {"push": {"sound": "default"}},
+        },
+    )
+    send_message_mock.reset_mock()
+
+    await hass.services.async_call(
+        "notify",
+        "my_notification_group",
+        {ATTR_MESSAGE: "Hello", ATTR_DATA: {"push": {"sound": "custom"}}},
+        blocking=True,
+    )
+    send_message_mock.assert_called_once_with(
+        "Hello",
+        {
+            ATTR_TARGET: [1],
+            ATTR_DATA: {"push": {"sound": "custom"}},
+        },
     )
 
 
