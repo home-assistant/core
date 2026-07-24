@@ -274,6 +274,18 @@ async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
             {CONF_VERIFY: {CONF_STATE_OFF: [0, 4]}},
             STATE_OFF,
         ),
+        (
+            [0x01],
+            False,
+            {CONF_VERIFY: {CONF_STATE_ON: [0], CONF_STATE_OFF: [1]}},
+            STATE_OFF,
+        ),
+        (
+            [0x00],
+            False,
+            {CONF_VERIFY: {CONF_STATE_ON: [0], CONF_STATE_OFF: [1]}},
+            STATE_ON,
+        ),
     ],
 )
 async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
