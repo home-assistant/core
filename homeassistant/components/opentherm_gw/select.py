@@ -7,6 +7,7 @@ from functools import partial
 from typing import override
 
 from pyotgw.vars import (
+    OTGW_DHW_OVRD,
     OTGW_GPIO_A,
     OTGW_GPIO_B,
     OTGW_LED_A,
@@ -31,6 +32,15 @@ from .const import (
     OpenThermDataSource,
 )
 from .entity import OpenThermEntityDescription, OpenThermStatusEntity
+
+MAP_DHW_OVRD_MODES = {
+    "force_off": 0,
+    "force_on": 1,
+    "override_disabled": "A",
+}
+
+
+INVERSE_MAP_DHW_OVRD_MODES = {v: k for k, v in MAP_DHW_OVRD_MODES.items()}
 
 
 class OpenThermSelectGPIOMode(StrEnum):
@@ -106,6 +116,12 @@ def pyotgw_led_mode_to_ha_led_mode(
     )
 
 
+async def set_dhw_ovrd_mode(gw_hub: OpenThermGatewayHub, mode: str) -> str | None:
+    """Set hot water override mode, return selected option."""
+    value = await gw_hub.gateway.set_hot_water_ovrd(MAP_DHW_OVRD_MODES[mode])
+    return INVERSE_MAP_DHW_OVRD_MODES.get(value)
+
+
 async def set_gpio_mode(
     gpio_id: str, gw_hub: OpenThermGatewayHub, mode: str
 ) -> OpenThermSelectGPIOMode | None:
@@ -145,6 +161,14 @@ class OpenThermSelectEntityDescription(
 
 
 SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
+    OpenThermSelectEntityDescription(
+        key=OTGW_DHW_OVRD,
+        translation_key="dhw_ovrd_mode",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(MAP_DHW_OVRD_MODES.keys()),
+        select_action=set_dhw_ovrd_mode,
+        convert_pyotgw_state_to_ha_state=INVERSE_MAP_DHW_OVRD_MODES.get,
+    ),
     OpenThermSelectEntityDescription(
         key=OTGW_GPIO_A,
         translation_key="gpio_mode_n",
