@@ -1,0 +1,13 @@
+{
+  "domain": "open_responses",
+  "name": "Open Responses",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@Komzpa"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/open_responses",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["openresponses-python==0.1.3"]
+}
