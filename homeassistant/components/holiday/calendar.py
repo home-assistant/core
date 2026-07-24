@@ -17,32 +17,35 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
 
 
-def _get_obj_holidays_and_language(
+def _get_holidays_and_language(
     country: str,
     province: str | None,
+    years: set[int],
     language: str,
     selected_categories: list[str] | None,
 ) -> tuple[HolidayBase, str]:
-    """Get the object for the requested country and year."""
+    """Get holidays for a scope, resolving English variants and fallbacks."""
     obj_holidays = country_holidays(
         country,
         subdiv=province,
-        years={dt_util.now().year, dt_util.now().year + 1},
+        years=years,
         language=language,
         categories=selected_categories,
     )
+
     if language == "en":
         for lang in obj_holidays.supported_languages:
             if lang.startswith("en"):
                 obj_holidays = country_holidays(
                     country,
                     subdiv=province,
-                    years={dt_util.now().year, dt_util.now().year + 1},
+                    years=years,
                     language=lang,
                     categories=selected_categories,
                 )
                 language = lang
                 break
+
     if (
         obj_holidays.supported_languages
         and language not in obj_holidays.supported_languages
@@ -51,11 +54,53 @@ def _get_obj_holidays_and_language(
         obj_holidays = country_holidays(
             country,
             subdiv=province,
-            years={dt_util.now().year, dt_util.now().year + 1},
+            years=years,
             language=default_language,
             categories=selected_categories,
         )
         language = default_language
+
+    return obj_holidays, language
+
+
+def _exclude_national_holidays(
+    obj_holidays: HolidayBase,
+    country: str,
+    years: set[int],
+    language: str,
+    selected_categories: list[str] | None,
+) -> None:
+    """Remove national holidays from a regional holiday collection."""
+    national_holidays = country_holidays(
+        country,
+        years=years,
+        language=language,
+        categories=selected_categories,
+    )
+    for holiday_date in set(obj_holidays.keys()) & set(national_holidays.keys()):
+        obj_holidays.pop(holiday_date, None)
+
+
+def _get_obj_holidays_and_language(
+    country: str,
+    province: str | None,
+    language: str,
+    selected_categories: list[str] | None,
+) -> tuple[HolidayBase, str]:
+    """Get the object for the requested country and year."""
+    years = {dt_util.now().year, dt_util.now().year + 1}
+    obj_holidays, language = _get_holidays_and_language(
+        country, province, years, language, selected_categories
+    )
+
+    if province:
+        _exclude_national_holidays(
+            obj_holidays,
+            country,
+            years,
+            language,
+            selected_categories,
+        )
 
     return (obj_holidays, language)
 
@@ -192,13 +237,22 @@ class HolidayCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        obj_holidays = country_holidays(
+        years = {start_date.year, end_date.year}
+        obj_holidays, language = _get_holidays_and_language(
             self._country,
-            subdiv=self._province,
-            years=list({start_date.year, end_date.year}),
-            language=self._language,
-            categories=self._categories,
+            self._province,
+            years,
+            self._language,
+            self._categories,
         )
+        if self._province:
+            _exclude_national_holidays(
+                obj_holidays,
+                self._country,
+                years,
+                language,
+                self._categories,
+            )
 
         event_list: list[CalendarEvent] = []
 

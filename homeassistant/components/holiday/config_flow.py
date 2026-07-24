@@ -100,6 +100,20 @@ def get_entry_name(language: str, country: str, province: str | None) -> str:
     return f"{country_str}{province_str}"
 
 
+def _is_duplicate_entry(
+    entry: ConfigEntry,
+    country: str,
+    province: str | None,
+    categories: list[str] | None,
+) -> bool:
+    """Return whether an existing entry matches the requested configuration."""
+    return (
+        entry.data[CONF_COUNTRY] == country
+        and entry.data.get(CONF_PROVINCE) == province
+        and (entry.options.get(CONF_CATEGORIES) or None) == (categories or None)
+    )
+
+
 class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
 
@@ -132,7 +146,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             if options_schema.schema:
                 return await self.async_step_options()
 
-            self._async_abort_entries_match({CONF_COUNTRY: user_input[CONF_COUNTRY]})
+            if any(
+                _is_duplicate_entry(entry, selected_country, None, None)
+                for entry in self._async_current_entries()
+            ):
+                return self.async_abort(reason="already_configured")
 
             try:
                 locale = Locale.parse(self.hass.config.language, sep="-")
@@ -165,12 +183,22 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             country = self.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
             options: dict[str, Any] | None = None
-            if province := user_input.get(CONF_PROVINCE):
+            province = user_input.get(CONF_PROVINCE)
+            if province:
                 data[CONF_PROVINCE] = province
             if categories := user_input.get(CONF_CATEGORIES):
                 options = {CONF_CATEGORIES: categories}
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            if any(
+                _is_duplicate_entry(
+                    entry,
+                    country,
+                    province,
+                    options[CONF_CATEGORIES] if options else None,
+                )
+                for entry in self._async_current_entries()
+            ):
+                return self.async_abort(reason="already_configured")
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
@@ -196,12 +224,23 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             country = reconfigure_entry.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
             options: dict[str, Any] | None = None
-            if province := user_input.get(CONF_PROVINCE):
+            province = user_input.get(CONF_PROVINCE)
+            if province:
                 data[CONF_PROVINCE] = province
             if categories := user_input.get(CONF_CATEGORIES):
                 options = {CONF_CATEGORIES: categories}
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            if any(
+                _is_duplicate_entry(
+                    entry,
+                    country,
+                    province,
+                    options[CONF_CATEGORIES] if options else None,
+                )
+                for entry in self._async_current_entries()
+                if entry.entry_id != reconfigure_entry.entry_id
+            ):
+                return self.async_abort(reason="already_configured")
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
