@@ -19,8 +19,13 @@ from aioautomower.session import AutomowerSession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 
@@ -60,6 +65,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.pong: datetime | None = None
         self.websocket_alive: bool = False
         self.websocket_callbacks: list[Callable[[bool], None]] = []
+        self._known_invalid_mowers: set[str] = set()
         self._watchdog_task: asyncio.Task | None = None
 
     @override
@@ -123,6 +129,31 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 )
                 self.update_interval = SCAN_INTERVAL
                 self.hass.async_create_task(self.async_request_refresh())
+
+        new_invalid_mowers = self.api.invalid_mowers - self._known_invalid_mowers
+        resolved_invalid_mowers = self._known_invalid_mowers - self.api.invalid_mowers
+
+        for mower_name in new_invalid_mowers:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"invalid_mower_{slugify(mower_name)}",
+                severity=ir.IssueSeverity.ERROR,
+                is_fixable=False,
+                translation_key="invalid_mower",
+                translation_placeholders={
+                    "mower_name": mower_name,
+                },
+            )
+
+        for mower_name in resolved_invalid_mowers:
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"invalid_mower_{slugify(mower_name)}",
+            )
+
+        self._known_invalid_mowers = set(self.api.invalid_mowers)
 
     @callback
     def handle_websocket_updates(self, ws_data: MowerDictionary) -> None:
