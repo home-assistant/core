@@ -186,6 +186,15 @@ def _async_camera_entities(
             or (camera is not None and camera.is_third_party_camera)
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
+        elif streams is None:
+            # None means the best-effort read failed, not that streams are absent.
+            _LOGGER.warning(
+                (
+                    "Could not read RTSPS streams for camera %s;"
+                    " live streaming stays disabled until streams can be read again"
+                ),
+                public.display_name,
+            )
         else:
             _create_rtsp_repair(hass, entry, public)
     return entities

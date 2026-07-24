@@ -234,19 +234,21 @@ async def init_entry(
     await hass.async_block_till_done()
 
 
-def public_rtsps_for(camera: Camera) -> RTSPSStreams | None:
+def public_rtsps_for(camera: Camera) -> RTSPSStreams:
     """Build a camera's primed RTSPS streams from its RTSP-enabled channels.
 
     Mirrors what the library writes onto ``PublicCamera.rtsps_streams`` during
-    ``update_public()`` — only RTSP-enabled channels carry an active URL, and a
-    camera with none is left streamless (``None``).
+    ``update_public()`` — only RTSP-enabled channels carry an active URL. The
+    server answers a successful read with ``null`` per inactive quality even
+    when nothing is enabled, so a read always yields a streams object;
+    ``None`` on the camera means the read itself failed (best-effort prime).
     """
     urls = {
         channel.rtsps_quality: channel.rtsps_url
         for channel in camera.channels
         if channel.is_rtsp_enabled and channel.rtsps_quality is not None
     }
-    return RTSPSStreams(**urls) if urls else None
+    return RTSPSStreams(**urls)
 
 
 def make_public_sensor(
