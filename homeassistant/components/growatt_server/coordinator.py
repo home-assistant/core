@@ -38,8 +38,36 @@ if TYPE_CHECKING:
 type GrowattConfigEntry = ConfigEntry[GrowattRuntimeData]
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
+_MAX_POWER_READING_AGE = datetime.timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _latest_power_value(
+    power_overview: dict[str, Any], now: datetime.datetime
+) -> float | None:
+    """Return the newest recent power value from a plant power overview."""
+    latest_time: datetime.datetime | None = None
+    latest_power: float | None = None
+
+    for reading in power_overview.get("powers", []):
+        power = reading.get("power")
+        reading_time = dt_util.parse_datetime(reading.get("time", ""))
+        if power is None or reading_time is None:
+            continue
+        if reading_time.tzinfo is None:
+            reading_time = reading_time.replace(tzinfo=dt_util.get_default_time_zone())
+        if reading_time > now or now - reading_time > _MAX_POWER_READING_AGE:
+            continue
+        try:
+            power_value = float(power)
+        except TypeError, ValueError:
+            continue
+        if latest_time is None or reading_time > latest_time:
+            latest_time = reading_time
+            latest_power = power_value
+
+    return latest_power
 
 
 class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -201,8 +229,25 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
-                # V1 API returns current_power in kW, convert to W
-                total_info["invTodayPpv"] = total_info["current_power"] * 1000
+                # The plant data endpoint can report zero while production continues.
+                current_power = total_info["current_power"] * 1000
+                now = dt_util.now()
+                try:
+                    power_overview = self.api.plant_power_overview(
+                        self.plant_id, now.date()
+                    )
+                except (growattServer.GrowattV1ApiError, RequestException) as err:
+                    _LOGGER.debug(
+                        "Failed to fetch plant power overview for %s: %s",
+                        self.plant_id,
+                        err,
+                    )
+                else:
+                    if (
+                        latest_power := _latest_power_value(power_overview, now)
+                    ) is not None:
+                        current_power = latest_power
+                total_info["invTodayPpv"] = current_power
             else:
                 # Classic API: use plant_info as before.
                 # Copy the response to avoid mutating the dict returned by the library
