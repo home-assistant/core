@@ -59,6 +59,11 @@ ENERGY_HISTORY_FIELDS = [
 ]
 
 
+def build_statistic_id(site_id: str | int, key: str) -> str:
+    """Return the external statistic ID for an energy site field."""
+    return f"{DOMAIN}:{site_id}_{key}"
+
+
 class TeslaFleetState(StrEnum):
     """Teslemetry Vehicle States."""
 
