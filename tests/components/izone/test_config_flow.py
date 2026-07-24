@@ -1061,6 +1061,107 @@ async def test_user_flow_host_only_when_entry_loaded(hass: HomeAssistant) -> Non
     assert CONF_HOST in result["data_schema"].schema
 
 
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_host_only_empty_host_required(hass: HomeAssistant) -> None:
+    """Host-only form requires a non-empty host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: ""}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_HOST: "required"}
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_host_only_probes_and_confirms(hass: HomeAssistant) -> None:
+    """Host-only form probes the entered address and continues to confirm."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    new_controller = create_mock_controller("000000002", "192.0.2.55")
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(return_value=endpoint_from_controller(new_controller)),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.55"}
+        )
+
+    assert result["step_id"] == "confirm"
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_host_only_unreachable_keeps_host_defaults(
+    hass: HomeAssistant,
+) -> None:
+    """Host-only cannot_connect redisplays the form with the entered host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.0.2.99"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert config_flow.CONF_SETUP_METHOD not in result["data_schema"].schema
+
+
+async def test_user_manual_host_aborts_when_discovery_bind_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Manual host aborts when discovery cannot bind the UDP socket."""
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(side_effect=OSError("bind failed")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("192.0.2.55")
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_failed"
+
+
 async def test_user_manual_host_unpaired_aborts(hass: HomeAssistant) -> None:
     """Unpaired bridge placeholder aborts manual host setup."""
     with (
