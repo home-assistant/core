@@ -28,7 +28,9 @@
           "min_cycle_duration": "Minimum run time",
           "min_temp": "Minimum target temperature",
           "name": "[%key:common::config_flow::data::name%]",
-          "target_sensor": "Temperature sensor"
+          "precision": "Temperature precision",
+          "target_sensor": "Temperature sensor",
+          "target_temp_step": "Temperature step"
         },
         "data_description": {
           "ac_mode": "Set the actuator specified to be treated as a cooling device instead of a heating device.",
@@ -63,7 +65,9 @@
           "max_temp": "[%key:component::generic_thermostat::config::step::user::data::max_temp%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data::min_cycle_duration%]",
           "min_temp": "[%key:component::generic_thermostat::config::step::user::data::min_temp%]",
-          "target_sensor": "[%key:component::generic_thermostat::config::step::user::data::target_sensor%]"
+          "precision": "[%key:component::generic_thermostat::config::step::user::data::precision%]",
+          "target_sensor": "[%key:component::generic_thermostat::config::step::user::data::target_sensor%]",
+          "target_temp_step": "[%key:component::generic_thermostat::config::step::user::data::target_temp_step%]"
         },
         "data_description": {
           "ac_mode": "[%key:component::generic_thermostat::config::step::user::data_description::ac_mode%]",
