@@ -111,11 +111,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
     def _schedule_event_notifications(
         self, events: list[TransmissionEventData]
-    ) -> float:
-        """Schedule event notifications with staggered delays.
-
-        Returns the next delay to use for subsequent events in the update cycle.
-        """
+    ) -> None:
+        """Schedule event notifications with staggered delays."""
         for event in events:
             async_call_later(
                 self.hass,
@@ -123,7 +120,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                 partial(self._async_notify_event_listeners, event),
             )
             self._event_notification_delay += self._EVENT_NOTIFICATION_DELAY_STEP
-        return self._event_notification_delay
 
     @override
     async def _async_update_data(self) -> SessionStats:

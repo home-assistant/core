@@ -15,7 +15,7 @@ from homeassistant.components.transmission.const import (
     EVENT_TYPE_STARTED,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
@@ -137,7 +137,7 @@ async def test_multiple_events_staggered(
     # Collect torrent IDs from state changes for the event entity
     torrent_ids_seen = set()
 
-    def state_changed_listener(event):
+    def state_changed_listener(event: Event[EventStateChangedData]) -> None:
         """Capture torrent IDs from state changes."""
         if event.data["entity_id"] == "event.transmission_torrent":
             new_state = event.data.get("new_state")
@@ -227,7 +227,7 @@ async def test_mixed_event_types_no_collision(
     # Track all event types and their torrent IDs
     event_types_seen = {}
 
-    def state_changed_listener(event):
+    def state_changed_listener(event: Event[EventStateChangedData]) -> None:
         """Capture event types seen with their torrent IDs."""
         if event.data["entity_id"] == "event.transmission_torrent":
             new_state = event.data.get("new_state")
