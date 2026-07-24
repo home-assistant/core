@@ -1,0 +1,113 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No actions in the initial PR; added in a follow-up.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No actions in the initial PR; added in a follow-up.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities are coordinator-driven; no explicit event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No actions in the initial PR; added in a follow-up.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-installation-parameters:
+    status: todo
+    comment: Pending the documentation PR.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: PARALLEL_UPDATES not yet set on the entity platforms.
+  reauthentication-flow:
+    status: todo
+    comment: Added in a follow-up PR.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: No diagnostics platform yet.
+  discovery:
+    status: exempt
+    comment: Cloud service; nothing to discover on the local network.
+  discovery-update-info:
+    status: exempt
+    comment: Cloud service; no IP/network info to update.
+  docs-data-update:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-examples:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-known-limitations:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-supported-devices:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-supported-functions:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-troubleshooting:
+    status: todo
+    comment: Pending the documentation PR.
+  docs-use-cases:
+    status: todo
+    comment: Pending the documentation PR.
+  dynamic-devices:
+    status: exempt
+    comment: One service device per config entry; nothing added at runtime.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities are essential to a safety integration.
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Service errors are not yet translated.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: Added in a follow-up PR.
+  repair-issues:
+    status: todo
+    comment: Added in a follow-up PR.
+  stale-devices:
+    status: exempt
+    comment: One device per entry; removed with the entry.
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: Depends on the future PyPI client being fully async.
+  inject-websession:
+    status: todo
+    comment: >-
+      Uses HA's shared httpx client via get_async_client; the future library
+      should accept an injected session.
+  strict-typing:
+    status: todo
+    comment: Not yet added to .strict-typing.

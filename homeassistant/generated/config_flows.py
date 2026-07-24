@@ -529,6 +529,7 @@ FLOWS = {
         "nmap_tracker",
         "nmbs",
         "nobo_hub",
+        "noonlight",
         "nordpool",
         "notion",
         "novy_cooker_hood",
