@@ -78,8 +78,11 @@ async def async_setup_entry(
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    if (on_action := config[CONF_ON_ACTION]) is not None:
+    on_action = config_entry.options.get(CONF_ON_ACTION, config.get(CONF_ON_ACTION))
+    if on_action:
         on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
+    else:
+        on_action = None
 
     params = {}
     if CONF_APP_ID in config and CONF_ENCRYPTION_KEY in config:
@@ -110,7 +113,18 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
+
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
+) -> None:
+    """Reload the integration when the options change."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(
