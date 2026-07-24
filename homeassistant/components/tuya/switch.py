@@ -263,6 +263,11 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
     ),
     DeviceCategory.GGQ: (
         SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_switch",
             translation_placeholders={"index": "1"},

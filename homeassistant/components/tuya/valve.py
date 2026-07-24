@@ -23,6 +23,13 @@ from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
+    DeviceCategory.GGQ: (
+        ValveEntityDescription(
+            key=DPCode.START,
+            translation_key="valve",
+            device_class=ValveDeviceClass.WATER,
+        ),
+    ),
     DeviceCategory.SFKZQ: (
         ValveEntityDescription(
             key=DPCode.SWITCH,
