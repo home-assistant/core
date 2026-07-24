@@ -8,7 +8,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker
-from homeassistant.components.opnsense import OPNsenseRuntimeData
 from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -46,6 +45,11 @@ async def test_device_tracker_setup(
     entity_unique_ids = {entity.unique_id for entity in device_tracker_entities}
     assert "ff:ff:ff:ff:ff:ff" in entity_unique_ids
     assert "ff:ff:ff:ff:ff:fe" in entity_unique_ids
+
+    # Entity IDs should be stable and not depend on mutable hostnames
+    entity_ids = {entity.entity_id for entity in device_tracker_entities}
+    assert "device_tracker.opnsense_ff_ff_ff_ff_ff_ff" in entity_ids
+    assert "device_tracker.opnsense_ff_ff_ff_ff_ff_fe" in entity_ids
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")
@@ -117,10 +121,6 @@ async def test_device_tracker_with_interfaces_filter(
             "tracker_interfaces": ["WAN"],  # Filter to only WAN interface
         },
     )
-    mock_config_entry.runtime_data = OPNsenseRuntimeData(
-        client=mock_opnsense_client.return_value,
-        tracker_interfaces=["WAN"],
-    )
     mock_config_entry.add_to_hass(hass)
 
     # Setup the integration
@@ -151,7 +151,10 @@ async def test_device_tracker_coordinator_update_failure(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.desktop").state != STATE_UNAVAILABLE
+    assert (
+        hass.states.get("device_tracker.opnsense_ff_ff_ff_ff_ff_fe").state
+        != STATE_UNAVAILABLE
+    )
 
     mock_opnsense_client.get_arp_table.side_effect = OPNsenseConnectionError(
         "connection failed"
@@ -161,6 +164,9 @@ async def test_device_tracker_coordinator_update_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.desktop").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("device_tracker.opnsense_ff_ff_ff_ff_ff_fe").state
+        == STATE_UNAVAILABLE
+    )
 
     assert mock_opnsense_client.get_arp_table.call_count == 2
