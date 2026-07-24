@@ -40,6 +40,8 @@ async def test_sensor_empty_rollup(
     mock_google_health_client.active_energy_burned.today.return_value = None
     mock_google_health_client.total_calories.today.return_value = None
     mock_google_health_client.floors.today.return_value = None
+    mock_google_health_client.hydration_log.today.return_value = None
+    mock_google_health_client.nutrition_log.today.return_value = None
 
     assert await integration_setup()
 
@@ -62,6 +64,14 @@ async def test_sensor_empty_rollup(
     floors_state = hass.states.get("sensor.google_health_floors")
     assert floors_state is not None
     assert floors_state.state == "0"
+
+    hydration_state = hass.states.get("sensor.google_health_water_intake")
+    assert hydration_state is not None
+    assert hydration_state.state == "0.0"
+
+    calories_consumed_state = hass.states.get("sensor.google_health_calories_consumed")
+    assert calories_consumed_state is not None
+    assert calories_consumed_state.state == "0.0"
 
 
 async def test_sensor_empty_sleep(

@@ -43,8 +43,14 @@
       "body_fat": {
         "name": "Body fat"
       },
+      "calories_consumed": {
+        "name": "Calories consumed"
+      },
       "floors": {
         "name": "Floors"
+      },
+      "hydration": {
+        "name": "Water intake"
       },
       "resting_heart_rate": {
         "name": "Resting heart rate"

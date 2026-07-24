@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -29,6 +30,7 @@ from .coordinator import (
     GoogleHealthActivityCoordinator,
     GoogleHealthBodyCoordinator,
     GoogleHealthDataUpdateCoordinator,
+    GoogleHealthNutritionCoordinator,
     GoogleHealthSleepCoordinator,
 )
 
@@ -191,6 +193,35 @@ SLEEP_SENSORS: list[
 ]
 
 
+NUTRITION_SENSORS: list[
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, Any]
+] = [
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="hydration",
+        translation_key="hydration",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.hydration.amount_consumed.milliliters_sum / 1000.0
+            if data and data.hydration and data.hydration.amount_consumed
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="calories_consumed",
+        translation_key="calories_consumed",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.energy.kcal_sum
+            if data and data.nutrition and data.nutrition.energy
+            else 0.0
+        ),
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GoogleHealthConfigEntry,
@@ -214,6 +245,11 @@ async def async_setup_entry(
         entities.extend(
             GoogleHealthSensor(sleep_coordinator, entry.entry_id, description)
             for description in SLEEP_SENSORS
+        )
+    if (nutrition_coordinator := data.nutrition_coordinator) is not None:
+        entities.extend(
+            GoogleHealthSensor(nutrition_coordinator, entry.entry_id, description)
+            for description in NUTRITION_SENSORS
         )
 
     if entities:
