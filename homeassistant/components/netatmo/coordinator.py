@@ -27,6 +27,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CAMERA_CONNECTION_WEBHOOKS,
+    CONF_DISABLED_HOMES,
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BUTTON,
@@ -154,6 +155,9 @@ class NetatmoDataHandler:
         self.hass = hass
         self.config_entry = config_entry
         self.auth = auth
+        self.disabled_homes: set[str] = set(
+            config_entry.options.get(CONF_DISABLED_HOMES, [])
+        )
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
         self._webhook: bool = False
@@ -294,6 +298,8 @@ class NetatmoDataHandler:
 
         if publisher == "public":
             kwargs = {"area_id": self.account.register_public_weather_area(**kwargs)}
+        elif publisher == ACCOUNT:
+            kwargs = {"disabled_homes_ids": list(self.disabled_homes)}
 
         interval = int(DEFAULT_INTERVALS[publisher] / self._interval_factor)
         self.publisher[signal_name] = NetatmoPublisher(
@@ -341,6 +347,11 @@ class NetatmoDataHandler:
         self.setup_air_care()
 
         for home in self.account.homes.values():
+            # With pyatmo <= 9.5.0 a disabled home can reappear in
+            # account.homes as a pseudo-home once weather data was fetched
+            if home.entity_id in self.disabled_homes:
+                continue
+
             signal_home = f"{HOME}-{home.entity_id}"
 
             await self.subscribe(HOME, signal_home, None, home_id=home.entity_id)

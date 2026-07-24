@@ -29,7 +29,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_DISABLED_HOMES, DOMAIN, PLATFORMS
 from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 from .services import async_setup_services
 from .webhook import async_register_webhook, async_unregister_webhook
@@ -120,6 +120,11 @@ async def async_config_entry_updated(
     """Handle signals of config entry being updated."""
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
+    disabled_homes = set(entry.options.get(CONF_DISABLED_HOMES, []))
+    if disabled_homes != entry.runtime_data.disabled_homes:
+        _LOGGER.debug("Reloading entry to apply new home selection")
+        await hass.config_entries.async_reload(entry.entry_id)
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
     """Unload a config entry."""
@@ -151,8 +156,13 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     data = config_entry.runtime_data
-    modules = [m for h in data.account.homes.values() for m in h.modules]
-    rooms = [r for h in data.account.homes.values() for r in h.rooms]
+    # With pyatmo <= 9.5.0 a disabled home can reappear in account.homes;
+    # filter it out so its leftover devices can be deleted
+    homes = [
+        h for h in data.account.homes.values() if h.entity_id not in data.disabled_homes
+    ]
+    modules = [m for h in homes for m in h.modules]
+    rooms = [r for h in homes for r in h.rooms]
 
     return not any(
         identifier
