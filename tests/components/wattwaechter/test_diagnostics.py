@@ -36,10 +36,12 @@ async def test_diagnostics_system_info_unavailable(
     mock_client: AsyncMock,
 ) -> None:
     """Test diagnostics still return config and meter data without system info."""
+    # System info fails during the poll, so the coordinator stores it as None.
+    mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
+
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
