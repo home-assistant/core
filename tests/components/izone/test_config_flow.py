@@ -367,6 +367,41 @@ async def test_user_flow_offers_ignored_controller_for_setup(
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
+async def test_user_manual_host_offers_ignored_controller_for_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Enter host can re-add a previously ignored controller."""
+    ignored_controller = create_mock_controller("000000001", "192.0.2.1")
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ignored_controller.device_uid,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.izone.discovery.async_discover_by_host",
+        new=AsyncMock(return_value=endpoint_from_controller(ignored_controller)),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["step_id"] == "user"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_manual_host_input("192.0.2.1")
+        )
+        assert result["step_id"] == "confirm_ignored"
+        progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert progress[0]["context"].get("confirm_only") is True
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "000000001"
+    assert result["data"] == {CONF_HOST: "192.0.2.1"}
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
 async def test_confirm_uses_confirm_only(hass: HomeAssistant) -> None:
     """Confirm step is confirm-only so closing the dialog dismisses silently."""
     controller = create_mock_controller("000000001", "192.0.2.1")
