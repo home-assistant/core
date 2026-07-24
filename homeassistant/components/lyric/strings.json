@@ -46,6 +46,9 @@
       }
     },
     "sensor": {
+      "accessory_status": {
+        "name": "Accessory status"
+      },
       "indoor_humidity": {
         "name": "Indoor humidity"
       },
