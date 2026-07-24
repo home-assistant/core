@@ -8,9 +8,10 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
-from caldav.lib.error import NotFoundError
+from caldav.lib.error import DAVError, NotFoundError
 from caldav.objects import Event
 from freezegun.api import FrozenDateTimeFactory
+import icalendar
 import pytest
 
 from homeassistant.components.caldav.api import async_get_calendars
@@ -20,8 +21,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .conftest import ClientFixture
+
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
+
+SUPPORTED_FEATURES = (
+    CalendarEntityFeature.CREATE_EVENT
+    | CalendarEntityFeature.UPDATE_EVENT
+    | CalendarEntityFeature.DELETE_EVENT
+)
+FILTERED_FEATURES = CalendarEntityFeature.CREATE_EVENT
 
 EVENTS = [
     """BEGIN:VCALENDAR
@@ -462,7 +472,7 @@ async def test_ongoing_event(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -487,7 +497,7 @@ async def test_just_ended_event(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -512,7 +522,7 @@ async def test_ongoing_event_different_tz(
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
         "location": "San Francisco",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -537,7 +547,7 @@ async def test_ongoing_floating_event_returned(
         "end_time": "2017-11-27 20:00:00",
         "location": "Hamburg",
         "description": "What a day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -562,7 +572,7 @@ async def test_ongoing_event_with_offset(
         "end_time": "2017-11-27 11:00:00",
         "location": "Hamburg",
         "description": "Surprisingly shiny",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -603,7 +613,7 @@ async def test_matching_filter(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": FILTERED_FEATURES,
     }
 
 
@@ -645,7 +655,7 @@ async def test_matching_filter_real_regexp(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": FILTERED_FEATURES,
     }
 
 
@@ -678,7 +688,7 @@ async def test_filter_matching_past_event(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": FILTERED_FEATURES,
     }
 
 
@@ -710,7 +720,7 @@ async def test_no_result_with_filtering(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": FILTERED_FEATURES,
     }
 
 
@@ -768,7 +778,7 @@ async def test_all_day_event(
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": FILTERED_FEATURES,
     }
 
 
@@ -793,7 +803,7 @@ async def test_event_rrule(
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -818,7 +828,7 @@ async def test_event_rrule_ongoing(
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -843,7 +853,7 @@ async def test_event_rrule_duration(
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -868,7 +878,7 @@ async def test_event_rrule_duration_ongoing(
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -893,7 +903,7 @@ async def test_event_rrule_endless(
         "end_time": "2017-11-27 23:59:59",
         "location": "Hamburg",
         "description": "Every day forever",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -953,7 +963,7 @@ async def test_event_rrule_all_day_early(
         "end_time": "2016-12-02 00:00:00",
         "location": "Hamburg",
         "description": "Groundhog Day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": FILTERED_FEATURES,
     }
 
 
@@ -978,7 +988,7 @@ async def test_event_rrule_hourly_on_first(
         "end_time": "2015-11-27 00:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1003,7 +1013,7 @@ async def test_event_rrule_hourly_on_last(
         "end_time": "2015-11-27 11:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1190,7 +1200,7 @@ async def test_setup_config_entry(
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1411,3 +1421,1903 @@ async def test_missing_supported_components_not_assumed(
     caplog.clear()
     await async_get_calendars(hass, client, "VJOURNAL")
     assert warning_msg not in caplog.text
+
+
+RECURRING_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Daily standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+UPDATED_EVENT = {
+    "summary": "Renamed standup",
+    "dtstart": "2017-11-27T17:00:00+00:00",
+    "dtend": "2017-11-27T18:00:00+00:00",
+}
+
+
+def _mock_dav_event(calendar: Mock, ics: str = RECURRING_ICS) -> Event:
+    """Return a real caldav Event whose writes are captured instead of sent."""
+    event = Event(None, "rec-1.ics", ics, calendar, "rec-1")
+    event.save = MagicMock()
+    event.delete = MagicMock()
+    calendar.event_by_uid = MagicMock(return_value=event)
+    return event
+
+
+def _master(event: Event) -> Any:
+    return next(
+        vevent
+        for vevent in event.icalendar_instance.walk("VEVENT")
+        if "RECURRENCE-ID" not in vevent
+    )
+
+
+def _overrides(event: Event) -> list[Any]:
+    return [
+        vevent
+        for vevent in event.icalendar_instance.walk("VEVENT")
+        if "RECURRENCE-ID" in vevent
+    ]
+
+
+def _saved_tail(calendar: Mock) -> Any:
+    """Return the master VEVENT of the object stored for the split-off tail."""
+    calendar.save_event.assert_called_once()
+    tail = icalendar.Calendar.from_ical(calendar.save_event.call_args[0][0])
+    return next(
+        vevent for vevent in tail.walk("VEVENT") if "RECURRENCE-ID" not in vevent
+    )
+
+
+async def test_delete_event(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test deleting a whole series."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result("delete", {"entity_id": TEST_ENTITY, "uid": "rec-1"})
+
+    event.delete.assert_called_once()
+
+
+async def test_delete_event_single_occurrence(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test cancelling one occurrence leaves the series in place."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+        },
+    )
+
+    event.delete.assert_not_called()
+    master = _master(event)
+    assert master["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=5"
+    assert master["EXDATE"].dts[0].dt == datetime.datetime(
+        2017, 11, 28, 17, 0, tzinfo=datetime.UTC
+    )
+
+
+async def test_delete_event_this_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test deleting an occurrence onwards caps the series."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    event.delete.assert_not_called()
+    recur = _master(event)["RRULE"]
+    assert "COUNT" not in recur
+    assert recur["UNTIL"][0] == datetime.datetime(
+        2017, 11, 29, 16, 59, 59, tzinfo=datetime.UTC
+    )
+
+
+async def test_delete_event_first_occurrence_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that capping at the first occurrence removes the object instead."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    event.delete.assert_called_once()
+
+
+async def test_update_event(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test updating a whole series."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {"entity_id": TEST_ENTITY, "uid": "rec-1", "event": UPDATED_EVENT},
+    )
+
+    event.save.assert_called_once_with(increase_seqno=False, only_this_recurrence=False)
+    assert _master(event)["SUMMARY"] == "Renamed standup"
+    assert not _overrides(event)
+
+
+async def test_update_event_single_occurrence(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test editing one occurrence adds an override and leaves the master."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert _master(event)["SUMMARY"] == "Daily standup"
+    overrides = _overrides(event)
+    assert len(overrides) == 1
+    assert overrides[0]["SUMMARY"] == "Renamed standup"
+    assert overrides[0]["RECURRENCE-ID"].dt == datetime.datetime(
+        2017, 11, 28, 17, 0, tzinfo=datetime.UTC
+    )
+    assert "RRULE" not in overrides[0]
+
+
+async def test_update_event_this_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test editing an occurrence onwards splits the series in two."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT
+            | {
+                "dtstart": "2017-11-29T17:00:00+00:00",
+                "dtend": "2017-11-29T18:00:00+00:00",
+            },
+        },
+    )
+
+    recur = _master(event)["RRULE"]
+    assert recur["UNTIL"][0] == datetime.datetime(
+        2017, 11, 29, 16, 59, 59, tzinfo=datetime.UTC
+    )
+    assert _master(event)["SUMMARY"] == "Daily standup"
+
+    tail = _saved_tail(calendars[0])
+    assert tail["UID"] == "rec-1-20171129T170000Z"
+    assert tail["SUMMARY"] == "Renamed standup"
+    assert tail["DTSTART"].dt == datetime.datetime(
+        2017, 11, 29, 17, 0, tzinfo=datetime.UTC
+    )
+    # Two occurrences stay in the capped head, so three are left for the tail.
+    assert tail["RRULE"]["COUNT"] == [3]
+
+
+async def test_update_event_not_found(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test an event that is gone from the server surfaces an error."""
+    await setup_platform_cb()
+    calendars[0].event_by_uid = MagicMock(side_effect=NotFoundError("gone"))
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {"entity_id": TEST_ENTITY, "uid": "missing", "event": UPDATED_EVENT},
+    )
+
+    assert not resp["success"]
+    assert "Event not found on the server" in resp["error"]["message"]
+
+
+ALL_DAY_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART;VALUE=DATE:20171127
+DTEND;VALUE=DATE:20171128
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:All day standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+OVERRIDDEN_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Daily standup
+END:VEVENT
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+RECURRENCE-ID:20171128T170000Z
+DTSTART:20171128T190000Z
+DTEND:20171128T200000Z
+SUMMARY:Moved standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+NON_RECURRING_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+SUMMARY:One off
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_existing_override(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test editing an occurrence that already has an override reuses it."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    overrides = _overrides(event)
+    assert len(overrides) == 1
+    assert overrides[0]["SUMMARY"] == "Renamed standup"
+
+
+async def test_delete_event_drops_stale_override(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that cancelling an occurrence removes its override too."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+        },
+    )
+
+    assert not _overrides(event)
+    assert _master(event)["EXDATE"].dts[0].dt == datetime.datetime(
+        2017, 11, 28, 17, 0, tzinfo=datetime.UTC
+    )
+
+
+async def test_delete_all_day_event_single_occurrence(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that an all day EXDATE keeps the DATE value type of DTSTART."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], ALL_DAY_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {"entity_id": TEST_ENTITY, "uid": "rec-1", "recurrence_id": "2017-11-28"},
+    )
+
+    assert _master(event)["EXDATE"].dts[0].dt == datetime.date(2017, 11, 28)
+
+
+async def test_delete_all_day_event_this_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that an all day UNTIL is a date on the day before the occurrence."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], ALL_DAY_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    assert _master(event)["RRULE"]["UNTIL"][0] == datetime.date(2017, 11, 28)
+
+
+async def test_delete_event_not_recurring(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test scoping to future occurrences of an event that does not recur."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], NON_RECURRING_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    assert not resp["success"]
+    assert "not a recurring series" in resp["error"]["message"]
+
+
+async def test_delete_event_invalid_recurrence_id(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test a recurrence id that cannot be parsed."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "delete",
+        {"entity_id": TEST_ENTITY, "uid": "rec-1", "recurrence_id": "not-a-date"},
+    )
+
+    assert not resp["success"]
+    assert "Unable to parse recurrence id" in resp["error"]["message"]
+
+
+async def test_update_event_first_occurrence_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that scoping from the first occurrence edits the series in place."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    calendars[0].save_event.assert_not_called()
+    master = _master(event)
+    assert master["SUMMARY"] == "Renamed standup"
+    assert master["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=5"
+
+
+FLOATING_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000
+DTEND:20171127T180000
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Floating standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_keeps_recurrence(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that an update without an rrule leaves the series recurring.
+
+    The coordinator expands recurring events, so CalendarEvent.rrule is never
+    populated and the frontend cannot echo the rule back on an ordinary edit.
+    """
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {"entity_id": TEST_ENTITY, "uid": "rec-1", "event": UPDATED_EVENT},
+    )
+
+    master = _master(event)
+    assert master["SUMMARY"] == "Renamed standup"
+    assert master["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=5"
+
+
+async def test_update_event_this_and_future_creates_tail_first(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a failure to store the tail leaves the series untouched."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+    calendars[0].save_event = MagicMock(side_effect=DAVError("boom"))
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    event.save.assert_not_called()
+    assert _master(event)["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=5"
+
+
+async def test_delete_floating_event_single_occurrence(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a floating series gets a floating EXDATE."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], FLOATING_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00",
+        },
+    )
+
+    exdate = _master(event)["EXDATE"].dts[0].dt
+    assert exdate == datetime.datetime(2017, 11, 28, 17, 0)
+    assert exdate.tzinfo is None
+
+
+async def test_delete_floating_event_this_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a floating series gets a floating UNTIL, as RFC 5545 requires."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], FLOATING_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    until = _master(event)["RRULE"]["UNTIL"][0]
+    assert until == datetime.datetime(2017, 11, 29, 16, 59, 59)
+    assert until.tzinfo is None
+
+
+RICH_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+BEGIN:STANDARD
+DTSTART:19701025T030000
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART;TZID=Europe/Berlin:20171127T170000
+DTEND;TZID=Europe/Berlin:20171127T180000
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Daily standup
+ORGANIZER:mailto:boss@example.com
+ATTENDEE:mailto:dev@example.com
+CATEGORIES:work
+X-CUSTOM-PROP:keep-me
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT10M
+END:VALARM
+END:VEVENT
+END:VCALENDAR
+"""
+
+MIXED_RDATE_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=DAILY;COUNT=3
+RDATE:20171201T170000Z,20171203T170000Z
+SUMMARY:Mixed series
+END:VEVENT
+END:VCALENDAR
+"""
+
+RDATE_ONLY_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RDATE:20171129T170000Z
+RDATE:20171201T170000Z
+SUMMARY:Extra sessions
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_this_and_future_preserves_master_data(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that the split-off tail keeps properties the edit cannot carry."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], RICH_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 16:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    stored = icalendar.Calendar.from_ical(calendars[0].save_event.call_args[0][0])
+    assert any(item.name == "VTIMEZONE" for item in stored.subcomponents)
+    tail = _saved_tail(calendars[0])
+    assert tail["SUMMARY"] == "Renamed standup"
+    assert str(tail["ORGANIZER"]) == "mailto:boss@example.com"
+    assert str(tail["ATTENDEE"]) == "mailto:dev@example.com"
+    assert tail["X-CUSTOM-PROP"] == "keep-me"
+    assert any(item.name == "VALARM" for item in tail.subcomponents)
+
+
+async def test_update_event_this_and_future_rolls_back_tail(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a failure to cap the head removes the stored tail again."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+    fresh = Event(None, "rec-1.ics", RECURRING_ICS, calendars[0], "rec-1")
+    calendars[0].event_by_uid = MagicMock(side_effect=[event, fresh])
+    tail = Mock()
+    calendars[0].save_event = MagicMock(return_value=tail)
+    event.save.side_effect = DAVError("boom")
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    tail.delete.assert_called_once()
+
+
+async def test_update_event_not_recurring(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that scoping an update to future occurrences needs a series."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], NON_RECURRING_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    assert "not a recurring series" in resp["error"]["message"]
+    calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()
+
+
+async def test_delete_event_this_and_future_drops_future_rdates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that the cutoff applies to RDATEs as well as the rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], MIXED_RDATE_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-03 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    master = _master(event)
+    # The rule ends before the cutoff; an UNTIL there would add occurrences.
+    assert master["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=3"
+    assert [item.dt for item in master["RDATE"].dts] == [
+        datetime.datetime(2017, 12, 1, 17, 0, tzinfo=datetime.UTC)
+    ]
+
+
+async def test_delete_rdate_only_event_this_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a series recurring only through RDATEs can be capped."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], RDATE_ONLY_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    master = _master(event)
+    assert "RRULE" not in master
+    assert [item.dt for item in master["RDATE"].dts] == [
+        datetime.datetime(2017, 11, 29, 17, 0, tzinfo=datetime.UTC)
+    ]
+
+
+async def test_update_rdate_only_event_this_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that splitting a series recurring only through RDATEs works."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], RDATE_ONLY_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed session",
+                "dtstart": "2017-12-01T17:00:00+00:00",
+                "dtend": "2017-12-01T18:00:00+00:00",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    assert "RRULE" not in tail
+    assert [item.dt for item in tail["RDATE"].dts] == [
+        datetime.datetime(2017, 12, 1, 17, 0, tzinfo=datetime.UTC)
+    ]
+    assert [item.dt for item in _master(event)["RDATE"].dts] == [
+        datetime.datetime(2017, 11, 29, 17, 0, tzinfo=datetime.UTC)
+    ]
+
+
+@pytest.mark.parametrize(
+    ("tz", "config"),
+    [
+        (
+            UTC,
+            {
+                "custom_calendars": [
+                    {"name": CALENDAR_NAME, "calendar": CALENDAR_NAME, "search": ".*"}
+                ]
+            },
+        )
+    ],
+)
+async def test_filtered_entity_does_not_expose_writes(
+    hass: HomeAssistant,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a filtered entity cannot reach events it never shows."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0])
+
+    state = hass.states.get("calendar.example_example")
+    assert state
+    assert state.attributes["supported_features"] == FILTERED_FEATURES
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "delete", {"entity_id": "calendar.example_example", "uid": "rec-1"}
+    )
+    assert not resp["success"]
+
+
+async def test_update_event_changes_recurrence(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a passed rrule replaces the rule of the series."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": UPDATED_EVENT | {"rrule": "FREQ=WEEKLY"},
+        },
+    )
+
+    assert _master(event)["RRULE"].to_ical().decode() == "FREQ=WEEKLY"
+
+
+async def test_update_all_day_event_this_and_future(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that an all day split reduces COUNT by the days the head keeps."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], ALL_DAY_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-29",
+                "dtend": "2017-11-30",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    assert tail["RRULE"]["COUNT"] == [3]
+
+
+async def test_update_event_this_and_future_drops_tail_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that the tail does not carry overrides of the old series."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    stored = icalendar.Calendar.from_ical(calendars[0].save_event.call_args[0][0])
+    assert len(list(stored.walk("VEVENT"))) == 1
+
+
+async def test_update_event_this_and_future_rollback_failure(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a failing rollback still reports the original error."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+    fresh = Event(None, "rec-1.ics", RECURRING_ICS, calendars[0], "rec-1")
+    calendars[0].event_by_uid = MagicMock(side_effect=[event, fresh])
+    tail = Mock()
+    tail.delete.side_effect = DAVError("still down")
+    calendars[0].save_event = MagicMock(return_value=tail)
+    event.save.side_effect = DAVError("boom")
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    assert "boom" in resp["error"]["message"]
+    assert "could not be removed" in caplog.text
+
+
+CAPPED_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=DAILY;UNTIL=20171129T165959Z
+SUMMARY:Daily standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_keeps_start_anchor(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a summary-only edit does not re-anchor the start time."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], RICH_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27T16:00:00+00:00",
+                "dtend": "2017-11-27T17:00:00+00:00",
+            },
+        },
+    )
+
+    dtstart = _master(event)["DTSTART"]
+    assert dtstart.dt == datetime.datetime(
+        2017, 11, 27, 17, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert str(dtstart.dt.tzinfo) == "Europe/Berlin"
+
+
+@pytest.mark.parametrize("tz", [UTC])
+async def test_update_event_moves_floating_start(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a moved time on a floating series stays floating."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], FLOATING_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Floating standup",
+                "dtstart": "2017-11-27T18:00:00+00:00",
+                "dtend": "2017-11-27T19:00:00+00:00",
+            },
+        },
+    )
+
+    dtstart = _master(event)["DTSTART"].dt
+    assert dtstart == datetime.datetime(2017, 11, 27, 18, 0)
+    assert dtstart.tzinfo is None
+
+
+async def test_update_event_this_and_future_replayed(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that replaying a finished split does not clone the capped head."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], CAPPED_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()
+
+
+async def test_update_event_first_occurrence_drops_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that an edit of every future occurrence clears old overrides."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert _master(event)["SUMMARY"] == "Renamed standup"
+    assert not _overrides(event)
+
+
+async def test_update_event_this_and_future_ambiguous_failure(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the tail survives when the head state cannot be verified."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+    calendars[0].event_by_uid = MagicMock(side_effect=[event, DAVError("down")])
+    tail = Mock()
+    calendars[0].save_event = MagicMock(return_value=tail)
+    event.save.side_effect = DAVError("boom")
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    tail.delete.assert_not_called()
+    assert "Keeping the split-off series" in caplog.text
+
+
+MIXED_TZ_EXDATE_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+BEGIN:STANDARD
+DTSTART:19701025T030000
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART;TZID=Europe/Berlin:20171127T170000
+DTEND;TZID=Europe/Berlin:20171127T180000
+RRULE:FREQ=DAILY;COUNT=10
+EXDATE;TZID=Europe/Berlin:20171128T170000,20171204T170000
+EXDATE:20171129T160000Z
+SUMMARY:Daily standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_delete_event_this_and_future_keeps_exdate_zones(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that filtering EXDATEs does not merge lines with different zones."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 16:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    entries = _master(event)["EXDATE"]
+    assert isinstance(entries, list)
+    berlin, utc = entries
+    assert berlin.params["TZID"] == "Europe/Berlin"
+    assert [item.dt for item in berlin.dts] == [
+        datetime.datetime(
+            2017, 11, 28, 17, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+        )
+    ]
+    assert [item.dt for item in utc.dts] == [
+        datetime.datetime(2017, 11, 29, 16, 0, tzinfo=datetime.UTC)
+    ]
+
+
+async def test_update_event_new_rrule_drops_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that replacing the rule clears overrides of the old series."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": UPDATED_EVENT | {"rrule": "FREQ=WEEKLY"},
+        },
+    )
+
+    assert not _overrides(event)
+
+
+async def test_update_event_single_occurrence_ignores_rrule(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a rule in the payload cannot make an override recurring."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+            "event": UPDATED_EVENT | {"rrule": "FREQ=WEEKLY"},
+        },
+    )
+
+    (override,) = _overrides(event)
+    assert "RRULE" not in override
+    assert _master(event)["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=5"
+
+
+async def test_update_event_rejects_all_day_toggle(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a series cannot switch between timed and all day."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27",
+                "dtend": "2017-11-28",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "all-day" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_event_single_occurrence_keeps_master_data(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a new override inherits what the edit cannot carry."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], RICH_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 16:00:00+00:00",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    (override,) = _overrides(event)
+    assert str(override["ATTENDEE"]) == "mailto:dev@example.com"
+    assert any(item.name == "VALARM" for item in override.subcomponents)
+    assert "RRULE" not in override
+
+
+ORPHAN_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+RECURRENCE-ID:20171128T170000Z
+DTSTART:20171128T190000Z
+DTEND:20171128T200000Z
+SUMMARY:Orphan override
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_orphan_override(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that editing an object holding only an override keeps it."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], ORPHAN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": UPDATED_EVENT
+            | {
+                "dtstart": "2017-11-28T20:00:00+00:00",
+                "dtend": "2017-11-28T21:00:00+00:00",
+            },
+        },
+    )
+
+    vevents = list(event.icalendar_instance.walk("VEVENT"))
+    assert len(vevents) == 1
+    assert vevents[0]["SUMMARY"] == "Renamed standup"
+
+
+async def test_delete_occurrence_of_orphan_override(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that cancelling the orphan's only occurrence drops the resource."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], ORPHAN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+        },
+    )
+
+    event.delete.assert_called_once()
+
+
+TWO_ORPHANS_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+RECURRENCE-ID:20171128T170000Z
+DTSTART:20171128T190000Z
+DTEND:20171128T200000Z
+SUMMARY:First orphan
+END:VEVENT
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+RECURRENCE-ID:20171129T170000Z
+DTSTART:20171129T190000Z
+DTEND:20171129T200000Z
+SUMMARY:Second orphan
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_delete_one_of_two_orphan_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that deleting one orphan occurrence keeps the other."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], TWO_ORPHANS_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+        },
+    )
+
+    event.delete.assert_not_called()
+    vevents = list(event.icalendar_instance.walk("VEVENT"))
+    assert [vevent["SUMMARY"] for vevent in vevents] == ["Second orphan"]
+
+
+async def test_update_event_same_rrule_keeps_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that resubmitting the unchanged rule keeps overrides."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": UPDATED_EVENT | {"rrule": "FREQ=DAILY;COUNT=5"},
+        },
+    )
+
+    assert len(_overrides(event)) == 1
+
+
+async def test_update_event_new_rrule_drops_exdates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a new rule clears dates anchored to the old schedule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27T16:00:00+00:00",
+                "dtend": "2017-11-27T17:00:00+00:00",
+                "rrule": "FREQ=WEEKLY",
+            },
+        },
+    )
+
+    master = _master(event)
+    assert "EXDATE" not in master
+    assert master["RRULE"].to_ical().decode() == "FREQ=WEEKLY"
+
+
+async def test_update_event_first_occurrence_new_rule_drops_exdates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that rescheduling every future occurrence clears old exceptions."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 16:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27T17:00:00+00:00",
+                "dtend": "2017-11-27T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert "EXDATE" not in _master(event)
+
+
+async def test_update_event_moved_tail_drops_exdates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a moved tail shifts retained dates along with it."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 16:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-12-01T18:00:00+00:00",
+                "dtend": "2017-12-01T19:00:00+00:00",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    assert tail["EXDATE"].dts[0].dt == datetime.datetime(
+        2017, 12, 4, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+
+
+async def test_update_rdate_only_event_with_new_rule(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that supplying a rule to an RDATE-only series does not crash."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], RDATE_ONLY_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed session",
+                "dtstart": "2017-12-01T17:00:00+00:00",
+                "dtend": "2017-12-01T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    assert tail["RRULE"].to_ical().decode() == "FREQ=WEEKLY"
+    assert "RDATE" not in tail
+
+
+async def test_update_moved_rdate_only_tail_shifts_dates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that moving an RDATE-only tail moves its dates too."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], RDATE_ONLY_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed session",
+                "dtstart": "2017-11-29T18:00:00+00:00",
+                "dtend": "2017-11-29T19:00:00+00:00",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    entries = tail["RDATE"]
+    assert isinstance(entries, list)
+    assert [item.dt for entry in entries for item in entry.dts] == [
+        datetime.datetime(2017, 11, 29, 18, 0, tzinfo=datetime.UTC),
+        datetime.datetime(2017, 12, 1, 18, 0, tzinfo=datetime.UTC),
+    ]
+
+
+OFF_RULE_RDATE_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=WEEKLY;COUNT=5
+RDATE:20171129T170000Z
+SUMMARY:Weekly with extra day
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_off_rule_rdate_split_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that splitting at an added date cannot re-anchor the rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OFF_RULE_RDATE_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed",
+                "dtstart": "2017-11-29T17:00:00+00:00",
+                "dtend": "2017-11-29T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "added date" in resp["error"]["message"]
+    calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()
+
+
+BYDAY_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=5
+SUMMARY:Monday sync
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_move_against_anchored_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that moving a day-bound series to another day needs a new rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-11-28T17:00:00+00:00",
+                "dtend": "2017-11-28T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_event_off_rule_split_with_resubmitted_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that echoing the unchanged rule does not bypass the split guard."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OFF_RULE_RDATE_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed",
+                "dtstart": "2017-11-29T17:00:00+00:00",
+                "dtend": "2017-11-29T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;COUNT=5",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "added date" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+DURATION_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000
+DURATION:PT1H
+SUMMARY:Floating with duration
+END:VEVENT
+END:VCALENDAR
+"""
+
+SECONDLY_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=SECONDLY
+SUMMARY:Way too dense
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_tail_move_against_anchored_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that moving a day-bound tail to another day needs a new rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-04 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-12-05T17:00:00+00:00",
+                "dtend": "2017-12-05T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()
+
+
+async def test_update_duration_event_keeps_floating_end(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a synthesized end follows the floating start."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], DURATION_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed",
+                "dtstart": "2017-11-27T17:00:00+00:00",
+                "dtend": "2017-11-27T18:30:00+00:00",
+            },
+        },
+    )
+
+    master = _master(event)
+    assert "DURATION" not in master
+    assert master["DTEND"].dt.tzinfo is None
+    assert master["DTSTART"].dt.tzinfo is None
+
+
+async def test_update_dense_rule_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a secondly rule cannot tie up the executor."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], SECONDLY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    assert "too dense" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_event_echoed_rule_does_not_bypass_anchor_check(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that resubmitting the rule does not allow an off-rule move."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-11-28T17:00:00+00:00",
+                "dtend": "2017-11-28T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;BYDAY=MO;COUNT=5",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_first_occurrence_echoed_rule_anchor_check(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test the anchor check on the first-occurrence path with an echoed rule."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], BYDAY_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Tuesday sync",
+                "dtstart": "2017-11-28T17:00:00+00:00",
+                "dtend": "2017-11-28T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY;BYDAY=MO;COUNT=5",
+            },
+        },
+    )
+
+    assert not resp["success"]
+    assert "does not match the recurrence rule" in resp["error"]["message"]
+    event.save.assert_not_called()
+
+
+async def test_update_orphans_this_and_future_rejected(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a future-scoped edit cannot wipe sibling orphan overrides."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], TWO_ORPHANS_ICS)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-28 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    assert "not a recurring series" in resp["error"]["message"]
+    event.save.assert_not_called()
