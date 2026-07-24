@@ -1,7 +1,7 @@
 """Config flow for Amcrest integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from amcrest import AmcrestError, LoginError
 import voluptuous as vol
@@ -32,8 +32,11 @@ from . import (
     DEFAULT_RESOLUTION,
     AmcrestChecker,
 )
+from .binary_sensor import DEFAULT_UI_BINARY_SENSOR_KEYS
 from .camera import STREAM_SOURCE_LIST
 from .const import DOMAIN
+from .sensor import SENSOR_KEYS
+from .switch import SWITCH_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +76,10 @@ def _build_user_options() -> dict[str, Any]:
         CONF_STREAM_SOURCE: STREAM_SOURCE_LIST[0],
         CONF_FFMPEG_ARGUMENTS: DEFAULT_ARGUMENTS,
         CONF_CONTROL_LIGHT: True,
+        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+        CONF_BINARY_SENSORS: list(DEFAULT_UI_BINARY_SENSOR_KEYS),
+        CONF_SENSORS: list(SENSOR_KEYS),
+        CONF_SWITCHES: list(SWITCH_KEYS),
     }
 
 
@@ -99,6 +106,7 @@ class AmcrestFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

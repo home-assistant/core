@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from amcrest import AmcrestError, LoginError
 import pytest
 
+from homeassistant.components.amcrest.config_flow import _build_user_options
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -55,6 +56,7 @@ async def test_form(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
     }
+    assert result["options"] == _build_user_options()
 
 
 async def test_form_invalid_auth(

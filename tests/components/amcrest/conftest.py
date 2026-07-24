@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.amcrest import PLATFORMS
+from homeassistant.components.amcrest.config_flow import _build_user_options
 from homeassistant.components.amcrest.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -131,6 +132,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: TEST_PASSWORD,
         },
         unique_id=TEST_SERIAL,
+        options=_build_user_options(),
     )
 
 

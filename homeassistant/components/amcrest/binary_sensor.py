@@ -141,13 +141,7 @@ async def async_setup_entry(
     device = config_entry.runtime_data.device
     name = device.name
 
-    key_set = set(
-        get_platform_keys(
-            config_entry,
-            CONF_BINARY_SENSORS,
-            list(DEFAULT_UI_BINARY_SENSOR_KEYS),
-        )
-    )
+    key_set = set(get_platform_keys(config_entry, CONF_BINARY_SENSORS))
     entity_descriptions = [
         description for description in BINARY_SENSORS if description.key in key_set
     ]

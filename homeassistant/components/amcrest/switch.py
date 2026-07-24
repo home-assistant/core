@@ -40,7 +40,7 @@ async def async_setup_entry(
     device = config_entry.runtime_data.device
     name = device.name
 
-    key_set = set(get_platform_keys(config_entry, CONF_SWITCHES, SWITCH_KEYS))
+    key_set = set(get_platform_keys(config_entry, CONF_SWITCHES))
     descriptions = [
         description for description in SWITCH_TYPES if description.key in key_set
     ]

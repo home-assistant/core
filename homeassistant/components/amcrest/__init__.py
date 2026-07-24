@@ -36,12 +36,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_s
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .binary_sensor import (
-    BINARY_SENSOR_KEYS,
-    BINARY_SENSORS,
-    DEFAULT_UI_BINARY_SENSOR_KEYS,
-    check_binary_sensors,
-)
+from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import STREAM_SOURCE_LIST
 from .const import (
     COMM_RETRIES,
@@ -474,12 +469,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> b
     config_data = dict(entry.data)
     config_data.update(entry.options)
 
-    config_data.setdefault(CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION)
-    config_data.setdefault(CONF_RESOLUTION, DEFAULT_RESOLUTION)
-    config_data.setdefault(CONF_STREAM_SOURCE, STREAM_SOURCE_LIST[0])
-    config_data.setdefault(CONF_FFMPEG_ARGUMENTS, DEFAULT_ARGUMENTS)
-    config_data.setdefault(CONF_CONTROL_LIGHT, True)
-
     name: str = entry.title
     username: str = config_data[CONF_USERNAME]
     password: str = config_data[CONF_PASSWORD]
@@ -511,9 +500,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> b
     device.name = name
 
     event_codes = _event_codes_for_binary_sensor_keys(
-        get_platform_keys(
-            entry, CONF_BINARY_SENSORS, list(DEFAULT_UI_BINARY_SENSOR_KEYS)
-        )
+        get_platform_keys(entry, CONF_BINARY_SENSORS)
     )
 
     runtime_data = AmcrestRuntimeData(device=device)

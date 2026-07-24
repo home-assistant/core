@@ -54,7 +54,7 @@ async def async_setup_entry(
     device = config_entry.runtime_data.device
     name = device.name
 
-    key_set = set(get_platform_keys(config_entry, CONF_SENSORS, SENSOR_KEYS))
+    key_set = set(get_platform_keys(config_entry, CONF_SENSORS))
     descriptions = [
         description for description in SENSOR_TYPES if description.key in key_set
     ]
