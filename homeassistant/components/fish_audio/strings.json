@@ -65,12 +65,14 @@
             "backend": "AI voice model",
             "latency": "Latency mode",
             "name": "[%key:common::config_flow::data::name%]",
+            "speed": "Speech speed",
             "voice_id": "Voice"
           },
           "data_description": {
             "backend": "Select the AI model that will generate the audio.",
             "latency": "Choose the latency mode: 'normal' for standard processing or 'balanced' for optimized speed.",
             "name": "Enter a unique name for this TTS voice to easily identify it in Home Assistant.",
+            "speed": "Speed of the generated speech. 1.0 is the normal speed; lower values speak slower and higher values speak faster.",
             "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID."
           },
           "description": "Select your preferred voice and the AI model to use for speech synthesis.",
