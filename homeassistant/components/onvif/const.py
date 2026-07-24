@@ -21,6 +21,9 @@ CONF_ENABLE_WEBHOOKS = "enable_webhooks"
 CONF_MORE_OPTIONS = "more_options"
 DEFAULT_ENABLE_WEBHOOKS = True
 
+# Number of consecutive PullPoint failures before marking device unavailable
+CONSECUTIVE_ERROR_THRESHOLD = 3
+
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"
 ATTR_ZOOM = "zoom"
