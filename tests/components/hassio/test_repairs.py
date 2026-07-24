@@ -50,6 +50,7 @@ async def test_supervisor_issue_repair_flow(
                 context=ContextType.SYSTEM,
                 reference="/dev/sda1",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -60,6 +61,7 @@ async def test_supervisor_issue_repair_flow(
                     reference="/dev/sda1",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -129,6 +131,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                 context=ContextType.SYSTEM,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -139,6 +142,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     reference="test",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type="test_type",
@@ -146,6 +150,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -228,6 +233,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -238,6 +244,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type="test_type",
@@ -245,6 +252,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -343,6 +351,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -353,6 +362,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -422,6 +432,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -432,6 +443,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow(
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -501,6 +513,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow_error(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -511,6 +524,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow_error(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -568,6 +582,7 @@ async def test_mount_failed_repair_flow_error(
                 context=ContextType.MOUNT,
                 reference="backup_share",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -578,6 +593,7 @@ async def test_mount_failed_repair_flow_error(
                     reference="backup_share",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type=SuggestionType.EXECUTE_REMOVE,
@@ -585,6 +601,7 @@ async def test_mount_failed_repair_flow_error(
                     reference="backup_share",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -645,6 +662,7 @@ async def test_mount_failed_repair_flow(
                 context=ContextType.MOUNT,
                 reference="backup_share",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -655,6 +673,7 @@ async def test_mount_failed_repair_flow(
                     reference="backup_share",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type=SuggestionType.EXECUTE_REMOVE,
@@ -662,6 +681,7 @@ async def test_mount_failed_repair_flow(
                     reference="backup_share",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -748,18 +768,21 @@ async def test_supervisor_issue_docker_config_repair_flow(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(issue1_uuid := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type=IssueType.DOCKER_CONFIG,
                 context=ContextType.CORE,
                 reference=None,
                 uuid=(issue2_uuid := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type=IssueType.DOCKER_CONFIG,
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue3_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -770,6 +793,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
                     reference=None,
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ],
             issue2_uuid: [
@@ -779,6 +803,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ],
             issue3_uuid: [
@@ -788,6 +813,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
                     reference="test",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ],
         },
@@ -857,6 +883,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
                 context=ContextType.SYSTEM,
                 reference="/dev/sda1",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -867,6 +894,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
                     reference="/dev/sda1",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type=SuggestionType.ADOPT_DATA_DISK,
@@ -874,6 +902,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
                     reference="/dev/sda1",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -975,6 +1004,7 @@ async def test_supervisor_issue_detached_addon_removed(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -985,6 +1015,7 @@ async def test_supervisor_issue_detached_addon_removed(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -1062,6 +1093,7 @@ async def test_supervisor_issue_addon_boot_fail(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -1072,6 +1104,7 @@ async def test_supervisor_issue_addon_boot_fail(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
                 Suggestion(
                     type="disable_boot",
@@ -1079,6 +1112,7 @@ async def test_supervisor_issue_addon_boot_fail(
                     reference="test",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -1169,6 +1203,7 @@ async def test_supervisor_issue_deprecated_addon(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -1179,6 +1214,7 @@ async def test_supervisor_issue_deprecated_addon(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },
@@ -1258,6 +1294,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -1268,6 +1305,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
                     reference="test",
                     uuid=(sugg_uuid := uuid4()),
                     auto=False,
+                    reference_extra=None,
                 ),
             ]
         },

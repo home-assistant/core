@@ -34,14 +34,7 @@ from homeassistant.setup import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .config import (
-    _DEFAULT_CONFIG,
-    ConfData,
-    HTTPConfigStore,
-    async_get_and_load_store,
-    async_load_config,
-    default_server_port,
-)
+from .config import async_get_and_load_store, async_load_config, default_server_port
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -128,63 +121,6 @@ class ApiConfig:
         self.use_ssl = use_ssl
 
 
-async def _async_fallback_config(
-    hass: HomeAssistant,
-    store: HTTPConfigStore,
-    conf: ConfData,
-    err: HomeAssistantError | OSError,
-) -> ConfData:
-    """Return the next config to try after ``conf`` could not be applied.
-
-    Implements the fallback chain pending -> stable -> default config, where
-    the last step is only taken in recovery mode. Raises when there is no
-    (acceptable) fallback left, failing setup: on a normal boot this
-    activates recovery mode, in recovery mode it makes the failure visible
-    to the outside (e.g. the Supervisor rolls back a Core update whose API
-    does not come up).
-    """
-    if store.revert_deadline is not None:
-        # An unconfirmed pending config is under trial and cannot even be
-        # applied, so it is known to be bad: revert to the stable config
-        # right away and continue this same start with it, instead of
-        # waiting out the trial window and restarting.
-        _LOGGER.error(
-            "The new HTTP configuration could not be applied, reverting to "
-            "the previous configuration: %s",
-            err,
-        )
-        await store.async_abort_trial()
-        return store.stable
-
-    if (
-        # In normal mode, fail setup so recovery mode can take over with a
-        # reachable configuration.
-        not hass.config.recovery_mode
-        # The chain is exhausted; nothing left to fall back to.
-        or conf is _DEFAULT_CONFIG
-        # With peer certificate verification configured, connections must
-        # never be accepted without a verified client certificate; there is
-        # no acceptable fallback config.
-        or CONF_SSL_PEER_CERTIFICATE in conf
-    ):
-        # An unusable SSL configuration already carries a descriptive
-        # HomeAssistantError.
-        if isinstance(err, HomeAssistantError):
-            raise err
-        raise HomeAssistantError(
-            f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
-        ) from err
-
-    # The config cannot be applied in recovery mode; fall back to the
-    # default config so the recovery UI stays reachable.
-    _LOGGER.error(
-        "The HTTP configuration could not be applied in recovery mode, "
-        "falling back to the default configuration: %s",
-        err,
-    )
-    return _DEFAULT_CONFIG
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
     # Late import to ensure isal is updated before
@@ -224,7 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except (HomeAssistantError, OSError) as err:
             store = await async_get_and_load_store(hass)
             trial_reverted = store.revert_deadline is not None
-            conf = await _async_fallback_config(hass, store, conf, err)
+            conf = await store.async_get_fallback_config(err)
             server = make_server(hass, conf, supervisor_unix_socket_path)
             continue
         if trial_reverted:
