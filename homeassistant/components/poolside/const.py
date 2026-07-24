@@ -219,12 +219,11 @@ TWINKLE_FIELD = "Twinkle"
 # Pool devices are the physical hardware (pumps, heaters, ...) the controller
 # operates to satisfy control requests; users never command them directly, so
 # they surface only as read-only telemetry. Site.getPoolDevices lists them
-# (UUID + DeviceType); everything else arrives as status pushes keyed by the
-# device's UUID. InformationFields is itself such a push: a JSON list
-# describing which of the device's status fields carry displayable telemetry
-# and how to interpret each one.
+# (UUID, Name, and DeviceType); everything else arrives as status pushes
+# keyed by the device's UUID. InformationFields is itself such a push: a JSON
+# list describing which of the device's status fields carry displayable
+# telemetry and how to interpret each one.
 INFORMATION_FIELDS_FIELD = "InformationFields"
-DEVICE_NAME_FIELD = "Name"
 
 # Keys of an InformationFields entry.
 FIELD_NAME_KEY = "Name"

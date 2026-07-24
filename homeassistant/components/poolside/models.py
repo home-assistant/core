@@ -57,6 +57,7 @@ class PoolsideDevice:
     """
 
     uuid: str
+    name: str
     device_type: str
 
 
@@ -68,9 +69,12 @@ def parse_pool_devices(data: dict[str, Any] | None) -> list[PoolsideDevice]:
         if not uuid:
             LOGGER.debug("Skipping pool device without a UUID: %s", item)
             continue
+        device_type = str(item.get("DeviceType") or "")
         devices.append(
             PoolsideDevice(
-                uuid=str(uuid), device_type=str(item.get("DeviceType") or "")
+                uuid=str(uuid),
+                name=str(item.get("Name") or device_type or uuid),
+                device_type=device_type,
             )
         )
     return devices

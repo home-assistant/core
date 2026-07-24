@@ -89,7 +89,7 @@ INFORMATION_FIELDS = json.dumps(
 @pytest.fixture
 def pool_devices() -> list[PoolsideDevice]:
     """One pump, as returned by Site.getPoolDevices."""
-    return [PoolsideDevice(uuid=PUMP_UUID, device_type="Pump")]
+    return [PoolsideDevice(uuid=PUMP_UUID, name="Pump", device_type="Pump")]
 
 
 async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
@@ -241,19 +241,22 @@ async def test_pool_device_registered_under_controller(
     assert device.name == "Pump"
 
 
-async def test_pool_device_named_from_streamed_name(
+async def test_pool_device_named_from_the_device_list(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_poolside_client: FakePoolsideClient,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """A streamed Name state wins over the DeviceType fallback."""
-    mock_poolside_client.set_status(PUMP_UUID, "Name", "Main Pump")
+    """The device is named from the getPoolDevices Name, not its DeviceType."""
+    mock_poolside_client.async_get_pool_devices.return_value = [
+        PoolsideDevice(uuid=PUMP_UUID, name="Main Pump", device_type="Pump")
+    ]
     await setup_entry(hass, mock_config_entry)
 
     device = device_registry.async_get_device({(DOMAIN, PUMP_UUID)})
     assert device is not None
     assert device.name == "Main Pump"
+    assert device.model == "Pump"
 
 
 async def test_setup_succeeds_without_pool_device_support(

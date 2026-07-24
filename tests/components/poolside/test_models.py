@@ -1,7 +1,11 @@
-"""Tests for parsing Site.getControlLayout responses."""
+"""Tests for parsing Site.getControlLayout and Site.getPoolDevices responses."""
 
 from homeassistant.components.poolside.const import ControlType, GroupKind
-from homeassistant.components.poolside.models import parse_control_layout
+from homeassistant.components.poolside.models import (
+    PoolsideDevice,
+    parse_control_layout,
+    parse_pool_devices,
+)
 
 LAYOUT = {
     "SiteName": "Smith Residence",
@@ -251,3 +255,29 @@ def test_combined_control_exposes_member_uuids() -> None:
 
     non_combined = next(c for c in controls if c.uuid == "heater-1")
     assert non_combined.member_uuids == []
+
+
+def test_parse_pool_devices() -> None:
+    """Devices parse from Site.getPoolDevices; UUID-less entries are skipped."""
+    devices = parse_pool_devices(
+        {
+            "SiteUUID": "site-smith",
+            "Devices": [
+                {"UUID": "pump-1", "Name": "Main Pump", "DeviceType": "Pump"},
+                {"Name": "Ghost", "DeviceType": "Pump"},
+            ],
+        }
+    )
+    assert devices == [
+        PoolsideDevice(uuid="pump-1", name="Main Pump", device_type="Pump")
+    ]
+
+
+def test_parse_pool_devices_name_falls_back_to_device_type() -> None:
+    """A device without a configured name is named after its type."""
+    devices = parse_pool_devices(
+        {"Devices": [{"UUID": "heater-1", "DeviceType": "Heater"}]}
+    )
+    assert devices == [
+        PoolsideDevice(uuid="heater-1", name="Heater", device_type="Heater")
+    ]

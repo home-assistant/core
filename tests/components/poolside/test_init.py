@@ -218,7 +218,7 @@ async def test_stale_pool_device_removed_when_it_leaves_the_list(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """A pool device missing from a re-fetched list takes its device and sensors."""
-    pump = PoolsideDevice(uuid="device-pump-1", device_type="Pump")
+    pump = PoolsideDevice(uuid="device-pump-1", name="Pump", device_type="Pump")
     mock_poolside_client.async_get_pool_devices.return_value = [pump]
     mock_poolside_client.set_status(
         "device-pump-1",
