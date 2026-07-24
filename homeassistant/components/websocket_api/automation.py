@@ -8,7 +8,11 @@ from typing import Any, Self
 
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, target as target_helpers
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    target as target_helpers,
+)
 from homeassistant.helpers.condition import (
     async_get_all_descriptions as async_get_all_condition_descriptions,
 )
@@ -98,15 +102,25 @@ class _AutomationComponentLookupData:
         filters: list[_EntityFilter] = []
 
         primary_entities_only = target_description.get("primary_entities_only", True)
-        entity_filters_config = target_description.get("entity", [])
+        entity_filters_config = cv.ensure_list(target_description.get("entity", []))
         for entity_filter_config in entity_filters_config:
             entity_filter = _EntityFilter(
                 integration=entity_filter_config.get("integration"),
-                domains=set(entity_filter_config.get("domain", [])),
-                device_classes=set(entity_filter_config.get("device_class", [])),
-                supported_features=set(
-                    entity_filter_config.get("supported_features", [])
+                domains=set(cv.ensure_list(entity_filter_config.get("domain", []))),
+                device_classes=set(
+                    cv.ensure_list(entity_filter_config.get("device_class", []))
                 ),
+                # Only keep already-resolved integer masks: a group can itself be
+                # an unhashable list of feature names, and directly registered
+                # schemas (async_set_service_schema) may leave dotted feature
+                # strings unresolved; both would crash matches()'s `feature & ...`.
+                supported_features={
+                    feature
+                    for feature in cv.ensure_list(
+                        entity_filter_config.get("supported_features", [])
+                    )
+                    if isinstance(feature, int)
+                },
             )
             filters.append(entity_filter)
 
@@ -155,14 +169,14 @@ def _get_automation_component_domains(
     If a filter is missing both domain and integration keys, None is added to the
     returned set.
     """
-    entity_filters_config = target_description.get("entity", [])
+    entity_filters_config = cv.ensure_list(target_description.get("entity", []))
     if not entity_filters_config:
         return {None}
 
     domains: set[str | None] = set()
     for entity_filter_config in entity_filters_config:
         filter_integration = entity_filter_config.get("integration")
-        filter_domains = entity_filter_config.get("domain", [])
+        filter_domains = cv.ensure_list(entity_filter_config.get("domain", []))
 
         if not filter_domains and not filter_integration:
             domains.add(None)
