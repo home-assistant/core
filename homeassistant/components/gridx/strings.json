@@ -1,0 +1,131 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_systems": "No GridX systems found for this account. Please verify that your account has at least one GridBox configured in the GridX app.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your GridX app password",
+          "username": "Your email address from the GridX app"
+        },
+        "title": "Connect to GridX"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
+      "battery_charge": {
+        "name": "Battery charge"
+      },
+      "battery_discharge": {
+        "name": "Battery discharge"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_remaining_charge": {
+        "name": "Battery remaining charge"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery state of charge"
+      },
+      "consumption": {
+        "name": "Consumption"
+      },
+      "direct_consumption_ev": {
+        "name": "Direct consumption EV"
+      },
+      "direct_consumption_heat_pump": {
+        "name": "Direct consumption heat pump"
+      },
+      "direct_consumption_heater": {
+        "name": "Direct consumption heater"
+      },
+      "direct_consumption_household": {
+        "name": "Direct consumption household"
+      },
+      "direct_consumption_rate": {
+        "name": "Direct consumption rate"
+      },
+      "ev_current_phase": {
+        "name": "EV current {phase}"
+      },
+      "ev_power": {
+        "name": "EV charging power"
+      },
+      "ev_reading_total": {
+        "name": "EV total energy"
+      },
+      "ev_state_of_charge": {
+        "name": "EV state of charge"
+      },
+      "grid": {
+        "name": "Grid power"
+      },
+      "grid_meter_reading_negative": {
+        "name": "Grid export meter"
+      },
+      "grid_meter_reading_positive": {
+        "name": "Grid import meter"
+      },
+      "heater_power": {
+        "name": "Heater power"
+      },
+      "heater_temperature": {
+        "name": "Heater temperature"
+      },
+      "heatpump_power": {
+        "name": "Heat pump power"
+      },
+      "photovoltaic": {
+        "name": "PV power"
+      },
+      "production": {
+        "name": "Production"
+      },
+      "self_consumption": {
+        "name": "Self consumption"
+      },
+      "self_consumption_rate": {
+        "name": "Self consumption rate"
+      },
+      "self_sufficiency_rate": {
+        "name": "Self sufficiency rate"
+      },
+      "self_supply": {
+        "name": "Self supply"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to GridX."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed. Please check your credentials."
+    },
+    "no_data": {
+      "message": "GridX returned no data."
+    },
+    "update_failed": {
+      "message": "Error fetching GridX data: {error}"
+    }
+  }
+}
