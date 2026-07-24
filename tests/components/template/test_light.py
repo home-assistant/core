@@ -328,7 +328,7 @@ async def setup_light_with_mireds(
         count,
         {
             attribute: attribute_template,
-            "temperature": "{{ 200 }}",
+            "temperature": "{{ 5000 }}",
             **make_test_action("set_temperature", {"color_temp": "{{ color_temp }}"}),
         },
         "{{ 1==1 }}",
@@ -769,8 +769,10 @@ async def test_level_template(
 @pytest.mark.parametrize(
     ("expected_temp", "attribute_template", "expected_color_mode"),
     [
-        (2000, "{{500}}", ColorMode.COLOR_TEMP),
-        (None, "{{501}}", ColorMode.COLOR_TEMP),
+        (2000, "{{2000}}", ColorMode.COLOR_TEMP),
+        (4000, "{{4000}}", ColorMode.COLOR_TEMP),
+        (None, "{{1999}}", ColorMode.COLOR_TEMP),
+        (None, "{{6536}}", ColorMode.COLOR_TEMP),
         (None, "{{x - 12}}", ColorMode.COLOR_TEMP),
         (None, "None", ColorMode.COLOR_TEMP),
         (None, "{{ none }}", ColorMode.COLOR_TEMP),
