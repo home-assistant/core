@@ -19,20 +19,47 @@
       "latest_commit": {
         "default": "mdi:source-commit"
       },
+      "latest_commit_date": {
+        "default": "mdi:calendar-clock"
+      },
       "latest_discussion": {
         "default": "mdi:forum"
+      },
+      "latest_discussion_created": {
+        "default": "mdi:calendar-clock"
+      },
+      "latest_discussion_updated": {
+        "default": "mdi:calendar-clock"
       },
       "latest_issue": {
         "default": "mdi:github"
       },
+      "latest_issue_created": {
+        "default": "mdi:calendar-clock"
+      },
+      "latest_issue_updated": {
+        "default": "mdi:calendar-clock"
+      },
       "latest_pull_request": {
         "default": "mdi:source-pull"
+      },
+      "latest_pull_request_created": {
+        "default": "mdi:calendar-clock"
+      },
+      "latest_pull_request_updated": {
+        "default": "mdi:calendar-clock"
       },
       "latest_release": {
         "default": "mdi:github"
       },
+      "latest_release_date": {
+        "default": "mdi:calendar-clock"
+      },
       "latest_tag": {
         "default": "mdi:tag"
+      },
+      "latest_tag_date": {
+        "default": "mdi:calendar-clock"
       },
       "merged_pulls_count": {
         "default": "mdi:source-merge"

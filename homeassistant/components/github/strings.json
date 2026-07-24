@@ -55,20 +55,47 @@
       "latest_commit": {
         "name": "Latest commit"
       },
+      "latest_commit_date": {
+        "name": "Latest commit date"
+      },
       "latest_discussion": {
         "name": "Latest discussion"
+      },
+      "latest_discussion_created": {
+        "name": "Latest discussion created"
+      },
+      "latest_discussion_updated": {
+        "name": "Latest discussion updated"
       },
       "latest_issue": {
         "name": "Latest issue"
       },
+      "latest_issue_created": {
+        "name": "Latest issue created"
+      },
+      "latest_issue_updated": {
+        "name": "Latest issue updated"
+      },
       "latest_pull_request": {
         "name": "Latest pull request"
+      },
+      "latest_pull_request_created": {
+        "name": "Latest pull request created"
+      },
+      "latest_pull_request_updated": {
+        "name": "Latest pull request updated"
       },
       "latest_release": {
         "name": "Latest release"
       },
+      "latest_release_date": {
+        "name": "Latest release date"
+      },
       "latest_tag": {
         "name": "Latest tag"
+      },
+      "latest_tag_date": {
+        "name": "Latest tag date"
       },
       "merged_pulls_count": {
         "name": "Merged pull requests",

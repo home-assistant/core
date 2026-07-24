@@ -9,7 +9,8 @@
         "commit": {
           "message": "Fix all the bugs",
           "url": "https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e",
-          "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e"
+          "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+          "committed": "2024-01-02T00:00:00Z"
         }
       },
       "stargazers_count": 9,
@@ -25,7 +26,9 @@
           {
             "title": "First discussion",
             "url": "https://github.com/octocat/Hello-World/discussions/1347",
-            "number": 1347
+            "number": 1347,
+            "created": "2024-01-01T00:00:00Z",
+            "updated": "2024-01-02T00:00:00Z"
           }
         ]
       },
@@ -35,7 +38,9 @@
           {
             "title": "Found a bug",
             "url": "https://github.com/octocat/Hello-World/issues/1347",
-            "number": 1347
+            "number": 1347,
+            "created": "2024-01-01T00:00:00Z",
+            "updated": "2024-01-02T00:00:00Z"
           }
         ]
       },
@@ -45,7 +50,9 @@
           {
             "title": "Amazing new feature",
             "url": "https://github.com/octocat/Hello-World/pull/1347",
-            "number": 1347
+            "number": 1347,
+            "created": "2024-01-01T00:00:00Z",
+            "updated": "2024-01-02T00:00:00Z"
           }
         ]
       },
@@ -55,14 +62,16 @@
       "release": {
         "name": "v1.0.0",
         "url": "https://github.com/octocat/Hello-World/releases/v1.0.0",
-        "tag": "v1.0.0"
+        "tag": "v1.0.0",
+        "published": "2024-01-02T00:00:00Z"
       },
       "refs": {
         "tags": [
           {
             "name": "v1.0.0",
             "target": {
-              "url": "https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e"
+              "url": "https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e",
+              "committed": "2024-01-02T00:00:00Z"
             }
           }
         ]
