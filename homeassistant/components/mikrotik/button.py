@@ -30,6 +30,11 @@ BUTTON_TYPES = {
         translation_key="shutdown",
         entity_category=EntityCategory.CONFIG,
     ),
+    ButtonEntityDescription(
+        key="backup",
+        translation_key="backup",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 

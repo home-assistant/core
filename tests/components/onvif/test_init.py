@@ -33,7 +33,7 @@ async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id=MAC)
     config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     entity_with_only_mac = entity_registry.async_get_or_create(
         domain="camera",

@@ -1,4 +1,4 @@
-"""Tests for midea_lan climate.py."""
+"""Tests for midea climate.py."""
 
 from collections.abc import Callable
 from typing import Any
@@ -43,7 +43,7 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
-from homeassistant.components.midea_lan.climate import FAN_FULL_SPEED, FAN_SILENT
+from homeassistant.components.midea.climate import FAN_FULL_SPEED, FAN_SILENT
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
