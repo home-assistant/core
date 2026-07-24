@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@example.com"
 MOCK_PASSWORD = "password"
+MOCK_USER_ID = "account-123"
 MOCK_DATA = {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD}
 
 
