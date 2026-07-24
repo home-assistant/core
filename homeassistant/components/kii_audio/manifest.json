@@ -1,0 +1,12 @@
+{
+  "domain": "kii_audio",
+  "name": "Kii Audio GmbH",
+  "codeowners": ["@KiiAudioGmbH"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kii_audio",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["aiokii==0.1.0"],
+  "zeroconf": ["_kii._tcp.local."]
+}
