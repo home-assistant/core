@@ -7,9 +7,10 @@ from duco_connectivity.models import NodeType
 from homeassistant.const import Platform
 
 DOMAIN = "duco"
-PLATFORMS = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [Platform.FAN, Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(seconds=10)
 BOX_NODE_ID = 1
+BYPASS_SUPPLY_TARGET_ZONE_IDS = (1, 2, 3, 4, 5, 6, 7, 8)
 VENTILATION_CAPABLE_NODE_TYPES: tuple[NodeType, ...] = (
     NodeType.BOX,
     NodeType.VLV,

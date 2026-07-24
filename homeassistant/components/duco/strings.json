@@ -48,6 +48,32 @@
         }
       }
     },
+    "number": {
+      "bypass_supply_target_temperature_zone_1": {
+        "name": "Bypass target 1"
+      },
+      "bypass_supply_target_temperature_zone_2": {
+        "name": "Bypass target 2"
+      },
+      "bypass_supply_target_temperature_zone_3": {
+        "name": "Bypass target 3"
+      },
+      "bypass_supply_target_temperature_zone_4": {
+        "name": "Bypass target 4"
+      },
+      "bypass_supply_target_temperature_zone_5": {
+        "name": "Bypass target 5"
+      },
+      "bypass_supply_target_temperature_zone_6": {
+        "name": "Bypass target 6"
+      },
+      "bypass_supply_target_temperature_zone_7": {
+        "name": "Bypass target 7"
+      },
+      "bypass_supply_target_temperature_zone_8": {
+        "name": "Bypass target 8"
+      }
+    },
     "select": {
       "ventilation_state": {
         "name": "Ventilation state",
@@ -134,8 +160,14 @@
     "connection_error": {
       "message": "Could not connect to the Duco device."
     },
+    "failed_to_set_bypass_supply_temperature_target": {
+      "message": "Failed to set bypass supply target temperature."
+    },
     "failed_to_set_state": {
       "message": "Failed to set ventilation state."
+    },
+    "invalid_bypass_supply_temperature_target_step": {
+      "message": "The value {value} does not match the supported increment of {increment} starting at {minimum}."
     },
     "rate_limit_exceeded": {
       "message": "The Duco device has reached its daily write limit. Try again tomorrow."
