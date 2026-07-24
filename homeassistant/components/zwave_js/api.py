@@ -55,7 +55,7 @@ from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
 )
-from zwave_js_server.model.value import ConfigurationValueFormat
+from zwave_js_server.model.value import ConfigurationValueFormat, Value
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -84,6 +84,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_VALUE_UPDATED,
     LOGGER,
     USER_AGENT,
 )
@@ -444,6 +445,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_get_raw_config_parameter)
     websocket_api.async_register_command(hass, websocket_set_raw_config_parameter)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_config_parameter_updates
+    )
     websocket_api.async_register_command(hass, websocket_subscribe_log_updates)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
@@ -1129,9 +1133,11 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
-            via_device=get_device_id(driver, driver.controller.own_node)
-            if driver.controller.own_node
-            else None,
+            via_device=(
+                get_device_id(driver, driver.controller.own_node)
+                if driver.controller.own_node
+                else None
+            ),
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
@@ -2059,6 +2065,46 @@ async def websocket_set_raw_config_parameter(
             STATUS: result.status,
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_config_parameter_updates",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_subscribe_config_parameter_updates(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Subscribe to value updates for the config parameters of a node."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_values(event: dict) -> None:
+        value: Value = event["value"]
+        if value.command_class != CommandClass.CONFIGURATION:
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"id": value.value_id, "value": value.value}
+            )
+        )
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on(EVENT_VALUE_UPDATED, forward_values)]
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
