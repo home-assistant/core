@@ -16,8 +16,10 @@ from homeassistant.components.generic_thermostat.const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_DUR,
     CONF_MIN_DUR,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DOMAIN,
 )
 from homeassistant.components.sensor import SensorDeviceClass
@@ -185,7 +187,9 @@ async def test_config_flow_preset_accepts_float(
         "heater": "switch.run",
         "hot_tolerance": 0.3,
         "name": "My thermostat",
+        "precision": "0.1",
         "target_sensor": "sensor.temperature",
+        "target_temp_step": "0.5",
     }
 
 
@@ -266,3 +270,112 @@ async def test_validate_config_min_max_duration() -> None:
     }
     result = await _validate_config(None, user_input_partial)
     assert result == user_input_partial
+
+
+BASE_OPTIONS = {
+    CONF_NAME: "My thermostat",
+    CONF_HEATER: "switch.run",
+    CONF_SENSOR: "sensor.temperature",
+    CONF_AC_MODE: False,
+    CONF_COLD_TOLERANCE: 0.3,
+    CONF_HOT_TOLERANCE: 0.3,
+}
+
+
+@pytest.mark.parametrize(
+    (
+        "precision",
+        "sensor_reading",
+        "target_temp",
+        "expected_current",
+        "expected_target",
+    ),
+    [
+        pytest.param("0.1", "20.34", 21.77, 20.3, 21.8, id="tenths"),
+        pytest.param("0.5", "20.3", 21.7, 20.5, 21.5, id="halves"),
+        pytest.param("1", "20.3", 21.7, 20.0, 22.0, id="whole"),
+    ],
+)
+async def test_precision_rounds_displayed_temperatures(
+    hass: HomeAssistant,
+    precision: str,
+    sensor_reading: str,
+    target_temp: float,
+    expected_current: float,
+    expected_target: float,
+) -> None:
+    """Test that precision from config entry options rounds current and target temperature display."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            **BASE_OPTIONS,
+            CONF_PRECISION: precision,
+            "target_temp": target_temp,
+        },
+        title="My thermostat",
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("switch.run", STATE_OFF)
+    hass.states.async_set("sensor.temperature", sensor_reading)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.my_thermostat")
+    assert state is not None
+    assert state.attributes["current_temperature"] == expected_current
+    assert state.attributes["temperature"] == expected_target
+
+
+@pytest.mark.parametrize(
+    ("temp_step", "expected_step"),
+    [
+        pytest.param("0.1", 0.1, id="tenths"),
+        pytest.param("0.5", 0.5, id="halves"),
+        pytest.param("1", 1.0, id="whole"),
+    ],
+)
+async def test_target_temp_step_configurable(
+    hass: HomeAssistant,
+    temp_step: str,
+    expected_step: float,
+) -> None:
+    """Test that target_temp_step from config entry options sets the UI step size."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={**BASE_OPTIONS, CONF_TEMP_STEP: temp_step},
+        title="My thermostat",
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("switch.run", STATE_OFF)
+    hass.states.async_set("sensor.temperature", "20")
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.my_thermostat")
+    assert state is not None
+    assert state.attributes["target_temp_step"] == expected_step
+
+
+async def test_precision_and_temp_step_independent(hass: HomeAssistant) -> None:
+    """Test that precision and target_temp_step can be set independently."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={**BASE_OPTIONS, CONF_PRECISION: "0.1", CONF_TEMP_STEP: "0.5"},
+        title="My thermostat",
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("switch.run", STATE_OFF)
+    hass.states.async_set("sensor.temperature", "20.34")
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.my_thermostat")
+    assert state is not None
+    assert state.attributes["current_temperature"] == 20.3
+    assert state.attributes["target_temp_step"] == 0.5
