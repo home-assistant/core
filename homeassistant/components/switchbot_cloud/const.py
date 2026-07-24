@@ -37,6 +37,25 @@ HUMIDITY_LEVELS = {
     100: 103,  # High humidity mode
 }
 
+NIGHT_LIGHT_ON = "on"
+NIGHT_LIGHT_OFF = "off"
+NIGHT_LIGHT_BRIGHT = "bright"
+NIGHT_LIGHT_SOFT = "soft"
+
+STANDING_FAN_NIGHT_LIGHT_PARAMETERS_MAP = {
+    NIGHT_LIGHT_ON: "on",
+    NIGHT_LIGHT_OFF: "off",
+    NIGHT_LIGHT_BRIGHT: "1",
+    NIGHT_LIGHT_SOFT: "2",
+}
+
+BATTERY_CIRCULATOR_FAN_2_PRO_NIGHT_LIGHT_PARAMETERS_MAP = {
+    NIGHT_LIGHT_ON: "on",
+    NIGHT_LIGHT_OFF: "off",
+    NIGHT_LIGHT_BRIGHT: "0",
+    NIGHT_LIGHT_SOFT: "1",
+}
+
 
 class AirPurifierMode(Enum):
     """Air Purifier Modes."""
@@ -154,5 +173,15 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "AI Art Frame": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
+    ),
+    "Standing Fan": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
+    ),
+    "Circulator Fan": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.FAN,)),
+    "Battery Circulator Fan": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
+    ),
+    "Battery Circulator Fan 2 Pro": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
     ),
 }

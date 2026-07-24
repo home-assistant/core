@@ -43,6 +43,7 @@ PLATFORMS: list[Platform] = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
@@ -64,6 +65,7 @@ class SwitchbotDevices:
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
         default_factory=list
     )
+    selects: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
@@ -216,20 +218,6 @@ async def make_device_data(
         devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
-        "Battery Circulator Fan",
-        "Standing Fan",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Circulator Fan":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in [
         "Curtain",
         "Curtain3",
         "Roller Shade",
@@ -317,6 +305,7 @@ async def make_new_device_data(
         Platform.IMAGE: devices_data.images,
         Platform.LIGHT: devices_data.lights,
         Platform.LOCK: devices_data.locks,
+        Platform.SELECT: devices_data.selects,
         Platform.SENSOR: devices_data.sensors,
         Platform.SWITCH: devices_data.switches,
         Platform.VACUUM: devices_data.vacuums,
