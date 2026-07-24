@@ -6,8 +6,10 @@ import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import async_capture_events
 
@@ -280,7 +282,11 @@ async def test_notifications(
 
 @pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
 async def test_value_updated(
-    hass: HomeAssistant, vision_security_zl7432, integration, client
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    vision_security_zl7432,
+    integration,
+    client,
 ) -> None:
     """Test value updated events."""
     node = vision_security_zl7432
@@ -312,7 +318,17 @@ async def test_value_updated(
     assert len(events) == 1
     assert events[0].data["home_id"] == client.driver.controller.home_id
     assert events[0].data["node_id"] == 7
-    assert events[0].data["entity_id"] == "switch.in_wall_dual_relay_switch"
+    # The colliding endpoint value's entity lives on the endpoint sub-device, so the
+    # event's device_id is the sub-device, not the node device.
+    sub_device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node, 1)}
+    )
+    assert sub_device
+    assert events[0].data["device_id"] == sub_device.id
+    assert (
+        events[0].data["entity_id"]
+        == "switch.in_wall_dual_relay_switch_binary_power_switch_1"
+    )
     assert events[0].data["command_class"] == CommandClass.SWITCH_BINARY
     assert events[0].data["command_class_name"] == "Switch Binary"
     assert events[0].data["endpoint"] == 1

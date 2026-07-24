@@ -522,6 +522,348 @@ async def test_reset_meter_action(
         assert args[1] == "reset"
 
 
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+async def test_set_value_action_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: Client,
+    vision_security_zl7432: Node,
+    integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    device_endpoint: int | None,
+) -> None:
+    """Test set_value action for a value moved to an endpoint sub-device.
+
+    The Binary Switch value on endpoint 1 now lives on an endpoint sub-device. Automations
+    created before this change stored the node device_id. Verify the action targets the
+    correct endpoint value whether it references the node device_id (backward
+    compatibility) or the endpoint sub-device device_id.
+    """
+    node = vision_security_zl7432
+    driver = client.driver
+    assert driver
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node, device_endpoint)}
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_value",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "set_value",
+                        "device_id": device.id,
+                        "command_class": CommandClass.SWITCH_BINARY.value,
+                        "property": "targetValue",
+                        "endpoint": 1,
+                        "value": True,
+                    },
+                },
+            ]
+        },
+    )
+
+    with patch("zwave_js_server.model.node.Node.async_set_value") as mock_call:
+        hass.bus.async_fire("test_event_set_value")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 2
+        assert args[0] == "7-37-1-targetValue"
+        assert args[1] is True
+
+
+async def test_reset_meter_action_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: Client,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reset_meter action for a meter entity moved to an endpoint sub-device.
+
+    The meter values on endpoints 1 and 2 collide, so the meter sensors now live on
+    endpoint sub-devices. An automation created before this change stored the node
+    device_id together with the entity registry id. Verify it still executes: the entity
+    service resolves by entity_id, which is unchanged by the device move.
+    """
+    node = shelly_qnsh_001P10_shutter
+    driver = client.driver
+    assert driver
+
+    node_device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node)}
+    )
+    assert node_device
+    sub_device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node, 1)}
+    )
+    assert sub_device
+
+    # The meter sensor on endpoint 1 now lives on the endpoint sub-device.
+    meter_entity = next(
+        entry
+        for entry in er.async_entries_for_device(entity_registry, sub_device.id)
+        if entry.unique_id.endswith("5-50-1-value-65537")
+    )
+    assert meter_entity.device_id == sub_device.id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_reset_meter",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "reset_meter",
+                        # Stored as the node device_id, as it would have been before the
+                        # meter entity moved to the endpoint sub-device.
+                        "device_id": node_device.id,
+                        "entity_id": meter_entity.id,
+                    },
+                },
+            ]
+        },
+    )
+
+    with patch(
+        "zwave_js_server.model.endpoint.Endpoint.async_invoke_cc_api"
+    ) as mock_call:
+        hass.bus.async_fire("test_event_reset_meter")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 2
+        assert args[0] == CommandClass.METER
+        assert args[1] == "reset"
+
+
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+async def test_refresh_value_action_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: Client,
+    vision_security_zl7432: Node,
+    integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_endpoint: int | None,
+) -> None:
+    """Test refresh_value action for an entity moved to an endpoint sub-device.
+
+    The switch on endpoint 1 now lives on an endpoint sub-device. An automation created
+    before this change stored the node device_id together with the entity registry id.
+    Verify it still executes: the entity service resolves by entity_id, which is unchanged
+    by the device move.
+    """
+    node = vision_security_zl7432
+    driver = client.driver
+    assert driver
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node, device_endpoint)}
+    )
+    assert device
+
+    switch_entity = entity_registry.async_get(
+        "switch.in_wall_dual_relay_switch_binary_power_switch_1"
+    )
+    assert switch_entity
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_refresh_value",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "refresh_value",
+                        "device_id": device.id,
+                        "entity_id": switch_entity.id,
+                    },
+                },
+            ]
+        },
+    )
+
+    with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
+        hass.bus.async_fire("test_event_refresh_value")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 1
+        assert args[0].value_id == "7-37-1-currentValue"
+
+
+async def test_lock_actions_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: Client,
+    lock_schlage_be469: Node,
+    integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test lock usercode actions remain backwards compatible with the node device.
+
+    Door Lock values are on the root endpoint, so the lock entity is never moved to an
+    endpoint sub-device. Confirm the lock stays on the node device and that automations
+    created before the sub-device change (storing the node device_id) still execute the
+    clear/set lock usercode actions.
+    """
+    node = lock_schlage_be469
+    driver = client.driver
+    assert driver
+    node_device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node)}
+    )
+    assert node_device
+    lock = entity_registry.async_get("lock.touchscreen_deadbolt")
+    assert lock
+    assert lock.device_id == node_device.id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_clear_lock_usercode",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "clear_lock_usercode",
+                        "device_id": node_device.id,
+                        "entity_id": lock.id,
+                        "code_slot": 1,
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_lock_usercode",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "set_lock_usercode",
+                        "device_id": node_device.id,
+                        "entity_id": lock.id,
+                        "code_slot": 1,
+                        "usercode": "1234",
+                    },
+                },
+            ]
+        },
+    )
+
+    with patch("homeassistant.components.zwave_js.lock.clear_usercode") as mock_call:
+        hass.bus.async_fire("test_event_clear_lock_usercode")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 2
+        assert args[0].node_id == node.node_id
+        assert args[1] == 1
+
+    with patch("homeassistant.components.zwave_js.lock.set_usercode") as mock_call:
+        hass.bus.async_fire("test_event_set_lock_usercode")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 3
+        assert args[0].node_id == node.node_id
+        assert args[1] == 1
+        assert args[2] == "1234"
+
+
+async def test_get_actions_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: Client,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test how entity actions are listed once entities move to endpoint sub-devices.
+
+    Node-level actions (set_value, ping) remain available from the node device. Entity
+    actions for a meter entity that moved to an endpoint sub-device are now listed under
+    that sub-device, not under the node device. Existing automations are unaffected since
+    they store the entity registry id, but newly created automations list the entity
+    action under the sub-device.
+    """
+    node = shelly_qnsh_001P10_shutter
+    driver = client.driver
+    assert driver
+
+    node_device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node)}
+    )
+    assert node_device
+    sub_device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node, 1)}
+    )
+    assert sub_device
+
+    meter_entity = next(
+        entry
+        for entry in er.async_entries_for_device(entity_registry, sub_device.id)
+        if entry.unique_id.endswith("5-50-1-value-65537")
+    )
+
+    node_actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, node_device.id
+    )
+    node_action_types = {action["type"] for action in node_actions}
+    assert "set_value" in node_action_types
+    assert "ping" in node_action_types
+    # The moved meter entity's actions are not listed under the node device.
+    assert not any(
+        action.get("entity_id") == meter_entity.id for action in node_actions
+    )
+
+    sub_actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, sub_device.id
+    )
+    assert any(
+        action["type"] == "reset_meter" and action.get("entity_id") == meter_entity.id
+        for action in sub_actions
+    )
+    assert any(
+        action["type"] == "refresh_value" and action.get("entity_id") == meter_entity.id
+        for action in sub_actions
+    )
+
+
 async def test_get_action_capabilities(
     hass: HomeAssistant,
     client: Client,

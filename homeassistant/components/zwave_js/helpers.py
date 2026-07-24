@@ -20,6 +20,7 @@ from zwave_js_server.const.command_class.notification import (
 )
 from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
@@ -238,9 +239,45 @@ def get_unique_id(driver: Driver, value_id: str) -> str:
     return f"{driver.controller.home_id}.{value_id}"
 
 
-def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
-    """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
+def get_device_id(
+    driver: Driver, node: ZwaveNode, endpoint: int | None = None
+) -> tuple[str, str]:
+    """Get device registry identifier for Z-Wave node.
+
+    When an endpoint is given (and not the root endpoint 0), the identifier
+    refers to the endpoint sub-device of the node. Endpoint 0 and ``None`` both
+    map to the main node device.
+    """
+    device_id = (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
+    if endpoint:
+        return (device_id[0], f"{device_id[1]}-{endpoint}")
+    return device_id
+
+
+def value_requires_endpoint_device(node: ZwaveNode, value: ZwaveValue) -> bool:
+    """Return whether a value's entity should live on its own endpoint device.
+
+    Values on the root endpoint always belong to the main node device. A value on
+    a non-root endpoint is placed on an endpoint sub-device when an equivalent
+    value (same command class, property and property key) also exists on another
+    endpoint. In that case every non-root endpoint instance gets its own
+    sub-device, since keeping them on the node device would produce ambiguous
+    duplicate entities.
+    """
+    if not value.endpoint:
+        return False
+    return any(
+        endpoint_idx != value.endpoint
+        and get_value_id_str(
+            node,
+            value.command_class,
+            value.property_,
+            endpoint=endpoint_idx,
+            property_key=value.property_key,
+        )
+        in node.values
+        for endpoint_idx in node.endpoints
+    )
 
 
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
@@ -273,7 +310,28 @@ def get_home_and_node_id_from_device_entry(
     if device_id is None or device_id.startswith("provision_"):
         return None
     id_ = device_id.split("-")
+    # A third segment, if present, is the endpoint index of a sub-device and is
+    # intentionally ignored here so that sub-devices resolve to their node.
     return (id_[0], int(id_[1]))
+
+
+def get_node_id_and_endpoint_from_device_entry(
+    device_entry: dr.DeviceEntry,
+) -> tuple[int, int] | None:
+    """Get node ID and endpoint index for a Z-Wave endpoint sub-device entry.
+
+    Returns (node_id, endpoint) only for endpoint sub-devices, whose identifier
+    has the form ``{home_id}-{node_id}-{endpoint}``. Returns None for node
+    devices and for devices carrying the hardware signature identifier (where
+    the trailing segment is not a plain integer).
+    """
+    for domain, device_id in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        parts = device_id.split("-")
+        if len(parts) == 3 and parts[1].isdigit() and parts[2].isdigit():
+            return (int(parts[1]), int(parts[2]))
+    return None
 
 
 @callback
@@ -583,15 +641,33 @@ def get_value_state_schema(
     )
 
 
-def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
-    """Get DeviceInfo for node."""
+def get_device_info(
+    driver: Driver, node: ZwaveNode, endpoint: Endpoint | None = None
+) -> DeviceInfo:
+    """Get DeviceInfo for a node or one of its endpoint sub-devices."""
+    node_name = node.name or node.device_config.description or f"Node {node.node_id}"
+    if endpoint is None or endpoint.index == 0:
+        return DeviceInfo(
+            identifiers={get_device_id(driver, node)},
+            sw_version=node.firmware_version,
+            name=node_name,
+            model=node.device_config.label,
+            manufacturer=node.device_config.manufacturer,
+            suggested_area=node.location or None,
+        )
+
+    if endpoint.endpoint_label:
+        endpoint_name = endpoint.endpoint_label
+    elif endpoint.device_class:
+        endpoint_name = f"{endpoint.device_class.specific.label} ({endpoint.index})"
+    else:
+        endpoint_name = f"Endpoint {endpoint.index}"
+    # Prefix the sub-device name with the node name so it's clear which node the
+    # endpoint sub-device belongs to.
     return DeviceInfo(
-        identifiers={get_device_id(driver, node)},
-        sw_version=node.firmware_version,
-        name=node.name or node.device_config.description or f"Node {node.node_id}",
-        model=node.device_config.label,
-        manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location or None,
+        identifiers={get_device_id(driver, node, endpoint.index)},
+        name=f"{node_name} {endpoint_name}",
+        via_device=get_device_id(driver, node),
     )
 
 

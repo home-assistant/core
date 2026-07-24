@@ -54,8 +54,10 @@ BLIND_COVER_ENTITY = "cover.window_blind_controller"
 SHUTTER_COVER_ENTITY = "cover.flush_shutter"
 AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
 FIBARO_FGR_222_SHUTTER_COVER_ENTITY = "cover.test_location_fgr_222_test_cover"
-FIBARO_FGR_223_SHUTTER_COVER_ENTITY = "cover.test_location_fgr_223_test_cover"
-SHELLY_WAVE_SHUTTER_COVER_ENTITY = "cover.shelly_fw_14_2_0_test_cover"
+FIBARO_FGR_223_SHUTTER_COVER_ENTITY = "cover.fgr_223_test_cover_motor_control_class_b_1"
+SHELLY_WAVE_SHUTTER_COVER_ENTITY = (
+    "cover.shelly_fw_14_2_0_test_cover_motor_control_class_b_1"
+)
 LOGGER.setLevel(logging.DEBUG)
 
 
