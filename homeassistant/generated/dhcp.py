@@ -324,6 +324,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]",
     },
     {
+        "domain": "earn_e_p1",
+        "hostname": "energiemonitor-*",
+    },
+    {
+        "domain": "earn_e_p1",
+        "registered_devices": True,
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },

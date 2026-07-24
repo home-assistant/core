@@ -29,6 +29,7 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         host: str,
         serial: str,
         listener: EarnEP1Listener,
+        mac: str | None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -40,6 +41,7 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.host = host
         self.serial = serial
         self.identifier = serial
+        self.mac = mac
         self.model: str | None = None
         self.sw_version: str | None = None
         self._listener = listener
@@ -60,7 +62,8 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                     model=self.model,
                     sw_version=self.sw_version,
                 )
-        self.async_set_updated_data(device.data)
+        # Device emits partial packets; merge so keys from full packets persist.
+        self.async_set_updated_data({**(self.data or {}), **device.data})
 
     def start(self) -> None:
         """Register with the shared listener."""

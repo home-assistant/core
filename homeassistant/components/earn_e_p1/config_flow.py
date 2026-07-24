@@ -7,7 +7,9 @@ from earn_e_p1 import EarnEP1Device, EarnEP1Listener, discover, validate
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_SERIAL, DOMAIN
 
@@ -32,6 +34,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_device: EarnEP1Device | None = None
+        self._discovered_mac: str | None = None
 
     async def _async_discover(self) -> EarnEP1Device | None:
         """Discover an EARN-E device on the network."""
@@ -49,12 +52,66 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate a host and wait for a packet containing its serial.
 
         Uses the shared listener if available, otherwise creates a temporary one.
-        Returns the device if serial is found, None on timeout.
+        Returns the device if serial is found, None on timeout or missing serial.
         """
         listener: EarnEP1Listener | None = self.hass.data.get(DOMAIN)
         if listener is not None:
-            return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
-        return await validate(host, timeout=VALIDATION_TIMEOUT)
+            device = await listener.validate(host, timeout=VALIDATION_TIMEOUT)
+        else:
+            device = await validate(host, timeout=VALIDATION_TIMEOUT)
+        # validate() may resolve on a partial packet with no serial; treat a
+        # missing serial as a validation failure so callers never persist it.
+        if device is not None and device.serial is None:
+            return None
+        return device
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery of an EARN-E P1 meter."""
+        ip = discovery_info.ip
+        raw_mac = discovery_info.macaddress
+        formatted_mac = format_mac(raw_mac)
+
+        for entry in self._async_current_entries(include_ignore=False):
+            entry_mac = entry.data.get(CONF_MAC)
+            if entry_mac and format_mac(entry_mac) == formatted_mac:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=f"EARN-E P1 ({ip})",
+                    data_updates={CONF_HOST: ip, CONF_MAC: raw_mac},
+                    reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
+                )
+
+        try:
+            device = await self._async_validate_host(ip)
+        except OSError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected error validating DHCP-discovered device")
+            return self.async_abort(reason="unknown")
+
+        if device is None:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(device.serial)
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.unique_id == device.serial:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=f"EARN-E P1 ({ip})",
+                    data_updates={CONF_HOST: ip, CONF_MAC: raw_mac},
+                    reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
+                )
+        self._abort_if_unique_id_configured()
+
+        self._discovered_device = device
+        self._discovered_mac = raw_mac
+        self.context["title_placeholders"] = {"host": ip}
+        return await self.async_step_discovery_confirm()
 
     @override
     async def async_step_user(
@@ -123,9 +180,15 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             if device.serial:
                 await self.async_set_unique_id(device.serial)
                 self._abort_if_unique_id_configured()
+                data: dict[str, Any] = {
+                    CONF_HOST: device.host,
+                    CONF_SERIAL: device.serial,
+                }
+                if self._discovered_mac is not None:
+                    data[CONF_MAC] = self._discovered_mac
                 return self.async_create_entry(
                     title=f"EARN-E P1 ({device.host})",
-                    data={CONF_HOST: device.host, CONF_SERIAL: device.serial},
+                    data=data,
                 )
 
             # Discovery didn't get serial — validate to obtain it
@@ -147,6 +210,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: validated.host, CONF_SERIAL: validated.serial},
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"host": device.host},

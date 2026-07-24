@@ -1,5 +1,6 @@
 """Tests for the EARN-E P1 Meter config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device
@@ -7,11 +8,12 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
+from .conftest import DHCP_DISCOVERY, DOMAIN, MOCK_HOST, MOCK_MAC, MOCK_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -343,3 +345,137 @@ async def test_validate_without_shared_listener(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery_new_device(hass: HomeAssistant) -> None:
+    """Test DHCP discovers a new device and creates a config entry."""
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_SERIAL: MOCK_SERIAL,
+        CONF_MAC: MOCK_MAC,
+    }
+    assert result["result"].unique_id == MOCK_SERIAL
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery_updates_ip_by_serial(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP updates IP and merges MAC for entry matched by serial."""
+    new_ip = "192.168.1.200"
+    dhcp_info = DhcpServiceInfo(
+        ip=new_ip,
+        hostname="energiemonitor-abc123",
+        macaddress=MOCK_MAC,
+    )
+
+    with patch(VALIDATE_PATH, return_value=_mock_device(host=new_ip)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp_info,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == new_ip
+    assert mock_config_entry.data[CONF_MAC] == MOCK_MAC
+    assert mock_config_entry.title == f"EARN-E P1 ({new_ip})"
+
+
+@pytest.mark.parametrize(
+    ("validate_mock", "reason"),
+    [
+        ({"return_value": None}, "cannot_connect"),
+        ({"return_value": _mock_device(serial=None)}, "cannot_connect"),
+        ({"side_effect": OSError("no socket")}, "cannot_connect"),
+        ({"side_effect": RuntimeError("boom")}, "unknown"),
+    ],
+    ids=["timeout", "no_serial", "oserror", "unexpected_error"],
+)
+async def test_dhcp_discovery_validate_failures(
+    hass: HomeAssistant, validate_mock: dict[str, Any], reason: str
+) -> None:
+    """Test DHCP validation failures abort with the expected reason."""
+    with patch(VALIDATE_PATH, **validate_mock):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_dhcp_discovery_updates_ip_by_mac(hass: HomeAssistant) -> None:
+    """Test DHCP fast path: MAC-known entry updates IP without calling validate."""
+    new_ip = "192.168.1.200"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST})",
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_SERIAL: MOCK_SERIAL,
+            CONF_MAC: MOCK_MAC,
+        },
+        unique_id=MOCK_SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    dhcp_info = DhcpServiceInfo(
+        ip=new_ip,
+        hostname="energiemonitor-abc123",
+        macaddress=MOCK_MAC,
+    )
+
+    with patch(VALIDATE_PATH) as mock_validate:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp_info,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == new_ip
+    assert entry.data[CONF_MAC] == MOCK_MAC
+    assert entry.title == f"EARN-E P1 ({new_ip})"
+    mock_validate.assert_not_called()
+
+
+async def test_dhcp_discovery_aborts_for_ignored_entry(hass: HomeAssistant) -> None:
+    """Test DHCP discovery does not re-offer a device the user ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id=MOCK_SERIAL,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
