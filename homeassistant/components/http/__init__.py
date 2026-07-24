@@ -60,6 +60,7 @@ from .const import (  # noqa: F401
 from .decorators import require_admin  # noqa: F401
 from .server import (
     DEFAULT_BIND,
+    HassioHTTPConfigView,
     HomeAssistantHTTP,  # noqa: F401
     HomeAssistantRequest,  # noqa: F401
     StaticPathConfig,  # noqa: F401
@@ -216,6 +217,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_when_setup_or_start(hass, "frontend", start_server)
 
     if server.supervisor_unix_socket_path is not None:
+        # Let Supervisor pull its connection parameters over the socket instead
+        # of relying on the hassio integration having pushed them first.
+        server.register_view(HassioHTTPConfigView)
 
         async def start_supervisor_unix_socket(*_: Any) -> None:
             """Start the Unix socket after the Supervisor user is available."""

@@ -51,6 +51,7 @@ from .const import (
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     SSL_INTERMEDIATE,
+    is_supervisor_unix_socket_request,
 )
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
@@ -551,3 +552,33 @@ class HomeAssistantHTTP:
             self._server.close()
         if self.runner is not None:
             await self.runner.cleanup()
+
+
+class HassioHTTPConfigView(HomeAssistantView):
+    """Expose the HTTP server configuration to Supervisor.
+
+    Only reachable over the Supervisor Unix socket. It lets Supervisor pull its
+    connection parameters (port, SSL) directly rather than depending on the
+    hassio integration having pushed them via the options API first, which is
+    racy during startup.
+    """
+
+    url = "/api/core/http_config"
+    name = "api:core:http_config"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the HTTP server configuration."""
+        if not is_supervisor_unix_socket_request(request):
+            raise web.HTTPNotFound
+        server: HomeAssistantHTTP = request.app[KEY_HASS].http
+        return self.json(
+            {
+                "port": server.server_port,
+                "ssl": server.ssl_certificate is not None,
+                "ssl_peer_certificate": server.ssl_peer_certificate is not None,
+                # The bind address(es). Supervisor decides whether it can reach
+                # Core there or must skip probes that assume the container IP.
+                "server_host": server.server_host or DEFAULT_BIND,
+            }
+        )
