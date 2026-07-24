@@ -17,6 +17,7 @@ from homeassistant.components import (
     binary_sensor,
     input_number,
     media_player,
+    number,
     persistent_notification,
     sensor,
 )
@@ -285,7 +286,9 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 )
             ),
         ),
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(
+            [input_number.DOMAIN, number.DOMAIN]
+        ),
         vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
     }
 )
@@ -299,7 +302,13 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_TYPE): vol.All(
+            cv.string,
+            vol.In((TYPE_FAUCET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_VALVE)),
+        ),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(
+            [input_number.DOMAIN, number.DOMAIN]
+        ),
         vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
     }
 )
