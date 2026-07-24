@@ -12,9 +12,10 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
+    SensorEntityStateAttribute,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -142,12 +143,38 @@ class OralBBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
         PassiveBluetoothDataProcessor[str | int | None, SensorUpdate]
     ],
-    SensorEntity,
+    RestoreSensor,
 ):
     """Representation of a OralB sensor."""
 
     _previous_native_value: int | None = None
     _attr_last_reset: datetime | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the session cycle marker across restarts and reloads.
+
+        Only relevant for the ``TOTAL`` duration sensor: without restoring
+        these, ``last_reset`` would be dropped on every reload and the next
+        decrease could be missed, corrupting the lifetime sum.
+        """
+        await super().async_added_to_hass()
+        if self.entity_description.state_class is not SensorStateClass.TOTAL:
+            return
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None and (
+            isinstance(sensor_data.native_value, int)
+        ):
+            self._previous_native_value = sensor_data.native_value
+        if (
+            (last_state := await self.async_get_last_state()) is not None
+            and (
+                last_reset := last_state.attributes.get(
+                    SensorEntityStateAttribute.LAST_RESET
+                )
+            )
+            is not None
+        ):
+            self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
     @callback
     @override
