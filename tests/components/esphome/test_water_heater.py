@@ -4,6 +4,7 @@ from unittest.mock import call
 
 from aioesphomeapi import (
     APIClient,
+    TemperatureUnit,
     WaterHeaterFeature,
     WaterHeaterInfo,
     WaterHeaterMode,
@@ -14,6 +15,8 @@ import pytest
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_OPERATION_LIST,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_AWAY_MODE,
@@ -29,6 +32,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import MockGenericDeviceEntryType
 
@@ -461,4 +465,127 @@ async def test_water_heater_set_away_mode(
 
     mock_client.water_heater_command.assert_has_calls(
         [call(key=1, away=away_mode, device_id=0)]
+    )
+
+
+@pytest.mark.parametrize(
+    ("temperature_unit", "expected_temperature"),
+    [
+        pytest.param(TemperatureUnit.CELSIUS, 50.0, id="celsius"),
+        pytest.param(TemperatureUnit.FAHRENHEIT, 10.0, id="fahrenheit"),
+        pytest.param(TemperatureUnit.KELVIN, -223.1, id="kelvin"),
+        pytest.param(3, 50.0, id="unknown_falls_back_to_celsius"),
+        pytest.param(None, 50.0, id="none_falls_back_to_celsius"),
+    ],
+)
+async def test_water_heater_temperature_unit(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    temperature_unit: TemperatureUnit | int | None,
+    expected_temperature: float,
+) -> None:
+    """Test that the temperature unit is passed through correctly."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            temperature_unit=temperature_unit,
+        )
+    ]
+    states = [WaterHeaterState(key=1, target_temperature=50.0)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
+
+
+async def test_water_heater_fahrenheit_unit(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that a Fahrenheit water heater converts temperatures correctly."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=32.0,
+            max_temperature=212.0,
+            temperature_unit=TemperatureUnit.FAHRENHEIT,
+        )
+    ]
+    states = [WaterHeaterState(key=1, target_temperature=32.0)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    # 32 °F and 212 °F displayed in the HA system unit (°C)
+    assert state.attributes[ATTR_MIN_TEMP] == 0.0
+    assert state.attributes[ATTR_MAX_TEMP] == 100.0
+    # 32 °F target displayed in °C
+    assert state.attributes[ATTR_TEMPERATURE] == 0.0
+
+    # set_temperature is called in °C; ESPHome must receive the °F equivalent
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "water_heater.test_my_boiler", ATTR_TEMPERATURE: 10},
+        blocking=True,
+    )
+    mock_client.water_heater_command.assert_called_once_with(
+        key=1, target_temperature=50.0, device_id=0
+    )
+
+
+async def test_water_heater_fahrenheit_unit_fahrenheit_system(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a Fahrenheit water heater under a Fahrenheit HA system passes through unchanged."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=32.0,
+            max_temperature=212.0,
+            temperature_unit=TemperatureUnit.FAHRENHEIT,
+        )
+    ]
+    states = [WaterHeaterState(key=1, target_temperature=72.0)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    # No conversion — device and system are both °F
+    assert state.attributes[ATTR_MIN_TEMP] == 32.0
+    assert state.attributes[ATTR_MAX_TEMP] == 212.0
+    assert state.attributes[ATTR_TEMPERATURE] == 72.0
+
+    # set_temperature is called in °F; ESPHome must receive the same value
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "water_heater.test_my_boiler", ATTR_TEMPERATURE: 86},
+        blocking=True,
+    )
+    mock_client.water_heater_command.assert_called_once_with(
+        key=1, target_temperature=86.0, device_id=0
     )

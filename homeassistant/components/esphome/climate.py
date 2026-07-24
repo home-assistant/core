@@ -51,7 +51,6 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    UnitOfTemperature,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
@@ -62,6 +61,7 @@ from .entity import (
     convert_api_error_ha_error,
     esphome_float_state_property,
     esphome_state_property,
+    get_temperature_unit,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
@@ -131,7 +131,6 @@ _PRESETS: EsphomeEnumMapper[ClimatePreset, str] = EsphomeEnumMapper(
 class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity):
     """A climate implementation for ESPHome."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
     _feature_flags = ClimateFeature(0)
 
@@ -144,6 +143,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
+        self._attr_temperature_unit = get_temperature_unit(static_info)
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes

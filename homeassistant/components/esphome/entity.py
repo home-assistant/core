@@ -8,15 +8,17 @@ from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast, over
 
 from aioesphomeapi import (
     APIConnectionError,
+    ClimateInfo,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
+    WaterHeaterInfo,
     build_device_unique_id,
 )
 import voluptuous as vol
 
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -29,13 +31,33 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, TEMPERATURE_UNIT_MAP
 
 # Import config flow so that it's added to the registry
 from .entry_data import DeviceEntityKey, ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_temperature_unit(
+    static_info: ClimateInfo | WaterHeaterInfo,
+) -> UnitOfTemperature:
+    """Return the HA temperature unit for the given ESPHome static info."""
+    temperature_unit = static_info.temperature_unit
+    if (
+        temperature_unit is not None
+        and (ha_unit := TEMPERATURE_UNIT_MAP.get(temperature_unit)) is not None
+    ):
+        return ha_unit
+    _LOGGER.debug(
+        "%s (device_id=%s): Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
+        static_info.name,
+        static_info.device_id,
+        temperature_unit,
+    )
+    return UnitOfTemperature.CELSIUS
+
 
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
