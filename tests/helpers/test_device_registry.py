@@ -7990,6 +7990,50 @@ async def test_restored_composite_preserves_primary_config_entry(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_get_composite_splits(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test getting the mapping of composite device ids to their split devices."""
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+    split_b = _get_device_for_config_entry(
+        device_registry, entry_b.entry_id, identifiers={("domain_b", "1")}
+    )
+
+    splits = device_registry.devices.get_composite_splits()
+    assert set(splits) == {COMPOSITE_ID}
+    assert {device.id for device in splits[COMPOSITE_ID]} == {split_a.id, split_b.id}
+
+    # A device which is not split from a composite is not included
+    device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("domain_a", "2")}
+    )
+    splits = device_registry.devices.get_composite_splits()
+    assert set(splits) == {COMPOSITE_ID}
+    assert {device.id for device in splits[COMPOSITE_ID]} == {split_a.id, split_b.id}
+
+    # A removed split is dropped from the mapping
+    device_registry.async_remove_device(split_a.id)
+    splits = device_registry.devices.get_composite_splits()
+    assert {device.id for device in splits[COMPOSITE_ID]} == {split_b.id}
+
+    # Removing the last split drops the composite id from the mapping
+    device_registry.async_remove_device(split_b.id)
+    assert device_registry.devices.get_composite_splits() == {}
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_clear_config_entry_clears_composite_primary_config_entry(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
