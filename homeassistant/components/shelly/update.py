@@ -95,7 +95,8 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def _update_status(self) -> dict[str, Any]:
         """Status of the LoRa add-on update, reported by the lora component."""
-        return cast(dict, self.status.get("update", {}))
+        update = self.status.get("update")
+        return update or {}
 
     @property
     @override
@@ -107,7 +108,7 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        new_version = self.entity_description.latest_version(self.sub_status)
+        new_version = self.entity_description.latest_version(self.status)
         if new_version:
             return cast(str, new_version)
 
@@ -117,7 +118,7 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @override
     def in_progress(self) -> bool:
         """Update installation in progress."""
-        return bool(self._update_status.get("status", "idle") != "idle")
+        return bool(self._update_status.get("state", "idle") == "updating")
 
     @property
     @override
@@ -130,7 +131,7 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
-        update_data = self.coordinator.device.status["lora"]["available_updates"]
+        update_data = self.status["available_updates"]
         LOGGER.debug("LoRa add-on OTA update service - update_data: %s", update_data)
 
         new_version = update_data.get("stable", {"version": ""})["version"]
@@ -144,6 +145,11 @@ class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         try:
             await self.coordinator.device.trigger_add_on_ota_update()
         except DeviceConnectionError as err:
+            if self.in_progress:
+                # During device update the device can become unreachable
+                # but the update is still in progress.
+                # In this case we should not raise an error.
+                return
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ota_update_connection_error",
@@ -184,9 +190,14 @@ RPC_UPDATES: Final = {
     ),
     "loraupdate": RpcUpdateDescription(
         key="lora",
-        sub_key="available_updates",
         translation_key="lora_firmware",
-        latest_version=lambda status: status.get("stable", {"version": ""})["version"],
+        latest_version=lambda status: (
+            # Right after firmware update, lora status can be None
+            # and even available_updates can be None, for a brief moment.
+            ((status or {}).get("available_updates") or {}).get(
+                "stable", {"version": ""}
+            )["version"]
+        ),
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
