@@ -613,14 +613,40 @@ async def test_send_message_thread(hass: HomeAssistant, webhook_bot) -> None:
     assert events[0].data[ATTR_MESSAGE_THREAD_ID] == 123
 
 
-async def test_webhook_endpoint_generates_telegram_text_event(
+@pytest.mark.parametrize(
+    "reply_content",
+    [
+        pytest.param({"text": "ORIGINAL MESSAGE"}, id="text"),
+        pytest.param(
+            {
+                "photo": [
+                    {
+                        "file_id": "photo-file-id",
+                        "file_unique_id": "photo-file-unique-id",
+                        "width": 640,
+                        "height": 480,
+                    }
+                ]
+            },
+            id="photo",
+        ),
+    ],
+)
+async def test_webhook_endpoint_generates_telegram_text_reply_event(
     hass: HomeAssistant,
-    webhook_bot,
+    webhook_bot: None,
     hass_client: ClientSessionGenerator,
-    update_message_text,
-    mock_generate_secret_token,
+    update_message_text: dict[str, Any],
+    mock_generate_secret_token: str,
+    reply_content: dict[str, Any],
 ) -> None:
-    """POST to webhook endpoint and assert fired telegram_text event."""
+    """Test a reply includes the replied-to message ID in the text event."""
+    update_message_text["message"]["reply_to_message"] = {
+        "message_id": 42,
+        "date": 1441645500,
+        "chat": update_message_text["message"]["chat"],
+        **reply_content,
+    }
     client = await hass_client()
     events = async_capture_events(hass, "telegram_text")
 
@@ -637,6 +663,10 @@ async def test_webhook_endpoint_generates_telegram_text_event(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
+    assert (
+        events[0].data[ATTR_REPLY_TO_MSGID]
+        == (update_message_text["message"]["reply_to_message"]["message_id"])
+    )
     assert isinstance(events[0].context, Context)
 
 

@@ -204,6 +204,9 @@ class BaseTelegramBot:
             ATTR_DATE: message.date,
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
+        if message.reply_to_message:
+            event_data[ATTR_REPLY_TO_MSGID] = message.reply_to_message.message_id
+
         if filters.COMMAND.filter(message):
             # This is a command message - set event type
             # to command and split data into command and args
