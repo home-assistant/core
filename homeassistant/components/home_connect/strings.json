@@ -1100,6 +1100,30 @@
           "tempmap": "Temporary map"
         }
       },
+      "machine_care_and_filter_cleaning_reminder": {
+        "name": "Machine care and filter cleaning reminder",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "machine_care_and_low_maintenance_filter_cleaning_reminder": {
+        "name": "Machine care and low maintenance filter cleaning reminder",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "machine_care_reminder": {
+        "name": "Machine care reminder",
+        "state": {
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "off": "[%key:common::state::off%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "milk_counter": {
         "name": "Milk cups",
         "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
