@@ -1522,6 +1522,62 @@ async def test_update_statistics_metadata_error(
     }
 
 
+@pytest.mark.parametrize(
+    ("state", "converted_value"),
+    [
+        pytest.param(0, None, id="zero"),
+        pytest.param(20, 5.0, id="non-zero"),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_display_inverse_unit(
+    hass: HomeAssistant,
+    state: int,
+    converted_value: float | None,
+) -> None:
+    """Test fetching statistics with a display unit which is an inverse unit.
+
+    A zero value has no representation in the inverse unit and should be
+    converted to None instead of raising ZeroDivisionError.
+    """
+    now = get_start_time(dt_util.utcnow())
+
+    attributes = {
+        "device_class": "energy_distance",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh/100km",
+    }
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    assert statistics_during_period(
+        hass,
+        now,
+        period="5minute",
+        statistic_ids={"sensor.test"},
+        units={"energy_distance": "km/kWh"},
+    ) == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).timestamp(),
+                "last_reset": None,
+                "max": converted_value,
+                "mean": converted_value,
+                "min": converted_value,
+                "start": now.timestamp(),
+            }
+        ],
+    }
+
+
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")

@@ -3829,6 +3829,89 @@ async def test_compile_hourly_statistics_convert_units_1(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+async def test_compile_hourly_statistics_convert_zero_to_inverse_unit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test compiling statistics when a sensor changes to an inverse unit.
+
+    A zero value has no representation in the inverse unit used for the
+    previously compiled statistics and should be skipped instead of raising
+    ZeroDivisionError.
+    """
+    zero = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, DOMAIN, {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    attributes = {
+        "device_class": "energy_distance",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh/100km",
+    }
+    with freeze_time(zero) as freezer:
+        await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes, seq=[16, 16, None]
+        )
+        attributes["unit_of_measurement"] = "km/kWh"
+        await async_record_states(
+            hass,
+            freezer,
+            zero + timedelta(minutes=5),
+            "sensor.test1",
+            attributes,
+            seq=[0, 20, 20],
+        )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=zero)
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=5))
+    await async_wait_recording_done(hass)
+
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": "km/kWh",
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kWh/100km",
+            "unit_class": "energy_distance",
+        },
+    ]
+    # The zero state at the start of the second period is skipped as it has no
+    # representation in kWh/100km, the 20 km/kWh states convert to 5 kWh/100km.
+    # The stored statistics are displayed converted to the current state unit
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "mean": pytest.approx(100 / 16),
+                "min": pytest.approx(100 / 16),
+                "max": pytest.approx(100 / 16),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
+            {
+                "start": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
+                "mean": pytest.approx(20.0),
+                "min": pytest.approx(20.0),
+                "max": pytest.approx(20.0),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
+        ]
+    }
+
+
 @pytest.mark.parametrize(
     (
         "device_class",

@@ -358,7 +358,7 @@ def _normalize_states(
         return unit_class, state_unit, fstates
 
     valid_fstates: list[tuple[float, State]] = []
-    convert: Callable[[float], float] | None = None
+    convert: Callable[[float | None], float | None] | None = None
     last_unit: str | None | UndefinedType = UNDEFINED
     valid_units = converter.VALID_UNITS
 
@@ -391,11 +391,17 @@ def _normalize_states(
             if state_unit == statistics_unit:
                 convert = None
             else:
-                convert = converter.converter_factory(state_unit, statistics_unit)
+                convert = converter.converter_factory_allow_none(
+                    state_unit, statistics_unit
+                )
             last_unit = state_unit
 
         if convert is not None:
-            fstate = convert(fstate)
+            if (converted_fstate := convert(fstate)) is None:
+                # Exclude states which can't be converted, e.g. zero has no
+                # representation in an inverse unit such as kWh/100km
+                continue
+            fstate = converted_fstate
 
         valid_fstates.append((fstate, state))
 

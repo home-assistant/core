@@ -382,8 +382,7 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-    allow_none: bool = True,
-) -> Callable[[float | None], float | None] | Callable[[float], float] | None:
+) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from the statistics unit to display unit."""
     if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
         return None
@@ -402,11 +401,9 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    if allow_none:
-        return converter.converter_factory_allow_none(
-            from_unit=statistic_unit, to_unit=display_unit
-        )
-    return converter.converter_factory(from_unit=statistic_unit, to_unit=display_unit)
+    return converter.converter_factory_allow_none(
+        from_unit=statistic_unit, to_unit=display_unit
+    )
 
 
 def _get_display_to_statistic_unit_converter_func(
@@ -2564,7 +2561,7 @@ def _build_sum_converted_stats(
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
-    convert: Callable[[float | None], float | None] | Callable[[float], float],
+    convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of sum statistics."""
     return [
@@ -2616,7 +2613,7 @@ def _build_converted_stats(
     table_duration_seconds: float,
     start_ts_idx: int,
     row_mapping: tuple[tuple[str, int], ...],
-    convert: Callable[[float | None], float | None] | Callable[[float], float],
+    convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
     return [
@@ -2690,7 +2687,7 @@ def _sorted_statistics_to_dict(
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             convert = _get_statistic_to_display_unit_converter(
-                unit_class, unit, state_unit, units, allow_none=False
+                unit_class, unit, state_unit, units
             )
         else:
             convert = None
