@@ -1438,7 +1438,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.7.17.104339
+knx-frontend==2026.7.23.145751
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.10.2
@@ -1588,7 +1588,7 @@ micloud==0.5
 # homeassistant.components.microbees
 microBeesPy==0.3.5
 
-# homeassistant.components.midea_lan
+# homeassistant.components.midea
 midea-local==6.10.0
 
 # homeassistant.components.mill
@@ -2333,7 +2333,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.4.2
+pylamarzocco==2.4.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2698,7 +2698,7 @@ python-homewizard-energy==10.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.7
+python-izone==1.3.8
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1

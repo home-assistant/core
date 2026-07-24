@@ -45,7 +45,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, FanSpeed
-from .entity import MideaEntity, MideaLanConfigEntry
+from .entity import MideaConfigEntry, MideaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ _SWING_STATE_MAP: dict[tuple[bool, bool], str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MideaLanConfigEntry,
+    config_entry: MideaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entries."""

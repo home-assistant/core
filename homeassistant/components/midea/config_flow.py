@@ -1,4 +1,4 @@
-"""Config flow for Midea LAN."""
+"""Config flow for Midea."""
 
 from operator import itemgetter
 from typing import Any, override
@@ -47,7 +47,7 @@ def _connect_and_close(dm: MideaDevice) -> bool:
         dm.close_socket()
 
 
-class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
+class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Define current integration setup steps.
 
     Use ConfigFlow handle to support config entries
@@ -58,7 +58,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
 
     def __init__(self) -> None:
-        """MideaLanConfigFlow class."""
+        """MideaConfigFlow class."""
         self.available_device: dict = {}
         self.devices: dict = {}
         self.found_device: dict[str, Any] = {}

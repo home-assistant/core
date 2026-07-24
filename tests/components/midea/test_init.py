@@ -1,10 +1,10 @@
-"""Tests for midea_lan __init__.py."""
+"""Tests for midea __init__.py."""
 
 from unittest.mock import patch
 
 from midealocal.const import DeviceType, ProtocolVersion
 
-from homeassistant.components.midea_lan.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
+from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -39,7 +39,7 @@ _ENTRY_DATA = {
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
-    """Test the midea_lan domain can be set up without any config entries."""
+    """Test the midea domain can be set up without any config entries."""
     assert await async_setup_component(hass, DOMAIN, {})
 
 
@@ -49,7 +49,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     device = DummyDevice(DeviceType.AC)
     with patch(
-        "homeassistant.components.midea_lan.device_selector",
+        "homeassistant.components.midea.device_selector",
         return_value=device,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -65,7 +65,7 @@ async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.midea_lan.device_selector",
+        "homeassistant.components.midea.device_selector",
         return_value=DummyDevice(DeviceType.AC),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -77,7 +77,7 @@ async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
     )
     entry2.add_to_hass(hass)
     with patch(
-        "homeassistant.components.midea_lan.device_selector",
+        "homeassistant.components.midea.device_selector",
         return_value=None,
     ):
         await hass.config_entries.async_setup(entry2.entry_id)
@@ -99,7 +99,7 @@ async def test_setup_entry_not_ready_on_connect_failure(
     device = DummyDevice(DeviceType.AC)
     with (
         patch(
-            "homeassistant.components.midea_lan.device_selector",
+            "homeassistant.components.midea.device_selector",
             return_value=device,
         ),
         patch.object(device, "connect", return_value=False),
