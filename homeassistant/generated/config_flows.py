@@ -869,6 +869,7 @@ FLOWS = {
         "wemo",
         "whirlpool",
         "whois",
+        "wibeee",
         "wiffi",
         "wiim",
         "wilight",
