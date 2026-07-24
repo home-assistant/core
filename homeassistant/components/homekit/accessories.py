@@ -115,6 +115,7 @@ from .util import (
     format_version,
     validate_media_player_features,
 )
+from .visibility import AccessoryVisibilityStorage
 
 _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES = {
@@ -882,6 +883,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         bridge_name: str,
         entry_title: str,
         iid_storage: AccessoryIIDStorage,
+        visibility_storage: AccessoryVisibilityStorage,
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
@@ -893,6 +895,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._bridge_name = bridge_name
         self._entry_title = entry_title
         self.iid_storage = iid_storage
+        self.visibility_storage = visibility_storage
 
     @pyhap_callback  # type: ignore[untyped-decorator]
     def pair(

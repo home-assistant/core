@@ -840,7 +840,7 @@ def test_home_bridge_setup_message(hk_driver) -> None:
     bridge.setup_message()
 
 
-def test_home_driver(iid_storage) -> None:
+def test_home_driver(iid_storage, visibility_storage) -> None:
     """Test HomeDriver class."""
     ip_address = "127.0.0.1"
     port = 51826
@@ -854,6 +854,7 @@ def test_home_driver(iid_storage) -> None:
             "name",
             "title",
             iid_storage=iid_storage,
+            visibility_storage=visibility_storage,
             address=ip_address,
             port=port,
             persist_file=path,

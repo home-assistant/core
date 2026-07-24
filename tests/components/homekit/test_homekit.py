@@ -284,6 +284,7 @@ async def test_homekit_setup(hass: HomeAssistant, hk_driver) -> None:
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         homekit.iid_storage = MagicMock()
+        homekit.visibility_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, zeroconf_mock, uuid)
 
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
@@ -301,6 +302,7 @@ async def test_homekit_setup(hass: HomeAssistant, hk_driver) -> None:
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
     assert homekit.driver.safe_mode is False
 
@@ -332,6 +334,7 @@ async def test_homekit_setup_ip_address(
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         homekit.iid_storage = MagicMock()
+        homekit.visibility_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, mock_async_zeroconf, uuid)
     mock_driver.assert_called_with(
         hass,
@@ -347,6 +350,7 @@ async def test_homekit_setup_ip_address(
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 
@@ -382,6 +386,7 @@ async def test_homekit_with_single_advertise_ips(
         zeroconf_server=ANY,
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 
@@ -421,6 +426,7 @@ async def test_homekit_with_many_advertise_ips(
         zeroconf_server=ANY,
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 
@@ -451,6 +457,7 @@ async def test_homekit_setup_advertise_ips(hass: HomeAssistant, hk_driver) -> No
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         homekit.iid_storage = MagicMock()
+        homekit.visibility_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance, uuid)
     mock_driver.assert_called_with(
         hass,
@@ -466,6 +473,7 @@ async def test_homekit_setup_advertise_ips(hass: HomeAssistant, hk_driver) -> No
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 

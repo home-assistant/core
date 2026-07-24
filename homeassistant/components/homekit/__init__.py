@@ -152,6 +152,7 @@ from .util import (
     state_needs_accessory_mode,
     validate_entity_config,
 )
+from .visibility import AccessoryVisibilityStorage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -574,6 +575,7 @@ class HomeKit:
         self._devices = devices or []
         self.aid_storage: AccessoryAidStorage | None = None
         self.iid_storage: AccessoryIIDStorage | None = None
+        self.visibility_storage: AccessoryVisibilityStorage | None = None
         self.status = STATUS_READY
         self.driver: HomeDriver | None = None
         self.bridge: HomeBridge | None = None
@@ -592,6 +594,7 @@ class HomeKit:
         Returns False if the persistent data was not loaded
         """
         assert self.iid_storage is not None
+        assert self.visibility_storage is not None
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
         self.driver = HomeDriver(
             self.hass,
@@ -607,6 +610,7 @@ class HomeKit:
             zeroconf_server=f"{uuid}-hap.local.",
             loader=get_loader(),
             iid_storage=self.iid_storage,
+            visibility_storage=self.visibility_storage,
         )
         # If we do not load the mac address will be wrong
         # as pyhap uses a random one until state is restored
@@ -902,9 +906,11 @@ class HomeKit:
         uuid = await instance_id.async_get(self.hass)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         self.iid_storage = AccessoryIIDStorage(self.hass, self._entry_id)
+        self.visibility_storage = AccessoryVisibilityStorage(self.hass, self._entry_id)
         # Avoid gather here since it will be I/O bound anyways
         await self.aid_storage.async_initialize()
         await self.iid_storage.async_initialize()
+        await self.visibility_storage.async_initialize()
         loaded_from_disk = await self.hass.async_add_executor_job(
             self.setup, async_zc_instance, uuid
         )

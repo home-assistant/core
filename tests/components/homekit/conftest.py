@@ -12,6 +12,7 @@ from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
+from homeassistant.components.homekit.visibility import AccessoryVisibilityStorage
 from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_capture_events
@@ -25,8 +26,19 @@ def iid_storage(hass: HomeAssistant) -> Generator[AccessoryIIDStorage]:
 
 
 @pytest.fixture
+def visibility_storage(
+    hass: HomeAssistant,
+) -> Generator[AccessoryVisibilityStorage]:
+    """Mock the input visibility storage."""
+    with patch.object(AccessoryVisibilityStorage, "async_schedule_save"):
+        yield AccessoryVisibilityStorage(hass, "")
+
+
+@pytest.fixture
 def run_driver(
-    hass: HomeAssistant, iid_storage: AccessoryIIDStorage
+    hass: HomeAssistant,
+    iid_storage: AccessoryIIDStorage,
+    visibility_storage: AccessoryVisibilityStorage,
 ) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init.
 
@@ -49,6 +61,7 @@ def run_driver(
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
             iid_storage=iid_storage,
+            visibility_storage=visibility_storage,
             address="127.0.0.1",
             loop=event_loop,
         )
@@ -56,7 +69,9 @@ def run_driver(
 
 @pytest.fixture
 def hk_driver(
-    hass: HomeAssistant, iid_storage: AccessoryIIDStorage
+    hass: HomeAssistant,
+    iid_storage: AccessoryIIDStorage,
+    visibility_storage: AccessoryVisibilityStorage,
 ) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     event_loop = asyncio.get_event_loop()
@@ -79,6 +94,7 @@ def hk_driver(
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
             iid_storage=iid_storage,
+            visibility_storage=visibility_storage,
             address="127.0.0.1",
             loop=event_loop,
         )
@@ -88,6 +104,7 @@ def hk_driver(
 def mock_hap(
     hass: HomeAssistant,
     iid_storage: AccessoryIIDStorage,
+    visibility_storage: AccessoryVisibilityStorage,
     mock_zeroconf: MagicMock,
 ) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
@@ -117,6 +134,7 @@ def mock_hap(
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
             iid_storage=iid_storage,
+            visibility_storage=visibility_storage,
             address="127.0.0.1",
             loop=event_loop,
         )

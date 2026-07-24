@@ -1,9 +1,11 @@
 """Class to hold remote accessories."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 import logging
 from typing import Any, override
 
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_TELEVISION
 
 from homeassistant.components.remote import (
@@ -35,6 +37,7 @@ from .const import (
     CHAR_NAME,
     CHAR_REMOTE_KEY,
     CHAR_SLEEP_DISCOVER_MODE,
+    CHAR_TARGET_VISIBILITY_STATE,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     KEY_ARROW_DOWN,
     KEY_ARROW_LEFT,
@@ -133,9 +136,14 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         self.char_input_source = serv_tv.configure_char(
             CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
         )
+        self._hidden_sources: set[str] = set(
+            self.driver.visibility_storage.get_hidden_sources(self.entity_id)
+        )
         for index, source in enumerate(self.sources):
             serv_input = self.add_preload_service(
-                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME], unique_id=source
+                SERV_INPUT_SOURCE,
+                [CHAR_IDENTIFIER, CHAR_NAME, CHAR_TARGET_VISIBILITY_STATE],
+                unique_id=source,
             )
             serv_tv.add_linked_service(serv_input)
             serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
@@ -144,8 +152,37 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
             serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
             input_type = 3 if "hdmi" in source.lower() else 0
             serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
-            serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
+            initial_hidden = 1 if source in self._hidden_sources else 0
+            char_current_visibility = serv_input.configure_char(
+                CHAR_CURRENT_VISIBILITY_STATE, value=initial_hidden
+            )
+            serv_input.configure_char(
+                CHAR_TARGET_VISIBILITY_STATE,
+                value=initial_hidden,
+                setter_callback=self._make_visibility_setter(
+                    source, char_current_visibility
+                ),
+            )
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
+
+    def _make_visibility_setter(
+        self, source: str, char_current: Characteristic
+    ) -> Callable[[int], None]:
+        """Build a setter that persists the visibility of a single input source."""
+
+        @callback
+        def _setter(value: int) -> None:
+            is_hidden = bool(value)
+            if is_hidden:
+                self._hidden_sources.add(source)
+            else:
+                self._hidden_sources.discard(source)
+            char_current.set_value(int(is_hidden))
+            self.driver.visibility_storage.async_set_hidden_sources(
+                self.entity_id, self._hidden_sources
+            )
+
+        return _setter
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:
         """Return a dict of sources mapped to their homekit safe name."""
