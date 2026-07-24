@@ -1,6 +1,7 @@
 """The tests for notify entity platform."""
 
 import copy
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,8 +15,14 @@ from homeassistant.components.notify import (
     NotifyEntityDescription,
     NotifyEntityFeature,
 )
+from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -38,9 +45,11 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
 
     send_message_mock_calls = MagicMock()
 
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
+    async def async_send_message(
+        self, message: str, title: str | None = None, data: dict[str, Any] | None = None
+    ) -> None:
         """Send a notification message."""
-        self.send_message_mock_calls(message, title=title)
+        self.send_message_mock_calls(message, title=title, data=data)
 
 
 class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
@@ -48,9 +57,11 @@ class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
 
     send_message_mock_calls = MagicMock()
 
-    def send_message(self, message: str, title: str | None = None) -> None:
+    def send_message(
+        self, message: str, title: str | None = None, data: dict[str, Any] | None = None
+    ) -> None:
         """Send a notification message."""
-        self.send_message_mock_calls(message, title=title)
+        self.send_message_mock_calls(message, title=title, data=data)
 
 
 class MockNotifyEntityWithException(MockEntity, NotifyEntity):
@@ -197,6 +208,7 @@ async def test_send_message_service_with_title(
     entity.send_message_mock_calls.assert_called_once_with(
         TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],
         title=TEST_KWARGS_TITLE[notify.ATTR_TITLE],
+        data=None,
     )
 
 
@@ -387,3 +399,66 @@ async def test_record_notification(
 
     state = hass.states.get("notify.test")
     assert state.state == "2021-01-01T23:59:59+00:00"
+
+
+async def test_notify_entity_send_message_with_data(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+) -> None:
+    """Test sending a message with platform data."""
+    entity = MockNotifyEntity(
+        is_title_supported=True,
+        name="test_notify",
+        entity_id="notify.test",
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [entity],
+        from_config_entry=True,
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("notify.test")
+    assert state is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.test",
+            ATTR_MESSAGE: "Hello",
+            ATTR_DATA: {
+                "push": {
+                    "sound": "default",
+                },
+            },
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    entity.send_message_mock_calls.assert_called_with(
+        "Hello",
+        title=None,
+        data={
+            "push": {
+                "sound": "default",
+            },
+        },
+    )
