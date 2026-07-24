@@ -3026,7 +3026,7 @@ serialx==1.8.2
 sfrbox-api==0.1.1
 
 # homeassistant.components.sharkiq
-sharkiq==1.5.0
+sharkiq==1.5.1
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
