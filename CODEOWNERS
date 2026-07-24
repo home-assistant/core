@@ -951,6 +951,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/karakeep/ @sli-cka
 /tests/components/karakeep/ @sli-cka
 /homeassistant/components/keba/ @dannerph
+/homeassistant/components/keba_p40/ @lpostiglione
+/tests/components/keba_p40/ @lpostiglione
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt
