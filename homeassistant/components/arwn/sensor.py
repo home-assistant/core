@@ -1,7 +1,7 @@
 """Support for collecting data from the ARWN project."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arwn_client import parse_message
 
@@ -12,28 +12,23 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads_object
+
+from .const import TOPIC
+
+if TYPE_CHECKING:
+    from . import ArwnConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "arwn"
-DATA_ARWN = "arwn"
-TOPIC = "arwn/#"
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ArwnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the ARWN platform."""
-
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return
+    """Set up the ARWN sensor platform."""
 
     @callback
     def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
@@ -52,8 +47,7 @@ async def async_setup_platform(
         if device is None:
             return
 
-        if (store := hass.data.get(DATA_ARWN)) is None:
-            store = hass.data[DATA_ARWN] = {}
+        store = entry.runtime_data
 
         if "timestamp" in event:
             del event["timestamp"]
@@ -109,22 +103,18 @@ async def async_setup_platform(
                     event=event,
                 )
                 store[unique_id] = sensor
-                _LOGGER.debug(
-                    "Registering sensor %(name)s => %(event)s",
-                    {"name": reading.sensor_name, "event": event},
-                )
+                _LOGGER.debug("Registering sensor %s => %s", reading.sensor_name, event)
                 new_sensors.append(sensor)
             else:
-                _LOGGER.debug(
-                    "Recording sensor %(name)s => %(event)s",
-                    {"name": reading.sensor_name, "event": event},
-                )
+                _LOGGER.debug("Recording sensor %s => %s", reading.sensor_name, event)
                 store[unique_id].set_event(event)
 
         if new_sensors:
-            async_add_entities(new_sensors, True)
+            async_add_entities(new_sensors)
 
-    await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
+    entry.async_on_unload(
+        await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
+    )
 
 
 class ArwnSensor(SensorEntity):

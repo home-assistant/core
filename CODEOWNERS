@@ -171,6 +171,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/arve/ @ikalnyi
 /tests/components/arve/ @ikalnyi
+/homeassistant/components/arwn/ @sdague
+/tests/components/arwn/ @sdague
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
 /homeassistant/components/assist_pipeline/ @synesthesiam @arturpragacz

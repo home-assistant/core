@@ -4,6 +4,9 @@ To update, run python3 -m script.hassfest
 """
 
 MQTT = {
+    "arwn": [
+        "arwn/#",
+    ],
     "drop_connect": [
         "drop_connect/discovery/#",
     ],
