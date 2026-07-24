@@ -13,7 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -46,6 +50,63 @@ class VelbusData:
     scan_task: asyncio.Task
 
 
+def _update_devices_and_issues(
+    hass: HomeAssistant, controller: Velbus, entry_id: str
+) -> None:
+    """Sync device registry and stale-device repair issues with the current bus state."""
+    dev_reg = dr.async_get(hass)
+    found_addresses: set[str] = set()
+    for module_address, module in controller.get_modules().items():
+        address = str(module_address)
+        found_addresses.add(address)
+        dev_reg.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={
+                (DOMAIN, address),
+            },
+            manufacturer="Velleman",
+            model=module.get_type_name(),
+            model_id=str(module.get_type()),
+            name=f"{module.get_name()} ({module.get_type_name()})",
+            sw_version=module.get_sw_version(),
+            serial_number=module.get_serial(),
+        )
+        ir.async_delete_issue(hass, DOMAIN, f"stale_device_{entry_id}_{address}")
+
+    registered_addresses: set[str] = set()
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        device_address: str | None = next(
+            (ident[1] for ident in device.identifiers if ident[0] == DOMAIN),
+            None,
+        )
+        if device_address is None or device.via_device_id is not None:
+            continue
+        registered_addresses.add(device_address)
+        if device_address in found_addresses:
+            continue
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"stale_device_{entry_id}_{device_address}",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="stale_device",
+            translation_placeholders={
+                "name": device.name_by_user or device.model or device_address,
+                "address": device_address,
+            },
+        )
+
+    issue_prefix = f"stale_device_{entry_id}_"
+    issue_reg = ir.async_get(hass)
+    for domain, issue_id in list(issue_reg.issues):
+        if domain == DOMAIN and issue_id.startswith(issue_prefix):
+            address = issue_id[len(issue_prefix) :]
+            if address not in registered_addresses:
+                ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 async def velbus_scan_task(
     controller: Velbus, hass: HomeAssistant, entry_id: str
 ) -> None:
@@ -56,21 +117,7 @@ async def velbus_scan_task(
         raise PlatformNotReady(
             f"Connection error while connecting to Velbus {entry_id}: {ex}"
         ) from ex
-    # create all modules
-    dev_reg = dr.async_get(hass)
-    for module in controller.get_modules().values():
-        dev_reg.async_get_or_create(
-            config_entry_id=entry_id,
-            identifiers={
-                (DOMAIN, str(module.get_addresses()[0])),
-            },
-            manufacturer="Velleman",
-            model=module.get_type_name(),
-            model_id=str(module.get_type()),
-            name=f"{module.get_name()} ({module.get_type_name()})",
-            sw_version=module.get_sw_version(),
-            serial_number=module.get_serial(),
-        )
+    _update_devices_and_issues(hass, controller, entry_id)
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
@@ -108,10 +155,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
             translation_key="connection_failed",
         ) from error
 
+    _migrate_device_identifiers(hass, entry.entry_id)
+
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
-
-    _migrate_device_identifiers(hass, entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
