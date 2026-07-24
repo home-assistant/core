@@ -5,6 +5,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.lg_infrared.button import (
+    AC_BUTTON_DESCRIPTIONS,
+    LgIrButtonEntityDescription,
+)
+from homeassistant.components.lg_infrared.const import LGDeviceType
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -13,6 +18,12 @@ from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
+
+_ENABLED_AC_BUTTONS = [
+    description
+    for description in AC_BUTTON_DESCRIPTIONS
+    if description.entity_registry_enabled_default
+]
 
 
 @pytest.fixture
@@ -104,3 +115,60 @@ async def test_button_availability_follows_ir_entity(
     """Test button becomes unavailable when IR entity is unavailable."""
     entity_id = "button.lg_tv_power_on"
     await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)
+
+
+@pytest.mark.parametrize("device_type", [LGDeviceType.AC])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_ac_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test all AC button entities are created with correct attributes."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize("device_type", [LGDeviceType.AC])
+@pytest.mark.parametrize(
+    "description", _ENABLED_AC_BUTTONS, ids=[d.key for d in _ENABLED_AC_BUTTONS]
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_ac_button_press_sends_correct_code(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    description: LgIrButtonEntityDescription,
+) -> None:
+    """Test pressing an AC button sends the matching fixed IR code."""
+    entity_id = entity_registry.async_get_entity_id(
+        BUTTON_DOMAIN, "lg_infrared", f"{mock_config_entry.entry_id}_{description.key}"
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert timings == description.command_code.to_command().get_raw_timings()
+
+
+@pytest.mark.parametrize("device_type", [LGDeviceType.AC])
+@pytest.mark.usefixtures("init_integration")
+async def test_swing_v_toggle_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the legacy vertical-swing toggle is registered but disabled by default."""
+    entity_id = entity_registry.async_get_entity_id(
+        BUTTON_DOMAIN, "lg_infrared", f"{mock_config_entry.entry_id}_swing_v_toggle"
+    )
+    assert entity_id is not None
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert entry.unique_id.endswith("_swing_v_toggle")

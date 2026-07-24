@@ -47,8 +47,20 @@
   },
   "entity": {
     "button": {
+      "ai_convertible": {
+        "name": "AI mode"
+      },
+      "audio": {
+        "name": "Beep"
+      },
       "back": {
         "name": "[%key:common::entity::button::back::name%]"
+      },
+      "diagnose": {
+        "name": "Diagnose"
+      },
+      "diet": {
+        "name": "Diet"
       },
       "down": {
         "name": "[%key:common::entity::button::down::name%]"
@@ -80,8 +92,14 @@
       "input": {
         "name": "[%key:common::entity::button::input::name%]"
       },
+      "jet": {
+        "name": "Jet"
+      },
       "left": {
         "name": "[%key:common::entity::button::left::name%]"
+      },
+      "light": {
+        "name": "Light"
       },
       "menu": {
         "name": "[%key:common::entity::button::menu::name%]"
@@ -131,8 +149,14 @@
       "right": {
         "name": "[%key:common::entity::button::right::name%]"
       },
+      "swing_v_toggle": {
+        "name": "Vertical swing toggle"
+      },
       "up": {
         "name": "[%key:common::entity::button::up::name%]"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
       }
     },
     "climate": {
@@ -143,6 +167,31 @@
               "medium_high": "Medium high",
               "medium_low": "Medium low",
               "quiet": "Quiet"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "left": "Left",
+              "left_half": "Left half",
+              "middle": "Middle",
+              "middle_left": "Middle left",
+              "middle_right": "Middle right",
+              "off": "Off",
+              "right": "Right",
+              "right_half": "Right half",
+              "swing": "Swing"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "high": "High",
+              "highest": "Highest",
+              "low": "Low",
+              "lowest": "Lowest",
+              "middle_high": "Middle high",
+              "middle_low": "Middle low",
+              "off": "Off",
+              "swing": "Swing"
             }
           }
         }
@@ -209,6 +258,25 @@
             }
           }
         }
+      }
+    },
+    "select": {
+      "energy_limit": {
+        "name": "Energy limit",
+        "state": {
+          "40": "40%",
+          "60": "60%",
+          "80": "80%",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "switch": {
+      "auto_clean": {
+        "name": "Auto clean"
+      },
+      "ion_generator": {
+        "name": "Ion generator"
       }
     }
   },
