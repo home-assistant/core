@@ -283,6 +283,12 @@
             }
           }
         }
+      },
+      "rgbicww_ceiling_color_light": {
+        "name": "Color light"
+      },
+      "rgbicww_ceiling_main_light": {
+        "name": "Main light"
       }
     },
     "lock": {
