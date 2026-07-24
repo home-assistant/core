@@ -7,12 +7,18 @@ from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_COUNTRY, TEST_EMAIL, TEST_LOGIN_RESP, TEST_PASSWORD
+from .const import (
+    TEST_COUNTRY,
+    TEST_EMAIL,
+    TEST_LOGIN_ENTRY_DATA,
+    TEST_LOGIN_RESP,
+    TEST_PASSWORD,
+)
 
 from tests.common import MockConfigEntry
 
@@ -40,7 +46,7 @@ async def test_config_flow_cloud_login_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_EMAIL} {TEST_COUNTRY}"
-    assert result["data"] == TEST_LOGIN_RESP
+    assert result["data"] == TEST_LOGIN_ENTRY_DATA
     assert result["result"].unique_id == TEST_LOGIN_RESP["id"]
 
 
@@ -90,7 +96,7 @@ async def test_config_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == TEST_LOGIN_RESP
+    assert result["data"] == TEST_LOGIN_ENTRY_DATA
 
 
 async def test_form_abort_already_configured(
@@ -117,3 +123,73 @@ async def test_form_abort_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    patch_aidot_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test successful reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+            "unique_id": mock_config_entry.unique_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: TEST_PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_invalid_auth(
+    hass: HomeAssistant,
+    patch_aidot_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauth flow with invalid auth."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+            "unique_id": mock_config_entry.unique_id,
+        },
+    )
+
+    patch_aidot_client.async_post_login.side_effect = AidotUserOrPassIncorrect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "wrong_password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    patch_aidot_client.async_post_login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: TEST_PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

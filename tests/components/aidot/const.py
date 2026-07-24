@@ -1,7 +1,5 @@
 """Const for the aidot tests."""
 
-from aidot.const import CONF_DEVICE_LIST
-
 TEST_COUNTRY = "US"
 TEST_EMAIL = "test@gmail.com"
 TEST_PASSWORD = "123456"
@@ -17,6 +15,12 @@ TEST_LOGIN_RESP = {
     "password": TEST_PASSWORD,
     "region": TEST_REGION,
     "country": "United States",
+}
+
+TEST_LOGIN_ENTRY_DATA = {
+    **TEST_LOGIN_RESP,
+    "country_code": TEST_COUNTRY,
+    "password": TEST_PASSWORD,
 }
 
 ENTITY_LIGHT = "light.test_light"
@@ -42,4 +46,4 @@ TEST_DEVICE1 = {
     },
 }
 
-TEST_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1]}
+TEST_DEVICE_LIST = {"device_id": TEST_DEVICE1}

@@ -1,11 +1,13 @@
 """Test the aidot device."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock
 
-from aidot.const import CONF_DEVICE_LIST
+from aidot.const import CONF_CCT, CONF_DIMMING, CONF_RGBW
 from aidot.device_client import DeviceStatusData
 from aidot.exceptions import AidotAuthFailed
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
@@ -41,12 +43,46 @@ async def test_state(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected_attrs"),
+    [
+        pytest.param({}, {}, id="plain"),
+        pytest.param(
+            {ATTR_BRIGHTNESS: 100},
+            {CONF_DIMMING: 100},
+            id="brightness",
+        ),
+        pytest.param(
+            {ATTR_COLOR_TEMP_KELVIN: 3000},
+            {CONF_CCT: 3000},
+            id="color-temperature",
+        ),
+        pytest.param(
+            {ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+            {CONF_RGBW: (255, 255, 255, 255)},
+            id="rgbw",
+        ),
+        pytest.param(
+            {
+                ATTR_BRIGHTNESS: 100,
+                ATTR_RGBW_COLOR: (255, 255, 255, 255),
+            },
+            {
+                CONF_DIMMING: 100,
+                CONF_RGBW: (255, 255, 255, 255),
+            },
+            id="brightness-and-rgbw",
+        ),
+    ],
+)
 async def test_turn_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mocked_device_client: MagicMock,
+    service_data: dict[str, Any],
+    expected_attrs: dict[str, Any],
 ) -> None:
-    """Test turn on."""
+    """Test turning on the light with attributes."""
     await async_init_integration(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
@@ -54,10 +90,10 @@ async def test_turn_on(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT},
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, **service_data},
         blocking=True,
     )
-    mocked_device_client.async_turn_on.assert_called_once()
+    mocked_device_client.async_turn_on.assert_awaited_once_with(expected_attrs)
 
 
 async def test_turn_off(
@@ -76,64 +112,7 @@ async def test_turn_off(
         {ATTR_ENTITY_ID: ENTITY_LIGHT},
         blocking=True,
     )
-    mocked_device_client.async_turn_off.assert_called_once()
-
-
-async def test_turn_on_brightness(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mocked_device_client: MagicMock,
-) -> None:
-    """Test turn on brightness."""
-    await async_init_integration(hass, mock_config_entry)
-
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100},
-        blocking=True,
-    )
-    mocked_device_client.async_set_brightness.assert_called_once()
-
-
-async def test_turn_on_with_color_temp(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mocked_device_client: MagicMock,
-) -> None:
-    """Test turn on with color temp."""
-    await async_init_integration(hass, mock_config_entry)
-
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 3000},
-        blocking=True,
-    )
-    mocked_device_client.async_set_cct.assert_called_once()
-
-
-async def test_turn_on_with_rgbw(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mocked_device_client: MagicMock,
-) -> None:
-    """Test turn on with rgbw."""
-    await async_init_integration(hass, mock_config_entry)
-
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGBW_COLOR: (255, 255, 255, 255)},
-        blocking=True,
-    )
-    mocked_device_client.async_set_rgbw.assert_called_once()
+    mocked_device_client.async_turn_off.assert_awaited_once()
 
 
 async def test_light_unavailable(
@@ -191,8 +170,7 @@ async def test_coordinator_device_removal(
 
     assert hass.states.get(ENTITY_LIGHT) is not None
 
-    # Return empty device list
-    patch_aidot_client.async_get_all_device.return_value = {CONF_DEVICE_LIST: []}
+    patch_aidot_client.async_get_all_device.return_value = {}
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
