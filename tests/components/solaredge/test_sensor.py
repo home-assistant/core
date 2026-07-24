@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientError
+from aiosolaredge import StorageData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -26,17 +27,17 @@ STORAGE_DATA_MULTI_BATTERY = {
                 "telemetries": [
                     {
                         "timeStamp": "2025-01-01 00:00:00",
-                        "lifeTimeEnergyCharged": 1000.0,
-                        "lifeTimeEnergyDischarged": 500.0,
+                        "lifeTimeEnergyCharged": 0,
+                        "lifeTimeEnergyDischarged": 0,
                         "batteryPercentageState": 50.0,
-                        "power": 100.0,
+                        "power": 0.0,
                     },
                     {
-                        "timeStamp": "2025-01-01 12:00:00",
-                        "lifeTimeEnergyCharged": 1500.0,
-                        "lifeTimeEnergyDischarged": 800.0,
+                        "timeStamp": "2025-01-01 02:00:00",
+                        "lifeTimeEnergyCharged": 0,
+                        "lifeTimeEnergyDischarged": 0,
                         "batteryPercentageState": 75.0,
-                        "power": 200.0,
+                        "power": 2000.0,
                     },
                 ],
             },
@@ -45,17 +46,17 @@ STORAGE_DATA_MULTI_BATTERY = {
                 "telemetries": [
                     {
                         "timeStamp": "2025-01-01 00:00:00",
-                        "lifeTimeEnergyCharged": 2000.0,
-                        "lifeTimeEnergyDischarged": 1000.0,
+                        "lifeTimeEnergyCharged": 0,
+                        "lifeTimeEnergyDischarged": 0,
                         "batteryPercentageState": 40.0,
-                        "power": 150.0,
+                        "power": 0.0,
                     },
                     {
-                        "timeStamp": "2025-01-01 12:00:00",
-                        "lifeTimeEnergyCharged": 2700.0,
-                        "lifeTimeEnergyDischarged": 1400.0,
+                        "timeStamp": "2025-01-01 02:00:00",
+                        "lifeTimeEnergyCharged": 0,
+                        "lifeTimeEnergyDischarged": 0,
                         "batteryPercentageState": 80.0,
-                        "power": 250.0,
+                        "power": 1500.0,
                     },
                 ],
             },
@@ -383,11 +384,14 @@ async def test_storage_data_service(
 
     state = hass.states.get(charge_entry)
     assert state is not None
-    assert float(state.state) == 500.0  # 1500 - 1000
+    # Integrated from the power telemetry: 1000 Wh (0 -> 2000 W over 1 h) +
+    # 1000 Wh (2000 -> 0 W over 1 h) = 2000 Wh.
+    assert float(state.state) == 2000.0
 
     state = hass.states.get(discharge_entry)
     assert state is not None
-    assert float(state.state) == 300.0  # 800 - 500
+    # 500 Wh discharged (0 -> -1000 W over 1 h).
+    assert float(state.state) == 500.0
 
     # Per-battery entities for BAT001
     bat_charge = entity_registry.async_get_entity_id(
@@ -409,19 +413,19 @@ async def test_storage_data_service(
 
     state = hass.states.get(bat_charge)
     assert state is not None
-    assert float(state.state) == 500.0
+    assert float(state.state) == 2000.0
 
     state = hass.states.get(bat_discharge)
     assert state is not None
-    assert float(state.state) == 300.0
+    assert float(state.state) == 500.0
 
     state = hass.states.get(bat_soc)
     assert state is not None
-    assert float(state.state) == 75.0
+    assert float(state.state) == 70.0
 
     state = hass.states.get(bat_power)
     assert state is not None
-    assert float(state.state) == 200.0
+    assert float(state.state) == -1000.0
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -435,7 +439,9 @@ async def test_storage_data_service_multi_battery(
     """Test storage data service aggregates data across multiple batteries."""
     inventory = solaredge_api.get_inventory.return_value
     inventory["Inventory"]["batteries"] = [{"SN": "BAT001"}, {"SN": "BAT002"}]
-    solaredge_api.get_storage_data.return_value = STORAGE_DATA_MULTI_BATTERY
+    solaredge_api.get_parsed_storage_data.return_value = StorageData.from_response(
+        STORAGE_DATA_MULTI_BATTERY
+    )
 
     await setup_integration(hass, mock_config_entry)
 
@@ -448,10 +454,10 @@ async def test_storage_data_service_multi_battery(
     assert charge_entry is not None
     assert discharge_entry is not None
 
-    # BAT001: charge=500 (1500-1000), discharge=300 (800-500)
-    # BAT002: charge=700 (2700-2000), discharge=400 (1400-1000)
-    assert float(hass.states.get(charge_entry).state) == 1200.0
-    assert float(hass.states.get(discharge_entry).state) == 700.0
+    # Integrated from power telemetry over the 2 h window:
+    # BAT001: charge=2000 (avg 1000 W), BAT002: charge=1500 (avg 750 W).
+    assert float(hass.states.get(charge_entry).state) == 3500.0
+    assert float(hass.states.get(discharge_entry).state) == 0.0
 
     bat1_soc = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{SITE_ID}_BAT001_battery_state_of_charge"
@@ -467,7 +473,7 @@ async def test_storage_data_service_multi_battery(
     )
     assert bat2_charge is not None
     assert bat2_soc is not None
-    assert float(hass.states.get(bat2_charge).state) == 700.0
+    assert float(hass.states.get(bat2_charge).state) == 1500.0
     assert float(hass.states.get(bat2_soc).state) == 80.0
 
 
@@ -503,7 +509,7 @@ async def test_storage_data_service_api_error(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage sensors are unavailable when the storage API errors out."""
-    solaredge_api.get_storage_data.side_effect = Exception("API error")
+    solaredge_api.get_parsed_storage_data.side_effect = Exception("API error")
 
     await setup_integration(hass, mock_config_entry)
 
@@ -520,11 +526,6 @@ async def test_storage_data_service_api_error(
     assert hass.states.get(discharge_entry).state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    "bad_response",
-    [{"unexpected": {}}, {"storageData": {"otherField": "value"}}],
-    ids=["missing_storageData", "missing_batteries"],
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_storage_data_missing_keys_in_response(
     recorder_mock: Recorder,
@@ -532,10 +533,13 @@ async def test_storage_data_missing_keys_in_response(
     mock_config_entry: MockConfigEntry,
     solaredge_api: Mock,
     entity_registry: er.EntityRegistry,
-    bad_response: dict,
 ) -> None:
-    """Test storage sensors unavailable with missing required keys."""
-    solaredge_api.get_storage_data.return_value = bad_response
+    """Test storage sensors unavailable with missing required keys.
+
+    aiosolaredge raises KeyError when the storageData response is missing the
+    storageData/batteries keys; the coordinator turns that into an UpdateFailed.
+    """
+    solaredge_api.get_parsed_storage_data.side_effect = KeyError("storageData")
 
     await setup_integration(hass, mock_config_entry)
 
@@ -601,20 +605,20 @@ async def test_storage_service_deferred_after_inventory_failure(
     [
         # Empty batteries list → data service returns early, aggregate stays unset.
         ({"storageData": {"batteries": []}}, STATE_UNKNOWN),
-        # Battery missing the serialNumber key → skipped in the loop, aggregate
-        # falls through with the initial 0.0 totals.
-        ({"storageData": {"batteries": [{"telemetries": []}]}}, "0.0"),
-        # Battery with no telemetries → skipped after the serial check.
+        # Battery missing the serialNumber key → dropped by the parser, leaving no
+        # usable battery, so the data service returns early.
+        ({"storageData": {"batteries": [{"telemetries": []}]}}, STATE_UNKNOWN),
+        # Battery with no telemetries → dropped by the parser too.
         (
             {
                 "storageData": {
                     "batteries": [{"serialNumber": "BAT001", "telemetries": []}]
                 }
             },
-            "0.0",
+            STATE_UNKNOWN,
         ),
-        # Battery with a single telemetry → can't compute a delta, contributes
-        # 0.0 to the aggregate via the len < 2 branch.
+        # Battery with a single telemetry → no intervals to integrate, so it
+        # contributes 0.0 to the aggregate.
         (
             {
                 "storageData": {
@@ -624,8 +628,6 @@ async def test_storage_service_deferred_after_inventory_failure(
                             "telemetries": [
                                 {
                                     "timeStamp": "2025-01-01 00:00:00",
-                                    "lifeTimeEnergyCharged": 1000.0,
-                                    "lifeTimeEnergyDischarged": 500.0,
                                     "batteryPercentageState": 50.0,
                                     "power": 100.0,
                                 }
@@ -655,7 +657,9 @@ async def test_storage_data_service_handles_malformed_responses(
     expected_charge_state: str,
 ) -> None:
     """Test storage tolerates batteries without serial/telemetries."""
-    solaredge_api.get_storage_data.return_value = storage_response
+    solaredge_api.get_parsed_storage_data.return_value = StorageData.from_response(
+        storage_response
+    )
 
     await setup_integration(hass, mock_config_entry)
 

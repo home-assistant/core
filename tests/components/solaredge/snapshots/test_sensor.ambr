@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '500.0',
+    'state': '2000.0',
   })
 # ---
 # name: test_all_entities[sensor.battery_bat001_discharge_energy_today-entry]
@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '300.0',
+    'state': '500.0',
   })
 # ---
 # name: test_all_entities[sensor.battery_bat001_power-entry]
@@ -170,7 +170,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '200.0',
+    'state': '-1000.0',
   })
 # ---
 # name: test_all_entities[sensor.battery_bat001_state_of_charge-entry]
@@ -225,7 +225,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '75.0',
+    'state': '70.0',
   })
 # ---
 # name: test_all_entities[sensor.solaredge_batteries-entry]
@@ -1462,7 +1462,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '500.0',
+    'state': '2000.0',
   })
 # ---
 # name: test_all_entities[sensor.solaredge_storage_discharge_energy_today-entry]
@@ -1520,7 +1520,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '300.0',
+    'state': '500.0',
   })
 # ---
 # name: test_all_entities[sensor.solaredge_storage_flow_direction-entry]
