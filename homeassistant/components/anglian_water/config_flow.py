@@ -37,7 +37,9 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
-    except ConsentRequiredError, SelfAssertedError:
+    except ConsentRequiredError:
+        return "consent_required"
+    except SelfAssertedError:
         return "invalid_auth"
     except Exception:
         _LOGGER.exception("Unexpected exception")
