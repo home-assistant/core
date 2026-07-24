@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 import respx
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components.mcp.auth import AuthenticateHeader
@@ -326,14 +327,15 @@ async def perform_oauth_flow(
             "redirect_uri": OAUTH_CALLBACK_URL,
         },
     )
-    scope_param = ""
-    if scopes:
-        scope_param = "&scope=" + "+".join(scopes)
-    assert result["url"] == (
-        f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
-        f"&redirect_uri={OAUTH_CALLBACK_URL}"
-        f"&state={state}{scope_param}"
-    )
+    result_url = URL(result["url"])
+    assert f"{result_url.origin()}{result_url.path}" == authorize_url
+    assert result_url.query["response_type"] == "code"
+    assert result_url.query["client_id"] == CLIENT_ID
+    assert result_url.query["redirect_uri"] == OAUTH_CALLBACK_URL
+    assert result_url.query["state"] == state
+    assert result_url.query.get("scope", "") == " ".join(scopes or [])
+    assert result_url.query["code_challenge"]
+    assert result_url.query["code_challenge_method"] == "S256"
 
     client = await hass_client_no_auth()
     resp = await client.get(f"{CALLBACK_PATH}?code={OAUTH_CODE}&state={state}")
@@ -445,6 +447,8 @@ async def test_authentication_flow(
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert aioclient_mock.mock_calls[-1][1] == URL(expected_token_url)
+    assert aioclient_mock.mock_calls[-1][2]["code_verifier"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
     data = result["data"]
