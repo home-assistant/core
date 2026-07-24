@@ -51,6 +51,39 @@
       }
     }
   },
+  "config_subentries": {
+    "vehicle": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "not_supported": "Vehicles are added automatically from your Teslemetry account and cannot be added manually.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Vehicle",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
+        "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure vehicle",
+        "user": "Add product"
+      },
+      "progress": {
+        "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
+      },
+      "step": {
+        "instructions": {
+          "description": "Select **Submit**, then place your key card against the center console card reader of vehicle {vin} to approve Home Assistant's virtual key. This only needs to be done once.",
+          "title": "Approve the virtual key"
+        },
+        "scan": {
+          "description": "Home Assistant will look for vehicle {vin} over Bluetooth to enable local command control. Make sure the vehicle is awake and within Bluetooth range of a Home Assistant Bluetooth adapter, then continue.",
+          "title": "Set up Bluetooth control"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "automatic_blind_spot_camera": {
