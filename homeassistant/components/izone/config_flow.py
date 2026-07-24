@@ -47,13 +47,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _user_discovered_endpoints: list[pizone.ControllerEndpoint] | None = None
     _discovered_controller_ip: str | None = None
-    _user_form_errors: dict[str, str]
-    _user_form_defaults: dict[str, Any]
-
-    def __init__(self) -> None:
-        """Initialize flow instance state."""
-        self._user_form_errors = {}
-        self._user_form_defaults = {}
 
     @override
     def is_matching(self, other_flow: Self) -> bool:
@@ -111,6 +104,23 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         return bool(self.hass.config_entries.async_loaded_entries(DOMAIN))
 
+    @callback
+    def _async_show_user_form(
+        self,
+        *,
+        errors: dict[str, str] | None = None,
+        defaults: Mapping[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Show the user setup form (search/manual or host-only)."""
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self._user_setup_schema(
+                host_only=self._async_user_setup_host_only(),
+                defaults=defaults or {},
+            ),
+            errors=errors or None,
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -122,14 +132,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         self._async_abort_other_user_flows()
 
-        host_only = self._async_user_setup_host_only()
-        errors = dict(self._user_form_errors)
-        self._user_form_errors = {}
-        defaults = dict(self._user_form_defaults)
-        self._user_form_defaults = {}
-        form_defaults = defaults or (user_input or {})
-
+        errors: dict[str, str] = {}
         if user_input is not None:
+            host_only = self._async_user_setup_host_only()
             if host_only:
                 host = str(user_input.get(CONF_HOST, "")).strip()
                 if not host:
@@ -148,13 +153,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     return await self.async_step_discover()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self._user_setup_schema(
-                host_only=host_only,
-                defaults=form_defaults,
-            ),
+        return self._async_show_user_form(
             errors=errors or None,
+            defaults=user_input,
         )
 
     async def async_step_discover(
@@ -169,13 +170,14 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not endpoints:
             _LOGGER.debug("No controllers found")
-            self._user_form_errors = {"base": "no_devices_found"}
-            self._user_form_defaults = {CONF_SETUP_METHOD: SETUP_METHOD_MANUAL_HOST}
             # Search started discovery; drop it when nothing is using it so the
             # follow-up form (and a later Add integration) can offer Search again.
             if not self._async_user_setup_host_only():
                 await izone_discovery.async_stop_discovery(self.hass)
-            return await self.async_step_user(None)
+            return self._async_show_user_form(
+                errors={"base": "no_devices_found"},
+                defaults={CONF_SETUP_METHOD: SETUP_METHOD_MANUAL_HOST},
+            )
 
         self._user_discovered_endpoints = self._async_get_unconfigured_endpoints(
             endpoints
@@ -401,15 +403,17 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         if endpoint is None:
-            self._user_form_errors = {"base": "cannot_connect"}
             if host_only:
-                self._user_form_defaults = {CONF_HOST: host}
+                defaults: dict[str, Any] = {CONF_HOST: host}
             else:
-                self._user_form_defaults = {
+                defaults = {
                     CONF_SETUP_METHOD: SETUP_METHOD_MANUAL_HOST,
                     CONF_HOST: host,
                 }
-            return await self.async_step_user(None)
+            return self._async_show_user_form(
+                errors={"base": "cannot_connect"},
+                defaults=defaults,
+            )
 
         await self.async_set_unique_id(endpoint.uid)
         self._abort_if_unique_id_configured()
