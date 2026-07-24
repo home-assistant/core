@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
 
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
+    except (ImplementationUnavailableError, ValueError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="oauth2_implementation_unavailable",
