@@ -2,7 +2,7 @@
 
 import copy
 from datetime import timedelta
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from motioneye_client.const import (
@@ -47,53 +47,63 @@ async def test_switch_turn_on_off(
     assert entity_state
     assert entity_state.state == "on"
 
-    client.async_get_camera = AsyncMock(return_value=TEST_CAMERA)
+    # Prepare the camera state with motion_detection=False.
+    camera_off = copy.deepcopy(TEST_CAMERA)
+    camera_off[KEY_MOTION_DETECTION] = False
 
-    expected_camera = copy.deepcopy(TEST_CAMERA)
-    expected_camera[KEY_MOTION_DETECTION] = False
-
-    # When the next refresh is called return the updated values.
-    client.async_get_cameras = AsyncMock(return_value={"cameras": [expected_camera]})
-
-    # Turn switch off.
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
-        blocking=True,
+    # async_get_camera is called by the switch to fetch the latest config before
+    # calling set_camera. Use a fresh deep-copy each call to prevent mutation.
+    client.async_get_camera = AsyncMock(
+        side_effect=lambda _: copy.deepcopy(TEST_CAMERA)
     )
+    # async_get_cameras is used by the coordinator to refresh state.
+    client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_off]})
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # Turn switch off. Patch sleep so the 2s delay is skipped.
+    with patch(
+        "homeassistant.components.motioneye.switch.asyncio.sleep",
+        new_callable=AsyncMock,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Verify correct parameters are passed to the library.
-    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)
+    # Verify set_camera was called with motion_detection=False.
+    assert client.async_set_camera.call_args[0][0] == TEST_CAMERA_ID
+    assert client.async_set_camera.call_args[0][1][KEY_MOTION_DETECTION] is False
 
-    # Verify the switch turns off.
+    # Verify the switch is off after the coordinator refresh triggered by the service.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "off"
 
-    # When the next refresh is called return the updated values.
-    client.async_get_cameras = AsyncMock(return_value={"cameras": [TEST_CAMERA]})
+    # Now prepare for turn-on: coordinator returns TEST_CAMERA (motion_detection=True).
+    camera_on = copy.deepcopy(TEST_CAMERA)
+    client.async_get_camera = AsyncMock(side_effect=lambda _: copy.deepcopy(camera_off))
+    client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_on]})
 
-    # Turn switch on.
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
-        blocking=True,
-    )
+    # Turn switch on. Patch sleep so the 2s delay is skipped.
+    with patch(
+        "homeassistant.components.motioneye.switch.asyncio.sleep",
+        new_callable=AsyncMock,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Verify correct parameters are passed to the library.
-    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, TEST_CAMERA)
+    # Verify set_camera was called with motion_detection=True.
+    assert client.async_set_camera.call_args[0][0] == TEST_CAMERA_ID
+    assert client.async_set_camera.call_args[0][1][KEY_MOTION_DETECTION] is True
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Verify the switch turns on.
+    # Verify the switch is on after the coordinator refresh triggered by the service.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "on"
@@ -213,3 +223,35 @@ async def test_switch_device_info(
         for entry in er.async_entries_for_device(entity_registry, device.id)
     ]
     assert TEST_SWITCH_MOTION_DETECTION_ENTITY_ID in entities_from_device
+
+
+async def test_switch_reverts_on_get_camera_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test that coordinator refreshes if async_get_camera fails.
+
+    When the GET fails, we trigger a coordinator refresh to revert to the real state.
+    Regression test for https://github.com/home-assistant/core/issues/169617
+    """
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    # Simulate async_get_camera returning no camera data.
+    client.async_get_camera = AsyncMock(return_value=None)
+    client.async_set_camera.reset_mock()
+
+    calls_before = client.async_get_cameras.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # async_set_camera should NOT have been called since GET returned None.
+    client.async_set_camera.assert_not_called()
+
+    # Coordinator should have been asked to refresh to revert optimistic state.
+    assert client.async_get_cameras.call_count > calls_before
