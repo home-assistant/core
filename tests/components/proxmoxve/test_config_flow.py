@@ -75,7 +75,7 @@ MOCK_USER_STEP_OTHER = {
 
 MOCK_USER_AUTH_STEP_OTHER = {
     **MOCK_USER_AUTH_STEP_PASSWORD,
-    CONF_REALM: "test_realm",
+    CONF_REALM: "Test_Realm",
 }
 
 # Other authentication method with realm and token
@@ -86,7 +86,7 @@ MOCK_USER_STEP_OTHER_TOKEN = {
 
 MOCK_USER_AUTH_STEP_OTHER_TOKEN = {
     **MOCK_USER_AUTH_STEP_TOKEN,
-    CONF_REALM: "test_realm",
+    CONF_REALM: "Test_Realm",
 }
 
 MOCK_USER_SETUP = {CONF_NODES: ["pve1"]}
@@ -724,7 +724,7 @@ async def test_full_flow_reauth_token_other(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_REALM: "test_realm",
+            CONF_REALM: "Test_Realm",
             CONF_TOKEN_ID: "test_token_id",
             CONF_TOKEN_SECRET: "new_token_secret",
         },
