@@ -62,12 +62,14 @@ class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
 
     _attr_fan_modes = ["Off", "Low", "Medium", "High"]
-    _attr_hvac_mode = HVACMode.COOL
-    _attr_hvac_modes = [HVACMode.COOL]
+    _attr_hvac_mode = HVACMode.HEAT_COOL
+    _attr_hvac_modes = [HVACMode.HEAT_COOL]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = 10.0
+    _attr_max_temp = 30.0
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None
@@ -78,9 +80,9 @@ class Flexit(ClimateEntity):
         self._slave = modbus_slave
         self._attr_fan_mode = None
         self._filter_hours: int | None = None
-        self._filter_alarm: int | None = None
+        self._filter_alarm: bool | None = None
         self._heat_recovery: int | None = None
-        self._heater_enabled: int | None = None
+        self._heater_enabled: bool | None = None
         self._heating: int | None = None
         self._cooling: int | None = None
         self._alarm = False
@@ -95,9 +97,11 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 9
         )
         res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
-        if self.fan_modes and res < len(self.fan_modes):
+        if self.fan_modes and res is not None and 0 <= res < len(self.fan_modes):
             self._attr_fan_mode = self.fan_modes[res]
-        self._filter_hours = await self._async_read_int16_from_register(
+        else:
+            self._attr_fan_mode = None
+        self._filter_hours = await self._async_read_uint16_from_register(
             CALL_TYPE_REGISTER_INPUT, 8
         )
         # # Mechanical heat recovery, 0-100%
@@ -113,13 +117,22 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 13
         )
         # # Filter alarm 0/1
-        self._filter_alarm = await self._async_read_int16_from_register(
+        filter_alarm_value = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 27
         )
+        if filter_alarm_value is None:
+            self._filter_alarm = None
+        else:
+            self._filter_alarm = filter_alarm_value == 1
         # # Heater enabled or not. Does not mean it's necessarily heating
-        self._heater_enabled = await self._async_read_int16_from_register(
+        heater_enabled_value = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 28
         )
+        if heater_enabled_value is None:
+            self._heater_enabled = None
+        else:
+            self._heater_enabled = heater_enabled_value == 1
+
         self._outdoor_air_temp = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_INPUT, 11
         )
@@ -128,7 +141,14 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 48
         )
 
-        if self._heating:
+        if None in (
+            self._heating,
+            self._cooling,
+            self._heat_recovery,
+            actual_air_speed,
+        ):
+            self._attr_hvac_action = None
+        elif self._heating:
             self._attr_hvac_action = HVACAction.HEATING
         elif self._cooling:
             self._attr_hvac_action = HVACAction.COOLING
@@ -178,24 +198,37 @@ class Flexit(ClimateEntity):
     # Based on _async_read_register in ModbusThermostat class
     async def _async_read_int16_from_register(
         self, register_type: str, register: int
-    ) -> int:
+    ) -> int | None:
+        """Read register using the Modbus hub slave."""
+        if (
+            value := await self._async_read_uint16_from_register(
+                register_type, register
+            )
+        ) is None:
+            return None
+        if value > 32767:  # Convert to signed 16-bit if negative number
+            value -= 65536
+        return value
+
+    async def _async_read_uint16_from_register(
+        self, register_type: str, register: int
+    ) -> int | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pb_call(self._slave, register, 1, register_type)
         if result is None:
             _LOGGER.error("Error reading value from Flexit modbus adapter")
-            return -1
+            return None
 
         return int(result.registers[0])
 
     async def _async_read_temp_from_register(
         self, register_type: str, register: int
-    ) -> float:
-        result = float(
-            await self._async_read_int16_from_register(register_type, register)
-        )
-        if not result:
-            return -1
-        return result / 10.0
+    ) -> float | None:
+        """Read register using the Modbus hub slave."""
+        result = await self._async_read_int16_from_register(register_type, register)
+        if result is None:
+            return None
+        return float(result) / 10.0
 
     async def _async_write_int16_to_register(self, register: int, value: int) -> bool:
         result = await self._hub.async_pb_call(
