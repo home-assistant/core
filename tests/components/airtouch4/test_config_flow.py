@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from airtouch4pyapi.airtouch import AirTouch, AirTouchAc, AirTouchGroup, AirTouchStatus
+from airtouch4pyapi.airtouch import (
+    AirTouch,
+    AirTouchAc,
+    AirTouchGroup,
+    AirTouchStatus,
+    AirTouchVersion,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.airtouch4.const import DOMAIN
@@ -29,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airtouch4.config_flow.AirTouch",
             return_value=mock_airtouch,
-        ),
+        ) as mock_ctor,
         patch(
             "homeassistant.components.airtouch4.async_setup_entry",
             return_value=True,
@@ -46,6 +52,9 @@ async def test_form(hass: HomeAssistant) -> None:
         "host": "0.0.0.1",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    # The client must be pinned to AirTouch 4 / port 9004 so the library never
+    # runs its blocking findVersion() port-probe in the event loop.
+    mock_ctor.assert_called_once_with("0.0.0.1", AirTouchVersion.AIRTOUCH4, 9004)
 
 
 async def test_form_timeout(hass: HomeAssistant) -> None:
