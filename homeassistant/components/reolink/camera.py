@@ -4,8 +4,6 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from reolink_aio.api import DUAL_LENS_SINGLE_MOTION_MODELS
-
 from homeassistant.components.camera import (
     Camera,
     CameraEntityDescription,
@@ -141,7 +139,7 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         if "snapshots" not in entity_description.stream:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
-        if self._host.api.model in DUAL_LENS_SINGLE_MOTION_MODELS:
+        if self._host.api.is_dual_lens:
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_lens_{self._channel}"
             )

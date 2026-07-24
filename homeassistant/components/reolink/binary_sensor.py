@@ -324,7 +324,7 @@ async def async_setup_entry(
     api = reolink_data.host.api
 
     entities: list[BinarySensorEntity] = []
-    for channel in api.channels:
+    for channel in api.stream_channels:
         entities.extend(
             ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
             for entity_description in BINARY_PUSH_SENSORS
