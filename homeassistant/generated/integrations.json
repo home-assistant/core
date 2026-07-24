@@ -3823,6 +3823,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "librenms": {
+      "name": "LibreNMS",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "lichess": {
       "name": "Lichess",
       "integration_type": "service",
