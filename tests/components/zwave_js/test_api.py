@@ -744,6 +744,25 @@ async def test_add_node(
     assert msg["event"]["stage"] == "NodeInfo"
 
     event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 67,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
+
+    event = Event(
         type="interview completed",
         data={"source": "node", "event": "interview completed", "nodeId": 67},
     )
@@ -2161,6 +2180,25 @@ async def test_replace_failed_node(
     assert msg["event"]["stage"] == "NodeInfo"
 
     event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 67,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
+
+    event = Event(
         type="interview completed",
         data={"source": "node", "event": "interview completed", "nodeId": 67},
     )
@@ -2763,6 +2801,25 @@ async def test_refresh_node_info(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview stage completed"
     assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview progress",
+        data={
+            "source": "node",
+            "event": "interview progress",
+            "nodeId": 52,
+            "stage": "CommandClasses",
+            "progress": 42.5,
+            "endpoint": 0,
+            "commandClass": 112,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview progress"
+    assert msg["event"]["stage"] == "CommandClasses"
+    assert msg["event"]["progress"] == 42.5
 
     event = Event(
         type="interview completed",
