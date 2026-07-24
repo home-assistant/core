@@ -31,5 +31,11 @@
     "cannot_discover_devices": {
       "message": "Unable to discover devices and scenes from the gateway."
     }
+  },
+  "issues": {
+    "unsupported_firmware": {
+      "description": "The Sunricher DALI gateway is running unsupported firmware (software {sw_version}, firmware {fw_version}). Please upgrade through the DALI Center app to at least software {min_sw_version} and firmware {min_fw_version} to ensure full functionality.",
+      "title": "Unsupported gateway firmware"
+    }
   }
 }

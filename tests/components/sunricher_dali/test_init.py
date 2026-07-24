@@ -1,16 +1,53 @@
 """Test the Sunricher DALI integration initialization."""
 
-from unittest.mock import MagicMock
+from collections.abc import Callable
+from unittest.mock import MagicMock, patch
 
+from PySrDaliGateway import CallbackEventType
 from PySrDaliGateway.exceptions import DaliGatewayError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sunricher_dali.const import DOMAIN
+from homeassistant.components.sunricher_dali.const import (
+    DOMAIN,
+    MIN_SUPPORTED_FW_VERSION,
+    MIN_SUPPORTED_SW_VERSION,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry
+
+
+def _register_stale_firmware_issue(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Pre-register an unsupported_firmware issue from a prior setup."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"unsupported_firmware_{entry.entry_id}",
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="unsupported_firmware",
+        translation_placeholders={
+            "sw_version": "3.50",
+            "fw_version": "1.30",
+            "min_sw_version": MIN_SUPPORTED_SW_VERSION,
+            "min_fw_version": MIN_SUPPORTED_FW_VERSION,
+        },
+    )
+
+
+def _get_version_listener(
+    mock_gateway: MagicMock,
+) -> Callable[[tuple[str, str]], None]:
+    """Find the VERSION_UPDATED listener registered on the gateway."""
+    for call in mock_gateway.register_listener.call_args_list:
+        if call.args[0] == CallbackEventType.VERSION_UPDATED:
+            return call.args[1]
+    raise AssertionError("VERSION_UPDATED listener was not registered")
 
 
 async def test_setup_entry_success(
@@ -79,6 +116,25 @@ async def test_setup_entry_discovery_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_gateway.connect.assert_called_once()
     mock_gateway.discover_devices.assert_called_once()
+    mock_gateway.disconnect.assert_called_once()
+
+
+async def test_setup_entry_unexpected_discovery_error_cleans_up(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+) -> None:
+    """Test setup cleans up gateway resources after unexpected discovery errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_gateway.discover_devices.side_effect = RuntimeError("Unexpected failure")
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_gateway.connect.assert_called_once()
+    mock_gateway.discover_devices.assert_called_once()
+    mock_gateway.disconnect.assert_called_once()
 
 
 async def test_unload_entry(
@@ -135,3 +191,163 @@ async def test_remove_stale_devices(
     )
     assert gateway_device is not None
     assert mock_config_entry.entry_id in gateway_device.config_entries
+
+
+@pytest.mark.parametrize(
+    ("sw_version", "fw_version", "preregister", "issue_exists"),
+    [
+        # versions below threshold create the issue
+        ("3.50", "1.45", False, True),
+        ("3.59", "1.30", False, True),
+        ("3.50", "1.30", False, True),
+        # versions at or above threshold clear any pre-existing issue
+        (MIN_SUPPORTED_SW_VERSION, MIN_SUPPORTED_FW_VERSION, True, False),
+        ("3.99", "1.99", True, False),
+        # supported versions without a pre-existing issue stay clean
+        ("3.99", "1.99", False, False),
+        # missing or unparsable versions skip the check, leaving any prior issue intact
+        ("", "1.45", True, True),
+        ("3.59", "", True, True),
+        ("not-a-version", "1.45", True, True),
+        ("3.59", "??", True, True),
+    ],
+)
+async def test_firmware_version_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    sw_version: str,
+    fw_version: str,
+    preregister: bool,
+    issue_exists: bool,
+) -> None:
+    """Make sure we get the issue for certain gateway firmware versions."""
+    mock_config_entry.add_to_hass(hass)
+    if preregister:
+        _register_stale_firmware_issue(hass, mock_config_entry)
+    mock_gateway.software_version = sw_version
+    mock_gateway.firmware_version = fw_version
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue is not None) == issue_exists
+
+
+async def test_firmware_listener_runtime_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """The VERSION_UPDATED listener re-evaluates the issue on runtime version changes."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    listener = _get_version_listener(mock_gateway)
+
+    listener(("3.50", "1.30"))
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    listener(("3.99", "1.99"))
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_firmware_issue_raised_when_discover_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Repair issue is raised from a delayed version event before discover fails."""
+    version_listener: Callable[[tuple[str, str]], None] | None = None
+    version_listener_subscribed = True
+
+    def _register_listener(
+        event_type: CallbackEventType,
+        listener: Callable[[tuple[str, str]], None],
+        _dev_id: str,
+    ) -> Callable[[], None]:
+        nonlocal version_listener, version_listener_subscribed
+        if event_type == CallbackEventType.VERSION_UPDATED:
+            version_listener = listener
+            version_listener_subscribed = True
+
+        def _unsubscribe() -> None:
+            nonlocal version_listener_subscribed
+            version_listener_subscribed = False
+
+        return _unsubscribe
+
+    def _emit_version_update() -> None:
+        if version_listener is None or not version_listener_subscribed:
+            return
+        version_listener(("3.50", "1.30"))
+
+    async def _discover_devices() -> None:
+        _emit_version_update()
+        raise DaliGatewayError("discover failed")
+
+    mock_gateway.register_listener.side_effect = _register_listener
+    mock_gateway.software_version = ""
+    mock_gateway.firmware_version = ""
+    mock_gateway.discover_devices.side_effect = _discover_devices
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+    mock_gateway.disconnect.assert_called_once()
+
+
+async def test_firmware_listener_unsubscribed_when_forward_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+) -> None:
+    """VERSION_UPDATED listener is removed if platform setup fails."""
+    unsubscribe = MagicMock()
+    mock_gateway.register_listener.return_value = unsubscribe
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("platform setup failed"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    unsubscribe.assert_called_once()
+    mock_gateway.disconnect.assert_called_once()
+
+
+async def test_remove_entry_clears_firmware_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """async_remove_entry deletes the persistent unsupported_firmware issue."""
+    mock_config_entry.add_to_hass(hass)
+    _register_stale_firmware_issue(hass, mock_config_entry)
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    assert await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

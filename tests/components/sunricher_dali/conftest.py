@@ -7,7 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from PySrDaliGateway.helper import gen_device_unique_id, gen_group_unique_id
 import pytest
 
-from homeassistant.components.sunricher_dali.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.sunricher_dali.const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+    MIN_SUPPORTED_FW_VERSION,
+    MIN_SUPPORTED_SW_VERSION,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -314,6 +319,8 @@ def mock_gateway(
         mock_gateway.name = "Test Gateway"
         mock_gateway.username = "gateway_user"
         mock_gateway.passwd = "gateway_pass"
+        mock_gateway.software_version = MIN_SUPPORTED_SW_VERSION
+        mock_gateway.firmware_version = MIN_SUPPORTED_FW_VERSION
         mock_gateway.connect = AsyncMock()
         mock_gateway.disconnect = AsyncMock()
         mock_gateway.discover_devices = AsyncMock(return_value=mock_devices)

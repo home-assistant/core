@@ -1,5 +1,10 @@
 """Constants for the Sunricher DALI integration."""
 
-DOMAIN = "sunricher_dali"
-MANUFACTURER = "Sunricher"
-CONF_SERIAL_NUMBER = "serial_number"
+from typing import Final
+
+DOMAIN: Final = "sunricher_dali"
+MANUFACTURER: Final = "Sunricher"
+CONF_SERIAL_NUMBER: Final = "serial_number"
+
+MIN_SUPPORTED_SW_VERSION: Final = "3.59"
+MIN_SUPPORTED_FW_VERSION: Final = "1.45"
