@@ -1,12 +1,13 @@
 """Test the Whirlpool Sensor domain."""
 
 from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from whirlpool.dryer import MachineState as DryerMachineState
-from whirlpool.oven import CavityState as OvenCavityState
+from whirlpool.oven import CavityState as OvenCavityState, KitchenTimerState
 from whirlpool.washer import MachineState as WasherMachineState
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -170,6 +171,75 @@ async def test_washer_dryer_time_sensor_no_restore(
     state = hass.states.get(entity_id)
     expected_time = (now + timedelta(seconds=60)).isoformat()
     assert state.state == expected_time
+
+
+@pytest.mark.freeze_time("2022-11-30 00:00:00")
+async def test_oven_kitchen_timer_sensor(
+    hass: HomeAssistant,
+    mock_oven_single_cavity_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven kitchen timer end time sensor."""
+    entity_id = "sensor.single_cavity_oven_kitchen_timer_end_time"
+    now = utcnow()
+    restored_datetime: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, UTC)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(entity_id, "1"),
+                {"native_value": restored_datetime, "native_unit_of_measurement": None},
+            )
+        ],
+    )
+
+    timer = mock_oven_single_cavity_api.get_kitchen_timer.return_value
+    timer.get_state.return_value = KitchenTimerState.Standby
+    await init_integration(hass)
+
+    # Test the restored value doesn't leak through while the timer isn't running.
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
+    # Test still no value while in standby.
+    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
+    # Test new time when the timer starts running.
+    timer.get_state.return_value = KitchenTimerState.Running
+    timer.get_remaining_time.return_value = 60
+    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
+    state = hass.states.get(entity_id)
+    expected_time = (now + timedelta(seconds=60)).isoformat()
+    assert state.state == expected_time
+
+    # Test no state change for < 60 seconds elapsed time.
+    timer.get_remaining_time.return_value = 65
+    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
+    state = hass.states.get(entity_id)
+    assert state.state == expected_time
+
+    # Test timestamp change for > 60 seconds.
+    timer.get_remaining_time.return_value = 125
+    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
+    state = hass.states.get(entity_id)
+    assert (
+        state.state == utc_from_timestamp(as_timestamp(expected_time) + 65).isoformat()
+    )
+
+    # Test the end time clears when the timer finishes.
+    timer.get_state.return_value = KitchenTimerState.Completed
+    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
+    # Test that periodic updates call the API to fetch data.
+    mock_oven_single_cavity_api.fetch_data.reset_mock()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_oven_single_cavity_api.fetch_data.assert_called_once()
 
 
 @pytest.mark.parametrize(

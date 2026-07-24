@@ -4,6 +4,9 @@
       "dryer_state": {
         "default": "mdi:tumble-dryer"
       },
+      "kitchen_timer_end_time": {
+        "default": "mdi:timer"
+      },
       "oven_state": {
         "default": "mdi:stove"
       },

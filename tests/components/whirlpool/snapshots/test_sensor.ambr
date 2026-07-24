@@ -149,6 +149,57 @@
     'state': 'running_maincycle',
   })
 # ---
+# name: test_all_entities[sensor.dual_cavity_oven_kitchen_timer_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dual_cavity_oven_kitchen_timer_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Kitchen timer end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Kitchen timer end time',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'kitchen_timer_end_time',
+    'unique_id': 'said_oven_dual-kitchen_timer_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dual_cavity_oven_kitchen_timer_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Kitchen timer end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_cavity_oven_kitchen_timer_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.dual_cavity_oven_lower_oven_current_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -445,6 +496,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '180',
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_kitchen_timer_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.single_cavity_oven_kitchen_timer_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Kitchen timer end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Kitchen timer end time',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'kitchen_timer_end_time',
+    'unique_id': 'said_oven_single-kitchen_timer_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.single_cavity_oven_kitchen_timer_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single cavity oven Kitchen timer end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.single_cavity_oven_kitchen_timer_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.single_cavity_oven_state-entry]
