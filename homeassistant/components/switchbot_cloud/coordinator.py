@@ -60,6 +60,11 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         """Return update_by_webhook value."""
         return self._manageable_by_webhook
 
+    def disable_webhook(self) -> None:
+        """Disable webhook."""
+        self._manageable_by_webhook = False
+        self.update_interval = DEFAULT_SCAN_INTERVAL
+
     @override
     async def _async_update_data(self) -> Status:
         """Fetch data from API endpoint."""

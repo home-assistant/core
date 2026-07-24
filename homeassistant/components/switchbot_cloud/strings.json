@@ -103,6 +103,16 @@
     }
   },
   "services": {
+    "disable_device_webhook": {
+      "description": "Disable device webhook functionality.",
+      "fields": {
+        "device_id": {
+          "description": "The target device.",
+          "name": "Devices"
+        }
+      },
+      "name": "Disable SwitchBot Cloud webhook"
+    },
     "upload_art_frame_image": {
       "description": "Upload web images to the device.",
       "fields": {
