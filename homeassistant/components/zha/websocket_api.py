@@ -38,6 +38,7 @@ from zha.application.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
+from zha.application.platforms.alarm_control_panel import AlarmControlPanel
 from zha.application.platforms.siren import (
     BaseSiren,
     SirenLevel,
@@ -46,6 +47,7 @@ from zha.application.platforms.siren import (
     StrobeLevel,
     WarningMode,
 )
+from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
@@ -62,6 +64,7 @@ from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
@@ -115,6 +118,7 @@ ATTR_NEW_CHANNEL = "new_channel"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
 ATTR_QR_CODE = "qr_code"
+ATTR_ARM_MODE = "arm_mode"
 
 BINDINGS = "bindings"
 
@@ -128,6 +132,8 @@ SERVICE_DIRECT_ZIGBEE_UNBIND = "issue_direct_zigbee_unbind"
 SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
 SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
+SERVICE_SET_ENTRY_DELAY = "set_entry_delay"
+SERVICE_SET_EXIT_DELAY = "set_exit_delay"
 IEEE_SERVICE = "ieee_based_service"
 
 IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
@@ -243,6 +249,23 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
             vol.Optional(ATTR_MANUFACTURER): vol.All(
                 vol.Coerce(int), vol.Range(min=-1)
             ),
+        }
+    ),
+    SERVICE_SET_ENTRY_DELAY: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+            vol.Required(ATTR_DURATION): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
+        }
+    ),
+    SERVICE_SET_EXIT_DELAY: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+            vol.Required(ATTR_DURATION): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
+            vol.Required(ATTR_ARM_MODE): vol.In(["away", "home", "night"]),
         }
     ),
 }
@@ -427,7 +450,10 @@ async def websocket_get_groupable_devices(
                         ),
                     }
                     for entity_ref in entity_refs
-                    if entity_ref.entity_data.entity.endpoint.id == ep_id
+                    if list(entity_ref.entity_data.entity.cluster_handlers.values())[
+                        0
+                    ].cluster.endpoint.endpoint_id
+                    == ep_id
                 ],
                 "device": device.zha_device_info,
             }
@@ -1275,6 +1301,78 @@ async def websocket_change_channel(
     connection.send_result(msg[ID])
 
 
+def _get_alarm_control_panel(zha_device: Device) -> AlarmControlPanel:
+    """Get the alarm control panel entity for a device."""
+    for entity in zha_device.platform_entities.values():
+        if isinstance(entity, AlarmControlPanel):
+            return entity
+    raise ServiceValidationError(
+        f"Device {zha_device.ieee!s} does not have an alarm control panel"
+    )
+
+
+def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
+    """Register alarm control services."""
+
+    async def set_entry_delay(service: ServiceCall) -> None:
+        """Set entry delay on alarm keypad."""
+        ieee: EUI64 = service.data[ATTR_IEEE]
+        duration: int = service.data[ATTR_DURATION]
+
+        _LOGGER.debug("Setting entry delay on %s for %d seconds", ieee, duration)
+
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is None:
+            raise ServiceValidationError(f"Device with IEEE {ieee!s} not found")
+
+        alarm_entity = _get_alarm_control_panel(zha_device)
+        await alarm_entity.async_start_entry_delay(duration)
+        _LOGGER.debug("Entry delay set on %s for %d seconds", str(ieee), duration)
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_ENTRY_DELAY,
+        set_entry_delay,
+        schema=SERVICE_SCHEMAS[SERVICE_SET_ENTRY_DELAY],
+    )
+
+    async def set_exit_delay(service: ServiceCall) -> None:
+        """Set exit delay on alarm keypad."""
+        ieee: EUI64 = service.data[ATTR_IEEE]
+        duration: int = service.data[ATTR_DURATION]
+        arm_mode: str = service.data[ATTR_ARM_MODE]
+
+        _LOGGER.debug(
+            "Setting exit delay on %s for %d seconds (mode: %s)",
+            ieee,
+            duration,
+            arm_mode,
+        )
+
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is None:
+            raise ServiceValidationError(f"Device with IEEE {ieee!s} not found")
+
+        alarm_entity = _get_alarm_control_panel(zha_device)
+        await alarm_entity.async_start_exit_delay(duration, arm_mode=arm_mode)
+
+        _LOGGER.debug(
+            "Exit delay set on %s for %d seconds (mode: %s)",
+            str(ieee),
+            duration,
+            arm_mode,
+        )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_EXIT_DELAY,
+        set_exit_delay,
+        schema=SERVICE_SCHEMAS[SERVICE_SET_EXIT_DELAY],
+    )
+
+
 @callback
 def async_load_api(hass: HomeAssistant) -> None:
     """Set up the web socket API."""
@@ -1316,7 +1414,6 @@ def async_load_api(hass: HomeAssistant) -> None:
 
     async def remove(service: ServiceCall) -> None:
         """Remove a node from the network."""
-        zha_gateway = get_zha_gateway(hass)
         ieee: EUI64 = service.data[ATTR_IEEE]
         _LOGGER.info("Removing node %s", ieee)
         await zha_gateway.async_remove_device(ieee)
@@ -1530,6 +1627,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
     )
 
+    _register_alarm_services(hass, zha_gateway)
+
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_get_groupable_devices)
@@ -1570,3 +1669,5 @@ def async_unload_api(hass: HomeAssistant) -> None:
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_WARN)
+    hass.services.async_remove(DOMAIN, SERVICE_SET_ENTRY_DELAY)
+    hass.services.async_remove(DOMAIN, SERVICE_SET_EXIT_DELAY)
