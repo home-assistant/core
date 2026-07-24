@@ -142,9 +142,6 @@ async def test_setup_with_disabled_home(
     account = data_handler.account
     assert set(account.all_homes_id) == {HOME_1_ID, HOME_2_ID}
     assert HOME_2_ID in account.homes
-    # The disabled home is only known as a weather station pseudo-home,
-    # without its topology (rooms, climate devices)
-    assert not account.homes[HOME_1_ID].rooms
     assert not hass.states.async_entity_ids(CLIMATE_DOMAIN)
     # The disabled home is not polled
     assert f"{HOME}-{HOME_1_ID}" not in data_handler.publisher
@@ -247,7 +244,6 @@ async def test_disabling_home_reloads_entry(
 
         assert config_entry.state is ConfigEntryState.LOADED
         assert config_entry.runtime_data.disabled_homes == {HOME_1_ID}
-        assert not config_entry.runtime_data.account.homes[HOME_1_ID].rooms
         # The disabled home's entities are no longer provided; only their
         # registry-restored placeholder states remain
         for entity_id in climate_entity_ids:

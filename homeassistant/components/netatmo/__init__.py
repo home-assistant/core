@@ -156,7 +156,8 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     data = config_entry.runtime_data
-    # Disabled homes are filtered so their leftover devices can be deleted
+    # With pyatmo <= 9.5.0 a disabled home can reappear in account.homes;
+    # filter it out so its leftover devices can be deleted
     homes = [
         h for h in data.account.homes.values() if h.entity_id not in data.disabled_homes
     ]

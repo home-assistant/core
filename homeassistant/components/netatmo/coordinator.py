@@ -347,8 +347,8 @@ class NetatmoDataHandler:
         self.setup_air_care()
 
         for home in self.account.homes.values():
-            # A disabled home can reappear in account.homes as a pseudo-home
-            # holding its weather modules once weather data has been fetched
+            # With pyatmo <= 9.5.0 a disabled home can reappear in
+            # account.homes as a pseudo-home once weather data was fetched
             if home.entity_id in self.disabled_homes:
                 continue
 
