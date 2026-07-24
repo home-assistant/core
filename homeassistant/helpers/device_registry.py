@@ -12,7 +12,7 @@ import logging
 import os
 import shutil
 import time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack, override
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, Unpack, override
 
 import attr
 from yarl import URL
@@ -111,6 +111,23 @@ class DeviceEntryDisabler(StrEnum):
     CONFIG_ENTRY = "config_entry"
     INTEGRATION = "integration"
     USER = "user"
+
+
+class DeviceInfoAttribute:
+    """Device info attributes."""
+
+    CONFIGURATION_URL: Final = "configuration_url"
+    CONNECTIONS: Final = "connections"
+    IDENTIFIERS: Final = "identifiers"
+    HW_VERSION: Final = "hw_version"
+    MANUFACTURER: Final = "manufacturer"
+    MODEL: Final = "model"
+    MODEL_ID: Final = "model_id"
+    NAME: Final = "name"
+    SERIAL_NUMBER: Final = "serial_number"
+    SUGGESTED_AREA: Final = "suggested_area"
+    SW_VERSION: Final = "sw_version"
+    VIA_DEVICE: Final = "via_device"
 
 
 class DeviceInfo(TypedDict, total=False):

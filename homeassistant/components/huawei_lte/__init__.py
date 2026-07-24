@@ -23,9 +23,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
-    ATTR_HW_VERSION,
-    ATTR_MODEL,
-    ATTR_SW_VERSION,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
@@ -383,15 +380,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
             hw_version = router_info.get("HardwareVersion")
             sw_version = router_info.get("SoftwareVersion")
             if router_info.get("DeviceName"):
-                device_info[ATTR_MODEL] = router_info["DeviceName"]
+                device_info[dr.DeviceInfoAttribute.MODEL] = router_info["DeviceName"]
         if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
             sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
                 "SoftwareVersion"
             )
         if hw_version:
-            device_info[ATTR_HW_VERSION] = hw_version
+            device_info[dr.DeviceInfoAttribute.HW_VERSION] = hw_version
         if sw_version:
-            device_info[ATTR_SW_VERSION] = sw_version
+            device_info[dr.DeviceInfoAttribute.SW_VERSION] = sw_version
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
