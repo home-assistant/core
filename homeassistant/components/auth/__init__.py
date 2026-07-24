@@ -278,7 +278,7 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
-        if client_id is None or not indieauth.verify_client_id(client_id):
+        if client_id is None or not indieauth.verify_client_id(client_id, hass):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -346,7 +346,7 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle refresh token request."""
         client_id = data.get("client_id")
-        if client_id is not None and not indieauth.verify_client_id(client_id):
+        if client_id is not None and not indieauth.verify_client_id(client_id, hass):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,
